@@ -1,7 +1,7 @@
 {
   "name": "std-calendar-week-timeline",
-  "version": "1.0.0",
-  "description": "Week-timeline calendar — week-strip view with 7 day columns across the top, each day a vertical Stack of event cards ordered by time. Same CalendarEventCalendar trait, same state machine, same emits/listens as std-calendar — only the bodyContent tree differs. For weekly schedule views (fitness-studio class week, healthcare appointment week).",
+  "version": "1.1.0",
+  "description": "Week-timeline calendar — events grouped by weekday in a 7-column timeline. The visible window normalizes to the payload's actual date range, so events stack into whichever day-of-week they fall on. Same CalendarEventCalendar trait, same state machine as std-calendar — only bodyContent differs. For weekly schedule views (fitness class week, healthcare appointment week).",
   "orbitals": [
     {
       "name": "WeekTimelineCalendarOrbital",
@@ -57,6 +57,11 @@
             "name": "duration",
             "type": "number",
             "default": 60.0
+          },
+          {
+            "name": "weekday",
+            "type": "string",
+            "default": ""
           }
         ]
       },
@@ -67,197 +72,107 @@
           "linkedEntity": "WeekTimelineEvent",
           "config": {
             "bodyContent": {
-              "type": "stack",
-              "gap": "md",
-              "direction": "vertical",
               "children": [
                 {
                   "direction": "horizontal",
                   "type": "stack",
                   "justify": "between",
-                  "gap": "md",
                   "children": [
                     {
+                      "gap": "sm",
                       "type": "stack",
-                      "align": "center",
-                      "direction": "horizontal",
                       "children": [
                         {
                           "type": "icon",
                           "name": "calendar"
                         },
                         {
-                          "type": "typography",
                           "content": "Week",
-                          "variant": "h2"
+                          "variant": "h2",
+                          "type": "typography"
                         }
                       ],
-                      "gap": "sm"
+                      "direction": "horizontal",
+                      "align": "center"
                     },
                     {
-                      "type": "date-range-selector",
-                      "onSelect": "SELECT_DAY"
+                      "onSelect": "SELECT_DAY",
+                      "type": "date-range-selector"
                     }
                   ],
-                  "align": "center"
+                  "align": "center",
+                  "gap": "md"
                 },
                 {
                   "type": "divider"
                 },
                 {
-                  "className": "min-h-[28rem]",
-                  "type": "grid",
-                  "gap": "sm",
-                  "cols": 7.0,
-                  "children": [
+                  "gap": "md",
+                  "groupBy": "weekday",
+                  "variant": "default",
+                  "entity": "@payload.data",
+                  "fields": [],
+                  "renderItem": [
+                    "fn",
+                    "item",
                     {
-                      "direction": "vertical",
+                      "look": "flat-bordered",
+                      "padding": "sm",
+                      "type": "card",
+                      "shadow": "sm",
                       "children": [
                         {
-                          "variant": "caption",
-                          "content": "Mon",
-                          "color": "muted",
-                          "className": "text-center pb-2 border-b border-[var(--color-border)]",
-                          "type": "typography"
-                        },
-                        {
-                          "fields": [],
-                          "gap": "sm",
-                          "renderItem": [
-                            "fn",
-                            "item",
+                          "direction": "vertical",
+                          "gap": "xs",
+                          "children": [
                             {
-                              "className": "p-2 cursor-pointer hover:shadow-elevation-1",
+                              "align": "center",
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "gap": "sm",
+                              "justify": "between",
                               "children": [
                                 {
-                                  "type": "stack",
-                                  "gap": "sm",
-                                  "direction": "vertical",
-                                  "children": [
-                                    {
-                                      "type": "typography",
-                                      "content": "@item.time",
-                                      "variant": "caption",
-                                      "weight": "medium"
-                                    },
-                                    {
-                                      "content": "@item.name",
-                                      "variant": "caption",
-                                      "className": "truncate",
-                                      "type": "typography"
-                                    },
-                                    {
-                                      "type": "badge",
-                                      "variant": "default",
-                                      "label": "@item.status"
-                                    }
-                                  ]
+                                  "weight": "medium",
+                                  "color": "muted",
+                                  "type": "typography",
+                                  "content": "@item.time",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "label": "@item.status",
+                                  "size": "sm",
+                                  "variant": "default",
+                                  "type": "badge"
                                 }
-                              ],
-                              "type": "card"
+                              ]
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "body2",
+                              "weight": "medium",
+                              "className": "truncate",
+                              "content": "@item.name"
+                            },
+                            {
+                              "type": "typography",
+                              "color": "muted",
+                              "variant": "caption",
+                              "className": "truncate",
+                              "content": "@item.description"
                             }
                           ],
-                          "type": "data-list",
-                          "entity": "@payload.data"
+                          "type": "stack"
                         }
-                      ],
-                      "gap": "sm",
-                      "type": "stack",
-                      "className": "border-r border-[var(--color-border)] pr-2"
-                    },
-                    {
-                      "direction": "vertical",
-                      "type": "stack",
-                      "className": "border-r border-[var(--color-border)] pr-2",
-                      "children": [
-                        {
-                          "color": "muted",
-                          "content": "Tue",
-                          "className": "text-center pb-2 border-b border-[var(--color-border)]",
-                          "variant": "caption",
-                          "type": "typography"
-                        }
-                      ],
-                      "gap": "sm"
-                    },
-                    {
-                      "type": "stack",
-                      "className": "border-r border-[var(--color-border)] pr-2",
-                      "children": [
-                        {
-                          "type": "typography",
-                          "variant": "caption",
-                          "color": "muted",
-                          "className": "text-center pb-2 border-b border-[var(--color-border)]",
-                          "content": "Wed"
-                        }
-                      ],
-                      "direction": "vertical",
-                      "gap": "sm"
-                    },
-                    {
-                      "children": [
-                        {
-                          "variant": "caption",
-                          "content": "Thu",
-                          "color": "muted",
-                          "className": "text-center pb-2 border-b border-[var(--color-border)]",
-                          "type": "typography"
-                        }
-                      ],
-                      "className": "border-r border-[var(--color-border)] pr-2",
-                      "gap": "sm",
-                      "direction": "vertical",
-                      "type": "stack"
-                    },
-                    {
-                      "direction": "vertical",
-                      "children": [
-                        {
-                          "variant": "caption",
-                          "className": "text-center pb-2 border-b border-[var(--color-border)]",
-                          "content": "Fri",
-                          "type": "typography",
-                          "color": "muted"
-                        }
-                      ],
-                      "gap": "sm",
-                      "type": "stack",
-                      "className": "border-r border-[var(--color-border)] pr-2"
-                    },
-                    {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "sm",
-                      "children": [
-                        {
-                          "variant": "caption",
-                          "type": "typography",
-                          "content": "Sat",
-                          "className": "text-center pb-2 border-b border-[var(--color-border)]",
-                          "color": "muted"
-                        }
-                      ],
-                      "className": "border-r border-[var(--color-border)] pr-2"
-                    },
-                    {
-                      "className": "pr-2",
-                      "direction": "vertical",
-                      "children": [
-                        {
-                          "type": "typography",
-                          "color": "muted",
-                          "variant": "caption",
-                          "content": "Sun",
-                          "className": "text-center pb-2 border-b border-[var(--color-border)]"
-                        }
-                      ],
-                      "type": "stack",
-                      "gap": "sm"
+                      ]
                     }
-                  ]
+                  ],
+                  "type": "data-list"
                 }
-              ]
+              ],
+              "gap": "md",
+              "type": "stack",
+              "direction": "vertical"
             }
           }
         }

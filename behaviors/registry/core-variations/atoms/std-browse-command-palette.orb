@@ -1,7 +1,7 @@
 {
   "name": "std-browse-command-palette",
   "version": "1.0.0",
-  "description": "Command-palette browse — keyboard-first search-driven UX inspired by Linear Cmd+K and Raycast. Full-width search input at the top of the viewport; typing emits REFETCH_QUERY on every keystroke; results render as a tight data-list of compact rows with kbd hints. Same BrowseItemBrowse trait, same state machine, same emits/listens as std-browse — only the bodyContent tree differs.",
+  "description": "Command-palette browse — VS Code/Linear/Raycast floating overlay with search input header, tight result list, and kbd hint chips.",
   "orbitals": [
     {
       "name": "CommandPaletteBrowseOrbital",
@@ -52,121 +52,170 @@
           "linkedEntity": "CommandPaletteItem",
           "config": {
             "bodyContent": {
-              "gap": "none",
+              "type": "stack",
+              "direction": "vertical",
+              "gap": "lg",
+              "className": "pt-section px-card-md",
+              "align": "center",
               "children": [
                 {
-                  "action": "REFETCH_QUERY",
-                  "placeholder": "Type to search…",
-                  "className": "text-lg",
-                  "type": "input",
-                  "inputType": "search"
-                },
-                {
-                  "align": "center",
-                  "gap": "sm",
-                  "direction": "horizontal",
-                  "className": "px-card-md py-2 border-b border-[var(--color-border)]",
-                  "type": "stack",
+                  "look": "elevated",
+                  "type": "card",
+                  "padding": "md",
                   "children": [
                     {
-                      "className": "px-1.5 py-0.5 border rounded font-mono",
-                      "content": "↑↓",
-                      "type": "typography",
-                      "variant": "caption"
-                    },
-                    {
-                      "content": "Navigate",
-                      "type": "typography",
-                      "color": "muted",
-                      "variant": "caption"
-                    },
-                    {
-                      "type": "typography",
-                      "className": "px-1.5 py-0.5 border rounded font-mono",
-                      "content": "↵",
-                      "variant": "caption"
-                    },
-                    {
-                      "content": "Select",
-                      "type": "typography",
-                      "variant": "caption",
-                      "color": "muted"
-                    },
-                    {
-                      "className": "px-1.5 py-0.5 border rounded font-mono",
-                      "type": "typography",
-                      "variant": "caption",
-                      "content": "esc"
-                    },
-                    {
-                      "color": "muted",
-                      "variant": "caption",
-                      "content": "Close",
-                      "type": "typography"
-                    }
-                  ]
-                },
-                {
-                  "entity": "@payload.data",
-                  "fields": [],
-                  "renderItem": [
-                    "fn",
-                    "item",
-                    {
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "file"
-                        },
-                        {
+                          "gap": "sm",
+                          "direction": "horizontal",
                           "type": "stack",
-                          "className": "flex-1 min-w-0",
-                          "direction": "vertical",
-                          "gap": "xs",
+                          "className": "px-card-md py-3",
                           "children": [
                             {
-                              "content": "@item.name",
-                              "variant": "body",
-                              "type": "typography",
-                              "weight": "medium",
-                              "className": "truncate"
+                              "name": "search",
+                              "type": "icon"
+                            },
+                            {
+                              "placeholder": "Search or jump to…",
+                              "type": "input",
+                              "inputType": "search",
+                              "action": "REFETCH_QUERY"
+                            },
+                            {
+                              "size": "sm",
+                              "variant": "neutral",
+                              "label": "ESC",
+                              "type": "badge"
+                            }
+                          ],
+                          "align": "center"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "fields": [],
+                          "className": "max-h-96 overflow-y-auto p-1",
+                          "renderItem": [
+                            "fn",
+                            "item",
+                            {
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "file"
+                                },
+                                {
+                                  "className": "flex-1 min-w-0",
+                                  "direction": "vertical",
+                                  "type": "stack",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "content": "@item.name",
+                                      "variant": "body",
+                                      "weight": "medium",
+                                      "className": "truncate"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "@item.description",
+                                      "color": "muted",
+                                      "variant": "caption",
+                                      "className": "truncate"
+                                    }
+                                  ],
+                                  "gap": "none"
+                                },
+                                {
+                                  "label": "@item.status",
+                                  "variant": "neutral",
+                                  "size": "sm",
+                                  "type": "badge"
+                                },
+                                {
+                                  "size": "sm",
+                                  "type": "badge",
+                                  "variant": "neutral",
+                                  "label": "↵"
+                                }
+                              ],
+                              "type": "stack",
+                              "className": "px-3 py-2 rounded-sm cursor-pointer hover:bg-muted/50 transition-colors"
+                            }
+                          ],
+                          "gap": "none",
+                          "type": "data-list",
+                          "entity": "@payload.data"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "align": "center",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "label": "↑↓",
+                              "size": "sm",
+                              "variant": "neutral",
+                              "type": "badge"
                             },
                             {
                               "variant": "caption",
                               "type": "typography",
+                              "content": "Navigate",
+                              "color": "muted"
+                            },
+                            {
+                              "label": "↵",
+                              "type": "badge",
+                              "variant": "neutral",
+                              "size": "sm"
+                            },
+                            {
+                              "variant": "caption",
                               "color": "muted",
-                              "content": "@item.description",
-                              "className": "truncate"
+                              "type": "typography",
+                              "content": "Select"
+                            },
+                            {
+                              "gap": "sm",
+                              "direction": "horizontal",
+                              "align": "center",
+                              "type": "stack",
+                              "className": "ml-auto",
+                              "children": [
+                                {
+                                  "label": "⌘K",
+                                  "size": "sm",
+                                  "type": "badge",
+                                  "variant": "neutral"
+                                },
+                                {
+                                  "color": "muted",
+                                  "type": "typography",
+                                  "content": "Toggle",
+                                  "variant": "caption"
+                                }
+                              ]
                             }
-                          ]
-                        },
-                        {
-                          "label": "@item.status",
-                          "type": "badge",
-                          "variant": "default"
-                        },
-                        {
-                          "className": "px-1.5 py-0.5 border rounded font-mono",
-                          "type": "typography",
-                          "content": "↵",
-                          "variant": "caption"
+                          ],
+                          "className": "px-card-md py-2 bg-[var(--color-surface-muted)]",
+                          "type": "stack",
+                          "gap": "md"
                         }
                       ],
-                      "align": "center",
-                      "type": "stack",
-                      "direction": "horizontal",
-                      "gap": "md",
-                      "className": "px-card-md py-3 hover:bg-muted cursor-pointer"
+                      "gap": "none",
+                      "direction": "vertical"
                     }
-                  ],
-                  "selectable": true,
-                  "gap": "none",
-                  "type": "data-list"
+                  ]
                 }
-              ],
-              "direction": "vertical",
-              "className": "max-w-2xl mx-auto pt-section",
-              "type": "stack"
+              ]
             }
           }
         }

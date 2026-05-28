@@ -1,22 +1,37 @@
-app std-display-dashboard-summary "1.0.0"
-"Dashboard-summary display — Datadog widget / dashboard-card style record detail. Title strip across the top with a status chip; below it a compact key/value grid arranges metrics in 2-3 columns of label-over-value rows. Best for iot-dashboard device-detail, healthcare patient summaries, devops service detail, and infra ops cards. Same DisplayItemDisplay trait, same state machine, same emits/listens as std-display — only bodyContent differs."
+app std-display-dashboard-summary "1.1.0"
+"Executive dashboard — 4 KPI tiles, status pill strip, primary line-chart panel below. Same trait as std-display."
 
 orbital DashboardSummaryDisplayOrbital {
   uses Display from "std/behaviors/std-display"
 
+  type KpiTile = {
+    label  : string!
+    value  : string!
+    trend  : number
+    icon   : string
+  }
+
+  type StatusPill = {
+    label   : string!
+    tone    : "success" | "warning" | "error" | "info" | "default"
+  }
+
+  type SeriesPoint = {
+    date  : string!
+    value : number!
+  }
+
   entity SummaryRecord [runtime] {
-    id          : string!
-    name        : string!
-    status      : "healthy" | "degraded" | "down" = "healthy"
-    uptime      : string
-    region      : string
-    version     : string
-    cpu         : string
-    memory      : string
-    requests    : string
-    errorRate   : string
-    lastSeen    : string
-    owner       : string
+    id           : string!
+    title        : string!
+    subtitle     : string
+    period       : string                = "Last 30 days"
+    tiles        : [KpiTile]             = []
+    statuses     : [StatusPill]          = []
+    chartTitle   : string                = "Performance"
+    chartSubtitle: string                = ""
+    chartData    : [SeriesPoint]         = []
+    filterEvent  : string                = "OPEN_FILTER"
   }
 
   trait DashboardSummaryDisplay = Display.traits.DisplayItemDisplay -> SummaryRecord {
@@ -24,57 +39,64 @@ orbital DashboardSummaryDisplayOrbital {
       bodyContent: {
         type: "stack",
         direction: "vertical",
-        gap: "md",
-        className: "max-w-5xl mx-auto px-card-md py-card-md",
+        gap: "sm",
+        className: "w-full max-w-6xl mx-auto px-card-md py-card-md",
         children: [
-          { type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", className: "pb-card-md border-b border-[var(--color-border)]", children: [
-            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
-              { type: "icon", name: "activity" },
-              { type: "typography", variant: "h3", weight: "semibold", content: "@payload.name" },
-              { type: "typography", variant: "caption", color: "muted", content: "@payload.id", className: "font-mono" }
+          { type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", className: "pb-card-sm", children: [
+            { type: "stack", direction: "vertical", gap: "xs", children: [
+              { type: "typography", variant: "h3", weight: "semibold", content: "@entity.title" },
+              { type: "typography", variant: "caption", color: "muted", content: "@entity.period" }
             ]},
-            { type: "badge", label: "@payload.status", variant: "default" }
+            { type: "button", label: "Filter", variant: "ghost", size: "sm", icon: "filter", action: "@entity.filterEvent" }
           ]},
-          { type: "stack", direction: "horizontal", gap: "lg", className: "flex-wrap", children: [
-            { type: "stack", direction: "vertical", gap: "xs", className: "min-w-[140px]", children: [
-              { type: "typography", variant: "caption", color: "muted", content: "Uptime", className: "uppercase tracking-wide" },
-              { type: "typography", variant: "h4", weight: "semibold", content: "@payload.uptime", className: "tabular-nums" }
-            ]},
-            { type: "stack", direction: "vertical", gap: "xs", className: "min-w-[140px]", children: [
-              { type: "typography", variant: "caption", color: "muted", content: "Region", className: "uppercase tracking-wide" },
-              { type: "typography", variant: "h4", weight: "semibold", content: "@payload.region" }
-            ]},
-            { type: "stack", direction: "vertical", gap: "xs", className: "min-w-[140px]", children: [
-              { type: "typography", variant: "caption", color: "muted", content: "Version", className: "uppercase tracking-wide" },
-              { type: "typography", variant: "h4", weight: "semibold", content: "@payload.version", className: "font-mono" }
-            ]},
-            { type: "stack", direction: "vertical", gap: "xs", className: "min-w-[140px]", children: [
-              { type: "typography", variant: "caption", color: "muted", content: "Owner", className: "uppercase tracking-wide" },
-              { type: "typography", variant: "h4", weight: "semibold", content: "@payload.owner" }
-            ]}
-          ]},
-          { type: "stack", direction: "horizontal", gap: "lg", className: "flex-wrap pt-card-md border-t border-[var(--color-border)]", children: [
-            { type: "stack", direction: "vertical", gap: "xs", className: "min-w-[140px]", children: [
-              { type: "typography", variant: "caption", color: "muted", content: "CPU", className: "uppercase tracking-wide" },
-              { type: "typography", variant: "h4", weight: "semibold", content: "@payload.cpu", className: "tabular-nums" }
-            ]},
-            { type: "stack", direction: "vertical", gap: "xs", className: "min-w-[140px]", children: [
-              { type: "typography", variant: "caption", color: "muted", content: "Memory", className: "uppercase tracking-wide" },
-              { type: "typography", variant: "h4", weight: "semibold", content: "@payload.memory", className: "tabular-nums" }
-            ]},
-            { type: "stack", direction: "vertical", gap: "xs", className: "min-w-[140px]", children: [
-              { type: "typography", variant: "caption", color: "muted", content: "Requests/s", className: "uppercase tracking-wide" },
-              { type: "typography", variant: "h4", weight: "semibold", content: "@payload.requests", className: "tabular-nums" }
-            ]},
-            { type: "stack", direction: "vertical", gap: "xs", className: "min-w-[140px]", children: [
-              { type: "typography", variant: "caption", color: "muted", content: "Error rate", className: "uppercase tracking-wide" },
-              { type: "typography", variant: "h4", weight: "semibold", content: "@payload.errorRate", className: "tabular-nums" }
-            ]},
-            { type: "stack", direction: "vertical", gap: "xs", className: "min-w-[140px]", children: [
-              { type: "typography", variant: "caption", color: "muted", content: "Last seen", className: "uppercase tracking-wide" },
-              { type: "typography", variant: "body", content: "@payload.lastSeen" }
-            ]}
-          ]}
+
+          { type: "simple-grid", cols: 4, gap: "sm", className: "w-full", children: [{
+            type: "data-list",
+            entity: "@entity.tiles",
+            gap: "sm",
+            fields: [],
+            renderItem: ["fn", "tile", {
+              type: "card",
+              variant: "elevated",
+              padding: "md",
+              className: "rounded-lg shadow-elevation-sm",
+              children: [{
+                type: "stack", direction: "vertical", gap: "xs", children: [
+                  { type: "stack", direction: "horizontal", gap: "xs", align: "center", justify: "between", children: [
+                    { type: "typography", variant: "overline", color: "muted", weight: "semibold", content: "@tile.label", className: "uppercase tracking-wide" },
+                    { type: "icon", name: "@tile.icon", size: "sm", color: "muted" }
+                  ]},
+                  { type: "typography", variant: "h2", weight: "semibold", content: "@tile.value", className: "tabular-nums" },
+                  { type: "trend-indicator", value: "@tile.trend", size: "sm", showValue: true }
+                ]
+              }]
+            }]
+          }]},
+
+          { type: "stack", direction: "horizontal", gap: "xs", className: "flex-wrap", children: [{
+            type: "data-list",
+            entity: "@entity.statuses",
+            gap: "sm",
+            fields: [],
+            renderItem: ["fn", "pill", { type: "badge", label: "@pill.label", variant: "@pill.tone", size: "sm" }]
+          }]},
+
+          { type: "divider" },
+
+          { type: "stack", direction: "vertical", gap: "none", className: "rounded-lg shadow-elevation-sm w-full", children: [{
+            type: "card", variant: "elevated", padding: "lg", children: [{
+              type: "stack", direction: "vertical", gap: "md", children: [
+                { type: "stack", direction: "horizontal", gap: "sm", align: "baseline", justify: "between", children: [
+                  { type: "stack", direction: "vertical", gap: "xs", children: [
+                    { type: "typography", variant: "h4", weight: "semibold", content: "@entity.chartTitle" },
+                    { type: "typography", variant: "caption", color: "muted", content: "@entity.chartSubtitle" }
+                  ]},
+                  { type: "badge", label: "@entity.period", variant: "default", size: "sm" }
+                ]},
+                { type: "chart", chartType: "line", data: "@entity.chartData", height: 280, showLegend: false }
+              ]
+            }]
+          }]}
         ]
       }
     }

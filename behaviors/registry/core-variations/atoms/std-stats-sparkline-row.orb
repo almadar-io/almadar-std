@@ -1,7 +1,7 @@
 {
   "name": "std-stats-sparkline-row",
   "version": "1.0.0",
-  "description": "Sparkline row — Datadog/Grafana-style horizontal strip of compact KPIs with inline trend chips and tiny sparklines. Each cell: metric label, current value, change indicator, micro sparkline. For devops dashboards, IoT telemetry, health scores, observability overviews. Same StatsItemStats trait, same aggregation pipeline, same listens as std-stats — only the bodyContent tree differs.",
+  "description": "Sparkline tile grid — chart-first card tiles where the mini trend line is the visual centerpiece, with label above and value+delta footer. For trend-led overviews: telemetry, weekly active users, traffic shape, observability at a glance.",
   "orbitals": [
     {
       "name": "SparklineRowStatsOrbital",
@@ -27,10 +27,34 @@
             "items": {
               "type": "object",
               "properties": {
+                "prefix": {
+                  "name": "prefix",
+                  "type": "string",
+                  "required": false
+                },
+                "label": {
+                  "name": "label",
+                  "type": "string",
+                  "required": true
+                },
                 "max": {
                   "name": "max",
                   "type": "number",
                   "required": false
+                },
+                "target": {
+                  "name": "target",
+                  "type": "number",
+                  "required": false
+                },
+                "trendPolarity": {
+                  "name": "trendPolarity",
+                  "type": "string",
+                  "required": false,
+                  "values": [
+                    "higher-is-better",
+                    "lower-is-better"
+                  ]
                 },
                 "trendFormat": {
                   "name": "trendFormat",
@@ -51,33 +75,10 @@
                   "type": "string",
                   "required": false
                 },
-                "suffix": {
-                  "name": "suffix",
+                "icon": {
+                  "name": "icon",
                   "type": "string",
                   "required": false
-                },
-                "trend": {
-                  "name": "trend",
-                  "type": "number",
-                  "required": false
-                },
-                "sparklineData": {
-                  "name": "sparklineData",
-                  "type": "array",
-                  "required": false,
-                  "items": {
-                    "type": "number"
-                  }
-                },
-                "target": {
-                  "name": "target",
-                  "type": "number",
-                  "required": false
-                },
-                "label": {
-                  "name": "label",
-                  "type": "string",
-                  "required": true
                 },
                 "format": {
                   "name": "format",
@@ -88,6 +89,11 @@
                     "currency",
                     "percent"
                   ]
+                },
+                "trend": {
+                  "name": "trend",
+                  "type": "number",
+                  "required": false
                 },
                 "variant": {
                   "name": "variant",
@@ -102,24 +108,18 @@
                     "info"
                   ]
                 },
-                "prefix": {
-                  "name": "prefix",
+                "suffix": {
+                  "name": "suffix",
                   "type": "string",
                   "required": false
                 },
-                "trendPolarity": {
-                  "name": "trendPolarity",
-                  "type": "string",
+                "sparklineData": {
+                  "name": "sparklineData",
+                  "type": "array",
                   "required": false,
-                  "values": [
-                    "higher-is-better",
-                    "lower-is-better"
-                  ]
-                },
-                "icon": {
-                  "name": "icon",
-                  "type": "string",
-                  "required": false
+                  "items": {
+                    "type": "number"
+                  }
                 }
               }
             }
@@ -133,95 +133,49 @@
           "linkedEntity": "SparklineRowStats",
           "config": {
             "bodyContent": {
-              "gap": "none",
-              "align": "stretch",
-              "wrap": true,
-              "direction": "horizontal",
-              "type": "stack",
-              "className": "w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] divide-x divide-[var(--color-border)] overflow-hidden",
+              "className": "w-full",
               "children": [
                 {
                   "type": "data-list",
-                  "entity": "@entity.cards",
-                  "fields": [],
-                  "gap": "none",
+                  "gap": "md",
                   "renderItem": [
                     "fn",
                     "card",
                     {
+                      "className": "rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] p-card-md shadow-elevation-sm hover:shadow-elevation-md transition-shadow min-h-[180px]",
                       "direction": "vertical",
-                      "className": "flex-1 min-w-[180px] px-card-md py-card-sm",
-                      "gap": "xs",
+                      "gap": "sm",
                       "type": "stack",
                       "children": [
                         {
+                          "gap": "xs",
+                          "align": "center",
+                          "type": "stack",
                           "children": [
-                            {
-                              "name": "@card.icon",
-                              "size": "xs",
-                              "type": "icon",
-                              "color": "muted"
-                            },
                             {
                               "color": "muted",
-                              "variant": "caption",
-                              "type": "typography",
-                              "weight": "medium",
-                              "content": "@card.label",
-                              "className": "uppercase tracking-wide truncate"
-                            }
-                          ],
-                          "direction": "horizontal",
-                          "align": "center",
-                          "type": "stack",
-                          "gap": "xs"
-                        },
-                        {
-                          "align": "center",
-                          "type": "stack",
-                          "gap": "sm",
-                          "direction": "horizontal",
-                          "justify": "between",
-                          "children": [
-                            {
-                              "gap": "xs",
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "children": [
-                                {
-                                  "content": "@card.prefix",
-                                  "variant": "caption",
-                                  "type": "typography",
-                                  "color": "muted"
-                                },
-                                {
-                                  "type": "typography",
-                                  "className": "tabular-nums",
-                                  "weight": "semibold",
-                                  "content": "@card.value",
-                                  "variant": "h4"
-                                },
-                                {
-                                  "color": "muted",
-                                  "type": "typography",
-                                  "content": "@card.suffix",
-                                  "variant": "caption"
-                                }
-                              ],
-                              "align": "baseline"
+                              "name": "@card.icon",
+                              "type": "icon",
+                              "size": "xs"
                             },
                             {
-                              "label": "@card.trend",
-                              "variant": "@card.variant",
-                              "type": "badge",
-                              "size": "sm"
+                              "variant": "overline",
+                              "type": "typography",
+                              "color": "muted",
+                              "content": "@card.label",
+                              "className": "uppercase tracking-wide truncate",
+                              "weight": "semibold"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal"
                         },
                         {
-                          "color": "auto",
                           "type": "sparkline",
-                          "height": 20.0,
+                          "color": "auto",
+                          "fill": true,
+                          "className": "w-full",
+                          "height": 64.0,
+                          "strokeWidth": 2.0,
                           "data": [
                             1.0,
                             2.0,
@@ -230,16 +184,60 @@
                             5.0,
                             6.0,
                             7.0
+                          ]
+                        },
+                        {
+                          "direction": "horizontal",
+                          "justify": "between",
+                          "gap": "sm",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "gap": "xs",
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "content": "@card.prefix",
+                                  "color": "muted",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "className": "tabular-nums",
+                                  "variant": "h3",
+                                  "content": "@card.value",
+                                  "type": "typography",
+                                  "weight": "semibold"
+                                },
+                                {
+                                  "variant": "caption",
+                                  "type": "typography",
+                                  "color": "muted",
+                                  "content": "@card.suffix"
+                                }
+                              ],
+                              "align": "baseline"
+                            },
+                            {
+                              "size": "sm",
+                              "type": "trend-indicator",
+                              "showValue": true,
+                              "value": "@card.trend"
+                            }
                           ],
-                          "className": "w-full",
-                          "strokeWidth": 1.0,
-                          "fill": false
+                          "align": "baseline"
                         }
                       ]
                     }
-                  ]
+                  ],
+                  "fields": [],
+                  "entity": "@entity.cards"
                 }
-              ]
+              ],
+              "cols": 2.0,
+              "gap": "md",
+              "type": "simple-grid"
             }
           }
         }

@@ -1,7 +1,7 @@
 {
   "name": "std-thread-chat-bubbles",
   "version": "1.0.0",
-  "description": "Chat-bubbles thread — iMessage/Slack DM style: alternating-aligned message bubbles, author avatar outside the bubble, timestamps tucked under each message. For realtime-chat, customer-success conversations, support DMs. Same ThreadPostBrowse trait, same state machine, same emits/listens as std-thread — only the bodyContent tree differs.",
+  "description": "Chat-bubbles thread — iMessage/WhatsApp DM style: two-party back-and-forth with sender-vs-receiver bubble alignment and tint.",
   "orbitals": [
     {
       "name": "ChatBubblesThreadOrbital",
@@ -41,6 +41,10 @@
             "required": true
           },
           {
+            "name": "recipientId",
+            "type": "string"
+          },
+          {
             "name": "content",
             "type": "string",
             "required": true
@@ -68,104 +72,122 @@
           "linkedEntity": "ChatBubblesPost",
           "config": {
             "bodyContent": {
+              "gap": "none",
+              "direction": "vertical",
               "children": [
                 {
+                  "type": "stack",
+                  "align": "center",
+                  "direction": "horizontal",
+                  "className": "pb-md border-b border-[var(--color-border)]",
+                  "children": [
+                    {
+                      "type": "avatar",
+                      "size": "md",
+                      "name": "Alex Rivera"
+                    },
+                    {
+                      "children": [
+                        {
+                          "content": "Alex Rivera",
+                          "weight": "medium",
+                          "variant": "body",
+                          "type": "typography"
+                        },
+                        {
+                          "color": "muted",
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Active now"
+                        }
+                      ],
+                      "gap": "xs",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "className": "flex-1"
+                    }
+                  ],
+                  "gap": "sm"
+                },
+                {
+                  "className": "flex-1 overflow-y-auto py-md",
+                  "variant": "message",
+                  "currentUser": "me",
+                  "fields": [],
                   "renderItem": [
                     "fn",
                     "item",
                     {
-                      "className": "w-full",
+                      "className": "@item.isMe ? 'w-full flex-row-reverse' : 'w-full flex-row'",
                       "children": [
                         {
+                          "type": "avatar",
                           "name": "@item.authorName",
-                          "size": "sm",
-                          "type": "avatar"
+                          "className": "@item.isMe ? 'invisible' : 'visible'",
+                          "size": "sm"
                         },
                         {
                           "direction": "vertical",
-                          "gap": "xs",
                           "type": "stack",
+                          "className": "@item.isMe ? 'max-w-[70%] items-end' : 'max-w-[70%] items-start'",
+                          "gap": "xs",
                           "children": [
                             {
-                              "look": "chip",
+                              "className": "@item.isMe ? 'rounded-lg rounded-br-sm bg-[var(--color-primary)] text-[var(--color-primary-foreground)] shadow-sm' : 'rounded-lg rounded-bl-sm bg-[var(--color-muted)] text-[var(--color-foreground)] shadow-sm'",
+                              "look": "@item.isMe ? 'filled' : 'flat-bordered'",
+                              "type": "card",
                               "padding": "sm",
                               "children": {
                                 "variant": "body",
-                                "content": "@item.content",
-                                "type": "typography"
-                              },
-                              "type": "card"
+                                "type": "typography",
+                                "content": "@item.content"
+                              }
                             },
                             {
-                              "gap": "xs",
-                              "children": [
-                                {
-                                  "variant": "caption",
-                                  "color": "muted",
-                                  "content": "@item.authorName",
-                                  "type": "typography"
-                                },
-                                {
-                                  "variant": "caption",
-                                  "type": "typography",
-                                  "content": "·",
-                                  "color": "muted"
-                                },
-                                {
-                                  "color": "muted",
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "content": "@item.createdAt"
-                                }
-                              ],
-                              "type": "stack",
-                              "align": "center",
-                              "direction": "horizontal"
+                              "color": "muted",
+                              "content": "@item.createdAt",
+                              "type": "typography",
+                              "variant": "caption"
                             }
-                          ],
-                          "className": "max-w-[70%]"
+                          ]
                         }
                       ],
-                      "direction": "horizontal",
                       "type": "stack",
+                      "direction": "horizontal",
                       "gap": "sm",
                       "align": "end"
                     }
                   ],
-                  "entity": "@payload.data",
-                  "fields": [],
-                  "variant": "default",
                   "type": "data-list",
-                  "gap": "md"
+                  "gap": "sm",
+                  "senderField": "authorId",
+                  "entity": "@payload.data"
                 },
                 {
-                  "align": "center",
+                  "direction": "horizontal",
                   "children": [
                     {
-                      "type": "input",
-                      "placeholder": "Message…",
                       "inputType": "text",
                       "action": "EDIT_REPLY",
-                      "className": "flex-1"
+                      "type": "input",
+                      "placeholder": "Message…"
                     },
                     {
-                      "label": "Send",
-                      "variant": "primary",
                       "type": "button",
                       "icon": "send",
-                      "action": "SUBMIT_REPLY"
+                      "label": "Send",
+                      "action": "SUBMIT_REPLY",
+                      "variant": "primary"
                     }
                   ],
+                  "align": "center",
                   "type": "stack",
                   "className": "mt-md border-t border-[var(--color-border)] pt-md",
-                  "gap": "sm",
-                  "direction": "horizontal"
+                  "gap": "sm"
                 }
               ],
-              "className": "max-w-3xl mx-auto px-card-md py-section",
-              "type": "stack",
-              "gap": "none",
-              "direction": "vertical"
+              "className": "max-w-2xl mx-auto px-card-md py-section h-full",
+              "type": "stack"
             }
           }
         }

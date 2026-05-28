@@ -43,10 +43,10 @@ export interface StdStatsConfig {
   viewPattern?: unknown;
   /** Default: `"elevated"` */
   statLook?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
-  /** Default: `{"type":"@config.viewPattern","renderItem":["fn","card",{"prefix":"@card.prefix","value":"@card.value","format":"@card.format","trendFormat":"@card.trendFormat","max":"@card.max","type":"stat-display","icon":"@card.icon","variant":"@card.variant","sparklineData":"@card.sparklineData","suffix":"@card.suffix","look":"@config.statLook","label":"@card.label","clickEvent":"@card.clickEvent","trendPolarity":"@card.trendPolarity","target":"@card.target","trend":"@card.trend"}],"entity":"@entity.cards","fields":[]}` */
-  bodyContent?: unknown;
-  /** Default: `[{"format":"number","icon":"list","aggregation":"count","label":"Total Items","variant":"primary"},{"aggregation":"count","format":"number","label":"Active","variant":"success","icon":"check-circle"},{"icon":"trending-up","format":"number","field":"value","label":"Avg Value","aggregation":"avg","variant":"info"}]` */
+  /** Default: `[{"variant":"primary","label":"Total Items","icon":"list","format":"number","aggregation":"count"},{"label":"Active","variant":"success","aggregation":"count","icon":"check-circle","format":"number"},{"aggregation":"avg","format":"number","label":"Avg Value","icon":"trending-up","field":"value","variant":"info"}]` */
   metrics?: EntityRow[];
+  /** Default: `{"fields":[],"entity":"@entity.cards","renderItem":["fn","card",{"look":"@config.statLook","format":"@card.format","sparklineData":"@card.sparklineData","prefix":"@card.prefix","max":"@card.max","target":"@card.target","variant":"@card.variant","trend":"@card.trend","value":"@card.value","icon":"@card.icon","trendFormat":"@card.trendFormat","type":"stat-display","trendPolarity":"@card.trendPolarity","clickEvent":"@card.clickEvent","suffix":"@card.suffix","label":"@card.label"}],"type":"@config.viewPattern"}` */
+  bodyContent?: unknown;
   /** Default: `"Summary"` */
   title?: string;
 }

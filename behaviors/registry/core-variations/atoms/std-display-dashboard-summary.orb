@@ -1,7 +1,7 @@
 {
   "name": "std-display-dashboard-summary",
-  "version": "1.0.0",
-  "description": "Dashboard-summary display — Datadog widget / dashboard-card style record detail. Title strip across the top with a status chip; below it a compact key/value grid arranges metrics in 2-3 columns of label-over-value rows. Best for iot-dashboard device-detail, healthcare patient summaries, devops service detail, and infra ops cards. Same DisplayItemDisplay trait, same state machine, same emits/listens as std-display — only bodyContent differs.",
+  "version": "1.1.0",
+  "description": "Executive dashboard — 4 KPI tiles, status pill strip, primary line-chart panel below. Same trait as std-display.",
   "orbitals": [
     {
       "name": "DashboardSummaryDisplayOrbital",
@@ -21,55 +21,110 @@
             "required": true
           },
           {
-            "name": "name",
+            "name": "title",
             "type": "string",
             "required": true
           },
           {
-            "name": "status",
+            "name": "subtitle",
+            "type": "string"
+          },
+          {
+            "name": "period",
             "type": "string",
-            "default": "healthy",
-            "values": [
-              "healthy",
-              "degraded",
-              "down"
-            ]
+            "default": "Last 30 days"
           },
           {
-            "name": "uptime",
-            "type": "string"
+            "name": "tiles",
+            "type": "array",
+            "default": [],
+            "items": {
+              "type": "object",
+              "properties": {
+                "trend": {
+                  "name": "trend",
+                  "type": "number",
+                  "required": false
+                },
+                "value": {
+                  "name": "value",
+                  "type": "string",
+                  "required": true
+                },
+                "label": {
+                  "name": "label",
+                  "type": "string",
+                  "required": true
+                },
+                "icon": {
+                  "name": "icon",
+                  "type": "string",
+                  "required": false
+                }
+              }
+            }
           },
           {
-            "name": "region",
-            "type": "string"
+            "name": "statuses",
+            "type": "array",
+            "default": [],
+            "items": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "name": "label",
+                  "type": "string",
+                  "required": true
+                },
+                "tone": {
+                  "name": "tone",
+                  "type": "string",
+                  "required": false,
+                  "values": [
+                    "success",
+                    "warning",
+                    "error",
+                    "info",
+                    "default"
+                  ]
+                }
+              }
+            }
           },
           {
-            "name": "version",
-            "type": "string"
+            "name": "chartTitle",
+            "type": "string",
+            "default": "Performance"
           },
           {
-            "name": "cpu",
-            "type": "string"
+            "name": "chartSubtitle",
+            "type": "string",
+            "default": ""
           },
           {
-            "name": "memory",
-            "type": "string"
+            "name": "chartData",
+            "type": "array",
+            "default": [],
+            "items": {
+              "type": "object",
+              "properties": {
+                "date": {
+                  "name": "date",
+                  "type": "string",
+                  "required": true
+                },
+                "value": {
+                  "name": "value",
+                  "type": "number",
+                  "required": true
+                }
+              }
+            }
           },
           {
-            "name": "requests",
-            "type": "string"
-          },
-          {
-            "name": "errorRate",
-            "type": "string"
-          },
-          {
-            "name": "lastSeen",
-            "type": "string"
-          },
-          {
-            "name": "owner",
-            "type": "string"
+            "name": "filterEvent",
+            "type": "string",
+            "default": "OPEN_FILTER"
           }
         ]
       },
@@ -80,262 +135,208 @@
           "linkedEntity": "SummaryRecord",
           "config": {
             "bodyContent": {
+              "className": "w-full max-w-6xl mx-auto px-card-md py-card-md",
               "children": [
                 {
-                  "align": "center",
+                  "className": "pb-card-sm",
+                  "type": "stack",
+                  "direction": "horizontal",
+                  "gap": "md",
                   "justify": "between",
+                  "align": "center",
                   "children": [
                     {
-                      "align": "center",
                       "type": "stack",
-                      "gap": "sm",
-                      "direction": "horizontal",
                       "children": [
-                        {
-                          "type": "icon",
-                          "name": "activity"
-                        },
                         {
                           "variant": "h3",
+                          "content": "@entity.title",
                           "weight": "semibold",
-                          "type": "typography",
-                          "content": "@payload.name"
+                          "type": "typography"
                         },
                         {
                           "variant": "caption",
-                          "content": "@payload.id",
-                          "className": "font-mono",
                           "type": "typography",
+                          "content": "@entity.period",
                           "color": "muted"
                         }
-                      ]
+                      ],
+                      "gap": "xs",
+                      "direction": "vertical"
                     },
                     {
-                      "variant": "default",
-                      "label": "@payload.status",
-                      "type": "badge"
+                      "size": "sm",
+                      "variant": "ghost",
+                      "icon": "filter",
+                      "action": "@entity.filterEvent",
+                      "type": "button",
+                      "label": "Filter"
                     }
-                  ],
-                  "direction": "horizontal",
-                  "type": "stack",
-                  "className": "pb-card-md border-b border-[var(--color-border)]",
-                  "gap": "md"
+                  ]
                 },
                 {
+                  "className": "w-full",
                   "children": [
                     {
-                      "gap": "xs",
-                      "children": [
+                      "type": "data-list",
+                      "entity": "@entity.tiles",
+                      "gap": "sm",
+                      "fields": [],
+                      "renderItem": [
+                        "fn",
+                        "tile",
                         {
-                          "content": "Uptime",
-                          "className": "uppercase tracking-wide",
-                          "variant": "caption",
-                          "type": "typography",
-                          "color": "muted"
-                        },
-                        {
-                          "weight": "semibold",
-                          "content": "@payload.uptime",
-                          "className": "tabular-nums",
-                          "variant": "h4",
-                          "type": "typography"
+                          "type": "card",
+                          "variant": "elevated",
+                          "className": "rounded-lg shadow-elevation-sm",
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "justify": "between",
+                                  "gap": "xs",
+                                  "type": "stack",
+                                  "children": [
+                                    {
+                                      "variant": "overline",
+                                      "className": "uppercase tracking-wide",
+                                      "type": "typography",
+                                      "color": "muted",
+                                      "weight": "semibold",
+                                      "content": "@tile.label"
+                                    },
+                                    {
+                                      "color": "muted",
+                                      "type": "icon",
+                                      "size": "sm",
+                                      "name": "@tile.icon"
+                                    }
+                                  ],
+                                  "align": "center",
+                                  "direction": "horizontal"
+                                },
+                                {
+                                  "content": "@tile.value",
+                                  "weight": "semibold",
+                                  "variant": "h2",
+                                  "type": "typography",
+                                  "className": "tabular-nums"
+                                },
+                                {
+                                  "value": "@tile.trend",
+                                  "size": "sm",
+                                  "type": "trend-indicator",
+                                  "showValue": true
+                                }
+                              ],
+                              "gap": "xs",
+                              "type": "stack",
+                              "direction": "vertical"
+                            }
+                          ],
+                          "padding": "md"
                         }
-                      ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "className": "min-w-[140px]"
-                    },
-                    {
-                      "direction": "vertical",
-                      "type": "stack",
-                      "className": "min-w-[140px]",
-                      "children": [
-                        {
-                          "className": "uppercase tracking-wide",
-                          "variant": "caption",
-                          "color": "muted",
-                          "type": "typography",
-                          "content": "Region"
-                        },
-                        {
-                          "type": "typography",
-                          "content": "@payload.region",
-                          "variant": "h4",
-                          "weight": "semibold"
-                        }
-                      ],
-                      "gap": "xs"
-                    },
-                    {
-                      "className": "min-w-[140px]",
-                      "direction": "vertical",
-                      "gap": "xs",
-                      "children": [
-                        {
-                          "color": "muted",
-                          "type": "typography",
-                          "className": "uppercase tracking-wide",
-                          "content": "Version",
-                          "variant": "caption"
-                        },
-                        {
-                          "variant": "h4",
-                          "content": "@payload.version",
-                          "weight": "semibold",
-                          "className": "font-mono",
-                          "type": "typography"
-                        }
-                      ],
-                      "type": "stack"
-                    },
-                    {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "className": "min-w-[140px]",
-                      "children": [
-                        {
-                          "type": "typography",
-                          "color": "muted",
-                          "variant": "caption",
-                          "content": "Owner",
-                          "className": "uppercase tracking-wide"
-                        },
-                        {
-                          "type": "typography",
-                          "weight": "semibold",
-                          "variant": "h4",
-                          "content": "@payload.owner"
-                        }
-                      ],
-                      "gap": "xs"
+                      ]
                     }
                   ],
-                  "type": "stack",
-                  "direction": "horizontal",
+                  "cols": 4.0,
+                  "type": "simple-grid",
+                  "gap": "sm"
+                },
+                {
                   "className": "flex-wrap",
-                  "gap": "lg"
-                },
-                {
-                  "type": "stack",
-                  "className": "flex-wrap pt-card-md border-t border-[var(--color-border)]",
-                  "gap": "lg",
-                  "direction": "horizontal",
+                  "gap": "xs",
                   "children": [
                     {
-                      "children": [
+                      "type": "data-list",
+                      "fields": [],
+                      "renderItem": [
+                        "fn",
+                        "pill",
                         {
-                          "variant": "caption",
-                          "color": "muted",
-                          "className": "uppercase tracking-wide",
-                          "type": "typography",
-                          "content": "CPU"
-                        },
-                        {
-                          "type": "typography",
-                          "weight": "semibold",
-                          "variant": "h4",
-                          "className": "tabular-nums",
-                          "content": "@payload.cpu"
+                          "type": "badge",
+                          "label": "@pill.label",
+                          "variant": "@pill.tone",
+                          "size": "sm"
                         }
                       ],
-                      "type": "stack",
-                      "className": "min-w-[140px]",
-                      "direction": "vertical",
-                      "gap": "xs"
-                    },
+                      "gap": "sm",
+                      "entity": "@entity.statuses"
+                    }
+                  ],
+                  "type": "stack",
+                  "direction": "horizontal"
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                  "direction": "vertical",
+                  "gap": "none",
+                  "type": "stack",
+                  "className": "rounded-lg shadow-elevation-sm w-full",
+                  "children": [
                     {
-                      "gap": "xs",
+                      "type": "card",
                       "children": [
                         {
-                          "content": "Memory",
-                          "color": "muted",
-                          "variant": "caption",
-                          "className": "uppercase tracking-wide",
-                          "type": "typography"
-                        },
-                        {
-                          "weight": "semibold",
-                          "content": "@payload.memory",
-                          "type": "typography",
-                          "variant": "h4",
-                          "className": "tabular-nums"
+                          "children": [
+                            {
+                              "type": "stack",
+                              "gap": "sm",
+                              "direction": "horizontal",
+                              "align": "baseline",
+                              "justify": "between",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "weight": "semibold",
+                                      "variant": "h4",
+                                      "content": "@entity.chartTitle",
+                                      "type": "typography"
+                                    },
+                                    {
+                                      "content": "@entity.chartSubtitle",
+                                      "color": "muted",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    }
+                                  ],
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "xs"
+                                },
+                                {
+                                  "label": "@entity.period",
+                                  "type": "badge",
+                                  "size": "sm",
+                                  "variant": "default"
+                                }
+                              ]
+                            },
+                            {
+                              "showLegend": false,
+                              "chartType": "line",
+                              "height": 280.0,
+                              "type": "chart",
+                              "data": "@entity.chartData"
+                            }
+                          ],
+                          "type": "stack",
+                          "gap": "md",
+                          "direction": "vertical"
                         }
                       ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "className": "min-w-[140px]"
-                    },
-                    {
-                      "gap": "xs",
-                      "children": [
-                        {
-                          "type": "typography",
-                          "color": "muted",
-                          "variant": "caption",
-                          "content": "Requests/s",
-                          "className": "uppercase tracking-wide"
-                        },
-                        {
-                          "type": "typography",
-                          "content": "@payload.requests",
-                          "weight": "semibold",
-                          "className": "tabular-nums",
-                          "variant": "h4"
-                        }
-                      ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "className": "min-w-[140px]"
-                    },
-                    {
-                      "type": "stack",
-                      "className": "min-w-[140px]",
-                      "gap": "xs",
-                      "direction": "vertical",
-                      "children": [
-                        {
-                          "className": "uppercase tracking-wide",
-                          "color": "muted",
-                          "type": "typography",
-                          "variant": "caption",
-                          "content": "Error rate"
-                        },
-                        {
-                          "className": "tabular-nums",
-                          "variant": "h4",
-                          "weight": "semibold",
-                          "content": "@payload.errorRate",
-                          "type": "typography"
-                        }
-                      ]
-                    },
-                    {
-                      "children": [
-                        {
-                          "content": "Last seen",
-                          "className": "uppercase tracking-wide",
-                          "color": "muted",
-                          "type": "typography",
-                          "variant": "caption"
-                        },
-                        {
-                          "type": "typography",
-                          "content": "@payload.lastSeen",
-                          "variant": "body"
-                        }
-                      ],
-                      "type": "stack",
-                      "gap": "xs",
-                      "direction": "vertical",
-                      "className": "min-w-[140px]"
+                      "padding": "lg",
+                      "variant": "elevated"
                     }
                   ]
                 }
               ],
               "type": "stack",
-              "direction": "vertical",
-              "className": "max-w-5xl mx-auto px-card-md py-card-md",
-              "gap": "md"
+              "gap": "sm",
+              "direction": "vertical"
             }
           }
         }

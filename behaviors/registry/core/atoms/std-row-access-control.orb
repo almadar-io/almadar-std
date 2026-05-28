@@ -1,7 +1,7 @@
 {
   "name": "std-row-access-control",
   "version": "1.0.0",
-  "description": "std-row-access-control — row-level access control gate. Listens for `RowsLoaded` (rename via traitOverrides.events to the consumer's load event), filters `@payload.data` by `@user.id` (when `ownerField` is set) and/or `@user.role` (when `visibleRoles` is non-empty), re-emits `RowsFiltered` for downstream consumers (rename to wire into the UI atom's listen). Composable via `extraTraits` to interpose between a data fetch and a list/grid UI.",
+  "description": "std-row-access-control — row-level access control gate / ownership filter / role-based row visibility. Use when a user voices that only certain users should see or edit certain records (only the owner can edit, private to owner, owner-only visibility, only see your own records, role-based visibility, admin-only access, visible to admins only, restricted to role, permission gate, ownership scoping, hide from other users, only show mine). Listens for `RowsLoaded` (rename via traitOverrides.events to the consumer's load event), filters `@payload.data` by `@user.id` (when `ownerField` is set) and/or `@user.role` (when `visibleRoles` is non-empty), re-emits `RowsFiltered` for downstream consumers (rename to wire into the UI atom's listen). Composable via `extraTraits` to interpose between a data fetch and a list/grid UI.",
   "orbitals": [
     {
       "name": "RowAccessControlOrbital",
@@ -21,8 +21,8 @@
             "items": {
               "type": "object",
               "properties": {
-                "id": {
-                  "name": "id",
+                "value": {
+                  "name": "value",
                   "type": "string",
                   "required": false
                 },
@@ -31,13 +31,13 @@
                   "type": "string",
                   "required": true
                 },
-                "value": {
-                  "name": "value",
+                "icon": {
+                  "name": "icon",
                   "type": "string",
                   "required": false
                 },
-                "icon": {
-                  "name": "icon",
+                "id": {
+                  "name": "id",
                   "type": "string",
                   "required": false
                 }
@@ -227,13 +227,6 @@
             ]
           },
           "config": {
-            "ownerField": {
-              "type": "string",
-              "default": "",
-              "label": "Owner field",
-              "description": "Row field holding the owning user id (blank disables owner filter)",
-              "tier": "domain"
-            },
             "visibleRoles": {
               "type": "[string]",
               "default": [],
@@ -243,6 +236,13 @@
               "items": {
                 "type": "string"
               }
+            },
+            "ownerField": {
+              "type": "string",
+              "default": "",
+              "label": "Owner field",
+              "description": "Row field holding the owning user id (blank disables owner filter)",
+              "tier": "domain"
             }
           },
           "scope": "instance"

@@ -1,7 +1,7 @@
 {
   "name": "std-browse-triage",
   "version": "1.0.0",
-  "description": "Triage browse — Linear/Gmail inbox-style prioritized list. Compact horizontal rows scan status → title → context fast: small status badge, primary title (truncate), one-line muted description (truncate), assignee badge, due-date chip. Top filter-group narrows by status. Same BrowseItemBrowse trait, state machine, emits, and listens as std-browse — only the bodyContent tree differs.",
+  "description": "Work-queue triage — prioritized rows with leading queue-position pill, priority badge, and per-row Accept/Defer/Escalate action buttons.",
   "orbitals": [
     {
       "name": "TriageBrowseOrbital",
@@ -30,17 +30,6 @@
             "type": "string"
           },
           {
-            "name": "status",
-            "type": "string",
-            "default": "new",
-            "values": [
-              "new",
-              "in_progress",
-              "done",
-              "blocked"
-            ]
-          },
-          {
             "name": "priority",
             "type": "string",
             "default": "medium",
@@ -51,11 +40,11 @@
             ]
           },
           {
-            "name": "assignee",
+            "name": "queueIndex",
             "type": "string"
           },
           {
-            "name": "dueAt",
+            "name": "assignee",
             "type": "string"
           },
           {
@@ -71,134 +60,178 @@
           "linkedEntity": "TriageItem",
           "config": {
             "bodyContent": {
-              "direction": "vertical",
-              "type": "stack",
-              "className": "max-w-4xl mx-auto",
-              "gap": "none",
               "children": [
                 {
-                  "direction": "horizontal",
+                  "gap": "sm",
+                  "justify": "between",
+                  "type": "stack",
+                  "className": "px-1",
                   "children": [
                     {
-                      "filters": [
-                        {
-                          "type": "select",
-                          "label": "Status",
-                          "field": "status",
-                          "options": [
-                            "new",
-                            "in_progress",
-                            "done",
-                            "blocked"
-                          ]
-                        },
-                        {
-                          "type": "select",
-                          "label": "Priority",
-                          "options": [
-                            "low",
-                            "medium",
-                            "high"
-                          ],
-                          "field": "priority"
-                        }
-                      ],
-                      "type": "filter-group",
-                      "entity": "TriageItem"
+                      "variant": "overline",
+                      "content": "Triage queue",
+                      "type": "typography",
+                      "color": "muted"
+                    },
+                    {
+                      "size": "sm",
+                      "variant": "neutral",
+                      "label": "@payload.data.length",
+                      "type": "badge"
                     }
                   ],
-                  "gap": "sm",
-                  "className": "px-card-md py-2 border-b border-[var(--color-border)] sticky top-0 bg-[var(--color-surface)] z-10",
-                  "align": "center",
-                  "type": "stack"
+                  "direction": "horizontal",
+                  "align": "center"
                 },
                 {
-                  "type": "data-list",
-                  "gap": "none",
+                  "type": "divider"
+                },
+                {
+                  "variant": "card",
                   "entity": "@payload.data",
+                  "gap": "md",
+                  "fields": [],
                   "renderItem": [
                     "fn",
                     "item",
                     {
-                      "className": "px-card-md py-2 border-b border-[var(--color-border)] hover:bg-muted cursor-pointer",
+                      "look": "flat-bordered",
+                      "type": "card",
                       "children": [
                         {
-                          "label": "@item.status",
-                          "variant": "info",
-                          "type": "badge",
-                          "size": "sm"
-                        },
-                        {
-                          "type": "stack",
-                          "className": "flex-1 min-w-0",
-                          "direction": "vertical",
-                          "gap": "none",
                           "children": [
                             {
-                              "content": "@item.name",
-                              "type": "typography",
-                              "className": "truncate",
-                              "weight": "medium",
-                              "variant": "body"
+                              "justify": "center",
+                              "className": "shrink-0 w-10 h-10 rounded-full bg-[var(--color-primary-soft)] text-[var(--color-primary-strong)] font-semibold",
+                              "direction": "vertical",
+                              "children": [
+                                {
+                                  "content": "@item.queueIndex",
+                                  "type": "typography",
+                                  "weight": "bold",
+                                  "variant": "caption"
+                                }
+                              ],
+                              "type": "stack",
+                              "align": "center",
+                              "gap": "none"
                             },
-                            {
-                              "variant": "caption",
-                              "className": "truncate",
-                              "color": "muted",
-                              "content": "@item.description",
-                              "type": "typography"
-                            }
-                          ]
-                        },
-                        {
-                          "align": "center",
-                          "direction": "horizontal",
-                          "className": "shrink-0",
-                          "gap": "xs",
-                          "type": "stack",
-                          "children": [
                             {
                               "type": "icon",
-                              "name": "user"
+                              "name": "flag",
+                              "className": "shrink-0 text-[var(--color-text-muted)]"
                             },
                             {
-                              "variant": "caption",
-                              "type": "typography",
-                              "content": "@item.assignee",
-                              "color": "muted"
+                              "direction": "vertical",
+                              "className": "flex-1 min-w-0",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "direction": "horizontal",
+                                  "gap": "xs",
+                                  "className": "flex-wrap",
+                                  "children": [
+                                    {
+                                      "variant": "body",
+                                      "className": "truncate",
+                                      "type": "typography",
+                                      "content": "@item.name",
+                                      "weight": "medium"
+                                    },
+                                    {
+                                      "variant": "warning",
+                                      "type": "badge",
+                                      "label": "@item.priority",
+                                      "size": "sm"
+                                    }
+                                  ],
+                                  "type": "stack",
+                                  "align": "center"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@item.description",
+                                  "variant": "caption",
+                                  "className": "truncate",
+                                  "color": "muted"
+                                },
+                                {
+                                  "type": "stack",
+                                  "align": "center",
+                                  "direction": "horizontal",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "className": "text-[var(--color-text-muted)]",
+                                      "name": "user"
+                                    },
+                                    {
+                                      "content": "@item.assignee",
+                                      "color": "muted",
+                                      "variant": "caption",
+                                      "type": "typography"
+                                    }
+                                  ],
+                                  "gap": "xs",
+                                  "className": "pt-0.5"
+                                }
+                              ],
+                              "gap": "xs"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "variant": "ghost",
+                                  "action": "DEFER",
+                                  "size": "sm",
+                                  "label": "Defer"
+                                },
+                                {
+                                  "type": "button",
+                                  "variant": "warning",
+                                  "action": "ESCALATE",
+                                  "label": "Escalate",
+                                  "size": "sm"
+                                },
+                                {
+                                  "size": "sm",
+                                  "type": "button",
+                                  "label": "Accept",
+                                  "variant": "primary",
+                                  "action": "ACCEPT"
+                                }
+                              ],
+                              "gap": "xs",
+                              "align": "center",
+                              "type": "stack",
+                              "className": "shrink-0 opacity-60 group-hover:opacity-100 transition-opacity duration-normal",
+                              "direction": "horizontal"
                             }
-                          ]
-                        },
-                        {
+                          ],
                           "direction": "horizontal",
-                          "align": "center",
                           "type": "stack",
-                          "gap": "xs",
-                          "className": "shrink-0 px-2 py-0.5 border rounded",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "calendar"
-                            },
-                            {
-                              "content": "@item.dueAt",
-                              "variant": "caption",
-                              "type": "typography"
-                            }
-                          ]
+                          "className": "p-card-md",
+                          "align": "center",
+                          "gap": "md"
                         }
                       ],
-                      "type": "stack",
-                      "direction": "horizontal",
-                      "gap": "md",
-                      "align": "center"
+                      "className": "group rounded-md bg-[var(--color-card)] border border-[var(--color-border)] shadow-sm transition-all duration-normal hover:shadow-hover hover:border-[var(--color-border-strong)] hover:-translate-y-px"
                     }
                   ],
-                  "selectable": true,
-                  "fields": []
+                  "type": "data-list"
                 }
-              ]
+              ],
+              "className": "max-w-3xl mx-auto p-card-md",
+              "type": "stack",
+              "direction": "vertical",
+              "gap": "md"
             }
+          },
+          "events": {
+            "DELETE": "ESCALATE",
+            "EDIT": "DEFER",
+            "VIEW": "ACCEPT"
           }
         }
       ],

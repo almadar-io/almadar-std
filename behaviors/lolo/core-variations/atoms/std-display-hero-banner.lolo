@@ -1,45 +1,43 @@
-app std-display-hero-banner "1.0.0"
-"Hero-banner display — Notion / Medium-style record detail. Oversized title typography centered above a muted subtitle and a horizontal meta strip (author, date, tags); the content body renders below in a comfortable reading column. Best for notes, articles, blog posts, legal-case headers, and listing detail pages. Same DisplayItemDisplay trait, same state machine, same emits/listens as std-display — only bodyContent differs."
+app std-display-hero-banner "2.0.0"
+"Hero marquee — centered headline + lead + single primary CTA on a gradient backdrop card. Landing-page above-the-fold."
 
 orbital HeroBannerDisplayOrbital {
   uses Display from "std/behaviors/std-display"
 
-  entity HeroDocument [runtime] {
-    id          : string!
-    title       : string!
-    subtitle    : string
-    author      : string
-    publishedAt : string
-    category    : string
-    body        : string
+  entity HeroPromo [runtime] {
+    id        : string!
+    eyebrow   : string                = "Announcing"
+    headline  : string!
+    lead      : string
+    ctaLabel  : string                = "Get started"
+    ctaEvent  : string                = "PRIMARY_CTA"
   }
 
-  trait HeroBannerDisplay = Display.traits.DisplayItemDisplay -> HeroDocument {
+  trait HeroBannerDisplay = Display.traits.DisplayItemDisplay -> HeroPromo {
     config: {
       bodyContent: {
         type: "stack",
         direction: "vertical",
-        gap: "lg",
-        className: "max-w-3xl mx-auto px-card-md py-section",
-        children: [
-          { type: "stack", direction: "vertical", gap: "md", align: "center", className: "text-center", children: [
-            { type: "badge", label: "@payload.category", variant: "neutral" },
-            { type: "typography", variant: "h1", weight: "bold", content: "@payload.title", className: "text-5xl tracking-tight" },
-            { type: "typography", variant: "body", color: "muted", content: "@payload.subtitle", className: "text-xl max-w-2xl" }
-          ]},
-          { type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "center", className: "pt-2 pb-card-md border-b border-[var(--color-border)]", children: [
-            { type: "stack", direction: "horizontal", gap: "xs", align: "center", children: [
-              { type: "icon", name: "user" },
-              { type: "typography", variant: "caption", color: "muted", content: "@payload.author" }
-            ]},
-            { type: "typography", variant: "caption", color: "muted", content: "·" },
-            { type: "stack", direction: "horizontal", gap: "xs", align: "center", children: [
-              { type: "icon", name: "calendar" },
-              { type: "typography", variant: "caption", color: "muted", content: "@payload.publishedAt" }
-            ]}
-          ]},
-          { type: "typography", variant: "body", content: "@payload.body", className: "whitespace-pre-wrap break-words leading-relaxed text-lg" }
-        ]
+        align: "center",
+        className: "w-full max-w-5xl mx-auto rounded-xl bg-gradient-to-br from-[var(--color-surface)] via-[var(--color-background)] to-[var(--color-muted)]",
+        children: [{
+          type: "card",
+          look: "elevated",
+          padding: "lg",
+          children: [{
+            type: "stack",
+            direction: "vertical",
+            gap: "xl",
+            align: "center",
+            className: "text-center py-section px-card-md",
+            children: [
+              { type: "badge", label: "@entity.eyebrow", variant: "neutral", size: "sm" },
+              { type: "typography", variant: "h1", weight: "bold", content: "@entity.headline", className: "tracking-tight text-balance max-w-3xl" },
+              { type: "typography", variant: "body", color: "muted", content: "@entity.lead", className: "text-lg max-w-2xl leading-relaxed" },
+              { type: "button", label: "@entity.ctaLabel", variant: "primary", size: "lg", action: "@entity.ctaEvent" }
+            ]
+          }]
+        }]
       }
     }
   }

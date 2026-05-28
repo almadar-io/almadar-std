@@ -112,16 +112,16 @@ export interface StdBoardBoardItemsSaveFailedPayload {
 export interface StdBoardConfig {
   /** Default: `"elevated"` */
   cardLook?: 'elevated' | 'flat-bordered' | 'borderless-divider' | 'ticket' | 'invoice' | 'chip' | 'tile-image-first';
-  /** Default: `[{"label":"To Do","variant":"default","key":"todo","icon":"circle"},{"icon":"circle-dot","label":"In Progress","key":"doing","variant":"primary"},{"variant":"success","key":"done","label":"Done","icon":"check-circle"}]` */
-  columns?: EntityRow[];
-  /** Default: `["title","description","stage","notes"]` */
-  formFields?: string[];
-  /** Default: `{"children":[{"align":"center","direction":"horizontal","type":"stack","gap":"sm","children":[{"type":"icon","name":"kanban-square"},{"variant":"h3","type":"typography","content":"@config.title"}]},{"type":"divider"},{"entity":"@entity.boards","gap":"md","dndRoot":true,"cols":"@config.gridCols","fields":[],"type":"data-grid","renderItem":["fn","col",{"children":[{"children":[{"align":"center","children":[{"type":"icon","name":"@col.icon"},{"variant":"h4","type":"typography","content":"@col.label"},{"variant":"@col.variant","type":"badge","label":"@col.count"}],"gap":"xs","direction":"horizontal","type":"stack"},{"fields":[],"dragGroup":"@col.key","sortable":true,"type":"data-list","reorderEvent":"REORDER_CARD","accepts":"*","dropEvent":"MOVE_CARD","entity":"@col.items","gap":"sm","renderItem":["fn","item",{"type":"card","look":"@config.cardLook","children":[{"children":[{"content":"@item.title","variant":"h4","type":"typography"},{"color":"muted","type":"typography","content":"@item.description","variant":"caption"},{"align":"center","gap":"xs","direction":"horizontal","type":"stack","children":[{"action":"OPEN_CARD","variant":"ghost","label":"Open","actionPayload":{"row":"@item","id":"@item.id"},"icon":"arrow-right","type":"button"}]}],"type":"stack","gap":"xs","direction":"vertical"}]}],"positionEvent":"REORDER_POSITION"}],"type":"stack","gap":"sm","direction":"vertical"}],"type":"card","look":"@config.cardLook"}]},{"label":"Add item","action":"ADD_CARD","type":"floating-action-button","icon":"plus","variant":"primary"}],"gap":"md","type":"stack","direction":"vertical"}` */
-  bodyContent?: unknown;
-  /** Default: `3` */
-  gridCols?: number;
   /** Default: `"Board"` */
   title?: string;
+  /** Default: `[{"icon":"circle","variant":"default","key":"todo","label":"To Do"},{"key":"doing","icon":"circle-dot","label":"In Progress","variant":"primary"},{"key":"done","label":"Done","variant":"success","icon":"check-circle"}]` */
+  columns?: EntityRow[];
+  /** Default: `3` */
+  gridCols?: number;
+  /** Default: `["title","description","stage","notes"]` */
+  formFields?: string[];
+  /** Default: `{"gap":"md","type":"stack","direction":"vertical","children":[{"direction":"horizontal","type":"stack","gap":"sm","children":[{"name":"kanban-square","type":"icon"},{"type":"typography","content":"@config.title","variant":"h3"}],"align":"center"},{"type":"divider"},{"type":"data-grid","cols":"@config.gridCols","renderItem":["fn","col",{"look":"@config.cardLook","type":"card","children":[{"type":"stack","direction":"vertical","children":[{"children":[{"type":"icon","name":"@col.icon"},{"type":"typography","content":"@col.label","variant":"h4"},{"variant":"@col.variant","type":"badge","label":"@col.count"}],"gap":"xs","direction":"horizontal","type":"stack","align":"center"},{"sortable":true,"fields":[],"reorderEvent":"REORDER_CARD","positionEvent":"REORDER_POSITION","type":"data-list","entity":"@col.items","dropEvent":"MOVE_CARD","dragGroup":"@col.key","gap":"sm","accepts":"*","renderItem":["fn","item",{"children":[{"gap":"xs","direction":"vertical","type":"stack","children":[{"content":"@item.title","type":"typography","variant":"h4"},{"color":"muted","type":"typography","variant":"caption","content":"@item.description"},{"direction":"horizontal","gap":"xs","align":"center","children":[{"actionPayload":{"row":"@item","id":"@item.id"},"variant":"ghost","icon":"arrow-right","label":"Open","action":"OPEN_CARD","type":"button"}],"type":"stack"}]}],"look":"@config.cardLook","type":"card"}]}],"gap":"sm"}]}],"dndRoot":true,"gap":"md","entity":"@entity.boards","fields":[]},{"label":"Add item","icon":"plus","variant":"primary","type":"floating-action-button","action":"ADD_CARD"}]}` */
+  bodyContent?: unknown;
 }
 
 /**

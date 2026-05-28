@@ -1,5 +1,5 @@
 {
-  "generatedFromStdVersion": "16.4.0",
+  "generatedFromStdVersion": "16.4.2",
   "signatures": [
     {
       "organism": "std-agent-activity-log",
@@ -24897,52 +24897,54 @@
               "key": "bodyContent",
               "type": "render-ui",
               "default": {
+                "gap": "md",
+                "type": "stack",
+                "direction": "vertical",
                 "children": [
                   {
-                    "align": "center",
                     "direction": "horizontal",
                     "type": "stack",
                     "gap": "sm",
                     "children": [
                       {
-                        "type": "icon",
-                        "name": "kanban-square"
+                        "name": "kanban-square",
+                        "type": "icon"
                       },
                       {
-                        "variant": "h3",
                         "type": "typography",
-                        "content": "@config.title"
+                        "content": "@config.title",
+                        "variant": "h3"
                       }
-                    ]
+                    ],
+                    "align": "center"
                   },
                   {
                     "type": "divider"
                   },
                   {
-                    "entity": "@entity.boards",
-                    "gap": "md",
-                    "dndRoot": true,
-                    "cols": "@config.gridCols",
-                    "fields": [],
                     "type": "data-grid",
+                    "cols": "@config.gridCols",
                     "renderItem": [
                       "fn",
                       "col",
                       {
+                        "look": "@config.cardLook",
+                        "type": "card",
                         "children": [
                           {
+                            "type": "stack",
+                            "direction": "vertical",
                             "children": [
                               {
-                                "align": "center",
                                 "children": [
                                   {
                                     "type": "icon",
                                     "name": "@col.icon"
                                   },
                                   {
-                                    "variant": "h4",
                                     "type": "typography",
-                                    "content": "@col.label"
+                                    "content": "@col.label",
+                                    "variant": "h4"
                                   },
                                   {
                                     "variant": "@col.variant",
@@ -24952,89 +24954,87 @@
                                 ],
                                 "gap": "xs",
                                 "direction": "horizontal",
-                                "type": "stack"
+                                "type": "stack",
+                                "align": "center"
                               },
                               {
-                                "fields": [],
-                                "dragGroup": "@col.key",
                                 "sortable": true,
-                                "type": "data-list",
+                                "fields": [],
                                 "reorderEvent": "REORDER_CARD",
-                                "accepts": "*",
-                                "dropEvent": "MOVE_CARD",
+                                "positionEvent": "REORDER_POSITION",
+                                "type": "data-list",
                                 "entity": "@col.items",
+                                "dropEvent": "MOVE_CARD",
+                                "dragGroup": "@col.key",
                                 "gap": "sm",
+                                "accepts": "*",
                                 "renderItem": [
                                   "fn",
                                   "item",
                                   {
-                                    "type": "card",
-                                    "look": "@config.cardLook",
                                     "children": [
                                       {
+                                        "gap": "xs",
+                                        "direction": "vertical",
+                                        "type": "stack",
                                         "children": [
                                           {
                                             "content": "@item.title",
-                                            "variant": "h4",
-                                            "type": "typography"
+                                            "type": "typography",
+                                            "variant": "h4"
                                           },
                                           {
                                             "color": "muted",
                                             "type": "typography",
-                                            "content": "@item.description",
-                                            "variant": "caption"
+                                            "variant": "caption",
+                                            "content": "@item.description"
                                           },
                                           {
-                                            "align": "center",
-                                            "gap": "xs",
                                             "direction": "horizontal",
-                                            "type": "stack",
+                                            "gap": "xs",
+                                            "align": "center",
                                             "children": [
                                               {
-                                                "action": "OPEN_CARD",
-                                                "variant": "ghost",
-                                                "label": "Open",
                                                 "actionPayload": {
                                                   "row": "@item",
                                                   "id": "@item.id"
                                                 },
+                                                "variant": "ghost",
                                                 "icon": "arrow-right",
+                                                "label": "Open",
+                                                "action": "OPEN_CARD",
                                                 "type": "button"
                                               }
-                                            ]
+                                            ],
+                                            "type": "stack"
                                           }
-                                        ],
-                                        "type": "stack",
-                                        "gap": "xs",
-                                        "direction": "vertical"
+                                        ]
                                       }
-                                    ]
+                                    ],
+                                    "look": "@config.cardLook",
+                                    "type": "card"
                                   }
-                                ],
-                                "positionEvent": "REORDER_POSITION"
+                                ]
                               }
                             ],
-                            "type": "stack",
-                            "gap": "sm",
-                            "direction": "vertical"
+                            "gap": "sm"
                           }
-                        ],
-                        "type": "card",
-                        "look": "@config.cardLook"
+                        ]
                       }
-                    ]
+                    ],
+                    "dndRoot": true,
+                    "gap": "md",
+                    "entity": "@entity.boards",
+                    "fields": []
                   },
                   {
                     "label": "Add item",
-                    "action": "ADD_CARD",
-                    "type": "floating-action-button",
                     "icon": "plus",
-                    "variant": "primary"
+                    "variant": "primary",
+                    "type": "floating-action-button",
+                    "action": "ADD_CARD"
                   }
-                ],
-                "gap": "md",
-                "type": "stack",
-                "direction": "vertical"
+                ]
               },
               "label": "Body content tree",
               "description": "Render-ui SExpr rendered after the board loads. Default is the canonical column data-grid with nested per-column data-lists. Layer 3 variants override this with their own tree (swim-lanes, timeline-roadmap, etc.) while inheriting the same trait, state machine, emits, and listens.",
@@ -25062,21 +25062,21 @@
               "type": "[ColumnSpec]",
               "default": [
                 {
-                  "label": "To Do",
+                  "icon": "circle",
                   "variant": "default",
                   "key": "todo",
-                  "icon": "circle"
+                  "label": "To Do"
                 },
                 {
+                  "key": "doing",
                   "icon": "circle-dot",
                   "label": "In Progress",
-                  "key": "doing",
                   "variant": "primary"
                 },
                 {
-                  "variant": "success",
                   "key": "done",
                   "label": "Done",
+                  "variant": "success",
                   "icon": "check-circle"
                 }
               ],
@@ -25085,14 +25085,14 @@
               "tier": "domain",
               "items": {
                 "properties": {
-                  "label": {
-                    "name": "label",
+                  "key": {
+                    "name": "key",
                     "required": true,
                     "type": "string"
                   },
-                  "icon": {
-                    "name": "icon",
-                    "required": false,
+                  "label": {
+                    "name": "label",
+                    "required": true,
                     "type": "string"
                   },
                   "variant": {
@@ -25100,9 +25100,9 @@
                     "required": false,
                     "type": "string"
                   },
-                  "key": {
-                    "name": "key",
-                    "required": true,
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
                     "type": "string"
                   }
                 },
@@ -25142,7 +25142,20 @@
               "tier": "presentation"
             }
           ],
-          "capabilities": []
+          "capabilities": [],
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": [
+              "boards",
+              "currentDescription",
+              "currentId",
+              "currentNotes",
+              "currentStage",
+              "currentTitle",
+              "errorMessage"
+            ]
+          }
         }
       ],
       "pages": [
@@ -25386,52 +25399,54 @@
                       "bodyContent": {
                         "type": "object",
                         "default": {
+                          "gap": "md",
+                          "type": "stack",
+                          "direction": "vertical",
                           "children": [
                             {
-                              "align": "center",
                               "direction": "horizontal",
                               "type": "stack",
                               "gap": "sm",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "kanban-square"
+                                  "name": "kanban-square",
+                                  "type": "icon"
                                 },
                                 {
-                                  "variant": "h3",
                                   "type": "typography",
-                                  "content": "@config.title"
+                                  "content": "@config.title",
+                                  "variant": "h3"
                                 }
-                              ]
+                              ],
+                              "align": "center"
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "entity": "@entity.boards",
-                              "gap": "md",
-                              "dndRoot": true,
-                              "cols": "@config.gridCols",
-                              "fields": [],
                               "type": "data-grid",
+                              "cols": "@config.gridCols",
                               "renderItem": [
                                 "fn",
                                 "col",
                                 {
+                                  "look": "@config.cardLook",
+                                  "type": "card",
                                   "children": [
                                     {
+                                      "type": "stack",
+                                      "direction": "vertical",
                                       "children": [
                                         {
-                                          "align": "center",
                                           "children": [
                                             {
                                               "type": "icon",
                                               "name": "@col.icon"
                                             },
                                             {
-                                              "variant": "h4",
                                               "type": "typography",
-                                              "content": "@col.label"
+                                              "content": "@col.label",
+                                              "variant": "h4"
                                             },
                                             {
                                               "variant": "@col.variant",
@@ -25441,89 +25456,87 @@
                                           ],
                                           "gap": "xs",
                                           "direction": "horizontal",
-                                          "type": "stack"
+                                          "type": "stack",
+                                          "align": "center"
                                         },
                                         {
-                                          "fields": [],
-                                          "dragGroup": "@col.key",
                                           "sortable": true,
-                                          "type": "data-list",
+                                          "fields": [],
                                           "reorderEvent": "REORDER_CARD",
-                                          "accepts": "*",
-                                          "dropEvent": "MOVE_CARD",
+                                          "positionEvent": "REORDER_POSITION",
+                                          "type": "data-list",
                                           "entity": "@col.items",
+                                          "dropEvent": "MOVE_CARD",
+                                          "dragGroup": "@col.key",
                                           "gap": "sm",
+                                          "accepts": "*",
                                           "renderItem": [
                                             "fn",
                                             "item",
                                             {
-                                              "type": "card",
-                                              "look": "@config.cardLook",
                                               "children": [
                                                 {
+                                                  "gap": "xs",
+                                                  "direction": "vertical",
+                                                  "type": "stack",
                                                   "children": [
                                                     {
                                                       "content": "@item.title",
-                                                      "variant": "h4",
-                                                      "type": "typography"
+                                                      "type": "typography",
+                                                      "variant": "h4"
                                                     },
                                                     {
                                                       "color": "muted",
                                                       "type": "typography",
-                                                      "content": "@item.description",
-                                                      "variant": "caption"
+                                                      "variant": "caption",
+                                                      "content": "@item.description"
                                                     },
                                                     {
-                                                      "align": "center",
-                                                      "gap": "xs",
                                                       "direction": "horizontal",
-                                                      "type": "stack",
+                                                      "gap": "xs",
+                                                      "align": "center",
                                                       "children": [
                                                         {
-                                                          "action": "OPEN_CARD",
-                                                          "variant": "ghost",
-                                                          "label": "Open",
                                                           "actionPayload": {
                                                             "row": "@item",
                                                             "id": "@item.id"
                                                           },
+                                                          "variant": "ghost",
                                                           "icon": "arrow-right",
+                                                          "label": "Open",
+                                                          "action": "OPEN_CARD",
                                                           "type": "button"
                                                         }
-                                                      ]
+                                                      ],
+                                                      "type": "stack"
                                                     }
-                                                  ],
-                                                  "type": "stack",
-                                                  "gap": "xs",
-                                                  "direction": "vertical"
+                                                  ]
                                                 }
-                                              ]
+                                              ],
+                                              "look": "@config.cardLook",
+                                              "type": "card"
                                             }
-                                          ],
-                                          "positionEvent": "REORDER_POSITION"
+                                          ]
                                         }
                                       ],
-                                      "type": "stack",
-                                      "gap": "sm",
-                                      "direction": "vertical"
+                                      "gap": "sm"
                                     }
-                                  ],
-                                  "type": "card",
-                                  "look": "@config.cardLook"
+                                  ]
                                 }
-                              ]
+                              ],
+                              "dndRoot": true,
+                              "gap": "md",
+                              "entity": "@entity.boards",
+                              "fields": []
                             },
                             {
                               "label": "Add item",
-                              "action": "ADD_CARD",
-                              "type": "floating-action-button",
                               "icon": "plus",
-                              "variant": "primary"
+                              "variant": "primary",
+                              "type": "floating-action-button",
+                              "action": "ADD_CARD"
                             }
-                          ],
-                          "gap": "md",
-                          "type": "stack",
-                          "direction": "vertical"
+                          ]
                         },
                         "description": "Render-ui SExpr rendered after the board loads. Default is the canonical column data-grid with nested per-column data-lists. Layer 3 variants override this with their own tree (swim-lanes, timeline-roadmap, etc.) while inheriting the same trait, state machine, emits, and listens.",
                         "x-label": "Body content tree",
@@ -25552,21 +25565,21 @@
                         },
                         "default": [
                           {
-                            "label": "To Do",
+                            "icon": "circle",
                             "variant": "default",
                             "key": "todo",
-                            "icon": "circle"
+                            "label": "To Do"
                           },
                           {
+                            "key": "doing",
                             "icon": "circle-dot",
                             "label": "In Progress",
-                            "key": "doing",
                             "variant": "primary"
                           },
                           {
-                            "variant": "success",
                             "key": "done",
                             "label": "Done",
+                            "variant": "success",
                             "icon": "check-circle"
                           }
                         ],
@@ -25604,6 +25617,10 @@
                         "x-tier": "presentation"
                       }
                     }
+                  },
+                  "linkedEntity": {
+                    "type": "string",
+                    "description": "Rebind this trait to a different entity in the organism (rewrites every @entity.* / ref / fetch / persist binding inside it)."
                   },
                   "name": {
                     "type": "string",
@@ -29918,22 +29935,17 @@
               "required": false
             },
             {
-              "name": "status",
-              "type": "string",
-              "required": false
-            },
-            {
               "name": "priority",
               "type": "string",
               "required": false
             },
             {
-              "name": "assignee",
+              "name": "queueIndex",
               "type": "string",
               "required": false
             },
             {
-              "name": "dueAt",
+              "name": "assignee",
               "type": "string",
               "required": false
             }
@@ -31527,6 +31539,11 @@
               "name": "duration",
               "type": "number",
               "required": false
+            },
+            {
+              "name": "dateGroup",
+              "type": "string",
+              "required": false
             }
           ],
           "persistence": "runtime"
@@ -31937,6 +31954,11 @@
             {
               "name": "duration",
               "type": "number",
+              "required": false
+            },
+            {
+              "name": "weekday",
+              "type": "string",
               "required": false
             }
           ],
@@ -34278,31 +34300,31 @@
               "key": "bodyContent",
               "type": "render-ui",
               "default": {
-                "type": "@config.viewPattern",
+                "fields": [],
+                "entity": "@entity.cards",
                 "renderItem": [
                   "fn",
                   "card",
                   {
-                    "prefix": "@card.prefix",
-                    "value": "@card.value",
-                    "format": "@card.format",
-                    "trendFormat": "@card.trendFormat",
-                    "max": "@card.max",
-                    "type": "stat-display",
-                    "icon": "@card.icon",
-                    "variant": "@card.variant",
-                    "sparklineData": "@card.sparklineData",
-                    "suffix": "@card.suffix",
                     "look": "@config.statLook",
-                    "label": "@card.label",
-                    "clickEvent": "@card.clickEvent",
-                    "trendPolarity": "@card.trendPolarity",
+                    "format": "@card.format",
+                    "sparklineData": "@card.sparklineData",
+                    "prefix": "@card.prefix",
+                    "max": "@card.max",
                     "target": "@card.target",
-                    "trend": "@card.trend"
+                    "variant": "@card.variant",
+                    "trend": "@card.trend",
+                    "value": "@card.value",
+                    "icon": "@card.icon",
+                    "trendFormat": "@card.trendFormat",
+                    "type": "stat-display",
+                    "trendPolarity": "@card.trendPolarity",
+                    "clickEvent": "@card.clickEvent",
+                    "suffix": "@card.suffix",
+                    "label": "@card.label"
                   }
                 ],
-                "entity": "@entity.cards",
-                "fields": []
+                "type": "@config.viewPattern"
               },
               "label": "Body content tree",
               "description": "Render-ui SExpr rendered after metrics aggregate. Default is the canonical data-grid call mapping @entity.cards through stat-display. Layer 3 variants override this with their own tree (hero numbers, sparkline rows, tile splashes) to deliver entirely different KPI UX while inheriting the same trait, state machine, aggregation pipeline, and listens.",
@@ -34356,74 +34378,9 @@
               ],
               "items": {
                 "properties": {
-                  "field": {
-                    "name": "field",
+                  "prefix": {
+                    "name": "prefix",
                     "required": false,
-                    "type": "string"
-                  },
-                  "trendFormat": {
-                    "name": "trendFormat",
-                    "required": false,
-                    "type": "string",
-                    "values": [
-                      "absolute",
-                      "percent"
-                    ]
-                  },
-                  "value": {
-                    "name": "value",
-                    "required": false,
-                    "type": "number"
-                  },
-                  "max": {
-                    "name": "max",
-                    "required": false,
-                    "type": "number"
-                  },
-                  "sparklineData": {
-                    "name": "sparklineData",
-                    "required": false,
-                    "type": "array",
-                    "items": {
-                      "type": "number"
-                    }
-                  },
-                  "clickEvent": {
-                    "name": "clickEvent",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "trend": {
-                    "name": "trend",
-                    "required": false,
-                    "type": "number"
-                  },
-                  "format": {
-                    "name": "format",
-                    "required": false,
-                    "type": "string",
-                    "values": [
-                      "number",
-                      "currency",
-                      "percent"
-                    ]
-                  },
-                  "aggregation": {
-                    "name": "aggregation",
-                    "required": false,
-                    "type": "string",
-                    "values": [
-                      "count",
-                      "sum",
-                      "avg",
-                      "min",
-                      "max",
-                      "variance"
-                    ]
-                  },
-                  "label": {
-                    "name": "label",
-                    "required": true,
                     "type": "string"
                   },
                   "target": {
@@ -34444,18 +34401,78 @@
                       "info"
                     ]
                   },
-                  "icon": {
-                    "name": "icon",
-                    "required": false,
-                    "type": "string"
-                  },
                   "suffix": {
                     "name": "suffix",
                     "required": false,
                     "type": "string"
                   },
-                  "prefix": {
-                    "name": "prefix",
+                  "value": {
+                    "name": "value",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "format": {
+                    "name": "format",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "number",
+                      "currency",
+                      "percent"
+                    ]
+                  },
+                  "trendFormat": {
+                    "name": "trendFormat",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "absolute",
+                      "percent"
+                    ]
+                  },
+                  "trend": {
+                    "name": "trend",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "field": {
+                    "name": "field",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "aggregation": {
+                    "name": "aggregation",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "count",
+                      "sum",
+                      "avg",
+                      "min",
+                      "max",
+                      "variance"
+                    ]
+                  },
+                  "max": {
+                    "name": "max",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "sparklineData": {
+                    "name": "sparklineData",
+                    "required": false,
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    }
+                  },
+                  "clickEvent": {
+                    "name": "clickEvent",
                     "required": false,
                     "type": "string"
                   },
@@ -34467,6 +34484,11 @@
                       "higher-is-better",
                       "lower-is-better"
                     ]
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
                   }
                 },
                 "type": "object"
@@ -34511,7 +34533,14 @@
             }
           ],
           "capabilities": [],
-          "ref": "Stats.traits.StatsItemStats"
+          "ref": "Stats.traits.StatsItemStats",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": [
+              "cards"
+            ]
+          }
         },
         {
           "name": "DashboardCategoryChart",
@@ -35498,31 +35527,31 @@
                       "bodyContent": {
                         "type": "object",
                         "default": {
-                          "type": "@config.viewPattern",
+                          "fields": [],
+                          "entity": "@entity.cards",
                           "renderItem": [
                             "fn",
                             "card",
                             {
-                              "prefix": "@card.prefix",
-                              "value": "@card.value",
-                              "format": "@card.format",
-                              "trendFormat": "@card.trendFormat",
-                              "max": "@card.max",
-                              "type": "stat-display",
-                              "icon": "@card.icon",
-                              "variant": "@card.variant",
-                              "sparklineData": "@card.sparklineData",
-                              "suffix": "@card.suffix",
                               "look": "@config.statLook",
-                              "label": "@card.label",
-                              "clickEvent": "@card.clickEvent",
-                              "trendPolarity": "@card.trendPolarity",
+                              "format": "@card.format",
+                              "sparklineData": "@card.sparklineData",
+                              "prefix": "@card.prefix",
+                              "max": "@card.max",
                               "target": "@card.target",
-                              "trend": "@card.trend"
+                              "variant": "@card.variant",
+                              "trend": "@card.trend",
+                              "value": "@card.value",
+                              "icon": "@card.icon",
+                              "trendFormat": "@card.trendFormat",
+                              "type": "stat-display",
+                              "trendPolarity": "@card.trendPolarity",
+                              "clickEvent": "@card.clickEvent",
+                              "suffix": "@card.suffix",
+                              "label": "@card.label"
                             }
                           ],
-                          "entity": "@entity.cards",
-                          "fields": []
+                          "type": "@config.viewPattern"
                         },
                         "description": "Render-ui SExpr rendered after metrics aggregate. Default is the canonical data-grid call mapping @entity.cards through stat-display. Layer 3 variants override this with their own tree (hero numbers, sparkline rows, tile splashes) to deliver entirely different KPI UX while inheriting the same trait, state machine, aggregation pipeline, and listens.",
                         "x-label": "Body content tree",
@@ -35612,6 +35641,10 @@
                         "x-tier": "internal"
                       }
                     }
+                  },
+                  "linkedEntity": {
+                    "type": "string",
+                    "description": "Rebind this trait to a different entity in the organism (rewrites every @entity.* / ref / fetch / persist binding inside it)."
                   },
                   "name": {
                     "type": "string",
@@ -38874,10 +38907,10 @@
               "key": "bodyContent",
               "type": "render-ui",
               "default": {
+                "type": "alert",
                 "variant": "warning",
-                "message": "@config.message",
                 "title": "std-display is deprecated",
-                "type": "alert"
+                "message": "@config.message"
               },
               "label": "Body content tree",
               "description": "Render-ui SExpr rendered in the idle state. Default is the deprecation alert. Layer 3 variants override this with their own record-detail tree (hero-banner / sidebar-meta / dashboard-summary) to deliver different detail UX while inheriting the same trait, state machine, and page binding.",
@@ -38892,7 +38925,12 @@
               "tier": "internal"
             }
           ],
-          "capabilities": []
+          "capabilities": [],
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          }
         }
       ],
       "pages": [
@@ -39123,10 +39161,10 @@
                       "bodyContent": {
                         "type": "object",
                         "default": {
+                          "type": "alert",
                           "variant": "warning",
-                          "message": "@config.message",
                           "title": "std-display is deprecated",
-                          "type": "alert"
+                          "message": "@config.message"
                         },
                         "description": "Render-ui SExpr rendered in the idle state. Default is the deprecation alert. Layer 3 variants override this with their own record-detail tree (hero-banner / sidebar-meta / dashboard-summary) to deliver different detail UX while inheriting the same trait, state machine, and page binding.",
                         "x-label": "Body content tree",
@@ -39140,6 +39178,10 @@
                         "x-tier": "internal"
                       }
                     }
+                  },
+                  "linkedEntity": {
+                    "type": "string",
+                    "description": "Rebind this trait to a different entity in the organism (rewrites every @entity.* / ref / fetch / persist binding inside it)."
                   },
                   "name": {
                     "type": "string",
@@ -39274,57 +39316,47 @@
           "name": "SummaryRecord",
           "fields": [
             {
-              "name": "name",
+              "name": "title",
               "type": "string",
               "required": true
             },
             {
-              "name": "status",
+              "name": "subtitle",
               "type": "string",
               "required": false
             },
             {
-              "name": "uptime",
+              "name": "period",
               "type": "string",
               "required": false
             },
             {
-              "name": "region",
+              "name": "tiles",
+              "type": "array",
+              "required": false
+            },
+            {
+              "name": "statuses",
+              "type": "array",
+              "required": false
+            },
+            {
+              "name": "chartTitle",
               "type": "string",
               "required": false
             },
             {
-              "name": "version",
+              "name": "chartSubtitle",
               "type": "string",
               "required": false
             },
             {
-              "name": "cpu",
-              "type": "string",
+              "name": "chartData",
+              "type": "array",
               "required": false
             },
             {
-              "name": "memory",
-              "type": "string",
-              "required": false
-            },
-            {
-              "name": "requests",
-              "type": "string",
-              "required": false
-            },
-            {
-              "name": "errorRate",
-              "type": "string",
-              "required": false
-            },
-            {
-              "name": "lastSeen",
-              "type": "string",
-              "required": false
-            },
-            {
-              "name": "owner",
+              "name": "filterEvent",
               "type": "string",
               "required": false
             }
@@ -39707,35 +39739,30 @@
       "factoryPath": "behaviors/functions/core-variations/atoms/std-display-hero-banner.ts",
       "entities": [
         {
-          "name": "HeroDocument",
+          "name": "HeroPromo",
           "fields": [
             {
-              "name": "title",
+              "name": "eyebrow",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "headline",
               "type": "string",
               "required": true
             },
             {
-              "name": "subtitle",
+              "name": "lead",
               "type": "string",
               "required": false
             },
             {
-              "name": "author",
+              "name": "ctaLabel",
               "type": "string",
               "required": false
             },
             {
-              "name": "publishedAt",
-              "type": "string",
-              "required": false
-            },
-            {
-              "name": "category",
-              "type": "string",
-              "required": false
-            },
-            {
-              "name": "body",
+              "name": "ctaEvent",
               "type": "string",
               "required": false
             }
@@ -39762,7 +39789,7 @@
         {
           "name": "HeroBannerDisplayPage",
           "defaultPath": "/hero-display",
-          "primaryEntity": "HeroDocument"
+          "primaryEntity": "HeroPromo"
         }
       ],
       "emittedEvents": [],
@@ -40126,12 +40153,12 @@
               "required": true
             },
             {
-              "name": "description",
+              "name": "status",
               "type": "string",
               "required": false
             },
             {
-              "name": "status",
+              "name": "priority",
               "type": "string",
               "required": false
             },
@@ -40146,7 +40173,7 @@
               "required": false
             },
             {
-              "name": "priority",
+              "name": "milestone",
               "type": "string",
               "required": false
             },
@@ -61180,31 +61207,31 @@
               "key": "bodyContent",
               "type": "render-ui",
               "default": {
-                "type": "@config.viewPattern",
+                "fields": [],
+                "entity": "@entity.cards",
                 "renderItem": [
                   "fn",
                   "card",
                   {
-                    "prefix": "@card.prefix",
-                    "value": "@card.value",
-                    "format": "@card.format",
-                    "trendFormat": "@card.trendFormat",
-                    "max": "@card.max",
-                    "type": "stat-display",
-                    "icon": "@card.icon",
-                    "variant": "@card.variant",
-                    "sparklineData": "@card.sparklineData",
-                    "suffix": "@card.suffix",
                     "look": "@config.statLook",
-                    "label": "@card.label",
-                    "clickEvent": "@card.clickEvent",
-                    "trendPolarity": "@card.trendPolarity",
+                    "format": "@card.format",
+                    "sparklineData": "@card.sparklineData",
+                    "prefix": "@card.prefix",
+                    "max": "@card.max",
                     "target": "@card.target",
-                    "trend": "@card.trend"
+                    "variant": "@card.variant",
+                    "trend": "@card.trend",
+                    "value": "@card.value",
+                    "icon": "@card.icon",
+                    "trendFormat": "@card.trendFormat",
+                    "type": "stat-display",
+                    "trendPolarity": "@card.trendPolarity",
+                    "clickEvent": "@card.clickEvent",
+                    "suffix": "@card.suffix",
+                    "label": "@card.label"
                   }
                 ],
-                "entity": "@entity.cards",
-                "fields": []
+                "type": "@config.viewPattern"
               },
               "label": "Body content tree",
               "description": "Render-ui SExpr rendered after metrics aggregate. Default is the canonical data-grid call mapping @entity.cards through stat-display. Layer 3 variants override this with their own tree (hero numbers, sparkline rows, tile splashes) to deliver entirely different KPI UX while inheriting the same trait, state machine, aggregation pipeline, and listens.",
@@ -61232,74 +61259,9 @@
               ],
               "items": {
                 "properties": {
-                  "field": {
-                    "name": "field",
+                  "prefix": {
+                    "name": "prefix",
                     "required": false,
-                    "type": "string"
-                  },
-                  "trendFormat": {
-                    "name": "trendFormat",
-                    "required": false,
-                    "type": "string",
-                    "values": [
-                      "absolute",
-                      "percent"
-                    ]
-                  },
-                  "value": {
-                    "name": "value",
-                    "required": false,
-                    "type": "number"
-                  },
-                  "max": {
-                    "name": "max",
-                    "required": false,
-                    "type": "number"
-                  },
-                  "sparklineData": {
-                    "name": "sparklineData",
-                    "required": false,
-                    "type": "array",
-                    "items": {
-                      "type": "number"
-                    }
-                  },
-                  "clickEvent": {
-                    "name": "clickEvent",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "trend": {
-                    "name": "trend",
-                    "required": false,
-                    "type": "number"
-                  },
-                  "format": {
-                    "name": "format",
-                    "required": false,
-                    "type": "string",
-                    "values": [
-                      "number",
-                      "currency",
-                      "percent"
-                    ]
-                  },
-                  "aggregation": {
-                    "name": "aggregation",
-                    "required": false,
-                    "type": "string",
-                    "values": [
-                      "count",
-                      "sum",
-                      "avg",
-                      "min",
-                      "max",
-                      "variance"
-                    ]
-                  },
-                  "label": {
-                    "name": "label",
-                    "required": true,
                     "type": "string"
                   },
                   "target": {
@@ -61320,18 +61282,78 @@
                       "info"
                     ]
                   },
-                  "icon": {
-                    "name": "icon",
-                    "required": false,
-                    "type": "string"
-                  },
                   "suffix": {
                     "name": "suffix",
                     "required": false,
                     "type": "string"
                   },
-                  "prefix": {
-                    "name": "prefix",
+                  "value": {
+                    "name": "value",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "format": {
+                    "name": "format",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "number",
+                      "currency",
+                      "percent"
+                    ]
+                  },
+                  "trendFormat": {
+                    "name": "trendFormat",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "absolute",
+                      "percent"
+                    ]
+                  },
+                  "trend": {
+                    "name": "trend",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "field": {
+                    "name": "field",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "aggregation": {
+                    "name": "aggregation",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "count",
+                      "sum",
+                      "avg",
+                      "min",
+                      "max",
+                      "variance"
+                    ]
+                  },
+                  "max": {
+                    "name": "max",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "sparklineData": {
+                    "name": "sparklineData",
+                    "required": false,
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    }
+                  },
+                  "clickEvent": {
+                    "name": "clickEvent",
                     "required": false,
                     "type": "string"
                   },
@@ -61343,6 +61365,11 @@
                       "higher-is-better",
                       "lower-is-better"
                     ]
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
                   }
                 },
                 "type": "object"
@@ -61387,7 +61414,14 @@
             }
           ],
           "capabilities": [],
-          "ref": "Stats.traits.StatsItemStats"
+          "ref": "Stats.traits.StatsItemStats",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": [
+              "cards"
+            ]
+          }
         },
         {
           "name": "WidgetGraphs",
@@ -62525,31 +62559,31 @@
                       "bodyContent": {
                         "type": "object",
                         "default": {
-                          "type": "@config.viewPattern",
+                          "fields": [],
+                          "entity": "@entity.cards",
                           "renderItem": [
                             "fn",
                             "card",
                             {
-                              "prefix": "@card.prefix",
-                              "value": "@card.value",
-                              "format": "@card.format",
-                              "trendFormat": "@card.trendFormat",
-                              "max": "@card.max",
-                              "type": "stat-display",
-                              "icon": "@card.icon",
-                              "variant": "@card.variant",
-                              "sparklineData": "@card.sparklineData",
-                              "suffix": "@card.suffix",
                               "look": "@config.statLook",
-                              "label": "@card.label",
-                              "clickEvent": "@card.clickEvent",
-                              "trendPolarity": "@card.trendPolarity",
+                              "format": "@card.format",
+                              "sparklineData": "@card.sparklineData",
+                              "prefix": "@card.prefix",
+                              "max": "@card.max",
                               "target": "@card.target",
-                              "trend": "@card.trend"
+                              "variant": "@card.variant",
+                              "trend": "@card.trend",
+                              "value": "@card.value",
+                              "icon": "@card.icon",
+                              "trendFormat": "@card.trendFormat",
+                              "type": "stat-display",
+                              "trendPolarity": "@card.trendPolarity",
+                              "clickEvent": "@card.clickEvent",
+                              "suffix": "@card.suffix",
+                              "label": "@card.label"
                             }
                           ],
-                          "entity": "@entity.cards",
-                          "fields": []
+                          "type": "@config.viewPattern"
                         },
                         "description": "Render-ui SExpr rendered after metrics aggregate. Default is the canonical data-grid call mapping @entity.cards through stat-display. Layer 3 variants override this with their own tree (hero numbers, sparkline rows, tile splashes) to deliver entirely different KPI UX while inheriting the same trait, state machine, aggregation pipeline, and listens.",
                         "x-label": "Body content tree",
@@ -62613,6 +62647,10 @@
                         "x-tier": "internal"
                       }
                     }
+                  },
+                  "linkedEntity": {
+                    "type": "string",
+                    "description": "Rebind this trait to a different entity in the organism (rewrites every @entity.* / ref / fetch / persist binding inside it)."
                   },
                   "name": {
                     "type": "string",
@@ -71583,14 +71621,14 @@
               "type": "[SortOption]",
               "default": [
                 {
-                  "label": "Most recent",
+                  "id": "recent",
                   "icon": "clock",
-                  "id": "recent"
+                  "label": "Most recent"
                 },
                 {
+                  "id": "highest",
                   "label": "Top rated",
-                  "icon": "star",
-                  "id": "highest"
+                  "icon": "star"
                 },
                 {
                   "label": "Lowest",
@@ -71603,9 +71641,9 @@
               "tier": "presentation",
               "items": {
                 "properties": {
-                  "icon": {
-                    "name": "icon",
-                    "required": false,
+                  "label": {
+                    "name": "label",
+                    "required": true,
                     "type": "string"
                   },
                   "id": {
@@ -71613,9 +71651,9 @@
                     "required": true,
                     "type": "string"
                   },
-                  "label": {
-                    "name": "label",
-                    "required": true,
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
                     "type": "string"
                   }
                 },
@@ -71631,12 +71669,12 @@
                   "label": "5 stars"
                 },
                 {
-                  "label": "4 stars",
-                  "percentage": 18
+                  "percentage": 18,
+                  "label": "4 stars"
                 },
                 {
-                  "label": "3 stars",
-                  "percentage": 5
+                  "percentage": 5,
+                  "label": "3 stars"
                 },
                 {
                   "percentage": 2,
@@ -71728,6 +71766,23 @@
               "label": "Cancel button",
               "description": "Label on the cancel button",
               "tier": "presentation"
+            },
+            {
+              "key": "cardLook",
+              "type": "string",
+              "default": "elevated",
+              "label": "Card look",
+              "description": "Visual style of the wrapper card. Layer 2 cardLook knob — render-ui references @config.cardLook on the compose card.",
+              "tier": "presentation",
+              "enumValues": [
+                "elevated",
+                "flat-bordered",
+                "borderless-divider",
+                "ticket",
+                "invoice",
+                "chip",
+                "tile-image-first"
+              ]
             },
             {
               "key": "maxStars",
@@ -72049,14 +72104,14 @@
                         },
                         "default": [
                           {
-                            "label": "Most recent",
+                            "id": "recent",
                             "icon": "clock",
-                            "id": "recent"
+                            "label": "Most recent"
                           },
                           {
+                            "id": "highest",
                             "label": "Top rated",
-                            "icon": "star",
-                            "id": "highest"
+                            "icon": "star"
                           },
                           {
                             "label": "Lowest",
@@ -72079,12 +72134,12 @@
                             "label": "5 stars"
                           },
                           {
-                            "label": "4 stars",
-                            "percentage": 18
+                            "percentage": 18,
+                            "label": "4 stars"
                           },
                           {
-                            "label": "3 stars",
-                            "percentage": 5
+                            "percentage": 5,
+                            "label": "3 stars"
                           },
                           {
                             "percentage": 2,
@@ -72201,6 +72256,22 @@
                         "default": "Cancel",
                         "description": "Label on the cancel button",
                         "x-label": "Cancel button",
+                        "x-tier": "presentation"
+                      },
+                      "cardLook": {
+                        "type": "string",
+                        "enum": [
+                          "elevated",
+                          "flat-bordered",
+                          "borderless-divider",
+                          "ticket",
+                          "invoice",
+                          "chip",
+                          "tile-image-first"
+                        ],
+                        "default": "elevated",
+                        "description": "Visual style of the wrapper card. Layer 2 cardLook knob — render-ui references @config.cardLook on the compose card.",
+                        "x-label": "Card look",
                         "x-tier": "presentation"
                       },
                       "maxStars": {
@@ -77579,31 +77650,31 @@
               "key": "bodyContent",
               "type": "render-ui",
               "default": {
-                "type": "@config.viewPattern",
+                "fields": [],
+                "entity": "@entity.cards",
                 "renderItem": [
                   "fn",
                   "card",
                   {
-                    "prefix": "@card.prefix",
-                    "value": "@card.value",
-                    "format": "@card.format",
-                    "trendFormat": "@card.trendFormat",
-                    "max": "@card.max",
-                    "type": "stat-display",
-                    "icon": "@card.icon",
-                    "variant": "@card.variant",
-                    "sparklineData": "@card.sparklineData",
-                    "suffix": "@card.suffix",
                     "look": "@config.statLook",
-                    "label": "@card.label",
-                    "clickEvent": "@card.clickEvent",
-                    "trendPolarity": "@card.trendPolarity",
+                    "format": "@card.format",
+                    "sparklineData": "@card.sparklineData",
+                    "prefix": "@card.prefix",
+                    "max": "@card.max",
                     "target": "@card.target",
-                    "trend": "@card.trend"
+                    "variant": "@card.variant",
+                    "trend": "@card.trend",
+                    "value": "@card.value",
+                    "icon": "@card.icon",
+                    "trendFormat": "@card.trendFormat",
+                    "type": "stat-display",
+                    "trendPolarity": "@card.trendPolarity",
+                    "clickEvent": "@card.clickEvent",
+                    "suffix": "@card.suffix",
+                    "label": "@card.label"
                   }
                 ],
-                "entity": "@entity.cards",
-                "fields": []
+                "type": "@config.viewPattern"
               },
               "label": "Body content tree",
               "description": "Render-ui SExpr rendered after metrics aggregate. Default is the canonical data-grid call mapping @entity.cards through stat-display. Layer 3 variants override this with their own tree (hero numbers, sparkline rows, tile splashes) to deliver entirely different KPI UX while inheriting the same trait, state machine, aggregation pipeline, and listens.",
@@ -77614,25 +77685,25 @@
               "type": "[MetricSpec]",
               "default": [
                 {
-                  "format": "number",
-                  "icon": "list",
-                  "aggregation": "count",
+                  "variant": "primary",
                   "label": "Total Items",
-                  "variant": "primary"
+                  "icon": "list",
+                  "format": "number",
+                  "aggregation": "count"
                 },
                 {
-                  "aggregation": "count",
-                  "format": "number",
                   "label": "Active",
                   "variant": "success",
-                  "icon": "check-circle"
+                  "aggregation": "count",
+                  "icon": "check-circle",
+                  "format": "number"
                 },
                 {
-                  "icon": "trending-up",
-                  "format": "number",
-                  "field": "value",
-                  "label": "Avg Value",
                   "aggregation": "avg",
+                  "format": "number",
+                  "label": "Avg Value",
+                  "icon": "trending-up",
+                  "field": "value",
                   "variant": "info"
                 }
               ],
@@ -77642,74 +77713,9 @@
               "tier": "presentation",
               "items": {
                 "properties": {
-                  "field": {
-                    "name": "field",
+                  "prefix": {
+                    "name": "prefix",
                     "required": false,
-                    "type": "string"
-                  },
-                  "trendFormat": {
-                    "name": "trendFormat",
-                    "required": false,
-                    "type": "string",
-                    "values": [
-                      "absolute",
-                      "percent"
-                    ]
-                  },
-                  "value": {
-                    "name": "value",
-                    "required": false,
-                    "type": "number"
-                  },
-                  "max": {
-                    "name": "max",
-                    "required": false,
-                    "type": "number"
-                  },
-                  "sparklineData": {
-                    "name": "sparklineData",
-                    "required": false,
-                    "type": "array",
-                    "items": {
-                      "type": "number"
-                    }
-                  },
-                  "clickEvent": {
-                    "name": "clickEvent",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "trend": {
-                    "name": "trend",
-                    "required": false,
-                    "type": "number"
-                  },
-                  "format": {
-                    "name": "format",
-                    "required": false,
-                    "type": "string",
-                    "values": [
-                      "number",
-                      "currency",
-                      "percent"
-                    ]
-                  },
-                  "aggregation": {
-                    "name": "aggregation",
-                    "required": false,
-                    "type": "string",
-                    "values": [
-                      "count",
-                      "sum",
-                      "avg",
-                      "min",
-                      "max",
-                      "variance"
-                    ]
-                  },
-                  "label": {
-                    "name": "label",
-                    "required": true,
                     "type": "string"
                   },
                   "target": {
@@ -77730,18 +77736,78 @@
                       "info"
                     ]
                   },
-                  "icon": {
-                    "name": "icon",
-                    "required": false,
-                    "type": "string"
-                  },
                   "suffix": {
                     "name": "suffix",
                     "required": false,
                     "type": "string"
                   },
-                  "prefix": {
-                    "name": "prefix",
+                  "value": {
+                    "name": "value",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "format": {
+                    "name": "format",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "number",
+                      "currency",
+                      "percent"
+                    ]
+                  },
+                  "trendFormat": {
+                    "name": "trendFormat",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "absolute",
+                      "percent"
+                    ]
+                  },
+                  "trend": {
+                    "name": "trend",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "field": {
+                    "name": "field",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "aggregation": {
+                    "name": "aggregation",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "count",
+                      "sum",
+                      "avg",
+                      "min",
+                      "max",
+                      "variance"
+                    ]
+                  },
+                  "max": {
+                    "name": "max",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "sparklineData": {
+                    "name": "sparklineData",
+                    "required": false,
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    }
+                  },
+                  "clickEvent": {
+                    "name": "clickEvent",
                     "required": false,
                     "type": "string"
                   },
@@ -77753,6 +77819,11 @@
                       "higher-is-better",
                       "lower-is-better"
                     ]
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
                   }
                 },
                 "type": "object"
@@ -77792,7 +77863,14 @@
               "tier": "internal"
             }
           ],
-          "capabilities": []
+          "capabilities": [],
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": [
+              "cards"
+            ]
+          }
         }
       ],
       "pages": [
@@ -78023,31 +78101,31 @@
                       "bodyContent": {
                         "type": "object",
                         "default": {
-                          "type": "@config.viewPattern",
+                          "fields": [],
+                          "entity": "@entity.cards",
                           "renderItem": [
                             "fn",
                             "card",
                             {
-                              "prefix": "@card.prefix",
-                              "value": "@card.value",
-                              "format": "@card.format",
-                              "trendFormat": "@card.trendFormat",
-                              "max": "@card.max",
-                              "type": "stat-display",
-                              "icon": "@card.icon",
-                              "variant": "@card.variant",
-                              "sparklineData": "@card.sparklineData",
-                              "suffix": "@card.suffix",
                               "look": "@config.statLook",
-                              "label": "@card.label",
-                              "clickEvent": "@card.clickEvent",
-                              "trendPolarity": "@card.trendPolarity",
+                              "format": "@card.format",
+                              "sparklineData": "@card.sparklineData",
+                              "prefix": "@card.prefix",
+                              "max": "@card.max",
                               "target": "@card.target",
-                              "trend": "@card.trend"
+                              "variant": "@card.variant",
+                              "trend": "@card.trend",
+                              "value": "@card.value",
+                              "icon": "@card.icon",
+                              "trendFormat": "@card.trendFormat",
+                              "type": "stat-display",
+                              "trendPolarity": "@card.trendPolarity",
+                              "clickEvent": "@card.clickEvent",
+                              "suffix": "@card.suffix",
+                              "label": "@card.label"
                             }
                           ],
-                          "entity": "@entity.cards",
-                          "fields": []
+                          "type": "@config.viewPattern"
                         },
                         "description": "Render-ui SExpr rendered after metrics aggregate. Default is the canonical data-grid call mapping @entity.cards through stat-display. Layer 3 variants override this with their own tree (hero numbers, sparkline rows, tile splashes) to deliver entirely different KPI UX while inheriting the same trait, state machine, aggregation pipeline, and listens.",
                         "x-label": "Body content tree",
@@ -78060,25 +78138,25 @@
                         },
                         "default": [
                           {
-                            "format": "number",
-                            "icon": "list",
-                            "aggregation": "count",
+                            "variant": "primary",
                             "label": "Total Items",
-                            "variant": "primary"
+                            "icon": "list",
+                            "format": "number",
+                            "aggregation": "count"
                           },
                           {
-                            "aggregation": "count",
-                            "format": "number",
                             "label": "Active",
                             "variant": "success",
-                            "icon": "check-circle"
+                            "aggregation": "count",
+                            "icon": "check-circle",
+                            "format": "number"
                           },
                           {
-                            "icon": "trending-up",
-                            "format": "number",
-                            "field": "value",
-                            "label": "Avg Value",
                             "aggregation": "avg",
+                            "format": "number",
+                            "label": "Avg Value",
+                            "icon": "trending-up",
+                            "field": "value",
                             "variant": "info"
                           }
                         ],
@@ -78118,6 +78196,10 @@
                         "x-tier": "internal"
                       }
                     }
+                  },
+                  "linkedEntity": {
+                    "type": "string",
+                    "description": "Rebind this trait to a different entity in the organism (rewrites every @entity.* / ref / fetch / persist binding inside it)."
                   },
                   "name": {
                     "type": "string",
@@ -78252,8 +78334,33 @@
           "name": "HeroMetricStats",
           "fields": [
             {
-              "name": "cards",
-              "type": "array",
+              "name": "label",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "value",
+              "type": "number",
+              "required": false
+            },
+            {
+              "name": "icon",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "prefix",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "suffix",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "trend",
+              "type": "number",
               "required": false
             }
           ],
@@ -78268,7 +78375,7 @@
           "overridableConfigKeys": [
             {
               "key": "bodyContent",
-              "type": "center"
+              "type": "stack"
             }
           ],
           "capabilities": [],
@@ -79040,7 +79147,7 @@
           "overridableConfigKeys": [
             {
               "key": "bodyContent",
-              "type": "stack"
+              "type": "simple-grid"
             }
           ],
           "capabilities": [],
@@ -79501,58 +79608,59 @@
               "key": "bodyContent",
               "type": "render-ui",
               "default": {
+                "direction": "vertical",
                 "children": [
                   {
                     "direction": "horizontal",
                     "type": "stack",
-                    "align": "center",
                     "gap": "sm",
                     "children": [
                       {
-                        "type": "icon",
-                        "name": "shield-check"
+                        "name": "shield-check",
+                        "type": "icon"
                       },
                       {
-                        "variant": "h3",
                         "content": "@config.title",
+                        "variant": "h3",
                         "type": "typography"
                       }
-                    ]
+                    ],
+                    "align": "center"
                   },
                   {
-                    "steps": "@entity.wizardSteps",
                     "type": "wizard-progress",
-                    "currentStep": "@entity.currentStepIndex",
-                    "allowNavigation": false
+                    "allowNavigation": false,
+                    "steps": "@entity.wizardSteps",
+                    "currentStep": "@entity.currentStepIndex"
                   },
                   {
-                    "look": "@config.cardLook",
                     "type": "card",
                     "children": [
                       {
+                        "type": "stack",
                         "children": [
                           {
-                            "align": "center",
                             "type": "stack",
                             "gap": "sm",
+                            "align": "center",
                             "direction": "horizontal",
                             "children": [
                               {
+                                "size": "lg",
                                 "type": "icon",
-                                "name": "@entity.currentStepIcon",
-                                "size": "lg"
+                                "name": "@entity.currentStepIcon"
                               },
                               {
                                 "children": [
                                   {
-                                    "content": "@entity.currentStepLabel",
+                                    "type": "typography",
                                     "variant": "h2",
-                                    "type": "typography"
+                                    "content": "@entity.currentStepLabel"
                                   },
                                   {
                                     "variant": "body",
-                                    "content": "@entity.currentStepDescription",
                                     "color": "muted",
+                                    "content": "@entity.currentStepDescription",
                                     "type": "typography"
                                   }
                                 ],
@@ -79563,65 +79671,64 @@
                             ]
                           }
                         ],
-                        "direction": "vertical",
-                        "type": "stack",
-                        "gap": "md"
-                      }
-                    ]
-                  },
-                  {
-                    "align": "center",
-                    "children": [
-                      {
-                        "variant": "ghost",
-                        "actionPayload": {
-                          "id": "@entity.id"
-                        },
-                        "icon": "chevron-left",
-                        "type": "button",
-                        "action": "BACK",
-                        "label": "Back",
-                        "disabled": "@entity.isFirstStep"
-                      },
-                      {
-                        "type": "button",
-                        "variant": "ghost",
-                        "action": "REJECT",
-                        "icon": "x",
-                        "actionPayload": {
-                          "id": "@entity.id"
-                        },
-                        "label": "Reject"
-                      },
-                      {
-                        "icon": "alert-triangle",
-                        "label": "Escalate",
-                        "type": "button",
-                        "action": "ESCALATE",
-                        "variant": "ghost",
-                        "actionPayload": {
-                          "id": "@entity.id"
-                        }
-                      },
-                      {
-                        "variant": "primary",
-                        "label": "@entity.primaryActionLabel",
-                        "action": "ADVANCE",
-                        "type": "button",
-                        "icon": "@entity.primaryActionIcon",
-                        "actionPayload": {
-                          "id": "@entity.id"
-                        }
+                        "gap": "md",
+                        "direction": "vertical"
                       }
                     ],
-                    "direction": "horizontal",
+                    "look": "@config.cardLook"
+                  },
+                  {
+                    "type": "stack",
                     "gap": "sm",
-                    "type": "stack"
+                    "align": "center",
+                    "direction": "horizontal",
+                    "children": [
+                      {
+                        "label": "Back",
+                        "action": "BACK",
+                        "actionPayload": {
+                          "id": "@entity.id"
+                        },
+                        "variant": "ghost",
+                        "disabled": "@entity.isFirstStep",
+                        "icon": "chevron-left",
+                        "type": "button"
+                      },
+                      {
+                        "type": "button",
+                        "label": "Reject",
+                        "action": "REJECT",
+                        "icon": "x",
+                        "variant": "ghost",
+                        "actionPayload": {
+                          "id": "@entity.id"
+                        }
+                      },
+                      {
+                        "variant": "ghost",
+                        "type": "button",
+                        "action": "ESCALATE",
+                        "actionPayload": {
+                          "id": "@entity.id"
+                        },
+                        "label": "Escalate",
+                        "icon": "alert-triangle"
+                      },
+                      {
+                        "label": "@entity.primaryActionLabel",
+                        "type": "button",
+                        "action": "ADVANCE",
+                        "icon": "@entity.primaryActionIcon",
+                        "variant": "primary",
+                        "actionPayload": {
+                          "id": "@entity.id"
+                        }
+                      }
+                    ]
                   }
                 ],
                 "gap": "lg",
-                "type": "stack",
-                "direction": "vertical"
+                "type": "stack"
               },
               "label": "Body content tree",
               "description": "Render-ui SExpr rendered while the step chain is active (loading-success, running, BACK). Default is the canonical wizard-progress + step-card + action-row tree. Layer 3 variants override this with their own tree (horizontal stepper, sidebar progress, card carousel, etc.) to deliver entirely different step UX while inheriting the same trait, state machine, emits, and listens.",
@@ -79650,21 +79757,21 @@
               "default": [
                 {
                   "key": "manager",
+                  "label": "Manager Review",
                   "icon": "user",
-                  "description": "Initial review by direct manager",
-                  "label": "Manager Review"
+                  "description": "Initial review by direct manager"
                 },
                 {
+                  "label": "Director Approval",
                   "description": "Department director sign-off",
                   "key": "director",
-                  "icon": "users",
-                  "label": "Director Approval"
+                  "icon": "users"
                 },
                 {
-                  "key": "executive",
                   "description": "Final executive approval",
-                  "icon": "shield",
-                  "label": "Executive Sign-off"
+                  "label": "Executive Sign-off",
+                  "key": "executive",
+                  "icon": "shield"
                 }
               ],
               "label": "Steps",
@@ -79672,18 +79779,13 @@
               "tier": "domain",
               "items": {
                 "properties": {
-                  "key": {
-                    "name": "key",
+                  "icon": {
+                    "name": "icon",
                     "required": false,
                     "type": "string"
                   },
-                  "label": {
-                    "name": "label",
-                    "required": true,
-                    "type": "string"
-                  },
-                  "icon": {
-                    "name": "icon",
+                  "key": {
+                    "name": "key",
                     "required": false,
                     "type": "string"
                   },
@@ -79699,6 +79801,11 @@
                     "items": {
                       "type": "string"
                     }
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
                   }
                 },
                 "type": "object"
@@ -79713,7 +79820,27 @@
               "tier": "presentation"
             }
           ],
-          "capabilities": []
+          "capabilities": [],
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": [
+              "currentStepDescription",
+              "currentStepIcon",
+              "currentStepIndex",
+              "currentStepLabel",
+              "errorMessage",
+              "finalStatus",
+              "isFirstStep",
+              "isLastStep",
+              "primaryActionIcon",
+              "primaryActionLabel",
+              "primaryActionVariant",
+              "rejectionReason",
+              "totalSteps",
+              "wizardSteps"
+            ]
+          }
         }
       ],
       "pages": [
@@ -79952,58 +80079,59 @@
                       "bodyContent": {
                         "type": "object",
                         "default": {
+                          "direction": "vertical",
                           "children": [
                             {
                               "direction": "horizontal",
                               "type": "stack",
-                              "align": "center",
                               "gap": "sm",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "shield-check"
+                                  "name": "shield-check",
+                                  "type": "icon"
                                 },
                                 {
-                                  "variant": "h3",
                                   "content": "@config.title",
+                                  "variant": "h3",
                                   "type": "typography"
                                 }
-                              ]
+                              ],
+                              "align": "center"
                             },
                             {
-                              "steps": "@entity.wizardSteps",
                               "type": "wizard-progress",
-                              "currentStep": "@entity.currentStepIndex",
-                              "allowNavigation": false
+                              "allowNavigation": false,
+                              "steps": "@entity.wizardSteps",
+                              "currentStep": "@entity.currentStepIndex"
                             },
                             {
-                              "look": "@config.cardLook",
                               "type": "card",
                               "children": [
                                 {
+                                  "type": "stack",
                                   "children": [
                                     {
-                                      "align": "center",
                                       "type": "stack",
                                       "gap": "sm",
+                                      "align": "center",
                                       "direction": "horizontal",
                                       "children": [
                                         {
+                                          "size": "lg",
                                           "type": "icon",
-                                          "name": "@entity.currentStepIcon",
-                                          "size": "lg"
+                                          "name": "@entity.currentStepIcon"
                                         },
                                         {
                                           "children": [
                                             {
-                                              "content": "@entity.currentStepLabel",
+                                              "type": "typography",
                                               "variant": "h2",
-                                              "type": "typography"
+                                              "content": "@entity.currentStepLabel"
                                             },
                                             {
                                               "variant": "body",
-                                              "content": "@entity.currentStepDescription",
                                               "color": "muted",
+                                              "content": "@entity.currentStepDescription",
                                               "type": "typography"
                                             }
                                           ],
@@ -80014,65 +80142,64 @@
                                       ]
                                     }
                                   ],
-                                  "direction": "vertical",
-                                  "type": "stack",
-                                  "gap": "md"
-                                }
-                              ]
-                            },
-                            {
-                              "align": "center",
-                              "children": [
-                                {
-                                  "variant": "ghost",
-                                  "actionPayload": {
-                                    "id": "@entity.id"
-                                  },
-                                  "icon": "chevron-left",
-                                  "type": "button",
-                                  "action": "BACK",
-                                  "label": "Back",
-                                  "disabled": "@entity.isFirstStep"
-                                },
-                                {
-                                  "type": "button",
-                                  "variant": "ghost",
-                                  "action": "REJECT",
-                                  "icon": "x",
-                                  "actionPayload": {
-                                    "id": "@entity.id"
-                                  },
-                                  "label": "Reject"
-                                },
-                                {
-                                  "icon": "alert-triangle",
-                                  "label": "Escalate",
-                                  "type": "button",
-                                  "action": "ESCALATE",
-                                  "variant": "ghost",
-                                  "actionPayload": {
-                                    "id": "@entity.id"
-                                  }
-                                },
-                                {
-                                  "variant": "primary",
-                                  "label": "@entity.primaryActionLabel",
-                                  "action": "ADVANCE",
-                                  "type": "button",
-                                  "icon": "@entity.primaryActionIcon",
-                                  "actionPayload": {
-                                    "id": "@entity.id"
-                                  }
+                                  "gap": "md",
+                                  "direction": "vertical"
                                 }
                               ],
-                              "direction": "horizontal",
+                              "look": "@config.cardLook"
+                            },
+                            {
+                              "type": "stack",
                               "gap": "sm",
-                              "type": "stack"
+                              "align": "center",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "label": "Back",
+                                  "action": "BACK",
+                                  "actionPayload": {
+                                    "id": "@entity.id"
+                                  },
+                                  "variant": "ghost",
+                                  "disabled": "@entity.isFirstStep",
+                                  "icon": "chevron-left",
+                                  "type": "button"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Reject",
+                                  "action": "REJECT",
+                                  "icon": "x",
+                                  "variant": "ghost",
+                                  "actionPayload": {
+                                    "id": "@entity.id"
+                                  }
+                                },
+                                {
+                                  "variant": "ghost",
+                                  "type": "button",
+                                  "action": "ESCALATE",
+                                  "actionPayload": {
+                                    "id": "@entity.id"
+                                  },
+                                  "label": "Escalate",
+                                  "icon": "alert-triangle"
+                                },
+                                {
+                                  "label": "@entity.primaryActionLabel",
+                                  "type": "button",
+                                  "action": "ADVANCE",
+                                  "icon": "@entity.primaryActionIcon",
+                                  "variant": "primary",
+                                  "actionPayload": {
+                                    "id": "@entity.id"
+                                  }
+                                }
+                              ]
                             }
                           ],
                           "gap": "lg",
-                          "type": "stack",
-                          "direction": "vertical"
+                          "type": "stack"
                         },
                         "description": "Render-ui SExpr rendered while the step chain is active (loading-success, running, BACK). Default is the canonical wizard-progress + step-card + action-row tree. Layer 3 variants override this with their own tree (horizontal stepper, sidebar progress, card carousel, etc.) to deliver entirely different step UX while inheriting the same trait, state machine, emits, and listens.",
                         "x-label": "Body content tree",
@@ -80102,21 +80229,21 @@
                         "default": [
                           {
                             "key": "manager",
+                            "label": "Manager Review",
                             "icon": "user",
-                            "description": "Initial review by direct manager",
-                            "label": "Manager Review"
+                            "description": "Initial review by direct manager"
                           },
                           {
+                            "label": "Director Approval",
                             "description": "Department director sign-off",
                             "key": "director",
-                            "icon": "users",
-                            "label": "Director Approval"
+                            "icon": "users"
                           },
                           {
-                            "key": "executive",
                             "description": "Final executive approval",
-                            "icon": "shield",
-                            "label": "Executive Sign-off"
+                            "label": "Executive Sign-off",
+                            "key": "executive",
+                            "icon": "shield"
                           }
                         ],
                         "description": "Ordered decision steps with label, icon, and optional role gates",
@@ -80131,6 +80258,10 @@
                         "x-tier": "presentation"
                       }
                     }
+                  },
+                  "linkedEntity": {
+                    "type": "string",
+                    "description": "Rebind this trait to a different entity in the organism (rewrites every @entity.* / ref / fetch / persist binding inside it)."
                   },
                   "name": {
                     "type": "string",
@@ -80643,7 +80774,13 @@
       "entities": [
         {
           "name": "ProgressVerticalView",
-          "fields": [],
+          "fields": [
+            {
+              "name": "progressLabel",
+              "type": "string",
+              "required": false
+            }
+          ],
           "persistence": "runtime"
         }
       ],
@@ -80655,7 +80792,7 @@
           "overridableConfigKeys": [
             {
               "key": "bodyContent",
-              "type": "split"
+              "type": "stack"
             }
           ],
           "capabilities": [],
@@ -83940,41 +84077,41 @@
               "type": "render-ui",
               "default": {
                 "type": "stack",
+                "direction": "vertical",
+                "gap": "md",
                 "children": [
                   {
-                    "variant": "card",
-                    "type": "data-list",
-                    "look": "@config.tableLook",
-                    "fields": [
-                      {
-                        "label": "Author",
-                        "variant": "h4",
-                        "name": "authorName"
-                      },
-                      {
-                        "label": "",
-                        "variant": "body",
-                        "name": "content"
-                      },
-                      {
-                        "label": "Votes",
-                        "name": "voteCount",
-                        "variant": "caption"
-                      }
-                    ],
+                    "gap": "sm",
                     "itemActions": [
                       {
+                        "label": "Reply",
                         "icon": "message-square",
-                        "event": "REPLY",
-                        "label": "Reply"
+                        "event": "REPLY"
                       }
                     ],
                     "entity": "@payload.data",
-                    "gap": "sm"
+                    "look": "@config.tableLook",
+                    "fields": [
+                      {
+                        "name": "authorName",
+                        "variant": "h4",
+                        "label": "Author"
+                      },
+                      {
+                        "variant": "body",
+                        "label": "",
+                        "name": "content"
+                      },
+                      {
+                        "variant": "caption",
+                        "label": "Votes",
+                        "name": "voteCount"
+                      }
+                    ],
+                    "variant": "card",
+                    "type": "data-list"
                   }
-                ],
-                "gap": "md",
-                "direction": "vertical"
+                ]
               },
               "label": "Body content tree",
               "description": "Render-ui SExpr rendered after thread posts load. Default is the canonical forum-style data-list. Layer 3 variants override this with their own tree (chat bubbles, email-threaded cards, linear comment stacks, etc.) to deliver entirely different thread UX while inheriting the same trait, state machine, emits, and listens.",
@@ -84012,7 +84149,15 @@
               "tier": "domain"
             }
           ],
-          "capabilities": []
+          "capabilities": [],
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": [
+              "content",
+              "parentId"
+            ]
+          }
         }
       ],
       "pages": [
@@ -84253,41 +84398,41 @@
                         "type": "object",
                         "default": {
                           "type": "stack",
+                          "direction": "vertical",
+                          "gap": "md",
                           "children": [
                             {
-                              "variant": "card",
-                              "type": "data-list",
-                              "look": "@config.tableLook",
-                              "fields": [
-                                {
-                                  "label": "Author",
-                                  "variant": "h4",
-                                  "name": "authorName"
-                                },
-                                {
-                                  "label": "",
-                                  "variant": "body",
-                                  "name": "content"
-                                },
-                                {
-                                  "label": "Votes",
-                                  "name": "voteCount",
-                                  "variant": "caption"
-                                }
-                              ],
+                              "gap": "sm",
                               "itemActions": [
                                 {
+                                  "label": "Reply",
                                   "icon": "message-square",
-                                  "event": "REPLY",
-                                  "label": "Reply"
+                                  "event": "REPLY"
                                 }
                               ],
                               "entity": "@payload.data",
-                              "gap": "sm"
+                              "look": "@config.tableLook",
+                              "fields": [
+                                {
+                                  "name": "authorName",
+                                  "variant": "h4",
+                                  "label": "Author"
+                                },
+                                {
+                                  "variant": "body",
+                                  "label": "",
+                                  "name": "content"
+                                },
+                                {
+                                  "variant": "caption",
+                                  "label": "Votes",
+                                  "name": "voteCount"
+                                }
+                              ],
+                              "variant": "card",
+                              "type": "data-list"
                             }
-                          ],
-                          "gap": "md",
-                          "direction": "vertical"
+                          ]
                         },
                         "description": "Render-ui SExpr rendered after thread posts load. Default is the canonical forum-style data-list. Layer 3 variants override this with their own tree (chat bubbles, email-threaded cards, linear comment stacks, etc.) to deliver entirely different thread UX while inheriting the same trait, state machine, emits, and listens.",
                         "x-label": "Body content tree",
@@ -84322,6 +84467,10 @@
                         "x-tier": "domain"
                       }
                     }
+                  },
+                  "linkedEntity": {
+                    "type": "string",
+                    "description": "Rebind this trait to a different entity in the organism (rewrites every @entity.* / ref / fetch / persist binding inside it)."
                   },
                   "name": {
                     "type": "string",
@@ -84474,6 +84623,11 @@
               "name": "authorName",
               "type": "string",
               "required": true
+            },
+            {
+              "name": "recipientId",
+              "type": "string",
+              "required": false
             },
             {
               "name": "content",
@@ -84905,6 +85059,11 @@
               "name": "replyCount",
               "type": "number",
               "required": false
+            },
+            {
+              "name": "replies",
+              "type": "array",
+              "required": false
             }
           ],
           "persistence": "persistent"
@@ -85308,6 +85467,26 @@
               "required": true
             },
             {
+              "name": "fromAddress",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "toAddress",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "subject",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "preview",
+              "type": "string",
+              "required": false
+            },
+            {
               "name": "content",
               "type": "string",
               "required": true
@@ -85320,6 +85499,51 @@
             {
               "name": "replyCount",
               "type": "number",
+              "required": false
+            },
+            {
+              "name": "replies",
+              "type": "array",
+              "required": false
+            },
+            {
+              "name": "focusedId",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "focusedSubject",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "focusedAuthorName",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "focusedFromAddress",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "focusedToAddress",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "focusedCreatedAt",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "focusedContent",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "focusedReplies",
+              "type": "array",
               "required": false
             }
           ],

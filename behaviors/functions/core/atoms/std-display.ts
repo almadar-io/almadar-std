@@ -41,7 +41,7 @@ export type StdDisplayEventKey = 'INIT';
 export interface StdDisplayConfig {
   /** Default: `"std-display is deprecated — use std-stats and std-graphs instead. See docs/Almadar_Std_Verification.md gap #25."` */
   message?: string;
-  /** Default: `{"variant":"warning","message":"@config.message","title":"std-display is deprecated","type":"alert"}` */
+  /** Default: `{"type":"alert","variant":"warning","title":"std-display is deprecated","message":"@config.message"}` */
   bodyContent?: unknown;
 }
 

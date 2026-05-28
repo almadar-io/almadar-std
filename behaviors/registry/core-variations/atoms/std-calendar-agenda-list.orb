@@ -1,7 +1,7 @@
 {
   "name": "std-calendar-agenda-list",
-  "version": "1.0.0",
-  "description": "Agenda-list calendar — Linear/Notion vertical chronological list grouped by day. Each entry shows time, title, description, and a status badge. Same CalendarEventCalendar trait, same state machine, same emits/listens as std-calendar — only the bodyContent tree differs. For appointment-policy queues, class-roster session schedules, court-deadline lists.",
+  "version": "1.1.0",
+  "description": "Day-grouped agenda — events organized by date with overline day headers (Today, Tomorrow, Mon Jun 5) and a time marker per event. Inherits std-calendar's fetch + SELECT_DAY state machine; only bodyContent differs from std-calendar's month-grid and std-calendar-week-timeline's 7-col timeline. For appointment queues, class-roster schedules, court-deadline lists where users scan a vertical chronological flow grouped by day.",
   "orbitals": [
     {
       "name": "AgendaListCalendarOrbital",
@@ -57,6 +57,11 @@
             "name": "duration",
             "type": "number",
             "default": 60.0
+          },
+          {
+            "name": "dateGroup",
+            "type": "string",
+            "default": ""
           }
         ]
       },
@@ -67,28 +72,27 @@
           "linkedEntity": "AgendaListEvent",
           "config": {
             "bodyContent": {
+              "type": "stack",
               "children": [
                 {
-                  "type": "stack",
                   "align": "center",
-                  "direction": "horizontal",
                   "children": [
                     {
+                      "align": "center",
+                      "direction": "horizontal",
                       "children": [
                         {
                           "type": "icon",
                           "name": "list"
                         },
                         {
+                          "content": "Agenda",
                           "variant": "h2",
-                          "type": "typography",
-                          "content": "Agenda"
+                          "type": "typography"
                         }
                       ],
-                      "direction": "horizontal",
                       "gap": "sm",
-                      "type": "stack",
-                      "align": "center"
+                      "type": "stack"
                     },
                     {
                       "type": "date-range-selector",
@@ -96,83 +100,106 @@
                     }
                   ],
                   "justify": "between",
-                  "gap": "md"
+                  "gap": "md",
+                  "type": "stack",
+                  "direction": "horizontal"
                 },
                 {
                   "type": "divider"
                 },
                 {
-                  "gap": "none",
+                  "fields": [],
+                  "variant": "default",
                   "renderItem": [
                     "fn",
                     "item",
                     {
-                      "direction": "horizontal",
-                      "type": "stack",
-                      "gap": "md",
-                      "align": "start",
-                      "className": "py-3 border-b border-[var(--color-border)] hover:bg-muted cursor-pointer",
+                      "look": "flat-bordered",
+                      "padding": "md",
                       "children": [
                         {
+                          "align": "start",
+                          "direction": "horizontal",
                           "type": "stack",
-                          "align": "center",
+                          "gap": "md",
                           "children": [
                             {
-                              "variant": "caption",
-                              "content": "@item.date",
-                              "format": "date",
-                              "type": "typography",
-                              "color": "muted"
+                              "gap": "xs",
+                              "type": "stack",
+                              "className": "w-16 shrink-0",
+                              "direction": "vertical",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "content": "@item.time",
+                                  "variant": "overline",
+                                  "color": "muted",
+                                  "type": "typography"
+                                },
+                                {
+                                  "color": "muted",
+                                  "type": "icon",
+                                  "size": "sm",
+                                  "name": "clock"
+                                }
+                              ]
                             },
                             {
-                              "type": "typography",
-                              "content": "@item.time",
-                              "variant": "h4"
-                            }
-                          ],
-                          "direction": "vertical",
-                          "className": "w-20 shrink-0",
-                          "gap": "xs"
-                        },
-                        {
-                          "children": [
-                            {
-                              "type": "typography",
-                              "className": "truncate",
-                              "weight": "medium",
-                              "content": "@item.name",
-                              "variant": "h4"
+                              "type": "divider",
+                              "orientation": "vertical"
                             },
                             {
-                              "variant": "caption",
-                              "className": "truncate",
-                              "content": "@item.description",
-                              "type": "typography",
-                              "color": "muted"
+                              "gap": "xs",
+                              "type": "stack",
+                              "className": "flex-1 min-w-0",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "gap": "sm",
+                                  "align": "center",
+                                  "direction": "horizontal",
+                                  "children": [
+                                    {
+                                      "variant": "h4",
+                                      "weight": "medium",
+                                      "className": "truncate",
+                                      "type": "typography",
+                                      "content": "@item.name"
+                                    },
+                                    {
+                                      "size": "sm",
+                                      "type": "badge",
+                                      "label": "@item.status",
+                                      "variant": "default"
+                                    }
+                                  ],
+                                  "justify": "between"
+                                },
+                                {
+                                  "variant": "body2",
+                                  "type": "typography",
+                                  "color": "muted",
+                                  "content": "@item.description",
+                                  "className": "truncate"
+                                }
+                              ],
+                              "direction": "vertical"
                             }
-                          ],
-                          "direction": "vertical",
-                          "gap": "xs",
-                          "type": "stack",
-                          "className": "flex-1 min-w-0"
-                        },
-                        {
-                          "type": "badge",
-                          "label": "@item.status",
-                          "variant": "default"
+                          ]
                         }
-                      ]
+                      ],
+                      "type": "card"
                     }
                   ],
+                  "groupBy": "dateGroup",
                   "entity": "@payload.data",
                   "type": "data-list",
-                  "fields": []
+                  "gap": "md"
                 }
               ],
-              "className": "max-w-3xl mx-auto",
+              "direction": "vertical",
               "gap": "lg",
-              "type": "stack",
-              "direction": "vertical"
+              "className": "max-w-3xl mx-auto p-card-md"
             }
           }
         }
