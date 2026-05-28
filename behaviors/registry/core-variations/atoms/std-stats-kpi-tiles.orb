@@ -40,6 +40,46 @@
                     "info"
                   ]
                 },
+                "icon": {
+                  "name": "icon",
+                  "type": "string",
+                  "required": false
+                },
+                "target": {
+                  "name": "target",
+                  "type": "number",
+                  "required": false
+                },
+                "value": {
+                  "name": "value",
+                  "type": "number",
+                  "required": false
+                },
+                "max": {
+                  "name": "max",
+                  "type": "number",
+                  "required": false
+                },
+                "trend": {
+                  "name": "trend",
+                  "type": "number",
+                  "required": false
+                },
+                "clickEvent": {
+                  "name": "clickEvent",
+                  "type": "string",
+                  "required": false
+                },
+                "format": {
+                  "name": "format",
+                  "type": "string",
+                  "required": false,
+                  "values": [
+                    "number",
+                    "currency",
+                    "percent"
+                  ]
+                },
                 "trendPolarity": {
                   "name": "trendPolarity",
                   "type": "string",
@@ -49,6 +89,16 @@
                     "lower-is-better"
                   ]
                 },
+                "label": {
+                  "name": "label",
+                  "type": "string",
+                  "required": true
+                },
+                "suffix": {
+                  "name": "suffix",
+                  "type": "string",
+                  "required": false
+                },
                 "trendFormat": {
                   "name": "trendFormat",
                   "type": "string",
@@ -57,11 +107,6 @@
                     "absolute",
                     "percent"
                   ]
-                },
-                "value": {
-                  "name": "value",
-                  "type": "number",
-                  "required": false
                 },
                 "prefix": {
                   "name": "prefix",
@@ -75,51 +120,6 @@
                   "items": {
                     "type": "number"
                   }
-                },
-                "clickEvent": {
-                  "name": "clickEvent",
-                  "type": "string",
-                  "required": false
-                },
-                "suffix": {
-                  "name": "suffix",
-                  "type": "string",
-                  "required": false
-                },
-                "max": {
-                  "name": "max",
-                  "type": "number",
-                  "required": false
-                },
-                "icon": {
-                  "name": "icon",
-                  "type": "string",
-                  "required": false
-                },
-                "label": {
-                  "name": "label",
-                  "type": "string",
-                  "required": true
-                },
-                "format": {
-                  "name": "format",
-                  "type": "string",
-                  "required": false,
-                  "values": [
-                    "number",
-                    "currency",
-                    "percent"
-                  ]
-                },
-                "target": {
-                  "name": "target",
-                  "type": "number",
-                  "required": false
-                },
-                "trend": {
-                  "name": "trend",
-                  "type": "number",
-                  "required": false
                 }
               }
             }
@@ -134,76 +134,85 @@
           "config": {
             "bodyContent": {
               "gap": "lg",
-              "className": "w-full",
               "type": "simple-grid",
+              "className": "w-full",
+              "cols": 4.0,
               "children": [
                 {
+                  "fields": [],
+                  "type": "data-list",
+                  "entity": "@entity.cards",
+                  "cols": 4.0,
                   "renderItem": [
                     "fn",
                     "card",
                     {
-                      "gap": "sm",
-                      "className": "rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-card-lg shadow-elevation-sm hover:shadow-elevation-md transition-shadow",
                       "children": [
                         {
-                          "type": "stack",
                           "gap": "xs",
-                          "direction": "horizontal",
-                          "align": "center",
                           "justify": "between",
+                          "type": "stack",
                           "children": [
                             {
-                              "variant": "caption",
-                              "weight": "medium",
                               "content": "@card.label",
                               "color": "muted",
+                              "weight": "medium",
                               "className": "uppercase tracking-wide",
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "caption"
                             },
                             {
-                              "name": "@card.icon",
                               "type": "icon",
-                              "size": "sm",
-                              "color": "muted"
+                              "name": "@card.icon",
+                              "color": "muted",
+                              "size": "sm"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "align": "center"
+                        },
+                        {
+                          "direction": "horizontal",
+                          "gap": "xs",
+                          "type": "stack",
+                          "align": "baseline",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "color": "muted",
+                              "content": "@card.prefix"
+                            },
+                            {
+                              "className": "text-4xl font-bold tracking-tight",
+                              "value": "@card.value",
+                              "type": "animated-counter"
+                            },
+                            {
+                              "type": "typography",
+                              "color": "muted",
+                              "variant": "caption",
+                              "content": "@card.suffix"
                             }
                           ]
                         },
                         {
-                          "children": [
-                            {
-                              "type": "typography",
-                              "color": "muted",
-                              "variant": "caption",
-                              "content": "@card.prefix"
-                            },
-                            {
-                              "type": "animated-counter",
-                              "value": "@card.value",
-                              "className": "text-4xl font-bold tracking-tight"
-                            },
-                            {
-                              "color": "muted",
-                              "content": "@card.suffix",
-                              "type": "typography",
-                              "variant": "caption"
-                            }
-                          ],
-                          "gap": "xs",
                           "direction": "horizontal",
-                          "align": "baseline",
-                          "type": "stack"
-                        },
-                        {
+                          "align": "center",
+                          "type": "stack",
+                          "gap": "sm",
                           "children": [
                             {
-                              "size": "sm",
-                              "type": "trend-indicator",
                               "showValue": true,
-                              "value": "@card.trend"
+                              "type": "trend-indicator",
+                              "value": "@card.trend",
+                              "size": "sm"
                             },
                             {
-                              "height": 24.0,
+                              "type": "sparkline",
                               "color": "auto",
+                              "fill": true,
+                              "className": "flex-1",
                               "data": [
                                 1.0,
                                 2.0,
@@ -213,29 +222,20 @@
                                 6.0,
                                 7.0
                               ],
-                              "type": "sparkline",
-                              "fill": true,
-                              "className": "flex-1"
+                              "height": 24.0
                             }
-                          ],
-                          "gap": "sm",
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "align": "center"
+                          ]
                         }
                       ],
+                      "gap": "sm",
                       "type": "stack",
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "className": "rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-card-lg shadow-elevation-sm hover:shadow-elevation-md transition-shadow"
                     }
                   ],
-                  "entity": "@entity.cards",
-                  "gap": "lg",
-                  "cols": 4.0,
-                  "fields": [],
-                  "type": "data-list"
+                  "gap": "lg"
                 }
-              ],
-              "cols": 4.0
+              ]
             }
           }
         }

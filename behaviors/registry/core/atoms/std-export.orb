@@ -21,6 +21,11 @@
             "items": {
               "type": "object",
               "properties": {
+                "label": {
+                  "name": "label",
+                  "type": "string",
+                  "required": true
+                },
                 "id": {
                   "name": "id",
                   "type": "string",
@@ -28,11 +33,6 @@
                 },
                 "format": {
                   "name": "format",
-                  "type": "string",
-                  "required": true
-                },
-                "label": {
-                  "name": "label",
                   "type": "string",
                   "required": true
                 }
@@ -110,37 +110,37 @@
                     "render-ui",
                     "main",
                     {
-                      "position": "bottom",
                       "type": "popover",
+                      "position": "bottom",
                       "children": {
-                        "size": "sm",
-                        "variant": "ghost",
                         "action": "OPEN_EXPORT",
+                        "variant": "ghost",
+                        "size": "sm",
                         "type": "button",
                         "label": "@config.buttonLabel",
                         "icon": "download"
                       },
                       "content": {
+                        "fields": [],
+                        "entity": "@entity.options",
+                        "look": "@config.tableLook",
                         "type": "data-list",
                         "renderItem": [
                           "fn",
                           "fmt",
                           {
+                            "icon": "file-down",
+                            "action": "@config.event",
+                            "variant": "ghost",
+                            "label": "@fmt.label",
                             "size": "sm",
                             "actionPayload": {
-                              "tileId": "@config.tileId",
-                              "format": "@fmt.format"
+                              "format": "@fmt.format",
+                              "tileId": "@config.tileId"
                             },
-                            "variant": "ghost",
-                            "type": "button",
-                            "label": "@fmt.label",
-                            "icon": "file-down",
-                            "action": "@config.event"
+                            "type": "button"
                           }
-                        ],
-                        "look": "@config.tableLook",
-                        "entity": "@entity.options",
-                        "fields": []
+                        ]
                       }
                     }
                   ]
@@ -173,61 +173,23 @@
             ]
           },
           "config": {
-            "event": {
-              "type": "string",
-              "default": "EXPORT_REQUESTED",
-              "label": "Export event",
-              "description": "Event emitted when the user picks a format",
-              "synonyms": "bus event name. internal wiring; users rarely target directly",
-              "tier": "internal"
-            },
-            "buttonLabel": {
-              "type": "string",
-              "default": "Export",
-              "label": "Button label",
-              "description": "Text shown on the toolbar button that opens the export popover",
-              "synonyms": "the text on the export trigger button. user phrases: 'rename export button to X' / 'set the button label to X' / 'call the button X' / 'change export button text to X' -> X (e.g. 'Download CSV', 'Download', 'Export Data')",
-              "tier": "presentation"
-            },
-            "tileId": {
-              "type": "string",
-              "default": "",
-              "label": "Tile id",
-              "description": "Identifier of the dashboard tile being exported",
-              "synonyms": "internal identifier — host orbital wires this; users rarely set it directly",
-              "tier": "internal"
-            },
-            "tableLook": {
-              "type": "string",
-              "default": "dense",
-              "label": "Table look",
-              "description": "Layer 2 visual treatment for the data table rendered by this atom.",
-              "tier": "presentation",
-              "values": [
-                "dense",
-                "spacious",
-                "striped",
-                "borderless",
-                "card-rows"
-              ]
-            },
             "formats": {
               "type": "[FormatOption]",
               "default": [
                 {
                   "id": "csv",
-                  "label": "CSV",
-                  "format": "csv"
+                  "format": "csv",
+                  "label": "CSV"
                 },
                 {
                   "label": "XLSX",
-                  "id": "xlsx",
-                  "format": "xlsx"
+                  "format": "xlsx",
+                  "id": "xlsx"
                 },
                 {
                   "id": "pdf",
-                  "format": "pdf",
-                  "label": "PDF"
+                  "label": "PDF",
+                  "format": "pdf"
                 }
               ],
               "label": "Available formats",
@@ -254,6 +216,44 @@
                   }
                 }
               }
+            },
+            "event": {
+              "type": "string",
+              "default": "EXPORT_REQUESTED",
+              "label": "Export event",
+              "description": "Event emitted when the user picks a format",
+              "synonyms": "bus event name. internal wiring; users rarely target directly",
+              "tier": "internal"
+            },
+            "tileId": {
+              "type": "string",
+              "default": "",
+              "label": "Tile id",
+              "description": "Identifier of the dashboard tile being exported",
+              "synonyms": "internal identifier — host orbital wires this; users rarely set it directly",
+              "tier": "internal"
+            },
+            "buttonLabel": {
+              "type": "string",
+              "default": "Export",
+              "label": "Button label",
+              "description": "Text shown on the toolbar button that opens the export popover",
+              "synonyms": "the text on the export trigger button. user phrases: 'rename export button to X' / 'set the button label to X' / 'call the button X' / 'change export button text to X' -> X (e.g. 'Download CSV', 'Download', 'Export Data')",
+              "tier": "presentation"
+            },
+            "tableLook": {
+              "type": "string",
+              "default": "dense",
+              "label": "Table look",
+              "description": "Layer 2 visual treatment for the data table rendered by this atom.",
+              "tier": "presentation",
+              "values": [
+                "dense",
+                "spacious",
+                "striped",
+                "borderless",
+                "card-rows"
+              ]
             }
           },
           "scope": "instance"

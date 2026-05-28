@@ -37,16 +37,6 @@
             "items": {
               "type": "object",
               "properties": {
-                "label": {
-                  "name": "label",
-                  "type": "string",
-                  "required": true
-                },
-                "trend": {
-                  "name": "trend",
-                  "type": "number",
-                  "required": false
-                },
                 "value": {
                   "name": "value",
                   "type": "string",
@@ -55,6 +45,16 @@
                 "icon": {
                   "name": "icon",
                   "type": "string",
+                  "required": false
+                },
+                "label": {
+                  "name": "label",
+                  "type": "string",
+                  "required": true
+                },
+                "trend": {
+                  "name": "trend",
+                  "type": "number",
                   "required": false
                 }
               }
@@ -220,11 +220,11 @@
                     "fetch",
                     "SummaryRecord",
                     {
-                      "limit": 1.0,
                       "emit": {
                         "success": "SummaryRecordLoaded",
                         "failure": "SummaryRecordLoadFailed"
-                      }
+                      },
+                      "limit": 1.0
                     }
                   ],
                   [
@@ -354,132 +354,130 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "direction": "vertical",
                       "children": [
                         {
-                          "direction": "horizontal",
                           "gap": "md",
-                          "type": "stack",
-                          "align": "center",
                           "justify": "between",
                           "children": [
                             {
-                              "gap": "xs",
                               "direction": "vertical",
                               "children": [
                                 {
-                                  "content": "@entity.title",
+                                  "weight": "semibold",
                                   "type": "typography",
                                   "variant": "h3",
-                                  "weight": "semibold"
+                                  "content": "@entity.title"
                                 },
                                 {
                                   "color": "muted",
-                                  "variant": "caption",
                                   "type": "typography",
+                                  "variant": "caption",
                                   "content": "@entity.period"
                                 }
                               ],
-                              "type": "stack"
+                              "type": "stack",
+                              "gap": "xs"
                             },
                             {
+                              "icon": "filter",
+                              "type": "button",
+                              "action": "@entity.filterEvent",
                               "label": "Filter",
                               "size": "sm",
-                              "icon": "filter",
-                              "action": "@entity.filterEvent",
-                              "variant": "ghost",
-                              "type": "button"
+                              "variant": "ghost"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center"
                         },
                         {
+                          "type": "simple-grid",
                           "gap": "md",
                           "cols": 4.0,
-                          "type": "simple-grid",
                           "children": [
                             {
-                              "type": "data-list",
-                              "entity": "@entity.tiles",
-                              "gap": "md",
                               "renderItem": [
                                 "fn",
                                 "tile",
                                 {
-                                  "padding": "md",
-                                  "type": "card",
+                                  "look": "elevated",
                                   "children": [
                                     {
                                       "direction": "vertical",
-                                      "gap": "xs",
                                       "children": [
                                         {
-                                          "align": "center",
                                           "gap": "xs",
-                                          "justify": "between",
+                                          "align": "center",
                                           "children": [
                                             {
                                               "type": "typography",
-                                              "color": "muted",
-                                              "weight": "semibold",
                                               "content": "@tile.label",
-                                              "variant": "overline"
+                                              "weight": "semibold",
+                                              "variant": "overline",
+                                              "color": "muted"
                                             },
                                             {
-                                              "type": "icon",
-                                              "size": "sm",
                                               "color": "muted",
-                                              "name": "@tile.icon"
+                                              "name": "@tile.icon",
+                                              "type": "icon",
+                                              "size": "sm"
                                             }
                                           ],
                                           "type": "stack",
+                                          "justify": "between",
                                           "direction": "horizontal"
                                         },
                                         {
-                                          "variant": "h2",
-                                          "weight": "semibold",
                                           "content": "@tile.value",
-                                          "type": "typography"
+                                          "type": "typography",
+                                          "weight": "semibold",
+                                          "variant": "h2"
                                         },
                                         {
-                                          "size": "sm",
                                           "type": "trend-indicator",
-                                          "showValue": true,
-                                          "value": "@tile.trend"
+                                          "size": "sm",
+                                          "value": "@tile.trend",
+                                          "showValue": true
                                         }
                                       ],
+                                      "gap": "xs",
                                       "type": "stack"
                                     }
                                   ],
-                                  "look": "elevated"
+                                  "padding": "md",
+                                  "type": "card"
                                 }
                               ],
-                              "fields": []
+                              "fields": [],
+                              "entity": "@entity.tiles",
+                              "gap": "md",
+                              "type": "data-list"
                             }
                           ]
                         },
                         {
-                          "type": "stack",
-                          "align": "center",
-                          "gap": "sm",
                           "children": [
                             {
                               "renderItem": [
                                 "fn",
                                 "pill",
                                 {
-                                  "label": "@pill.label",
-                                  "size": "sm",
                                   "variant": "@pill.tone",
-                                  "type": "badge"
+                                  "label": "@pill.label",
+                                  "type": "badge",
+                                  "size": "sm"
                                 }
                               ],
-                              "fields": [],
                               "type": "data-list",
-                              "entity": "@entity.statuses",
-                              "gap": "sm"
+                              "fields": [],
+                              "gap": "sm",
+                              "entity": "@entity.statuses"
                             }
                           ],
+                          "align": "center",
+                          "gap": "sm",
+                          "type": "stack",
                           "direction": "horizontal"
                         },
                         {
@@ -487,61 +485,63 @@
                         },
                         {
                           "look": "elevated",
-                          "padding": "lg",
-                          "type": "card",
                           "children": [
                             {
+                              "gap": "md",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "gap": "sm",
-                                  "align": "center",
-                                  "direction": "horizontal",
-                                  "type": "stack",
-                                  "justify": "between",
                                   "children": [
                                     {
-                                      "direction": "vertical",
                                       "type": "stack",
+                                      "direction": "vertical",
+                                      "gap": "xs",
                                       "children": [
                                         {
                                           "variant": "h4",
-                                          "type": "typography",
                                           "content": "@entity.chartTitle",
+                                          "type": "typography",
                                           "weight": "semibold"
                                         },
                                         {
                                           "variant": "caption",
-                                          "content": "@entity.chartSubtitle",
                                           "type": "typography",
-                                          "color": "muted"
+                                          "color": "muted",
+                                          "content": "@entity.chartSubtitle"
                                         }
-                                      ],
-                                      "gap": "xs"
+                                      ]
                                     },
                                     {
-                                      "label": "@entity.period",
-                                      "variant": "default",
+                                      "size": "sm",
                                       "type": "badge",
-                                      "size": "sm"
+                                      "variant": "default",
+                                      "label": "@entity.period"
                                     }
-                                  ]
+                                  ],
+                                  "align": "center",
+                                  "gap": "sm",
+                                  "direction": "horizontal",
+                                  "justify": "between",
+                                  "type": "stack"
                                 },
                                 {
-                                  "data": "@entity.chartData",
                                   "chartType": "line",
+                                  "data": "@entity.chartData",
                                   "height": 280.0,
                                   "type": "chart",
                                   "showLegend": false
                                 }
                               ],
-                              "gap": "md",
-                              "direction": "vertical",
-                              "type": "stack"
+                              "direction": "vertical"
                             }
-                          ]
+                          ],
+                          "padding": "lg",
+                          "type": "card"
                         }
                       ],
-                      "type": "stack"
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -581,8 +581,8 @@
                     "render-ui",
                     "main",
                     {
-                      "title": "Retrying…",
-                      "type": "loading-state"
+                      "type": "loading-state",
+                      "title": "Retrying…"
                     }
                   ]
                 ]

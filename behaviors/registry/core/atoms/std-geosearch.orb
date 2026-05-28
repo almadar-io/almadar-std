@@ -130,33 +130,33 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "type": "stack",
-                      "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "event": "@config.event",
                           "type": "search-input",
+                          "event": "@config.event",
                           "placeholder": "@config.placeholder"
                         },
                         {
-                          "centerLat": "@entity.centerLat",
-                          "centerLng": "@entity.centerLng",
                           "zoom": 12.0,
                           "markers": [],
+                          "centerLng": "@entity.centerLng",
                           "height": "240px",
+                          "centerLat": "@entity.centerLat",
                           "type": "map-view"
                         },
                         {
                           "showTooltip": true,
-                          "action": "GEO_SEARCH",
-                          "step": 1.0,
-                          "type": "range-slider",
                           "max": 100.0,
+                          "action": "GEO_SEARCH",
+                          "type": "range-slider",
+                          "min": 1.0,
                           "value": "@entity.radiusKm",
-                          "min": 1.0
+                          "step": 1.0
                         }
-                      ]
+                      ],
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -190,7 +190,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
                       "children": [
                         {
                           "event": "@config.event",
@@ -198,25 +199,24 @@
                           "placeholder": "@config.placeholder"
                         },
                         {
-                          "markers": [],
                           "type": "map-view",
-                          "centerLng": "@entity.centerLng",
-                          "zoom": 12.0,
+                          "markers": [],
+                          "centerLat": "@entity.centerLat",
                           "height": "240px",
-                          "centerLat": "@entity.centerLat"
+                          "centerLng": "@entity.centerLng",
+                          "zoom": 12.0
                         },
                         {
-                          "max": 100.0,
-                          "value": "@entity.radiusKm",
                           "action": "GEO_SEARCH",
-                          "showTooltip": true,
                           "step": 1.0,
+                          "type": "range-slider",
                           "min": 1.0,
-                          "type": "range-slider"
+                          "value": "@entity.radiusKm",
+                          "showTooltip": true,
+                          "max": 100.0
                         }
                       ],
-                      "direction": "vertical",
-                      "gap": "md"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -224,6 +224,13 @@
             ]
           },
           "config": {
+            "event": {
+              "type": "string",
+              "default": "GEO_SEARCH",
+              "label": "Search event",
+              "description": "Event emitted when the user runs a geo search",
+              "tier": "internal"
+            },
             "defaultRadiusKm": {
               "type": "number",
               "default": 10.0,
@@ -237,13 +244,6 @@
               "label": "Search placeholder",
               "description": "Hint text in the location search input",
               "tier": "presentation"
-            },
-            "event": {
-              "type": "string",
-              "default": "GEO_SEARCH",
-              "label": "Search event",
-              "description": "Event emitted when the user runs a geo search",
-              "tier": "internal"
             }
           },
           "scope": "instance"

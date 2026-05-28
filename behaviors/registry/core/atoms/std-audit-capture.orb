@@ -57,6 +57,7 @@
           "name": "AuditCaptureListener",
           "entityRebindable": true,
           "entityContract": {
+            "requires": [],
             "provides": [
               "action",
               "actor",
@@ -248,13 +249,13 @@
                         "create",
                         "AuditEntry",
                         {
-                          "before": "@entity.before",
+                          "entityType": "@config.captureEntity",
+                          "actor": "@user.id",
+                          "entityId": "@entity.entityId",
                           "after": "@entity.after",
                           "action": "@entity.action",
-                          "entityId": "@entity.entityId",
-                          "recordedAt": 0.0,
-                          "actor": "@user.id",
-                          "entityType": "@config.captureEntity"
+                          "before": "@entity.before",
+                          "recordedAt": 0.0
                         }
                       ],
                       [
@@ -262,10 +263,10 @@
                         "AuditRecorded",
                         {
                           "recordedAt": 0.0,
+                          "entityId": "@entity.entityId",
                           "actor": "@user.id",
                           "entityType": "@config.captureEntity",
-                          "action": "@entity.action",
-                          "entityId": "@entity.entityId"
+                          "action": "@entity.action"
                         }
                       ]
                     ]
@@ -275,14 +276,6 @@
             ]
           },
           "config": {
-            "enabled": {
-              "type": "boolean",
-              "default": false,
-              "label": "Enabled",
-              "description": "Whether the audit trail is active for the host orbital. Off by default; turn on to record mutations.",
-              "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, audit, audit trail, log changes, track changes, who edited what, mutation log, change history, edit history, modification log, accountability log, record changes, log every edit, compliance log",
-              "tier": "domain"
-            },
             "captureEntity": {
               "type": "string",
               "default": "",
@@ -306,6 +299,14 @@
               "items": {
                 "type": "string"
               }
+            },
+            "enabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Enabled",
+              "description": "Whether the audit trail is active for the host orbital. Off by default; turn on to record mutations.",
+              "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, audit, audit trail, log changes, track changes, who edited what, mutation log, change history, edit history, modification log, accountability log, record changes, log every edit, compliance log",
+              "tier": "domain"
             },
             "excludeFields": {
               "type": "[string]",

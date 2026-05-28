@@ -43,7 +43,10 @@
         {
           "name": "SelectableItemSelection",
           "entityRebindable": true,
-          "entityContract": {},
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
           "category": "interaction",
           "linkedEntity": "SelectableItem",
           "emits": [
@@ -160,8 +163,8 @@
                     "SelectableItem",
                     {
                       "emit": {
-                        "failure": "SelectableItemLoadFailed",
-                        "success": "SelectableItemLoaded"
+                        "success": "SelectableItemLoaded",
+                        "failure": "SelectableItemLoadFailed"
                       }
                     }
                   ],
@@ -169,22 +172,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "className": "py-12",
-                      "gap": "md",
-                      "direction": "vertical",
-                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "variant": "caption",
+                          "content": "Loading…",
                           "color": "muted",
-                          "content": "Loading…"
+                          "variant": "caption",
+                          "type": "typography"
                         }
-                      ]
+                      ],
+                      "gap": "md",
+                      "className": "py-12",
+                      "align": "center",
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -199,11 +202,10 @@
                     "main",
                     {
                       "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "align": "center",
                           "gap": "sm",
                           "children": [
                             {
@@ -211,54 +213,55 @@
                               "type": "icon"
                             },
                             {
-                              "content": "SelectableItems",
                               "variant": "h2",
-                              "type": "typography"
+                              "type": "typography",
+                              "content": "SelectableItems"
                             }
-                          ]
+                          ],
+                          "align": "center",
+                          "type": "stack",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "variant": "caption",
-                          "content": "Choose a selectableitem to continue.",
                           "color": "muted",
-                          "type": "typography"
+                          "type": "typography",
+                          "content": "Choose a selectableitem to continue.",
+                          "variant": "caption"
                         },
                         {
+                          "type": "data-grid",
                           "look": "@config.tableLook",
-                          "entity": "@payload.data",
-                          "className": "transition-shadow hover:shadow-md cursor-pointer",
+                          "itemActions": [
+                            {
+                              "event": "SELECT",
+                              "icon": "check",
+                              "label": "Select"
+                            }
+                          ],
                           "renderItem": [
                             "fn",
                             "item",
                             {
-                              "gap": "sm",
+                              "direction": "horizontal",
                               "type": "stack",
+                              "align": "center",
                               "children": [
                                 {
-                                  "label": "@item.name",
-                                  "type": "checkbox"
+                                  "type": "checkbox",
+                                  "label": "@item.name"
                                 }
                               ],
-                              "direction": "horizontal",
-                              "align": "center"
+                              "gap": "sm"
                             }
                           ],
                           "fields": [],
-                          "type": "data-grid",
-                          "itemActions": [
-                            {
-                              "label": "Select",
-                              "icon": "check",
-                              "event": "SELECT"
-                            }
-                          ]
+                          "entity": "@payload.data",
+                          "className": "transition-shadow hover:shadow-md cursor-pointer"
                         }
-                      ],
-                      "gap": "lg",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -273,35 +276,35 @@
                     "main",
                     {
                       "gap": "md",
-                      "type": "stack",
+                      "align": "center",
                       "direction": "vertical",
-                      "className": "py-12",
                       "children": [
                         {
-                          "color": "destructive",
                           "type": "icon",
+                          "color": "destructive",
                           "name": "alert-triangle"
                         },
                         {
-                          "content": "Failed to load",
                           "type": "typography",
-                          "variant": "h3"
+                          "variant": "h3",
+                          "content": "Failed to load"
                         },
                         {
-                          "variant": "body",
+                          "type": "typography",
                           "color": "muted",
                           "content": "@payload.error",
-                          "type": "typography"
+                          "variant": "body"
                         },
                         {
-                          "type": "button",
-                          "icon": "rotate-ccw",
                           "action": "INIT",
+                          "variant": "primary",
+                          "type": "button",
                           "label": "Retry",
-                          "variant": "primary"
+                          "icon": "rotate-ccw"
                         }
                       ],
-                      "align": "center"
+                      "type": "stack",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -315,81 +318,81 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
+                      "type": "stack",
                       "direction": "vertical",
+                      "gap": "lg",
                       "children": [
                         {
+                          "gap": "md",
                           "children": [
                             {
-                              "type": "stack",
-                              "align": "center",
-                              "direction": "horizontal",
-                              "gap": "md",
                               "children": [
                                 {
                                   "name": "check-square",
                                   "type": "icon"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "SelectableItems",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "type": "typography"
                                 }
-                              ]
+                              ],
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "align": "center",
+                              "gap": "md"
                             },
                             {
+                              "gap": "sm",
                               "align": "center",
-                              "type": "stack",
                               "direction": "horizontal",
                               "children": [
                                 {
-                                  "label": "Selecting",
-                                  "type": "badge"
+                                  "type": "badge",
+                                  "label": "Selecting"
                                 },
                                 {
+                                  "action": "CLEAR",
                                   "variant": "ghost",
                                   "type": "button",
-                                  "action": "CLEAR",
-                                  "icon": "x",
-                                  "label": "Clear"
+                                  "label": "Clear",
+                                  "icon": "x"
                                 }
                               ],
-                              "gap": "sm"
+                              "type": "stack"
                             }
                           ],
-                          "type": "stack",
-                          "gap": "md",
-                          "justify": "between",
                           "direction": "horizontal",
-                          "align": "center"
+                          "type": "stack",
+                          "align": "center",
+                          "justify": "between"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "variant": "info",
                           "message": "@payload.id",
+                          "variant": "info",
                           "type": "alert"
                         },
                         {
-                          "type": "stack",
-                          "gap": "sm",
                           "children": [
                             {
-                              "label": "Confirm",
                               "type": "button",
                               "action": "CONFIRM_SELECTION",
+                              "variant": "primary",
                               "actionPayload": {
                                 "id": "@payload.id"
                               },
-                              "variant": "primary",
-                              "icon": "check"
+                              "icon": "check",
+                              "label": "Confirm"
                             }
                           ],
+                          "type": "stack",
+                          "gap": "sm",
                           "direction": "horizontal"
                         }
-                      ],
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -403,72 +406,72 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "children": [
                         {
+                          "type": "stack",
                           "direction": "horizontal",
-                          "justify": "between",
                           "align": "center",
                           "gap": "md",
+                          "justify": "between",
                           "children": [
                             {
+                              "type": "stack",
                               "direction": "horizontal",
+                              "gap": "md",
+                              "align": "center",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "check-circle"
+                                  "name": "check-circle",
+                                  "type": "icon"
                                 },
                                 {
                                   "content": "Selection Confirmed",
                                   "type": "typography",
                                   "variant": "h2"
                                 }
-                              ],
-                              "type": "stack",
-                              "align": "center",
-                              "gap": "md"
+                              ]
                             },
                             {
-                              "label": "Confirmed",
-                              "type": "badge"
+                              "type": "badge",
+                              "label": "Confirmed"
                             }
-                          ],
-                          "type": "stack"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "type": "alert",
-                          "message": "Selection confirmed successfully.",
-                          "variant": "success"
+                          "variant": "success",
+                          "message": "Selection confirmed successfully."
                         },
                         {
-                          "gap": "md",
-                          "align": "center",
+                          "direction": "horizontal",
                           "type": "stack",
                           "children": [
                             {
-                              "type": "typography",
                               "variant": "caption",
-                              "content": "Selected ID:"
+                              "content": "Selected ID:",
+                              "type": "typography"
                             },
                             {
+                              "type": "typography",
                               "variant": "body",
-                              "content": "@payload.id",
-                              "type": "typography"
+                              "content": "@payload.id"
                             }
                           ],
-                          "direction": "horizontal"
+                          "align": "center",
+                          "gap": "md"
                         },
                         {
-                          "action": "CLEAR",
-                          "variant": "ghost",
-                          "icon": "rotate-ccw",
                           "type": "button",
+                          "variant": "ghost",
+                          "action": "CLEAR",
+                          "icon": "rotate-ccw",
                           "label": "Clear Selection"
                         }
                       ],
-                      "type": "stack",
                       "gap": "lg",
                       "direction": "vertical"
                     }

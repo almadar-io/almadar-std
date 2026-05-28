@@ -41,7 +41,10 @@
         {
           "name": "ModalRecordModal",
           "entityRebindable": true,
-          "entityContract": {},
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
           "category": "interaction",
           "linkedEntity": "ModalRecord",
           "emits": [
@@ -193,13 +196,15 @@
                     "render-ui",
                     "@config.detailSlot",
                     {
+                      "gap": "md",
+                      "direction": "vertical",
+                      "type": "@config.detailPattern",
                       "children": [
                         {
-                          "type": "stack",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "@config.icon"
+                              "name": "@config.icon",
+                              "type": "icon"
                             },
                             {
                               "variant": "h3",
@@ -208,23 +213,21 @@
                             }
                           ],
                           "gap": "sm",
-                          "direction": "horizontal"
+                          "direction": "horizontal",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "form-section",
+                          "entity": "@payload.row",
+                          "fields": "@config.fields",
                           "submitEvent": "SAVE",
                           "mode": "@config.mode",
-                          "entity": "@payload.row",
-                          "cancelEvent": "CLOSE",
-                          "fields": "@config.fields",
-                          "type": "form-section"
+                          "cancelEvent": "CLOSE"
                         }
-                      ],
-                      "direction": "vertical",
-                      "gap": "md",
-                      "type": "@config.detailPattern"
+                      ]
                     }
                   ]
                 ]
@@ -261,23 +264,6 @@
             ]
           },
           "config": {
-            "icon": {
-              "type": "string",
-              "default": "layout-panel-top",
-              "label": "Icon",
-              "description": "Icon shown in the modal header",
-              "tier": "presentation"
-            },
-            "fields": {
-              "type": "[string]",
-              "default": [],
-              "label": "Form fields",
-              "description": "Entity fields displayed as inputs in the modal form",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
-            },
             "title": {
               "type": "string",
               "default": "Details",
@@ -292,12 +278,12 @@
               "description": "UI slot the modal renders into",
               "tier": "internal"
             },
-            "detailPattern": {
-              "type": "pattern",
-              "default": "stack",
-              "label": "Layout pattern",
-              "description": "Pattern used to arrange the form body",
-              "tier": "internal"
+            "icon": {
+              "type": "string",
+              "default": "layout-panel-top",
+              "label": "Icon",
+              "description": "Icon shown in the modal header",
+              "tier": "presentation"
             },
             "mode": {
               "type": "string",
@@ -305,6 +291,23 @@
               "label": "Form mode",
               "description": "create or edit — controls submit-button copy and validation",
               "tier": "presentation"
+            },
+            "detailPattern": {
+              "type": "pattern",
+              "default": "stack",
+              "label": "Layout pattern",
+              "description": "Pattern used to arrange the form body",
+              "tier": "internal"
+            },
+            "fields": {
+              "type": "[string]",
+              "default": [],
+              "label": "Form fields",
+              "description": "Entity fields displayed as inputs in the modal form",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
             }
           },
           "scope": "instance"
