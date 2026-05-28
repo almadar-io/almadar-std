@@ -1,7 +1,7 @@
 {
   "name": "std-display",
   "version": "1.2.0",
-  "description": "std-display — record-detail display atom. Owns the idle state-machine; consumers configure bodyContent to render any single-record detail view (the default is a deprecation alert, retained for backward compatibility). Layer 3 variants override bodyContent to deliver hero-banner / sidebar-meta / dashboard-summary detail layouts while inheriting the same trait shape, state, and page binding.",
+  "description": "std-display — record-detail display atom. Owns the idle state-machine; consumers configure bodyContent to render any single-record detail view (default is a deprecation alert). Layer 3 variants override bodyContent to deliver hero-banner / sidebar-meta / dashboard-summary layouts. Known gap (2026-05-28, Almadar_Std_Gaps.md): variants that add new typed entity fields (tiles, headline, …) cannot auto-populate them in catalog/preview because (a) lolo phase 9.5.H removed effects-override at trait call sites, (b) validator forbids `object`-typed config bags (`ORB_T_CONFIG_OBJECT_ARRAY_FORBIDDEN`), (c) `set @entity` requires a static field path, and (d) variants can only override existing config knobs, not declare new typed ones. Fix requires either restoring effects-override grammar, adding an `entity/merge` SExpr operator, or relaxing the config-object ban for declared-shape variants.",
   "orbitals": [
     {
       "name": "DisplayItemOrbital",
@@ -62,10 +62,10 @@
             "bodyContent": {
               "type": "render-ui",
               "default": {
-                "type": "alert",
-                "variant": "warning",
                 "title": "std-display is deprecated",
-                "message": "@config.message"
+                "type": "alert",
+                "message": "@config.message",
+                "variant": "warning"
               },
               "label": "Body content tree",
               "description": "Render-ui SExpr rendered in the idle state. Default is the deprecation alert. Layer 3 variants override this with their own record-detail tree (hero-banner / sidebar-meta / dashboard-summary) to deliver different detail UX while inheriting the same trait, state machine, and page binding.",
