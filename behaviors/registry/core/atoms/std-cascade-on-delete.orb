@@ -35,6 +35,9 @@
         {
           "name": "CascadeOnDeleteGate",
           "category": "lifecycle",
+          "capabilities": [
+            "cascade-delete"
+          ],
           "linkedEntity": "CascadeLog",
           "emits": [
             {
@@ -166,6 +169,7 @@
                 "from": "idle",
                 "to": "idle",
                 "event": "ParentDeleted",
+                "guard": "@config.enabled",
                 "effects": [
                   [
                     "set",
@@ -215,16 +219,16 @@
                     "emit",
                     "CascadeRowsLoaded",
                     {
-                      "data": "@payload.data",
-                      "parentId": "@entity.parentId"
+                      "parentId": "@entity.parentId",
+                      "data": "@payload.data"
                     }
                   ],
                   [
                     "emit",
                     "CascadeCompleted",
                     {
-                      "deletedCount": "@entity.rowCount",
-                      "parentId": "@entity.parentId"
+                      "parentId": "@entity.parentId",
+                      "deletedCount": "@entity.rowCount"
                     }
                   ]
                 ]
@@ -232,11 +236,19 @@
             ]
           },
           "config": {
-            "parentEntity": {
+            "enabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Enabled",
+              "description": "Whether the cascade-on-delete gate is active for the host orbital. Off by default; turn on to cascade-delete dependent rows when the parent is deleted.",
+              "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, cascade delete, delete children, on delete cascade, cascade on delete, remove related, soft delete cascade, dependent deletes, integrity cascade",
+              "tier": "domain"
+            },
+            "foreignKeyField": {
               "type": "string",
               "default": "",
-              "label": "Parent entity",
-              "description": "Entity whose deletion triggers the cascade",
+              "label": "Foreign-key field",
+              "description": "Field on dependent rows that holds the parent's id",
               "tier": "domain"
             },
             "dependentEntities": {
@@ -249,11 +261,11 @@
                 "type": "string"
               }
             },
-            "foreignKeyField": {
+            "parentEntity": {
               "type": "string",
               "default": "",
-              "label": "Foreign-key field",
-              "description": "Field on dependent rows that holds the parent's id",
+              "label": "Parent entity",
+              "description": "Entity whose deletion triggers the cascade",
               "tier": "domain"
             }
           },

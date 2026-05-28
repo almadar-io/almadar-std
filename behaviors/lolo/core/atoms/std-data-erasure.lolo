@@ -19,8 +19,13 @@ orbital DataErasureOrbital {
   type ErasureSaved      = Event { row : ErasureRequest }                   "Fired after an ErasureRequest row persists."
   type ErasureSaveFailed = Event { error : string, code : string }          "Fired when an ErasureRequest persist fails."
 
-  trait ErasureWorkflow -> ErasureRequest [interaction, collection] {
+  trait ErasureWorkflow -> ErasureRequest [interaction, collection, erasure, compliance] {
     config {
+      enabled             : boolean  = false
+        @label "Enabled"
+        @description "Whether the data-erasure workflow is active for the host orbital. Off by default; turn on to handle GDPR right-to-be-forgotten requests."
+        @synonyms "enable, turn on, enforce, require, activate, apply, switch on, gdpr, erasure, right to be forgotten, data deletion, scheduled deletion, retention purge, account deletion, anonymize user data, scrub PII, delete user data"
+        @tier "domain"
       targetEntity        : string   = ""
         @label "Target entity"
         @description "Entity name whose records erasure requests apply to (e.g. 'CustomerAccount')."
@@ -44,7 +49,7 @@ orbital DataErasureOrbital {
     }
     initial: loading
     state loading {
-      INIT -> loading
+      INIT -> loading when @config.enabled
         (fetch ErasureRequest { emit: { success: "ErasureLoaded", failure: "ErasureLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading erasure requests…" }] })
       ErasureLoaded -> browsing

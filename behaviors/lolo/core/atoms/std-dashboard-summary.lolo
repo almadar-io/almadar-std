@@ -1,0 +1,124 @@
+app std-dashboard-summary "1.0.0"
+"Executive dashboard summary — 4 KPI tiles, status pill strip, and a primary line-chart panel. Standalone atom with its own loading/ready/error state machine; fetches a single SummaryRecord and renders inline."
+
+type KpiTile = {
+  label  : string!
+  value  : string!
+  trend  : number
+  icon   : string
+}
+
+type StatusPill = {
+  label : string!
+  tone  : "default" | "primary" | "success" | "warning" | "error" | "info" | "neutral"
+}
+
+type SeriesPoint = {
+  date  : string!
+  value : number!
+}
+
+orbital DashboardSummaryOrbital {
+  entity SummaryRecord [runtime] {
+    id            : string!
+    title         : string!         = "Performance overview"
+    subtitle      : string          = ""
+    period        : string          = "Last 30 days"
+    tiles         : [KpiTile]       = []
+    statuses      : [StatusPill]    = []
+    chartTitle    : string          = "Performance"
+    chartSubtitle : string          = ""
+    chartData     : [SeriesPoint]   = []
+    filterEvent   : string          = "OPEN_FILTER"
+    errorMessage  : string          = ""
+  }
+
+  type SummaryRecordLoaded     = Event { data : [object] }              "Fired when the summary record finishes loading"
+  type SummaryRecordLoadFailed = Event { error : string, code : string } "Fired when the summary fetch fails"
+
+  trait DashboardSummary -> SummaryRecord [interaction, instance] {
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch SummaryRecord { limit: 1, emit: { success: "SummaryRecordLoaded", failure: "SummaryRecordLoadFailed" } })
+        (render-ui main { type: "loading-state", title: "Loading dashboard…" })
+      SummaryRecordLoaded -> ready
+        (set @entity.title        (object/get (array/first @payload.data) "title"))
+        (set @entity.subtitle     (object/get (array/first @payload.data) "subtitle"))
+        (set @entity.period       (object/get (array/first @payload.data) "period"))
+        (set @entity.tiles        (object/get (array/first @payload.data) "tiles"))
+        (set @entity.statuses     (object/get (array/first @payload.data) "statuses"))
+        (set @entity.chartTitle   (object/get (array/first @payload.data) "chartTitle"))
+        (set @entity.chartSubtitle (object/get (array/first @payload.data) "chartSubtitle"))
+        (set @entity.chartData    (object/get (array/first @payload.data) "chartData"))
+        (set @entity.filterEvent  (object/get (array/first @payload.data) "filterEvent"))
+        (render-ui main {
+          type: "stack", direction: "vertical", gap: "md",
+          children: [
+            { type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [
+              { type: "stack", direction: "vertical", gap: "xs", children: [
+                { type: "typography", variant: "h3", weight: "semibold", content: "@entity.title" },
+                { type: "typography", variant: "caption", color: "muted", content: "@entity.period" }
+              ]},
+              { type: "button", label: "Filter", variant: "ghost", size: "sm", icon: "filter", action: "@entity.filterEvent" }
+            ]},
+            { type: "simple-grid", cols: 4, gap: "md", children: [{
+              type: "data-list", entity: "@entity.tiles", gap: "md", fields: [],
+              renderItem: ["fn", "tile", {
+                type: "card", look: "elevated", padding: "md",
+                children: [{
+                  type: "stack", direction: "vertical", gap: "xs", children: [
+                    { type: "stack", direction: "horizontal", gap: "xs", align: "center", justify: "between", children: [
+                      { type: "typography", variant: "overline", color: "muted", weight: "semibold", content: "@tile.label" },
+                      { type: "icon", name: "@tile.icon", size: "sm", color: "muted" }
+                    ]},
+                    { type: "typography", variant: "h2", weight: "semibold", content: "@tile.value" },
+                    { type: "trend-indicator", value: "@tile.trend", size: "sm", showValue: true }
+                  ]
+                }]
+              }]
+            }]},
+            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{
+              type: "data-list", entity: "@entity.statuses", gap: "sm", fields: [],
+              renderItem: ["fn", "pill", { type: "badge", label: "@pill.label", variant: "@pill.tone", size: "sm" }]
+            }]},
+            { type: "divider" },
+            { type: "card", look: "elevated", padding: "lg", children: [{
+              type: "stack", direction: "vertical", gap: "md", children: [
+                { type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "between", children: [
+                  { type: "stack", direction: "vertical", gap: "xs", children: [
+                    { type: "typography", variant: "h4", weight: "semibold", content: "@entity.chartTitle" },
+                    { type: "typography", variant: "caption", color: "muted", content: "@entity.chartSubtitle" }
+                  ]},
+                  { type: "badge", label: "@entity.period", variant: "default", size: "sm" }
+                ]},
+                { type: "chart", chartType: "line", data: "@entity.chartData", height: 280, showLegend: false }
+              ]
+            }]}
+          ]
+        })
+      SummaryRecordLoadFailed -> error
+        (set @entity.errorMessage @payload.error)
+        (render-ui main { type: "error-state", title: "Failed to load dashboard", message: "@entity.errorMessage" })
+    }
+    state ready {
+      OPEN_FILTER -> ready
+    }
+    state error {
+      INIT -> loading
+        (render-ui main { type: "loading-state", title: "Retrying…" })
+    }
+    emits {
+      OPEN_FILTER             { }
+      SummaryRecordLoaded     { data : [object] }
+      SummaryRecordLoadFailed { error : string, code : string }
+    }
+    listens {
+      OPEN_FILTER             { }
+      SummaryRecordLoaded     { data : [object] }
+      SummaryRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  page "/dashboard-summary" as DashboardSummaryPage -> DashboardSummary
+}

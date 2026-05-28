@@ -151,6 +151,7 @@
                 "from": "idle",
                 "to": "idle",
                 "event": "EntityMutated",
+                "guard": "@config.enabled",
                 "effects": [
                   [
                     "when",
@@ -247,23 +248,23 @@
                         "create",
                         "AuditEntry",
                         {
-                          "action": "@entity.action",
-                          "actor": "@user.id",
-                          "entityType": "@config.captureEntity",
                           "before": "@entity.before",
                           "after": "@entity.after",
+                          "action": "@entity.action",
                           "entityId": "@entity.entityId",
-                          "recordedAt": 0.0
+                          "recordedAt": 0.0,
+                          "actor": "@user.id",
+                          "entityType": "@config.captureEntity"
                         }
                       ],
                       [
                         "emit",
                         "AuditRecorded",
                         {
-                          "entityType": "@config.captureEntity",
-                          "actor": "@user.id",
-                          "action": "@entity.action",
                           "recordedAt": 0.0,
+                          "actor": "@user.id",
+                          "entityType": "@config.captureEntity",
+                          "action": "@entity.action",
                           "entityId": "@entity.entityId"
                         }
                       ]
@@ -274,28 +275,26 @@
             ]
           },
           "config": {
-            "excludeFields": {
-              "type": "[string]",
-              "default": [],
-              "label": "Skip fields",
-              "description": "Entity fields to omit from the audit payload (declarative; before/after still capture all fields in v1.1 — field exclusion lands when captureBeforeAfter wiring filters per-field).",
-              "tier": "domain",
-              "items": {
-                "type": "string"
-              }
+            "enabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Enabled",
+              "description": "Whether the audit trail is active for the host orbital. Off by default; turn on to record mutations.",
+              "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, audit, audit trail, log changes, track changes, who edited what, mutation log, change history, edit history, modification log, accountability log, record changes, log every edit, compliance log",
+              "tier": "domain"
+            },
+            "captureEntity": {
+              "type": "string",
+              "default": "",
+              "label": "Entity to audit",
+              "description": "Type name of the entity whose mutations get logged",
+              "tier": "domain"
             },
             "retentionDays": {
               "type": "number",
               "default": 2555.0,
               "label": "Retention (days)",
               "description": "Days to keep audit rows. Default 2555 (7 years) for typical compliance regimes. WIRING DEFERRED: retention enforcement requires composing `std-lifecycle` against AuditEntry with a delete rule (gap — docs/Almadar_Std_Factories.md).",
-              "tier": "domain"
-            },
-            "captureBeforeAfter": {
-              "type": "boolean",
-              "default": false,
-              "label": "Capture before/after snapshots",
-              "description": "When true, persist `before` and `after` object snapshots from @payload.data on each audit row. Default off to keep audit rows small.",
               "tier": "domain"
             },
             "captureEventTypes": {
@@ -308,11 +307,21 @@
                 "type": "string"
               }
             },
-            "captureEntity": {
-              "type": "string",
-              "default": "",
-              "label": "Entity to audit",
-              "description": "Type name of the entity whose mutations get logged",
+            "excludeFields": {
+              "type": "[string]",
+              "default": [],
+              "label": "Skip fields",
+              "description": "Entity fields to omit from the audit payload (declarative; before/after still capture all fields in v1.1 — field exclusion lands when captureBeforeAfter wiring filters per-field).",
+              "tier": "domain",
+              "items": {
+                "type": "string"
+              }
+            },
+            "captureBeforeAfter": {
+              "type": "boolean",
+              "default": false,
+              "label": "Capture before/after snapshots",
+              "description": "When true, persist `before` and `after` object snapshots from @payload.data on each audit row. Default off to keep audit rows small.",
               "tier": "domain"
             }
           },

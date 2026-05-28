@@ -1,0 +1,112 @@
+app std-sidebar-meta "1.0.0"
+"Right-rail meta panel — Linear/Jira/GitHub-style issue sidebar. Stacked label/value rows grouped with dividers. Standalone atom; fetches one SidebarRecord and renders inline."
+
+orbital SidebarMetaOrbital {
+  entity SidebarRecord [runtime] {
+    id           : string!
+    title        : string! = "Untitled"
+    status       : "open" | "in_progress" | "closed" = "open"
+    priority     : "low" | "medium" | "high"         = "medium"
+    assignee     : string  = ""
+    reporter     : string  = ""
+    milestone    : string  = ""
+    labels       : string  = ""
+    createdAt    : string  = ""
+    updatedAt    : string  = ""
+    errorMessage : string  = ""
+  }
+
+  type SidebarRecordLoaded     = Event { data : [object] }              "Fired when the sidebar record finishes loading"
+  type SidebarRecordLoadFailed = Event { error : string, code : string } "Fired when the sidebar record fetch fails"
+
+  trait SidebarMeta -> SidebarRecord [interaction, instance] {
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch SidebarRecord { limit: 1, emit: { success: "SidebarRecordLoaded", failure: "SidebarRecordLoadFailed" } })
+        (render-ui main { type: "loading-state", title: "Loading…" })
+      SidebarRecordLoaded -> loading
+        (set @entity.id        (object/get (array/first @payload.data) "id"))
+        (set @entity.title     (object/get (array/first @payload.data) "title"))
+        (set @entity.status    (object/get (array/first @payload.data) "status"))
+        (set @entity.priority  (object/get (array/first @payload.data) "priority"))
+        (set @entity.assignee  (object/get (array/first @payload.data) "assignee"))
+        (set @entity.reporter  (object/get (array/first @payload.data) "reporter"))
+        (set @entity.milestone (object/get (array/first @payload.data) "milestone"))
+        (set @entity.labels    (object/get (array/first @payload.data) "labels"))
+        (set @entity.createdAt (object/get (array/first @payload.data) "createdAt"))
+        (set @entity.updatedAt (object/get (array/first @payload.data) "updatedAt"))
+        (render-ui main {
+          type: "card", look: "flat-bordered", padding: "md",
+          children: [{
+            type: "stack", direction: "vertical", gap: "md",
+            children: [
+              { type: "stack", direction: "vertical", gap: "xs", children: [
+                { type: "typography", variant: "caption", color: "muted", content: "@entity.id" },
+                { type: "typography", variant: "h4", weight: "semibold", content: "@entity.title" }
+              ]},
+              { type: "divider" },
+              { type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "between", children: [
+                { type: "typography", variant: "overline", color: "muted", content: "Status" },
+                { type: "badge", label: "@entity.status", variant: "default", size: "sm" }
+              ]},
+              { type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "between", children: [
+                { type: "typography", variant: "overline", color: "muted", content: "Priority" },
+                { type: "badge", label: "@entity.priority", variant: "neutral", size: "sm" }
+              ]},
+              { type: "divider" },
+              { type: "stack", direction: "vertical", gap: "xs", children: [
+                { type: "typography", variant: "overline", color: "muted", content: "Assignee" },
+                { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+                  { type: "avatar", name: "@entity.assignee", size: "xs" },
+                  { type: "typography", variant: "body", content: "@entity.assignee" }
+                ]}
+              ]},
+              { type: "stack", direction: "vertical", gap: "xs", children: [
+                { type: "typography", variant: "overline", color: "muted", content: "Reporter" },
+                { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+                  { type: "avatar", name: "@entity.reporter", size: "xs" },
+                  { type: "typography", variant: "body", content: "@entity.reporter" }
+                ]}
+              ]},
+              { type: "divider" },
+              { type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "between", children: [
+                { type: "typography", variant: "overline", color: "muted", content: "Milestone" },
+                { type: "typography", variant: "body", content: "@entity.milestone" }
+              ]},
+              { type: "stack", direction: "vertical", gap: "xs", children: [
+                { type: "typography", variant: "overline", color: "muted", content: "Labels" },
+                { type: "badge", label: "@entity.labels", variant: "neutral", size: "sm" }
+              ]},
+              { type: "divider" },
+              { type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "between", children: [
+                { type: "typography", variant: "overline", color: "muted", content: "Created" },
+                { type: "typography", variant: "caption", color: "muted", content: "@entity.createdAt" }
+              ]},
+              { type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "between", children: [
+                { type: "typography", variant: "overline", color: "muted", content: "Updated" },
+                { type: "typography", variant: "caption", color: "muted", content: "@entity.updatedAt" }
+              ]}
+            ]
+          }]
+        })
+      SidebarRecordLoadFailed -> error
+        (set @entity.errorMessage @payload.error)
+        (render-ui main { type: "error-state", title: "Failed to load sidebar", message: "@entity.errorMessage" })
+    }
+    state error {
+      INIT -> loading
+        (render-ui main { type: "loading-state", title: "Retrying…" })
+    }
+    emits {
+      SidebarRecordLoaded     { data : [object] }
+      SidebarRecordLoadFailed { error : string, code : string }
+    }
+    listens {
+      SidebarRecordLoaded     { data : [object] }
+      SidebarRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  page "/sidebar-meta" as SidebarMetaPage -> SidebarMeta
+}

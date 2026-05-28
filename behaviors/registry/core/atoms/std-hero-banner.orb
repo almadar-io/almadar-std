@@ -1,0 +1,326 @@
+{
+  "name": "std-hero-banner",
+  "version": "1.0.0",
+  "description": "Hero marquee — eyebrow + headline + lead + primary CTA, centered in an elevated card. Above-the-fold landing surface. Standalone atom; fetches one HeroPromo record and renders inline.",
+  "orbitals": [
+    {
+      "name": "HeroBannerOrbital",
+      "entity": {
+        "name": "HeroPromo",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "eyebrow",
+            "type": "string",
+            "default": "Announcing"
+          },
+          {
+            "name": "headline",
+            "type": "string",
+            "required": true,
+            "default": "Headline"
+          },
+          {
+            "name": "lead",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "ctaLabel",
+            "type": "string",
+            "default": "Get started"
+          },
+          {
+            "name": "ctaEvent",
+            "type": "string",
+            "default": "PRIMARY_CTA"
+          },
+          {
+            "name": "errorMessage",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "HeroBanner",
+          "category": "interaction",
+          "linkedEntity": "HeroPromo",
+          "emits": [
+            {
+              "event": "PRIMARY_CTA"
+            },
+            {
+              "event": "HeroPromoLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[object]"
+                }
+              ]
+            },
+            {
+              "event": "HeroPromoLoadFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "ready"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "HeroPromoLoaded",
+                "name": "HeroPromo loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[object]"
+                  }
+                ]
+              },
+              {
+                "key": "HeroPromoLoadFailed",
+                "name": "HeroPromo load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "PRIMARY_CTA",
+                "name": "Primary Cta"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "HeroPromo",
+                    {
+                      "limit": 1.0,
+                      "emit": {
+                        "success": "HeroPromoLoaded",
+                        "failure": "HeroPromoLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "loading-state",
+                      "title": "Loading…"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "ready",
+                "event": "HeroPromoLoaded",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.eyebrow",
+                    [
+                      "object/get",
+                      [
+                        "array/first",
+                        "@payload.data"
+                      ],
+                      "eyebrow"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.headline",
+                    [
+                      "object/get",
+                      [
+                        "array/first",
+                        "@payload.data"
+                      ],
+                      "headline"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.lead",
+                    [
+                      "object/get",
+                      [
+                        "array/first",
+                        "@payload.data"
+                      ],
+                      "lead"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.ctaLabel",
+                    [
+                      "object/get",
+                      [
+                        "array/first",
+                        "@payload.data"
+                      ],
+                      "ctaLabel"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.ctaEvent",
+                    [
+                      "object/get",
+                      [
+                        "array/first",
+                        "@payload.data"
+                      ],
+                      "ctaEvent"
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "direction": "vertical",
+                          "align": "center",
+                          "gap": "lg",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "size": "sm",
+                              "label": "@entity.eyebrow",
+                              "variant": "neutral",
+                              "type": "badge"
+                            },
+                            {
+                              "weight": "bold",
+                              "variant": "h1",
+                              "type": "typography",
+                              "content": "@entity.headline"
+                            },
+                            {
+                              "content": "@entity.lead",
+                              "variant": "body",
+                              "color": "muted",
+                              "type": "typography"
+                            },
+                            {
+                              "label": "@entity.ctaLabel",
+                              "size": "lg",
+                              "action": "@entity.ctaEvent",
+                              "variant": "primary",
+                              "type": "button"
+                            }
+                          ]
+                        }
+                      ],
+                      "type": "card",
+                      "look": "elevated",
+                      "padding": "lg"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "HeroPromoLoadFailed",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.errorMessage",
+                    "@payload.error"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "title": "Failed to load hero",
+                      "message": "@entity.errorMessage",
+                      "type": "error-state"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "ready",
+                "to": "ready",
+                "event": "PRIMARY_CTA"
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "loading-state",
+                      "title": "Retrying…"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "HeroBannerPage",
+          "path": "/hero-banner",
+          "traits": [
+            {
+              "ref": "HeroBanner"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
