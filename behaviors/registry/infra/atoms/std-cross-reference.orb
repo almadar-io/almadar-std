@@ -37,11 +37,6 @@
             "items": {
               "type": "object",
               "properties": {
-                "icon": {
-                  "name": "icon",
-                  "type": "string",
-                  "required": false
-                },
                 "href": {
                   "name": "href",
                   "type": "string",
@@ -51,6 +46,11 @@
                   "name": "label",
                   "type": "string",
                   "required": true
+                },
+                "icon": {
+                  "name": "icon",
+                  "type": "string",
+                  "required": false
                 }
               }
             }
@@ -246,13 +246,13 @@
                     "create",
                     "CrossRefLink",
                     {
-                      "leftId": "@payload.leftId",
-                      "rightId": "@payload.rightId"
+                      "rightId": "@payload.rightId",
+                      "leftId": "@payload.leftId"
                     },
                     {
                       "emit": {
-                        "failure": "LinkOpFailed",
-                        "success": "LinkCreated"
+                        "success": "LinkCreated",
+                        "failure": "LinkOpFailed"
                       }
                     }
                   ]
@@ -329,8 +329,8 @@
                     "emit",
                     "LinksLoaded",
                     {
-                      "data": "@entity.filteredLinks",
-                      "leftId": "@entity.leftId"
+                      "leftId": "@entity.leftId",
+                      "data": "@entity.filteredLinks"
                     }
                   ]
                 ]
@@ -343,6 +343,7 @@
               "default": "",
               "label": "Left entity",
               "description": "Entity type on the left side of the N:M relationship",
+              "synonyms": "left side, source entity, from entity, parent entity",
               "tier": "domain"
             },
             "junctionEntity": {
@@ -350,13 +351,7 @@
               "default": "",
               "label": "Junction entity",
               "description": "Persistent entity used as the join table",
-              "tier": "domain"
-            },
-            "rightEntity": {
-              "type": "string",
-              "default": "",
-              "label": "Right entity",
-              "description": "Entity type on the right side of the N:M relationship",
+              "synonyms": "join table, link table, bridge table, junction table, mapping table",
               "tier": "domain"
             },
             "leftIdField": {
@@ -364,6 +359,15 @@
               "default": "",
               "label": "Left FK field",
               "description": "Junction column holding the left entity's id",
+              "synonyms": "left foreign key, left FK, source key, parent key",
+              "tier": "domain"
+            },
+            "rightEntity": {
+              "type": "string",
+              "default": "",
+              "label": "Right entity",
+              "description": "Entity type on the right side of the N:M relationship",
+              "synonyms": "right side, target entity, to entity, child entity, related entity",
               "tier": "domain"
             },
             "rightIdField": {
@@ -371,6 +375,7 @@
               "default": "",
               "label": "Right FK field",
               "description": "Junction column holding the right entity's id",
+              "synonyms": "right foreign key, right FK, target key, child key",
               "tier": "domain"
             }
           },
