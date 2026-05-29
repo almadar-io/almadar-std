@@ -47,6 +47,11 @@
             "name": "replies",
             "type": "relation",
             "required": false
+          },
+          {
+            "name": "focusedRow",
+            "type": "object",
+            "required": false
           }
         ],
         "persistence": "persistent"
@@ -56,6 +61,7 @@
       {
         "name": "ThreadPostBrowse",
         "emittedEvents": [
+          "SELECT",
           "REPLY",
           "EDIT_REPLY",
           "SUBMIT_REPLY",
@@ -71,32 +77,13 @@
             "key": "bodyContent",
             "type": "render-ui",
             "default": {
-              "direction": "vertical",
-              "type": "stack",
               "gap": "md",
               "children": [
                 {
-                  "look": "@config.tableLook",
-                  "variant": "card",
-                  "gap": "sm",
                   "type": "data-list",
-                  "fields": [
-                    {
-                      "label": "Author",
-                      "name": "authorName",
-                      "variant": "h4"
-                    },
-                    {
-                      "label": "",
-                      "variant": "body",
-                      "name": "content"
-                    },
-                    {
-                      "variant": "caption",
-                      "label": "Votes",
-                      "name": "voteCount"
-                    }
-                  ],
+                  "variant": "card",
+                  "entity": "@payload.data",
+                  "look": "@config.tableLook",
                   "itemActions": [
                     {
                       "icon": "message-square",
@@ -104,9 +91,28 @@
                       "event": "REPLY"
                     }
                   ],
-                  "entity": "@payload.data"
+                  "gap": "sm",
+                  "fields": [
+                    {
+                      "name": "authorName",
+                      "variant": "h4",
+                      "label": "Author"
+                    },
+                    {
+                      "label": "",
+                      "name": "content",
+                      "variant": "body"
+                    },
+                    {
+                      "variant": "caption",
+                      "name": "voteCount",
+                      "label": "Votes"
+                    }
+                  ]
                 }
-              ]
+              ],
+              "type": "stack",
+              "direction": "vertical"
             },
             "label": "Body content tree",
             "description": "Render-ui SExpr rendered after thread posts load. Default is the canonical forum-style data-list. Layer 3 variants override this with their own tree (chat bubbles, email-threaded cards, linear comment stacks, etc.) to deliver entirely different thread UX while inheriting the same trait, state machine, emits, and listens.",
@@ -150,6 +156,7 @@
           "requires": [],
           "provides": [
             "content",
+            "focusedRow",
             "parentId"
           ]
         }
@@ -166,6 +173,7 @@
       "CANCEL_REPLY",
       "EDIT_REPLY",
       "REPLY",
+      "SELECT",
       "SUBMIT_REPLY",
       "ThreadPostCreateFailed",
       "ThreadPostCreated",

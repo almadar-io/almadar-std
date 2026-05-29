@@ -83,16 +83,16 @@ export interface StdEventLogEventLogSaveFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdEventLogConfig {
-  /** Default: `[{"status":"active","key":"created","icon":"plus-circle","label":"Created"},{"icon":"edit-3","label":"Updated","key":"updated","status":"pending"},{"status":"complete","key":"approved","label":"Approved","icon":"check-circle"},{"icon":"x-circle","key":"rejected","status":"error","label":"Rejected"}]` */
+  /** Default: `[{"icon":"plus-circle","key":"created","label":"Created","status":"active"},{"label":"Updated","icon":"edit-3","key":"updated","status":"pending"},{"icon":"check-circle","key":"approved","label":"Approved","status":"complete"},{"icon":"x-circle","status":"error","key":"rejected","label":"Rejected"}]` */
   kindOptions?: EntityRow[];
+  /** Default: `"elevated"` */
+  cardLook?: 'elevated' | 'flat-bordered' | 'borderless-divider' | 'ticket' | 'invoice' | 'chip' | 'tile-image-first';
   /** Default: `"vertical-spacious"` */
   timelineLook?: 'vertical-compact' | 'vertical-spacious' | 'horizontal' | 'swimlane';
   /** Default: `"Activity"` */
   title?: string;
   /** Default: `["backfillTitle","backfillDescription","backfillKind","backfillDate"]` */
   formFields?: string[];
-  /** Default: `"elevated"` */
-  cardLook?: 'elevated' | 'flat-bordered' | 'borderless-divider' | 'ticket' | 'invoice' | 'chip' | 'tile-image-first';
 }
 
 /**

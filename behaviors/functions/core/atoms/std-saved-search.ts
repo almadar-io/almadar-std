@@ -114,10 +114,10 @@ export interface StdSavedSearchSavedSearchDeletedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdSavedSearchConfig {
-  /** Default: `"Saved Searches"` */
-  title?: string;
   /** Default: `"dense"` */
   tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
+  /** Default: `"Saved Searches"` */
+  title?: string;
 }
 
 /**

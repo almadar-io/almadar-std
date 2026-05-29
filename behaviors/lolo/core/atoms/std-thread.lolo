@@ -1,4 +1,4 @@
-app std-thread "1.1.0"
+app std-thread "1.2.0"
 "std-thread — forum-style nested replies with collapse + flat-mode toggle. Owns ThreadPost (persistent). flat:true covers 1:1 linear inquiry threads; flat:false renders forum-style nested. INIT fetches; REPLY persists a child post under @payload.parentId. Layer 3 variants override `bodyContent` to deliver chat-bubble, email-threaded, or linear-comments UX while inheriting the same trait, state machine, emits, and listens."
 
 orbital ThreadPostOrbital {
@@ -20,6 +20,10 @@ orbital ThreadPostOrbital {
     ;; variant's bodyContent can render `@reply.authorName` etc. without
     ;; per-reply lookups.
     replies       : [ThreadPost]
+    ;; Master-detail focus: SELECT sets this to the clicked row so split-pane
+    ;; variants (email-threaded) can bind @entity.focusedRow.<field> in their
+    ;; detail pane. Unused by list/bubble variants.
+    focusedRow    : object = {}
   }
 
   type ThreadPostLoaded        = Event { data : [ThreadPost] }              "Fired when the thread-post collection finishes loading"
@@ -80,8 +84,11 @@ orbital ThreadPostOrbital {
       ThreadPostLoaded -> browsing
         (render-ui main @config.bodyContent)
       REPLY -> replying
-        (set @entity.parentId @payload.parentId)
+        (set @entity.parentId (str/default @payload.parentNodeId @payload.parentId))
         (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", variant: "h4", content: "Write a reply" }, { type: "textarea", placeholder: "Your reply…", action: "EDIT_REPLY" }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Submit", action: "SUBMIT_REPLY", variant: "primary", icon: "send" }, { type: "button", label: "Cancel", action: "CANCEL_REPLY", variant: "secondary" }] }] })
+      SELECT -> loading
+        (set @entity.focusedRow @payload.row)
+        (fetch ThreadPost { include: ["replies"], emit: { success: "ThreadPostLoaded", failure: "ThreadPostLoadFailed" } })
     }
     state replying {
       EDIT_REPLY -> replying
@@ -104,7 +111,8 @@ orbital ThreadPostOrbital {
         (render-ui main { type: "spinner", size: "sm" })
     }
     emits {
-      REPLY                  { parentId : string!, content : string }
+      SELECT                 { id : string, row : object! }
+      REPLY                  { parentId : string, parentNodeId : string, content : string }
       EDIT_REPLY             { value : string! }
       SUBMIT_REPLY           { data : object! }
       CANCEL_REPLY
@@ -114,7 +122,8 @@ orbital ThreadPostOrbital {
       ThreadPostCreateFailed { error : string, code : string }
     }
     listens {
-      REPLY                  { parentId : string!, content : string }
+      SELECT                 { id : string, row : object! }
+      REPLY                  { parentId : string, parentNodeId : string, content : string }
       EDIT_REPLY             { value : string! }
       SUBMIT_REPLY           { data : object! }
       CANCEL_REPLY

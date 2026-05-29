@@ -97,22 +97,22 @@ export interface StdRatingReviewReviewSaveFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdRatingReviewConfig {
-  /** Default: `"Submit review"` */
-  submitLabel?: string;
-  /** Default: `"Write a review"` */
-  writeLabel?: string;
-  /** Default: `["draftComment"]` */
-  reviewFields?: string[];
-  /** Default: `[{"percentage":74,"label":"5 stars"},{"percentage":18,"label":"4 stars"},{"percentage":5,"label":"3 stars"},{"percentage":2,"label":"2 stars"},{"percentage":1,"label":"1 star"}]` */
-  starDistribution?: EntityRow[];
+  /** Default: `[{"label":"Most recent","id":"recent","icon":"clock"},{"id":"highest","icon":"star","label":"Top rated"},{"icon":"trending-down","id":"lowest","label":"Lowest"}]` */
+  sortOptions?: EntityRow[];
   /** Default: `"elevated"` */
   cardLook?: 'elevated' | 'flat-bordered' | 'borderless-divider' | 'ticket' | 'invoice' | 'chip' | 'tile-image-first';
-  /** Default: `[{"id":"recent","icon":"clock","label":"Most recent"},{"id":"highest","label":"Top rated","icon":"star"},{"label":"Lowest","id":"lowest","icon":"trending-down"}]` */
-  sortOptions?: EntityRow[];
-  /** Default: `"Bali Sunset Villa · 3 nights"` */
-  subjectTitle?: string;
   /** Default: `"Cancel"` */
   cancelLabel?: string;
+  /** Default: `[{"label":"5 stars","percentage":74},{"label":"4 stars","percentage":18},{"label":"3 stars","percentage":5},{"percentage":2,"label":"2 stars"},{"label":"1 star","percentage":1}]` */
+  starDistribution?: EntityRow[];
+  /** Default: `"Submit review"` */
+  submitLabel?: string;
+  /** Default: `["draftComment"]` */
+  reviewFields?: string[];
+  /** Default: `"Bali Sunset Villa · 3 nights"` */
+  subjectTitle?: string;
+  /** Default: `"Write a review"` */
+  writeLabel?: string;
 }
 
 /**

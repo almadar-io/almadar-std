@@ -1,6 +1,6 @@
 {
   "name": "std-calendar-week-timeline",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "description": "Week-timeline calendar — events grouped by weekday in a 7-column timeline. The visible window normalizes to the payload's actual date range, so events stack into whichever day-of-week they fall on. Same CalendarEventCalendar trait, same state machine as std-calendar — only bodyContent differs. For weekly schedule views (fitness class week, healthcare appointment week).",
   "orbitals": [
     {
@@ -66,7 +66,7 @@
           {
             "name": "selectedRange",
             "type": "string",
-            "default": "month"
+            "default": "week"
           }
         ]
       },
@@ -77,108 +77,108 @@
           "linkedEntity": "WeekTimelineEvent",
           "config": {
             "bodyContent": {
-              "gap": "md",
               "direction": "vertical",
+              "type": "stack",
+              "gap": "md",
               "children": [
                 {
-                  "align": "center",
                   "children": [
                     {
                       "type": "stack",
-                      "gap": "sm",
+                      "direction": "horizontal",
                       "align": "center",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "calendar"
+                          "name": "calendar",
+                          "type": "icon"
                         },
                         {
-                          "content": "Week",
                           "type": "typography",
+                          "content": "Week",
                           "variant": "h2"
                         }
                       ],
-                      "direction": "horizontal"
+                      "gap": "sm"
                     },
                     {
-                      "onSelect": "SELECT_DAY",
                       "selected": "@entity.selectedRange",
-                      "type": "date-range-selector"
+                      "type": "date-range-selector",
+                      "onSelect": "SELECT_DAY"
                     }
                   ],
                   "gap": "md",
+                  "direction": "horizontal",
                   "type": "stack",
-                  "justify": "between",
-                  "direction": "horizontal"
+                  "align": "center",
+                  "justify": "between"
                 },
                 {
                   "type": "divider"
                 },
                 {
+                  "groupBy": "weekday",
+                  "fields": [],
                   "renderItem": [
                     "fn",
                     "item",
                     {
+                      "shadow": "sm",
+                      "type": "card",
                       "children": [
                         {
-                          "gap": "xs",
-                          "type": "stack",
                           "direction": "vertical",
+                          "type": "stack",
+                          "gap": "xs",
                           "children": [
                             {
-                              "gap": "sm",
-                              "justify": "between",
-                              "type": "stack",
                               "align": "center",
+                              "justify": "between",
                               "direction": "horizontal",
                               "children": [
                                 {
-                                  "content": "@item.time",
+                                  "color": "muted",
                                   "variant": "caption",
                                   "weight": "medium",
                                   "type": "typography",
-                                  "color": "muted"
+                                  "content": "@item.time"
                                 },
                                 {
-                                  "type": "badge",
                                   "size": "sm",
                                   "label": "@item.status",
-                                  "variant": "default"
+                                  "variant": "default",
+                                  "type": "badge"
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "gap": "sm"
                             },
                             {
-                              "content": "@item.name",
                               "variant": "body2",
+                              "content": "@item.name",
                               "className": "truncate",
                               "weight": "medium",
                               "type": "typography"
                             },
                             {
+                              "variant": "caption",
                               "content": "@item.description",
                               "color": "muted",
                               "type": "typography",
-                              "variant": "caption",
                               "className": "truncate"
                             }
                           ]
                         }
                       ],
-                      "type": "card",
                       "padding": "sm",
-                      "look": "flat-bordered",
-                      "shadow": "sm"
+                      "look": "flat-bordered"
                     }
                   ],
+                  "entity": "@payload.data",
                   "type": "data-list",
                   "gap": "md",
-                  "fields": [],
-                  "variant": "default",
-                  "groupBy": "weekday",
-                  "entity": "@payload.data"
+                  "variant": "default"
                 }
-              ],
-              "type": "stack"
+              ]
             }
           }
         }

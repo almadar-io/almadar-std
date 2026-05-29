@@ -27,31 +27,31 @@
             "key": "bodyContent",
             "type": "render-ui",
             "default": {
-              "fields": [],
+              "type": "@config.viewPattern",
               "entity": "@entity.cards",
+              "fields": [],
               "renderItem": [
                 "fn",
                 "card",
                 {
-                  "look": "@config.statLook",
-                  "format": "@card.format",
-                  "sparklineData": "@card.sparklineData",
-                  "prefix": "@card.prefix",
-                  "max": "@card.max",
-                  "target": "@card.target",
                   "variant": "@card.variant",
-                  "trend": "@card.trend",
-                  "value": "@card.value",
-                  "icon": "@card.icon",
-                  "trendFormat": "@card.trendFormat",
-                  "type": "stat-display",
                   "trendPolarity": "@card.trendPolarity",
-                  "clickEvent": "@card.clickEvent",
+                  "max": "@card.max",
+                  "icon": "@card.icon",
+                  "type": "stat-display",
+                  "target": "@card.target",
+                  "trendFormat": "@card.trendFormat",
+                  "look": "@config.statLook",
+                  "trend": "@card.trend",
+                  "sparklineData": "@card.sparklineData",
+                  "value": "@card.value",
+                  "prefix": "@card.prefix",
+                  "label": "@card.label",
+                  "format": "@card.format",
                   "suffix": "@card.suffix",
-                  "label": "@card.label"
+                  "clickEvent": "@card.clickEvent"
                 }
-              ],
-              "type": "@config.viewPattern"
+              ]
             },
             "label": "Body content tree",
             "description": "Render-ui SExpr rendered after metrics aggregate. Default is the canonical data-grid call mapping @entity.cards through stat-display. Layer 3 variants override this with their own tree (hero numbers, sparkline rows, tile splashes) to deliver entirely different KPI UX while inheriting the same trait, state machine, aggregation pipeline, and listens.",
@@ -62,26 +62,26 @@
             "type": "[MetricSpec]",
             "default": [
               {
-                "variant": "primary",
                 "label": "Total Items",
                 "icon": "list",
-                "format": "number",
-                "aggregation": "count"
-              },
-              {
-                "label": "Active",
-                "variant": "success",
                 "aggregation": "count",
-                "icon": "check-circle",
-                "format": "number"
+                "format": "number",
+                "variant": "primary"
               },
               {
-                "aggregation": "avg",
+                "aggregation": "count",
                 "format": "number",
+                "icon": "check-circle",
+                "label": "Active",
+                "variant": "success"
+              },
+              {
                 "label": "Avg Value",
-                "icon": "trending-up",
+                "aggregation": "avg",
+                "variant": "info",
                 "field": "value",
-                "variant": "info"
+                "icon": "trending-up",
+                "format": "number"
               }
             ],
             "label": "Metrics",
@@ -90,8 +90,13 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "prefix": {
-                  "name": "prefix",
+                "max": {
+                  "name": "max",
+                  "required": false,
+                  "type": "number"
+                },
+                "suffix": {
+                  "name": "suffix",
                   "required": false,
                   "type": "string"
                 },
@@ -113,45 +118,6 @@
                     "info"
                   ]
                 },
-                "suffix": {
-                  "name": "suffix",
-                  "required": false,
-                  "type": "string"
-                },
-                "value": {
-                  "name": "value",
-                  "required": false,
-                  "type": "number"
-                },
-                "format": {
-                  "name": "format",
-                  "required": false,
-                  "type": "string",
-                  "values": [
-                    "number",
-                    "currency",
-                    "percent"
-                  ]
-                },
-                "trendFormat": {
-                  "name": "trendFormat",
-                  "required": false,
-                  "type": "string",
-                  "values": [
-                    "absolute",
-                    "percent"
-                  ]
-                },
-                "trend": {
-                  "name": "trend",
-                  "required": false,
-                  "type": "number"
-                },
-                "label": {
-                  "name": "label",
-                  "required": true,
-                  "type": "string"
-                },
                 "field": {
                   "name": "field",
                   "required": false,
@@ -170,11 +136,6 @@
                     "variance"
                   ]
                 },
-                "max": {
-                  "name": "max",
-                  "required": false,
-                  "type": "number"
-                },
                 "sparklineData": {
                   "name": "sparklineData",
                   "required": false,
@@ -183,10 +144,29 @@
                     "type": "number"
                   }
                 },
+                "trendFormat": {
+                  "name": "trendFormat",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "absolute",
+                    "percent"
+                  ]
+                },
                 "clickEvent": {
                   "name": "clickEvent",
                   "required": false,
                   "type": "string"
+                },
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "number",
+                    "currency",
+                    "percent"
+                  ]
                 },
                 "trendPolarity": {
                   "name": "trendPolarity",
@@ -197,9 +177,29 @@
                     "lower-is-better"
                   ]
                 },
+                "value": {
+                  "name": "value",
+                  "required": false,
+                  "type": "number"
+                },
+                "trend": {
+                  "name": "trend",
+                  "required": false,
+                  "type": "number"
+                },
+                "prefix": {
+                  "name": "prefix",
+                  "required": false,
+                  "type": "string"
+                },
                 "icon": {
                   "name": "icon",
                   "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
                   "type": "string"
                 }
               },
