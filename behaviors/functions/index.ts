@@ -6,7 +6,7 @@
  * machines live in behaviors/registry/.
  *
  * Layout: <topic>/<tier>/std-X.ts (topic is any direct subdir of functions/).
- * Topics in this package: core, agent, core-variations.
+ * Topics in this package: core, agent, core-variations, infra.
  *
  * @packageDocumentation
  */
@@ -30,7 +30,7 @@ export * from './core-variations/atoms/std-app-layout-bottomnav.js';
 export * from './core-variations/atoms/std-app-layout-minimal.js';
 export * from './core-variations/atoms/std-app-layout-topnav.js';
 export * from './core/atoms/std-approval-gate.js';
-export * from './core/atoms/std-audit-capture.js';
+export * from './infra/atoms/std-audit-capture.js';
 export * from './core/atoms/std-billable-hour.js';
 export * from './core/atoms/std-board.js';
 export * from './core-variations/atoms/std-board-kanban-classic.js';
@@ -47,10 +47,10 @@ export * from './core/atoms/std-cache-aside.js';
 export * from './core/atoms/std-calendar.js';
 export * from './core-variations/atoms/std-calendar-agenda-list.js';
 export * from './core-variations/atoms/std-calendar-week-timeline.js';
-export * from './core/atoms/std-cascade-on-delete.js';
+export * from './infra/atoms/std-cascade-on-delete.js';
 export * from './core/atoms/std-circuit-breaker.js';
 export * from './core/atoms/std-confirmation.js';
-export * from './core/atoms/std-cross-reference.js';
+export * from './infra/atoms/std-cross-reference.js';
 export * from './core/atoms/std-dashboard-grid-embedded.js';
 export * from './core/atoms/std-dashboard-grid-layout.js';
 export * from './core/atoms/std-dashboard-summary.js';
@@ -77,11 +77,11 @@ export * from './core-variations/atoms/std-graphs-pie.js';
 export * from './core-variations/atoms/std-graphs-scatter.js';
 export * from './core/atoms/std-hero-banner.js';
 export * from './core/atoms/std-image-upload-multi.js';
-export * from './core/atoms/std-lifecycle.js';
+export * from './infra/atoms/std-lifecycle.js';
 export * from './core/atoms/std-mod-queue.js';
 export * from './core/atoms/std-modal.js';
 export * from './core/atoms/std-multi-party-flow.js';
-export * from './core/atoms/std-notify-on-event.js';
+export * from './infra/atoms/std-notify-on-event.js';
 export * from './core/atoms/std-page-tree.js';
 export * from './core/atoms/std-pagination.js';
 export * from './core/atoms/std-push.js';
@@ -89,9 +89,9 @@ export * from './core/atoms/std-rate-limiter.js';
 export * from './core/atoms/std-rating-review.js';
 export * from './core/atoms/std-recurrence.js';
 export * from './core/atoms/std-related.js';
-export * from './core/atoms/std-reminder-scheduler.js';
+export * from './infra/atoms/std-reminder-scheduler.js';
 export * from './core/atoms/std-rich-editor.js';
-export * from './core/atoms/std-row-access-control.js';
+export * from './infra/atoms/std-row-access-control.js';
 export * from './core/atoms/std-saved-search.js';
 export * from './core/atoms/std-scatter.js';
 export * from './core/atoms/std-search.js';
