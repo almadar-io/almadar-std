@@ -1,6 +1,6 @@
 {
   "name": "std-thread-email-threaded",
-  "version": "1.3.1",
+  "version": "1.3.5",
   "description": "Email-threaded — Gmail/Outlook/Mail.app split-pane: left message list (sender, subject, preview), right pane shows the focused message with from/to/subject header and quoted-reply nested tree. For helpdesk email threads, support tickets, document discussions that read like email.",
   "orbitals": [
     {
@@ -91,13 +91,13 @@
             "type": "object",
             "default": {},
             "properties": {
-              "createdAt": {
-                "name": "createdAt",
+              "subject": {
+                "name": "subject",
                 "type": "string",
                 "required": false
               },
-              "id": {
-                "name": "id",
+              "content": {
+                "name": "content",
                 "type": "string",
                 "required": false
               },
@@ -110,18 +110,8 @@
                   "cardinality": "many"
                 }
               },
-              "content": {
-                "name": "content",
-                "type": "string",
-                "required": false
-              },
               "authorName": {
                 "name": "authorName",
-                "type": "string",
-                "required": false
-              },
-              "fromAddress": {
-                "name": "fromAddress",
                 "type": "string",
                 "required": false
               },
@@ -130,8 +120,18 @@
                 "type": "string",
                 "required": false
               },
-              "subject": {
-                "name": "subject",
+              "createdAt": {
+                "name": "createdAt",
+                "type": "string",
+                "required": false
+              },
+              "fromAddress": {
+                "name": "fromAddress",
+                "type": "string",
+                "required": false
+              },
+              "id": {
+                "name": "id",
                 "type": "string",
                 "required": false
               }
@@ -147,336 +147,337 @@
           "config": {
             "bodyContent": {
               "type": "stack",
+              "direction": "horizontal",
+              "align": "stretch",
+              "gap": "none",
+              "className": "max-w-7xl mx-auto my-section min-h-[32rem] max-h-[80vh] border border-[var(--color-border)] rounded-lg overflow-hidden shadow-sm bg-[var(--color-surface)]",
               "children": [
                 {
+                  "className": "w-80 shrink-0 border-r border-[var(--color-border)] bg-[var(--color-surface-subtle)] overflow-y-auto",
+                  "gap": "none",
                   "type": "stack",
                   "children": [
                     {
-                      "className": "px-card-md py-md border-b border-[var(--color-border)]",
+                      "align": "center",
+                      "gap": "sm",
+                      "className": "p-card-md border-b border-[var(--color-border)] sticky top-0 bg-[var(--color-surface-subtle)] z-10",
                       "children": [
                         {
+                          "type": "icon",
                           "name": "inbox",
-                          "size": "sm",
-                          "type": "icon"
+                          "size": "sm"
                         },
                         {
-                          "content": "Inbox",
                           "variant": "label",
+                          "weight": "medium",
                           "type": "typography",
-                          "weight": "medium"
+                          "content": "Inbox"
                         }
                       ],
                       "type": "stack",
-                      "gap": "sm",
-                      "align": "center",
                       "direction": "horizontal"
                     },
                     {
+                      "type": "data-list",
+                      "gap": "none",
                       "variant": "default",
+                      "entity": "@payload.data",
                       "fields": [],
                       "itemClickEvent": "SELECT",
                       "renderItem": [
                         "fn",
                         "item",
                         {
-                          "type": "stack",
+                          "align": "start",
+                          "gap": "sm",
+                          "className": "min-w-0 px-4 py-3",
                           "direction": "horizontal",
+                          "type": "stack",
                           "children": [
                             {
+                              "name": "@item.authorName",
                               "size": "sm",
-                              "className": "shrink-0 mt-0.5",
                               "type": "avatar",
-                              "name": "@item.authorName"
+                              "className": "shrink-0 mt-0.5"
                             },
                             {
-                              "className": "flex-1 min-w-0",
+                              "gap": "xs",
+                              "direction": "vertical",
                               "type": "stack",
+                              "className": "flex-1 min-w-0",
                               "children": [
                                 {
+                                  "className": "min-w-0",
                                   "type": "stack",
                                   "children": [
                                     {
+                                      "variant": "body2",
                                       "type": "typography",
-                                      "content": "@item.authorName",
-                                      "className": "flex-1 truncate",
                                       "weight": "semibold",
-                                      "variant": "body2"
+                                      "content": "@item.authorName",
+                                      "className": "flex-1 truncate"
                                     },
                                     {
+                                      "name": "chevron-right",
                                       "className": "shrink-0 text-[var(--color-text-muted)]",
-                                      "type": "icon",
                                       "size": "xs",
-                                      "name": "chevron-right"
+                                      "type": "icon"
                                     }
                                   ],
-                                  "direction": "horizontal",
                                   "align": "center",
                                   "gap": "sm",
-                                  "className": "min-w-0"
+                                  "direction": "horizontal"
                                 },
                                 {
                                   "content": "@item.subject",
+                                  "className": "truncate",
                                   "type": "typography",
-                                  "variant": "body2",
-                                  "className": "truncate"
+                                  "variant": "body2"
                                 },
                                 {
-                                  "className": "truncate",
                                   "color": "muted",
-                                  "variant": "caption",
                                   "type": "typography",
-                                  "content": "@item.preview"
+                                  "variant": "caption",
+                                  "content": "@item.preview",
+                                  "className": "truncate"
                                 }
-                              ],
-                              "direction": "vertical",
-                              "gap": "xs"
+                              ]
                             }
-                          ],
-                          "gap": "sm",
-                          "align": "start",
-                          "className": "min-w-0 py-1"
+                          ]
                         }
-                      ],
-                      "entity": "@payload.data",
-                      "type": "data-list",
-                      "gap": "none"
+                      ]
                     }
                   ],
-                  "direction": "vertical",
-                  "gap": "none",
-                  "className": "w-80 shrink-0 border-r border-[var(--color-border)] bg-[var(--color-muted)]"
+                  "direction": "vertical"
                 },
                 {
                   "children": [
                     {
-                      "type": "stack",
-                      "gap": "md",
-                      "className": "pb-card-md border-b border-[var(--color-border)]",
+                      "direction": "vertical",
+                      "className": "pb-4 border-b border-[var(--color-border)]",
                       "children": [
                         {
+                          "type": "stack",
+                          "justify": "between",
+                          "gap": "md",
+                          "align": "start",
                           "direction": "horizontal",
                           "children": [
                             {
+                              "variant": "h3",
                               "type": "typography",
                               "content": "@entity.focusedRow.subject",
-                              "variant": "h3",
                               "className": "flex-1 min-w-0"
                             },
                             {
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "type": "stack",
-                              "align": "center",
-                              "className": "shrink-0",
                               "children": [
                                 {
+                                  "size": "sm",
                                   "actionPayload": {
                                     "parentId": "@entity.focusedRow.id"
                                   },
                                   "variant": "secondary",
+                                  "type": "button",
                                   "icon": "corner-up-left",
                                   "label": "Reply",
-                                  "type": "button",
-                                  "size": "sm",
                                   "action": "REPLY"
                                 },
                                 {
-                                  "label": "Forward",
+                                  "type": "button",
                                   "action": "REPLY",
                                   "icon": "corner-up-right",
+                                  "label": "Forward",
                                   "variant": "ghost",
-                                  "type": "button",
                                   "size": "sm"
                                 }
-                              ]
+                              ],
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "align": "center",
+                              "gap": "sm",
+                              "className": "shrink-0"
                             }
-                          ],
-                          "gap": "md",
-                          "type": "stack",
-                          "align": "start",
-                          "justify": "between"
+                          ]
                         },
                         {
-                          "align": "center",
-                          "direction": "horizontal",
                           "gap": "md",
+                          "direction": "horizontal",
+                          "align": "center",
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "avatar",
-                              "name": "@entity.focusedRow.authorName",
                               "size": "md",
+                              "name": "@entity.focusedRow.authorName",
+                              "type": "avatar",
                               "className": "shrink-0"
                             },
                             {
                               "children": [
                                 {
                                   "type": "stack",
-                                  "align": "center",
-                                  "direction": "horizontal",
-                                  "gap": "xs",
                                   "children": [
                                     {
                                       "content": "From",
                                       "type": "typography",
                                       "variant": "caption",
-                                      "className": "w-10 shrink-0",
-                                      "color": "muted"
+                                      "color": "muted",
+                                      "className": "w-10 shrink-0"
                                     },
                                     {
-                                      "weight": "medium",
+                                      "className": "truncate",
                                       "content": "@entity.focusedRow.fromAddress",
-                                      "className": "truncate",
-                                      "type": "typography",
-                                      "variant": "body2"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "gap": "xs",
-                                  "direction": "horizontal",
-                                  "children": [
-                                    {
-                                      "content": "To",
-                                      "className": "w-10 shrink-0",
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "color": "muted"
-                                    },
-                                    {
-                                      "className": "truncate",
-                                      "type": "typography",
+                                      "weight": "medium",
                                       "variant": "body2",
-                                      "content": "@entity.focusedRow.toAddress"
+                                      "type": "typography"
                                     }
                                   ],
+                                  "align": "center",
+                                  "direction": "horizontal",
+                                  "gap": "xs"
+                                },
+                                {
+                                  "direction": "horizontal",
                                   "type": "stack",
-                                  "align": "center"
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "className": "w-10 shrink-0",
+                                      "type": "typography",
+                                      "content": "To",
+                                      "color": "muted",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "className": "truncate",
+                                      "content": "@entity.focusedRow.toAddress",
+                                      "variant": "body2"
+                                    }
+                                  ],
+                                  "gap": "xs"
                                 }
                               ],
-                              "direction": "vertical",
-                              "type": "stack",
                               "gap": "none",
-                              "className": "flex-1 min-w-0"
+                              "type": "stack",
+                              "className": "flex-1 min-w-0",
+                              "direction": "vertical"
                             },
                             {
-                              "variant": "caption",
-                              "color": "muted",
-                              "type": "typography",
                               "className": "shrink-0",
-                              "content": "@entity.focusedRow.createdAt"
+                              "content": "@entity.focusedRow.createdAt",
+                              "type": "typography",
+                              "color": "muted",
+                              "variant": "caption"
                             }
-                          ],
-                          "type": "stack"
+                          ]
                         }
                       ],
-                      "direction": "vertical"
+                      "type": "stack",
+                      "gap": "md"
                     },
                     {
-                      "padding": "lg",
                       "look": "flat-bordered",
+                      "type": "card",
                       "children": {
-                        "variant": "body",
-                        "className": "leading-relaxed whitespace-pre-wrap",
                         "content": "@entity.focusedRow.content",
+                        "className": "leading-relaxed whitespace-pre-wrap",
+                        "variant": "body",
                         "type": "typography"
                       },
-                      "type": "card"
+                      "padding": "lg"
                     },
                     {
-                      "align": "center",
-                      "direction": "horizontal",
-                      "gap": "sm",
                       "children": [
                         {
-                          "name": "corner-down-right",
                           "size": "xs",
+                          "name": "corner-down-right",
                           "type": "icon"
                         },
                         {
-                          "color": "muted",
                           "type": "typography",
+                          "content": "Quoted replies",
                           "variant": "label",
-                          "content": "Quoted replies"
+                          "color": "muted"
                         }
                       ],
-                      "type": "stack"
+                      "align": "center",
+                      "type": "stack",
+                      "gap": "sm",
+                      "direction": "horizontal"
                     },
                     {
+                      "type": "data-list",
+                      "gap": "sm",
                       "entity": "@entity.focusedRow.replies",
-                      "fields": [],
                       "variant": "default",
+                      "fields": [],
                       "renderItem": [
                         "fn",
                         "reply",
                         {
-                          "look": "flat-bordered",
                           "type": "card",
-                          "className": "border-l-4 border-l-[var(--color-primary)] ml-card-md",
+                          "look": "flat-bordered",
+                          "padding": "md",
                           "children": {
-                            "direction": "vertical",
+                            "type": "stack",
                             "gap": "sm",
                             "children": [
                               {
+                                "gap": "sm",
                                 "type": "stack",
+                                "align": "center",
+                                "direction": "horizontal",
                                 "children": [
                                   {
-                                    "size": "xs",
                                     "type": "avatar",
-                                    "name": "@reply.authorName"
+                                    "name": "@reply.authorName",
+                                    "size": "xs"
                                   },
                                   {
                                     "weight": "medium",
+                                    "type": "typography",
                                     "content": "@reply.authorName",
-                                    "variant": "body2",
-                                    "type": "typography"
+                                    "variant": "body2"
                                   },
                                   {
                                     "variant": "caption",
+                                    "color": "muted",
                                     "type": "typography",
-                                    "content": "@reply.fromAddress",
-                                    "color": "muted"
+                                    "content": "@reply.fromAddress"
                                   },
                                   {
-                                    "type": "typography",
                                     "color": "muted",
+                                    "type": "typography",
                                     "content": "·",
                                     "variant": "caption"
                                   },
                                   {
-                                    "type": "typography",
-                                    "variant": "caption",
                                     "color": "muted",
-                                    "content": "@reply.createdAt"
+                                    "content": "@reply.createdAt",
+                                    "type": "typography",
+                                    "variant": "caption"
                                   }
-                                ],
-                                "align": "center",
-                                "gap": "sm",
-                                "direction": "horizontal"
+                                ]
                               },
                               {
-                                "content": "@reply.content",
                                 "type": "typography",
-                                "variant": "body"
+                                "variant": "body",
+                                "content": "@reply.content"
                               }
                             ],
-                            "type": "stack"
+                            "direction": "vertical"
                           },
-                          "padding": "md"
+                          "className": "border-l-4 border-l-[var(--color-primary)] ml-card-md"
                         }
-                      ],
-                      "type": "data-list",
-                      "gap": "sm"
+                      ]
                     }
                   ],
+                  "className": "flex-1 min-w-0 p-card-lg overflow-y-auto",
                   "gap": "lg",
                   "type": "stack",
-                  "direction": "vertical",
-                  "className": "flex-1 px-card-lg py-card-lg overflow-y-auto"
+                  "direction": "vertical"
                 }
-              ],
-              "direction": "horizontal",
-              "className": "max-w-7xl mx-auto h-full border border-[var(--color-border)] rounded-md overflow-hidden",
-              "gap": "none"
+              ]
             }
           }
         }

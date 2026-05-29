@@ -1,6 +1,6 @@
 {
   "name": "std-stats-hero-metric",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "Hero metric — one elevated card, one oversize number. The headline KPI for executive landing pages and finance hero dashboards.",
   "orbitals": [
     {
@@ -21,29 +21,108 @@
             "required": true
           },
           {
-            "name": "label",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "value",
-            "type": "number"
-          },
-          {
-            "name": "icon",
-            "type": "string"
-          },
-          {
-            "name": "prefix",
-            "type": "string"
-          },
-          {
-            "name": "suffix",
-            "type": "string"
-          },
-          {
-            "name": "trend",
-            "type": "number"
+            "name": "cards",
+            "type": "array",
+            "default": [],
+            "items": {
+              "type": "object",
+              "properties": {
+                "max": {
+                  "name": "max",
+                  "type": "number",
+                  "required": false
+                },
+                "value": {
+                  "name": "value",
+                  "type": "number",
+                  "required": false
+                },
+                "target": {
+                  "name": "target",
+                  "type": "number",
+                  "required": false
+                },
+                "icon": {
+                  "name": "icon",
+                  "type": "string",
+                  "required": false
+                },
+                "format": {
+                  "name": "format",
+                  "type": "string",
+                  "required": false,
+                  "values": [
+                    "number",
+                    "currency",
+                    "percent"
+                  ]
+                },
+                "trendPolarity": {
+                  "name": "trendPolarity",
+                  "type": "string",
+                  "required": false,
+                  "values": [
+                    "higher-is-better",
+                    "lower-is-better"
+                  ]
+                },
+                "trendFormat": {
+                  "name": "trendFormat",
+                  "type": "string",
+                  "required": false,
+                  "values": [
+                    "absolute",
+                    "percent"
+                  ]
+                },
+                "sparklineData": {
+                  "name": "sparklineData",
+                  "type": "array",
+                  "required": false,
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                "clickEvent": {
+                  "name": "clickEvent",
+                  "type": "string",
+                  "required": false
+                },
+                "suffix": {
+                  "name": "suffix",
+                  "type": "string",
+                  "required": false
+                },
+                "label": {
+                  "name": "label",
+                  "type": "string",
+                  "required": true
+                },
+                "prefix": {
+                  "name": "prefix",
+                  "type": "string",
+                  "required": false
+                },
+                "variant": {
+                  "name": "variant",
+                  "type": "string",
+                  "required": false,
+                  "values": [
+                    "default",
+                    "primary",
+                    "success",
+                    "warning",
+                    "error",
+                    "info"
+                  ]
+                },
+                "trend": {
+                  "name": "trend",
+                  "type": "number",
+                  "required": false
+                }
+              }
+            }
           }
         ]
       },
@@ -54,104 +133,133 @@
           "linkedEntity": "HeroMetricStats",
           "config": {
             "bodyContent": {
-              "direction": "vertical",
               "gap": "none",
-              "type": "stack",
-              "className": "relative w-full rounded-xl shadow-lg overflow-hidden",
-              "children": [
+              "fields": [],
+              "entity": "@entity.cards",
+              "type": "data-list",
+              "renderItem": [
+                "fn",
+                "card",
                 {
-                  "type": "card",
-                  "padding": "lg",
+                  "gap": "none",
+                  "className": "relative w-full rounded-xl shadow-lg overflow-hidden",
+                  "type": "stack",
                   "children": [
                     {
-                      "className": "relative z-10 w-full max-w-2xl mx-auto text-center",
-                      "direction": "vertical",
-                      "type": "stack",
-                      "align": "center",
-                      "gap": "md",
+                      "padding": "lg",
+                      "type": "card",
+                      "look": "elevated",
                       "children": [
                         {
-                          "gap": "sm",
-                          "align": "center",
-                          "justify": "center",
+                          "className": "relative z-10 w-full max-w-2xl mx-auto text-center",
                           "type": "stack",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "@entity.icon",
-                              "color": "muted",
-                              "size": "md"
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "color": "muted",
+                                  "size": "md",
+                                  "name": "@card.icon"
+                                },
+                                {
+                                  "variant": "overline",
+                                  "content": "@card.label",
+                                  "type": "typography",
+                                  "weight": "bold",
+                                  "color": "muted",
+                                  "className": "uppercase tracking-widest"
+                                }
+                              ],
+                              "gap": "sm",
+                              "type": "stack",
+                              "justify": "center",
+                              "direction": "horizontal"
                             },
                             {
-                              "className": "uppercase tracking-widest",
-                              "color": "muted",
-                              "variant": "overline",
-                              "weight": "bold",
-                              "type": "typography",
-                              "content": "@entity.label"
+                              "className": "py-section",
+                              "gap": "xs",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "h2",
+                                  "color": "muted",
+                                  "weight": "normal",
+                                  "content": "@card.prefix"
+                                },
+                                {
+                                  "value": "@card.value",
+                                  "className": "text-7xl md:text-8xl font-bold tracking-tighter tabular-nums text-[var(--color-foreground)]",
+                                  "type": "animated-counter"
+                                },
+                                {
+                                  "content": "@card.suffix",
+                                  "variant": "h2",
+                                  "type": "typography",
+                                  "color": "muted",
+                                  "weight": "normal"
+                                }
+                              ],
+                              "align": "baseline",
+                              "justify": "center",
+                              "type": "stack",
+                              "direction": "horizontal"
+                            },
+                            {
+                              "showValue": true,
+                              "type": "trend-indicator",
+                              "size": "md",
+                              "value": "@card.trend"
                             }
                           ],
-                          "direction": "horizontal"
+                          "gap": "md",
+                          "direction": "vertical",
+                          "align": "center"
                         },
                         {
-                          "children": [
-                            {
-                              "color": "muted",
-                              "weight": "normal",
-                              "type": "typography",
-                              "variant": "h2",
-                              "content": "@entity.prefix"
-                            },
-                            {
-                              "value": "@entity.value",
-                              "className": "text-7xl md:text-8xl font-bold tracking-tighter tabular-nums text-[var(--color-foreground)]",
-                              "type": "animated-counter"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "@entity.suffix",
-                              "variant": "h2",
-                              "color": "muted",
-                              "weight": "normal"
-                            }
-                          ],
-                          "type": "stack",
-                          "align": "baseline",
-                          "justify": "center",
-                          "gap": "xs",
-                          "className": "py-section",
-                          "direction": "horizontal"
-                        },
-                        {
-                          "value": "@entity.trend",
-                          "type": "trend-indicator",
-                          "showValue": true,
-                          "size": "md"
+                          "data": "@card.sparklineData",
+                          "color": "auto",
+                          "type": "sparkline",
+                          "strokeWidth": 1.0,
+                          "height": 96.0,
+                          "fill": true,
+                          "className": "absolute inset-x-0 bottom-0 w-full opacity-10 pointer-events-none"
                         }
-                      ]
-                    },
-                    {
-                      "height": 96.0,
-                      "fill": true,
-                      "color": "auto",
-                      "type": "sparkline",
-                      "className": "absolute inset-x-0 bottom-0 w-full opacity-10 pointer-events-none",
-                      "strokeWidth": 1.0,
-                      "data": [
-                        1.0,
-                        2.0,
-                        3.0,
-                        4.0,
-                        5.0,
-                        6.0,
-                        7.0
                       ]
                     }
                   ],
-                  "look": "elevated"
+                  "direction": "vertical"
                 }
               ]
-            }
+            },
+            "metrics": [
+              {
+                "trendFormat": "percent",
+                "trend": 12.5,
+                "label": "Monthly Recurring Revenue",
+                "variant": "success",
+                "value": 128400.0,
+                "prefix": "$",
+                "trendPolarity": "higher-is-better",
+                "icon": "dollar-sign",
+                "format": "currency",
+                "sparklineData": [
+                  86000.0,
+                  91000.0,
+                  89500.0,
+                  97000.0,
+                  104000.0,
+                  101500.0,
+                  110000.0,
+                  116000.0,
+                  119500.0,
+                  123000.0,
+                  126200.0,
+                  128400.0
+                ]
+              }
+            ]
           }
         }
       ],
