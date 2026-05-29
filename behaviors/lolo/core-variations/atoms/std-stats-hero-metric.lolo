@@ -1,56 +1,77 @@
-app std-stats-hero-metric "1.0.0"
+app std-stats-hero-metric "1.2.0"
 "Hero metric — one elevated card, one oversize number. The headline KPI for executive landing pages and finance hero dashboards."
 
 orbital HeroMetricStatsOrbital {
   uses Stats from "std/behaviors/std-stats"
 
+  type StatCard = {
+    label          : string!
+    value          : number
+    icon           : string
+    format         : "number" | "currency" | "percent"
+    variant        : "default" | "primary" | "success" | "warning" | "error" | "info"
+    prefix         : string
+    suffix         : string
+    max            : number
+    target         : number
+    trend          : number
+    trendPolarity  : "higher-is-better" | "lower-is-better"
+    trendFormat    : "absolute" | "percent"
+    sparklineData  : [number]
+    clickEvent     : string
+  }
+
   entity HeroMetricStats [runtime] {
-    id      : string!
-    label   : string!
-    value   : number
-    icon    : string
-    prefix  : string
-    suffix  : string
-    trend   : number
+    id    : string!
+    cards : [StatCard] = []
   }
 
   trait HeroMetricStatsItemStats = Stats.traits.StatsItemStats -> HeroMetricStats {
     config: {
+      metrics: [
+        { label: "Monthly Recurring Revenue", value: 128400, format: "currency", prefix: "$", icon: "dollar-sign", variant: "success", trend: 12.5, trendPolarity: "higher-is-better", trendFormat: "percent", sparklineData: [86000, 91000, 89500, 97000, 104000, 101500, 110000, 116000, 119500, 123000, 126200, 128400] }
+      ],
       bodyContent: {
-        type: "stack",
-        direction: "vertical",
+        type: "data-list",
+        entity: "@entity.cards",
         gap: "none",
-        className: "relative w-full rounded-xl shadow-lg overflow-hidden",
-        children: [{
-          type: "card",
-          look: "elevated",
-          padding: "lg",
+        fields: [],
+        renderItem: ["fn", "card", {
+          type: "stack",
+          direction: "vertical",
+          gap: "none",
+          className: "relative w-full rounded-xl shadow-lg overflow-hidden",
           children: [{
-            type: "stack",
-            direction: "vertical",
-            gap: "md",
-            align: "center",
-            className: "relative z-10 w-full max-w-2xl mx-auto text-center",
-            children: [
-              { type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "center", children: [
-                { type: "icon", name: "@entity.icon", size: "md", color: "muted" },
-                { type: "typography", variant: "overline", color: "muted", weight: "bold", content: "@entity.label", className: "uppercase tracking-widest" }
-              ]},
-              { type: "stack", direction: "horizontal", gap: "xs", align: "baseline", justify: "center", className: "py-section", children: [
-                { type: "typography", variant: "h2", color: "muted", weight: "normal", content: "@entity.prefix" },
-                { type: "animated-counter", value: "@entity.value", className: "text-7xl md:text-8xl font-bold tracking-tighter tabular-nums text-[var(--color-foreground)]" },
-                { type: "typography", variant: "h2", color: "muted", weight: "normal", content: "@entity.suffix" }
-              ]},
-              { type: "trend-indicator", value: "@entity.trend", size: "md", showValue: true }
-            ]
-          }, {
-            type: "sparkline",
-            data: [1, 2, 3, 4, 5, 6, 7],
-            color: "auto",
-            height: 96,
-            strokeWidth: 1,
-            fill: true,
-            className: "absolute inset-x-0 bottom-0 w-full opacity-10 pointer-events-none"
+            type: "card",
+            look: "elevated",
+            padding: "lg",
+            children: [{
+              type: "stack",
+              direction: "vertical",
+              gap: "md",
+              align: "center",
+              className: "relative z-10 w-full max-w-2xl mx-auto text-center",
+              children: [
+                { type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "center", children: [
+                  { type: "icon", name: "@card.icon", size: "md", color: "muted" },
+                  { type: "typography", variant: "overline", color: "muted", weight: "bold", content: "@card.label", className: "uppercase tracking-widest" }
+                ]},
+                { type: "stack", direction: "horizontal", gap: "xs", align: "baseline", justify: "center", className: "py-section", children: [
+                  { type: "typography", variant: "h2", color: "muted", weight: "normal", content: "@card.prefix" },
+                  { type: "animated-counter", value: "@card.value", className: "text-7xl md:text-8xl font-bold tracking-tighter tabular-nums text-[var(--color-foreground)]" },
+                  { type: "typography", variant: "h2", color: "muted", weight: "normal", content: "@card.suffix" }
+                ]},
+                { type: "trend-indicator", value: "@card.trend", size: "md", showValue: true }
+              ]
+            }, {
+              type: "sparkline",
+              data: "@card.sparklineData",
+              color: "auto",
+              height: 96,
+              strokeWidth: 1,
+              fill: true,
+              className: "absolute inset-x-0 bottom-0 w-full opacity-10 pointer-events-none"
+            }]
           }]
         }]
       }
