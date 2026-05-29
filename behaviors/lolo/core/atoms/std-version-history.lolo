@@ -62,7 +62,7 @@ orbital RevisionOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "file-text" }, { type: "typography", content: "@entity.summary", variant: "h3" }, { type: "badge", label: "@entity.versionNumber", variant: "default" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Author" }, { type: "typography", variant: "body", content: "@entity.authorName" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Saved" }, { type: "typography", variant: "body", content: "@entity.createdAt" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Content" }, { type: "typography", variant: "body", content: "@entity.content" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 3, children: [{ type: "stat-display", look: "@config.statLook", label: "Version", value: "@entity.versionNumber", icon: "tag" }, { type: "stat-display", look: "@config.statLook", label: "Document", value: "@entity.documentId", icon: "file" }, { type: "stat-display", look: "@config.statLook", label: "Type", value: "@entity.documentType", icon: "layers" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Compare", variant: "secondary", action: "COMPARE", actionPayload: { id: "@entity.id" } }, { type: "button", label: "Rollback", variant: "danger", action: "ROLLBACK", actionPayload: { id: "@entity.id" } }] }] })
       ROLLBACK -> loading
         (set @entity.id @payload.id)
-        (fetch Revision { emit: { success: "RevisionLoaded", failure: "RevisionLoadFailed" } })
+        (persist update Revision @entity { emit: { success: "RevisionRolledBack", failure: "RevisionRollbackFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Rolling back…" }] })
     }
     state viewing_single {
@@ -74,7 +74,7 @@ orbital RevisionOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "git-compare" }, { type: "typography", content: "Compare versions", variant: "h3" }] }, { type: "divider" }, { type: "version-diff", revisions: "@payload.revisions", beforeId: "@payload.beforeId", afterId: "@payload.afterId", view: "side-by-side", onRevert: "ROLLBACK" }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Rollback", variant: "danger", action: "ROLLBACK", actionPayload: { id: "@entity.id" } }] }] })
       ROLLBACK -> loading
         (set @entity.id @payload.id)
-        (fetch Revision { emit: { success: "RevisionLoaded", failure: "RevisionLoadFailed" } })
+        (persist update Revision @entity { emit: { success: "RevisionRolledBack", failure: "RevisionRollbackFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Rolling back…" }] })
     }
     state comparing {
@@ -83,7 +83,7 @@ orbital RevisionOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading version history…" }] })
       ROLLBACK -> loading
         (set @entity.id @payload.id)
-        (fetch Revision { emit: { success: "RevisionLoaded", failure: "RevisionLoadFailed" } })
+        (persist update Revision @entity { emit: { success: "RevisionRolledBack", failure: "RevisionRollbackFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Rolling back…" }] })
     }
     state error {

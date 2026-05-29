@@ -49,8 +49,10 @@ orbital ListItemOrbital {
     }
     emits {
       CREATE
-      EDIT { id : string!, row : ListItem }
-      DELETE { id : string!, row : ListItem }
+      ;; row carries the public display contract (no internal pendingId)
+      ;; so EDIT/DELETE agree with other browse emitters app-wide.
+      EDIT { id : string!, row : { id : string!, name : string!, description : string, status : string, createdAt : string } }
+      DELETE { id : string!, row : { id : string!, name : string!, description : string, status : string, createdAt : string } }
       ListItemLoaded
       ListItemLoadFailed
     }
