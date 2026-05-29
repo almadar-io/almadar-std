@@ -95,10 +95,10 @@
             "key": "bodyContent",
             "type": "render-ui",
             "default": {
-              "gap": "md",
               "direction": "vertical",
               "children": [
                 {
+                  "align": "center",
                   "type": "stack",
                   "children": [
                     {
@@ -106,37 +106,32 @@
                       "name": "kanban-square"
                     },
                     {
-                      "type": "typography",
                       "variant": "h3",
+                      "type": "typography",
                       "content": "@config.title"
                     }
                   ],
                   "direction": "horizontal",
-                  "align": "center",
                   "gap": "sm"
                 },
                 {
                   "type": "divider"
                 },
                 {
-                  "gap": "md",
-                  "type": "data-grid",
-                  "fields": [],
-                  "entity": "@entity.boards",
-                  "cols": "@config.gridCols",
-                  "dndRoot": true,
                   "renderItem": [
                     "fn",
                     "col",
                     {
-                      "type": "card",
+                      "look": "@config.cardLook",
                       "children": [
                         {
+                          "gap": "sm",
+                          "direction": "vertical",
                           "children": [
                             {
-                              "gap": "xs",
-                              "direction": "horizontal",
                               "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "xs",
                               "align": "center",
                               "children": [
                                 {
@@ -149,90 +144,95 @@
                                   "variant": "h4"
                                 },
                                 {
-                                  "label": "@col.count",
                                   "variant": "@col.variant",
+                                  "label": "@col.count",
                                   "type": "badge"
                                 }
                               ]
                             },
                             {
-                              "type": "data-list",
-                              "entity": "@col.items",
-                              "positionEvent": "REORDER_POSITION",
-                              "reorderEvent": "REORDER_CARD",
-                              "fields": [],
-                              "gap": "sm",
                               "sortable": true,
-                              "accepts": "*",
                               "dropEvent": "MOVE_CARD",
                               "renderItem": [
                                 "fn",
                                 "item",
                                 {
+                                  "look": "@config.cardLook",
                                   "type": "card",
                                   "children": [
                                     {
+                                      "direction": "vertical",
                                       "children": [
                                         {
-                                          "type": "typography",
+                                          "content": "@config.cardTitleBinding",
                                           "variant": "h4",
-                                          "content": "@config.cardTitleBinding"
+                                          "type": "typography"
                                         },
                                         {
-                                          "type": "typography",
-                                          "color": "muted",
                                           "variant": "caption",
+                                          "color": "muted",
+                                          "type": "typography",
                                           "content": "@config.cardDescriptionBinding"
                                         },
                                         {
-                                          "type": "stack",
+                                          "direction": "horizontal",
                                           "align": "center",
+                                          "type": "stack",
                                           "children": [
                                             {
                                               "type": "button",
-                                              "variant": "ghost",
+                                              "label": "Open",
                                               "action": "OPEN_CARD",
-                                              "icon": "arrow-right",
+                                              "variant": "ghost",
                                               "actionPayload": {
-                                                "row": "@item",
-                                                "id": "@config.cardIdBinding"
+                                                "id": "@config.cardIdBinding",
+                                                "row": "@item"
                                               },
-                                              "label": "Open"
+                                              "icon": "arrow-right"
                                             }
                                           ],
-                                          "direction": "horizontal",
                                           "gap": "xs"
                                         }
                                       ],
-                                      "direction": "vertical",
                                       "type": "stack",
                                       "gap": "xs"
                                     }
-                                  ],
-                                  "look": "@config.cardLook"
+                                  ]
                                 }
                               ],
-                              "dragGroup": "@col.key"
+                              "fields": [],
+                              "reorderEvent": "REORDER_CARD",
+                              "positionEvent": "REORDER_POSITION",
+                              "entity": "@col.items",
+                              "type": "data-list",
+                              "accepts": "*",
+                              "dragGroup": "@col.key",
+                              "gap": "sm"
                             }
                           ],
-                          "gap": "sm",
-                          "type": "stack",
-                          "direction": "vertical"
+                          "type": "stack"
                         }
                       ],
-                      "look": "@config.cardLook"
+                      "type": "card"
                     }
-                  ]
+                  ],
+                  "gap": "md",
+                  "type": "data-grid",
+                  "entity": "@entity.boards",
+                  "cols": "@config.gridCols",
+                  "fields": [],
+                  "dndRoot": true
                 },
                 {
+                  "variant": "primary",
                   "type": "floating-action-button",
                   "action": "ADD_CARD",
                   "icon": "plus",
-                  "label": "Add item",
-                  "variant": "primary"
+                  "label": "Add item"
                 }
               ],
-              "type": "stack"
+              "type": "stack",
+              "gap": "md"
             },
             "label": "Body content tree",
             "description": "Render-ui SExpr rendered after the board loads. Default is the canonical column data-grid with nested per-column data-lists. Layer 3 variants override this with their own tree (swim-lanes, timeline-roadmap, etc.) while inheriting the same trait, state machine, emits, and listens.",
@@ -292,10 +292,10 @@
             "type": "[ColumnSpec]",
             "default": [
               {
+                "icon": "circle",
                 "key": "todo",
                 "variant": "default",
-                "label": "To Do",
-                "icon": "circle"
+                "label": "To Do"
               },
               {
                 "key": "doing",
@@ -304,9 +304,9 @@
                 "variant": "primary"
               },
               {
-                "label": "Done",
                 "key": "done",
                 "variant": "success",
+                "label": "Done",
                 "icon": "check-circle"
               }
             ],
@@ -315,14 +315,14 @@
             "tier": "domain",
             "items": {
               "properties": {
-                "key": {
-                  "name": "key",
-                  "required": true,
-                  "type": "string"
-                },
                 "icon": {
                   "name": "icon",
                   "required": false,
+                  "type": "string"
+                },
+                "key": {
+                  "name": "key",
+                  "required": true,
                   "type": "string"
                 },
                 "label": {
@@ -361,6 +361,14 @@
             "default": 3,
             "label": "Grid columns",
             "description": "Outer grid column count before the board wraps",
+            "tier": "presentation"
+          },
+          {
+            "key": "groupByField",
+            "type": "string",
+            "default": "stage",
+            "label": "Group-by field",
+            "description": "Entity field whose value matches a column key — items are filtered into columns by it. Default 'stage'; set to 'status' (or any field) for entities that track state under a different name.",
             "tier": "presentation"
           },
           {
