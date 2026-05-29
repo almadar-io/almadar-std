@@ -40,23 +40,31 @@
         "listenedEvents": [],
         "overridableConfigKeys": [
           {
+            "key": "badgeBinding",
+            "type": "string",
+            "default": "@item.status",
+            "label": "Badge binding",
+            "description": "Per-row binding string for the status/badge slot.",
+            "tier": "presentation"
+          },
+          {
             "key": "bodyContent",
             "type": "render-ui",
             "default": {
+              "type": "stack",
               "direction": "vertical",
               "children": [
                 {
-                  "fields": "@config.fields",
+                  "type": "data-grid",
                   "cols": "@config.cols",
-                  "pageSize": "@config.displayPageSize",
                   "gap": "@config.gap",
-                  "imageField": "@config.imageField",
+                  "pageSize": "@config.displayPageSize",
+                  "fields": "@config.fields",
                   "itemActions": "@config.itemActions",
-                  "entity": "@payload.data",
-                  "type": "data-grid"
+                  "imageField": "@config.imageField",
+                  "entity": "@payload.data"
                 }
-              ],
-              "type": "stack"
+              ]
             },
             "label": "Body content tree",
             "description": "Render-ui SExpr rendered after rows load. Default is the canonical data-grid call wrapped in a stack. Layer 3 variants override this with their own tree (composing data-list/data-grid/entity-table + custom renderItem lambdas + filter-group, kbd, card, etc.) to deliver entirely different browse UX while inheriting the same trait, state machine, emits, and listens.",
@@ -68,6 +76,14 @@
             "default": 1,
             "label": "Grid columns",
             "description": "Number of columns in the responsive grid layout",
+            "tier": "presentation"
+          },
+          {
+            "key": "descriptionBinding",
+            "type": "string",
+            "default": "@item.description",
+            "label": "Description binding",
+            "description": "Per-row binding string for the card body/subtitle slot.",
             "tier": "presentation"
           },
           {
@@ -84,8 +100,8 @@
             "default": [
               {
                 "variant": "h4",
-                "name": "name",
-                "label": "Name"
+                "label": "Name",
+                "name": "name"
               },
               {
                 "variant": "caption",
@@ -103,28 +119,13 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "icon": {
-                  "name": "icon",
-                  "required": false,
-                  "type": "string"
-                },
-                "format": {
-                  "name": "format",
-                  "required": false,
-                  "type": "string"
-                },
-                "key": {
-                  "name": "key",
-                  "required": false,
-                  "type": "string"
-                },
                 "label": {
                   "name": "label",
                   "required": false,
                   "type": "string"
                 },
-                "header": {
-                  "name": "header",
+                "variant": {
+                  "name": "variant",
                   "required": false,
                   "type": "string"
                 },
@@ -133,8 +134,23 @@
                   "required": true,
                   "type": "string"
                 },
-                "variant": {
-                  "name": "variant",
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "key": {
+                  "name": "key",
+                  "required": false,
+                  "type": "string"
+                },
+                "header": {
+                  "name": "header",
+                  "required": false,
+                  "type": "string"
+                },
+                "format": {
+                  "name": "format",
                   "required": false,
                   "type": "string"
                 }
@@ -159,6 +175,14 @@
             "tier": "presentation"
           },
           {
+            "key": "imageLabelBinding",
+            "type": "string",
+            "default": "@item.thumbnailLabel",
+            "label": "Image label binding",
+            "description": "Per-row binding string for the image-area label slot (image-first variants).",
+            "tier": "presentation"
+          },
+          {
             "key": "itemActions",
             "type": "[ItemAction]",
             "default": [],
@@ -167,23 +191,23 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "event": {
-                  "name": "event",
-                  "required": true,
-                  "type": "string"
-                },
-                "icon": {
-                  "name": "icon",
-                  "required": false,
-                  "type": "string"
-                },
                 "label": {
                   "name": "label",
                   "required": true,
                   "type": "string"
                 },
+                "event": {
+                  "name": "event",
+                  "required": true,
+                  "type": "string"
+                },
                 "variant": {
                   "name": "variant",
+                  "required": false,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
                   "required": false,
                   "type": "string"
                 }
@@ -192,11 +216,35 @@
             }
           },
           {
+            "key": "metaBinding",
+            "type": "string",
+            "default": "@item.createdAt",
+            "label": "Meta binding",
+            "description": "Per-row binding string for the secondary meta slot (timestamp / category).",
+            "tier": "presentation"
+          },
+          {
             "key": "pageSize",
             "type": "number",
             "default": 10,
             "label": "Page size (fetch)",
             "description": "Rows fetched from the server per page",
+            "tier": "presentation"
+          },
+          {
+            "key": "priceBinding",
+            "type": "string",
+            "default": "@item.price",
+            "label": "Price binding",
+            "description": "Per-row binding string for the price/amount overlay slot.",
+            "tier": "presentation"
+          },
+          {
+            "key": "titleBinding",
+            "type": "string",
+            "default": "@item.name",
+            "label": "Title binding",
+            "description": "Per-row binding string for the card title slot. Layer 3 variants read this inside their renderItem; consumers override it to point at their entity's field (e.g. \"@item.dishName\").",
             "tier": "presentation"
           },
           {

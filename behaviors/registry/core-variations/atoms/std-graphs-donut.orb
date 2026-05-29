@@ -1,0 +1,68 @@
+{
+  "name": "std-graphs-donut",
+  "version": "1.0.0",
+  "description": "Donut chart view. Embeds std-graphs with the donut chartType — pie with a hollow centre that frees up space for a centered total/label. Reads better than pie when slices are similarly sized.",
+  "orbitals": [
+    {
+      "name": "DonutGraphItemOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-graphs",
+          "as": "Graph"
+        }
+      ],
+      "entity": {
+        "name": "DonutGraphItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "chartData",
+            "type": "array",
+            "default": [],
+            "items": {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "name": "value",
+                  "type": "number",
+                  "required": true
+                },
+                "label": {
+                  "name": "label",
+                  "type": "string",
+                  "required": true
+                }
+              }
+            }
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "Graph.traits.GraphItemGraph",
+          "name": "DonutGraphItemGraph",
+          "linkedEntity": "DonutGraphItem",
+          "config": {
+            "chartType": "donut"
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "DonutGraphPage",
+          "path": "/donut-graph",
+          "traits": [
+            {
+              "ref": "DonutGraphItemGraph"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

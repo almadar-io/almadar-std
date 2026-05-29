@@ -39,44 +39,44 @@ export type StdGraphsEventKey = 'INIT' | 'ITEMS_LOADED';
  * without modifying its state-machine topology.
  */
 export interface StdGraphsConfig {
+  /** Default: `"count"` */
+  aggregation?: 'count' | 'sum' | 'avg' | 'min' | 'max';
+  /** Default: `[]` */
+  series?: EntityRow[];
+  /** Default: `"none"` */
+  sortField?: 'value' | 'label' | 'none';
+  /** Default: `0` */
+  limit?: number;
+  /** Default: `"none"` */
+  stack?: 'none' | 'stack' | 'normalize';
+  /** Default: `true` */
+  showLegend?: boolean;
+  /** Default: `false` */
+  showValues?: boolean;
   /** Default: `"status"` */
   categoryField?: string;
+  /** Default: `""` */
+  valueField?: string;
+  /** Default: `"desc"` */
+  sortDir?: 'asc' | 'desc';
+  /** Default: `"month"` */
+  period?: 'day' | 'week' | 'month' | 'quarter' | 'year';
+  /** Default: `"Counts per category"` */
+  subtitle?: string;
   /** Default: `"date"` */
   timeField?: string;
   /** Default: `""` */
   drillEvent?: string;
-  /** Default: `280` */
-  height?: number;
-  /** Default: `"Distribution"` */
-  title?: string;
-  /** Default: `false` */
-  showValues?: boolean;
-  /** Default: `0` */
-  limit?: number;
-  /** Default: `"bar"` */
-  chartType?: 'bar' | 'line' | 'pie' | 'area' | 'donut' | 'histogram' | 'scatter';
-  /** Default: `""` */
-  valueField?: string;
-  /** Default: `[]` */
-  series?: EntityRow[];
-  /** Default: `"chart"` */
-  viewPattern?: unknown;
-  /** Default: `"Counts per category"` */
-  subtitle?: string;
-  /** Default: `"month"` */
-  period?: 'day' | 'week' | 'month' | 'quarter' | 'year';
   /** Default: `false` */
   timeAxis?: boolean;
-  /** Default: `"desc"` */
-  sortDir?: 'asc' | 'desc';
-  /** Default: `"none"` */
-  stack?: 'none' | 'stack' | 'normalize';
-  /** Default: `"none"` */
-  sortField?: 'value' | 'label' | 'none';
-  /** Default: `true` */
-  showLegend?: boolean;
-  /** Default: `"count"` */
-  aggregation?: 'count' | 'sum' | 'avg' | 'min' | 'max';
+  /** Default: `"bar"` */
+  chartType?: 'bar' | 'line' | 'pie' | 'area' | 'donut' | 'histogram' | 'scatter';
+  /** Default: `"Distribution"` */
+  title?: string;
+  /** Default: `280` */
+  height?: number;
+  /** Default: `"chart"` */
+  viewPattern?: unknown;
 }
 
 /**

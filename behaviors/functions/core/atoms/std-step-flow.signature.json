@@ -100,127 +100,127 @@
             "key": "bodyContent",
             "type": "render-ui",
             "default": {
-              "gap": "lg",
               "type": "stack",
+              "direction": "vertical",
               "children": [
                 {
-                  "direction": "horizontal",
                   "gap": "sm",
-                  "type": "stack",
-                  "align": "center",
                   "children": [
                     {
-                      "name": "shield-check",
-                      "type": "icon"
+                      "type": "icon",
+                      "name": "shield-check"
                     },
                     {
-                      "type": "typography",
+                      "variant": "h3",
                       "content": "@config.title",
-                      "variant": "h3"
+                      "type": "typography"
                     }
-                  ]
+                  ],
+                  "align": "center",
+                  "type": "stack",
+                  "direction": "horizontal"
                 },
                 {
+                  "allowNavigation": false,
                   "steps": "@entity.wizardSteps",
                   "type": "wizard-progress",
-                  "allowNavigation": false,
                   "currentStep": "@entity.currentStepIndex"
                 },
                 {
-                  "look": "@config.cardLook",
-                  "type": "card",
                   "children": [
                     {
-                      "direction": "vertical",
-                      "type": "stack",
                       "gap": "md",
+                      "type": "stack",
                       "children": [
                         {
-                          "align": "center",
-                          "type": "stack",
                           "gap": "sm",
                           "children": [
                             {
+                              "size": "lg",
                               "name": "@entity.currentStepIcon",
-                              "type": "icon",
-                              "size": "lg"
+                              "type": "icon"
                             },
                             {
                               "gap": "xs",
-                              "direction": "vertical",
                               "children": [
                                 {
-                                  "type": "typography",
                                   "content": "@entity.currentStepLabel",
+                                  "type": "typography",
                                   "variant": "h2"
                                 },
                                 {
-                                  "content": "@entity.currentStepDescription",
-                                  "color": "muted",
                                   "type": "typography",
-                                  "variant": "body"
+                                  "variant": "body",
+                                  "color": "muted",
+                                  "content": "@entity.currentStepDescription"
                                 }
                               ],
-                              "type": "stack"
+                              "type": "stack",
+                              "direction": "vertical"
                             }
                           ],
+                          "type": "stack",
+                          "align": "center",
                           "direction": "horizontal"
                         }
-                      ]
+                      ],
+                      "direction": "vertical"
                     }
-                  ]
+                  ],
+                  "type": "card",
+                  "look": "@config.cardLook"
                 },
                 {
-                  "gap": "sm",
-                  "direction": "horizontal",
-                  "align": "center",
                   "type": "stack",
                   "children": [
                     {
-                      "icon": "chevron-left",
-                      "variant": "ghost",
-                      "action": "BACK",
+                      "label": "Back",
                       "disabled": "@entity.isFirstStep",
                       "actionPayload": {
                         "id": "@entity.id"
                       },
-                      "label": "Back",
-                      "type": "button"
+                      "variant": "ghost",
+                      "action": "BACK",
+                      "type": "button",
+                      "icon": "chevron-left"
                     },
                     {
-                      "actionPayload": {
-                        "id": "@entity.id"
-                      },
-                      "variant": "ghost",
                       "label": "Reject",
-                      "type": "button",
                       "action": "REJECT",
-                      "icon": "x"
-                    },
-                    {
-                      "actionPayload": {
-                        "id": "@entity.id"
-                      },
-                      "action": "ESCALATE",
-                      "label": "Escalate",
-                      "icon": "alert-triangle",
-                      "variant": "ghost",
-                      "type": "button"
-                    },
-                    {
-                      "action": "ADVANCE",
-                      "variant": "primary",
-                      "label": "@entity.primaryActionLabel",
                       "type": "button",
-                      "icon": "@entity.primaryActionIcon",
+                      "variant": "ghost",
+                      "icon": "x",
                       "actionPayload": {
                         "id": "@entity.id"
                       }
+                    },
+                    {
+                      "action": "ESCALATE",
+                      "icon": "alert-triangle",
+                      "actionPayload": {
+                        "id": "@entity.id"
+                      },
+                      "label": "Escalate",
+                      "variant": "ghost",
+                      "type": "button"
+                    },
+                    {
+                      "type": "button",
+                      "actionPayload": {
+                        "id": "@entity.id"
+                      },
+                      "variant": "primary",
+                      "action": "ADVANCE",
+                      "label": "@entity.primaryActionLabel",
+                      "icon": "@entity.primaryActionIcon"
                     }
-                  ]
+                  ],
+                  "direction": "horizontal",
+                  "gap": "sm",
+                  "align": "center"
                 }
               ],
-              "direction": "vertical"
+              "gap": "lg"
             },
             "label": "Body content tree",
             "description": "Render-ui SExpr rendered while the step chain is active (loading-success, running, BACK). Default is the canonical wizard-progress + step-card + action-row tree. Layer 3 variants override this with their own tree (horizontal stepper, sidebar progress, card carousel, etc.) to deliver entirely different step UX while inheriting the same trait, state machine, emits, and listens.",
@@ -248,22 +248,22 @@
             "type": "[StepSpec]",
             "default": [
               {
-                "icon": "user",
-                "description": "Initial review by direct manager",
                 "key": "manager",
-                "label": "Manager Review"
+                "label": "Manager Review",
+                "description": "Initial review by direct manager",
+                "icon": "user"
               },
               {
-                "label": "Director Approval",
+                "key": "director",
                 "description": "Department director sign-off",
                 "icon": "users",
-                "key": "director"
+                "label": "Director Approval"
               },
               {
                 "key": "executive",
+                "label": "Executive Sign-off",
                 "description": "Final executive approval",
-                "icon": "shield",
-                "label": "Executive Sign-off"
+                "icon": "shield"
               }
             ],
             "label": "Steps",
@@ -276,6 +276,16 @@
                   "required": false,
                   "type": "string"
                 },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
                 "allowedRoles": {
                   "name": "allowedRoles",
                   "required": false,
@@ -283,16 +293,6 @@
                   "items": {
                     "type": "string"
                   }
-                },
-                "icon": {
-                  "name": "icon",
-                  "required": false,
-                  "type": "string"
-                },
-                "label": {
-                  "name": "label",
-                  "required": true,
-                  "type": "string"
                 },
                 "description": {
                   "name": "description",
