@@ -1,4 +1,4 @@
-app std-thread "1.2.0"
+app std-thread "1.3.0"
 "std-thread — forum-style nested replies with collapse + flat-mode toggle. Owns ThreadPost (persistent). flat:true covers 1:1 linear inquiry threads; flat:false renders forum-style nested. INIT fetches; REPLY persists a child post under @payload.parentId. Layer 3 variants override `bodyContent` to deliver chat-bubble, email-threaded, or linear-comments UX while inheriting the same trait, state machine, emits, and listens."
 
 orbital ThreadPostOrbital {
@@ -83,9 +83,17 @@ orbital ThreadPostOrbital {
         (render-ui main { type: "spinner", size: "sm" })
       ThreadPostLoaded -> browsing
         (render-ui main @config.bodyContent)
-      REPLY -> replying
+      ;; Inline reply: when the event already carries the composed text (e.g.
+      ;; reply-tree's inline composer), persist directly and stay in `browsing`
+      ;; so the box stays inline instead of swapping to a full composer view.
+      REPLY -> browsing when (not (= (str/default @payload.content "") ""))
+        (persist create ThreadPost { parentId: (str/default @payload.parentNodeId @payload.parentId), content: @payload.content, threadRootId: (str/default @payload.parentNodeId "root"), authorId: "me", authorName: "You" } { emit: { success: "ThreadPostCreated", failure: "ThreadPostCreateFailed" } })
+      ;; Reply with no text yet (e.g. an email "Reply" button) opens the composer.
+      REPLY -> replying when (= (str/default @payload.content "") "")
         (set @entity.parentId (str/default @payload.parentNodeId @payload.parentId))
         (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", variant: "h4", content: "Write a reply" }, { type: "textarea", placeholder: "Your reply…", action: "EDIT_REPLY" }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Submit", action: "SUBMIT_REPLY", variant: "primary", icon: "send" }, { type: "button", label: "Cancel", action: "CANCEL_REPLY", variant: "secondary" }] }] })
+      ThreadPostCreated -> browsing
+        (fetch ThreadPost { include: ["replies"], emit: { success: "ThreadPostLoaded", failure: "ThreadPostLoadFailed" } })
       SELECT -> loading
         (set @entity.focusedRow @payload.row)
         (fetch ThreadPost { include: ["replies"], emit: { success: "ThreadPostLoaded", failure: "ThreadPostLoadFailed" } })

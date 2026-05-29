@@ -1,4 +1,4 @@
-app std-step-flow "3.3.1"
+app std-step-flow "3.4.0"
 "std-step-flow — generic N-step sequential decision chain (Stripe Connect / TurboTax / Vercel deploy style). `config.steps` is an array of step definitions `{ key, label, description, icon, allowedRoles?: [string] }`; the trait projects the current step into a prominent body card and a `wizard-progress` stepper bar at the top. When a step declares `allowedRoles`, only users whose `@user.role` is in that list can advance through it. One primary button ADVANCEs along the chain; at the last step the same button finalizes (label/icon/variant swap via entity binding, state routed via guard). REJECT/ESCALATE terminate. Topology = loading / running / approved / rejected / escalated / error."
 
 type ObjectSpec = { id : string, label : string, value : string }
@@ -6,9 +6,16 @@ type StepSpec = { label : string!, key : string, icon : string, description : st
 
 orbital StepFlowOrbital {
   type WizardStep = {
-    id          : string!
-    title       : string!
-    description : string
+    id           : string!
+    key          : string
+    title        : string!
+    label        : string
+    description  : string
+    icon         : string
+    indexLabel   : string
+    isPending    : boolean
+    badgeVariant : string
+    labelColor   : string
   }
 
   entity StepFlowView [runtime] {
@@ -95,9 +102,16 @@ orbital StepFlowOrbital {
         (set @entity.currentStepIndex 0)
         (set @entity.totalSteps (array/len @config.steps))
         (set @entity.wizardSteps (array/map @config.steps ["fn", "step", {
-          id:          (object/get @step "key"),
-          title:       (object/get @step "label"),
-          description: (object/get @step "description" "")
+          id:           (object/get @step "key"),
+          key:          (object/get @step "key"),
+          title:        (object/get @step "label"),
+          label:        (object/get @step "label"),
+          description:  (object/get @step "description" ""),
+          icon:         (object/get @step "icon" "circle"),
+          indexLabel:   (str/concat "" (+ @index 1)),
+          isPending:    (> @index @entity.currentStepIndex),
+          badgeVariant: (if (< @index @entity.currentStepIndex) "success" (if (= @index @entity.currentStepIndex) "primary" "neutral")),
+          labelColor:   (if (= @index @entity.currentStepIndex) "default" "muted")
         }]))
         (set @entity.currentStepLabel       (object/get (array/nth @config.steps 0) "label"))
         (set @entity.currentStepDescription (object/get (array/nth @config.steps 0) "description" ""))
@@ -132,6 +146,18 @@ orbital StepFlowOrbital {
         (set @entity.primaryActionLabel   (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) "Finalize Approval" "Approve & Continue"))
         (set @entity.primaryActionVariant (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) "success" "primary"))
         (set @entity.primaryActionIcon    (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) "check-circle" "chevron-right"))
+        (set @entity.wizardSteps (array/map @config.steps ["fn", "step", {
+          id:           (object/get @step "key"),
+          key:          (object/get @step "key"),
+          title:        (object/get @step "label"),
+          label:        (object/get @step "label"),
+          description:  (object/get @step "description" ""),
+          icon:         (object/get @step "icon" "circle"),
+          indexLabel:   (str/concat "" (+ @index 1)),
+          isPending:    (> @index @entity.currentStepIndex),
+          badgeVariant: (if (< @index @entity.currentStepIndex) "success" (if (= @index @entity.currentStepIndex) "primary" "neutral")),
+          labelColor:   (if (= @index @entity.currentStepIndex) "default" "muted")
+        }]))
         (render-ui main @config.bodyContent)
       ADVANCE -> approved when (and @entity.isLastStep (or (= (object/get (array/nth @config.steps @entity.currentStepIndex) "allowedRoles" "ANY") "ANY") (array/includes (object/get (array/nth @config.steps @entity.currentStepIndex) "allowedRoles") @user.role)))
         (set @entity.finalStatus "approved")
@@ -146,6 +172,18 @@ orbital StepFlowOrbital {
         (set @entity.primaryActionLabel   (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) "Finalize Approval" "Approve & Continue"))
         (set @entity.primaryActionVariant (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) "success" "primary"))
         (set @entity.primaryActionIcon    (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) "check-circle" "chevron-right"))
+        (set @entity.wizardSteps (array/map @config.steps ["fn", "step", {
+          id:           (object/get @step "key"),
+          key:          (object/get @step "key"),
+          title:        (object/get @step "label"),
+          label:        (object/get @step "label"),
+          description:  (object/get @step "description" ""),
+          icon:         (object/get @step "icon" "circle"),
+          indexLabel:   (str/concat "" (+ @index 1)),
+          isPending:    (> @index @entity.currentStepIndex),
+          badgeVariant: (if (< @index @entity.currentStepIndex) "success" (if (= @index @entity.currentStepIndex) "primary" "neutral")),
+          labelColor:   (if (= @index @entity.currentStepIndex) "default" "muted")
+        }]))
         (render-ui main @config.bodyContent)
       REJECT -> rejected
         (set @entity.finalStatus "rejected")

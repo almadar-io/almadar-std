@@ -33,18 +33,19 @@
           "linkedEntity": "ProgressVerticalView",
           "config": {
             "bodyContent": {
-              "className": "max-w-2xl mx-auto pt-section w-full",
               "direction": "vertical",
-              "type": "stack",
               "gap": "lg",
+              "className": "max-w-2xl mx-auto pt-section w-full",
               "children": [
                 {
-                  "gap": "sm",
+                  "type": "stack",
                   "children": [
                     {
-                      "justify": "between",
                       "gap": "sm",
+                      "direction": "horizontal",
                       "type": "stack",
+                      "align": "center",
+                      "justify": "between",
                       "children": [
                         {
                           "content": "@config.title",
@@ -52,45 +53,37 @@
                           "variant": "h3"
                         },
                         {
+                          "content": "@entity.progressLabel",
                           "color": "muted",
                           "type": "typography",
-                          "content": "@entity.progressLabel",
                           "variant": "caption"
                         }
-                      ],
-                      "direction": "horizontal",
-                      "align": "center"
+                      ]
                     },
                     {
-                      "value": "@entity.currentStepIndex",
                       "max": "@entity.totalSteps",
                       "steps": "@entity.totalSteps",
-                      "type": "progress-bar"
+                      "type": "progress-bar",
+                      "value": "@entity.currentStepIndex"
                     }
                   ],
                   "direction": "vertical",
-                  "type": "stack"
+                  "gap": "sm"
                 },
                 {
                   "type": "divider"
                 },
                 {
+                  "entity": "@entity.wizardSteps",
                   "type": "data-list",
                   "gap": "md",
-                  "entity": "@entity.wizardSteps",
                   "fields": [],
                   "renderItem": [
                     "fn",
                     "step",
                     {
-                      "look": "@config.cardLook",
-                      "type": "card",
                       "children": [
                         {
-                          "type": "stack",
-                          "className": "p-card-md",
-                          "direction": "horizontal",
-                          "align": "center",
                           "children": [
                             {
                               "type": "badge",
@@ -98,12 +91,12 @@
                               "variant": "@step.badgeVariant"
                             },
                             {
-                              "type": "icon",
+                              "size": "md",
                               "name": "@step.icon",
-                              "size": "md"
+                              "type": "icon"
                             },
                             {
-                              "type": "stack",
+                              "gap": "xs",
                               "children": [
                                 {
                                   "type": "typography",
@@ -111,81 +104,88 @@
                                   "variant": "h4"
                                 },
                                 {
-                                  "variant": "caption",
+                                  "color": "muted",
                                   "type": "typography",
                                   "content": "@step.description",
-                                  "color": "muted"
+                                  "variant": "caption"
                                 }
                               ],
-                              "gap": "xs",
+                              "type": "stack",
                               "direction": "vertical"
                             }
                           ],
-                          "gap": "md"
+                          "align": "center",
+                          "gap": "md",
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "className": "p-card-md"
                         }
-                      ]
+                      ],
+                      "look": "@config.cardLook",
+                      "type": "card"
                     }
                   ]
                 },
                 {
-                  "gap": "sm",
-                  "className": "justify-between",
+                  "align": "center",
                   "children": [
                     {
+                      "icon": "chevron-left",
+                      "variant": "ghost",
+                      "type": "button",
+                      "disabled": "@entity.isFirstStep",
                       "actionPayload": {
                         "id": "@entity.id"
                       },
-                      "icon": "chevron-left",
-                      "type": "button",
                       "label": "Back",
-                      "disabled": "@entity.isFirstStep",
-                      "variant": "ghost",
                       "action": "BACK"
                     },
                     {
+                      "type": "stack",
                       "direction": "horizontal",
-                      "gap": "sm",
                       "children": [
                         {
-                          "action": "REJECT",
-                          "actionPayload": {
-                            "id": "@entity.id"
-                          },
-                          "icon": "x",
-                          "variant": "ghost",
                           "label": "Reject",
-                          "type": "button"
-                        },
-                        {
-                          "variant": "ghost",
+                          "icon": "x",
                           "actionPayload": {
                             "id": "@entity.id"
                           },
                           "type": "button",
-                          "label": "Escalate",
-                          "action": "ESCALATE",
-                          "icon": "alert-triangle"
+                          "action": "REJECT",
+                          "variant": "ghost"
                         },
                         {
+                          "icon": "alert-triangle",
+                          "variant": "ghost",
+                          "label": "Escalate",
                           "type": "button",
-                          "variant": "primary",
+                          "action": "ESCALATE",
+                          "actionPayload": {
+                            "id": "@entity.id"
+                          }
+                        },
+                        {
+                          "icon": "@entity.primaryActionIcon",
+                          "actionPayload": {
+                            "id": "@entity.id"
+                          },
+                          "type": "button",
                           "label": "@entity.primaryActionLabel",
                           "action": "ADVANCE",
-                          "actionPayload": {
-                            "id": "@entity.id"
-                          },
-                          "icon": "@entity.primaryActionIcon"
+                          "variant": "primary"
                         }
                       ],
                       "align": "center",
-                      "type": "stack"
+                      "gap": "sm"
                     }
                   ],
-                  "align": "center",
                   "direction": "horizontal",
-                  "type": "stack"
+                  "gap": "sm",
+                  "type": "stack",
+                  "className": "justify-between"
                 }
-              ]
+              ],
+              "type": "stack"
             }
           }
         }
