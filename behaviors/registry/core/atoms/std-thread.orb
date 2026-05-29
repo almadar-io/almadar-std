@@ -85,6 +85,7 @@
           "emits": [
             {
               "event": "SELECT",
+              "scope": "external",
               "payloadSchema": [
                 {
                   "name": "id",
@@ -406,9 +407,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
+                      "variant": "error",
                       "message": "@payload.error",
-                      "variant": "error"
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -422,13 +423,13 @@
                     "fetch",
                     "ThreadPost",
                     {
-                      "include": [
-                        "replies"
-                      ],
                       "emit": {
                         "success": "ThreadPostLoaded",
                         "failure": "ThreadPostLoadFailed"
-                      }
+                      },
+                      "include": [
+                        "replies"
+                      ]
                     }
                   ],
                   [
@@ -475,12 +476,12 @@
                     "create",
                     "ThreadPost",
                     {
+                      "content": "@payload.content",
                       "threadRootId": [
                         "str/default",
                         "@payload.parentNodeId",
                         "root"
                       ],
-                      "content": "@payload.content",
                       "authorId": "me",
                       "authorName": "You",
                       "parentId": [
@@ -491,8 +492,8 @@
                     },
                     {
                       "emit": {
-                        "success": "ThreadPostCreated",
-                        "failure": "ThreadPostCreateFailed"
+                        "failure": "ThreadPostCreateFailed",
+                        "success": "ThreadPostCreated"
                       }
                     }
                   ]
@@ -525,6 +526,7 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "typography",
@@ -532,34 +534,33 @@
                           "content": "Write a reply"
                         },
                         {
-                          "type": "textarea",
                           "placeholder": "Your reply…",
-                          "action": "EDIT_REPLY"
+                          "action": "EDIT_REPLY",
+                          "type": "textarea"
                         },
                         {
-                          "direction": "horizontal",
                           "type": "stack",
                           "gap": "sm",
                           "children": [
                             {
-                              "action": "SUBMIT_REPLY",
-                              "type": "button",
                               "icon": "send",
+                              "type": "button",
+                              "label": "Submit",
                               "variant": "primary",
-                              "label": "Submit"
+                              "action": "SUBMIT_REPLY"
                             },
                             {
                               "label": "Cancel",
-                              "variant": "secondary",
                               "action": "CANCEL_REPLY",
-                              "type": "button"
+                              "type": "button",
+                              "variant": "secondary"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal"
                         }
                       ],
-                      "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack"
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -633,8 +634,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "success": "ThreadPostCreated",
-                        "failure": "ThreadPostCreateFailed"
+                        "failure": "ThreadPostCreateFailed",
+                        "success": "ThreadPostCreated"
                       }
                     }
                   ]
@@ -712,13 +713,13 @@
                     "fetch",
                     "ThreadPost",
                     {
-                      "emit": {
-                        "failure": "ThreadPostLoadFailed",
-                        "success": "ThreadPostLoaded"
-                      },
                       "include": [
                         "replies"
-                      ]
+                      ],
+                      "emit": {
+                        "success": "ThreadPostLoaded",
+                        "failure": "ThreadPostLoadFailed"
+                      }
                     }
                   ],
                   [
@@ -734,119 +735,12 @@
             ]
           },
           "config": {
-            "flat": {
-              "type": "boolean",
-              "default": false,
-              "label": "Flat thread",
-              "description": "Render replies as a linear list instead of nested tree",
-              "tier": "presentation"
-            },
-            "emailAuthorBinding": {
-              "type": "string",
-              "default": "@item.authorName",
-              "label": "emailAuthorBinding",
-              "description": "List-pane binding for the message author.",
-              "tier": "presentation"
-            },
-            "detailAuthorBinding": {
-              "type": "string",
-              "default": "@entity.focusedRow.authorName",
-              "label": "detailAuthorBinding",
-              "description": "Detail-pane binding for the focused message author.",
-              "tier": "presentation"
-            },
-            "sectionTitle": {
-              "type": "string",
-              "default": "Discussion",
-              "label": "sectionTitle",
-              "description": "Section header for linear-comment threads.",
-              "tier": "presentation"
-            },
-            "detailFromBinding": {
-              "type": "string",
-              "default": "@entity.focusedRow.fromAddress",
-              "label": "detailFromBinding",
-              "description": "Detail-pane binding for the From address.",
-              "tier": "presentation"
-            },
-            "emailPreviewBinding": {
-              "type": "string",
-              "default": "@item.preview",
-              "label": "emailPreviewBinding",
-              "description": "List-pane binding for the message preview text.",
-              "tier": "presentation"
-            },
-            "detailSubjectBinding": {
-              "type": "string",
-              "default": "@entity.focusedRow.subject",
-              "label": "detailSubjectBinding",
-              "description": "Detail-pane binding for the focused message subject.",
-              "tier": "presentation"
-            },
-            "replyAuthorBinding": {
-              "type": "string",
-              "default": "@reply.authorName",
-              "label": "replyAuthorBinding",
-              "description": "Reply binding for the reply author.",
-              "tier": "presentation"
-            },
             "replyContentBinding": {
               "type": "string",
               "default": "@reply.content",
               "label": "replyContentBinding",
               "description": "Reply binding for the reply body.",
               "tier": "presentation"
-            },
-            "replyFromBinding": {
-              "type": "string",
-              "default": "@reply.fromAddress",
-              "label": "replyFromBinding",
-              "description": "Reply binding for the reply From address.",
-              "tier": "presentation"
-            },
-            "bodyContent": {
-              "type": "render-ui",
-              "default": {
-                "type": "stack",
-                "gap": "md",
-                "direction": "vertical",
-                "children": [
-                  {
-                    "fields": [
-                      {
-                        "variant": "h4",
-                        "label": "Author",
-                        "name": "authorName"
-                      },
-                      {
-                        "variant": "body",
-                        "name": "content",
-                        "label": ""
-                      },
-                      {
-                        "label": "Votes",
-                        "name": "voteCount",
-                        "variant": "caption"
-                      }
-                    ],
-                    "itemActions": [
-                      {
-                        "icon": "message-square",
-                        "label": "Reply",
-                        "event": "REPLY"
-                      }
-                    ],
-                    "gap": "sm",
-                    "look": "@config.tableLook",
-                    "entity": "@payload.data",
-                    "variant": "card",
-                    "type": "data-list"
-                  }
-                ]
-              },
-              "label": "Body content tree",
-              "description": "Render-ui SExpr rendered after thread posts load. Default is the canonical forum-style data-list. Layer 3 variants override this with their own tree (chat bubbles, email-threaded cards, linear comment stacks, etc.) to deliver entirely different thread UX while inheriting the same trait, state machine, emits, and listens.",
-              "tier": "internal"
             },
             "tableLook": {
               "type": "string",
@@ -862,12 +756,19 @@
                 "card-rows"
               ]
             },
-            "threadRootId": {
+            "emailPreviewBinding": {
               "type": "string",
-              "default": "",
-              "label": "Root post id",
-              "description": "Top-level post whose descendants are loaded (blank = all roots)",
-              "tier": "domain"
+              "default": "@item.preview",
+              "label": "emailPreviewBinding",
+              "description": "List-pane binding for the message preview text.",
+              "tier": "presentation"
+            },
+            "detailSubjectBinding": {
+              "type": "string",
+              "default": "@entity.focusedRow.subject",
+              "label": "detailSubjectBinding",
+              "description": "Detail-pane binding for the focused message subject.",
+              "tier": "presentation"
             },
             "detailContentBinding": {
               "type": "string",
@@ -876,11 +777,104 @@
               "description": "Detail-pane binding for the message body.",
               "tier": "presentation"
             },
+            "detailAuthorBinding": {
+              "type": "string",
+              "default": "@entity.focusedRow.authorName",
+              "label": "detailAuthorBinding",
+              "description": "Detail-pane binding for the focused message author.",
+              "tier": "presentation"
+            },
+            "flat": {
+              "type": "boolean",
+              "default": false,
+              "label": "Flat thread",
+              "description": "Render replies as a linear list instead of nested tree",
+              "tier": "presentation"
+            },
+            "detailFromBinding": {
+              "type": "string",
+              "default": "@entity.focusedRow.fromAddress",
+              "label": "detailFromBinding",
+              "description": "Detail-pane binding for the From address.",
+              "tier": "presentation"
+            },
+            "replyAuthorBinding": {
+              "type": "string",
+              "default": "@reply.authorName",
+              "label": "replyAuthorBinding",
+              "description": "Reply binding for the reply author.",
+              "tier": "presentation"
+            },
+            "emailSubjectBinding": {
+              "type": "string",
+              "default": "@item.subject",
+              "label": "emailSubjectBinding",
+              "description": "List-pane binding for the message subject.",
+              "tier": "presentation"
+            },
             "recipientName": {
               "type": "string",
               "default": "Conversation",
               "label": "recipientName",
               "description": "Header/recipient label for chat-style threads.",
+              "tier": "presentation"
+            },
+            "bodyContent": {
+              "type": "render-ui",
+              "default": {
+                "type": "stack",
+                "gap": "md",
+                "direction": "vertical",
+                "children": [
+                  {
+                    "type": "data-list",
+                    "gap": "sm",
+                    "entity": "@payload.data",
+                    "fields": [
+                      {
+                        "name": "authorName",
+                        "variant": "h4",
+                        "label": "Author"
+                      },
+                      {
+                        "label": "",
+                        "variant": "body",
+                        "name": "content"
+                      },
+                      {
+                        "name": "voteCount",
+                        "label": "Votes",
+                        "variant": "caption"
+                      }
+                    ],
+                    "variant": "card",
+                    "itemActions": [
+                      {
+                        "icon": "message-square",
+                        "label": "Reply",
+                        "event": "REPLY"
+                      }
+                    ],
+                    "look": "@config.tableLook"
+                  }
+                ]
+              },
+              "label": "Body content tree",
+              "description": "Render-ui SExpr rendered after thread posts load. Default is the canonical forum-style data-list. Layer 3 variants override this with their own tree (chat bubbles, email-threaded cards, linear comment stacks, etc.) to deliver entirely different thread UX while inheriting the same trait, state machine, emits, and listens.",
+              "tier": "internal"
+            },
+            "threadRootId": {
+              "type": "string",
+              "default": "",
+              "label": "Root post id",
+              "description": "Top-level post whose descendants are loaded (blank = all roots)",
+              "tier": "domain"
+            },
+            "detailToBinding": {
+              "type": "string",
+              "default": "@entity.focusedRow.toAddress",
+              "label": "detailToBinding",
+              "description": "Detail-pane binding for the To address.",
               "tier": "presentation"
             },
             "detailDateBinding": {
@@ -897,18 +891,25 @@
               "description": "Reply binding for the reply timestamp.",
               "tier": "presentation"
             },
-            "detailToBinding": {
+            "sectionTitle": {
               "type": "string",
-              "default": "@entity.focusedRow.toAddress",
-              "label": "detailToBinding",
-              "description": "Detail-pane binding for the To address.",
+              "default": "Discussion",
+              "label": "sectionTitle",
+              "description": "Section header for linear-comment threads.",
               "tier": "presentation"
             },
-            "emailSubjectBinding": {
+            "emailAuthorBinding": {
               "type": "string",
-              "default": "@item.subject",
-              "label": "emailSubjectBinding",
-              "description": "List-pane binding for the message subject.",
+              "default": "@item.authorName",
+              "label": "emailAuthorBinding",
+              "description": "List-pane binding for the message author.",
+              "tier": "presentation"
+            },
+            "replyFromBinding": {
+              "type": "string",
+              "default": "@reply.fromAddress",
+              "label": "replyFromBinding",
+              "description": "Reply binding for the reply From address.",
               "tier": "presentation"
             }
           },
