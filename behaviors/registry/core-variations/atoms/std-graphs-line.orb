@@ -1,0 +1,68 @@
+{
+  "name": "std-graphs-line",
+  "version": "1.0.0",
+  "description": "Line chart view. Embeds std-graphs with the line chartType — connected points over a continuous (typically time) axis. Best for trends and time-series.",
+  "orbitals": [
+    {
+      "name": "LineGraphItemOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-graphs",
+          "as": "Graph"
+        }
+      ],
+      "entity": {
+        "name": "LineGraphItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "chartData",
+            "type": "array",
+            "default": [],
+            "items": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "name": "label",
+                  "type": "string",
+                  "required": true
+                },
+                "value": {
+                  "name": "value",
+                  "type": "number",
+                  "required": true
+                }
+              }
+            }
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "Graph.traits.GraphItemGraph",
+          "name": "LineGraphItemGraph",
+          "linkedEntity": "LineGraphItem",
+          "config": {
+            "chartType": "line"
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "LineGraphPage",
+          "path": "/line-graph",
+          "traits": [
+            {
+              "ref": "LineGraphItemGraph"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

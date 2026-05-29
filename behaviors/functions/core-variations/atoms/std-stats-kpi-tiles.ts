@@ -32,6 +32,7 @@ const ALIAS = 'StatsKpiTiles';
  */
 export interface StdStatsKpiTilesConfig {
   bodyContent?: unknown;
+  metrics?: TraitConfig;
 }
 
 /**

@@ -32,6 +32,7 @@ const ALIAS = 'StatsHeroMetric';
  */
 export interface StdStatsHeroMetricConfig {
   bodyContent?: unknown;
+  metrics?: TraitConfig;
 }
 
 /**

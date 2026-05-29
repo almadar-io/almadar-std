@@ -112,14 +112,14 @@ export interface StdThreadThreadPostCreateFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdThreadConfig {
-  /** Default: `false` */
-  flat?: boolean;
   /** Default: `"dense"` */
   tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
-  /** Default: `{"gap":"md","children":[{"type":"data-list","variant":"card","entity":"@payload.data","look":"@config.tableLook","itemActions":[{"icon":"message-square","label":"Reply","event":"REPLY"}],"gap":"sm","fields":[{"name":"authorName","variant":"h4","label":"Author"},{"label":"","name":"content","variant":"body"},{"variant":"caption","name":"voteCount","label":"Votes"}]}],"type":"stack","direction":"vertical"}` */
-  bodyContent?: unknown;
   /** Default: `""` */
   threadRootId?: string;
+  /** Default: `{"direction":"vertical","gap":"md","children":[{"variant":"card","look":"@config.tableLook","entity":"@payload.data","gap":"sm","fields":[{"label":"Author","variant":"h4","name":"authorName"},{"name":"content","label":"","variant":"body"},{"name":"voteCount","label":"Votes","variant":"caption"}],"itemActions":[{"icon":"message-square","label":"Reply","event":"REPLY"}],"type":"data-list"}],"type":"stack"}` */
+  bodyContent?: unknown;
+  /** Default: `false` */
+  flat?: boolean;
 }
 
 /**

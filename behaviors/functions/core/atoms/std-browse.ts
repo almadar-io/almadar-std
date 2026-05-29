@@ -97,24 +97,36 @@ export interface StdBrowseDeletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdBrowseConfig {
-  /** Default: `[{"variant":"h4","name":"name","label":"Name"},{"variant":"caption","label":"Description","name":"description"},{"label":"Status","variant":"badge","name":"status"}]` */
-  fields?: EntityRow[];
+  /** Default: `[]` */
+  itemActions?: EntityRow[];
   /** Default: `""` */
   imageField?: string;
+  /** Default: `"@item.status"` */
+  badgeBinding?: string;
   /** Default: `"md"` */
   gap?: string;
   /** Default: `10` */
-  displayPageSize?: number;
-  /** Default: `{"direction":"vertical","children":[{"fields":"@config.fields","cols":"@config.cols","pageSize":"@config.displayPageSize","gap":"@config.gap","imageField":"@config.imageField","itemActions":"@config.itemActions","entity":"@payload.data","type":"data-grid"}],"type":"stack"}` */
-  bodyContent?: unknown;
-  /** Default: `[]` */
-  itemActions?: EntityRow[];
-  /** Default: `1` */
-  cols?: number;
-  /** Default: `10` */
   pageSize?: number;
+  /** Default: `"@item.description"` */
+  descriptionBinding?: string;
+  /** Default: `10` */
+  displayPageSize?: number;
+  /** Default: `"@item.name"` */
+  titleBinding?: string;
+  /** Default: `{"type":"stack","direction":"vertical","children":[{"type":"data-grid","cols":"@config.cols","gap":"@config.gap","pageSize":"@config.displayPageSize","fields":"@config.fields","itemActions":"@config.itemActions","imageField":"@config.imageField","entity":"@payload.data"}]}` */
+  bodyContent?: unknown;
+  /** Default: `"@item.thumbnailLabel"` */
+  imageLabelBinding?: string;
+  /** Default: `[{"variant":"h4","label":"Name","name":"name"},{"variant":"caption","label":"Description","name":"description"},{"label":"Status","variant":"badge","name":"status"}]` */
+  fields?: EntityRow[];
+  /** Default: `"@item.createdAt"` */
+  metaBinding?: string;
+  /** Default: `"@item.price"` */
+  priceBinding?: string;
   /** Default: `"data-grid"` */
   viewPattern?: unknown;
+  /** Default: `1` */
+  cols?: number;
 }
 
 /**
