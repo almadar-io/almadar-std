@@ -1,4 +1,4 @@
-app std-calendar "1.2.0"
+app std-calendar "1.3.0"
 "std-calendar as a Function — owns the fetch + SELECT_DAY state machine; default bodyContent renders the month-grid + upcoming-events tree. Layer 3 variants override bodyContent to deliver agenda, week-timeline, etc. while inheriting the same trait, state machine, emits, and listens."
 
 orbital CalendarEventOrbital {
@@ -11,6 +11,7 @@ orbital CalendarEventOrbital {
     date        : datetime = ""
     time        : string = ""
     duration    : number = 60
+    selectedRange : string = "month"
   }
 
   type CalendarEventLoaded     = Event { data : [CalendarEvent] }        "Fired when CalendarEvent finishes loading; payload.data holds the events"
@@ -32,7 +33,7 @@ orbital CalendarEventOrbital {
               { type: "icon", name: "calendar" },
               { type: "typography", content: "CalendarEvents Calendar", variant: "h2" }
             ]},
-            { type: "date-range-selector", onSelect: "SELECT_DAY" }
+            { type: "date-range-selector", onSelect: "SELECT_DAY", selected: "@entity.selectedRange" }
           ]},
           { type: "divider" },
           { type: "calendar-grid" },
@@ -66,8 +67,8 @@ orbital CalendarEventOrbital {
     state month-view {
       SELECT_DAY -> loading
         (set @entity.date @payload.value)
+        (set @entity.selectedRange @payload.value)
         (fetch CalendarEvent { filter: (time/isAfter (time/parse @entity.date) (if (= @payload.value "week") (time/subtract (time/now) 1 "week") (if (= @payload.value "3months") (time/subtract (time/now) 3 "month") (if (= @payload.value "year") (time/subtract (time/now) 1 "year") (time/subtract (time/now) 1 "month"))))), emit: { success: "CalendarEventLoaded", failure: "CalendarEventLoadFailed" } })
-        (render-ui main { type: "spinner" })
     }
     state error {
       INIT -> loading

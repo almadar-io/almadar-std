@@ -1,6 +1,6 @@
 {
   "name": "std-board-kanban-classic",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Trello-style kanban — wide elevated columns side-by-side, sticky column headers with icon + label + count chip, dense cards with title, description, and a status badge. Same BoardItemBoard trait, same state machine, same emits/listens as std-board — only the bodyContent tree differs.",
   "orbitals": [
     {
@@ -98,6 +98,7 @@
           "linkedEntity": "KanbanClassicItem",
           "config": {
             "bodyContent": {
+              "gap": "md",
               "type": "stack",
               "direction": "vertical",
               "className": "h-full",
@@ -109,15 +110,15 @@
                       "name": "kanban-square"
                     },
                     {
-                      "type": "typography",
+                      "content": "@config.title",
                       "variant": "h2",
-                      "content": "@config.title"
+                      "type": "typography"
                     }
                   ],
-                  "className": "px-card-md",
-                  "type": "stack",
-                  "direction": "horizontal",
                   "gap": "sm",
+                  "type": "stack",
+                  "className": "px-card-md",
+                  "direction": "horizontal",
                   "align": "center"
                 },
                 {
@@ -128,135 +129,134 @@
                     "fn",
                     "col",
                     {
+                      "look": "elevated",
                       "padding": "none",
                       "type": "card",
-                      "look": "elevated",
                       "className": "min-w-[280px] bg-[var(--color-surface-subtle)] rounded-lg overflow-hidden",
                       "children": [
                         {
+                          "type": "stack",
                           "gap": "none",
                           "children": [
                             {
-                              "direction": "horizontal",
-                              "type": "stack",
-                              "align": "center",
                               "gap": "sm",
-                              "className": "px-card-md py-3 border-b border-[var(--color-border)] sticky top-0 bg-[var(--color-surface)]",
+                              "align": "center",
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "className": "p-card-md border-b border-[var(--color-border)] sticky top-0 bg-[var(--color-surface)]",
                               "children": [
                                 {
-                                  "name": "@col.icon",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "@col.icon"
                                 },
                                 {
-                                  "variant": "h4",
                                   "content": "@col.label",
+                                  "variant": "h4",
                                   "type": "typography",
                                   "className": "flex-1"
                                 },
                                 {
-                                  "variant": "primary",
                                   "label": "@col.count",
+                                  "variant": "primary",
                                   "size": "sm",
                                   "type": "badge"
                                 }
                               ]
                             },
                             {
+                              "sortable": true,
+                              "reorderEvent": "REORDER_CARD",
+                              "type": "data-list",
+                              "gap": "sm",
+                              "entity": "@col.items",
+                              "dragGroup": "@col.key",
+                              "accepts": "*",
+                              "fields": [],
+                              "dropEvent": "MOVE_CARD",
+                              "positionEvent": "REORDER_POSITION",
+                              "className": "p-card-md min-h-[120px]",
                               "renderItem": [
                                 "fn",
                                 "item",
                                 {
-                                  "type": "card",
                                   "children": [
                                     {
+                                      "direction": "vertical",
                                       "gap": "xs",
                                       "children": [
                                         {
-                                          "variant": "body",
                                           "weight": "medium",
                                           "content": "@item.title",
-                                          "type": "typography"
+                                          "type": "typography",
+                                          "variant": "body"
                                         },
                                         {
                                           "variant": "caption",
-                                          "content": "@item.description",
-                                          "color": "muted",
                                           "type": "typography",
-                                          "className": "line-clamp-2"
+                                          "className": "line-clamp-2",
+                                          "color": "muted",
+                                          "content": "@item.description"
                                         },
                                         {
-                                          "align": "center",
-                                          "direction": "horizontal",
-                                          "type": "stack",
+                                          "gap": "xs",
                                           "children": [
                                             {
-                                              "variant": "primary",
-                                              "type": "badge",
                                               "label": "@item.stage",
-                                              "size": "sm"
+                                              "size": "sm",
+                                              "type": "badge",
+                                              "variant": "primary"
                                             },
                                             {
-                                              "type": "button",
-                                              "action": "OPEN_CARD",
                                               "icon": "arrow-right",
-                                              "className": "ml-auto",
+                                              "type": "button",
                                               "size": "sm",
-                                              "label": "Open",
+                                              "className": "ml-auto",
                                               "variant": "ghost",
                                               "actionPayload": {
-                                                "id": "@item.id",
-                                                "row": "@item"
-                                              }
+                                                "row": "@item",
+                                                "id": "@item.id"
+                                              },
+                                              "label": "Open",
+                                              "action": "OPEN_CARD"
                                             }
                                           ],
-                                          "gap": "xs",
-                                          "className": "pt-1"
+                                          "align": "center",
+                                          "type": "stack",
+                                          "className": "pt-1",
+                                          "direction": "horizontal"
                                         }
                                       ],
-                                      "type": "stack",
-                                      "direction": "vertical"
+                                      "type": "stack"
                                     }
                                   ],
-                                  "look": "elevated",
                                   "className": "cursor-grab hover:shadow-lg transition-shadow",
-                                  "padding": "sm"
+                                  "padding": "sm",
+                                  "type": "card",
+                                  "look": "elevated"
                                 }
-                              ],
-                              "positionEvent": "REORDER_POSITION",
-                              "fields": [],
-                              "dragGroup": "@col.key",
-                              "reorderEvent": "REORDER_CARD",
-                              "className": "p-card-md min-h-[120px]",
-                              "sortable": true,
-                              "type": "data-list",
-                              "gap": "sm",
-                              "entity": "@col.items",
-                              "accepts": "*",
-                              "dropEvent": "MOVE_CARD"
+                              ]
                             }
                           ],
-                          "type": "stack",
                           "direction": "vertical"
                         }
                       ]
                     }
                   ],
-                  "gap": "lg",
                   "type": "data-grid",
                   "cols": "@config.gridCols",
                   "entity": "@entity.boards",
+                  "gap": "lg",
                   "fields": [],
                   "dndRoot": true
                 },
                 {
                   "variant": "primary",
-                  "type": "floating-action-button",
                   "label": "Add card",
-                  "action": "ADD_CARD",
-                  "icon": "plus"
+                  "icon": "plus",
+                  "type": "floating-action-button",
+                  "action": "ADD_CARD"
                 }
-              ],
-              "gap": "md"
+              ]
             }
           }
         }
