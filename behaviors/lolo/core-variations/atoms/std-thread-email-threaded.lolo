@@ -1,4 +1,4 @@
-app std-thread-email-threaded "1.3.0"
+app std-thread-email-threaded "1.3.1"
 "Email-threaded — Gmail/Outlook/Mail.app split-pane: left message list (sender, subject, preview), right pane shows the focused message with from/to/subject header and quoted-reply nested tree. For helpdesk email threads, support tickets, document discussions that read like email."
 
 orbital EmailThreadedOrbital {
@@ -57,14 +57,19 @@ orbital EmailThreadedOrbital {
               },
               { type: "data-list", entity: "@payload.data", gap: "none", variant: "default",
                 fields: [],
-                itemActions: [{ label: "", event: "SELECT", icon: "chevron-right", variant: "ghost" }],
+                itemClickEvent: "SELECT",
                 renderItem: ["fn", "item", {
-                  type: "stack", direction: "horizontal", gap: "sm", align: "center", className: "min-w-0",
+                  type: "stack", direction: "horizontal", gap: "sm", align: "start", className: "min-w-0 py-1",
                   children: [
-                    { type: "avatar", name: "@item.authorName", size: "sm", className: "shrink-0" },
-                    { type: "stack", direction: "vertical", gap: "none", className: "flex-1 min-w-0",
+                    { type: "avatar", name: "@item.authorName", size: "sm", className: "shrink-0 mt-0.5" },
+                    { type: "stack", direction: "vertical", gap: "xs", className: "flex-1 min-w-0",
                       children: [
-                        { type: "typography", variant: "body2", weight: "medium", content: "@item.authorName", className: "truncate" },
+                        { type: "stack", direction: "horizontal", gap: "sm", align: "center", className: "min-w-0",
+                          children: [
+                            { type: "typography", variant: "body2", weight: "semibold", content: "@item.authorName", className: "flex-1 truncate" },
+                            { type: "icon", name: "chevron-right", size: "xs", className: "shrink-0 text-[var(--color-text-muted)]" }
+                          ]
+                        },
                         { type: "typography", variant: "body2", content: "@item.subject", className: "truncate" },
                         { type: "typography", variant: "caption", color: "muted", content: "@item.preview", className: "truncate" }
                       ]
@@ -74,11 +79,11 @@ orbital EmailThreadedOrbital {
               }
             ]
           },
-          { type: "stack", direction: "vertical", gap: "md",
-            className: "flex-1 px-card-md py-md overflow-y-auto",
+          { type: "stack", direction: "vertical", gap: "lg",
+            className: "flex-1 px-card-lg py-card-lg overflow-y-auto",
             children: [
               { type: "stack", direction: "vertical", gap: "md",
-                className: "pb-md border-b border-[var(--color-border)]",
+                className: "pb-card-md border-b border-[var(--color-border)]",
                 children: [
                   { type: "stack", direction: "horizontal", gap: "md", align: "start", justify: "between",
                     children: [
@@ -115,8 +120,8 @@ orbital EmailThreadedOrbital {
                   }
                 ]
               },
-              { type: "card", look: "flat-bordered", padding: "md",
-                children: { type: "typography", variant: "body", content: "@entity.focusedRow.content" }
+              { type: "card", look: "flat-bordered", padding: "lg",
+                children: { type: "typography", variant: "body", content: "@entity.focusedRow.content", className: "leading-relaxed whitespace-pre-wrap" }
               },
               { type: "stack", direction: "horizontal", gap: "sm", align: "center",
                 children: [
