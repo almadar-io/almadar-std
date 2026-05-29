@@ -1,5 +1,5 @@
-app std-browse-dense "1.0.0"
-"Spreadsheet-style dense browse — sortable column-row table, sticky header, monospaced numerics, tight 8px row padding."
+app std-browse-dense "1.1.0"
+"Spreadsheet-style dense browse — column-row data-table molecule with sticky header, monospaced numerics, status badges, tight row padding."
 
 orbital DenseBrowseOrbital {
   uses Browse from "std/behaviors/std-browse"
@@ -27,22 +27,22 @@ orbital DenseBrowseOrbital {
             { type: "icon", name: "search" },
             { type: "input", inputType: "search", placeholder: "Filter records…", action: "REFETCH_QUERY" }
           ]},
-          { type: "stack", direction: "vertical", gap: "none", className: "rounded-md border border-[var(--color-border)] overflow-hidden bg-[var(--color-surface)]", children: [
-            { type: "table",
+          { type: "stack", direction: "vertical", gap: "none", className: "rounded-lg border border-[var(--color-border)] overflow-x-auto bg-[var(--color-card)] shadow-sm", children: [
+            { type: "table-view",
               entity: "@payload.data",
               selectable: true,
-              className: "w-full text-sm [&_thead]:sticky [&_thead]:top-0 [&_thead]:z-10 [&_thead]:bg-[var(--color-surface-muted)] [&_thead]:text-[var(--color-text-muted)] [&_thead]:uppercase [&_thead]:text-xs [&_thead]:font-semibold [&_thead]:tracking-wide [&_thead]:border-b [&_thead]:border-[var(--color-border)] [&_tbody_tr]:border-b [&_tbody_tr]:border-[var(--color-border)] [&_tbody_tr:last-child]:border-b-0 [&_tbody_tr:hover]:bg-[var(--color-surface-muted)] [&_td]:px-3 [&_td]:py-2 [&_th]:px-3 [&_th]:py-2",
+              look: "dense",
+              emptyMessage: "No records",
               columns: [
-                { key: "id",          label: "ID",          field: "id",          header: "ID",       width: "w-28",  align: "left",  className: "font-mono text-[var(--color-text-muted)] truncate" },
-                { key: "name",        label: "Name",        field: "name",        header: "NAME",     width: "flex-1 min-w-[10rem]", align: "left",  weight: "medium", className: "truncate" },
-                { key: "description", label: "Detail",      field: "description", header: "DETAIL",   width: "flex-1 min-w-[12rem]", align: "left",  className: "text-[var(--color-text-muted)] truncate" },
-                { key: "value",       label: "Value",       field: "value",       header: "VALUE",    width: "w-28",  align: "right", className: "font-mono tabular-nums" },
-                { key: "change",      label: "Change",      field: "change",      header: "CHANGE",   width: "w-24",  align: "right", className: "font-mono tabular-nums" },
-                { key: "volume",      label: "Volume",      field: "volume",      header: "VOLUME",   width: "w-24",  align: "right", className: "font-mono tabular-nums text-[var(--color-text-muted)]" },
-                { key: "status",      label: "Status",      field: "status",      header: "STATUS",   width: "w-24",  align: "center" },
-                { key: "createdAt",   label: "Created",     field: "createdAt",   header: "CREATED",  width: "w-32",  align: "right", className: "font-mono tabular-nums text-[var(--color-text-muted)] truncate" }
-              ],
-              emptyMessage: "No records"
+                { key: "id",          field: "id",          header: "ID",      width: "w-28",                 align: "left",   className: "font-mono text-[var(--color-text-muted)] truncate" },
+                { key: "name",        field: "name",        header: "Name",    width: "min-w-[10rem]",        align: "left",   weight: "medium", className: "truncate" },
+                { key: "description", field: "description", header: "Detail",  width: "min-w-[12rem]",        align: "left",   className: "text-[var(--color-text-muted)] truncate" },
+                { key: "value",       field: "value",       header: "Value",   width: "w-28",                 align: "right",  className: "font-mono tabular-nums" },
+                { key: "change",      field: "change",      header: "Change",  width: "w-24",                 align: "right",  className: "font-mono tabular-nums" },
+                { key: "volume",      field: "volume",      header: "Volume",  width: "w-24",                 align: "right",  className: "font-mono tabular-nums text-[var(--color-text-muted)]" },
+                { key: "status",      field: "status",      header: "Status",  width: "w-24",                 align: "center", format: "badge" },
+                { key: "createdAt",   field: "createdAt",   header: "Created", width: "w-36",                 align: "right",  className: "font-mono tabular-nums text-[var(--color-text-muted)] whitespace-nowrap", format: "date" }
+              ]
             }
           ]}
         ]

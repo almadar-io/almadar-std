@@ -1,6 +1,6 @@
 {
   "name": "std-browse-feed",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Activity feed — chronological card-per-item stream with avatar, title, meta, body, timestamp; hover-lift, gap-md rhythm.",
   "orbitals": [
     {
@@ -56,122 +56,123 @@
           "linkedEntity": "FeedPost",
           "config": {
             "bodyContent": {
-              "className": "max-w-2xl mx-auto p-card-md",
-              "type": "stack",
               "children": [
                 {
-                  "align": "center",
-                  "className": "rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 shadow-sm",
-                  "direction": "horizontal",
-                  "gap": "sm",
                   "type": "stack",
+                  "className": "rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 shadow-sm",
                   "children": [
                     {
                       "name": "search",
                       "type": "icon"
                     },
                     {
-                      "inputType": "search",
                       "placeholder": "Filter the feed…",
-                      "action": "REFETCH_QUERY",
-                      "type": "input"
+                      "type": "input",
+                      "className": "flex-1",
+                      "inputType": "search",
+                      "action": "REFETCH_QUERY"
                     }
-                  ]
+                  ],
+                  "gap": "sm",
+                  "direction": "horizontal",
+                  "align": "center"
                 },
                 {
-                  "variant": "card",
+                  "entity": "@payload.data",
                   "fields": [],
+                  "type": "data-list",
+                  "variant": "card",
                   "renderItem": [
                     "fn",
                     "item",
                     {
                       "look": "flat-bordered",
-                      "className": "rounded-lg bg-[var(--color-card)] border border-[var(--color-border)] shadow-sm transition-all duration-normal hover:shadow-main hover:border-[var(--color-border-strong)] hover:-translate-y-px",
-                      "type": "card",
                       "children": [
                         {
+                          "direction": "horizontal",
+                          "align": "start",
                           "children": [
                             {
-                              "className": "rounded-full flex-shrink-0",
-                              "type": "avatar",
+                              "fallback": "@item.name",
                               "size": "md",
-                              "fallback": "@item.name"
+                              "className": "rounded-full flex-shrink-0",
+                              "type": "avatar"
                             },
                             {
                               "gap": "xs",
+                              "className": "flex-1 min-w-0",
                               "type": "stack",
+                              "direction": "vertical",
                               "children": [
                                 {
+                                  "direction": "horizontal",
                                   "align": "center",
                                   "className": "flex-wrap",
-                                  "children": [
-                                    {
-                                      "type": "typography",
-                                      "content": "@item.name",
-                                      "className": "truncate",
-                                      "variant": "body",
-                                      "weight": "medium"
-                                    },
-                                    {
-                                      "variant": "neutral",
-                                      "size": "sm",
-                                      "type": "badge",
-                                      "label": "@item.category"
-                                    }
-                                  ],
                                   "gap": "xs",
-                                  "direction": "horizontal",
-                                  "type": "stack"
-                                },
-                                {
-                                  "className": "text-[var(--color-foreground)] whitespace-pre-wrap break-words leading-relaxed",
-                                  "content": "@item.description",
-                                  "variant": "body",
-                                  "type": "typography"
-                                },
-                                {
-                                  "justify": "between",
-                                  "gap": "sm",
-                                  "align": "center",
                                   "type": "stack",
                                   "children": [
                                     {
-                                      "content": "@item.createdAt",
-                                      "variant": "caption",
-                                      "color": "muted",
-                                      "type": "typography"
+                                      "variant": "body",
+                                      "content": "@item.name",
+                                      "weight": "medium",
+                                      "type": "typography",
+                                      "className": "truncate"
                                     },
                                     {
-                                      "label": "@item.status",
-                                      "type": "badge",
+                                      "variant": "neutral",
+                                      "label": "@item.category",
                                       "size": "sm",
-                                      "variant": "default"
+                                      "type": "badge"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "className": "text-[var(--color-foreground)] whitespace-pre-wrap break-words leading-relaxed",
+                                  "variant": "body",
+                                  "content": "@item.description",
+                                  "type": "typography"
+                                },
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "justify": "between",
+                                  "className": "pt-1",
+                                  "children": [
+                                    {
+                                      "variant": "caption",
+                                      "type": "typography",
+                                      "color": "muted",
+                                      "content": "@item.createdAt"
+                                    },
+                                    {
+                                      "variant": "default",
+                                      "type": "badge",
+                                      "label": "@item.status",
+                                      "size": "sm"
                                     }
                                   ],
-                                  "className": "pt-1",
-                                  "direction": "horizontal"
+                                  "gap": "sm",
+                                  "align": "center"
                                 }
-                              ],
-                              "direction": "vertical",
-                              "className": "flex-1 min-w-0"
+                              ]
                             }
                           ],
-                          "direction": "horizontal",
-                          "className": "p-card-md",
+                          "type": "stack",
                           "gap": "md",
-                          "align": "start",
-                          "type": "stack"
+                          "className": "p-card-md"
                         }
-                      ]
+                      ],
+                      "className": "rounded-lg bg-[var(--color-card)] border border-[var(--color-border)] shadow-sm transition-all duration-normal hover:shadow-main hover:border-[var(--color-border-strong)] hover:-translate-y-px",
+                      "type": "card"
                     }
                   ],
-                  "type": "data-list",
-                  "gap": "md",
-                  "entity": "@payload.data"
+                  "gap": "md"
                 }
               ],
-              "gap": "lg",
-              "direction": "vertical"
+              "type": "stack",
+              "className": "max-w-2xl mx-auto p-card-md",
+              "direction": "vertical",
+              "gap": "lg"
             }
           }
         }

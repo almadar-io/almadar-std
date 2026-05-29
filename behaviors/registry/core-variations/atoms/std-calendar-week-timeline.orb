@@ -1,6 +1,6 @@
 {
   "name": "std-calendar-week-timeline",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Week-timeline calendar — events grouped by weekday in a 7-column timeline. The visible window normalizes to the payload's actual date range, so events stack into whichever day-of-week they fall on. Same CalendarEventCalendar trait, same state machine as std-calendar — only bodyContent differs. For weekly schedule views (fitness class week, healthcare appointment week).",
   "orbitals": [
     {
@@ -45,7 +45,7 @@
           },
           {
             "name": "date",
-            "type": "string",
+            "type": "datetime",
             "default": ""
           },
           {
@@ -72,107 +72,107 @@
           "linkedEntity": "WeekTimelineEvent",
           "config": {
             "bodyContent": {
-              "type": "stack",
-              "direction": "vertical",
+              "gap": "md",
               "children": [
                 {
+                  "type": "stack",
                   "children": [
                     {
                       "align": "center",
-                      "type": "stack",
-                      "gap": "sm",
+                      "direction": "horizontal",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "calendar"
+                          "name": "calendar",
+                          "type": "icon"
                         },
                         {
-                          "content": "Week",
                           "variant": "h2",
-                          "type": "typography"
+                          "type": "typography",
+                          "content": "Week"
                         }
                       ],
-                      "direction": "horizontal"
+                      "type": "stack",
+                      "gap": "sm"
                     },
                     {
                       "onSelect": "SELECT_DAY",
                       "type": "date-range-selector"
                     }
                   ],
-                  "align": "center",
+                  "gap": "md",
                   "direction": "horizontal",
                   "justify": "between",
-                  "type": "stack",
-                  "gap": "md"
+                  "align": "center"
                 },
                 {
                   "type": "divider"
                 },
                 {
+                  "gap": "md",
+                  "variant": "default",
+                  "fields": [],
                   "renderItem": [
                     "fn",
                     "item",
                     {
-                      "look": "flat-bordered",
-                      "type": "card",
-                      "shadow": "sm",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "vertical",
                           "gap": "xs",
                           "children": [
                             {
+                              "justify": "between",
                               "align": "center",
                               "gap": "sm",
                               "type": "stack",
                               "direction": "horizontal",
-                              "justify": "between",
                               "children": [
                                 {
-                                  "type": "typography",
+                                  "weight": "medium",
                                   "color": "muted",
-                                  "variant": "caption",
                                   "content": "@item.time",
-                                  "weight": "medium"
+                                  "variant": "caption",
+                                  "type": "typography"
                                 },
                                 {
-                                  "size": "sm",
                                   "label": "@item.status",
+                                  "type": "badge",
                                   "variant": "default",
-                                  "type": "badge"
+                                  "size": "sm"
                                 }
                               ]
                             },
                             {
-                              "content": "@item.name",
-                              "className": "truncate",
                               "weight": "medium",
+                              "content": "@item.name",
                               "variant": "body2",
-                              "type": "typography"
+                              "type": "typography",
+                              "className": "truncate"
                             },
                             {
-                              "color": "muted",
+                              "className": "truncate",
                               "content": "@item.description",
                               "type": "typography",
-                              "className": "truncate",
-                              "variant": "caption"
+                              "variant": "caption",
+                              "color": "muted"
                             }
-                          ]
+                          ],
+                          "direction": "vertical",
+                          "type": "stack"
                         }
                       ],
-                      "padding": "sm"
+                      "padding": "sm",
+                      "look": "flat-bordered",
+                      "shadow": "sm",
+                      "type": "card"
                     }
                   ],
-                  "groupBy": "weekday",
                   "entity": "@payload.data",
                   "type": "data-list",
-                  "gap": "md",
-                  "variant": "default",
-                  "fields": []
+                  "groupBy": "weekday"
                 }
               ],
-              "gap": "md"
+              "direction": "vertical",
+              "type": "stack"
             }
           }
         }
