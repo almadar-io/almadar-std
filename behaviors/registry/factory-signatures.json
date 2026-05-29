@@ -27253,10 +27253,10 @@
               "key": "bodyContent",
               "type": "render-ui",
               "default": {
-                "gap": "md",
                 "direction": "vertical",
                 "children": [
                   {
+                    "align": "center",
                     "type": "stack",
                     "children": [
                       {
@@ -27264,37 +27264,32 @@
                         "name": "kanban-square"
                       },
                       {
-                        "type": "typography",
                         "variant": "h3",
+                        "type": "typography",
                         "content": "@config.title"
                       }
                     ],
                     "direction": "horizontal",
-                    "align": "center",
                     "gap": "sm"
                   },
                   {
                     "type": "divider"
                   },
                   {
-                    "gap": "md",
-                    "type": "data-grid",
-                    "fields": [],
-                    "entity": "@entity.boards",
-                    "cols": "@config.gridCols",
-                    "dndRoot": true,
                     "renderItem": [
                       "fn",
                       "col",
                       {
-                        "type": "card",
+                        "look": "@config.cardLook",
                         "children": [
                           {
+                            "gap": "sm",
+                            "direction": "vertical",
                             "children": [
                               {
-                                "gap": "xs",
-                                "direction": "horizontal",
                                 "type": "stack",
+                                "direction": "horizontal",
+                                "gap": "xs",
                                 "align": "center",
                                 "children": [
                                   {
@@ -27307,90 +27302,95 @@
                                     "variant": "h4"
                                   },
                                   {
-                                    "label": "@col.count",
                                     "variant": "@col.variant",
+                                    "label": "@col.count",
                                     "type": "badge"
                                   }
                                 ]
                               },
                               {
-                                "type": "data-list",
-                                "entity": "@col.items",
-                                "positionEvent": "REORDER_POSITION",
-                                "reorderEvent": "REORDER_CARD",
-                                "fields": [],
-                                "gap": "sm",
                                 "sortable": true,
-                                "accepts": "*",
                                 "dropEvent": "MOVE_CARD",
                                 "renderItem": [
                                   "fn",
                                   "item",
                                   {
+                                    "look": "@config.cardLook",
                                     "type": "card",
                                     "children": [
                                       {
+                                        "direction": "vertical",
                                         "children": [
                                           {
-                                            "type": "typography",
+                                            "content": "@config.cardTitleBinding",
                                             "variant": "h4",
-                                            "content": "@config.cardTitleBinding"
+                                            "type": "typography"
                                           },
                                           {
-                                            "type": "typography",
-                                            "color": "muted",
                                             "variant": "caption",
+                                            "color": "muted",
+                                            "type": "typography",
                                             "content": "@config.cardDescriptionBinding"
                                           },
                                           {
-                                            "type": "stack",
+                                            "direction": "horizontal",
                                             "align": "center",
+                                            "type": "stack",
                                             "children": [
                                               {
                                                 "type": "button",
-                                                "variant": "ghost",
+                                                "label": "Open",
                                                 "action": "OPEN_CARD",
-                                                "icon": "arrow-right",
+                                                "variant": "ghost",
                                                 "actionPayload": {
-                                                  "row": "@item",
-                                                  "id": "@config.cardIdBinding"
+                                                  "id": "@config.cardIdBinding",
+                                                  "row": "@item"
                                                 },
-                                                "label": "Open"
+                                                "icon": "arrow-right"
                                               }
                                             ],
-                                            "direction": "horizontal",
                                             "gap": "xs"
                                           }
                                         ],
-                                        "direction": "vertical",
                                         "type": "stack",
                                         "gap": "xs"
                                       }
-                                    ],
-                                    "look": "@config.cardLook"
+                                    ]
                                   }
                                 ],
-                                "dragGroup": "@col.key"
+                                "fields": [],
+                                "reorderEvent": "REORDER_CARD",
+                                "positionEvent": "REORDER_POSITION",
+                                "entity": "@col.items",
+                                "type": "data-list",
+                                "accepts": "*",
+                                "dragGroup": "@col.key",
+                                "gap": "sm"
                               }
                             ],
-                            "gap": "sm",
-                            "type": "stack",
-                            "direction": "vertical"
+                            "type": "stack"
                           }
                         ],
-                        "look": "@config.cardLook"
+                        "type": "card"
                       }
-                    ]
+                    ],
+                    "gap": "md",
+                    "type": "data-grid",
+                    "entity": "@entity.boards",
+                    "cols": "@config.gridCols",
+                    "fields": [],
+                    "dndRoot": true
                   },
                   {
+                    "variant": "primary",
                     "type": "floating-action-button",
                     "action": "ADD_CARD",
                     "icon": "plus",
-                    "label": "Add item",
-                    "variant": "primary"
+                    "label": "Add item"
                   }
                 ],
-                "type": "stack"
+                "type": "stack",
+                "gap": "md"
               },
               "label": "Body content tree",
               "description": "Render-ui SExpr rendered after the board loads. Default is the canonical column data-grid with nested per-column data-lists. Layer 3 variants override this with their own tree (swim-lanes, timeline-roadmap, etc.) while inheriting the same trait, state machine, emits, and listens.",
@@ -27450,10 +27450,10 @@
               "type": "[ColumnSpec]",
               "default": [
                 {
+                  "icon": "circle",
                   "key": "todo",
                   "variant": "default",
-                  "label": "To Do",
-                  "icon": "circle"
+                  "label": "To Do"
                 },
                 {
                   "key": "doing",
@@ -27462,9 +27462,9 @@
                   "variant": "primary"
                 },
                 {
-                  "label": "Done",
                   "key": "done",
                   "variant": "success",
+                  "label": "Done",
                   "icon": "check-circle"
                 }
               ],
@@ -27473,14 +27473,14 @@
               "tier": "domain",
               "items": {
                 "properties": {
-                  "key": {
-                    "name": "key",
-                    "required": true,
-                    "type": "string"
-                  },
                   "icon": {
                     "name": "icon",
                     "required": false,
+                    "type": "string"
+                  },
+                  "key": {
+                    "name": "key",
+                    "required": true,
                     "type": "string"
                   },
                   "label": {
@@ -27519,6 +27519,14 @@
               "default": 3,
               "label": "Grid columns",
               "description": "Outer grid column count before the board wraps",
+              "tier": "presentation"
+            },
+            {
+              "key": "groupByField",
+              "type": "string",
+              "default": "stage",
+              "label": "Group-by field",
+              "description": "Entity field whose value matches a column key — items are filtered into columns by it. Default 'stage'; set to 'status' (or any field) for entities that track state under a different name.",
               "tier": "presentation"
             },
             {
@@ -27787,10 +27795,10 @@
                       "bodyContent": {
                         "type": "object",
                         "default": {
-                          "gap": "md",
                           "direction": "vertical",
                           "children": [
                             {
+                              "align": "center",
                               "type": "stack",
                               "children": [
                                 {
@@ -27798,37 +27806,32 @@
                                   "name": "kanban-square"
                                 },
                                 {
-                                  "type": "typography",
                                   "variant": "h3",
+                                  "type": "typography",
                                   "content": "@config.title"
                                 }
                               ],
                               "direction": "horizontal",
-                              "align": "center",
                               "gap": "sm"
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "gap": "md",
-                              "type": "data-grid",
-                              "fields": [],
-                              "entity": "@entity.boards",
-                              "cols": "@config.gridCols",
-                              "dndRoot": true,
                               "renderItem": [
                                 "fn",
                                 "col",
                                 {
-                                  "type": "card",
+                                  "look": "@config.cardLook",
                                   "children": [
                                     {
+                                      "gap": "sm",
+                                      "direction": "vertical",
                                       "children": [
                                         {
-                                          "gap": "xs",
-                                          "direction": "horizontal",
                                           "type": "stack",
+                                          "direction": "horizontal",
+                                          "gap": "xs",
                                           "align": "center",
                                           "children": [
                                             {
@@ -27841,90 +27844,95 @@
                                               "variant": "h4"
                                             },
                                             {
-                                              "label": "@col.count",
                                               "variant": "@col.variant",
+                                              "label": "@col.count",
                                               "type": "badge"
                                             }
                                           ]
                                         },
                                         {
-                                          "type": "data-list",
-                                          "entity": "@col.items",
-                                          "positionEvent": "REORDER_POSITION",
-                                          "reorderEvent": "REORDER_CARD",
-                                          "fields": [],
-                                          "gap": "sm",
                                           "sortable": true,
-                                          "accepts": "*",
                                           "dropEvent": "MOVE_CARD",
                                           "renderItem": [
                                             "fn",
                                             "item",
                                             {
+                                              "look": "@config.cardLook",
                                               "type": "card",
                                               "children": [
                                                 {
+                                                  "direction": "vertical",
                                                   "children": [
                                                     {
-                                                      "type": "typography",
+                                                      "content": "@config.cardTitleBinding",
                                                       "variant": "h4",
-                                                      "content": "@config.cardTitleBinding"
+                                                      "type": "typography"
                                                     },
                                                     {
-                                                      "type": "typography",
-                                                      "color": "muted",
                                                       "variant": "caption",
+                                                      "color": "muted",
+                                                      "type": "typography",
                                                       "content": "@config.cardDescriptionBinding"
                                                     },
                                                     {
-                                                      "type": "stack",
+                                                      "direction": "horizontal",
                                                       "align": "center",
+                                                      "type": "stack",
                                                       "children": [
                                                         {
                                                           "type": "button",
-                                                          "variant": "ghost",
+                                                          "label": "Open",
                                                           "action": "OPEN_CARD",
-                                                          "icon": "arrow-right",
+                                                          "variant": "ghost",
                                                           "actionPayload": {
-                                                            "row": "@item",
-                                                            "id": "@config.cardIdBinding"
+                                                            "id": "@config.cardIdBinding",
+                                                            "row": "@item"
                                                           },
-                                                          "label": "Open"
+                                                          "icon": "arrow-right"
                                                         }
                                                       ],
-                                                      "direction": "horizontal",
                                                       "gap": "xs"
                                                     }
                                                   ],
-                                                  "direction": "vertical",
                                                   "type": "stack",
                                                   "gap": "xs"
                                                 }
-                                              ],
-                                              "look": "@config.cardLook"
+                                              ]
                                             }
                                           ],
-                                          "dragGroup": "@col.key"
+                                          "fields": [],
+                                          "reorderEvent": "REORDER_CARD",
+                                          "positionEvent": "REORDER_POSITION",
+                                          "entity": "@col.items",
+                                          "type": "data-list",
+                                          "accepts": "*",
+                                          "dragGroup": "@col.key",
+                                          "gap": "sm"
                                         }
                                       ],
-                                      "gap": "sm",
-                                      "type": "stack",
-                                      "direction": "vertical"
+                                      "type": "stack"
                                     }
                                   ],
-                                  "look": "@config.cardLook"
+                                  "type": "card"
                                 }
-                              ]
+                              ],
+                              "gap": "md",
+                              "type": "data-grid",
+                              "entity": "@entity.boards",
+                              "cols": "@config.gridCols",
+                              "fields": [],
+                              "dndRoot": true
                             },
                             {
+                              "variant": "primary",
                               "type": "floating-action-button",
                               "action": "ADD_CARD",
                               "icon": "plus",
-                              "label": "Add item",
-                              "variant": "primary"
+                              "label": "Add item"
                             }
                           ],
-                          "type": "stack"
+                          "type": "stack",
+                          "gap": "md"
                         },
                         "description": "Render-ui SExpr rendered after the board loads. Default is the canonical column data-grid with nested per-column data-lists. Layer 3 variants override this with their own tree (swim-lanes, timeline-roadmap, etc.) while inheriting the same trait, state machine, emits, and listens.",
                         "x-label": "Body content tree",
@@ -27981,10 +27989,10 @@
                         },
                         "default": [
                           {
+                            "icon": "circle",
                             "key": "todo",
                             "variant": "default",
-                            "label": "To Do",
-                            "icon": "circle"
+                            "label": "To Do"
                           },
                           {
                             "key": "doing",
@@ -27993,9 +28001,9 @@
                             "variant": "primary"
                           },
                           {
-                            "label": "Done",
                             "key": "done",
                             "variant": "success",
+                            "label": "Done",
                             "icon": "check-circle"
                           }
                         ],
@@ -28023,6 +28031,13 @@
                         "default": 3,
                         "description": "Outer grid column count before the board wraps",
                         "x-label": "Grid columns",
+                        "x-tier": "presentation"
+                      },
+                      "groupByField": {
+                        "type": "string",
+                        "default": "stage",
+                        "description": "Entity field whose value matches a column key — items are filtered into columns by it. Default 'stage'; set to 'status' (or any field) for entities that track state under a different name.",
+                        "x-label": "Group-by field",
                         "x-tier": "presentation"
                       },
                       "title": {
@@ -31416,69 +31431,69 @@
               "type": "unknown",
               "default": [
                 {
-                  "width": "7rem",
-                  "header": "ID",
-                  "key": "id",
+                  "className": "font-mono text-[var(--color-text-muted)]",
                   "field": "id",
+                  "header": "ID",
                   "align": "left",
-                  "className": "font-mono text-[var(--color-text-muted)]"
+                  "key": "id",
+                  "width": "7rem"
                 },
                 {
-                  "key": "name",
                   "field": "name",
-                  "header": "Name",
-                  "align": "left",
                   "width": "minmax(10rem, 1.5fr)",
-                  "weight": "medium"
+                  "header": "Name",
+                  "weight": "medium",
+                  "align": "left",
+                  "key": "name"
                 },
                 {
+                  "align": "left",
+                  "key": "description",
+                  "className": "text-[var(--color-text-muted)]",
                   "field": "description",
                   "header": "Detail",
-                  "width": "minmax(12rem, 2fr)",
-                  "key": "description",
-                  "align": "left",
-                  "className": "text-[var(--color-text-muted)]"
+                  "width": "minmax(12rem, 2fr)"
                 },
                 {
                   "className": "font-mono tabular-nums",
                   "header": "Value",
-                  "field": "value",
-                  "align": "right",
+                  "key": "value",
                   "width": "6rem",
-                  "key": "value"
+                  "align": "right",
+                  "field": "value"
                 },
                 {
-                  "key": "change",
-                  "className": "font-mono tabular-nums",
                   "width": "6rem",
+                  "field": "change",
+                  "align": "right",
                   "header": "Change",
-                  "align": "right",
-                  "field": "change"
+                  "className": "font-mono tabular-nums",
+                  "key": "change"
                 },
                 {
-                  "key": "volume",
-                  "header": "Volume",
-                  "align": "right",
-                  "field": "volume",
                   "width": "6rem",
+                  "header": "Volume",
+                  "field": "volume",
+                  "key": "volume",
+                  "align": "right",
                   "className": "font-mono tabular-nums text-[var(--color-text-muted)]"
                 },
                 {
-                  "align": "center",
                   "format": "badge",
                   "field": "status",
                   "header": "Status",
                   "key": "status",
-                  "width": "6rem"
+                  "width": "6rem",
+                  "align": "center"
                 },
                 {
-                  "key": "createdAt",
-                  "field": "createdAt",
-                  "header": "Created",
+                  "format": "date",
                   "width": "9rem",
                   "align": "right",
-                  "className": "font-mono tabular-nums text-[var(--color-text-muted)]",
-                  "format": "date"
+                  "key": "createdAt",
+                  "header": "Created",
+                  "field": "createdAt",
+                  "className": "font-mono tabular-nums text-[var(--color-text-muted)]"
                 }
               ]
             }
@@ -31719,69 +31734,69 @@
                         "type": "object",
                         "default": [
                           {
-                            "width": "7rem",
-                            "header": "ID",
-                            "key": "id",
+                            "className": "font-mono text-[var(--color-text-muted)]",
                             "field": "id",
+                            "header": "ID",
                             "align": "left",
-                            "className": "font-mono text-[var(--color-text-muted)]"
+                            "key": "id",
+                            "width": "7rem"
                           },
                           {
-                            "key": "name",
                             "field": "name",
-                            "header": "Name",
-                            "align": "left",
                             "width": "minmax(10rem, 1.5fr)",
-                            "weight": "medium"
+                            "header": "Name",
+                            "weight": "medium",
+                            "align": "left",
+                            "key": "name"
                           },
                           {
+                            "align": "left",
+                            "key": "description",
+                            "className": "text-[var(--color-text-muted)]",
                             "field": "description",
                             "header": "Detail",
-                            "width": "minmax(12rem, 2fr)",
-                            "key": "description",
-                            "align": "left",
-                            "className": "text-[var(--color-text-muted)]"
+                            "width": "minmax(12rem, 2fr)"
                           },
                           {
                             "className": "font-mono tabular-nums",
                             "header": "Value",
-                            "field": "value",
-                            "align": "right",
+                            "key": "value",
                             "width": "6rem",
-                            "key": "value"
+                            "align": "right",
+                            "field": "value"
                           },
                           {
-                            "key": "change",
-                            "className": "font-mono tabular-nums",
                             "width": "6rem",
+                            "field": "change",
+                            "align": "right",
                             "header": "Change",
-                            "align": "right",
-                            "field": "change"
+                            "className": "font-mono tabular-nums",
+                            "key": "change"
                           },
                           {
-                            "key": "volume",
-                            "header": "Volume",
-                            "align": "right",
-                            "field": "volume",
                             "width": "6rem",
+                            "header": "Volume",
+                            "field": "volume",
+                            "key": "volume",
+                            "align": "right",
                             "className": "font-mono tabular-nums text-[var(--color-text-muted)]"
                           },
                           {
-                            "align": "center",
                             "format": "badge",
                             "field": "status",
                             "header": "Status",
                             "key": "status",
-                            "width": "6rem"
+                            "width": "6rem",
+                            "align": "center"
                           },
                           {
-                            "key": "createdAt",
-                            "field": "createdAt",
-                            "header": "Created",
+                            "format": "date",
                             "width": "9rem",
                             "align": "right",
-                            "className": "font-mono tabular-nums text-[var(--color-text-muted)]",
-                            "format": "date"
+                            "key": "createdAt",
+                            "header": "Created",
+                            "field": "createdAt",
+                            "className": "font-mono tabular-nums text-[var(--color-text-muted)]"
                           }
                         ]
                       }
@@ -33284,8 +33299,8 @@
               "type": "number",
               "default": 300,
               "label": "TTL (seconds)",
-              "description": "Cache entry time-to-live before it goes stale. Default 5 minutes.",
-              "synonyms": "expiration, time to live, cache duration",
+              "description": "Cache entry time-to-live before it goes stale. Default 5 minutes. Shorter = fresher/real-time data; longer = stable/long-lived caching.",
+              "synonyms": "expiration, time to live, cache duration, freshness, real-time (short) vs long-lived (long)",
               "tier": "domain"
             }
           ],
@@ -33582,9 +33597,9 @@
                       "ttlSeconds": {
                         "type": "number",
                         "default": 300,
-                        "description": "Cache entry time-to-live before it goes stale. Default 5 minutes.",
+                        "description": "Cache entry time-to-live before it goes stale. Default 5 minutes. Shorter = fresher/real-time data; longer = stable/long-lived caching.",
                         "x-label": "TTL (seconds)",
-                        "x-synonyms": "expiration, time to live, cache duration",
+                        "x-synonyms": "expiration, time to live, cache duration, freshness, real-time (short) vs long-lived (long)",
                         "x-tier": "domain"
                       }
                     }
@@ -35801,8 +35816,8 @@
               "type": "string",
               "default": "reject",
               "label": "Fallback behavior",
-              "description": "What to return to callers while the circuit is open: reject outright, serve last cached value, queue for retry, or return a static default.",
-              "synonyms": "open-state response, degraded mode",
+              "description": "What to return to callers while the circuit is open: reject = fail-fast/strict, cached-response = graceful degrade with stale data, queue = retry-later/no data loss, static-default = safe placeholder.",
+              "synonyms": "open-state response, degraded mode, fail-fast vs graceful degrade",
               "tier": "domain",
               "enumValues": [
                 "reject",
@@ -35816,8 +35831,8 @@
               "type": "number",
               "default": 1,
               "label": "Half-open probe requests",
-              "description": "Number of probe requests allowed through in the half-open state before deciding to close or re-open.",
-              "synonyms": "probe count, recovery test size",
+              "description": "Probe requests allowed through in the half-open state before deciding to close or re-open. Lower = cautious single-probe recovery; higher = aggressive parallel re-validation.",
+              "synonyms": "probe count, recovery test size, probe aggressiveness, recovery test volume, cautious vs fast recovery",
               "tier": "domain"
             },
             {
@@ -36092,17 +36107,17 @@
                           "static-default"
                         ],
                         "default": "reject",
-                        "description": "What to return to callers while the circuit is open: reject outright, serve last cached value, queue for retry, or return a static default.",
+                        "description": "What to return to callers while the circuit is open: reject = fail-fast/strict, cached-response = graceful degrade with stale data, queue = retry-later/no data loss, static-default = safe placeholder.",
                         "x-label": "Fallback behavior",
-                        "x-synonyms": "open-state response, degraded mode",
+                        "x-synonyms": "open-state response, degraded mode, fail-fast vs graceful degrade",
                         "x-tier": "domain"
                       },
                       "halfOpenRequests": {
                         "type": "number",
                         "default": 1,
-                        "description": "Number of probe requests allowed through in the half-open state before deciding to close or re-open.",
+                        "description": "Probe requests allowed through in the half-open state before deciding to close or re-open. Lower = cautious single-probe recovery; higher = aggressive parallel re-validation.",
                         "x-label": "Half-open probe requests",
-                        "x-synonyms": "probe count, recovery test size",
+                        "x-synonyms": "probe count, recovery test size, probe aggressiveness, recovery test volume, cautious vs fast recovery",
                         "x-tier": "domain"
                       },
                       "statLook": {
@@ -78624,8 +78639,8 @@
               "type": "number",
               "default": 10,
               "label": "Burst size",
-              "description": "Number of requests allowed to burst above the per-minute rate before steady-state throttling kicks in.",
-              "synonyms": "burst capacity, allowance",
+              "description": "Requests allowed to burst above the per-minute rate before steady-state throttling kicks in. Lower burst = strict/no-spikes; higher burst = forgiving/allow-spikes.",
+              "synonyms": "burst capacity, allowance, spike allowance, no-spike (low) vs allow-bursts (high)",
               "tier": "domain"
             },
             {
@@ -78922,9 +78937,9 @@
                       "burstSize": {
                         "type": "number",
                         "default": 10,
-                        "description": "Number of requests allowed to burst above the per-minute rate before steady-state throttling kicks in.",
+                        "description": "Requests allowed to burst above the per-minute rate before steady-state throttling kicks in. Lower burst = strict/no-spikes; higher burst = forgiving/allow-spikes.",
                         "x-label": "Burst size",
-                        "x-synonyms": "burst capacity, allowance",
+                        "x-synonyms": "burst capacity, allowance, spike allowance, no-spike (low) vs allow-bursts (high)",
                         "x-tier": "domain"
                       },
                       "enabled": {
@@ -89143,13 +89158,7 @@
       "entities": [
         {
           "name": "ProgressVerticalView",
-          "fields": [
-            {
-              "name": "progressLabel",
-              "type": "string",
-              "required": false
-            }
-          ],
+          "fields": [],
           "persistence": "runtime"
         }
       ],
@@ -92461,23 +92470,27 @@
                 "direction": "vertical",
                 "children": [
                   {
+                    "type": "data-list",
+                    "gap": "sm",
+                    "entity": "@payload.data",
                     "fields": [
                       {
+                        "name": "authorName",
                         "variant": "h4",
-                        "label": "Author",
-                        "name": "authorName"
+                        "label": "Author"
                       },
                       {
+                        "label": "",
                         "variant": "body",
-                        "name": "content",
-                        "label": ""
+                        "name": "content"
                       },
                       {
-                        "label": "Votes",
                         "name": "voteCount",
+                        "label": "Votes",
                         "variant": "caption"
                       }
                     ],
+                    "variant": "card",
                     "itemActions": [
                       {
                         "icon": "message-square",
@@ -92485,11 +92498,7 @@
                         "event": "REPLY"
                       }
                     ],
-                    "gap": "sm",
-                    "look": "@config.tableLook",
-                    "entity": "@payload.data",
-                    "variant": "card",
-                    "type": "data-list"
+                    "look": "@config.tableLook"
                   }
                 ]
               },
@@ -92904,23 +92913,27 @@
                           "direction": "vertical",
                           "children": [
                             {
+                              "type": "data-list",
+                              "gap": "sm",
+                              "entity": "@payload.data",
                               "fields": [
                                 {
+                                  "name": "authorName",
                                   "variant": "h4",
-                                  "label": "Author",
-                                  "name": "authorName"
+                                  "label": "Author"
                                 },
                                 {
+                                  "label": "",
                                   "variant": "body",
-                                  "name": "content",
-                                  "label": ""
+                                  "name": "content"
                                 },
                                 {
-                                  "label": "Votes",
                                   "name": "voteCount",
+                                  "label": "Votes",
                                   "variant": "caption"
                                 }
                               ],
+                              "variant": "card",
                               "itemActions": [
                                 {
                                   "icon": "message-square",
@@ -92928,11 +92941,7 @@
                                   "event": "REPLY"
                                 }
                               ],
-                              "gap": "sm",
-                              "look": "@config.tableLook",
-                              "entity": "@payload.data",
-                              "variant": "card",
-                              "type": "data-list"
+                              "look": "@config.tableLook"
                             }
                           ]
                         },
