@@ -40,6 +40,14 @@
         "listenedEvents": [],
         "overridableConfigKeys": [
           {
+            "key": "assigneeBinding",
+            "type": "string",
+            "default": "@item.assignee",
+            "label": "Assignee binding",
+            "description": "Per-row binding string for the assignee/owner slot.",
+            "tier": "presentation"
+          },
+          {
             "key": "badgeBinding",
             "type": "string",
             "default": "@item.status",
@@ -55,14 +63,14 @@
               "direction": "vertical",
               "children": [
                 {
+                  "entity": "@payload.data",
                   "type": "data-grid",
-                  "cols": "@config.cols",
-                  "gap": "@config.gap",
-                  "pageSize": "@config.displayPageSize",
                   "fields": "@config.fields",
-                  "itemActions": "@config.itemActions",
                   "imageField": "@config.imageField",
-                  "entity": "@payload.data"
+                  "itemActions": "@config.itemActions",
+                  "pageSize": "@config.displayPageSize",
+                  "gap": "@config.gap",
+                  "cols": "@config.cols"
                 }
               ]
             },
@@ -71,12 +79,99 @@
             "tier": "internal"
           },
           {
+            "key": "categoryBinding",
+            "type": "string",
+            "default": "@item.category",
+            "label": "Category binding",
+            "description": "Per-row binding string for the category/tag slot.",
+            "tier": "presentation"
+          },
+          {
             "key": "cols",
             "type": "number",
             "default": 1,
             "label": "Grid columns",
             "description": "Number of columns in the responsive grid layout",
             "tier": "presentation"
+          },
+          {
+            "key": "columns",
+            "type": "[ColumnSpec]",
+            "default": [
+              {
+                "key": "name",
+                "align": "left",
+                "weight": "medium",
+                "field": "name",
+                "header": "Name"
+              },
+              {
+                "align": "left",
+                "header": "Detail",
+                "key": "description",
+                "field": "description"
+              },
+              {
+                "field": "status",
+                "format": "badge",
+                "header": "Status",
+                "key": "status",
+                "align": "center"
+              }
+            ],
+            "label": "Table columns",
+            "description": "Column definitions for table-style variants (dense). Each maps an entity field to a column with optional width / align / weight / format.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "className": {
+                  "name": "className",
+                  "required": false,
+                  "type": "string"
+                },
+                "align": {
+                  "name": "align",
+                  "required": false,
+                  "type": "string"
+                },
+                "weight": {
+                  "name": "weight",
+                  "required": false,
+                  "type": "string"
+                },
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string"
+                },
+                "header": {
+                  "name": "header",
+                  "required": false,
+                  "type": "string"
+                },
+                "field": {
+                  "name": "field",
+                  "required": false,
+                  "type": "string"
+                },
+                "width": {
+                  "name": "width",
+                  "required": false,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "key": {
+                  "name": "key",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
           },
           {
             "key": "descriptionBinding",
@@ -99,19 +194,19 @@
             "type": "[FieldSpec]",
             "default": [
               {
-                "variant": "h4",
                 "label": "Name",
+                "variant": "h4",
                 "name": "name"
               },
               {
+                "name": "description",
                 "variant": "caption",
-                "label": "Description",
-                "name": "description"
+                "label": "Description"
               },
               {
-                "label": "Status",
                 "variant": "badge",
-                "name": "status"
+                "name": "status",
+                "label": "Status"
               }
             ],
             "label": "Columns to show",
@@ -124,18 +219,23 @@
                   "required": false,
                   "type": "string"
                 },
-                "variant": {
-                  "name": "variant",
-                  "required": false,
-                  "type": "string"
-                },
                 "name": {
                   "name": "name",
                   "required": true,
                   "type": "string"
                 },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                },
                 "icon": {
                   "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "format": {
+                  "name": "format",
                   "required": false,
                   "type": "string"
                 },
@@ -146,11 +246,6 @@
                 },
                 "header": {
                   "name": "header",
-                  "required": false,
-                  "type": "string"
-                },
-                "format": {
-                  "name": "format",
                   "required": false,
                   "type": "string"
                 }
@@ -196,9 +291,9 @@
                   "required": true,
                   "type": "string"
                 },
-                "event": {
-                  "name": "event",
-                  "required": true,
+                "icon": {
+                  "name": "icon",
+                  "required": false,
                   "type": "string"
                 },
                 "variant": {
@@ -206,9 +301,9 @@
                   "required": false,
                   "type": "string"
                 },
-                "icon": {
-                  "name": "icon",
-                  "required": false,
+                "event": {
+                  "name": "event",
+                  "required": true,
                   "type": "string"
                 }
               },
@@ -237,6 +332,14 @@
             "default": "@item.price",
             "label": "Price binding",
             "description": "Per-row binding string for the price/amount overlay slot.",
+            "tier": "presentation"
+          },
+          {
+            "key": "priorityBinding",
+            "type": "string",
+            "default": "@item.priority",
+            "label": "Priority binding",
+            "description": "Per-row binding string for the priority slot (triage / work-queue variants).",
             "tier": "presentation"
           },
           {

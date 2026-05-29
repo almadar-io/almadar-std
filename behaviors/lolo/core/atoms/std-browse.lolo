@@ -3,6 +3,7 @@ app std-browse "2.1.0"
 
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+type ColumnSpec = { key : string!, field : string, header : string, width : string, align : string, className : string, weight : string, format : string, icon : string }
 
 orbital BrowseItemOrbital {
   entity BrowseItem [runtime] {
@@ -26,6 +27,14 @@ orbital BrowseItemOrbital {
       ]
         @label "Columns to show"
         @description "Each column maps to one field on the BrowseItem entity"
+        @tier "presentation"
+      columns : [ColumnSpec] = [
+        { key: "name", field: "name", header: "Name", align: "left", weight: "medium" },
+        { key: "description", field: "description", header: "Detail", align: "left" },
+        { key: "status", field: "status", header: "Status", align: "center", format: "badge" }
+      ]
+        @label "Table columns"
+        @description "Column definitions for table-style variants (dense). Each maps an entity field to a column with optional width / align / weight / format."
         @tier "presentation"
       imageField : string = ""
         @label "Image field"

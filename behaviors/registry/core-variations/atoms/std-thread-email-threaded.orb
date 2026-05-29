@@ -96,8 +96,23 @@
                 "type": "string",
                 "required": false
               },
-              "content": {
-                "name": "content",
+              "createdAt": {
+                "name": "createdAt",
+                "type": "string",
+                "required": false
+              },
+              "id": {
+                "name": "id",
+                "type": "string",
+                "required": false
+              },
+              "fromAddress": {
+                "name": "fromAddress",
+                "type": "string",
+                "required": false
+              },
+              "authorName": {
+                "name": "authorName",
                 "type": "string",
                 "required": false
               },
@@ -110,28 +125,13 @@
                   "cardinality": "many"
                 }
               },
-              "authorName": {
-                "name": "authorName",
-                "type": "string",
-                "required": false
-              },
               "toAddress": {
                 "name": "toAddress",
                 "type": "string",
                 "required": false
               },
-              "createdAt": {
-                "name": "createdAt",
-                "type": "string",
-                "required": false
-              },
-              "fromAddress": {
-                "name": "fromAddress",
-                "type": "string",
-                "required": false
-              },
-              "id": {
-                "name": "id",
+              "content": {
+                "name": "content",
                 "type": "string",
                 "required": false
               }
@@ -146,338 +146,338 @@
           "linkedEntity": "EmailThreadedPost",
           "config": {
             "bodyContent": {
-              "type": "stack",
-              "direction": "horizontal",
-              "align": "stretch",
-              "gap": "none",
-              "className": "max-w-7xl mx-auto my-section min-h-[32rem] max-h-[80vh] border border-[var(--color-border)] rounded-lg overflow-hidden shadow-sm bg-[var(--color-surface)]",
+              "className": "w-full my-section min-h-[32rem] max-h-[80vh] border border-[var(--color-border)] rounded-lg overflow-hidden shadow-sm bg-[var(--color-surface)]",
               "children": [
                 {
-                  "className": "w-80 shrink-0 border-r border-[var(--color-border)] bg-[var(--color-surface-subtle)] overflow-y-auto",
-                  "gap": "none",
-                  "type": "stack",
                   "children": [
                     {
                       "align": "center",
-                      "gap": "sm",
                       "className": "p-card-md border-b border-[var(--color-border)] sticky top-0 bg-[var(--color-surface-subtle)] z-10",
+                      "direction": "horizontal",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "icon",
                           "name": "inbox",
-                          "size": "sm"
+                          "size": "sm",
+                          "type": "icon"
                         },
                         {
-                          "variant": "label",
-                          "weight": "medium",
+                          "content": "Inbox",
                           "type": "typography",
-                          "content": "Inbox"
+                          "weight": "medium",
+                          "variant": "label"
                         }
                       ],
-                      "type": "stack",
-                      "direction": "horizontal"
+                      "gap": "sm"
                     },
                     {
-                      "type": "data-list",
-                      "gap": "none",
-                      "variant": "default",
-                      "entity": "@payload.data",
-                      "fields": [],
                       "itemClickEvent": "SELECT",
                       "renderItem": [
                         "fn",
                         "item",
                         {
-                          "align": "start",
-                          "gap": "sm",
-                          "className": "min-w-0 px-4 py-3",
-                          "direction": "horizontal",
                           "type": "stack",
                           "children": [
                             {
-                              "name": "@item.authorName",
                               "size": "sm",
-                              "type": "avatar",
-                              "className": "shrink-0 mt-0.5"
+                              "name": "@config.emailAuthorBinding",
+                              "className": "shrink-0 mt-0.5",
+                              "type": "avatar"
                             },
                             {
-                              "gap": "xs",
-                              "direction": "vertical",
                               "type": "stack",
+                              "direction": "vertical",
                               "className": "flex-1 min-w-0",
+                              "gap": "xs",
                               "children": [
                                 {
-                                  "className": "min-w-0",
+                                  "align": "center",
                                   "type": "stack",
+                                  "className": "min-w-0",
                                   "children": [
                                     {
-                                      "variant": "body2",
-                                      "type": "typography",
                                       "weight": "semibold",
-                                      "content": "@item.authorName",
-                                      "className": "flex-1 truncate"
+                                      "className": "flex-1 truncate",
+                                      "content": "@config.emailAuthorBinding",
+                                      "type": "typography",
+                                      "variant": "body2"
                                     },
                                     {
-                                      "name": "chevron-right",
-                                      "className": "shrink-0 text-[var(--color-text-muted)]",
                                       "size": "xs",
-                                      "type": "icon"
+                                      "type": "icon",
+                                      "className": "shrink-0 text-[var(--color-text-muted)]",
+                                      "name": "chevron-right"
                                     }
                                   ],
-                                  "align": "center",
-                                  "gap": "sm",
-                                  "direction": "horizontal"
+                                  "direction": "horizontal",
+                                  "gap": "sm"
                                 },
                                 {
-                                  "content": "@item.subject",
-                                  "className": "truncate",
+                                  "variant": "body2",
+                                  "content": "@config.emailSubjectBinding",
                                   "type": "typography",
-                                  "variant": "body2"
-                                },
-                                {
-                                  "color": "muted",
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "content": "@item.preview",
                                   "className": "truncate"
+                                },
+                                {
+                                  "type": "typography",
+                                  "className": "truncate",
+                                  "color": "muted",
+                                  "variant": "caption",
+                                  "content": "@config.emailPreviewBinding"
                                 }
                               ]
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "className": "min-w-0 px-4 py-3",
+                          "align": "start"
                         }
-                      ]
+                      ],
+                      "type": "data-list",
+                      "entity": "@payload.data",
+                      "gap": "none",
+                      "variant": "default",
+                      "fields": []
                     }
                   ],
-                  "direction": "vertical"
+                  "direction": "vertical",
+                  "type": "stack",
+                  "gap": "none",
+                  "className": "w-80 shrink-0 border-r border-[var(--color-border)] bg-[var(--color-surface-subtle)] overflow-y-auto"
                 },
                 {
                   "children": [
                     {
-                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
                       "className": "pb-4 border-b border-[var(--color-border)]",
                       "children": [
                         {
-                          "type": "stack",
-                          "justify": "between",
                           "gap": "md",
+                          "type": "stack",
                           "align": "start",
+                          "justify": "between",
                           "direction": "horizontal",
                           "children": [
                             {
-                              "variant": "h3",
                               "type": "typography",
-                              "content": "@entity.focusedRow.subject",
+                              "variant": "h3",
+                              "content": "@config.detailSubjectBinding",
                               "className": "flex-1 min-w-0"
                             },
                             {
+                              "align": "center",
                               "children": [
                                 {
-                                  "size": "sm",
+                                  "icon": "corner-up-left",
                                   "actionPayload": {
                                     "parentId": "@entity.focusedRow.id"
                                   },
                                   "variant": "secondary",
-                                  "type": "button",
-                                  "icon": "corner-up-left",
                                   "label": "Reply",
+                                  "size": "sm",
+                                  "type": "button",
                                   "action": "REPLY"
                                 },
                                 {
-                                  "type": "button",
-                                  "action": "REPLY",
-                                  "icon": "corner-up-right",
-                                  "label": "Forward",
                                   "variant": "ghost",
+                                  "label": "Forward",
+                                  "action": "REPLY",
+                                  "type": "button",
+                                  "icon": "corner-up-right",
                                   "size": "sm"
                                 }
                               ],
-                              "direction": "horizontal",
-                              "type": "stack",
-                              "align": "center",
+                              "className": "shrink-0",
                               "gap": "sm",
-                              "className": "shrink-0"
+                              "type": "stack",
+                              "direction": "horizontal"
                             }
                           ]
                         },
                         {
-                          "gap": "md",
-                          "direction": "horizontal",
-                          "align": "center",
                           "type": "stack",
                           "children": [
                             {
-                              "size": "md",
-                              "name": "@entity.focusedRow.authorName",
+                              "name": "@config.detailAuthorBinding",
                               "type": "avatar",
+                              "size": "md",
                               "className": "shrink-0"
                             },
                             {
+                              "direction": "vertical",
+                              "className": "flex-1 min-w-0",
+                              "gap": "none",
+                              "type": "stack",
                               "children": [
                                 {
                                   "type": "stack",
+                                  "gap": "xs",
+                                  "direction": "horizontal",
+                                  "align": "center",
                                   "children": [
                                     {
-                                      "content": "From",
-                                      "type": "typography",
-                                      "variant": "caption",
                                       "color": "muted",
+                                      "className": "w-10 shrink-0",
+                                      "variant": "caption",
+                                      "content": "From",
+                                      "type": "typography"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "weight": "medium",
+                                      "content": "@config.detailFromBinding",
+                                      "className": "truncate",
+                                      "variant": "body2"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "color": "muted",
+                                      "variant": "caption",
+                                      "content": "To",
+                                      "type": "typography",
                                       "className": "w-10 shrink-0"
                                     },
                                     {
-                                      "className": "truncate",
-                                      "content": "@entity.focusedRow.fromAddress",
-                                      "weight": "medium",
                                       "variant": "body2",
-                                      "type": "typography"
+                                      "type": "typography",
+                                      "className": "truncate",
+                                      "content": "@config.detailToBinding"
                                     }
                                   ],
-                                  "align": "center",
-                                  "direction": "horizontal",
-                                  "gap": "xs"
-                                },
-                                {
                                   "direction": "horizontal",
                                   "type": "stack",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "className": "w-10 shrink-0",
-                                      "type": "typography",
-                                      "content": "To",
-                                      "color": "muted",
-                                      "variant": "caption"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "className": "truncate",
-                                      "content": "@entity.focusedRow.toAddress",
-                                      "variant": "body2"
-                                    }
-                                  ],
                                   "gap": "xs"
                                 }
-                              ],
-                              "gap": "none",
-                              "type": "stack",
-                              "className": "flex-1 min-w-0",
-                              "direction": "vertical"
+                              ]
                             },
                             {
-                              "className": "shrink-0",
-                              "content": "@entity.focusedRow.createdAt",
                               "type": "typography",
+                              "content": "@config.detailDateBinding",
+                              "variant": "caption",
                               "color": "muted",
-                              "variant": "caption"
+                              "className": "shrink-0"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "align": "center",
+                          "gap": "md"
                         }
                       ],
-                      "type": "stack",
-                      "gap": "md"
+                      "direction": "vertical"
                     },
                     {
                       "look": "flat-bordered",
+                      "padding": "lg",
                       "type": "card",
                       "children": {
-                        "content": "@entity.focusedRow.content",
-                        "className": "leading-relaxed whitespace-pre-wrap",
                         "variant": "body",
-                        "type": "typography"
-                      },
-                      "padding": "lg"
+                        "type": "typography",
+                        "content": "@config.detailContentBinding",
+                        "className": "leading-relaxed whitespace-pre-wrap"
+                      }
                     },
                     {
-                      "children": [
-                        {
-                          "size": "xs",
-                          "name": "corner-down-right",
-                          "type": "icon"
-                        },
-                        {
-                          "type": "typography",
-                          "content": "Quoted replies",
-                          "variant": "label",
-                          "color": "muted"
-                        }
-                      ],
-                      "align": "center",
+                      "direction": "horizontal",
                       "type": "stack",
                       "gap": "sm",
-                      "direction": "horizontal"
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "corner-down-right",
+                          "size": "xs"
+                        },
+                        {
+                          "variant": "label",
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "Quoted replies"
+                        }
+                      ]
                     },
                     {
-                      "type": "data-list",
-                      "gap": "sm",
-                      "entity": "@entity.focusedRow.replies",
-                      "variant": "default",
-                      "fields": [],
                       "renderItem": [
                         "fn",
                         "reply",
                         {
                           "type": "card",
-                          "look": "flat-bordered",
-                          "padding": "md",
+                          "className": "border-l-4 border-l-[var(--color-primary)] ml-card-md",
                           "children": {
-                            "type": "stack",
-                            "gap": "sm",
+                            "direction": "vertical",
                             "children": [
                               {
-                                "gap": "sm",
-                                "type": "stack",
-                                "align": "center",
                                 "direction": "horizontal",
+                                "gap": "sm",
+                                "align": "center",
+                                "type": "stack",
                                 "children": [
                                   {
-                                    "type": "avatar",
-                                    "name": "@reply.authorName",
-                                    "size": "xs"
+                                    "size": "xs",
+                                    "name": "@config.replyAuthorBinding",
+                                    "type": "avatar"
                                   },
                                   {
-                                    "weight": "medium",
+                                    "variant": "body2",
                                     "type": "typography",
-                                    "content": "@reply.authorName",
-                                    "variant": "body2"
+                                    "content": "@config.replyAuthorBinding",
+                                    "weight": "medium"
+                                  },
+                                  {
+                                    "content": "@config.replyFromBinding",
+                                    "color": "muted",
+                                    "variant": "caption",
+                                    "type": "typography"
+                                  },
+                                  {
+                                    "color": "muted",
+                                    "type": "typography",
+                                    "variant": "caption",
+                                    "content": "·"
                                   },
                                   {
                                     "variant": "caption",
                                     "color": "muted",
-                                    "type": "typography",
-                                    "content": "@reply.fromAddress"
-                                  },
-                                  {
-                                    "color": "muted",
-                                    "type": "typography",
-                                    "content": "·",
-                                    "variant": "caption"
-                                  },
-                                  {
-                                    "color": "muted",
-                                    "content": "@reply.createdAt",
-                                    "type": "typography",
-                                    "variant": "caption"
+                                    "content": "@config.replyDateBinding",
+                                    "type": "typography"
                                   }
                                 ]
                               },
                               {
+                                "content": "@config.replyContentBinding",
                                 "type": "typography",
-                                "variant": "body",
-                                "content": "@reply.content"
+                                "variant": "body"
                               }
                             ],
-                            "direction": "vertical"
+                            "gap": "sm",
+                            "type": "stack"
                           },
-                          "className": "border-l-4 border-l-[var(--color-primary)] ml-card-md"
+                          "look": "flat-bordered",
+                          "padding": "md"
                         }
-                      ]
+                      ],
+                      "gap": "sm",
+                      "variant": "default",
+                      "entity": "@entity.focusedRow.replies",
+                      "fields": [],
+                      "type": "data-list"
                     }
                   ],
+                  "direction": "vertical",
                   "className": "flex-1 min-w-0 p-card-lg overflow-y-auto",
                   "gap": "lg",
-                  "type": "stack",
-                  "direction": "vertical"
+                  "type": "stack"
                 }
-              ]
+              ],
+              "type": "stack",
+              "gap": "none",
+              "direction": "horizontal",
+              "align": "stretch"
             }
           }
         }

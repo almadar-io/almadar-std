@@ -32,6 +32,7 @@ const ALIAS = 'BrowseDense';
  */
 export interface StdBrowseDenseConfig {
   bodyContent?: unknown;
+  columns?: TraitConfig;
 }
 
 /**
