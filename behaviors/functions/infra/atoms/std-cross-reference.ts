@@ -82,9 +82,9 @@ export interface StdCrossReferenceConfig {
   /** Default: `""` */
   junctionEntity?: string;
   /** Default: `""` */
-  rightEntity?: string;
-  /** Default: `""` */
   leftIdField?: string;
+  /** Default: `""` */
+  rightEntity?: string;
   /** Default: `""` */
   rightIdField?: string;
 }
