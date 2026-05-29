@@ -39,9 +39,9 @@ export type StdStackLayoutEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdStackLayoutConfig {
+  contentTrait?: TraitFieldRef;
   /** Default: `"List"` */
   title?: string;
-  contentTrait?: TraitFieldRef;
   /** Default: `"list"` */
   icon?: string;
 }

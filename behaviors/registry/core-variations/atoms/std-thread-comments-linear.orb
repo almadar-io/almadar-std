@@ -1,6 +1,6 @@
 {
   "name": "std-thread-comments-linear",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Nested threaded comments — Disqus/Hacker News style: indented reply tree, inline reply composer on every comment card, and a visible replies group per parent. For forum discussions, blog comments, document review threads, project-manager issue comments.",
   "orbitals": [
     {
@@ -66,6 +66,11 @@
               "entity": "CommentsLinearPost",
               "cardinality": "many"
             }
+          },
+          {
+            "name": "focusedRow",
+            "type": "object",
+            "default": {}
           }
         ]
       },
@@ -76,286 +81,83 @@
           "linkedEntity": "CommentsLinearPost",
           "config": {
             "bodyContent": {
-              "type": "stack",
               "className": "max-w-3xl mx-auto px-card-md py-section",
+              "type": "stack",
+              "gap": "lg",
+              "direction": "vertical",
               "children": [
                 {
-                  "children": [
-                    {
-                      "type": "icon",
-                      "name": "message-square",
-                      "size": "md"
-                    },
-                    {
-                      "type": "typography",
-                      "content": "Discussion",
-                      "variant": "h3"
-                    }
-                  ],
+                  "direction": "horizontal",
                   "type": "stack",
                   "gap": "sm",
                   "align": "center",
-                  "direction": "horizontal"
+                  "children": [
+                    {
+                      "name": "message-square",
+                      "type": "icon",
+                      "size": "md"
+                    },
+                    {
+                      "content": "Discussion",
+                      "type": "typography",
+                      "variant": "h3"
+                    }
+                  ]
                 },
                 {
-                  "padding": "md",
-                  "type": "card",
-                  "look": "flat-bordered",
                   "children": {
                     "children": [
                       {
-                        "content": "Add a comment",
+                        "type": "typography",
                         "variant": "label",
-                        "type": "typography"
+                        "content": "Add a comment"
                       },
                       {
-                        "inputType": "textarea",
-                        "rows": 3.0,
                         "placeholder": "Share your thoughts…",
                         "action": "EDIT_REPLY",
-                        "type": "input"
+                        "inputType": "textarea",
+                        "type": "input",
+                        "rows": 3.0
                       },
                       {
-                        "type": "stack",
-                        "direction": "horizontal",
                         "justify": "end",
-                        "gap": "sm",
                         "children": [
                           {
-                            "action": "CANCEL_REPLY",
+                            "size": "sm",
                             "type": "button",
+                            "label": "Cancel",
                             "variant": "ghost",
-                            "size": "sm",
-                            "label": "Cancel"
+                            "action": "CANCEL_REPLY"
                           },
                           {
-                            "size": "sm",
-                            "label": "Comment",
+                            "variant": "primary",
                             "icon": "send",
-                            "action": "SUBMIT_REPLY",
+                            "size": "sm",
                             "type": "button",
-                            "variant": "primary"
-                          }
-                        ]
-                      }
-                    ],
-                    "direction": "vertical",
-                    "type": "stack",
-                    "gap": "sm"
-                  }
-                },
-                {
-                  "gap": "md",
-                  "variant": "default",
-                  "renderItem": [
-                    "fn",
-                    "item",
-                    {
-                      "type": "card",
-                      "children": {
-                        "children": [
-                          {
-                            "gap": "sm",
-                            "align": "center",
-                            "direction": "horizontal",
-                            "type": "stack",
-                            "children": [
-                              {
-                                "name": "@item.authorName",
-                                "size": "sm",
-                                "type": "avatar"
-                              },
-                              {
-                                "content": "@item.authorName",
-                                "variant": "body",
-                                "type": "typography",
-                                "weight": "medium"
-                              },
-                              {
-                                "variant": "caption",
-                                "content": "·",
-                                "type": "typography",
-                                "color": "muted"
-                              },
-                              {
-                                "color": "muted",
-                                "variant": "caption",
-                                "type": "typography",
-                                "content": "@item.createdAt"
-                              }
-                            ]
-                          },
-                          {
-                            "content": "@item.content",
-                            "type": "typography",
-                            "variant": "body"
-                          },
-                          {
-                            "type": "stack",
-                            "gap": "xs",
-                            "direction": "horizontal",
-                            "align": "center",
-                            "children": [
-                              {
-                                "icon": "corner-down-right",
-                                "action": "REPLY",
-                                "actionPayload": {
-                                  "parentId": "@item.id"
-                                },
-                                "variant": "ghost",
-                                "label": "Reply",
-                                "size": "sm",
-                                "type": "button"
-                              }
-                            ]
-                          },
-                          {
-                            "children": [
-                              {
-                                "align": "center",
-                                "direction": "horizontal",
-                                "children": [
-                                  {
-                                    "name": "chevron-down",
-                                    "size": "xs",
-                                    "type": "icon"
-                                  },
-                                  {
-                                    "content": "@item.replyCount replies",
-                                    "weight": "medium",
-                                    "variant": "caption",
-                                    "type": "typography",
-                                    "color": "muted"
-                                  }
-                                ],
-                                "gap": "xs",
-                                "type": "stack"
-                              },
-                              {
-                                "entity": "@item.replies",
-                                "type": "data-list",
-                                "gap": "sm",
-                                "variant": "default",
-                                "renderItem": [
-                                  "fn",
-                                  "reply",
-                                  {
-                                    "padding": "sm",
-                                    "type": "card",
-                                    "children": {
-                                      "direction": "vertical",
-                                      "type": "stack",
-                                      "gap": "xs",
-                                      "children": [
-                                        {
-                                          "type": "stack",
-                                          "children": [
-                                            {
-                                              "size": "xs",
-                                              "name": "@reply.authorName",
-                                              "type": "avatar"
-                                            },
-                                            {
-                                              "type": "typography",
-                                              "content": "@reply.authorName",
-                                              "weight": "medium",
-                                              "variant": "caption"
-                                            },
-                                            {
-                                              "color": "muted",
-                                              "variant": "caption",
-                                              "content": "·",
-                                              "type": "typography"
-                                            },
-                                            {
-                                              "color": "muted",
-                                              "type": "typography",
-                                              "content": "@reply.createdAt",
-                                              "variant": "caption"
-                                            }
-                                          ],
-                                          "gap": "sm",
-                                          "align": "center",
-                                          "direction": "horizontal"
-                                        },
-                                        {
-                                          "variant": "body",
-                                          "content": "@reply.content",
-                                          "type": "typography"
-                                        },
-                                        {
-                                          "gap": "xs",
-                                          "children": [
-                                            {
-                                              "size": "sm",
-                                              "label": "Reply",
-                                              "icon": "corner-down-right",
-                                              "type": "button",
-                                              "actionPayload": {
-                                                "parentId": "@reply.id"
-                                              },
-                                              "action": "REPLY",
-                                              "variant": "ghost"
-                                            }
-                                          ],
-                                          "align": "center",
-                                          "type": "stack",
-                                          "direction": "horizontal"
-                                        }
-                                      ]
-                                    },
-                                    "look": "borderless-divider"
-                                  }
-                                ],
-                                "fields": []
-                              },
-                              {
-                                "gap": "sm",
-                                "children": [
-                                  {
-                                    "action": "EDIT_REPLY",
-                                    "placeholder": "Write a reply…",
-                                    "type": "input",
-                                    "inputType": "text"
-                                  },
-                                  {
-                                    "label": "Send",
-                                    "icon": "send",
-                                    "action": "SUBMIT_REPLY",
-                                    "actionPayload": {
-                                      "parentId": "@item.id"
-                                    },
-                                    "type": "button",
-                                    "variant": "primary",
-                                    "size": "sm"
-                                  }
-                                ],
-                                "type": "stack",
-                                "direction": "horizontal",
-                                "align": "center"
-                              }
-                            ],
-                            "gap": "sm",
-                            "type": "stack",
-                            "className": "pl-card-md border-l border-[var(--color-border)]",
-                            "direction": "vertical"
+                            "action": "SUBMIT_REPLY",
+                            "label": "Comment"
                           }
                         ],
+                        "gap": "sm",
                         "type": "stack",
-                        "direction": "vertical",
-                        "gap": "sm"
-                      },
-                      "look": "flat-bordered",
-                      "padding": "md"
-                    }
-                  ],
-                  "fields": [],
-                  "type": "data-list",
-                  "entity": "@payload.data"
+                        "direction": "horizontal"
+                      }
+                    ],
+                    "gap": "sm",
+                    "type": "stack",
+                    "direction": "vertical"
+                  },
+                  "padding": "md",
+                  "type": "card",
+                  "look": "flat-bordered"
+                },
+                {
+                  "replyEvent": "REPLY",
+                  "nodes": "@payload.data",
+                  "showActions": true,
+                  "type": "reply-tree"
                 }
-              ],
-              "gap": "lg",
-              "direction": "vertical"
+              ]
             }
           }
         }

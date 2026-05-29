@@ -95,10 +95,10 @@ export interface StdPageTreePageNodeLoadFailedPayload {
 export interface StdPageTreeConfig {
   /** Default: `"elevated"` */
   statLook?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
-  /** Default: `"Pages"` */
-  title?: string;
   /** Default: `"dense"` */
   tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
+  /** Default: `"Pages"` */
+  title?: string;
 }
 
 /**

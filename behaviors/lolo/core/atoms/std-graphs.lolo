@@ -20,10 +20,6 @@ orbital GraphItemOrbital {
         @description "Visual format for the rendered chart"
         @synonyms "bar = vertical bars, line = connected line, pie = pie chart, donut = pie with hole, area = filled area chart, histogram = frequency distribution, scatter = XY scatter. user phrases: 'switch to donut' / 'make it a donut' / 'as a donut chart' -> donut; 'use a pie chart' -> pie; 'show as line' / 'line chart' -> line; 'as bars' / 'bar chart' -> bar"
         @tier "presentation"
-      chartLook     : "bar-vertical" | "bar-horizontal" | "line" | "area" | "pie" | "donut" | "scatter" | "histogram" = "bar-vertical"
-        @label "Chart look"
-        @description "Layer 2 visual treatment — selects the chart kind (bar / line / pie / etc.)."
-        @tier "presentation"
       timeAxis      : boolean = false
         @label "Time axis"
         @description "Group by timeField bucketed by period instead of categoryField"
@@ -122,7 +118,7 @@ orbital GraphItemOrbital {
           { label: "Pending",  value: 3 },
           { label: "Inactive", value: 1 }
         ])
-        (render-ui main { type: "@config.viewPattern", look: "@config.chartLook", title: "@config.title", subtitle: "@config.subtitle", chartType: "@config.chartType", data: "@entity.chartData", series: "@config.series", height: "@config.height", showLegend: "@config.showLegend", showValues: "@config.showValues", stack: "@config.stack", timeAxis: "@config.timeAxis", drillEvent: "@config.drillEvent" })
+        (render-ui main { type: "@config.viewPattern", title: "@config.title", subtitle: "@config.subtitle", chartType: "@config.chartType", data: "@entity.chartData", series: "@config.series", height: "@config.height", showLegend: "@config.showLegend", showValues: "@config.showValues", stack: "@config.stack", timeAxis: "@config.timeAxis", drillEvent: "@config.drillEvent" })
       ITEMS_LOADED -> idle
         (set @entity.chartData
           (if (= @config.chartType "histogram")
@@ -147,7 +143,7 @@ orbital GraphItemOrbital {
           (if (> @config.limit 0)
               (array/take @entity.chartData @config.limit)
               @entity.chartData))
-        (render-ui main { type: "@config.viewPattern", look: "@config.chartLook", title: "@config.title", subtitle: "@config.subtitle", chartType: "@config.chartType", data: "@entity.chartData", series: "@config.series", height: "@config.height", showLegend: "@config.showLegend", showValues: "@config.showValues", stack: "@config.stack", timeAxis: "@config.timeAxis", drillEvent: "@config.drillEvent" })
+        (render-ui main { type: "@config.viewPattern", title: "@config.title", subtitle: "@config.subtitle", chartType: "@config.chartType", data: "@entity.chartData", series: "@config.series", height: "@config.height", showLegend: "@config.showLegend", showValues: "@config.showValues", stack: "@config.stack", timeAxis: "@config.timeAxis", drillEvent: "@config.drillEvent" })
     }
     listens {
       ITEMS_LOADED { data : [ObjectSpec], totalCount : number }

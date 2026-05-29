@@ -25,7 +25,7 @@
           },
           {
             "name": "date",
-            "type": "string",
+            "type": "datetime",
             "required": false
           },
           {
@@ -36,6 +36,11 @@
           {
             "name": "duration",
             "type": "number",
+            "required": false
+          },
+          {
+            "name": "selectedRange",
+            "type": "string",
             "required": false
           }
         ],
@@ -55,36 +60,40 @@
             "key": "bodyContent",
             "type": "render-ui",
             "default": {
+              "type": "stack",
+              "direction": "vertical",
+              "gap": "lg",
               "children": [
                 {
-                  "direction": "horizontal",
-                  "gap": "md",
+                  "type": "stack",
                   "justify": "between",
                   "align": "center",
-                  "type": "stack",
                   "children": [
                     {
-                      "direction": "horizontal",
                       "gap": "sm",
+                      "align": "center",
+                      "type": "stack",
+                      "direction": "horizontal",
                       "children": [
                         {
                           "type": "icon",
                           "name": "calendar"
                         },
                         {
-                          "content": "CalendarEvents Calendar",
                           "variant": "h2",
-                          "type": "typography"
+                          "type": "typography",
+                          "content": "CalendarEvents Calendar"
                         }
-                      ],
-                      "type": "stack",
-                      "align": "center"
+                      ]
                     },
                     {
+                      "type": "date-range-selector",
                       "onSelect": "SELECT_DAY",
-                      "type": "date-range-selector"
+                      "selected": "@entity.selectedRange"
                     }
-                  ]
+                  ],
+                  "direction": "horizontal",
+                  "gap": "md"
                 },
                 {
                   "type": "divider"
@@ -96,50 +105,47 @@
                   "type": "divider"
                 },
                 {
-                  "type": "typography",
                   "content": "Upcoming Events",
-                  "variant": "h4"
+                  "variant": "h4",
+                  "type": "typography"
                 },
                 {
-                  "type": "data-list",
-                  "look": "@config.tableLook",
                   "fields": [
                     {
-                      "name": "name",
-                      "variant": "h4",
                       "label": "Event",
-                      "icon": "calendar"
+                      "name": "name",
+                      "icon": "calendar",
+                      "variant": "h4"
                     },
                     {
-                      "variant": "badge",
                       "label": "Time",
-                      "name": "time"
+                      "name": "time",
+                      "variant": "badge"
                     },
                     {
-                      "label": "Date",
-                      "format": "date",
                       "name": "date",
-                      "variant": "caption"
+                      "variant": "caption",
+                      "label": "Date",
+                      "format": "date"
                     },
                     {
+                      "name": "status",
                       "label": "Status",
-                      "variant": "badge",
-                      "name": "status"
+                      "variant": "badge"
                     }
                   ],
                   "itemActions": [
                     {
-                      "event": "SELECT_DAY",
+                      "icon": "eye",
                       "label": "View",
-                      "icon": "eye"
+                      "event": "SELECT_DAY"
                     }
                   ],
+                  "type": "data-list",
+                  "look": "@config.tableLook",
                   "entity": "@payload.data"
                 }
-              ],
-              "direction": "vertical",
-              "type": "stack",
-              "gap": "lg"
+              ]
             },
             "label": "Body content tree",
             "description": "Render-ui SExpr rendered after events load. Default is the month-grid + upcoming-events list. Layer 3 variants override this with their own tree (agenda list, week timeline, etc.) to deliver entirely different calendar UX while inheriting the same trait, state machine, emits, and listens.",
@@ -166,7 +172,8 @@
         "entityContract": {
           "requires": [],
           "provides": [
-            "date"
+            "date",
+            "selectedRange"
           ]
         }
       }

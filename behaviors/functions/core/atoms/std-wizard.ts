@@ -87,7 +87,7 @@ export interface StdWizardConfig {
   cardLook?: 'elevated' | 'flat-bordered' | 'borderless-divider' | 'ticket' | 'invoice' | 'chip' | 'tile-image-first';
   /** Default: `"Wizard"` */
   title?: string;
-  /** Default: `[{"label":"Details","key":"details","description":"Basic information","fields":["title","description"],"icon":"file-text"},{"label":"Options","description":"Configure preferences","icon":"settings","key":"options","fields":["category","priority"]},{"description":"Confirm and submit","key":"review","icon":"check-circle","label":"Review","fields":["notes"]}]` */
+  /** Default: `[{"icon":"file-text","description":"Basic information","key":"details","label":"Details","fields":["title","description"]},{"description":"Configure preferences","icon":"settings","label":"Options","fields":["category","priority"],"key":"options"},{"fields":["notes"],"icon":"check-circle","label":"Review","description":"Confirm and submit","key":"review"}]` */
   steps?: EntityRow[];
 }
 

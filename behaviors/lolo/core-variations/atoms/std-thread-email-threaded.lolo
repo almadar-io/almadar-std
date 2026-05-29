@@ -1,4 +1,4 @@
-app std-thread-email-threaded "1.1.0"
+app std-thread-email-threaded "1.2.0"
 "Email-threaded — Gmail/Outlook/Mail.app split-pane: left message list (sender, subject, preview), right pane shows the focused message with from/to/subject header and quoted-reply nested tree. For helpdesk email threads, support tickets, document discussions that read like email."
 
 orbital EmailThreadedOrbital {
@@ -19,14 +19,22 @@ orbital EmailThreadedOrbital {
     voteCount          : number = 0
     replyCount         : number = 0
     replies            : [EmailThreadedPost]
-    focusedId          : string
-    focusedSubject     : string
-    focusedAuthorName  : string
-    focusedFromAddress : string
-    focusedToAddress   : string
-    focusedCreatedAt   : string
-    focusedContent     : string
-    focusedReplies     : [EmailThreadedPost]
+    focusedRow         : FocusedEmail = {}
+  }
+
+  ;; Typed shape of the SELECT-focused message so the detail pane's
+  ;; `@entity.focusedRow.<field>` bindings resolve to concrete types
+  ;; (a bare `object` resolves to `object`, which strict string props like
+  ;; avatar `name` reject).
+  type FocusedEmail = {
+    id          : string
+    authorName  : string
+    fromAddress : string
+    toAddress   : string
+    subject     : string
+    content     : string
+    createdAt   : string
+    replies     : [EmailThreadedPost]
   }
 
   trait EmailThreaded = Thread.traits.ThreadPostBrowse -> EmailThreadedPost {
@@ -49,6 +57,7 @@ orbital EmailThreadedOrbital {
               },
               { type: "data-list", entity: "@payload.data", gap: "none", variant: "default",
                 fields: [],
+                itemActions: [{ label: "Open", event: "SELECT", icon: "mail-open" }],
                 renderItem: ["fn", "item", {
                   type: "card", look: "borderless-divider", padding: "md",
                   children: {
@@ -79,35 +88,35 @@ orbital EmailThreadedOrbital {
               { type: "stack", direction: "vertical", gap: "xs",
                 className: "pb-md border-b border-[var(--color-border)]",
                 children: [
-                  { type: "typography", variant: "h3", content: "@entity.focusedSubject" },
+                  { type: "typography", variant: "h3", content: "@entity.focusedRow.subject" },
                   { type: "stack", direction: "horizontal", gap: "md", align: "center",
                     children: [
-                      { type: "avatar", name: "@entity.focusedAuthorName", size: "md" },
+                      { type: "avatar", name: "@entity.focusedRow.authorName", size: "md" },
                       { type: "stack", direction: "vertical", gap: "xs", className: "flex-1",
                         children: [
                           { type: "stack", direction: "horizontal", gap: "sm", align: "center",
                             children: [
                               { type: "typography", variant: "label", color: "muted", content: "From" },
-                              { type: "typography", variant: "body2", weight: "medium", content: "@entity.focusedFromAddress" }
+                              { type: "typography", variant: "body2", weight: "medium", content: "@entity.focusedRow.fromAddress" }
                             ]
                           },
                           { type: "stack", direction: "horizontal", gap: "sm", align: "center",
                             children: [
                               { type: "typography", variant: "label", color: "muted", content: "To" },
-                              { type: "typography", variant: "body2", content: "@entity.focusedToAddress" }
+                              { type: "typography", variant: "body2", content: "@entity.focusedRow.toAddress" }
                             ]
                           }
                         ]
                       },
-                      { type: "typography", variant: "caption", color: "muted", content: "@entity.focusedCreatedAt" },
-                      { type: "button", label: "Reply", icon: "corner-up-left", action: "REPLY", actionPayload: { parentId: "@entity.focusedId" }, variant: "secondary", size: "sm" },
+                      { type: "typography", variant: "caption", color: "muted", content: "@entity.focusedRow.createdAt" },
+                      { type: "button", label: "Reply", icon: "corner-up-left", action: "REPLY", actionPayload: { parentId: "@entity.focusedRow.id" }, variant: "secondary", size: "sm" },
                       { type: "button", label: "Forward", icon: "corner-up-right", action: "REPLY", variant: "ghost", size: "sm" }
                     ]
                   }
                 ]
               },
               { type: "card", look: "flat-bordered", padding: "md",
-                children: { type: "typography", variant: "body", content: "@entity.focusedContent" }
+                children: { type: "typography", variant: "body", content: "@entity.focusedRow.content" }
               },
               { type: "stack", direction: "horizontal", gap: "sm", align: "center",
                 children: [
@@ -115,7 +124,7 @@ orbital EmailThreadedOrbital {
                   { type: "typography", variant: "label", color: "muted", content: "Quoted replies" }
                 ]
               },
-              { type: "data-list", entity: "@entity.focusedReplies", gap: "sm", variant: "default",
+              { type: "data-list", entity: "@entity.focusedRow.replies", gap: "sm", variant: "default",
                 fields: [],
                 renderItem: ["fn", "reply", {
                   type: "card", look: "flat-bordered", padding: "md",

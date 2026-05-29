@@ -63,12 +63,12 @@ export interface StdConfirmationConfirmActionLoadedPayload {
 export interface StdConfirmationConfig {
   /** Default: `"Confirm Action"` */
   title?: string;
-  /** Default: `"alert-triangle"` */
-  icon?: string;
-  /** Default: `"Confirm"` */
-  confirmLabel?: string;
   /** Default: `"Are you sure?"` */
   alertMessage?: string;
+  /** Default: `"Confirm"` */
+  confirmLabel?: string;
+  /** Default: `"alert-triangle"` */
+  icon?: string;
 }
 
 /**

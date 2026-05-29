@@ -41,12 +41,12 @@ export type StdStatsEventKey = 'INIT' | 'ITEMS_LOADED';
 export interface StdStatsConfig {
   /** Default: `"data-grid"` */
   viewPattern?: unknown;
+  /** Default: `{"type":"@config.viewPattern","entity":"@entity.cards","fields":[],"renderItem":["fn","card",{"variant":"@card.variant","trendPolarity":"@card.trendPolarity","max":"@card.max","icon":"@card.icon","type":"stat-display","target":"@card.target","trendFormat":"@card.trendFormat","look":"@config.statLook","trend":"@card.trend","sparklineData":"@card.sparklineData","value":"@card.value","prefix":"@card.prefix","label":"@card.label","format":"@card.format","suffix":"@card.suffix","clickEvent":"@card.clickEvent"}]}` */
+  bodyContent?: unknown;
   /** Default: `"elevated"` */
   statLook?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
-  /** Default: `[{"variant":"primary","label":"Total Items","icon":"list","format":"number","aggregation":"count"},{"label":"Active","variant":"success","aggregation":"count","icon":"check-circle","format":"number"},{"aggregation":"avg","format":"number","label":"Avg Value","icon":"trending-up","field":"value","variant":"info"}]` */
+  /** Default: `[{"label":"Total Items","icon":"list","aggregation":"count","format":"number","variant":"primary"},{"aggregation":"count","format":"number","icon":"check-circle","label":"Active","variant":"success"},{"label":"Avg Value","aggregation":"avg","variant":"info","field":"value","icon":"trending-up","format":"number"}]` */
   metrics?: EntityRow[];
-  /** Default: `{"fields":[],"entity":"@entity.cards","renderItem":["fn","card",{"look":"@config.statLook","format":"@card.format","sparklineData":"@card.sparklineData","prefix":"@card.prefix","max":"@card.max","target":"@card.target","variant":"@card.variant","trend":"@card.trend","value":"@card.value","icon":"@card.icon","trendFormat":"@card.trendFormat","type":"stat-display","trendPolarity":"@card.trendPolarity","clickEvent":"@card.clickEvent","suffix":"@card.suffix","label":"@card.label"}],"type":"@config.viewPattern"}` */
-  bodyContent?: unknown;
   /** Default: `"Summary"` */
   title?: string;
 }

@@ -1,4 +1,4 @@
-app std-thread-chat-bubbles "1.0.1"
+app std-thread-chat-bubbles "1.0.3"
 "Chat-bubbles thread — iMessage/WhatsApp DM style: two-party back-and-forth with sender-vs-receiver bubble alignment and tint."
 
 orbital ChatBubblesThreadOrbital {
@@ -16,6 +16,7 @@ orbital ChatBubblesThreadOrbital {
     voteCount     : number = 0
     replyCount    : number = 0
     replies       : [ChatBubblesPost]
+    focusedRow    : object = {}
   }
 
   trait ChatBubblesThread = Thread.traits.ThreadPostBrowse -> ChatBubblesPost {
@@ -42,28 +43,10 @@ orbital ChatBubblesThreadOrbital {
             gap: "sm", variant: "message",
             senderField: "authorId", currentUser: "me",
             className: "flex-1 overflow-y-auto py-md",
-            fields: [],
-            renderItem: ["fn", "item", {
-              type: "stack", direction: "horizontal", gap: "sm", align: "end",
-              className: "@item.isMe ? 'w-full flex-row-reverse' : 'w-full flex-row'",
-              children: [
-                { type: "avatar", name: "@item.authorName", size: "sm",
-                  className: "@item.isMe ? 'invisible' : 'visible'"
-                },
-                { type: "stack", direction: "vertical", gap: "xs",
-                  className: "@item.isMe ? 'max-w-[70%] items-end' : 'max-w-[70%] items-start'",
-                  children: [
-                    { type: "card",
-                      look: "@item.isMe ? 'filled' : 'flat-bordered'",
-                      padding: "sm",
-                      className: "@item.isMe ? 'rounded-lg rounded-br-sm bg-[var(--color-primary)] text-[var(--color-primary-foreground)] shadow-sm' : 'rounded-lg rounded-bl-sm bg-[var(--color-muted)] text-[var(--color-foreground)] shadow-sm'",
-                      children: { type: "typography", variant: "body", content: "@item.content" }
-                    },
-                    { type: "typography", variant: "caption", color: "muted", content: "@item.createdAt" }
-                  ]
-                }
-              ]
-            }]
+            fields: [
+              { name: "content", variant: "body" },
+              { name: "createdAt", format: "date" }
+            ]
           },
           { type: "stack", direction: "horizontal", gap: "sm", align: "center",
             className: "mt-md border-t border-[var(--color-border)] pt-md",

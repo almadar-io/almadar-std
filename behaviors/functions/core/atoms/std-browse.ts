@@ -97,24 +97,24 @@ export interface StdBrowseDeletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdBrowseConfig {
-  /** Default: `"md"` */
-  gap?: string;
-  /** Default: `10` */
-  pageSize?: number;
-  /** Default: `{"type":"stack","direction":"vertical","children":[{"type":"data-grid","fields":"@config.fields","imageField":"@config.imageField","entity":"@payload.data","itemActions":"@config.itemActions","cols":"@config.cols","pageSize":"@config.displayPageSize","gap":"@config.gap"}]}` */
-  bodyContent?: unknown;
-  /** Default: `"data-grid"` */
-  viewPattern?: unknown;
-  /** Default: `[]` */
-  itemActions?: EntityRow[];
-  /** Default: `[{"variant":"h4","name":"name","label":"Name"},{"variant":"caption","name":"description","label":"Description"},{"name":"status","label":"Status","variant":"badge"}]` */
+  /** Default: `[{"variant":"h4","name":"name","label":"Name"},{"variant":"caption","label":"Description","name":"description"},{"label":"Status","variant":"badge","name":"status"}]` */
   fields?: EntityRow[];
   /** Default: `""` */
   imageField?: string;
+  /** Default: `"md"` */
+  gap?: string;
+  /** Default: `10` */
+  displayPageSize?: number;
+  /** Default: `{"direction":"vertical","children":[{"fields":"@config.fields","cols":"@config.cols","pageSize":"@config.displayPageSize","gap":"@config.gap","imageField":"@config.imageField","itemActions":"@config.itemActions","entity":"@payload.data","type":"data-grid"}],"type":"stack"}` */
+  bodyContent?: unknown;
+  /** Default: `[]` */
+  itemActions?: EntityRow[];
   /** Default: `1` */
   cols?: number;
   /** Default: `10` */
-  displayPageSize?: number;
+  pageSize?: number;
+  /** Default: `"data-grid"` */
+  viewPattern?: unknown;
 }
 
 /**

@@ -99,16 +99,16 @@ export interface StdDataErasureErasureSaveFailedPayload {
 export interface StdDataErasureConfig {
   /** Default: `"anonymize"` */
   anonymizeVsDelete?: 'anonymize' | 'delete';
-  /** Default: `"dense"` */
-  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
-  /** Default: `""` */
-  targetEntity?: string;
-  /** Default: `[]` */
-  piiFields?: string[];
-  /** Default: `30` */
-  gracePeriodDays?: number;
   /** Default: `false` */
   enabled?: boolean;
+  /** Default: `30` */
+  gracePeriodDays?: number;
+  /** Default: `[]` */
+  piiFields?: string[];
+  /** Default: `""` */
+  targetEntity?: string;
+  /** Default: `"dense"` */
+  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
 }
 
 /**

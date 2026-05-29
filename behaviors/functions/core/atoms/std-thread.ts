@@ -30,13 +30,22 @@ const ALIAS = 'Thread';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdThreadEventKey = 'CANCEL_REPLY' | 'EDIT_REPLY' | 'INIT' | 'REPLY' | 'SUBMIT_REPLY' | 'ThreadPostCreateFailed' | 'ThreadPostCreated' | 'ThreadPostLoadFailed' | 'ThreadPostLoaded';
+export type StdThreadEventKey = 'CANCEL_REPLY' | 'EDIT_REPLY' | 'INIT' | 'REPLY' | 'SELECT' | 'SUBMIT_REPLY' | 'ThreadPostCreateFailed' | 'ThreadPostCreated' | 'ThreadPostLoadFailed' | 'ThreadPostLoaded';
+
+/**
+ * Payload shape for the `SELECT` event.
+ */
+export interface StdThreadSelectPayload {
+  id?: string;
+  row: EntityRow;
+}
 
 /**
  * Payload shape for the `REPLY` event.
  */
 export interface StdThreadReplyPayload {
-  parentId: string;
+  parentId?: string;
+  parentNodeId?: string;
   content?: string;
 }
 
@@ -84,6 +93,7 @@ export interface StdThreadThreadPostCreatedPayload {
     voteCount?: number;
     replyCount?: number;
     replies?: EntityRow[];
+    focusedRow?: EntityRow;
   };
 }
 
@@ -102,14 +112,14 @@ export interface StdThreadThreadPostCreateFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdThreadConfig {
-  /** Default: `""` */
-  threadRootId?: string;
-  /** Default: `"dense"` */
-  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
-  /** Default: `{"direction":"vertical","type":"stack","gap":"md","children":[{"look":"@config.tableLook","variant":"card","gap":"sm","type":"data-list","fields":[{"label":"Author","name":"authorName","variant":"h4"},{"label":"","variant":"body","name":"content"},{"variant":"caption","label":"Votes","name":"voteCount"}],"itemActions":[{"icon":"message-square","label":"Reply","event":"REPLY"}],"entity":"@payload.data"}]}` */
-  bodyContent?: unknown;
   /** Default: `false` */
   flat?: boolean;
+  /** Default: `"dense"` */
+  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
+  /** Default: `{"gap":"md","children":[{"type":"data-list","variant":"card","entity":"@payload.data","look":"@config.tableLook","itemActions":[{"icon":"message-square","label":"Reply","event":"REPLY"}],"gap":"sm","fields":[{"name":"authorName","variant":"h4","label":"Author"},{"label":"","name":"content","variant":"body"},{"variant":"caption","name":"voteCount","label":"Votes"}]}],"type":"stack","direction":"vertical"}` */
+  bodyContent?: unknown;
+  /** Default: `""` */
+  threadRootId?: string;
 }
 
 /**

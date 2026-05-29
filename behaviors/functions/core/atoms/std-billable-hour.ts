@@ -90,10 +90,10 @@ export interface StdBillableHourBillableHourLoadFailedPayload {
 export interface StdBillableHourConfig {
   /** Default: `"dense"` */
   tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
-  /** Default: `"Time Entries"` */
-  title?: string;
   /** Default: `"elevated"` */
   statLook?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
+  /** Default: `"Time Entries"` */
+  title?: string;
 }
 
 /**
