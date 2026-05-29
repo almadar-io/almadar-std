@@ -1,6 +1,6 @@
 {
   "name": "std-calendar-agenda-list",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Day-grouped agenda — events organized by date with overline day headers (Today, Tomorrow, Mon Jun 5) and a time marker per event. Inherits std-calendar's fetch + SELECT_DAY state machine; only bodyContent differs from std-calendar's month-grid and std-calendar-week-timeline's 7-col timeline. For appointment queues, class-roster schedules, court-deadline lists where users scan a vertical chronological flow grouped by day.",
   "orbitals": [
     {
@@ -45,7 +45,7 @@
           },
           {
             "name": "date",
-            "type": "string",
+            "type": "datetime",
             "default": ""
           },
           {
@@ -72,133 +72,133 @@
           "linkedEntity": "AgendaListEvent",
           "config": {
             "bodyContent": {
-              "gap": "lg",
-              "className": "max-w-3xl mx-auto p-card-md",
+              "direction": "vertical",
               "children": [
                 {
-                  "direction": "horizontal",
+                  "gap": "md",
                   "children": [
                     {
-                      "align": "center",
-                      "gap": "sm",
                       "type": "stack",
+                      "align": "center",
                       "children": [
                         {
                           "type": "icon",
                           "name": "list"
                         },
                         {
-                          "variant": "h2",
+                          "content": "Agenda",
                           "type": "typography",
-                          "content": "Agenda"
+                          "variant": "h2"
                         }
                       ],
-                      "direction": "horizontal"
+                      "direction": "horizontal",
+                      "gap": "sm"
                     },
                     {
-                      "onSelect": "SELECT_DAY",
-                      "type": "date-range-selector"
+                      "type": "date-range-selector",
+                      "onSelect": "SELECT_DAY"
                     }
                   ],
-                  "gap": "md",
-                  "align": "center",
+                  "direction": "horizontal",
                   "type": "stack",
-                  "justify": "between"
+                  "justify": "between",
+                  "align": "center"
                 },
                 {
                   "type": "divider"
                 },
                 {
+                  "fields": [],
+                  "gap": "md",
                   "renderItem": [
                     "fn",
                     "item",
                     {
-                      "look": "flat-bordered",
+                      "type": "card",
+                      "padding": "md",
                       "children": [
                         {
-                          "type": "stack",
+                          "gap": "md",
                           "children": [
                             {
-                              "direction": "vertical",
+                              "className": "w-16 shrink-0",
                               "type": "stack",
                               "children": [
                                 {
                                   "type": "typography",
-                                  "color": "muted",
                                   "variant": "overline",
+                                  "color": "muted",
                                   "content": "@item.time"
                                 },
                                 {
-                                  "color": "muted",
+                                  "type": "icon",
                                   "size": "sm",
-                                  "name": "clock",
-                                  "type": "icon"
+                                  "color": "muted",
+                                  "name": "clock"
                                 }
                               ],
                               "gap": "xs",
-                              "align": "center",
-                              "className": "w-16 shrink-0"
+                              "direction": "vertical",
+                              "align": "center"
                             },
                             {
                               "type": "divider",
                               "orientation": "vertical"
                             },
                             {
-                              "type": "stack",
-                              "direction": "vertical",
                               "className": "flex-1 min-w-0",
+                              "gap": "xs",
                               "children": [
                                 {
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "align": "center",
+                                  "justify": "between",
                                   "children": [
                                     {
-                                      "weight": "medium",
+                                      "className": "truncate",
+                                      "variant": "h4",
                                       "type": "typography",
                                       "content": "@item.name",
-                                      "variant": "h4",
-                                      "className": "truncate"
+                                      "weight": "medium"
                                     },
                                     {
-                                      "variant": "default",
-                                      "label": "@item.status",
                                       "type": "badge",
-                                      "size": "sm"
+                                      "size": "sm",
+                                      "label": "@item.status",
+                                      "variant": "default"
                                     }
                                   ],
+                                  "gap": "sm",
+                                  "direction": "horizontal",
                                   "type": "stack",
-                                  "justify": "between"
+                                  "align": "center"
                                 },
                                 {
-                                  "variant": "body2",
-                                  "color": "muted",
                                   "type": "typography",
+                                  "variant": "body2",
+                                  "className": "truncate",
                                   "content": "@item.description",
-                                  "className": "truncate"
+                                  "color": "muted"
                                 }
                               ],
-                              "gap": "xs"
+                              "direction": "vertical",
+                              "type": "stack"
                             }
                           ],
-                          "gap": "md",
-                          "direction": "horizontal",
-                          "align": "start"
+                          "align": "start",
+                          "type": "stack",
+                          "direction": "horizontal"
                         }
                       ],
-                      "padding": "md",
-                      "type": "card"
+                      "look": "flat-bordered"
                     }
                   ],
+                  "groupBy": "dateGroup",
                   "type": "data-list",
                   "entity": "@payload.data",
-                  "groupBy": "dateGroup",
-                  "gap": "md",
-                  "variant": "default",
-                  "fields": []
+                  "variant": "default"
                 }
               ],
-              "direction": "vertical",
+              "gap": "lg",
+              "className": "max-w-3xl mx-auto p-card-md",
               "type": "stack"
             }
           }

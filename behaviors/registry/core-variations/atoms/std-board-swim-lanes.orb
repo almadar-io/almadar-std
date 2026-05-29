@@ -1,6 +1,6 @@
 {
   "name": "std-board-swim-lanes",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Swim-lane board — full-width horizontal lanes per status, cards flow left-to-right within each lane. Lane header on top with icon + label + count; cards render in the lane body. Useful for HR-portal recruiting stages and project-manager team boards. Same BoardItemBoard trait, same state machine, same emits/listens as std-board — only the bodyContent tree differs.",
   "orbitals": [
     {
@@ -98,15 +98,11 @@
           "linkedEntity": "SwimLaneItem",
           "config": {
             "bodyContent": {
+              "gap": "md",
               "direction": "vertical",
               "type": "stack",
               "children": [
                 {
-                  "className": "px-card-md",
-                  "gap": "sm",
-                  "direction": "horizontal",
-                  "type": "stack",
-                  "align": "center",
                   "children": [
                     {
                       "type": "icon",
@@ -117,144 +113,148 @@
                       "content": "@config.title",
                       "variant": "h2"
                     }
-                  ]
+                  ],
+                  "type": "stack",
+                  "direction": "horizontal",
+                  "className": "px-card-md",
+                  "align": "center",
+                  "gap": "sm"
                 },
                 {
                   "type": "divider"
                 },
                 {
-                  "type": "data-list",
                   "dndRoot": true,
-                  "fields": [],
+                  "gap": "md",
+                  "entity": "@entity.boards",
                   "renderItem": [
                     "fn",
                     "col",
                     {
                       "padding": "none",
+                      "type": "card",
+                      "className": "overflow-hidden rounded-lg",
+                      "look": "flat-bordered",
                       "children": [
                         {
+                          "type": "stack",
+                          "gap": "none",
                           "children": [
                             {
-                              "align": "center",
-                              "direction": "horizontal",
                               "type": "stack",
+                              "className": "p-card-md border-b border-[var(--color-border)] bg-[var(--color-surface-subtle)]",
+                              "direction": "horizontal",
                               "gap": "sm",
-                              "className": "px-card-md py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-subtle)]",
                               "children": [
                                 {
-                                  "name": "@col.icon",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "@col.icon"
                                 },
                                 {
+                                  "type": "typography",
                                   "variant": "h4",
-                                  "className": "flex-1",
                                   "content": "@col.label",
-                                  "type": "typography"
+                                  "className": "flex-1"
                                 },
                                 {
-                                  "type": "badge",
                                   "variant": "primary",
+                                  "type": "badge",
                                   "size": "sm",
                                   "label": "@col.count"
                                 }
-                              ]
+                              ],
+                              "align": "center"
                             },
                             {
-                              "positionEvent": "REORDER_POSITION",
                               "renderItem": [
                                 "fn",
                                 "item",
                                 {
-                                  "look": "elevated",
-                                  "className": "min-w-[220px] max-w-[260px] rounded-md cursor-grab shadow-sm hover:shadow-md transition-shadow",
                                   "padding": "sm",
+                                  "className": "min-w-[220px] max-w-[260px] rounded-md cursor-grab shadow-sm hover:shadow-md transition-shadow",
                                   "type": "card",
+                                  "look": "elevated",
                                   "children": [
                                     {
+                                      "gap": "xs",
+                                      "direction": "vertical",
                                       "children": [
                                         {
-                                          "variant": "body",
+                                          "content": "@item.title",
                                           "weight": "medium",
                                           "type": "typography",
-                                          "content": "@item.title"
+                                          "variant": "body"
                                         },
                                         {
                                           "type": "typography",
                                           "content": "@item.description",
-                                          "color": "muted",
                                           "variant": "caption",
-                                          "className": "line-clamp-2"
+                                          "className": "line-clamp-2",
+                                          "color": "muted"
                                         },
                                         {
+                                          "type": "stack",
+                                          "direction": "horizontal",
+                                          "align": "center",
+                                          "gap": "xs",
                                           "children": [
                                             {
-                                              "size": "sm",
                                               "label": "@item.stage",
                                               "variant": "primary",
-                                              "type": "badge"
+                                              "type": "badge",
+                                              "size": "sm"
                                             },
                                             {
+                                              "type": "button",
                                               "label": "Open",
-                                              "size": "sm",
                                               "variant": "ghost",
                                               "actionPayload": {
-                                                "row": "@item",
-                                                "id": "@item.id"
+                                                "id": "@item.id",
+                                                "row": "@item"
                                               },
                                               "action": "OPEN_CARD",
+                                              "size": "sm",
                                               "icon": "arrow-right",
-                                              "type": "button",
                                               "className": "ml-auto"
                                             }
                                           ],
-                                          "className": "pt-1",
-                                          "align": "center",
-                                          "direction": "horizontal",
-                                          "type": "stack",
-                                          "gap": "xs"
+                                          "className": "pt-1"
                                         }
                                       ],
-                                      "type": "stack",
-                                      "direction": "vertical",
-                                      "gap": "xs"
+                                      "type": "stack"
                                     }
                                   ]
                                 }
                               ],
-                              "className": "p-card-md min-h-[140px] flex flex-row flex-nowrap gap-3 overflow-x-auto",
-                              "dropEvent": "MOVE_CARD",
-                              "entity": "@col.items",
-                              "sortable": true,
+                              "accepts": "*",
                               "type": "data-list",
-                              "fields": [],
+                              "entity": "@col.items",
+                              "dropEvent": "MOVE_CARD",
                               "dragGroup": "@col.key",
                               "gap": "sm",
-                              "accepts": "*",
-                              "reorderEvent": "REORDER_CARD"
+                              "positionEvent": "REORDER_POSITION",
+                              "reorderEvent": "REORDER_CARD",
+                              "fields": [],
+                              "className": "p-card-md min-h-[140px] flex flex-row flex-nowrap gap-3 overflow-x-auto",
+                              "sortable": true
                             }
                           ],
-                          "gap": "none",
-                          "type": "stack",
                           "direction": "vertical"
                         }
-                      ],
-                      "look": "flat-bordered",
-                      "type": "card",
-                      "className": "overflow-hidden rounded-lg"
+                      ]
                     }
                   ],
-                  "entity": "@entity.boards",
-                  "gap": "md"
+                  "fields": [],
+                  "type": "data-list"
                 },
                 {
+                  "label": "Add card",
                   "action": "ADD_CARD",
                   "variant": "primary",
                   "icon": "plus",
-                  "type": "floating-action-button",
-                  "label": "Add card"
+                  "type": "floating-action-button"
                 }
-              ],
-              "gap": "md"
+              ]
             }
           }
         }
