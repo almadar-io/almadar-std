@@ -287,11 +287,11 @@
                     "fetch",
                     "BrowseItem",
                     {
-                      "limit": "@config.pageSize",
                       "emit": {
-                        "success": "BrowseItemLoaded",
-                        "failure": "BrowseItemLoadFailed"
+                        "failure": "BrowseItemLoadFailed",
+                        "success": "BrowseItemLoaded"
                       },
+                      "limit": "@config.pageSize",
                       "offset": 0.0
                     }
                   ],
@@ -299,8 +299,8 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]
@@ -326,10 +326,10 @@
                     "render-ui",
                     "main",
                     {
-                      "color": "error",
                       "variant": "caption",
+                      "content": "@payload.error",
                       "type": "typography",
-                      "content": "@payload.error"
+                      "color": "error"
                     }
                   ]
                 ]
@@ -343,12 +343,12 @@
                     "fetch",
                     "BrowseItem",
                     {
+                      "limit": "@config.pageSize",
                       "emit": {
                         "failure": "BrowseItemLoadFailed",
                         "success": "BrowseItemLoaded"
                       },
-                      "offset": 0.0,
-                      "limit": "@config.pageSize"
+                      "offset": 0.0
                     }
                   ],
                   [
@@ -371,11 +371,11 @@
                     "BrowseItem",
                     {
                       "offset": 0.0,
-                      "limit": "@config.pageSize",
                       "emit": {
-                        "success": "BrowseItemLoaded",
-                        "failure": "BrowseItemLoadFailed"
+                        "failure": "BrowseItemLoadFailed",
+                        "success": "BrowseItemLoaded"
                       },
+                      "limit": "@config.pageSize",
                       "filter": [
                         "or",
                         [
@@ -406,7 +406,6 @@
                     "fetch",
                     "BrowseItem",
                     {
-                      "limit": "@config.pageSize",
                       "offset": 0.0,
                       "filter": [
                         "or",
@@ -425,9 +424,10 @@
                           "@payload.value"
                         ]
                       ],
+                      "limit": "@config.pageSize",
                       "emit": {
-                        "success": "BrowseItemLoaded",
-                        "failure": "BrowseItemLoadFailed"
+                        "failure": "BrowseItemLoadFailed",
+                        "success": "BrowseItemLoaded"
                       }
                     }
                   ]
@@ -481,20 +481,20 @@
                     "fetch",
                     "BrowseItem",
                     {
-                      "offset": 0.0,
-                      "limit": "@config.pageSize",
                       "emit": {
                         "success": "BrowseItemLoaded",
                         "failure": "BrowseItemLoadFailed"
-                      }
+                      },
+                      "offset": 0.0,
+                      "limit": "@config.pageSize"
                     }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "sm"
+                      "size": "sm",
+                      "type": "spinner"
                     }
                   ]
                 ]
@@ -502,168 +502,30 @@
             ]
           },
           "config": {
-            "bodyContent": {
-              "type": "render-ui",
-              "default": {
-                "children": [
-                  {
-                    "entity": "@payload.data",
-                    "itemActions": "@config.itemActions",
-                    "cols": "@config.cols",
-                    "type": "data-grid",
-                    "imageField": "@config.imageField",
-                    "pageSize": "@config.displayPageSize",
-                    "gap": "@config.gap",
-                    "fields": "@config.fields"
-                  }
-                ],
-                "type": "stack",
-                "direction": "vertical"
-              },
-              "label": "Body content tree",
-              "description": "Render-ui SExpr rendered after rows load. Default is the canonical data-grid call wrapped in a stack. Layer 3 variants override this with their own tree (composing data-list/data-grid/entity-table + custom renderItem lambdas + filter-group, kbd, card, etc.) to deliver entirely different browse UX while inheriting the same trait, state machine, emits, and listens.",
-              "tier": "internal"
-            },
-            "viewPattern": {
-              "type": "pattern",
-              "default": "data-grid",
-              "label": "Render pattern",
-              "description": "UI pattern used to render the collection. Used by the default bodyContent tree; Layer 3 variants override bodyContent directly instead and may ignore this knob.",
-              "tier": "internal"
-            },
-            "imageLabelBinding": {
+            "priorityBinding": {
               "type": "string",
-              "default": "@item.thumbnailLabel",
-              "label": "Image label binding",
-              "description": "Per-row binding string for the image-area label slot (image-first variants).",
-              "tier": "presentation"
-            },
-            "priceBinding": {
-              "type": "string",
-              "default": "@item.price",
-              "label": "Price binding",
-              "description": "Per-row binding string for the price/amount overlay slot.",
-              "tier": "presentation"
-            },
-            "categoryBinding": {
-              "type": "string",
-              "default": "@item.category",
-              "label": "Category binding",
-              "description": "Per-row binding string for the category/tag slot.",
-              "tier": "presentation"
-            },
-            "badgeBinding": {
-              "type": "string",
-              "default": "@item.status",
-              "label": "Badge binding",
-              "description": "Per-row binding string for the status/badge slot.",
-              "tier": "presentation"
-            },
-            "titleBinding": {
-              "type": "string",
-              "default": "@item.name",
-              "label": "Title binding",
-              "description": "Per-row binding string for the card title slot. Layer 3 variants read this inside their renderItem; consumers override it to point at their entity's field (e.g. \"@item.dishName\").",
-              "tier": "presentation"
-            },
-            "gap": {
-              "type": "string",
-              "default": "md",
-              "label": "Cell spacing",
-              "description": "Gap size between rows (sm, md, lg)",
-              "tier": "presentation"
-            },
-            "displayPageSize": {
-              "type": "number",
-              "default": 10.0,
-              "label": "Page size (display)",
-              "description": "Rows shown per visible page before pagination",
-              "tier": "presentation"
-            },
-            "descriptionBinding": {
-              "type": "string",
-              "default": "@item.description",
-              "label": "Description binding",
-              "description": "Per-row binding string for the card body/subtitle slot.",
-              "tier": "presentation"
-            },
-            "metaBinding": {
-              "type": "string",
-              "default": "@item.createdAt",
-              "label": "Meta binding",
-              "description": "Per-row binding string for the secondary meta slot (timestamp / category).",
-              "tier": "presentation"
-            },
-            "assigneeBinding": {
-              "type": "string",
-              "default": "@item.assignee",
-              "label": "Assignee binding",
-              "description": "Per-row binding string for the assignee/owner slot.",
-              "tier": "presentation"
-            },
-            "itemActions": {
-              "type": "[ItemAction]",
-              "default": [],
-              "label": "Row actions",
-              "description": "Buttons users can click on each row",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
-                  },
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": true
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            },
-            "pageSize": {
-              "type": "number",
-              "default": 10.0,
-              "label": "Page size (fetch)",
-              "description": "Rows fetched from the server per page",
-              "tier": "presentation"
-            },
-            "cols": {
-              "type": "number",
-              "default": 1.0,
-              "label": "Grid columns",
-              "description": "Number of columns in the responsive grid layout",
+              "default": "@item.priority",
+              "label": "Priority binding",
+              "description": "Per-row binding string for the priority slot (triage / work-queue variants).",
               "tier": "presentation"
             },
             "fields": {
               "type": "[FieldSpec]",
               "default": [
                 {
-                  "variant": "h4",
                   "label": "Name",
+                  "variant": "h4",
                   "name": "name"
                 },
                 {
                   "name": "description",
-                  "label": "Description",
-                  "variant": "caption"
+                  "variant": "caption",
+                  "label": "Description"
                 },
                 {
+                  "variant": "badge",
                   "name": "status",
-                  "label": "Status",
-                  "variant": "badge"
+                  "label": "Status"
                 }
               ],
               "label": "Columns to show",
@@ -672,8 +534,8 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "key": {
-                    "name": "key",
+                  "label": {
+                    "name": "label",
                     "type": "string",
                     "required": false
                   },
@@ -682,8 +544,83 @@
                     "type": "string",
                     "required": true
                   },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
                   "icon": {
                     "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "format": {
+                    "name": "format",
+                    "type": "string",
+                    "required": false
+                  },
+                  "key": {
+                    "name": "key",
+                    "type": "string",
+                    "required": false
+                  },
+                  "header": {
+                    "name": "header",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "badgeBinding": {
+              "type": "string",
+              "default": "@item.status",
+              "label": "Badge binding",
+              "description": "Per-row binding string for the status/badge slot.",
+              "tier": "presentation"
+            },
+            "columns": {
+              "type": "[ColumnSpec]",
+              "default": [
+                {
+                  "key": "name",
+                  "align": "left",
+                  "weight": "medium",
+                  "field": "name",
+                  "header": "Name"
+                },
+                {
+                  "align": "left",
+                  "header": "Detail",
+                  "key": "description",
+                  "field": "description"
+                },
+                {
+                  "field": "status",
+                  "format": "badge",
+                  "header": "Status",
+                  "key": "status",
+                  "align": "center"
+                }
+              ],
+              "label": "Table columns",
+              "description": "Column definitions for table-style variants (dense). Each maps an entity field to a column with optional width / align / weight / format.",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "className": {
+                    "name": "className",
+                    "type": "string",
+                    "required": false
+                  },
+                  "align": {
+                    "name": "align",
+                    "type": "string",
+                    "required": false
+                  },
+                  "weight": {
+                    "name": "weight",
                     "type": "string",
                     "required": false
                   },
@@ -697,24 +634,62 @@
                     "type": "string",
                     "required": false
                   },
-                  "variant": {
-                    "name": "variant",
+                  "field": {
+                    "name": "field",
                     "type": "string",
                     "required": false
                   },
-                  "label": {
-                    "name": "label",
+                  "width": {
+                    "name": "width",
                     "type": "string",
                     "required": false
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "key": {
+                    "name": "key",
+                    "type": "string",
+                    "required": true
                   }
                 }
               }
             },
-            "priorityBinding": {
+            "descriptionBinding": {
               "type": "string",
-              "default": "@item.priority",
-              "label": "Priority binding",
-              "description": "Per-row binding string for the priority slot (triage / work-queue variants).",
+              "default": "@item.description",
+              "label": "Description binding",
+              "description": "Per-row binding string for the card body/subtitle slot.",
+              "tier": "presentation"
+            },
+            "cols": {
+              "type": "number",
+              "default": 1.0,
+              "label": "Grid columns",
+              "description": "Number of columns in the responsive grid layout",
+              "tier": "presentation"
+            },
+            "metaBinding": {
+              "type": "string",
+              "default": "@item.createdAt",
+              "label": "Meta binding",
+              "description": "Per-row binding string for the secondary meta slot (timestamp / category).",
+              "tier": "presentation"
+            },
+            "titleBinding": {
+              "type": "string",
+              "default": "@item.name",
+              "label": "Title binding",
+              "description": "Per-row binding string for the card title slot. Layer 3 variants read this inside their renderItem; consumers override it to point at their entity's field (e.g. \"@item.dishName\").",
+              "tier": "presentation"
+            },
+            "assigneeBinding": {
+              "type": "string",
+              "default": "@item.assignee",
+              "label": "Assignee binding",
+              "description": "Per-row binding string for the assignee/owner slot.",
               "tier": "presentation"
             },
             "imageField": {
@@ -722,6 +697,109 @@
               "default": "",
               "label": "Image field",
               "description": "Entity field that holds the row thumbnail URL",
+              "tier": "presentation"
+            },
+            "itemActions": {
+              "type": "[ItemAction]",
+              "default": [],
+              "label": "Row actions",
+              "description": "Buttons users can click on each row",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "viewPattern": {
+              "type": "pattern",
+              "default": "data-grid",
+              "label": "Render pattern",
+              "description": "UI pattern used to render the collection. Used by the default bodyContent tree; Layer 3 variants override bodyContent directly instead and may ignore this knob.",
+              "tier": "internal"
+            },
+            "categoryBinding": {
+              "type": "string",
+              "default": "@item.category",
+              "label": "Category binding",
+              "description": "Per-row binding string for the category/tag slot.",
+              "tier": "presentation"
+            },
+            "gap": {
+              "type": "string",
+              "default": "md",
+              "label": "Cell spacing",
+              "description": "Gap size between rows (sm, md, lg)",
+              "tier": "presentation"
+            },
+            "bodyContent": {
+              "type": "render-ui",
+              "default": {
+                "type": "stack",
+                "direction": "vertical",
+                "children": [
+                  {
+                    "entity": "@payload.data",
+                    "type": "data-grid",
+                    "fields": "@config.fields",
+                    "imageField": "@config.imageField",
+                    "itemActions": "@config.itemActions",
+                    "pageSize": "@config.displayPageSize",
+                    "gap": "@config.gap",
+                    "cols": "@config.cols"
+                  }
+                ]
+              },
+              "label": "Body content tree",
+              "description": "Render-ui SExpr rendered after rows load. Default is the canonical data-grid call wrapped in a stack. Layer 3 variants override this with their own tree (composing data-list/data-grid/entity-table + custom renderItem lambdas + filter-group, kbd, card, etc.) to deliver entirely different browse UX while inheriting the same trait, state machine, emits, and listens.",
+              "tier": "internal"
+            },
+            "displayPageSize": {
+              "type": "number",
+              "default": 10.0,
+              "label": "Page size (display)",
+              "description": "Rows shown per visible page before pagination",
+              "tier": "presentation"
+            },
+            "priceBinding": {
+              "type": "string",
+              "default": "@item.price",
+              "label": "Price binding",
+              "description": "Per-row binding string for the price/amount overlay slot.",
+              "tier": "presentation"
+            },
+            "imageLabelBinding": {
+              "type": "string",
+              "default": "@item.thumbnailLabel",
+              "label": "Image label binding",
+              "description": "Per-row binding string for the image-area label slot (image-first variants).",
+              "tier": "presentation"
+            },
+            "pageSize": {
+              "type": "number",
+              "default": 10.0,
+              "label": "Page size (fetch)",
+              "description": "Rows fetched from the server per page",
               "tier": "presentation"
             }
           },

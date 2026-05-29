@@ -57,34 +57,40 @@
         "listenedEvents": [],
         "overridableConfigKeys": [
           {
+            "key": "badgeBinding",
+            "type": "string",
+            "default": "@item.status",
+            "label": "Badge binding",
+            "description": "Per-row binding for the event status/badge slot.",
+            "tier": "presentation"
+          },
+          {
             "key": "bodyContent",
             "type": "render-ui",
             "default": {
-              "type": "stack",
               "direction": "vertical",
-              "gap": "lg",
               "children": [
                 {
                   "type": "stack",
-                  "justify": "between",
+                  "direction": "horizontal",
                   "align": "center",
                   "children": [
                     {
-                      "gap": "sm",
-                      "align": "center",
-                      "type": "stack",
                       "direction": "horizontal",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "calendar"
+                          "name": "calendar",
+                          "type": "icon"
                         },
                         {
-                          "variant": "h2",
+                          "content": "CalendarEvents Calendar",
                           "type": "typography",
-                          "content": "CalendarEvents Calendar"
+                          "variant": "h2"
                         }
-                      ]
+                      ],
+                      "gap": "sm",
+                      "align": "center",
+                      "type": "stack"
                     },
                     {
                       "type": "date-range-selector",
@@ -92,8 +98,8 @@
                       "selected": "@entity.selectedRange"
                     }
                   ],
-                  "direction": "horizontal",
-                  "gap": "md"
+                  "gap": "md",
+                  "justify": "between"
                 },
                 {
                   "type": "divider"
@@ -105,27 +111,28 @@
                   "type": "divider"
                 },
                 {
-                  "content": "Upcoming Events",
+                  "type": "typography",
                   "variant": "h4",
-                  "type": "typography"
+                  "content": "Upcoming Events"
                 },
                 {
+                  "look": "@config.tableLook",
                   "fields": [
                     {
                       "label": "Event",
-                      "name": "name",
+                      "variant": "h4",
                       "icon": "calendar",
-                      "variant": "h4"
+                      "name": "name"
                     },
                     {
-                      "label": "Time",
+                      "variant": "badge",
                       "name": "time",
-                      "variant": "badge"
+                      "label": "Time"
                     },
                     {
                       "name": "date",
-                      "variant": "caption",
                       "label": "Date",
+                      "variant": "caption",
                       "format": "date"
                     },
                     {
@@ -134,22 +141,31 @@
                       "variant": "badge"
                     }
                   ],
+                  "entity": "@payload.data",
                   "itemActions": [
                     {
-                      "icon": "eye",
                       "label": "View",
-                      "event": "SELECT_DAY"
+                      "event": "SELECT_DAY",
+                      "icon": "eye"
                     }
                   ],
-                  "type": "data-list",
-                  "look": "@config.tableLook",
-                  "entity": "@payload.data"
+                  "type": "data-list"
                 }
-              ]
+              ],
+              "gap": "lg",
+              "type": "stack"
             },
             "label": "Body content tree",
             "description": "Render-ui SExpr rendered after events load. Default is the month-grid + upcoming-events list. Layer 3 variants override this with their own tree (agenda list, week timeline, etc.) to deliver entirely different calendar UX while inheriting the same trait, state machine, emits, and listens.",
             "tier": "internal"
+          },
+          {
+            "key": "descriptionBinding",
+            "type": "string",
+            "default": "@item.description",
+            "label": "Description binding",
+            "description": "Per-row binding for the event description slot.",
+            "tier": "presentation"
           },
           {
             "key": "tableLook",
@@ -165,6 +181,22 @@
               "borderless",
               "card-rows"
             ]
+          },
+          {
+            "key": "timeBinding",
+            "type": "string",
+            "default": "@item.time",
+            "label": "Time binding",
+            "description": "Per-row binding for the event time slot.",
+            "tier": "presentation"
+          },
+          {
+            "key": "titleBinding",
+            "type": "string",
+            "default": "@item.name",
+            "label": "Title binding",
+            "description": "Per-row binding for the event title slot.",
+            "tier": "presentation"
           }
         ],
         "capabilities": [],

@@ -112,14 +112,44 @@ export interface StdThreadThreadPostCreateFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdThreadConfig {
+  /** Default: `false` */
+  flat?: boolean;
+  /** Default: `"@item.authorName"` */
+  emailAuthorBinding?: string;
+  /** Default: `"@entity.focusedRow.authorName"` */
+  detailAuthorBinding?: string;
+  /** Default: `"Discussion"` */
+  sectionTitle?: string;
+  /** Default: `"@entity.focusedRow.fromAddress"` */
+  detailFromBinding?: string;
+  /** Default: `"@item.preview"` */
+  emailPreviewBinding?: string;
+  /** Default: `"@entity.focusedRow.subject"` */
+  detailSubjectBinding?: string;
+  /** Default: `"@reply.authorName"` */
+  replyAuthorBinding?: string;
+  /** Default: `"@reply.content"` */
+  replyContentBinding?: string;
+  /** Default: `"@reply.fromAddress"` */
+  replyFromBinding?: string;
+  /** Default: `{"type":"stack","gap":"md","direction":"vertical","children":[{"fields":[{"variant":"h4","label":"Author","name":"authorName"},{"variant":"body","name":"content","label":""},{"label":"Votes","name":"voteCount","variant":"caption"}],"itemActions":[{"icon":"message-square","label":"Reply","event":"REPLY"}],"gap":"sm","look":"@config.tableLook","entity":"@payload.data","variant":"card","type":"data-list"}]}` */
+  bodyContent?: unknown;
   /** Default: `"dense"` */
   tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
   /** Default: `""` */
   threadRootId?: string;
-  /** Default: `{"direction":"vertical","gap":"md","children":[{"variant":"card","look":"@config.tableLook","entity":"@payload.data","gap":"sm","fields":[{"label":"Author","variant":"h4","name":"authorName"},{"name":"content","label":"","variant":"body"},{"name":"voteCount","label":"Votes","variant":"caption"}],"itemActions":[{"icon":"message-square","label":"Reply","event":"REPLY"}],"type":"data-list"}],"type":"stack"}` */
-  bodyContent?: unknown;
-  /** Default: `false` */
-  flat?: boolean;
+  /** Default: `"@entity.focusedRow.content"` */
+  detailContentBinding?: string;
+  /** Default: `"Conversation"` */
+  recipientName?: string;
+  /** Default: `"@entity.focusedRow.createdAt"` */
+  detailDateBinding?: string;
+  /** Default: `"@reply.createdAt"` */
+  replyDateBinding?: string;
+  /** Default: `"@entity.focusedRow.toAddress"` */
+  detailToBinding?: string;
+  /** Default: `"@item.subject"` */
+  emailSubjectBinding?: string;
 }
 
 /**

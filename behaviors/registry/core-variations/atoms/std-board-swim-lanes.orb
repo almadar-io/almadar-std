@@ -98,32 +98,33 @@
           "linkedEntity": "SwimLaneItem",
           "config": {
             "bodyContent": {
-              "gap": "md",
               "direction": "vertical",
-              "type": "stack",
+              "gap": "md",
               "children": [
                 {
+                  "type": "stack",
+                  "className": "px-card-md",
                   "children": [
                     {
                       "type": "icon",
                       "name": "layout-rows"
                     },
                     {
+                      "variant": "h2",
                       "type": "typography",
-                      "content": "@config.title",
-                      "variant": "h2"
+                      "content": "@config.title"
                     }
                   ],
-                  "type": "stack",
-                  "direction": "horizontal",
-                  "className": "px-card-md",
                   "align": "center",
-                  "gap": "sm"
+                  "gap": "sm",
+                  "direction": "horizontal"
                 },
                 {
                   "type": "divider"
                 },
                 {
+                  "fields": [],
+                  "type": "data-list",
                   "dndRoot": true,
                   "gap": "md",
                   "entity": "@entity.boards",
@@ -131,130 +132,129 @@
                     "fn",
                     "col",
                     {
-                      "padding": "none",
                       "type": "card",
-                      "className": "overflow-hidden rounded-lg",
                       "look": "flat-bordered",
+                      "padding": "none",
+                      "className": "overflow-hidden rounded-lg",
                       "children": [
                         {
-                          "type": "stack",
-                          "gap": "none",
+                          "direction": "vertical",
                           "children": [
                             {
-                              "type": "stack",
                               "className": "p-card-md border-b border-[var(--color-border)] bg-[var(--color-surface-subtle)]",
-                              "direction": "horizontal",
-                              "gap": "sm",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "@col.icon"
+                                  "name": "@col.icon",
+                                  "type": "icon"
                                 },
                                 {
-                                  "type": "typography",
+                                  "className": "flex-1",
                                   "variant": "h4",
-                                  "content": "@col.label",
-                                  "className": "flex-1"
+                                  "type": "typography",
+                                  "content": "@col.label"
                                 },
                                 {
+                                  "label": "@col.count",
                                   "variant": "primary",
-                                  "type": "badge",
                                   "size": "sm",
-                                  "label": "@col.count"
+                                  "type": "badge"
                                 }
                               ],
-                              "align": "center"
+                              "direction": "horizontal",
+                              "align": "center",
+                              "type": "stack",
+                              "gap": "sm"
                             },
                             {
+                              "type": "data-list",
+                              "fields": [],
+                              "gap": "sm",
+                              "dragGroup": "@col.key",
+                              "sortable": true,
+                              "entity": "@col.items",
                               "renderItem": [
                                 "fn",
                                 "item",
                                 {
-                                  "padding": "sm",
-                                  "className": "min-w-[220px] max-w-[260px] rounded-md cursor-grab shadow-sm hover:shadow-md transition-shadow",
-                                  "type": "card",
                                   "look": "elevated",
+                                  "padding": "sm",
+                                  "type": "card",
                                   "children": [
                                     {
-                                      "gap": "xs",
                                       "direction": "vertical",
+                                      "type": "stack",
+                                      "gap": "xs",
                                       "children": [
                                         {
-                                          "content": "@item.title",
-                                          "weight": "medium",
+                                          "variant": "body",
                                           "type": "typography",
-                                          "variant": "body"
+                                          "content": "@config.cardTitleBinding",
+                                          "weight": "medium"
                                         },
                                         {
-                                          "type": "typography",
-                                          "content": "@item.description",
                                           "variant": "caption",
-                                          "className": "line-clamp-2",
-                                          "color": "muted"
+                                          "type": "typography",
+                                          "content": "@config.cardDescriptionBinding",
+                                          "color": "muted",
+                                          "className": "line-clamp-2"
                                         },
                                         {
-                                          "type": "stack",
-                                          "direction": "horizontal",
                                           "align": "center",
-                                          "gap": "xs",
+                                          "className": "pt-1",
                                           "children": [
                                             {
-                                              "label": "@item.stage",
                                               "variant": "primary",
-                                              "type": "badge",
-                                              "size": "sm"
+                                              "size": "sm",
+                                              "label": "@config.cardStageBinding",
+                                              "type": "badge"
                                             },
                                             {
+                                              "icon": "arrow-right",
+                                              "actionPayload": {
+                                                "row": "@item",
+                                                "id": "@config.cardIdBinding"
+                                              },
+                                              "variant": "ghost",
+                                              "size": "sm",
                                               "type": "button",
                                               "label": "Open",
-                                              "variant": "ghost",
-                                              "actionPayload": {
-                                                "id": "@item.id",
-                                                "row": "@item"
-                                              },
-                                              "action": "OPEN_CARD",
-                                              "size": "sm",
-                                              "icon": "arrow-right",
-                                              "className": "ml-auto"
+                                              "className": "ml-auto",
+                                              "action": "OPEN_CARD"
                                             }
                                           ],
-                                          "className": "pt-1"
+                                          "direction": "horizontal",
+                                          "type": "stack",
+                                          "gap": "xs"
                                         }
-                                      ],
-                                      "type": "stack"
+                                      ]
                                     }
-                                  ]
+                                  ],
+                                  "className": "min-w-[220px] max-w-[260px] rounded-md cursor-grab shadow-sm hover:shadow-md transition-shadow"
                                 }
                               ],
-                              "accepts": "*",
-                              "type": "data-list",
-                              "entity": "@col.items",
-                              "dropEvent": "MOVE_CARD",
-                              "dragGroup": "@col.key",
-                              "gap": "sm",
                               "positionEvent": "REORDER_POSITION",
+                              "accepts": "*",
                               "reorderEvent": "REORDER_CARD",
-                              "fields": [],
-                              "className": "p-card-md min-h-[140px] flex flex-row flex-nowrap gap-3 overflow-x-auto",
-                              "sortable": true
+                              "dropEvent": "MOVE_CARD",
+                              "className": "p-card-md min-h-[140px] flex flex-row flex-nowrap gap-3 overflow-x-auto"
                             }
                           ],
-                          "direction": "vertical"
+                          "gap": "none",
+                          "type": "stack"
                         }
                       ]
                     }
-                  ],
-                  "fields": [],
-                  "type": "data-list"
+                  ]
                 },
                 {
+                  "type": "floating-action-button",
                   "label": "Add card",
                   "action": "ADD_CARD",
-                  "variant": "primary",
                   "icon": "plus",
-                  "type": "floating-action-button"
+                  "variant": "primary"
                 }
-              ]
+              ],
+              "type": "stack"
             }
           }
         }

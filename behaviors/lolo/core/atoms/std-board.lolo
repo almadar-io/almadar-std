@@ -70,7 +70,27 @@ orbital BoardOrbital {
         @label "Card look"
         @description "Layer 2 visual treatment for cards rendered by this board."
         @tier "presentation"
-      bodyContent : render-ui = { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "kanban-square" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-grid", entity: "@entity.boards", cols: "@config.gridCols", gap: "md", fields: [], dndRoot: true, renderItem: ["fn", "col", { type: "card", look: "@config.cardLook", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "xs", align: "center", children: [{ type: "icon", name: "@col.icon" }, { type: "typography", content: "@col.label", variant: "h4" }, { type: "badge", label: "@col.count", variant: "@col.variant" }] }, { type: "data-list", entity: "@col.items", gap: "sm", fields: [], dragGroup: "@col.key", accepts: "*", sortable: true, dropEvent: "MOVE_CARD", reorderEvent: "REORDER_CARD", positionEvent: "REORDER_POSITION", renderItem: ["fn", "item", { type: "card", look: "@config.cardLook", children: [{ type: "stack", direction: "vertical", gap: "xs", children: [{ type: "typography", content: "@item.title", variant: "h4" }, { type: "typography", content: "@item.description", variant: "caption", color: "muted" }, { type: "stack", direction: "horizontal", gap: "xs", align: "center", children: [{ type: "button", label: "Open", variant: "ghost", action: "OPEN_CARD", actionPayload: { id: "@item.id", row: "@item" }, icon: "arrow-right" }] }] }] }] }] }] }] }, { type: "floating-action-button", label: "Add item", action: "ADD_CARD", icon: "plus", variant: "primary" }] }
+      cardTitleBinding : string = "@item.title"
+        @label "Card title binding"
+        @description "Per-card binding for the title slot."
+        @tier "presentation"
+      cardDescriptionBinding : string = "@item.description"
+        @label "Card description binding"
+        @description "Per-card binding for the description slot."
+        @tier "presentation"
+      cardStageBinding : string = "@item.stage"
+        @label "Card stage binding"
+        @description "Per-card binding for the stage/status slot."
+        @tier "presentation"
+      cardIdBinding : string = "@item.id"
+        @label "Card id binding"
+        @description "Per-card binding for the id used in action payloads."
+        @tier "presentation"
+      groupByField : string = "stage"
+        @label "Group-by field"
+        @description "Entity field whose value matches a column key — items are filtered into columns by it. Default 'stage'; set to 'status' (or any field) for entities that track state under a different name."
+        @tier "presentation"
+      bodyContent : render-ui = { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "kanban-square" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-grid", entity: "@entity.boards", cols: "@config.gridCols", gap: "md", fields: [], dndRoot: true, renderItem: ["fn", "col", { type: "card", look: "@config.cardLook", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "xs", align: "center", children: [{ type: "icon", name: "@col.icon" }, { type: "typography", content: "@col.label", variant: "h4" }, { type: "badge", label: "@col.count", variant: "@col.variant" }] }, { type: "data-list", entity: "@col.items", gap: "sm", fields: [], dragGroup: "@col.key", accepts: "*", sortable: true, dropEvent: "MOVE_CARD", reorderEvent: "REORDER_CARD", positionEvent: "REORDER_POSITION", renderItem: ["fn", "item", { type: "card", look: "@config.cardLook", children: [{ type: "stack", direction: "vertical", gap: "xs", children: [{ type: "typography", content: "@config.cardTitleBinding", variant: "h4" }, { type: "typography", content: "@config.cardDescriptionBinding", variant: "caption", color: "muted" }, { type: "stack", direction: "horizontal", gap: "xs", align: "center", children: [{ type: "button", label: "Open", variant: "ghost", action: "OPEN_CARD", actionPayload: { id: "@config.cardIdBinding", row: "@item" }, icon: "arrow-right" }] }] }] }] }] }] }] }, { type: "floating-action-button", label: "Add item", action: "ADD_CARD", icon: "plus", variant: "primary" }] }
         @label "Body content tree"
         @description "Render-ui SExpr rendered after the board loads. Default is the canonical column data-grid with nested per-column data-lists. Layer 3 variants override this with their own tree (swim-lanes, timeline-roadmap, etc.) while inheriting the same trait, state machine, emits, and listens."
         @tier "internal"
@@ -86,8 +106,8 @@ orbital BoardOrbital {
           label:   (object/get @col "label"),
           icon:    (object/get @col "icon" "circle"),
           variant: (object/get @col "variant" "default"),
-          count:   (array/len (array/filter @payload.data ["fn", "item", (= (object/get @item "stage") (object/get @col "key"))])),
-          items:   (array/sort (array/filter @payload.data ["fn", "item", (= (object/get @item "stage") (object/get @col "key"))]) "position")
+          count:   (array/len (array/filter @payload.data ["fn", "item", (= (object/get @item @config.groupByField) (object/get @col "key"))])),
+          items:   (array/sort (array/filter @payload.data ["fn", "item", (= (object/get @item @config.groupByField) (object/get @col "key"))]) "position")
         }]))
         (render-ui main @config.bodyContent)
       BoardItemsLoadFailed -> error
@@ -125,8 +145,8 @@ orbital BoardOrbital {
           label:   (object/get @col "label"),
           icon:    (object/get @col "icon" "circle"),
           variant: (object/get @col "variant" "default"),
-          count:   (array/len (array/filter @payload.data ["fn", "item", (= (object/get @item "stage") (object/get @col "key"))])),
-          items:   (array/sort (array/filter @payload.data ["fn", "item", (= (object/get @item "stage") (object/get @col "key"))]) "position")
+          count:   (array/len (array/filter @payload.data ["fn", "item", (= (object/get @item @config.groupByField) (object/get @col "key"))])),
+          items:   (array/sort (array/filter @payload.data ["fn", "item", (= (object/get @item @config.groupByField) (object/get @col "key"))]) "position")
         }]))
     }
     state viewing_card {
