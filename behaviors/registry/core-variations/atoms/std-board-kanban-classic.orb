@@ -57,37 +57,44 @@
             "default": [],
             "items": {
               "type": "object"
-            }
+            },
+            "intrinsic": true
           },
           {
             "name": "currentId",
             "type": "string",
-            "default": ""
+            "default": "",
+            "intrinsic": true
           },
           {
             "name": "currentTitle",
             "type": "string",
-            "default": ""
+            "default": "",
+            "intrinsic": true
           },
           {
             "name": "currentDescription",
             "type": "string",
-            "default": ""
+            "default": "",
+            "intrinsic": true
           },
           {
             "name": "currentStage",
             "type": "string",
-            "default": ""
+            "default": "",
+            "intrinsic": true
           },
           {
             "name": "currentNotes",
             "type": "string",
-            "default": ""
+            "default": "",
+            "intrinsic": true
           },
           {
             "name": "errorMessage",
             "type": "string",
-            "default": ""
+            "default": "",
+            "intrinsic": true
           }
         ]
       },
@@ -106,157 +113,157 @@
                       "name": "kanban-square"
                     },
                     {
-                      "variant": "h2",
                       "type": "typography",
-                      "content": "@config.title"
+                      "content": "@config.title",
+                      "variant": "h2"
                     }
                   ],
-                  "className": "px-card-md",
-                  "gap": "sm",
-                  "direction": "horizontal",
                   "type": "stack",
-                  "align": "center"
+                  "align": "center",
+                  "direction": "horizontal",
+                  "gap": "sm",
+                  "className": "px-card-md"
                 },
                 {
                   "type": "divider"
                 },
                 {
-                  "gap": "lg",
-                  "type": "data-grid",
+                  "cols": "@config.gridCols",
+                  "entity": "@entity.boards",
+                  "fields": [],
+                  "dndRoot": true,
                   "renderItem": [
                     "fn",
                     "col",
                     {
-                      "look": "elevated",
-                      "className": "min-w-[280px] bg-[var(--color-surface-subtle)] rounded-lg overflow-hidden",
                       "padding": "none",
+                      "className": "min-w-[280px] bg-[var(--color-surface-subtle)] rounded-lg overflow-hidden",
+                      "look": "elevated",
+                      "type": "card",
                       "children": [
                         {
+                          "direction": "vertical",
+                          "type": "stack",
+                          "gap": "none",
                           "children": [
                             {
-                              "type": "stack",
                               "direction": "horizontal",
+                              "type": "stack",
+                              "gap": "sm",
                               "className": "p-card-md border-b border-[var(--color-border)] sticky top-0 bg-[var(--color-surface)]",
+                              "align": "center",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "@col.icon"
+                                  "name": "@col.icon",
+                                  "type": "icon"
                                 },
                                 {
-                                  "className": "flex-1",
-                                  "variant": "h4",
                                   "type": "typography",
-                                  "content": "@col.label"
+                                  "variant": "h4",
+                                  "content": "@col.label",
+                                  "className": "flex-1"
                                 },
                                 {
                                   "label": "@col.count",
-                                  "size": "sm",
+                                  "type": "badge",
                                   "variant": "primary",
-                                  "type": "badge"
+                                  "size": "sm"
                                 }
-                              ],
-                              "align": "center",
-                              "gap": "sm"
+                              ]
                             },
                             {
-                              "dropEvent": "MOVE_CARD",
-                              "gap": "sm",
-                              "entity": "@col.items",
-                              "sortable": true,
-                              "accepts": "*",
-                              "reorderEvent": "REORDER_CARD",
-                              "dragGroup": "@col.key",
+                              "fields": [],
                               "type": "data-list",
-                              "className": "p-card-md min-h-[120px]",
+                              "reorderEvent": "REORDER_CARD",
+                              "gap": "sm",
                               "renderItem": [
                                 "fn",
                                 "item",
                                 {
-                                  "padding": "sm",
                                   "children": [
                                     {
-                                      "gap": "xs",
-                                      "direction": "vertical",
-                                      "type": "stack",
                                       "children": [
                                         {
                                           "type": "typography",
-                                          "weight": "medium",
+                                          "content": "@config.cardTitleBinding",
                                           "variant": "body",
-                                          "content": "@config.cardTitleBinding"
+                                          "weight": "medium"
                                         },
                                         {
-                                          "color": "muted",
-                                          "variant": "caption",
                                           "type": "typography",
-                                          "className": "line-clamp-2",
-                                          "content": "@config.cardDescriptionBinding"
+                                          "content": "@config.cardDescriptionBinding",
+                                          "variant": "caption",
+                                          "color": "muted",
+                                          "className": "line-clamp-2"
                                         },
                                         {
+                                          "gap": "xs",
+                                          "align": "center",
                                           "direction": "horizontal",
+                                          "className": "pt-1",
+                                          "type": "stack",
                                           "children": [
                                             {
                                               "type": "badge",
-                                              "variant": "primary",
                                               "label": "@config.cardStageBinding",
+                                              "variant": "primary",
                                               "size": "sm"
                                             },
                                             {
+                                              "type": "button",
+                                              "label": "Open",
+                                              "action": "OPEN_CARD",
                                               "actionPayload": {
                                                 "row": "@item",
                                                 "id": "@config.cardIdBinding"
                                               },
-                                              "icon": "arrow-right",
                                               "variant": "ghost",
+                                              "icon": "arrow-right",
                                               "size": "sm",
-                                              "className": "ml-auto",
-                                              "action": "OPEN_CARD",
-                                              "type": "button",
-                                              "label": "Open"
+                                              "className": "ml-auto"
                                             }
-                                          ],
-                                          "align": "center",
-                                          "type": "stack",
-                                          "className": "pt-1",
-                                          "gap": "xs"
+                                          ]
                                         }
-                                      ]
+                                      ],
+                                      "direction": "vertical",
+                                      "gap": "xs",
+                                      "type": "stack"
                                     }
                                   ],
+                                  "look": "elevated",
                                   "type": "card",
-                                  "className": "cursor-grab hover:shadow-lg transition-shadow",
-                                  "look": "elevated"
+                                  "padding": "sm",
+                                  "className": "cursor-grab hover:shadow-lg transition-shadow"
                                 }
                               ],
-                              "fields": [],
+                              "dragGroup": "@col.key",
+                              "entity": "@col.items",
+                              "accepts": "*",
+                              "dropEvent": "MOVE_CARD",
+                              "className": "p-card-md min-h-[120px]",
+                              "sortable": true,
                               "positionEvent": "REORDER_POSITION"
                             }
-                          ],
-                          "gap": "none",
-                          "direction": "vertical",
-                          "type": "stack"
+                          ]
                         }
-                      ],
-                      "type": "card"
+                      ]
                     }
                   ],
-                  "fields": [],
-                  "entity": "@entity.boards",
-                  "dndRoot": true,
-                  "cols": "@config.gridCols"
+                  "type": "data-grid",
+                  "gap": "lg"
                 },
                 {
-                  "action": "ADD_CARD",
                   "icon": "plus",
-                  "label": "Add card",
                   "type": "floating-action-button",
-                  "variant": "primary"
+                  "variant": "primary",
+                  "label": "Add card",
+                  "action": "ADD_CARD"
                 }
               ],
+              "gap": "md",
               "className": "h-full",
-              "type": "stack",
               "direction": "vertical",
-              "gap": "md"
+              "type": "stack"
             }
           }
         }
