@@ -21,28 +21,13 @@
             "items": {
               "type": "object",
               "properties": {
-                "title": {
-                  "name": "title",
-                  "type": "string",
-                  "required": true
-                },
-                "badgeVariant": {
-                  "name": "badgeVariant",
-                  "type": "string",
-                  "required": false
-                },
-                "key": {
-                  "name": "key",
-                  "type": "string",
-                  "required": false
-                },
                 "indexLabel": {
                   "name": "indexLabel",
                   "type": "string",
                   "required": false
                 },
-                "labelColor": {
-                  "name": "labelColor",
+                "key": {
+                  "name": "key",
                   "type": "string",
                   "required": false
                 },
@@ -61,8 +46,23 @@
                   "type": "string",
                   "required": false
                 },
+                "badgeVariant": {
+                  "name": "badgeVariant",
+                  "type": "string",
+                  "required": false
+                },
+                "title": {
+                  "name": "title",
+                  "type": "string",
+                  "required": true
+                },
                 "description": {
                   "name": "description",
+                  "type": "string",
+                  "required": false
+                },
+                "labelColor": {
+                  "name": "labelColor",
                   "type": "string",
                   "required": false
                 },
@@ -72,47 +72,56 @@
                   "required": true
                 }
               }
-            }
+            },
+            "intrinsic": true
           },
           {
             "name": "currentStepIndex",
             "type": "number",
-            "default": 0.0
+            "default": 0.0,
+            "intrinsic": true
           },
           {
             "name": "totalSteps",
             "type": "number",
-            "default": 0.0
+            "default": 0.0,
+            "intrinsic": true
           },
           {
             "name": "currentStepLabel",
             "type": "string",
-            "default": ""
+            "default": "",
+            "intrinsic": true
           },
           {
             "name": "currentStepDescription",
             "type": "string",
-            "default": ""
+            "default": "",
+            "intrinsic": true
           },
           {
             "name": "currentStepIcon",
             "type": "string",
-            "default": "user"
+            "default": "user",
+            "intrinsic": true
           },
           {
             "name": "isFirstStep",
             "type": "boolean",
-            "default": true
+            "default": true,
+            "intrinsic": true
           },
           {
             "name": "isLastStep",
             "type": "boolean",
-            "default": false
+            "default": false,
+            "intrinsic": true
           },
           {
             "name": "primaryActionLabel",
             "type": "string",
-            "default": "Approve & Continue"
+            "default": "Approve & Continue",
+            "intrinsic": true
           },
           {
             "name": "primaryActionVariant",
@@ -121,12 +130,14 @@
             "values": [
               "primary",
               "success"
-            ]
+            ],
+            "intrinsic": true
           },
           {
             "name": "primaryActionIcon",
             "type": "string",
-            "default": "chevron-right"
+            "default": "chevron-right",
+            "intrinsic": true
           },
           {
             "name": "finalStatus",
@@ -137,17 +148,20 @@
               "rejected",
               "escalated",
               ""
-            ]
+            ],
+            "intrinsic": true
           },
           {
             "name": "rejectionReason",
             "type": "string",
-            "default": ""
+            "default": "",
+            "intrinsic": true
           },
           {
             "name": "errorMessage",
             "type": "string",
-            "default": ""
+            "default": "",
+            "intrinsic": true
           }
         ]
       },
@@ -415,8 +429,8 @@
                     "render-ui",
                     "main",
                     {
-                      "title": "Loading review…",
-                      "type": "loading-state"
+                      "type": "loading-state",
+                      "title": "Loading review…"
                     }
                   ]
                 ]
@@ -462,6 +476,47 @@
                         "fn",
                         "step",
                         {
+                          "id": [
+                            "object/get",
+                            "@step",
+                            "key"
+                          ],
+                          "title": [
+                            "object/get",
+                            "@step",
+                            "label"
+                          ],
+                          "indexLabel": [
+                            "str/concat",
+                            "",
+                            [
+                              "+",
+                              "@index",
+                              1.0
+                            ]
+                          ],
+                          "icon": [
+                            "object/get",
+                            "@step",
+                            "icon",
+                            "circle"
+                          ],
+                          "description": [
+                            "object/get",
+                            "@step",
+                            "description",
+                            ""
+                          ],
+                          "key": [
+                            "object/get",
+                            "@step",
+                            "key"
+                          ],
+                          "label": [
+                            "object/get",
+                            "@step",
+                            "label"
+                          ],
                           "badgeVariant": [
                             "if",
                             [
@@ -481,11 +536,6 @@
                               "neutral"
                             ]
                           ],
-                          "label": [
-                            "object/get",
-                            "@step",
-                            "label"
-                          ],
                           "labelColor": [
                             "if",
                             [
@@ -496,46 +546,10 @@
                             "default",
                             "muted"
                           ],
-                          "indexLabel": [
-                            "str/concat",
-                            "",
-                            [
-                              "+",
-                              "@index",
-                              1.0
-                            ]
-                          ],
-                          "key": [
-                            "object/get",
-                            "@step",
-                            "key"
-                          ],
-                          "title": [
-                            "object/get",
-                            "@step",
-                            "label"
-                          ],
                           "isPending": [
                             ">",
                             "@index",
                             "@entity.currentStepIndex"
-                          ],
-                          "description": [
-                            "object/get",
-                            "@step",
-                            "description",
-                            ""
-                          ],
-                          "icon": [
-                            "object/get",
-                            "@step",
-                            "icon",
-                            "circle"
-                          ],
-                          "id": [
-                            "object/get",
-                            "@step",
-                            "key"
                           ]
                         }
                       ]
@@ -672,8 +686,8 @@
                     "main",
                     {
                       "type": "error-state",
-                      "title": "Failed to load",
-                      "message": "@entity.errorMessage"
+                      "message": "@entity.errorMessage",
+                      "title": "Failed to load"
                     }
                   ]
                 ]
@@ -697,8 +711,8 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "@entity.errorMessage",
                       "title": "Save failed",
+                      "message": "@entity.errorMessage",
                       "type": "error-state"
                     }
                   ]
@@ -882,36 +896,46 @@
                         "fn",
                         "step",
                         {
-                          "icon": [
+                          "label": [
                             "object/get",
                             "@step",
-                            "icon",
-                            "circle"
+                            "label"
+                          ],
+                          "labelColor": [
+                            "if",
+                            [
+                              "=",
+                              "@index",
+                              "@entity.currentStepIndex"
+                            ],
+                            "default",
+                            "muted"
                           ],
                           "title": [
                             "object/get",
                             "@step",
                             "label"
                           ],
-                          "indexLabel": [
-                            "str/concat",
-                            "",
-                            [
-                              "+",
-                              "@index",
-                              1.0
-                            ]
-                          ],
-                          "description": [
-                            "object/get",
-                            "@step",
-                            "description",
-                            ""
-                          ],
                           "id": [
                             "object/get",
                             "@step",
                             "key"
+                          ],
+                          "icon": [
+                            "object/get",
+                            "@step",
+                            "icon",
+                            "circle"
+                          ],
+                          "key": [
+                            "object/get",
+                            "@step",
+                            "key"
+                          ],
+                          "isPending": [
+                            ">",
+                            "@index",
+                            "@entity.currentStepIndex"
                           ],
                           "badgeVariant": [
                             "if",
@@ -932,30 +956,20 @@
                               "neutral"
                             ]
                           ],
-                          "labelColor": [
-                            "if",
+                          "indexLabel": [
+                            "str/concat",
+                            "",
                             [
-                              "=",
+                              "+",
                               "@index",
-                              "@entity.currentStepIndex"
-                            ],
-                            "default",
-                            "muted"
+                              1.0
+                            ]
                           ],
-                          "key": [
+                          "description": [
                             "object/get",
                             "@step",
-                            "key"
-                          ],
-                          "isPending": [
-                            ">",
-                            "@index",
-                            "@entity.currentStepIndex"
-                          ],
-                          "label": [
-                            "object/get",
-                            "@step",
-                            "label"
+                            "description",
+                            ""
                           ]
                         }
                       ]
@@ -1016,46 +1030,46 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
                       "children": [
                         {
+                          "size": "lg",
                           "name": "check-circle",
-                          "type": "icon",
-                          "size": "lg"
+                          "type": "icon"
                         },
                         {
-                          "content": "Approved",
                           "type": "typography",
                           "align": "center",
-                          "variant": "h2"
+                          "variant": "h2",
+                          "content": "Approved"
                         },
                         {
-                          "content": "All review steps completed successfully.",
                           "color": "muted",
+                          "content": "All review steps completed successfully.",
                           "variant": "body",
                           "type": "typography",
                           "align": "center"
                         },
                         {
-                          "type": "wizard-progress",
                           "currentStep": "@entity.totalSteps",
-                          "steps": "@entity.wizardSteps",
-                          "allowNavigation": false
+                          "allowNavigation": false,
+                          "type": "wizard-progress",
+                          "steps": "@entity.wizardSteps"
                         },
                         {
-                          "type": "button",
+                          "label": "Start a new review",
                           "action": "RESTART",
                           "actionPayload": {
                             "id": "@entity.id"
                           },
-                          "variant": "secondary",
                           "icon": "rotate-ccw",
-                          "label": "Start a new review"
+                          "type": "button",
+                          "variant": "secondary"
                         }
                       ],
                       "type": "stack",
-                      "direction": "vertical",
                       "gap": "lg",
-                      "align": "center"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1201,10 +1215,10 @@
                         "fn",
                         "step",
                         {
-                          "id": [
+                          "title": [
                             "object/get",
                             "@step",
-                            "key"
+                            "label"
                           ],
                           "labelColor": [
                             "if",
@@ -1216,26 +1230,31 @@
                             "default",
                             "muted"
                           ],
-                          "label": [
+                          "key": [
                             "object/get",
                             "@step",
-                            "label"
+                            "key"
                           ],
                           "isPending": [
                             ">",
                             "@index",
                             "@entity.currentStepIndex"
                           ],
-                          "key": [
+                          "label": [
+                            "object/get",
+                            "@step",
+                            "label"
+                          ],
+                          "description": [
+                            "object/get",
+                            "@step",
+                            "description",
+                            ""
+                          ],
+                          "id": [
                             "object/get",
                             "@step",
                             "key"
-                          ],
-                          "icon": [
-                            "object/get",
-                            "@step",
-                            "icon",
-                            "circle"
                           ],
                           "badgeVariant": [
                             "if",
@@ -1256,16 +1275,11 @@
                               "neutral"
                             ]
                           ],
-                          "description": [
+                          "icon": [
                             "object/get",
                             "@step",
-                            "description",
-                            ""
-                          ],
-                          "title": [
-                            "object/get",
-                            "@step",
-                            "label"
+                            "icon",
+                            "circle"
                           ],
                           "indexLabel": [
                             "str/concat",
@@ -1306,9 +1320,6 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "type": "stack",
                       "children": [
                         {
                           "size": "lg",
@@ -1316,47 +1327,50 @@
                           "name": "x-circle"
                         },
                         {
-                          "type": "typography",
-                          "variant": "h2",
                           "align": "center",
+                          "variant": "h2",
+                          "type": "typography",
                           "content": "Rejected"
                         },
                         {
                           "children": [
                             {
                               "direction": "vertical",
+                              "gap": "sm",
                               "children": [
                                 {
                                   "color": "muted",
                                   "type": "typography",
-                                  "content": "Reason",
-                                  "variant": "caption"
+                                  "variant": "caption",
+                                  "content": "Reason"
                                 },
                                 {
-                                  "type": "typography",
                                   "variant": "body",
+                                  "type": "typography",
                                   "content": "@entity.rejectionReason"
                                 }
                               ],
-                              "type": "stack",
-                              "gap": "sm"
+                              "type": "stack"
                             }
                           ],
-                          "look": "@config.cardLook",
-                          "type": "card"
+                          "type": "card",
+                          "look": "@config.cardLook"
                         },
                         {
+                          "action": "RESTART",
+                          "icon": "rotate-ccw",
                           "actionPayload": {
                             "id": "@entity.id"
                           },
                           "label": "Start a new review",
-                          "variant": "secondary",
-                          "icon": "rotate-ccw",
-                          "action": "RESTART",
-                          "type": "button"
+                          "type": "button",
+                          "variant": "secondary"
                         }
                       ],
-                      "align": "center"
+                      "align": "center",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -1375,40 +1389,40 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "align": "center",
                       "type": "stack",
                       "children": [
                         {
-                          "size": "lg",
+                          "type": "icon",
                           "name": "alert-triangle",
-                          "type": "icon"
+                          "size": "lg"
                         },
                         {
-                          "variant": "h2",
                           "content": "Escalated",
-                          "align": "center",
-                          "type": "typography"
-                        },
-                        {
-                          "content": "This item has been escalated for further review.",
-                          "color": "muted",
-                          "variant": "body",
                           "type": "typography",
-                          "align": "center"
+                          "align": "center",
+                          "variant": "h2"
                         },
                         {
+                          "align": "center",
+                          "variant": "body",
+                          "content": "This item has been escalated for further review.",
+                          "type": "typography",
+                          "color": "muted"
+                        },
+                        {
+                          "variant": "secondary",
                           "action": "RESTART",
-                          "type": "button",
                           "actionPayload": {
                             "id": "@entity.id"
                           },
                           "label": "Start a new review",
-                          "variant": "secondary",
-                          "icon": "rotate-ccw"
+                          "icon": "rotate-ccw",
+                          "type": "button"
                         }
-                      ]
+                      ],
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -1433,8 +1447,8 @@
                     "StepFlowView",
                     {
                       "emit": {
-                        "success": "StepItemsLoaded",
-                        "failure": "StepItemsLoadFailed"
+                        "failure": "StepItemsLoadFailed",
+                        "success": "StepItemsLoaded"
                       }
                     }
                   ],
@@ -1442,8 +1456,8 @@
                     "render-ui",
                     "main",
                     {
-                      "title": "Restarting…",
-                      "type": "loading-state"
+                      "type": "loading-state",
+                      "title": "Restarting…"
                     }
                   ]
                 ]
@@ -1473,8 +1487,8 @@
                     "StepFlowView",
                     {
                       "emit": {
-                        "failure": "StepItemsLoadFailed",
-                        "success": "StepItemsLoaded"
+                        "success": "StepItemsLoaded",
+                        "failure": "StepItemsLoadFailed"
                       }
                     }
                   ],
@@ -1482,8 +1496,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "loading-state",
-                      "title": "Restarting…"
+                      "title": "Restarting…",
+                      "type": "loading-state"
                     }
                   ]
                 ]
@@ -1508,8 +1522,8 @@
                     "StepFlowView",
                     {
                       "emit": {
-                        "success": "StepItemsLoaded",
-                        "failure": "StepItemsLoadFailed"
+                        "failure": "StepItemsLoadFailed",
+                        "success": "StepItemsLoaded"
                       }
                     }
                   ],
@@ -1517,8 +1531,8 @@
                     "render-ui",
                     "main",
                     {
-                      "title": "Restarting…",
-                      "type": "loading-state"
+                      "type": "loading-state",
+                      "title": "Restarting…"
                     }
                   ]
                 ]
@@ -1541,71 +1555,134 @@
             ]
           },
           "config": {
-            "title": {
-              "type": "string",
-              "default": "Review",
-              "label": "Flow title",
-              "description": "Heading shown above the step progress bar",
-              "tier": "presentation"
-            },
-            "steps": {
-              "type": "[StepSpec]",
-              "default": [
-                {
-                  "key": "manager",
-                  "label": "Manager Review",
-                  "description": "Initial review by direct manager",
-                  "icon": "user"
-                },
-                {
-                  "key": "director",
-                  "description": "Department director sign-off",
-                  "icon": "users",
-                  "label": "Director Approval"
-                },
-                {
-                  "key": "executive",
-                  "label": "Executive Sign-off",
-                  "description": "Final executive approval",
-                  "icon": "shield"
-                }
-              ],
-              "label": "Steps",
-              "description": "Ordered decision steps with label, icon, and optional role gates",
-              "tier": "domain",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "key": {
-                    "name": "key",
-                    "type": "string",
-                    "required": false
+            "bodyContent": {
+              "type": "render-ui",
+              "default": {
+                "direction": "vertical",
+                "type": "stack",
+                "gap": "lg",
+                "children": [
+                  {
+                    "gap": "sm",
+                    "direction": "horizontal",
+                    "align": "center",
+                    "children": [
+                      {
+                        "name": "shield-check",
+                        "type": "icon"
+                      },
+                      {
+                        "variant": "h3",
+                        "content": "@config.title",
+                        "type": "typography"
+                      }
+                    ],
+                    "type": "stack"
                   },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
+                  {
+                    "type": "wizard-progress",
+                    "currentStep": "@entity.currentStepIndex",
+                    "allowNavigation": false,
+                    "steps": "@entity.wizardSteps"
                   },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
+                  {
+                    "look": "@config.cardLook",
+                    "type": "card",
+                    "children": [
+                      {
+                        "type": "stack",
+                        "direction": "vertical",
+                        "children": [
+                          {
+                            "type": "stack",
+                            "children": [
+                              {
+                                "type": "icon",
+                                "name": "@entity.currentStepIcon",
+                                "size": "lg"
+                              },
+                              {
+                                "direction": "vertical",
+                                "gap": "xs",
+                                "children": [
+                                  {
+                                    "type": "typography",
+                                    "variant": "h2",
+                                    "content": "@entity.currentStepLabel"
+                                  },
+                                  {
+                                    "type": "typography",
+                                    "color": "muted",
+                                    "content": "@entity.currentStepDescription",
+                                    "variant": "body"
+                                  }
+                                ],
+                                "type": "stack"
+                              }
+                            ],
+                            "gap": "sm",
+                            "align": "center",
+                            "direction": "horizontal"
+                          }
+                        ],
+                        "gap": "md"
+                      }
+                    ]
                   },
-                  "allowedRoles": {
-                    "name": "allowedRoles",
-                    "type": "array",
-                    "required": false,
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "description": {
-                    "name": "description",
-                    "type": "string",
-                    "required": false
+                  {
+                    "direction": "horizontal",
+                    "align": "center",
+                    "children": [
+                      {
+                        "disabled": "@entity.isFirstStep",
+                        "actionPayload": {
+                          "id": "@entity.id"
+                        },
+                        "icon": "chevron-left",
+                        "action": "BACK",
+                        "variant": "ghost",
+                        "type": "button",
+                        "label": "Back"
+                      },
+                      {
+                        "icon": "x",
+                        "type": "button",
+                        "label": "Reject",
+                        "action": "REJECT",
+                        "variant": "ghost",
+                        "actionPayload": {
+                          "id": "@entity.id"
+                        }
+                      },
+                      {
+                        "type": "button",
+                        "variant": "ghost",
+                        "label": "Escalate",
+                        "action": "ESCALATE",
+                        "icon": "alert-triangle",
+                        "actionPayload": {
+                          "id": "@entity.id"
+                        }
+                      },
+                      {
+                        "type": "button",
+                        "actionPayload": {
+                          "id": "@entity.id"
+                        },
+                        "action": "ADVANCE",
+                        "variant": "primary",
+                        "icon": "@entity.primaryActionIcon",
+                        "label": "@entity.primaryActionLabel"
+                      }
+                    ],
+                    "type": "stack",
+                    "gap": "sm"
                   }
-                }
-              }
+                ]
+              },
+              "label": "Body content tree",
+              "description": "Render-ui SExpr rendered while the step chain is active (loading-success, running, BACK). Default is the canonical wizard-progress + step-card + action-row tree. Layer 3 variants override this with their own tree (horizontal stepper, sidebar progress, card carousel, etc.) to deliver entirely different step UX while inheriting the same trait, state machine, emits, and listens.",
+              "tier": "internal"
             },
             "cardLook": {
               "type": "string",
@@ -1623,134 +1700,71 @@
                 "tile-image-first"
               ]
             },
-            "bodyContent": {
-              "type": "render-ui",
-              "default": {
-                "type": "stack",
-                "direction": "vertical",
-                "children": [
-                  {
-                    "gap": "sm",
-                    "children": [
-                      {
-                        "type": "icon",
-                        "name": "shield-check"
-                      },
-                      {
-                        "variant": "h3",
-                        "content": "@config.title",
-                        "type": "typography"
-                      }
-                    ],
-                    "align": "center",
-                    "type": "stack",
-                    "direction": "horizontal"
+            "steps": {
+              "type": "[StepSpec]",
+              "default": [
+                {
+                  "description": "Initial review by direct manager",
+                  "icon": "user",
+                  "label": "Manager Review",
+                  "key": "manager"
+                },
+                {
+                  "label": "Director Approval",
+                  "key": "director",
+                  "description": "Department director sign-off",
+                  "icon": "users"
+                },
+                {
+                  "label": "Executive Sign-off",
+                  "key": "executive",
+                  "icon": "shield",
+                  "description": "Final executive approval"
+                }
+              ],
+              "label": "Steps",
+              "description": "Ordered decision steps with label, icon, and optional role gates",
+              "tier": "domain",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
                   },
-                  {
-                    "allowNavigation": false,
-                    "steps": "@entity.wizardSteps",
-                    "type": "wizard-progress",
-                    "currentStep": "@entity.currentStepIndex"
+                  "key": {
+                    "name": "key",
+                    "type": "string",
+                    "required": false
                   },
-                  {
-                    "children": [
-                      {
-                        "gap": "md",
-                        "type": "stack",
-                        "children": [
-                          {
-                            "gap": "sm",
-                            "children": [
-                              {
-                                "size": "lg",
-                                "name": "@entity.currentStepIcon",
-                                "type": "icon"
-                              },
-                              {
-                                "gap": "xs",
-                                "children": [
-                                  {
-                                    "content": "@entity.currentStepLabel",
-                                    "type": "typography",
-                                    "variant": "h2"
-                                  },
-                                  {
-                                    "type": "typography",
-                                    "variant": "body",
-                                    "color": "muted",
-                                    "content": "@entity.currentStepDescription"
-                                  }
-                                ],
-                                "type": "stack",
-                                "direction": "vertical"
-                              }
-                            ],
-                            "type": "stack",
-                            "align": "center",
-                            "direction": "horizontal"
-                          }
-                        ],
-                        "direction": "vertical"
-                      }
-                    ],
-                    "type": "card",
-                    "look": "@config.cardLook"
+                  "description": {
+                    "name": "description",
+                    "type": "string",
+                    "required": false
                   },
-                  {
-                    "type": "stack",
-                    "children": [
-                      {
-                        "label": "Back",
-                        "disabled": "@entity.isFirstStep",
-                        "actionPayload": {
-                          "id": "@entity.id"
-                        },
-                        "variant": "ghost",
-                        "action": "BACK",
-                        "type": "button",
-                        "icon": "chevron-left"
-                      },
-                      {
-                        "label": "Reject",
-                        "action": "REJECT",
-                        "type": "button",
-                        "variant": "ghost",
-                        "icon": "x",
-                        "actionPayload": {
-                          "id": "@entity.id"
-                        }
-                      },
-                      {
-                        "action": "ESCALATE",
-                        "icon": "alert-triangle",
-                        "actionPayload": {
-                          "id": "@entity.id"
-                        },
-                        "label": "Escalate",
-                        "variant": "ghost",
-                        "type": "button"
-                      },
-                      {
-                        "type": "button",
-                        "actionPayload": {
-                          "id": "@entity.id"
-                        },
-                        "variant": "primary",
-                        "action": "ADVANCE",
-                        "label": "@entity.primaryActionLabel",
-                        "icon": "@entity.primaryActionIcon"
-                      }
-                    ],
-                    "direction": "horizontal",
-                    "gap": "sm",
-                    "align": "center"
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "allowedRoles": {
+                    "name": "allowedRoles",
+                    "type": "array",
+                    "required": false,
+                    "items": {
+                      "type": "string"
+                    }
                   }
-                ],
-                "gap": "lg"
-              },
-              "label": "Body content tree",
-              "description": "Render-ui SExpr rendered while the step chain is active (loading-success, running, BACK). Default is the canonical wizard-progress + step-card + action-row tree. Layer 3 variants override this with their own tree (horizontal stepper, sidebar progress, card carousel, etc.) to deliver entirely different step UX while inheriting the same trait, state machine, emits, and listens.",
-              "tier": "internal"
+                }
+              }
+            },
+            "title": {
+              "type": "string",
+              "default": "Review",
+              "label": "Flow title",
+              "description": "Heading shown above the step progress bar",
+              "tier": "presentation"
             }
           },
           "scope": "instance"
