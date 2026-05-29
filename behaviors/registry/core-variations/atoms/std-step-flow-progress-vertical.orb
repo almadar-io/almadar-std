@@ -19,10 +19,6 @@
             "name": "id",
             "type": "string",
             "required": true
-          },
-          {
-            "name": "progressLabel",
-            "type": "string"
           }
         ]
       },
@@ -33,13 +29,8 @@
           "linkedEntity": "ProgressVerticalView",
           "config": {
             "bodyContent": {
-              "gap": "lg",
-              "direction": "vertical",
-              "className": "w-full pt-section w-full",
-              "type": "stack",
               "children": [
                 {
-                  "gap": "sm",
                   "children": [
                     {
                       "children": [
@@ -49,59 +40,62 @@
                           "type": "typography"
                         },
                         {
-                          "variant": "caption",
-                          "color": "muted",
                           "type": "typography",
-                          "content": "@entity.progressLabel"
+                          "color": "muted",
+                          "content": "@entity.currentStepLabel",
+                          "variant": "caption"
                         }
                       ],
-                      "direction": "horizontal",
-                      "type": "stack",
                       "gap": "sm",
+                      "type": "stack",
+                      "align": "center",
                       "justify": "between",
-                      "align": "center"
+                      "direction": "horizontal"
                     },
                     {
-                      "value": "@entity.currentStepIndex",
-                      "steps": "@entity.totalSteps",
                       "max": "@entity.totalSteps",
+                      "steps": "@entity.totalSteps",
+                      "value": "@entity.currentStepIndex",
                       "type": "progress-bar"
                     }
                   ],
                   "type": "stack",
-                  "direction": "vertical"
+                  "direction": "vertical",
+                  "gap": "sm"
                 },
                 {
                   "type": "divider"
                 },
                 {
-                  "fields": [],
                   "type": "data-list",
+                  "fields": [],
+                  "entity": "@entity.wizardSteps",
+                  "gap": "md",
                   "renderItem": [
                     "fn",
                     "step",
                     {
-                      "type": "card",
+                      "look": "@config.cardLook",
                       "children": [
                         {
-                          "className": "p-card-md",
+                          "type": "stack",
+                          "direction": "horizontal",
                           "gap": "md",
-                          "align": "center",
                           "children": [
                             {
                               "type": "badge",
-                              "label": "@step.indexLabel",
-                              "variant": "@step.badgeVariant"
+                              "variant": "@step.badgeVariant",
+                              "label": "@step.indexLabel"
                             },
                             {
                               "type": "icon",
-                              "size": "md",
-                              "name": "@step.icon"
+                              "name": "@step.icon",
+                              "size": "md"
                             },
                             {
                               "direction": "vertical",
-                              "gap": "xs",
                               "type": "stack",
+                              "gap": "xs",
                               "children": [
                                 {
                                   "type": "typography",
@@ -109,83 +103,85 @@
                                   "content": "@step.label"
                                 },
                                 {
-                                  "color": "muted",
-                                  "type": "typography",
                                   "content": "@step.description",
-                                  "variant": "caption"
+                                  "color": "muted",
+                                  "variant": "caption",
+                                  "type": "typography"
                                 }
                               ]
                             }
                           ],
-                          "direction": "horizontal",
-                          "type": "stack"
+                          "align": "center",
+                          "className": "p-card-md"
                         }
                       ],
-                      "look": "@config.cardLook"
+                      "type": "card"
                     }
-                  ],
-                  "entity": "@entity.wizardSteps",
-                  "gap": "md"
+                  ]
                 },
                 {
                   "children": [
                     {
+                      "variant": "ghost",
                       "actionPayload": {
                         "id": "@entity.id"
                       },
-                      "variant": "ghost",
-                      "action": "BACK",
-                      "type": "button",
                       "icon": "chevron-left",
+                      "action": "BACK",
                       "disabled": "@entity.isFirstStep",
+                      "type": "button",
                       "label": "Back"
                     },
                     {
-                      "align": "center",
-                      "type": "stack",
-                      "direction": "horizontal",
                       "children": [
                         {
                           "label": "Reject",
                           "action": "REJECT",
-                          "variant": "ghost",
-                          "icon": "x",
                           "actionPayload": {
                             "id": "@entity.id"
                           },
+                          "icon": "x",
+                          "variant": "ghost",
                           "type": "button"
                         },
                         {
-                          "label": "Escalate",
                           "actionPayload": {
                             "id": "@entity.id"
                           },
+                          "type": "button",
+                          "label": "Escalate",
                           "action": "ESCALATE",
                           "variant": "ghost",
-                          "type": "button",
                           "icon": "alert-triangle"
                         },
                         {
-                          "variant": "primary",
-                          "type": "button",
                           "icon": "@entity.primaryActionIcon",
+                          "type": "button",
+                          "action": "ADVANCE",
                           "actionPayload": {
                             "id": "@entity.id"
                           },
                           "label": "@entity.primaryActionLabel",
-                          "action": "ADVANCE"
+                          "variant": "primary"
                         }
                       ],
-                      "gap": "sm"
+                      "gap": "sm",
+                      "direction": "horizontal",
+                      "type": "stack",
+                      "align": "center"
                     }
                   ],
-                  "type": "stack",
+                  "gap": "sm",
                   "direction": "horizontal",
+                  "type": "stack",
                   "align": "center",
-                  "className": "justify-between",
-                  "gap": "sm"
+                  "className": "justify-between"
                 }
-              ]
+              ],
+              "className": "w-full pt-section w-full",
+              "direction": "vertical",
+              "type": "stack",
+              "gap": "lg"
             }
           }
         }
