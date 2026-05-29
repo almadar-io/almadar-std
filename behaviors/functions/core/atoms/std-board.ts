@@ -110,26 +110,28 @@ export interface StdBoardBoardItemsSaveFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdBoardConfig {
-  /** Default: `"@item.description"` */
-  cardDescriptionBinding?: string;
-  /** Default: `[{"key":"todo","variant":"default","label":"To Do","icon":"circle"},{"key":"doing","label":"In Progress","icon":"circle-dot","variant":"primary"},{"label":"Done","key":"done","variant":"success","icon":"check-circle"}]` */
-  columns?: EntityRow[];
-  /** Default: `{"gap":"md","direction":"vertical","children":[{"type":"stack","children":[{"type":"icon","name":"kanban-square"},{"type":"typography","variant":"h3","content":"@config.title"}],"direction":"horizontal","align":"center","gap":"sm"},{"type":"divider"},{"gap":"md","type":"data-grid","fields":[],"entity":"@entity.boards","cols":"@config.gridCols","dndRoot":true,"renderItem":["fn","col",{"type":"card","children":[{"children":[{"gap":"xs","direction":"horizontal","type":"stack","align":"center","children":[{"type":"icon","name":"@col.icon"},{"type":"typography","content":"@col.label","variant":"h4"},{"label":"@col.count","variant":"@col.variant","type":"badge"}]},{"type":"data-list","entity":"@col.items","positionEvent":"REORDER_POSITION","reorderEvent":"REORDER_CARD","fields":[],"gap":"sm","sortable":true,"accepts":"*","dropEvent":"MOVE_CARD","renderItem":["fn","item",{"type":"card","children":[{"children":[{"type":"typography","variant":"h4","content":"@config.cardTitleBinding"},{"type":"typography","color":"muted","variant":"caption","content":"@config.cardDescriptionBinding"},{"type":"stack","align":"center","children":[{"type":"button","variant":"ghost","action":"OPEN_CARD","icon":"arrow-right","actionPayload":{"row":"@item","id":"@config.cardIdBinding"},"label":"Open"}],"direction":"horizontal","gap":"xs"}],"direction":"vertical","type":"stack","gap":"xs"}],"look":"@config.cardLook"}],"dragGroup":"@col.key"}],"gap":"sm","type":"stack","direction":"vertical"}],"look":"@config.cardLook"}]},{"type":"floating-action-button","action":"ADD_CARD","icon":"plus","label":"Add item","variant":"primary"}],"type":"stack"}` */
-  bodyContent?: unknown;
-  /** Default: `["title","description","stage","notes"]` */
-  formFields?: string[];
-  /** Default: `"@item.title"` */
-  cardTitleBinding?: string;
-  /** Default: `3` */
-  gridCols?: number;
   /** Default: `"Board"` */
   title?: string;
-  /** Default: `"@item.stage"` */
-  cardStageBinding?: string;
+  /** Default: `3` */
+  gridCols?: number;
+  /** Default: `["title","description","stage","notes"]` */
+  formFields?: string[];
+  /** Default: `"@item.description"` */
+  cardDescriptionBinding?: string;
+  /** Default: `"@item.title"` */
+  cardTitleBinding?: string;
   /** Default: `"@item.id"` */
   cardIdBinding?: string;
+  /** Default: `"stage"` */
+  groupByField?: string;
+  /** Default: `{"direction":"vertical","children":[{"align":"center","type":"stack","children":[{"type":"icon","name":"kanban-square"},{"variant":"h3","type":"typography","content":"@config.title"}],"direction":"horizontal","gap":"sm"},{"type":"divider"},{"renderItem":["fn","col",{"look":"@config.cardLook","children":[{"gap":"sm","direction":"vertical","children":[{"type":"stack","direction":"horizontal","gap":"xs","align":"center","children":[{"type":"icon","name":"@col.icon"},{"type":"typography","content":"@col.label","variant":"h4"},{"variant":"@col.variant","label":"@col.count","type":"badge"}]},{"sortable":true,"dropEvent":"MOVE_CARD","renderItem":["fn","item",{"look":"@config.cardLook","type":"card","children":[{"direction":"vertical","children":[{"content":"@config.cardTitleBinding","variant":"h4","type":"typography"},{"variant":"caption","color":"muted","type":"typography","content":"@config.cardDescriptionBinding"},{"direction":"horizontal","align":"center","type":"stack","children":[{"type":"button","label":"Open","action":"OPEN_CARD","variant":"ghost","actionPayload":{"id":"@config.cardIdBinding","row":"@item"},"icon":"arrow-right"}],"gap":"xs"}],"type":"stack","gap":"xs"}]}],"fields":[],"reorderEvent":"REORDER_CARD","positionEvent":"REORDER_POSITION","entity":"@col.items","type":"data-list","accepts":"*","dragGroup":"@col.key","gap":"sm"}],"type":"stack"}],"type":"card"}],"gap":"md","type":"data-grid","entity":"@entity.boards","cols":"@config.gridCols","fields":[],"dndRoot":true},{"variant":"primary","type":"floating-action-button","action":"ADD_CARD","icon":"plus","label":"Add item"}],"type":"stack","gap":"md"}` */
+  bodyContent?: unknown;
+  /** Default: `"@item.stage"` */
+  cardStageBinding?: string;
   /** Default: `"elevated"` */
   cardLook?: 'elevated' | 'flat-bordered' | 'borderless-divider' | 'ticket' | 'invoice' | 'chip' | 'tile-image-first';
+  /** Default: `[{"icon":"circle","key":"todo","variant":"default","label":"To Do"},{"key":"doing","label":"In Progress","icon":"circle-dot","variant":"primary"},{"key":"done","variant":"success","label":"Done","icon":"check-circle"}]` */
+  columns?: EntityRow[];
 }
 
 /**
