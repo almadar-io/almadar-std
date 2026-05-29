@@ -1,6 +1,6 @@
 {
   "name": "std-thread",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "std-thread — forum-style nested replies with collapse + flat-mode toggle. Owns ThreadPost (persistent). flat:true covers 1:1 linear inquiry threads; flat:false renders forum-style nested. INIT fetches; REPLY persists a child post under @payload.parentId. Layer 3 variants override `bodyContent` to deliver chat-bubble, email-threaded, or linear-comments UX while inheriting the same trait, state machine, emits, and listens.",
   "orbitals": [
     {
@@ -291,6 +291,16 @@
                 ]
               },
               {
+                "key": "ThreadPostCreated",
+                "name": "ThreadPost created",
+                "payloadSchema": [
+                  {
+                    "name": "row",
+                    "type": "ThreadPost"
+                  }
+                ]
+              },
+              {
                 "key": "SELECT",
                 "name": "Select",
                 "payloadSchema": [
@@ -332,16 +342,6 @@
                 "name": "Cancel Reply"
               },
               {
-                "key": "ThreadPostCreated",
-                "name": "ThreadPost created",
-                "payloadSchema": [
-                  {
-                    "name": "row",
-                    "type": "ThreadPost"
-                  }
-                ]
-              },
-              {
                 "key": "ThreadPostCreateFailed",
                 "name": "ThreadPost create failed",
                 "payloadSchema": [
@@ -370,8 +370,8 @@
                         "replies"
                       ],
                       "emit": {
-                        "failure": "ThreadPostLoadFailed",
-                        "success": "ThreadPostLoaded"
+                        "success": "ThreadPostLoaded",
+                        "failure": "ThreadPostLoadFailed"
                       }
                     }
                   ],
@@ -379,8 +379,8 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]
@@ -406,8 +406,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
                       "variant": "error",
+                      "type": "alert",
                       "message": "@payload.error"
                     }
                   ]
@@ -422,21 +422,21 @@
                     "fetch",
                     "ThreadPost",
                     {
-                      "include": [
-                        "replies"
-                      ],
                       "emit": {
                         "failure": "ThreadPostLoadFailed",
                         "success": "ThreadPostLoaded"
-                      }
+                      },
+                      "include": [
+                        "replies"
+                      ]
                     }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]
@@ -455,8 +455,62 @@
               },
               {
                 "from": "browsing",
+                "to": "browsing",
+                "event": "REPLY",
+                "guard": [
+                  "not",
+                  [
+                    "=",
+                    [
+                      "str/default",
+                      "@payload.content",
+                      ""
+                    ],
+                    ""
+                  ]
+                ],
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "ThreadPost",
+                    {
+                      "content": "@payload.content",
+                      "threadRootId": [
+                        "str/default",
+                        "@payload.parentNodeId",
+                        "root"
+                      ],
+                      "parentId": [
+                        "str/default",
+                        "@payload.parentNodeId",
+                        "@payload.parentId"
+                      ],
+                      "authorId": "me",
+                      "authorName": "You"
+                    },
+                    {
+                      "emit": {
+                        "success": "ThreadPostCreated",
+                        "failure": "ThreadPostCreateFailed"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
                 "to": "replying",
                 "event": "REPLY",
+                "guard": [
+                  "=",
+                  [
+                    "str/default",
+                    "@payload.content",
+                    ""
+                  ],
+                  ""
+                ],
                 "effects": [
                   [
                     "set",
@@ -471,41 +525,61 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
                           "variant": "h4",
-                          "type": "typography",
-                          "content": "Write a reply"
+                          "content": "Write a reply",
+                          "type": "typography"
                         },
                         {
-                          "placeholder": "Your reply…",
                           "action": "EDIT_REPLY",
-                          "type": "textarea"
+                          "type": "textarea",
+                          "placeholder": "Your reply…"
                         },
                         {
-                          "type": "stack",
-                          "gap": "sm",
                           "children": [
                             {
-                              "label": "Submit",
                               "variant": "primary",
                               "icon": "send",
-                              "type": "button",
-                              "action": "SUBMIT_REPLY"
+                              "action": "SUBMIT_REPLY",
+                              "label": "Submit",
+                              "type": "button"
                             },
                             {
-                              "action": "CANCEL_REPLY",
-                              "label": "Cancel",
                               "type": "button",
-                              "variant": "secondary"
+                              "action": "CANCEL_REPLY",
+                              "variant": "secondary",
+                              "label": "Cancel"
                             }
                           ],
-                          "direction": "horizontal"
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "type": "stack"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "ThreadPostCreated",
+                "effects": [
+                  [
+                    "fetch",
+                    "ThreadPost",
+                    {
+                      "include": [
+                        "replies"
+                      ],
+                      "emit": {
+                        "failure": "ThreadPostLoadFailed",
+                        "success": "ThreadPostLoaded"
+                      }
                     }
                   ]
                 ]
@@ -524,13 +598,13 @@
                     "fetch",
                     "ThreadPost",
                     {
+                      "include": [
+                        "replies"
+                      ],
                       "emit": {
                         "failure": "ThreadPostLoadFailed",
                         "success": "ThreadPostLoaded"
-                      },
-                      "include": [
-                        "replies"
-                      ]
+                      }
                     }
                   ]
                 ]
@@ -559,8 +633,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "success": "ThreadPostCreated",
-                        "failure": "ThreadPostCreateFailed"
+                        "failure": "ThreadPostCreateFailed",
+                        "success": "ThreadPostCreated"
                       }
                     }
                   ]
@@ -623,8 +697,8 @@
                     "main",
                     {
                       "variant": "error",
-                      "message": "@payload.error",
-                      "type": "alert"
+                      "type": "alert",
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -660,13 +734,6 @@
             ]
           },
           "config": {
-            "flat": {
-              "type": "boolean",
-              "default": false,
-              "label": "Flat thread",
-              "description": "Render replies as a linear list instead of nested tree",
-              "tier": "presentation"
-            },
             "tableLook": {
               "type": "string",
               "default": "dense",
@@ -681,16 +748,41 @@
                 "card-rows"
               ]
             },
+            "threadRootId": {
+              "type": "string",
+              "default": "",
+              "label": "Root post id",
+              "description": "Top-level post whose descendants are loaded (blank = all roots)",
+              "tier": "domain"
+            },
             "bodyContent": {
               "type": "render-ui",
               "default": {
+                "direction": "vertical",
                 "gap": "md",
                 "children": [
                   {
-                    "type": "data-list",
                     "variant": "card",
-                    "entity": "@payload.data",
                     "look": "@config.tableLook",
+                    "entity": "@payload.data",
+                    "gap": "sm",
+                    "fields": [
+                      {
+                        "label": "Author",
+                        "variant": "h4",
+                        "name": "authorName"
+                      },
+                      {
+                        "name": "content",
+                        "label": "",
+                        "variant": "body"
+                      },
+                      {
+                        "name": "voteCount",
+                        "label": "Votes",
+                        "variant": "caption"
+                      }
+                    ],
                     "itemActions": [
                       {
                         "icon": "message-square",
@@ -698,39 +790,21 @@
                         "event": "REPLY"
                       }
                     ],
-                    "gap": "sm",
-                    "fields": [
-                      {
-                        "name": "authorName",
-                        "variant": "h4",
-                        "label": "Author"
-                      },
-                      {
-                        "label": "",
-                        "name": "content",
-                        "variant": "body"
-                      },
-                      {
-                        "variant": "caption",
-                        "name": "voteCount",
-                        "label": "Votes"
-                      }
-                    ]
+                    "type": "data-list"
                   }
                 ],
-                "type": "stack",
-                "direction": "vertical"
+                "type": "stack"
               },
               "label": "Body content tree",
               "description": "Render-ui SExpr rendered after thread posts load. Default is the canonical forum-style data-list. Layer 3 variants override this with their own tree (chat bubbles, email-threaded cards, linear comment stacks, etc.) to deliver entirely different thread UX while inheriting the same trait, state machine, emits, and listens.",
               "tier": "internal"
             },
-            "threadRootId": {
-              "type": "string",
-              "default": "",
-              "label": "Root post id",
-              "description": "Top-level post whose descendants are loaded (blank = all roots)",
-              "tier": "domain"
+            "flat": {
+              "type": "boolean",
+              "default": false,
+              "label": "Flat thread",
+              "description": "Render replies as a linear list instead of nested tree",
+              "tier": "presentation"
             }
           },
           "scope": "collection"
