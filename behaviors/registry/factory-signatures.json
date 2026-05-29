@@ -27253,15 +27253,14 @@
               "key": "bodyContent",
               "type": "render-ui",
               "default": {
-                "direction": "vertical",
+                "gap": "md",
                 "children": [
                   {
-                    "align": "center",
-                    "type": "stack",
+                    "gap": "sm",
                     "children": [
                       {
-                        "type": "icon",
-                        "name": "kanban-square"
+                        "name": "kanban-square",
+                        "type": "icon"
                       },
                       {
                         "variant": "h3",
@@ -27269,36 +27268,38 @@
                         "content": "@config.title"
                       }
                     ],
-                    "direction": "horizontal",
-                    "gap": "sm"
+                    "type": "stack",
+                    "align": "center",
+                    "direction": "horizontal"
                   },
                   {
                     "type": "divider"
                   },
                   {
+                    "cols": "@config.gridCols",
+                    "entity": "@entity.boards",
+                    "dndRoot": true,
+                    "fields": [],
+                    "type": "data-grid",
+                    "gap": "md",
                     "renderItem": [
                       "fn",
                       "col",
                       {
+                        "type": "card",
                         "look": "@config.cardLook",
                         "children": [
                           {
-                            "gap": "sm",
-                            "direction": "vertical",
                             "children": [
                               {
-                                "type": "stack",
-                                "direction": "horizontal",
-                                "gap": "xs",
-                                "align": "center",
                                 "children": [
                                   {
-                                    "type": "icon",
-                                    "name": "@col.icon"
+                                    "name": "@col.icon",
+                                    "type": "icon"
                                   },
                                   {
-                                    "type": "typography",
                                     "content": "@col.label",
+                                    "type": "typography",
                                     "variant": "h4"
                                   },
                                   {
@@ -27306,11 +27307,23 @@
                                     "label": "@col.count",
                                     "type": "badge"
                                   }
-                                ]
+                                ],
+                                "gap": "xs",
+                                "direction": "horizontal",
+                                "align": "center",
+                                "type": "stack"
                               },
                               {
+                                "accepts": "*",
+                                "dragGroup": "@col.key",
+                                "positionEvent": "REORDER_POSITION",
+                                "entity": "@col.items",
+                                "type": "data-list",
+                                "fields": [],
                                 "sortable": true,
                                 "dropEvent": "MOVE_CARD",
+                                "reorderEvent": "REORDER_CARD",
+                                "gap": "sm",
                                 "renderItem": [
                                   "fn",
                                   "item",
@@ -27319,78 +27332,65 @@
                                     "type": "card",
                                     "children": [
                                       {
-                                        "direction": "vertical",
+                                        "gap": "xs",
                                         "children": [
                                           {
-                                            "content": "@config.cardTitleBinding",
+                                            "type": "typography",
                                             "variant": "h4",
-                                            "type": "typography"
+                                            "content": "@config.cardTitleBinding"
                                           },
                                           {
-                                            "variant": "caption",
-                                            "color": "muted",
                                             "type": "typography",
+                                            "color": "muted",
+                                            "variant": "caption",
                                             "content": "@config.cardDescriptionBinding"
                                           },
                                           {
-                                            "direction": "horizontal",
-                                            "align": "center",
-                                            "type": "stack",
                                             "children": [
                                               {
                                                 "type": "button",
-                                                "label": "Open",
-                                                "action": "OPEN_CARD",
-                                                "variant": "ghost",
+                                                "icon": "arrow-right",
                                                 "actionPayload": {
                                                   "id": "@config.cardIdBinding",
                                                   "row": "@item"
                                                 },
-                                                "icon": "arrow-right"
+                                                "variant": "ghost",
+                                                "label": "Open",
+                                                "action": "OPEN_CARD"
                                               }
                                             ],
-                                            "gap": "xs"
+                                            "gap": "xs",
+                                            "type": "stack",
+                                            "direction": "horizontal",
+                                            "align": "center"
                                           }
                                         ],
-                                        "type": "stack",
-                                        "gap": "xs"
+                                        "direction": "vertical",
+                                        "type": "stack"
                                       }
                                     ]
                                   }
-                                ],
-                                "fields": [],
-                                "reorderEvent": "REORDER_CARD",
-                                "positionEvent": "REORDER_POSITION",
-                                "entity": "@col.items",
-                                "type": "data-list",
-                                "accepts": "*",
-                                "dragGroup": "@col.key",
-                                "gap": "sm"
+                                ]
                               }
                             ],
-                            "type": "stack"
+                            "gap": "sm",
+                            "type": "stack",
+                            "direction": "vertical"
                           }
-                        ],
-                        "type": "card"
+                        ]
                       }
-                    ],
-                    "gap": "md",
-                    "type": "data-grid",
-                    "entity": "@entity.boards",
-                    "cols": "@config.gridCols",
-                    "fields": [],
-                    "dndRoot": true
+                    ]
                   },
                   {
-                    "variant": "primary",
-                    "type": "floating-action-button",
                     "action": "ADD_CARD",
                     "icon": "plus",
+                    "variant": "primary",
+                    "type": "floating-action-button",
                     "label": "Add item"
                   }
                 ],
                 "type": "stack",
-                "gap": "md"
+                "direction": "vertical"
               },
               "label": "Body content tree",
               "description": "Render-ui SExpr rendered after the board loads. Default is the canonical column data-grid with nested per-column data-lists. Layer 3 variants override this with their own tree (swim-lanes, timeline-roadmap, etc.) while inheriting the same trait, state machine, emits, and listens.",
@@ -27450,22 +27450,22 @@
               "type": "[ColumnSpec]",
               "default": [
                 {
-                  "icon": "circle",
                   "key": "todo",
-                  "variant": "default",
-                  "label": "To Do"
+                  "label": "To Do",
+                  "icon": "circle",
+                  "variant": "default"
                 },
                 {
                   "key": "doing",
-                  "label": "In Progress",
+                  "variant": "primary",
                   "icon": "circle-dot",
-                  "variant": "primary"
+                  "label": "In Progress"
                 },
                 {
-                  "key": "done",
-                  "variant": "success",
                   "label": "Done",
-                  "icon": "check-circle"
+                  "icon": "check-circle",
+                  "variant": "success",
+                  "key": "done"
                 }
               ],
               "label": "Columns",
@@ -27473,6 +27473,16 @@
               "tier": "domain",
               "items": {
                 "properties": {
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
                   "icon": {
                     "name": "icon",
                     "required": false,
@@ -27481,16 +27491,6 @@
                   "key": {
                     "name": "key",
                     "required": true,
-                    "type": "string"
-                  },
-                  "label": {
-                    "name": "label",
-                    "required": true,
-                    "type": "string"
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "required": false,
                     "type": "string"
                   }
                 },
@@ -27795,15 +27795,14 @@
                       "bodyContent": {
                         "type": "object",
                         "default": {
-                          "direction": "vertical",
+                          "gap": "md",
                           "children": [
                             {
-                              "align": "center",
-                              "type": "stack",
+                              "gap": "sm",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "kanban-square"
+                                  "name": "kanban-square",
+                                  "type": "icon"
                                 },
                                 {
                                   "variant": "h3",
@@ -27811,36 +27810,38 @@
                                   "content": "@config.title"
                                 }
                               ],
-                              "direction": "horizontal",
-                              "gap": "sm"
+                              "type": "stack",
+                              "align": "center",
+                              "direction": "horizontal"
                             },
                             {
                               "type": "divider"
                             },
                             {
+                              "cols": "@config.gridCols",
+                              "entity": "@entity.boards",
+                              "dndRoot": true,
+                              "fields": [],
+                              "type": "data-grid",
+                              "gap": "md",
                               "renderItem": [
                                 "fn",
                                 "col",
                                 {
+                                  "type": "card",
                                   "look": "@config.cardLook",
                                   "children": [
                                     {
-                                      "gap": "sm",
-                                      "direction": "vertical",
                                       "children": [
                                         {
-                                          "type": "stack",
-                                          "direction": "horizontal",
-                                          "gap": "xs",
-                                          "align": "center",
                                           "children": [
                                             {
-                                              "type": "icon",
-                                              "name": "@col.icon"
+                                              "name": "@col.icon",
+                                              "type": "icon"
                                             },
                                             {
-                                              "type": "typography",
                                               "content": "@col.label",
+                                              "type": "typography",
                                               "variant": "h4"
                                             },
                                             {
@@ -27848,11 +27849,23 @@
                                               "label": "@col.count",
                                               "type": "badge"
                                             }
-                                          ]
+                                          ],
+                                          "gap": "xs",
+                                          "direction": "horizontal",
+                                          "align": "center",
+                                          "type": "stack"
                                         },
                                         {
+                                          "accepts": "*",
+                                          "dragGroup": "@col.key",
+                                          "positionEvent": "REORDER_POSITION",
+                                          "entity": "@col.items",
+                                          "type": "data-list",
+                                          "fields": [],
                                           "sortable": true,
                                           "dropEvent": "MOVE_CARD",
+                                          "reorderEvent": "REORDER_CARD",
+                                          "gap": "sm",
                                           "renderItem": [
                                             "fn",
                                             "item",
@@ -27861,78 +27874,65 @@
                                               "type": "card",
                                               "children": [
                                                 {
-                                                  "direction": "vertical",
+                                                  "gap": "xs",
                                                   "children": [
                                                     {
-                                                      "content": "@config.cardTitleBinding",
+                                                      "type": "typography",
                                                       "variant": "h4",
-                                                      "type": "typography"
+                                                      "content": "@config.cardTitleBinding"
                                                     },
                                                     {
-                                                      "variant": "caption",
-                                                      "color": "muted",
                                                       "type": "typography",
+                                                      "color": "muted",
+                                                      "variant": "caption",
                                                       "content": "@config.cardDescriptionBinding"
                                                     },
                                                     {
-                                                      "direction": "horizontal",
-                                                      "align": "center",
-                                                      "type": "stack",
                                                       "children": [
                                                         {
                                                           "type": "button",
-                                                          "label": "Open",
-                                                          "action": "OPEN_CARD",
-                                                          "variant": "ghost",
+                                                          "icon": "arrow-right",
                                                           "actionPayload": {
                                                             "id": "@config.cardIdBinding",
                                                             "row": "@item"
                                                           },
-                                                          "icon": "arrow-right"
+                                                          "variant": "ghost",
+                                                          "label": "Open",
+                                                          "action": "OPEN_CARD"
                                                         }
                                                       ],
-                                                      "gap": "xs"
+                                                      "gap": "xs",
+                                                      "type": "stack",
+                                                      "direction": "horizontal",
+                                                      "align": "center"
                                                     }
                                                   ],
-                                                  "type": "stack",
-                                                  "gap": "xs"
+                                                  "direction": "vertical",
+                                                  "type": "stack"
                                                 }
                                               ]
                                             }
-                                          ],
-                                          "fields": [],
-                                          "reorderEvent": "REORDER_CARD",
-                                          "positionEvent": "REORDER_POSITION",
-                                          "entity": "@col.items",
-                                          "type": "data-list",
-                                          "accepts": "*",
-                                          "dragGroup": "@col.key",
-                                          "gap": "sm"
+                                          ]
                                         }
                                       ],
-                                      "type": "stack"
+                                      "gap": "sm",
+                                      "type": "stack",
+                                      "direction": "vertical"
                                     }
-                                  ],
-                                  "type": "card"
+                                  ]
                                 }
-                              ],
-                              "gap": "md",
-                              "type": "data-grid",
-                              "entity": "@entity.boards",
-                              "cols": "@config.gridCols",
-                              "fields": [],
-                              "dndRoot": true
+                              ]
                             },
                             {
-                              "variant": "primary",
-                              "type": "floating-action-button",
                               "action": "ADD_CARD",
                               "icon": "plus",
+                              "variant": "primary",
+                              "type": "floating-action-button",
                               "label": "Add item"
                             }
                           ],
                           "type": "stack",
-                          "gap": "md"
+                          "direction": "vertical"
                         },
                         "description": "Render-ui SExpr rendered after the board loads. Default is the canonical column data-grid with nested per-column data-lists. Layer 3 variants override this with their own tree (swim-lanes, timeline-roadmap, etc.) while inheriting the same trait, state machine, emits, and listens.",
                         "x-label": "Body content tree",
@@ -27989,22 +27989,22 @@
                         },
                         "default": [
                           {
-                            "icon": "circle",
                             "key": "todo",
-                            "variant": "default",
-                            "label": "To Do"
+                            "label": "To Do",
+                            "icon": "circle",
+                            "variant": "default"
                           },
                           {
                             "key": "doing",
-                            "label": "In Progress",
+                            "variant": "primary",
                             "icon": "circle-dot",
-                            "variant": "primary"
+                            "label": "In Progress"
                           },
                           {
-                            "key": "done",
-                            "variant": "success",
                             "label": "Done",
-                            "icon": "check-circle"
+                            "icon": "check-circle",
+                            "variant": "success",
+                            "key": "done"
                           }
                         ],
                         "description": "Board columns; each row's stage maps to a column key",
@@ -33796,33 +33796,35 @@
               "key": "bodyContent",
               "type": "render-ui",
               "default": {
+                "gap": "lg",
                 "direction": "vertical",
+                "type": "stack",
                 "children": [
                   {
-                    "type": "stack",
-                    "direction": "horizontal",
                     "align": "center",
+                    "direction": "horizontal",
+                    "type": "stack",
                     "children": [
                       {
+                        "align": "center",
+                        "type": "stack",
                         "direction": "horizontal",
+                        "gap": "sm",
                         "children": [
                           {
                             "name": "calendar",
                             "type": "icon"
                           },
                           {
-                            "content": "CalendarEvents Calendar",
                             "type": "typography",
+                            "content": "CalendarEvents Calendar",
                             "variant": "h2"
                           }
-                        ],
-                        "gap": "sm",
-                        "align": "center",
-                        "type": "stack"
+                        ]
                       },
                       {
-                        "type": "date-range-selector",
                         "onSelect": "SELECT_DAY",
+                        "type": "date-range-selector",
                         "selected": "@entity.selectedRange"
                       }
                     ],
@@ -33840,48 +33842,46 @@
                   },
                   {
                     "type": "typography",
-                    "variant": "h4",
-                    "content": "Upcoming Events"
+                    "content": "Upcoming Events",
+                    "variant": "h4"
                   },
                   {
                     "look": "@config.tableLook",
-                    "fields": [
+                    "type": "data-list",
+                    "itemActions": [
                       {
-                        "label": "Event",
-                        "variant": "h4",
-                        "icon": "calendar",
-                        "name": "name"
-                      },
-                      {
-                        "variant": "badge",
-                        "name": "time",
-                        "label": "Time"
-                      },
-                      {
-                        "name": "date",
-                        "label": "Date",
-                        "variant": "caption",
-                        "format": "date"
-                      },
-                      {
-                        "name": "status",
-                        "label": "Status",
-                        "variant": "badge"
+                        "event": "SELECT_DAY",
+                        "icon": "eye",
+                        "label": "View"
                       }
                     ],
                     "entity": "@payload.data",
-                    "itemActions": [
+                    "fields": [
                       {
-                        "label": "View",
-                        "event": "SELECT_DAY",
-                        "icon": "eye"
+                        "icon": "calendar",
+                        "label": "Event",
+                        "variant": "h4",
+                        "name": "name"
+                      },
+                      {
+                        "label": "Time",
+                        "variant": "badge",
+                        "name": "time"
+                      },
+                      {
+                        "name": "date",
+                        "variant": "caption",
+                        "label": "Date",
+                        "format": "date"
+                      },
+                      {
+                        "label": "Status",
+                        "variant": "badge",
+                        "name": "status"
                       }
-                    ],
-                    "type": "data-list"
+                    ]
                   }
-                ],
-                "gap": "lg",
-                "type": "stack"
+                ]
               },
               "label": "Body content tree",
               "description": "Render-ui SExpr rendered after events load. Default is the month-grid + upcoming-events list. Layer 3 variants override this with their own tree (agenda list, week timeline, etc.) to deliver entirely different calendar UX while inheriting the same trait, state machine, emits, and listens.",
@@ -34176,33 +34176,35 @@
                       "bodyContent": {
                         "type": "object",
                         "default": {
+                          "gap": "lg",
                           "direction": "vertical",
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
                               "align": "center",
+                              "direction": "horizontal",
+                              "type": "stack",
                               "children": [
                                 {
+                                  "align": "center",
+                                  "type": "stack",
                                   "direction": "horizontal",
+                                  "gap": "sm",
                                   "children": [
                                     {
                                       "name": "calendar",
                                       "type": "icon"
                                     },
                                     {
-                                      "content": "CalendarEvents Calendar",
                                       "type": "typography",
+                                      "content": "CalendarEvents Calendar",
                                       "variant": "h2"
                                     }
-                                  ],
-                                  "gap": "sm",
-                                  "align": "center",
-                                  "type": "stack"
+                                  ]
                                 },
                                 {
-                                  "type": "date-range-selector",
                                   "onSelect": "SELECT_DAY",
+                                  "type": "date-range-selector",
                                   "selected": "@entity.selectedRange"
                                 }
                               ],
@@ -34220,48 +34222,46 @@
                             },
                             {
                               "type": "typography",
-                              "variant": "h4",
-                              "content": "Upcoming Events"
+                              "content": "Upcoming Events",
+                              "variant": "h4"
                             },
                             {
                               "look": "@config.tableLook",
-                              "fields": [
+                              "type": "data-list",
+                              "itemActions": [
                                 {
-                                  "label": "Event",
-                                  "variant": "h4",
-                                  "icon": "calendar",
-                                  "name": "name"
-                                },
-                                {
-                                  "variant": "badge",
-                                  "name": "time",
-                                  "label": "Time"
-                                },
-                                {
-                                  "name": "date",
-                                  "label": "Date",
-                                  "variant": "caption",
-                                  "format": "date"
-                                },
-                                {
-                                  "name": "status",
-                                  "label": "Status",
-                                  "variant": "badge"
+                                  "event": "SELECT_DAY",
+                                  "icon": "eye",
+                                  "label": "View"
                                 }
                               ],
                               "entity": "@payload.data",
-                              "itemActions": [
+                              "fields": [
                                 {
-                                  "label": "View",
-                                  "event": "SELECT_DAY",
-                                  "icon": "eye"
+                                  "icon": "calendar",
+                                  "label": "Event",
+                                  "variant": "h4",
+                                  "name": "name"
+                                },
+                                {
+                                  "label": "Time",
+                                  "variant": "badge",
+                                  "name": "time"
+                                },
+                                {
+                                  "name": "date",
+                                  "variant": "caption",
+                                  "label": "Date",
+                                  "format": "date"
+                                },
+                                {
+                                  "label": "Status",
+                                  "variant": "badge",
+                                  "name": "status"
                                 }
-                              ],
-                              "type": "data-list"
+                              ]
                             }
-                          ],
-                          "gap": "lg",
-                          "type": "stack"
+                          ]
                         },
                         "description": "Render-ui SExpr rendered after events load. Default is the month-grid + upcoming-events list. Layer 3 variants override this with their own tree (agenda list, week timeline, etc.) to deliver entirely different calendar UX while inheriting the same trait, state machine, emits, and listens.",
                         "x-label": "Body content tree",
@@ -51710,33 +51710,35 @@
               "key": "bodyContent",
               "type": "render-ui",
               "default": {
+                "gap": "lg",
                 "direction": "vertical",
+                "type": "stack",
                 "children": [
                   {
-                    "type": "stack",
-                    "direction": "horizontal",
                     "align": "center",
+                    "direction": "horizontal",
+                    "type": "stack",
                     "children": [
                       {
+                        "align": "center",
+                        "type": "stack",
                         "direction": "horizontal",
+                        "gap": "sm",
                         "children": [
                           {
                             "name": "calendar",
                             "type": "icon"
                           },
                           {
-                            "content": "CalendarEvents Calendar",
                             "type": "typography",
+                            "content": "CalendarEvents Calendar",
                             "variant": "h2"
                           }
-                        ],
-                        "gap": "sm",
-                        "align": "center",
-                        "type": "stack"
+                        ]
                       },
                       {
-                        "type": "date-range-selector",
                         "onSelect": "SELECT_DAY",
+                        "type": "date-range-selector",
                         "selected": "@entity.selectedRange"
                       }
                     ],
@@ -51754,48 +51756,46 @@
                   },
                   {
                     "type": "typography",
-                    "variant": "h4",
-                    "content": "Upcoming Events"
+                    "content": "Upcoming Events",
+                    "variant": "h4"
                   },
                   {
                     "look": "@config.tableLook",
-                    "fields": [
+                    "type": "data-list",
+                    "itemActions": [
                       {
-                        "label": "Event",
-                        "variant": "h4",
-                        "icon": "calendar",
-                        "name": "name"
-                      },
-                      {
-                        "variant": "badge",
-                        "name": "time",
-                        "label": "Time"
-                      },
-                      {
-                        "name": "date",
-                        "label": "Date",
-                        "variant": "caption",
-                        "format": "date"
-                      },
-                      {
-                        "name": "status",
-                        "label": "Status",
-                        "variant": "badge"
+                        "event": "SELECT_DAY",
+                        "icon": "eye",
+                        "label": "View"
                       }
                     ],
                     "entity": "@payload.data",
-                    "itemActions": [
+                    "fields": [
                       {
-                        "label": "View",
-                        "event": "SELECT_DAY",
-                        "icon": "eye"
+                        "icon": "calendar",
+                        "label": "Event",
+                        "variant": "h4",
+                        "name": "name"
+                      },
+                      {
+                        "label": "Time",
+                        "variant": "badge",
+                        "name": "time"
+                      },
+                      {
+                        "name": "date",
+                        "variant": "caption",
+                        "label": "Date",
+                        "format": "date"
+                      },
+                      {
+                        "label": "Status",
+                        "variant": "badge",
+                        "name": "status"
                       }
-                    ],
-                    "type": "data-list"
+                    ]
                   }
-                ],
-                "gap": "lg",
-                "type": "stack"
+                ]
               },
               "label": "Body content tree",
               "description": "Render-ui SExpr rendered after events load. Default is the month-grid + upcoming-events list. Layer 3 variants override this with their own tree (agenda list, week timeline, etc.) to deliver entirely different calendar UX while inheriting the same trait, state machine, emits, and listens.",
@@ -52887,33 +52887,35 @@
                       "bodyContent": {
                         "type": "object",
                         "default": {
+                          "gap": "lg",
                           "direction": "vertical",
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
                               "align": "center",
+                              "direction": "horizontal",
+                              "type": "stack",
                               "children": [
                                 {
+                                  "align": "center",
+                                  "type": "stack",
                                   "direction": "horizontal",
+                                  "gap": "sm",
                                   "children": [
                                     {
                                       "name": "calendar",
                                       "type": "icon"
                                     },
                                     {
-                                      "content": "CalendarEvents Calendar",
                                       "type": "typography",
+                                      "content": "CalendarEvents Calendar",
                                       "variant": "h2"
                                     }
-                                  ],
-                                  "gap": "sm",
-                                  "align": "center",
-                                  "type": "stack"
+                                  ]
                                 },
                                 {
-                                  "type": "date-range-selector",
                                   "onSelect": "SELECT_DAY",
+                                  "type": "date-range-selector",
                                   "selected": "@entity.selectedRange"
                                 }
                               ],
@@ -52931,48 +52933,46 @@
                             },
                             {
                               "type": "typography",
-                              "variant": "h4",
-                              "content": "Upcoming Events"
+                              "content": "Upcoming Events",
+                              "variant": "h4"
                             },
                             {
                               "look": "@config.tableLook",
-                              "fields": [
+                              "type": "data-list",
+                              "itemActions": [
                                 {
-                                  "label": "Event",
-                                  "variant": "h4",
-                                  "icon": "calendar",
-                                  "name": "name"
-                                },
-                                {
-                                  "variant": "badge",
-                                  "name": "time",
-                                  "label": "Time"
-                                },
-                                {
-                                  "name": "date",
-                                  "label": "Date",
-                                  "variant": "caption",
-                                  "format": "date"
-                                },
-                                {
-                                  "name": "status",
-                                  "label": "Status",
-                                  "variant": "badge"
+                                  "event": "SELECT_DAY",
+                                  "icon": "eye",
+                                  "label": "View"
                                 }
                               ],
                               "entity": "@payload.data",
-                              "itemActions": [
+                              "fields": [
                                 {
-                                  "label": "View",
-                                  "event": "SELECT_DAY",
-                                  "icon": "eye"
+                                  "icon": "calendar",
+                                  "label": "Event",
+                                  "variant": "h4",
+                                  "name": "name"
+                                },
+                                {
+                                  "label": "Time",
+                                  "variant": "badge",
+                                  "name": "time"
+                                },
+                                {
+                                  "name": "date",
+                                  "variant": "caption",
+                                  "label": "Date",
+                                  "format": "date"
+                                },
+                                {
+                                  "label": "Status",
+                                  "variant": "badge",
+                                  "name": "status"
                                 }
-                              ],
-                              "type": "data-list"
+                              ]
                             }
-                          ],
-                          "gap": "lg",
-                          "type": "stack"
+                          ]
                         },
                         "description": "Render-ui SExpr rendered after events load. Default is the month-grid + upcoming-events list. Layer 3 variants override this with their own tree (agenda list, week timeline, etc.) to deliver entirely different calendar UX while inheriting the same trait, state machine, emits, and listens.",
                         "x-label": "Body content tree",
@@ -79241,19 +79241,19 @@
               "type": "[SortOption]",
               "default": [
                 {
-                  "label": "Most recent",
+                  "icon": "clock",
                   "id": "recent",
-                  "icon": "clock"
+                  "label": "Most recent"
                 },
                 {
-                  "id": "highest",
                   "icon": "star",
+                  "id": "highest",
                   "label": "Top rated"
                 },
                 {
-                  "icon": "trending-down",
+                  "label": "Lowest",
                   "id": "lowest",
-                  "label": "Lowest"
+                  "icon": "trending-down"
                 }
               ],
               "label": "Sort tabs",
@@ -79266,14 +79266,14 @@
                     "required": true,
                     "type": "string"
                   },
-                  "icon": {
-                    "name": "icon",
-                    "required": false,
-                    "type": "string"
-                  },
                   "label": {
                     "name": "label",
                     "required": true,
+                    "type": "string"
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
                     "type": "string"
                   }
                 },
@@ -79285,8 +79285,8 @@
               "type": "[StarBucket]",
               "default": [
                 {
-                  "label": "5 stars",
-                  "percentage": 74
+                  "percentage": 74,
+                  "label": "5 stars"
                 },
                 {
                   "label": "4 stars",
@@ -79310,15 +79310,15 @@
               "tier": "presentation",
               "items": {
                 "properties": {
-                  "label": {
-                    "name": "label",
-                    "required": true,
-                    "type": "string"
-                  },
                   "percentage": {
                     "name": "percentage",
                     "required": true,
                     "type": "number"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
                   }
                 },
                 "type": "object"
@@ -79724,19 +79724,19 @@
                         },
                         "default": [
                           {
-                            "label": "Most recent",
+                            "icon": "clock",
                             "id": "recent",
-                            "icon": "clock"
+                            "label": "Most recent"
                           },
                           {
-                            "id": "highest",
                             "icon": "star",
+                            "id": "highest",
                             "label": "Top rated"
                           },
                           {
-                            "icon": "trending-down",
+                            "label": "Lowest",
                             "id": "lowest",
-                            "label": "Lowest"
+                            "icon": "trending-down"
                           }
                         ],
                         "description": "Sort modes shown as tabs above the reviews list",
@@ -79750,8 +79750,8 @@
                         },
                         "default": [
                           {
-                            "label": "5 stars",
-                            "percentage": 74
+                            "percentage": 74,
+                            "label": "5 stars"
                           },
                           {
                             "label": "4 stars",
@@ -87992,15 +87992,18 @@
               "key": "bodyContent",
               "type": "render-ui",
               "default": {
-                "type": "stack",
                 "direction": "vertical",
+                "type": "stack",
+                "gap": "lg",
                 "children": [
                   {
                     "gap": "sm",
+                    "direction": "horizontal",
+                    "align": "center",
                     "children": [
                       {
-                        "type": "icon",
-                        "name": "shield-check"
+                        "name": "shield-check",
+                        "type": "icon"
                       },
                       {
                         "variant": "h3",
@@ -88008,111 +88011,108 @@
                         "type": "typography"
                       }
                     ],
-                    "align": "center",
-                    "type": "stack",
-                    "direction": "horizontal"
+                    "type": "stack"
                   },
                   {
-                    "allowNavigation": false,
-                    "steps": "@entity.wizardSteps",
                     "type": "wizard-progress",
-                    "currentStep": "@entity.currentStepIndex"
+                    "currentStep": "@entity.currentStepIndex",
+                    "allowNavigation": false,
+                    "steps": "@entity.wizardSteps"
                   },
                   {
+                    "look": "@config.cardLook",
+                    "type": "card",
                     "children": [
                       {
-                        "gap": "md",
                         "type": "stack",
+                        "direction": "vertical",
                         "children": [
                           {
-                            "gap": "sm",
+                            "type": "stack",
                             "children": [
                               {
-                                "size": "lg",
+                                "type": "icon",
                                 "name": "@entity.currentStepIcon",
-                                "type": "icon"
+                                "size": "lg"
                               },
                               {
+                                "direction": "vertical",
                                 "gap": "xs",
                                 "children": [
                                   {
-                                    "content": "@entity.currentStepLabel",
                                     "type": "typography",
-                                    "variant": "h2"
+                                    "variant": "h2",
+                                    "content": "@entity.currentStepLabel"
                                   },
                                   {
                                     "type": "typography",
-                                    "variant": "body",
                                     "color": "muted",
-                                    "content": "@entity.currentStepDescription"
+                                    "content": "@entity.currentStepDescription",
+                                    "variant": "body"
                                   }
                                 ],
-                                "type": "stack",
-                                "direction": "vertical"
+                                "type": "stack"
                               }
                             ],
-                            "type": "stack",
+                            "gap": "sm",
                             "align": "center",
                             "direction": "horizontal"
                           }
                         ],
-                        "direction": "vertical"
+                        "gap": "md"
                       }
-                    ],
-                    "type": "card",
-                    "look": "@config.cardLook"
+                    ]
                   },
                   {
-                    "type": "stack",
+                    "direction": "horizontal",
+                    "align": "center",
                     "children": [
                       {
-                        "label": "Back",
                         "disabled": "@entity.isFirstStep",
                         "actionPayload": {
                           "id": "@entity.id"
                         },
-                        "variant": "ghost",
+                        "icon": "chevron-left",
                         "action": "BACK",
+                        "variant": "ghost",
                         "type": "button",
-                        "icon": "chevron-left"
+                        "label": "Back"
                       },
                       {
+                        "icon": "x",
+                        "type": "button",
                         "label": "Reject",
                         "action": "REJECT",
-                        "type": "button",
                         "variant": "ghost",
-                        "icon": "x",
                         "actionPayload": {
                           "id": "@entity.id"
                         }
                       },
                       {
+                        "type": "button",
+                        "variant": "ghost",
+                        "label": "Escalate",
                         "action": "ESCALATE",
                         "icon": "alert-triangle",
                         "actionPayload": {
                           "id": "@entity.id"
-                        },
-                        "label": "Escalate",
-                        "variant": "ghost",
-                        "type": "button"
+                        }
                       },
                       {
                         "type": "button",
                         "actionPayload": {
                           "id": "@entity.id"
                         },
-                        "variant": "primary",
                         "action": "ADVANCE",
-                        "label": "@entity.primaryActionLabel",
-                        "icon": "@entity.primaryActionIcon"
+                        "variant": "primary",
+                        "icon": "@entity.primaryActionIcon",
+                        "label": "@entity.primaryActionLabel"
                       }
                     ],
-                    "direction": "horizontal",
-                    "gap": "sm",
-                    "align": "center"
+                    "type": "stack",
+                    "gap": "sm"
                   }
-                ],
-                "gap": "lg"
+                ]
               },
               "label": "Body content tree",
               "description": "Render-ui SExpr rendered while the step chain is active (loading-success, running, BACK). Default is the canonical wizard-progress + step-card + action-row tree. Layer 3 variants override this with their own tree (horizontal stepper, sidebar progress, card carousel, etc.) to deliver entirely different step UX while inheriting the same trait, state machine, emits, and listens.",
@@ -88140,22 +88140,22 @@
               "type": "[StepSpec]",
               "default": [
                 {
-                  "key": "manager",
-                  "label": "Manager Review",
                   "description": "Initial review by direct manager",
-                  "icon": "user"
+                  "icon": "user",
+                  "label": "Manager Review",
+                  "key": "manager"
                 },
                 {
+                  "label": "Director Approval",
                   "key": "director",
                   "description": "Department director sign-off",
-                  "icon": "users",
-                  "label": "Director Approval"
+                  "icon": "users"
                 },
                 {
-                  "key": "executive",
                   "label": "Executive Sign-off",
-                  "description": "Final executive approval",
-                  "icon": "shield"
+                  "key": "executive",
+                  "icon": "shield",
+                  "description": "Final executive approval"
                 }
               ],
               "label": "Steps",
@@ -88163,14 +88163,19 @@
               "tier": "domain",
               "items": {
                 "properties": {
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
                   "key": {
                     "name": "key",
                     "required": false,
                     "type": "string"
                   },
-                  "label": {
-                    "name": "label",
-                    "required": true,
+                  "description": {
+                    "name": "description",
+                    "required": false,
                     "type": "string"
                   },
                   "icon": {
@@ -88185,11 +88190,6 @@
                     "items": {
                       "type": "string"
                     }
-                  },
-                  "description": {
-                    "name": "description",
-                    "required": false,
-                    "type": "string"
                   }
                 },
                 "type": "object"
@@ -88463,15 +88463,18 @@
                       "bodyContent": {
                         "type": "object",
                         "default": {
-                          "type": "stack",
                           "direction": "vertical",
+                          "type": "stack",
+                          "gap": "lg",
                           "children": [
                             {
                               "gap": "sm",
+                              "direction": "horizontal",
+                              "align": "center",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "shield-check"
+                                  "name": "shield-check",
+                                  "type": "icon"
                                 },
                                 {
                                   "variant": "h3",
@@ -88479,111 +88482,108 @@
                                   "type": "typography"
                                 }
                               ],
-                              "align": "center",
-                              "type": "stack",
-                              "direction": "horizontal"
+                              "type": "stack"
                             },
                             {
-                              "allowNavigation": false,
-                              "steps": "@entity.wizardSteps",
                               "type": "wizard-progress",
-                              "currentStep": "@entity.currentStepIndex"
+                              "currentStep": "@entity.currentStepIndex",
+                              "allowNavigation": false,
+                              "steps": "@entity.wizardSteps"
                             },
                             {
+                              "look": "@config.cardLook",
+                              "type": "card",
                               "children": [
                                 {
-                                  "gap": "md",
                                   "type": "stack",
+                                  "direction": "vertical",
                                   "children": [
                                     {
-                                      "gap": "sm",
+                                      "type": "stack",
                                       "children": [
                                         {
-                                          "size": "lg",
+                                          "type": "icon",
                                           "name": "@entity.currentStepIcon",
-                                          "type": "icon"
+                                          "size": "lg"
                                         },
                                         {
+                                          "direction": "vertical",
                                           "gap": "xs",
                                           "children": [
                                             {
-                                              "content": "@entity.currentStepLabel",
                                               "type": "typography",
-                                              "variant": "h2"
+                                              "variant": "h2",
+                                              "content": "@entity.currentStepLabel"
                                             },
                                             {
                                               "type": "typography",
-                                              "variant": "body",
                                               "color": "muted",
-                                              "content": "@entity.currentStepDescription"
+                                              "content": "@entity.currentStepDescription",
+                                              "variant": "body"
                                             }
                                           ],
-                                          "type": "stack",
-                                          "direction": "vertical"
+                                          "type": "stack"
                                         }
                                       ],
-                                      "type": "stack",
+                                      "gap": "sm",
                                       "align": "center",
                                       "direction": "horizontal"
                                     }
                                   ],
-                                  "direction": "vertical"
+                                  "gap": "md"
                                 }
-                              ],
-                              "type": "card",
-                              "look": "@config.cardLook"
+                              ]
                             },
                             {
-                              "type": "stack",
+                              "direction": "horizontal",
+                              "align": "center",
                               "children": [
                                 {
-                                  "label": "Back",
                                   "disabled": "@entity.isFirstStep",
                                   "actionPayload": {
                                     "id": "@entity.id"
                                   },
-                                  "variant": "ghost",
+                                  "icon": "chevron-left",
                                   "action": "BACK",
+                                  "variant": "ghost",
                                   "type": "button",
-                                  "icon": "chevron-left"
+                                  "label": "Back"
                                 },
                                 {
+                                  "icon": "x",
+                                  "type": "button",
                                   "label": "Reject",
                                   "action": "REJECT",
-                                  "type": "button",
                                   "variant": "ghost",
-                                  "icon": "x",
                                   "actionPayload": {
                                     "id": "@entity.id"
                                   }
                                 },
                                 {
+                                  "type": "button",
+                                  "variant": "ghost",
+                                  "label": "Escalate",
                                   "action": "ESCALATE",
                                   "icon": "alert-triangle",
                                   "actionPayload": {
                                     "id": "@entity.id"
-                                  },
-                                  "label": "Escalate",
-                                  "variant": "ghost",
-                                  "type": "button"
+                                  }
                                 },
                                 {
                                   "type": "button",
                                   "actionPayload": {
                                     "id": "@entity.id"
                                   },
-                                  "variant": "primary",
                                   "action": "ADVANCE",
-                                  "label": "@entity.primaryActionLabel",
-                                  "icon": "@entity.primaryActionIcon"
+                                  "variant": "primary",
+                                  "icon": "@entity.primaryActionIcon",
+                                  "label": "@entity.primaryActionLabel"
                                 }
                               ],
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "align": "center"
+                              "type": "stack",
+                              "gap": "sm"
                             }
-                          ],
-                          "gap": "lg"
+                          ]
                         },
                         "description": "Render-ui SExpr rendered while the step chain is active (loading-success, running, BACK). Default is the canonical wizard-progress + step-card + action-row tree. Layer 3 variants override this with their own tree (horizontal stepper, sidebar progress, card carousel, etc.) to deliver entirely different step UX while inheriting the same trait, state machine, emits, and listens.",
                         "x-label": "Body content tree",
@@ -88612,22 +88612,22 @@
                         },
                         "default": [
                           {
-                            "key": "manager",
-                            "label": "Manager Review",
                             "description": "Initial review by direct manager",
-                            "icon": "user"
+                            "icon": "user",
+                            "label": "Manager Review",
+                            "key": "manager"
                           },
                           {
+                            "label": "Director Approval",
                             "key": "director",
                             "description": "Department director sign-off",
-                            "icon": "users",
-                            "label": "Director Approval"
+                            "icon": "users"
                           },
                           {
-                            "key": "executive",
                             "label": "Executive Sign-off",
-                            "description": "Final executive approval",
-                            "icon": "shield"
+                            "key": "executive",
+                            "icon": "shield",
+                            "description": "Final executive approval"
                           }
                         ],
                         "description": "Ordered decision steps with label, icon, and optional role gates",

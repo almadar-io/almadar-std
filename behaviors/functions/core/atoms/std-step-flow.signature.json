@@ -100,15 +100,18 @@
             "key": "bodyContent",
             "type": "render-ui",
             "default": {
-              "type": "stack",
               "direction": "vertical",
+              "type": "stack",
+              "gap": "lg",
               "children": [
                 {
                   "gap": "sm",
+                  "direction": "horizontal",
+                  "align": "center",
                   "children": [
                     {
-                      "type": "icon",
-                      "name": "shield-check"
+                      "name": "shield-check",
+                      "type": "icon"
                     },
                     {
                       "variant": "h3",
@@ -116,111 +119,108 @@
                       "type": "typography"
                     }
                   ],
-                  "align": "center",
-                  "type": "stack",
-                  "direction": "horizontal"
+                  "type": "stack"
                 },
                 {
-                  "allowNavigation": false,
-                  "steps": "@entity.wizardSteps",
                   "type": "wizard-progress",
-                  "currentStep": "@entity.currentStepIndex"
+                  "currentStep": "@entity.currentStepIndex",
+                  "allowNavigation": false,
+                  "steps": "@entity.wizardSteps"
                 },
                 {
+                  "look": "@config.cardLook",
+                  "type": "card",
                   "children": [
                     {
-                      "gap": "md",
                       "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "gap": "sm",
+                          "type": "stack",
                           "children": [
                             {
-                              "size": "lg",
+                              "type": "icon",
                               "name": "@entity.currentStepIcon",
-                              "type": "icon"
+                              "size": "lg"
                             },
                             {
+                              "direction": "vertical",
                               "gap": "xs",
                               "children": [
                                 {
-                                  "content": "@entity.currentStepLabel",
                                   "type": "typography",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "content": "@entity.currentStepLabel"
                                 },
                                 {
                                   "type": "typography",
-                                  "variant": "body",
                                   "color": "muted",
-                                  "content": "@entity.currentStepDescription"
+                                  "content": "@entity.currentStepDescription",
+                                  "variant": "body"
                                 }
                               ],
-                              "type": "stack",
-                              "direction": "vertical"
+                              "type": "stack"
                             }
                           ],
-                          "type": "stack",
+                          "gap": "sm",
                           "align": "center",
                           "direction": "horizontal"
                         }
                       ],
-                      "direction": "vertical"
+                      "gap": "md"
                     }
-                  ],
-                  "type": "card",
-                  "look": "@config.cardLook"
+                  ]
                 },
                 {
-                  "type": "stack",
+                  "direction": "horizontal",
+                  "align": "center",
                   "children": [
                     {
-                      "label": "Back",
                       "disabled": "@entity.isFirstStep",
                       "actionPayload": {
                         "id": "@entity.id"
                       },
-                      "variant": "ghost",
+                      "icon": "chevron-left",
                       "action": "BACK",
+                      "variant": "ghost",
                       "type": "button",
-                      "icon": "chevron-left"
+                      "label": "Back"
                     },
                     {
+                      "icon": "x",
+                      "type": "button",
                       "label": "Reject",
                       "action": "REJECT",
-                      "type": "button",
                       "variant": "ghost",
-                      "icon": "x",
                       "actionPayload": {
                         "id": "@entity.id"
                       }
                     },
                     {
+                      "type": "button",
+                      "variant": "ghost",
+                      "label": "Escalate",
                       "action": "ESCALATE",
                       "icon": "alert-triangle",
                       "actionPayload": {
                         "id": "@entity.id"
-                      },
-                      "label": "Escalate",
-                      "variant": "ghost",
-                      "type": "button"
+                      }
                     },
                     {
                       "type": "button",
                       "actionPayload": {
                         "id": "@entity.id"
                       },
-                      "variant": "primary",
                       "action": "ADVANCE",
-                      "label": "@entity.primaryActionLabel",
-                      "icon": "@entity.primaryActionIcon"
+                      "variant": "primary",
+                      "icon": "@entity.primaryActionIcon",
+                      "label": "@entity.primaryActionLabel"
                     }
                   ],
-                  "direction": "horizontal",
-                  "gap": "sm",
-                  "align": "center"
+                  "type": "stack",
+                  "gap": "sm"
                 }
-              ],
-              "gap": "lg"
+              ]
             },
             "label": "Body content tree",
             "description": "Render-ui SExpr rendered while the step chain is active (loading-success, running, BACK). Default is the canonical wizard-progress + step-card + action-row tree. Layer 3 variants override this with their own tree (horizontal stepper, sidebar progress, card carousel, etc.) to deliver entirely different step UX while inheriting the same trait, state machine, emits, and listens.",
@@ -248,22 +248,22 @@
             "type": "[StepSpec]",
             "default": [
               {
-                "key": "manager",
-                "label": "Manager Review",
                 "description": "Initial review by direct manager",
-                "icon": "user"
+                "icon": "user",
+                "label": "Manager Review",
+                "key": "manager"
               },
               {
+                "label": "Director Approval",
                 "key": "director",
                 "description": "Department director sign-off",
-                "icon": "users",
-                "label": "Director Approval"
+                "icon": "users"
               },
               {
-                "key": "executive",
                 "label": "Executive Sign-off",
-                "description": "Final executive approval",
-                "icon": "shield"
+                "key": "executive",
+                "icon": "shield",
+                "description": "Final executive approval"
               }
             ],
             "label": "Steps",
@@ -271,14 +271,19 @@
             "tier": "domain",
             "items": {
               "properties": {
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
                 "key": {
                   "name": "key",
                   "required": false,
                   "type": "string"
                 },
-                "label": {
-                  "name": "label",
-                  "required": true,
+                "description": {
+                  "name": "description",
+                  "required": false,
                   "type": "string"
                 },
                 "icon": {
@@ -293,11 +298,6 @@
                   "items": {
                     "type": "string"
                   }
-                },
-                "description": {
-                  "name": "description",
-                  "required": false,
-                  "type": "string"
                 }
               },
               "type": "object"

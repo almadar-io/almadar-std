@@ -59,7 +59,10 @@
         {
           "name": "ListItemBrowse",
           "entityRebindable": true,
-          "entityContract": {},
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
           "category": "interaction",
           "linkedEntity": "ListItem",
           "emits": [
@@ -75,30 +78,8 @@
                   "required": true
                 },
                 {
-                  "name": "row.id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.name",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.description",
-                  "type": "string"
-                },
-                {
-                  "name": "row.status",
-                  "type": "string"
-                },
-                {
-                  "name": "row.createdAt",
-                  "type": "string"
-                },
-                {
-                  "name": "row.pendingId",
-                  "type": "string"
+                  "name": "row",
+                  "type": "object"
                 }
               ]
             },
@@ -111,30 +92,8 @@
                   "required": true
                 },
                 {
-                  "name": "row.id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.name",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.description",
-                  "type": "string"
-                },
-                {
-                  "name": "row.status",
-                  "type": "string"
-                },
-                {
-                  "name": "row.createdAt",
-                  "type": "string"
-                },
-                {
-                  "name": "row.pendingId",
-                  "type": "string"
+                  "name": "row",
+                  "type": "object"
                 }
               ]
             },
@@ -267,22 +226,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "direction": "vertical",
-                      "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
+                          "type": "typography",
                           "color": "muted",
-                          "content": "Loading list…",
-                          "type": "typography"
+                          "variant": "caption",
+                          "content": "Loading list…"
                         }
                       ],
                       "type": "stack",
-                      "className": "py-12"
+                      "align": "center",
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -296,80 +255,80 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "type": "stack",
                       "className": "max-w-5xl mx-auto w-full",
                       "children": [
                         {
-                          "children": [
-                            {
-                              "gap": "md",
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "list"
-                                },
-                                {
-                                  "content": "ListItems",
-                                  "variant": "h2",
-                                  "type": "typography"
-                                }
-                              ]
-                            },
-                            {
-                              "icon": "plus",
-                              "type": "button",
-                              "variant": "primary",
-                              "label": "Create",
-                              "action": "CREATE"
-                            }
-                          ],
                           "direction": "horizontal",
                           "type": "stack",
+                          "gap": "md",
                           "justify": "between",
-                          "gap": "md"
+                          "children": [
+                            {
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "name": "list",
+                                  "type": "icon"
+                                },
+                                {
+                                  "variant": "h2",
+                                  "type": "typography",
+                                  "content": "ListItems"
+                                }
+                              ],
+                              "type": "stack"
+                            },
+                            {
+                              "variant": "primary",
+                              "icon": "plus",
+                              "label": "Create",
+                              "action": "CREATE",
+                              "type": "button"
+                            }
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "entity": "@payload.data",
                           "itemActions": [
                             {
-                              "label": "Edit",
                               "variant": "ghost",
+                              "label": "Edit",
                               "event": "EDIT"
                             },
                             {
-                              "label": "Delete",
                               "event": "DELETE",
+                              "label": "Delete",
                               "variant": "danger"
                             }
                           ],
                           "type": "data-grid",
                           "fields": [
                             {
-                              "icon": "list",
-                              "label": "Name",
+                              "variant": "h4",
                               "name": "name",
-                              "variant": "h4"
+                              "label": "Name",
+                              "icon": "list"
                             },
                             {
-                              "label": "Description",
                               "name": "description",
+                              "label": "Description",
                               "variant": "caption"
                             },
                             {
                               "variant": "badge",
-                              "label": "Status",
-                              "name": "status"
+                              "name": "status",
+                              "label": "Status"
                             }
-                          ],
-                          "entity": "@payload.data"
+                          ]
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -383,36 +342,36 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
+                      "type": "stack",
                       "children": [
                         {
                           "color": "destructive",
-                          "name": "alert-triangle",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "alert-triangle"
                         },
                         {
-                          "variant": "h3",
                           "content": "Failed to load list",
+                          "variant": "h3",
                           "type": "typography"
                         },
                         {
-                          "color": "muted",
                           "content": "@payload.error",
                           "type": "typography",
-                          "variant": "body"
+                          "variant": "body",
+                          "color": "muted"
                         },
                         {
-                          "type": "button",
                           "action": "INIT",
-                          "label": "Retry",
+                          "type": "button",
+                          "icon": "rotate-ccw",
                           "variant": "primary",
-                          "icon": "rotate-ccw"
+                          "label": "Retry"
                         }
                       ],
-                      "type": "stack",
-                      "className": "py-12",
                       "direction": "vertical",
-                      "gap": "md"
+                      "className": "py-12",
+                      "gap": "md",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -474,14 +433,14 @@
           "name": "ListItemCreate",
           "linkedEntity": "ListItem",
           "config": {
+            "mode": "create",
             "icon": "plus-circle",
             "title": "Create ListItem",
             "fields": [
               "name",
               "description",
               "status"
-            ],
-            "mode": "create"
+            ]
           },
           "events": {
             "OPEN": "CREATE",
@@ -503,14 +462,14 @@
           "name": "ListItemEdit",
           "linkedEntity": "ListItem",
           "config": {
+            "icon": "edit",
+            "mode": "edit",
             "fields": [
               "name",
               "description",
               "status"
             ],
-            "title": "Edit ListItem",
-            "mode": "edit",
-            "icon": "edit"
+            "title": "Edit ListItem"
           },
           "events": {
             "OPEN": "EDIT",
@@ -532,14 +491,14 @@
           "name": "ListItemDelete",
           "linkedEntity": "ListItem",
           "config": {
+            "confirmLabel": "Delete",
             "icon": "alert-triangle",
-            "alertMessage": "This action cannot be undone.",
             "title": "Delete ListItem",
-            "confirmLabel": "Delete"
+            "alertMessage": "This action cannot be undone."
           },
           "events": {
-            "CONFIRM": "CONFIRM_DELETE",
-            "REQUEST": "DELETE"
+            "REQUEST": "DELETE",
+            "CONFIRM": "CONFIRM_DELETE"
           },
           "listens": [
             {

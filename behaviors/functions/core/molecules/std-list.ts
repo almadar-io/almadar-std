@@ -43,14 +43,7 @@ export type StdListListenKey = 'ITEM_CREATED' | 'ITEM_UPDATED' | 'ITEM_DELETED';
  */
 export interface StdListEditPayload {
   id: string;
-  row?: {
-    id: string;
-    name: string;
-    description?: string;
-    status?: string;
-    createdAt?: string;
-    pendingId?: string;
-  };
+  row?: EntityRow;
 }
 
 /**
@@ -58,14 +51,7 @@ export interface StdListEditPayload {
  */
 export interface StdListDeletePayload {
   id: string;
-  row?: {
-    id: string;
-    name: string;
-    description?: string;
-    status?: string;
-    createdAt?: string;
-    pendingId?: string;
-  };
+  row?: EntityRow;
 }
 
 /**
