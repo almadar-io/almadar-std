@@ -1,6 +1,6 @@
 {
   "name": "std-calendar-week-timeline",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Week-timeline calendar — events grouped by weekday in a 7-column timeline. The visible window normalizes to the payload's actual date range, so events stack into whichever day-of-week they fall on. Same CalendarEventCalendar trait, same state machine as std-calendar — only bodyContent differs. For weekly schedule views (fitness class week, healthcare appointment week).",
   "orbitals": [
     {
@@ -62,6 +62,11 @@
             "name": "weekday",
             "type": "string",
             "default": ""
+          },
+          {
+            "name": "selectedRange",
+            "type": "string",
+            "default": "month"
           }
         ]
       },
@@ -73,44 +78,43 @@
           "config": {
             "bodyContent": {
               "gap": "md",
+              "direction": "vertical",
               "children": [
                 {
-                  "type": "stack",
+                  "align": "center",
                   "children": [
                     {
+                      "type": "stack",
+                      "gap": "sm",
                       "align": "center",
-                      "direction": "horizontal",
                       "children": [
                         {
-                          "name": "calendar",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "calendar"
                         },
                         {
-                          "variant": "h2",
+                          "content": "Week",
                           "type": "typography",
-                          "content": "Week"
+                          "variant": "h2"
                         }
                       ],
-                      "type": "stack",
-                      "gap": "sm"
+                      "direction": "horizontal"
                     },
                     {
                       "onSelect": "SELECT_DAY",
+                      "selected": "@entity.selectedRange",
                       "type": "date-range-selector"
                     }
                   ],
                   "gap": "md",
-                  "direction": "horizontal",
+                  "type": "stack",
                   "justify": "between",
-                  "align": "center"
+                  "direction": "horizontal"
                 },
                 {
                   "type": "divider"
                 },
                 {
-                  "gap": "md",
-                  "variant": "default",
-                  "fields": [],
                   "renderItem": [
                     "fn",
                     "item",
@@ -118,60 +122,62 @@
                       "children": [
                         {
                           "gap": "xs",
+                          "type": "stack",
+                          "direction": "vertical",
                           "children": [
                             {
-                              "justify": "between",
-                              "align": "center",
                               "gap": "sm",
+                              "justify": "between",
                               "type": "stack",
+                              "align": "center",
                               "direction": "horizontal",
                               "children": [
                                 {
-                                  "weight": "medium",
-                                  "color": "muted",
                                   "content": "@item.time",
                                   "variant": "caption",
-                                  "type": "typography"
+                                  "weight": "medium",
+                                  "type": "typography",
+                                  "color": "muted"
                                 },
                                 {
-                                  "label": "@item.status",
                                   "type": "badge",
-                                  "variant": "default",
-                                  "size": "sm"
+                                  "size": "sm",
+                                  "label": "@item.status",
+                                  "variant": "default"
                                 }
                               ]
                             },
                             {
-                              "weight": "medium",
                               "content": "@item.name",
                               "variant": "body2",
-                              "type": "typography",
-                              "className": "truncate"
+                              "className": "truncate",
+                              "weight": "medium",
+                              "type": "typography"
                             },
                             {
-                              "className": "truncate",
                               "content": "@item.description",
+                              "color": "muted",
                               "type": "typography",
                               "variant": "caption",
-                              "color": "muted"
+                              "className": "truncate"
                             }
-                          ],
-                          "direction": "vertical",
-                          "type": "stack"
+                          ]
                         }
                       ],
+                      "type": "card",
                       "padding": "sm",
                       "look": "flat-bordered",
-                      "shadow": "sm",
-                      "type": "card"
+                      "shadow": "sm"
                     }
                   ],
-                  "entity": "@payload.data",
                   "type": "data-list",
-                  "groupBy": "weekday"
+                  "gap": "md",
+                  "fields": [],
+                  "variant": "default",
+                  "groupBy": "weekday",
+                  "entity": "@payload.data"
                 }
               ],
-              "direction": "vertical",
               "type": "stack"
             }
           }

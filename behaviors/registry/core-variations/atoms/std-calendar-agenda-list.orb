@@ -1,6 +1,6 @@
 {
   "name": "std-calendar-agenda-list",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Day-grouped agenda — events organized by date with overline day headers (Today, Tomorrow, Mon Jun 5) and a time marker per event. Inherits std-calendar's fetch + SELECT_DAY state machine; only bodyContent differs from std-calendar's month-grid and std-calendar-week-timeline's 7-col timeline. For appointment queues, class-roster schedules, court-deadline lists where users scan a vertical chronological flow grouped by day.",
   "orbitals": [
     {
@@ -62,6 +62,11 @@
             "name": "dateGroup",
             "type": "string",
             "default": ""
+          },
+          {
+            "name": "selectedRange",
+            "type": "string",
+            "default": "month"
           }
         ]
       },
@@ -72,134 +77,135 @@
           "linkedEntity": "AgendaListEvent",
           "config": {
             "bodyContent": {
+              "className": "max-w-3xl mx-auto p-card-md",
+              "type": "stack",
               "direction": "vertical",
+              "gap": "lg",
               "children": [
                 {
+                  "align": "center",
+                  "direction": "horizontal",
+                  "type": "stack",
                   "gap": "md",
+                  "justify": "between",
                   "children": [
                     {
+                      "direction": "horizontal",
+                      "gap": "sm",
                       "type": "stack",
                       "align": "center",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "list"
+                          "name": "list",
+                          "type": "icon"
                         },
                         {
-                          "content": "Agenda",
                           "type": "typography",
+                          "content": "Agenda",
                           "variant": "h2"
                         }
-                      ],
-                      "direction": "horizontal",
-                      "gap": "sm"
+                      ]
                     },
                     {
-                      "type": "date-range-selector",
-                      "onSelect": "SELECT_DAY"
+                      "onSelect": "SELECT_DAY",
+                      "selected": "@entity.selectedRange",
+                      "type": "date-range-selector"
                     }
-                  ],
-                  "direction": "horizontal",
-                  "type": "stack",
-                  "justify": "between",
-                  "align": "center"
+                  ]
                 },
                 {
                   "type": "divider"
                 },
                 {
-                  "fields": [],
                   "gap": "md",
+                  "variant": "default",
+                  "groupBy": "dateGroup",
+                  "fields": [],
                   "renderItem": [
                     "fn",
                     "item",
                     {
                       "type": "card",
-                      "padding": "md",
                       "children": [
                         {
-                          "gap": "md",
+                          "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
+                              "align": "center",
                               "className": "w-16 shrink-0",
-                              "type": "stack",
                               "children": [
                                 {
-                                  "type": "typography",
-                                  "variant": "overline",
+                                  "content": "@item.time",
                                   "color": "muted",
-                                  "content": "@item.time"
+                                  "variant": "overline",
+                                  "type": "typography"
                                 },
                                 {
-                                  "type": "icon",
+                                  "name": "clock",
                                   "size": "sm",
                                   "color": "muted",
-                                  "name": "clock"
+                                  "type": "icon"
                                 }
                               ],
                               "gap": "xs",
                               "direction": "vertical",
-                              "align": "center"
+                              "type": "stack"
                             },
                             {
-                              "type": "divider",
-                              "orientation": "vertical"
+                              "orientation": "vertical",
+                              "type": "divider"
                             },
                             {
-                              "className": "flex-1 min-w-0",
+                              "type": "stack",
                               "gap": "xs",
                               "children": [
                                 {
-                                  "justify": "between",
+                                  "type": "stack",
+                                  "gap": "sm",
+                                  "direction": "horizontal",
                                   "children": [
                                     {
-                                      "className": "truncate",
-                                      "variant": "h4",
                                       "type": "typography",
                                       "content": "@item.name",
-                                      "weight": "medium"
+                                      "className": "truncate",
+                                      "weight": "medium",
+                                      "variant": "h4"
                                     },
                                     {
                                       "type": "badge",
-                                      "size": "sm",
                                       "label": "@item.status",
-                                      "variant": "default"
+                                      "variant": "default",
+                                      "size": "sm"
                                     }
                                   ],
-                                  "gap": "sm",
-                                  "direction": "horizontal",
-                                  "type": "stack",
-                                  "align": "center"
+                                  "align": "center",
+                                  "justify": "between"
                                 },
                                 {
-                                  "type": "typography",
                                   "variant": "body2",
                                   "className": "truncate",
-                                  "content": "@item.description",
-                                  "color": "muted"
+                                  "color": "muted",
+                                  "type": "typography",
+                                  "content": "@item.description"
                                 }
                               ],
                               "direction": "vertical",
-                              "type": "stack"
+                              "className": "flex-1 min-w-0"
                             }
                           ],
-                          "align": "start",
-                          "type": "stack",
-                          "direction": "horizontal"
+                          "gap": "md",
+                          "align": "start"
                         }
                       ],
-                      "look": "flat-bordered"
+                      "look": "flat-bordered",
+                      "padding": "md"
                     }
                   ],
-                  "groupBy": "dateGroup",
                   "type": "data-list",
-                  "entity": "@payload.data",
-                  "variant": "default"
+                  "entity": "@payload.data"
                 }
-              ],
-              "gap": "lg",
-              "className": "max-w-3xl mx-auto p-card-md",
-              "type": "stack"
+              ]
             }
           }
         }

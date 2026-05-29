@@ -1,6 +1,6 @@
 {
   "name": "std-thread-chat-bubbles",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Chat-bubbles thread — iMessage/WhatsApp DM style: two-party back-and-forth with sender-vs-receiver bubble alignment and tint.",
   "orbitals": [
     {
@@ -33,7 +33,11 @@
           {
             "name": "authorId",
             "type": "string",
-            "required": true
+            "default": "them",
+            "values": [
+              "me",
+              "them"
+            ]
           },
           {
             "name": "authorName",
@@ -62,6 +66,14 @@
             "name": "replyCount",
             "type": "number",
             "default": 0.0
+          },
+          {
+            "name": "replies",
+            "type": "relation",
+            "relation": {
+              "entity": "ChatBubblesPost",
+              "cardinality": "many"
+            }
           }
         ]
       },
@@ -72,122 +84,122 @@
           "linkedEntity": "ChatBubblesPost",
           "config": {
             "bodyContent": {
+              "className": "max-w-2xl mx-auto px-card-md py-section h-full",
               "direction": "vertical",
+              "type": "stack",
               "children": [
                 {
                   "direction": "horizontal",
                   "align": "center",
+                  "gap": "sm",
                   "type": "stack",
                   "className": "pb-md border-b border-[var(--color-border)]",
-                  "gap": "sm",
                   "children": [
                     {
-                      "name": "Alex Rivera",
                       "type": "avatar",
+                      "name": "Alex Rivera",
                       "size": "md"
                     },
                     {
-                      "direction": "vertical",
-                      "className": "flex-1",
-                      "type": "stack",
                       "gap": "xs",
+                      "className": "flex-1",
                       "children": [
                         {
-                          "content": "Alex Rivera",
-                          "variant": "body",
+                          "type": "typography",
                           "weight": "medium",
-                          "type": "typography"
+                          "content": "Alex Rivera",
+                          "variant": "body"
                         },
                         {
-                          "content": "Active now",
                           "variant": "caption",
+                          "content": "Active now",
                           "color": "muted",
                           "type": "typography"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 },
                 {
                   "variant": "message",
-                  "senderField": "authorId",
-                  "currentUser": "me",
-                  "type": "data-list",
+                  "entity": "@payload.data",
+                  "className": "flex-1 overflow-y-auto py-md",
                   "renderItem": [
                     "fn",
                     "item",
                     {
-                      "type": "stack",
-                      "gap": "sm",
-                      "direction": "horizontal",
                       "align": "end",
+                      "gap": "sm",
+                      "type": "stack",
                       "className": "@item.isMe ? 'w-full flex-row-reverse' : 'w-full flex-row'",
                       "children": [
                         {
-                          "className": "@item.isMe ? 'invisible' : 'visible'",
                           "size": "sm",
-                          "type": "avatar",
-                          "name": "@item.authorName"
+                          "className": "@item.isMe ? 'invisible' : 'visible'",
+                          "name": "@item.authorName",
+                          "type": "avatar"
                         },
                         {
-                          "className": "@item.isMe ? 'max-w-[70%] items-end' : 'max-w-[70%] items-start'",
                           "type": "stack",
                           "direction": "vertical",
-                          "gap": "xs",
                           "children": [
                             {
-                              "children": {
-                                "content": "@item.content",
-                                "type": "typography",
-                                "variant": "body"
-                              },
-                              "look": "@item.isMe ? 'filled' : 'flat-bordered'",
                               "type": "card",
                               "padding": "sm",
+                              "children": {
+                                "variant": "body",
+                                "type": "typography",
+                                "content": "@item.content"
+                              },
+                              "look": "@item.isMe ? 'filled' : 'flat-bordered'",
                               "className": "@item.isMe ? 'rounded-lg rounded-br-sm bg-[var(--color-primary)] text-[var(--color-primary-foreground)] shadow-sm' : 'rounded-lg rounded-bl-sm bg-[var(--color-muted)] text-[var(--color-foreground)] shadow-sm'"
                             },
                             {
                               "variant": "caption",
                               "type": "typography",
-                              "color": "muted",
-                              "content": "@item.createdAt"
+                              "content": "@item.createdAt",
+                              "color": "muted"
                             }
-                          ]
+                          ],
+                          "className": "@item.isMe ? 'max-w-[70%] items-end' : 'max-w-[70%] items-start'",
+                          "gap": "xs"
                         }
-                      ]
+                      ],
+                      "direction": "horizontal"
                     }
                   ],
+                  "senderField": "authorId",
+                  "type": "data-list",
+                  "gap": "sm",
                   "fields": [],
-                  "entity": "@payload.data",
-                  "className": "flex-1 overflow-y-auto py-md",
-                  "gap": "sm"
+                  "currentUser": "me"
                 },
                 {
+                  "type": "stack",
                   "direction": "horizontal",
+                  "align": "center",
                   "gap": "sm",
                   "className": "mt-md border-t border-[var(--color-border)] pt-md",
                   "children": [
                     {
-                      "type": "input",
-                      "placeholder": "Message…",
+                      "inputType": "text",
                       "action": "EDIT_REPLY",
-                      "inputType": "text"
+                      "placeholder": "Message…",
+                      "type": "input"
                     },
                     {
                       "action": "SUBMIT_REPLY",
                       "icon": "send",
+                      "type": "button",
                       "label": "Send",
-                      "variant": "primary",
-                      "type": "button"
+                      "variant": "primary"
                     }
-                  ],
-                  "type": "stack",
-                  "align": "center"
+                  ]
                 }
               ],
-              "type": "stack",
-              "gap": "none",
-              "className": "max-w-2xl mx-auto px-card-md py-section h-full"
+              "gap": "none"
             }
           }
         }

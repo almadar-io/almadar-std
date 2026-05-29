@@ -1,4 +1,4 @@
-app std-calendar-week-timeline "1.1.1"
+app std-calendar-week-timeline "1.1.2"
 "Week-timeline calendar — events grouped by weekday in a 7-column timeline. The visible window normalizes to the payload's actual date range, so events stack into whichever day-of-week they fall on. Same CalendarEventCalendar trait, same state machine as std-calendar — only bodyContent differs. For weekly schedule views (fitness class week, healthcare appointment week)."
 
 orbital WeekTimelineCalendarOrbital {
@@ -14,6 +14,7 @@ orbital WeekTimelineCalendarOrbital {
     time        : string = ""
     duration    : number = 60
     weekday     : string = ""
+    selectedRange : string = "month"
   }
 
   trait WeekTimelineCalendar = Calendar.traits.CalendarEventCalendar -> WeekTimelineEvent {
@@ -28,7 +29,7 @@ orbital WeekTimelineCalendarOrbital {
               { type: "icon", name: "calendar" },
               { type: "typography", content: "Week", variant: "h2" }
             ]},
-            { type: "date-range-selector", onSelect: "SELECT_DAY" }
+            { type: "date-range-selector", onSelect: "SELECT_DAY", selected: "@entity.selectedRange" }
           ]},
           { type: "divider" },
           { type: "data-list",
