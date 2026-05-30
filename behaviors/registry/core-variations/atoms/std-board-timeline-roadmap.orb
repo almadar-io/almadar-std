@@ -1,6 +1,6 @@
 {
   "name": "std-board-timeline-roadmap",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Timeline / roadmap board — horizontal time axis with quarters or months as columns; items render as cards inside their target column (item.stage = column.key). Mirrors the Linear / Asana / Productboard roadmap UX. Configure `columns` as ['Q1', 'Q2', 'Q3', 'Q4'] (or months) and the board lays them out left-to-right along a time axis. Same BoardItemBoard trait, same state machine, same emits/listens as std-board — only the bodyContent tree differs.",
   "orbitals": [
     {
@@ -58,37 +58,44 @@
             "default": [],
             "items": {
               "type": "object"
-            }
+            },
+            "intrinsic": true
           },
           {
             "name": "currentId",
             "type": "string",
-            "default": ""
+            "default": "",
+            "intrinsic": true
           },
           {
             "name": "currentTitle",
             "type": "string",
-            "default": ""
+            "default": "",
+            "intrinsic": true
           },
           {
             "name": "currentDescription",
             "type": "string",
-            "default": ""
+            "default": "",
+            "intrinsic": true
           },
           {
             "name": "currentStage",
             "type": "string",
-            "default": ""
+            "default": "",
+            "intrinsic": true
           },
           {
             "name": "currentNotes",
             "type": "string",
-            "default": ""
+            "default": "",
+            "intrinsic": true
           },
           {
             "name": "errorMessage",
             "type": "string",
-            "default": ""
+            "default": "",
+            "intrinsic": true
           }
         ]
       },
@@ -98,216 +105,216 @@
           "name": "TimelineRoadmapBoard",
           "linkedEntity": "TimelineRoadmapItem",
           "config": {
+            "columns": [
+              {
+                "key": "Q1",
+                "icon": "calendar",
+                "variant": "default",
+                "label": "Q1"
+              },
+              {
+                "key": "Q2",
+                "label": "Q2",
+                "icon": "calendar",
+                "variant": "primary"
+              },
+              {
+                "icon": "calendar",
+                "variant": "info",
+                "key": "Q3",
+                "label": "Q3"
+              },
+              {
+                "label": "Q4",
+                "variant": "success",
+                "key": "Q4",
+                "icon": "calendar"
+              }
+            ],
+            "gridCols": 4.0,
             "bodyContent": {
-              "type": "stack",
               "direction": "vertical",
               "gap": "md",
               "children": [
                 {
+                  "gap": "sm",
+                  "direction": "horizontal",
+                  "className": "px-card-md",
+                  "align": "center",
                   "children": [
                     {
-                      "name": "calendar-range",
-                      "type": "icon"
+                      "type": "icon",
+                      "name": "calendar-range"
                     },
                     {
                       "content": "@config.title",
-                      "type": "typography",
-                      "variant": "h2"
+                      "variant": "h2",
+                      "type": "typography"
                     },
                     {
-                      "className": "ml-2",
                       "variant": "caption",
                       "content": "Roadmap",
-                      "color": "muted",
-                      "type": "typography"
+                      "className": "ml-2",
+                      "type": "typography",
+                      "color": "muted"
                     }
                   ],
-                  "type": "stack",
-                  "direction": "horizontal",
-                  "gap": "sm",
-                  "align": "center",
-                  "className": "px-card-md"
+                  "type": "stack"
                 },
                 {
                   "type": "divider"
                 },
                 {
-                  "gap": "none",
                   "align": "stretch",
-                  "className": "overflow-x-auto border-y border-[var(--color-border)]",
                   "direction": "horizontal",
+                  "type": "stack",
+                  "className": "overflow-x-auto border-y border-[var(--color-border)]",
                   "children": [
                     {
+                      "fields": [],
+                      "className": "min-w-full",
+                      "type": "data-grid",
+                      "dndRoot": true,
                       "renderItem": [
                         "fn",
                         "col",
                         {
-                          "gap": "none",
                           "className": "min-w-[240px] border-r border-[var(--color-border)] last:border-r-0",
+                          "gap": "none",
                           "children": [
                             {
-                              "gap": "xs",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "@col.icon"
+                                  "name": "@col.icon",
+                                  "type": "icon"
                                 },
                                 {
-                                  "variant": "h4",
+                                  "type": "typography",
                                   "className": "flex-1",
-                                  "content": "@col.label",
-                                  "type": "typography"
+                                  "variant": "h4",
+                                  "content": "@col.label"
                                 },
                                 {
+                                  "label": "@col.count",
                                   "variant": "primary",
                                   "type": "badge",
-                                  "size": "sm",
-                                  "label": "@col.count"
+                                  "size": "sm"
                                 }
                               ],
-                              "type": "stack",
                               "direction": "horizontal",
+                              "className": "px-card-md py-2 bg-[var(--color-surface-subtle)] border-b border-[var(--color-border)] sticky top-0",
                               "align": "center",
-                              "className": "px-card-md py-2 bg-[var(--color-surface-subtle)] border-b border-[var(--color-border)] sticky top-0"
+                              "gap": "xs",
+                              "type": "stack"
                             },
                             {
+                              "type": "data-list",
+                              "accepts": "*",
+                              "reorderEvent": "REORDER_CARD",
+                              "dragGroup": "@col.key",
+                              "sortable": true,
+                              "className": "p-card-md min-h-[160px]",
+                              "gap": "sm",
                               "fields": [],
                               "dropEvent": "MOVE_CARD",
-                              "className": "p-card-md min-h-[160px]",
-                              "reorderEvent": "REORDER_CARD",
-                              "sortable": true,
                               "positionEvent": "REORDER_POSITION",
-                              "type": "data-list",
+                              "entity": "@col.items",
                               "renderItem": [
                                 "fn",
                                 "item",
                                 {
                                   "look": "elevated",
                                   "padding": "sm",
-                                  "type": "card",
                                   "className": "cursor-grab hover:shadow-md transition-shadow",
+                                  "type": "card",
                                   "children": [
                                     {
-                                      "type": "stack",
+                                      "direction": "vertical",
                                       "children": [
                                         {
-                                          "align": "center",
-                                          "direction": "horizontal",
                                           "type": "stack",
+                                          "direction": "horizontal",
+                                          "align": "center",
+                                          "gap": "xs",
                                           "children": [
                                             {
-                                              "name": "flag",
-                                              "type": "icon"
+                                              "type": "icon",
+                                              "name": "flag"
                                             },
                                             {
                                               "weight": "medium",
-                                              "type": "typography",
+                                              "className": "flex-1",
                                               "content": "@config.cardTitleBinding",
-                                              "variant": "body",
-                                              "className": "flex-1"
+                                              "type": "typography",
+                                              "variant": "body"
                                             }
-                                          ],
-                                          "gap": "xs"
+                                          ]
                                         },
                                         {
-                                          "content": "@config.cardDescriptionBinding",
-                                          "color": "muted",
                                           "variant": "caption",
                                           "className": "line-clamp-2",
-                                          "type": "typography"
+                                          "type": "typography",
+                                          "color": "muted",
+                                          "content": "@config.cardDescriptionBinding"
                                         },
                                         {
-                                          "direction": "horizontal",
                                           "children": [
                                             {
-                                              "size": "sm",
                                               "label": "@config.cardStageBinding",
+                                              "size": "sm",
                                               "type": "badge",
                                               "variant": "primary"
                                             },
                                             {
+                                              "label": "Details",
                                               "type": "button",
+                                              "action": "OPEN_CARD",
+                                              "variant": "ghost",
                                               "size": "sm",
+                                              "className": "ml-auto",
                                               "icon": "arrow-right",
                                               "actionPayload": {
-                                                "id": "@config.cardIdBinding",
-                                                "row": "@item"
-                                              },
-                                              "variant": "ghost",
-                                              "action": "OPEN_CARD",
-                                              "className": "ml-auto",
-                                              "label": "Details"
+                                                "row": "@item",
+                                                "id": "@config.cardIdBinding"
+                                              }
                                             }
                                           ],
-                                          "align": "center",
                                           "type": "stack",
+                                          "gap": "xs",
+                                          "align": "center",
                                           "className": "pt-1",
-                                          "gap": "xs"
+                                          "direction": "horizontal"
                                         }
                                       ],
                                       "gap": "xs",
-                                      "direction": "vertical"
+                                      "type": "stack"
                                     }
                                   ]
                                 }
-                              ],
-                              "gap": "sm",
-                              "entity": "@col.items",
-                              "accepts": "*",
-                              "dragGroup": "@col.key"
+                              ]
                             }
                           ],
-                          "direction": "vertical",
-                          "type": "stack"
+                          "type": "stack",
+                          "direction": "vertical"
                         }
                       ],
-                      "type": "data-grid",
                       "cols": "@config.gridCols",
-                      "dndRoot": true,
-                      "fields": [],
-                      "gap": "none",
-                      "className": "min-w-full",
-                      "entity": "@entity.boards"
+                      "entity": "@entity.boards",
+                      "gap": "none"
                     }
                   ],
-                  "type": "stack"
+                  "gap": "none"
                 },
                 {
-                  "label": "Add milestone",
-                  "type": "floating-action-button",
                   "icon": "plus",
-                  "variant": "primary",
-                  "action": "ADD_CARD"
+                  "type": "floating-action-button",
+                  "label": "Add milestone",
+                  "action": "ADD_CARD",
+                  "variant": "primary"
                 }
-              ]
-            },
-            "columns": [
-              {
-                "icon": "calendar",
-                "label": "Q1",
-                "variant": "default",
-                "key": "Q1"
-              },
-              {
-                "key": "Q2",
-                "variant": "primary",
-                "icon": "calendar",
-                "label": "Q2"
-              },
-              {
-                "key": "Q3",
-                "icon": "calendar",
-                "variant": "info",
-                "label": "Q3"
-              },
-              {
-                "icon": "calendar",
-                "key": "Q4",
-                "variant": "success",
-                "label": "Q4"
-              }
-            ],
-            "gridCols": 4.0
+              ],
+              "type": "stack"
+            }
           }
         }
       ],

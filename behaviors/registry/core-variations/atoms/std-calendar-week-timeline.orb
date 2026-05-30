@@ -1,6 +1,6 @@
 {
   "name": "std-calendar-week-timeline",
-  "version": "1.1.3",
+  "version": "1.2.0",
   "description": "Week-timeline calendar — events grouped by weekday in a 7-column timeline. The visible window normalizes to the payload's actual date range, so events stack into whichever day-of-week they fall on. Same CalendarEventCalendar trait, same state machine as std-calendar — only bodyContent differs. For weekly schedule views (fitness class week, healthcare appointment week).",
   "orbitals": [
     {
@@ -79,17 +79,21 @@
           "linkedEntity": "WeekTimelineEvent",
           "config": {
             "bodyContent": {
-              "direction": "vertical",
               "gap": "md",
               "type": "stack",
               "children": [
                 {
-                  "justify": "between",
                   "type": "stack",
                   "gap": "md",
+                  "direction": "horizontal",
+                  "justify": "between",
                   "align": "center",
                   "children": [
                     {
+                      "direction": "horizontal",
+                      "gap": "sm",
+                      "align": "center",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "icon",
@@ -100,88 +104,26 @@
                           "content": "Week",
                           "variant": "h2"
                         }
-                      ],
-                      "gap": "sm",
-                      "align": "center",
-                      "direction": "horizontal",
-                      "type": "stack"
+                      ]
                     },
                     {
-                      "onSelect": "SELECT_DAY",
-                      "selected": "week",
-                      "type": "date-range-selector"
+                      "type": "date-range-selector",
+                      "selected": "@entity.selectedRange",
+                      "onSelect": "SELECT_DAY"
                     }
-                  ],
-                  "direction": "horizontal"
+                  ]
                 },
                 {
                   "type": "divider"
                 },
                 {
-                  "entity": "@payload.data",
-                  "fields": [],
-                  "gap": "md",
-                  "className": "w-full",
-                  "type": "data-grid",
-                  "minCardWidth": 220.0,
-                  "renderItem": [
-                    "fn",
-                    "item",
-                    {
-                      "look": "flat-bordered",
-                      "className": "h-full",
-                      "type": "card",
-                      "children": [
-                        {
-                          "direction": "vertical",
-                          "gap": "xs",
-                          "children": [
-                            {
-                              "direction": "horizontal",
-                              "align": "center",
-                              "justify": "between",
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "weight": "medium",
-                                  "variant": "caption",
-                                  "color": "muted",
-                                  "content": "@config.timeBinding"
-                                },
-                                {
-                                  "size": "sm",
-                                  "label": "@config.badgeBinding",
-                                  "type": "badge",
-                                  "variant": "default"
-                                }
-                              ],
-                              "type": "stack",
-                              "gap": "sm"
-                            },
-                            {
-                              "weight": "medium",
-                              "variant": "body2",
-                              "content": "@config.titleBinding",
-                              "type": "typography",
-                              "className": "truncate"
-                            },
-                            {
-                              "className": "truncate",
-                              "color": "muted",
-                              "variant": "caption",
-                              "type": "typography",
-                              "content": "@config.descriptionBinding"
-                            }
-                          ],
-                          "type": "stack"
-                        }
-                      ],
-                      "shadow": "sm",
-                      "padding": "sm"
-                    }
-                  ]
+                  "events": "@payload.data",
+                  "type": "calendar-grid",
+                  "dayWindow": 7.0,
+                  "className": "w-full"
                 }
-              ]
+              ],
+              "direction": "vertical"
             }
           }
         }
