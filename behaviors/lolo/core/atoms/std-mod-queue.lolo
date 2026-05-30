@@ -51,17 +51,11 @@ orbital ModQueueItemOrbital {
     }
     state reviewing {
       APPROVE -> reviewing
-        (set @entity.id @payload.id)
-        (set @entity.status "approved")
-        (persist update ModQueueItem @entity { emit: { success: "ModQueueItemReviewed", failure: "ModQueueItemReviewFailed" } })
+        (persist update ModQueueItem { id: @payload.row.id, status: "approved" } { emit: { success: "ModQueueItemReviewed", failure: "ModQueueItemReviewFailed" } })
       REJECT -> reviewing
-        (set @entity.id @payload.id)
-        (set @entity.status "rejected")
-        (persist update ModQueueItem @entity { emit: { success: "ModQueueItemReviewed", failure: "ModQueueItemReviewFailed" } })
+        (persist update ModQueueItem { id: @payload.row.id, status: "rejected" } { emit: { success: "ModQueueItemReviewed", failure: "ModQueueItemReviewFailed" } })
       ESCALATE -> reviewing
-        (set @entity.id @payload.id)
-        (set @entity.status "escalated")
-        (persist update ModQueueItem @entity { emit: { success: "ModQueueItemReviewed", failure: "ModQueueItemReviewFailed" } })
+        (persist update ModQueueItem { id: @payload.row.id, status: "escalated" } { emit: { success: "ModQueueItemReviewed", failure: "ModQueueItemReviewFailed" } })
       ModQueueItemReviewed -> loading
         (fetch ModQueueItem { emit: { success: "ModQueueItemLoaded", failure: "ModQueueItemLoadFailed" } })
       ModQueueItemReviewFailed -> reviewing
