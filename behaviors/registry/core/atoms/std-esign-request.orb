@@ -1,7 +1,7 @@
 {
   "name": "std-esign-request",
-  "version": "1.0.0",
-  "description": "Generic e-signature request primitive: send a document for signing and track status.",
+  "version": "1.1.0",
+  "description": "std-esign-request — specialized e-signature request tracker: send a document out for signing and track its status (draft/sent/viewed/signed/declined/expired). Just the request list + send/revoke; signature capture is std-signature-capture's job.",
   "orbitals": [
     {
       "name": "ESignRequestOrbital",
@@ -195,8 +195,8 @@
                     "ESignRequest",
                     {
                       "emit": {
-                        "success": "ESignRequestLoaded",
-                        "failure": "ESignRequestLoadFailed"
+                        "failure": "ESignRequestLoadFailed",
+                        "success": "ESignRequestLoaded"
                       }
                     }
                   ],
@@ -204,8 +204,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "md"
+                      "size": "md",
+                      "type": "spinner"
                     }
                   ]
                 ]
@@ -219,63 +219,56 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "type": "stack",
+                      "gap": "md",
                       "direction": "vertical",
                       "children": [
                         {
+                          "content": "@config.title",
                           "variant": "h3",
-                          "type": "typography",
-                          "content": "@config.title"
+                          "type": "typography"
                         },
                         {
-                          "label": "Recipient signature preview",
-                          "height": 160.0,
-                          "readOnly": true,
-                          "type": "signature-pad",
-                          "helperText": "Read-only preview of the captured signature"
-                        },
-                        {
+                          "entity": "@payload.data",
+                          "look": "@config.tableLook",
                           "fields": [
                             {
-                              "variant": "h4",
                               "name": "documentName",
-                              "label": "Document"
+                              "label": "Document",
+                              "variant": "h4"
                             },
                             {
                               "label": "Recipient",
-                              "name": "recipientName",
-                              "variant": "body"
+                              "variant": "body",
+                              "name": "recipientName"
                             },
                             {
-                              "name": "recipientEmail",
                               "label": "Email",
-                              "variant": "caption"
-                            },
-                            {
-                              "name": "status",
-                              "label": "Status",
-                              "variant": "badge"
-                            },
-                            {
-                              "label": "Sent",
                               "variant": "caption",
-                              "name": "sentAt"
+                              "name": "recipientEmail"
+                            },
+                            {
+                              "label": "Status",
+                              "variant": "badge",
+                              "name": "status"
+                            },
+                            {
+                              "name": "sentAt",
+                              "variant": "caption",
+                              "label": "Sent"
                             }
                           ],
-                          "look": "@config.tableLook",
-                          "entity": "@payload.data",
                           "type": "data-grid",
                           "itemActions": [
                             {
                               "event": "SEND_REQUEST",
-                              "label": "Send",
-                              "variant": "primary"
+                              "variant": "primary",
+                              "label": "Send"
                             },
                             {
-                              "label": "Revoke",
                               "variant": "danger",
-                              "event": "REVOKE_REQUEST"
+                              "event": "REVOKE_REQUEST",
+                              "label": "Revoke"
                             }
                           ]
                         }
@@ -293,10 +286,10 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
                       "title": "Failed to load signature requests",
-                      "message": "@payload.error",
-                      "variant": "error"
+                      "type": "alert",
+                      "variant": "error",
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -354,8 +347,8 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "md",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "md"
                     }
                   ]
                 ]
@@ -363,13 +356,6 @@
             ]
           },
           "config": {
-            "title": {
-              "type": "string",
-              "default": "Signature Requests",
-              "label": "Section title",
-              "description": "Heading shown above the signature-request list",
-              "tier": "presentation"
-            },
             "tableLook": {
               "type": "string",
               "default": "dense",
@@ -383,6 +369,13 @@
                 "borderless",
                 "card-rows"
               ]
+            },
+            "title": {
+              "type": "string",
+              "default": "Signature Requests",
+              "label": "Section title",
+              "description": "Heading shown above the signature-request list",
+              "tier": "presentation"
             }
           },
           "scope": "collection"

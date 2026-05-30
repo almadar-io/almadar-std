@@ -1,7 +1,7 @@
 {
   "name": "std-esign-flow",
-  "version": "1.0.0",
-  "description": "Generic e-signature flow: pick a stored file, pick a recipient, send for signature, track status.",
+  "version": "1.1.0",
+  "description": "std-esign-flow — the send-for-signature flow: list signature requests, create one (pick document + recipient), resend or cancel, track status. Composes std-file-store + std-esign-request; no document-rendering or code-preview chrome.",
   "orbitals": [
     {
       "name": "SignatureSessionOrbital",
@@ -332,22 +332,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "gap": "md",
-                      "className": "py-12",
-                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
-                          "color": "muted",
                           "type": "typography",
-                          "content": "Loading signature requests…"
+                          "color": "muted",
+                          "content": "Loading signature requests…",
+                          "variant": "caption"
                         }
                       ],
-                      "type": "stack"
+                      "align": "center",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -366,13 +366,13 @@
                       "gap": "lg",
                       "children": [
                         {
+                          "type": "stack",
                           "justify": "between",
+                          "direction": "horizontal",
                           "gap": "md",
                           "children": [
                             {
                               "direction": "horizontal",
-                              "gap": "md",
-                              "type": "stack",
                               "children": [
                                 {
                                   "type": "icon",
@@ -380,104 +380,21 @@
                                 },
                                 {
                                   "type": "typography",
-                                  "content": "Signature Requests",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "content": "Signature Requests"
                                 }
-                              ]
+                              ],
+                              "gap": "md",
+                              "type": "stack"
                             },
                             {
                               "icon": "plus",
-                              "label": "New Signature Request",
                               "type": "button",
+                              "variant": "primary",
                               "action": "CREATE",
-                              "variant": "primary"
+                              "label": "New Signature Request"
                             }
-                          ],
-                          "type": "stack",
-                          "direction": "horizontal"
-                        },
-                        {
-                          "title": "Document Bundle",
-                          "coverImageUrl": "https://picsum.photos/seed/esign-cover/1200/400",
-                          "subtitle": "Pending signature review",
-                          "type": "book-cover-page",
-                          "author": "Legal Operations"
-                        },
-                        {
-                          "parts": [
-                            {
-                              "title": "Pending",
-                              "chapters": [
-                                {
-                                  "id": "ch-a",
-                                  "content": "Recipient hasn't opened the envelope yet.",
-                                  "title": "Awaiting Recipient"
-                                },
-                                {
-                                  "title": "Awaiting Counter-Signer",
-                                  "content": "Recipient signed; counter-signer pending.",
-                                  "id": "ch-b"
-                                }
-                              ]
-                            },
-                            {
-                              "title": "Completed",
-                              "chapters": [
-                                {
-                                  "content": "All parties signed.",
-                                  "id": "ch-c",
-                                  "title": "Signed"
-                                },
-                                {
-                                  "title": "Declined",
-                                  "content": "Recipient declined to sign.",
-                                  "id": "ch-d"
-                                }
-                              ]
-                            }
-                          ],
-                          "currentChapterId": "ch-a",
-                          "type": "book-table-of-contents"
-                        },
-                        {
-                          "code": "document MSA-2026.pdf to alex@example.com status sent",
-                          "title": "Sample envelope payload",
-                          "type": "code-example",
-                          "language": "json",
-                          "copyable": true
-                        },
-                        {
-                          "code": "POST /api/esign/send",
-                          "language": "http",
-                          "showCopyButton": true,
-                          "showLanguageBadge": true,
-                          "type": "code-block"
-                        },
-                        {
-                          "type": "doc-code-block",
-                          "showLineNumbers": true,
-                          "code": "Signature recipient alex@example.com doc MSA-2026.pdf",
-                          "title": "Document structure",
-                          "language": "xml"
-                        },
-                        {
-                          "showLineNumbers": true,
-                          "showCopy": true,
-                          "code": "sendEnvelope doc recipient via api esign send",
-                          "type": "code-viewer",
-                          "wordWrap": false,
-                          "language": "javascript"
-                        },
-                        {
-                          "data": {
-                            "documents": 3.0,
-                            "kind": "envelope",
-                            "recipients": 2.0,
-                            "status": "pending"
-                          },
-                          "type": "code-view",
-                          "defaultExpanded": false,
-                          "label": "Inspect envelope JSON"
+                          ]
                         },
                         {
                           "type": "divider"
@@ -485,46 +402,46 @@
                         {
                           "fields": [
                             {
-                              "label": "Document",
-                              "icon": "file-text",
                               "variant": "h4",
-                              "name": "documentName"
+                              "name": "documentName",
+                              "icon": "file-text",
+                              "label": "Document"
                             },
                             {
-                              "variant": "body",
+                              "label": "Recipient",
                               "name": "recipientName",
-                              "label": "Recipient"
+                              "variant": "body"
                             },
                             {
-                              "label": "Email",
+                              "name": "recipientEmail",
                               "variant": "caption",
-                              "name": "recipientEmail"
+                              "label": "Email"
                             },
                             {
-                              "label": "Status",
+                              "variant": "badge",
                               "name": "status",
-                              "variant": "badge"
+                              "label": "Status"
                             },
                             {
-                              "name": "sentAt",
                               "variant": "caption",
+                              "name": "sentAt",
                               "label": "Sent"
                             }
                           ],
-                          "type": "data-grid",
-                          "entity": "@payload.data",
                           "itemActions": [
                             {
+                              "label": "Resend",
                               "event": "RESEND_REQUEST",
-                              "variant": "primary",
-                              "label": "Resend"
+                              "variant": "primary"
                             },
                             {
-                              "variant": "danger",
                               "label": "Cancel",
+                              "variant": "danger",
                               "event": "REQUEST_DELETE"
                             }
-                          ]
+                          ],
+                          "type": "data-grid",
+                          "entity": "@payload.data"
                         }
                       ]
                     }
@@ -541,33 +458,33 @@
                     "main",
                     {
                       "direction": "vertical",
-                      "className": "py-12",
-                      "type": "stack",
-                      "gap": "md",
                       "align": "center",
+                      "gap": "md",
+                      "type": "stack",
+                      "className": "py-12",
                       "children": [
                         {
-                          "name": "alert-triangle",
                           "type": "icon",
+                          "name": "alert-triangle",
                           "color": "destructive"
                         },
                         {
-                          "content": "Failed to load signature requests",
+                          "variant": "h3",
                           "type": "typography",
-                          "variant": "h3"
+                          "content": "Failed to load signature requests"
                         },
                         {
                           "content": "@payload.error",
-                          "variant": "body",
+                          "color": "muted",
                           "type": "typography",
-                          "color": "muted"
+                          "variant": "body"
                         },
                         {
                           "variant": "primary",
-                          "type": "button",
+                          "action": "INIT",
                           "icon": "rotate-ccw",
-                          "label": "Retry",
-                          "action": "INIT"
+                          "type": "button",
+                          "label": "Retry"
                         }
                       ]
                     }
@@ -608,8 +525,8 @@
                     "SignatureSession",
                     {
                       "emit": {
-                        "success": "SignatureSessionLoaded",
-                        "failure": "SignatureSessionLoadFailed"
+                        "failure": "SignatureSessionLoadFailed",
+                        "success": "SignatureSessionLoaded"
                       }
                     }
                   ],
@@ -631,16 +548,16 @@
           "name": "SignatureSessionCreate",
           "linkedEntity": "SignatureSession",
           "config": {
-            "openButtonLabel": "New Signature Request",
-            "title": "New Signature Request",
             "mode": "create",
-            "icon": "file-signature",
+            "openButtonLabel": "New Signature Request",
             "fields": [
               "documentId",
               "recipientName",
               "recipientEmail",
               "requesterName"
-            ]
+            ],
+            "icon": "file-signature",
+            "title": "New Signature Request"
           },
           "events": {
             "OPEN": "CREATE"
