@@ -63,15 +63,83 @@
           "name": "DenseBrowse",
           "linkedEntity": "DenseRow",
           "config": {
+            "columns": [
+              {
+                "key": "id",
+                "header": "ID",
+                "align": "left",
+                "field": "id",
+                "width": "7rem",
+                "className": " text-[var(--color-text-muted)]"
+              },
+              {
+                "weight": "medium",
+                "width": "minmax(10rem, 1.5fr)",
+                "header": "Name",
+                "key": "name",
+                "align": "left",
+                "field": "name"
+              },
+              {
+                "className": "text-[var(--color-text-muted)]",
+                "align": "left",
+                "field": "description",
+                "header": "Detail",
+                "width": "minmax(12rem, 2fr)",
+                "key": "description"
+              },
+              {
+                "className": "",
+                "header": "Value",
+                "field": "value",
+                "key": "value",
+                "width": "6rem",
+                "align": "right"
+              },
+              {
+                "key": "change",
+                "field": "change",
+                "className": "",
+                "width": "6rem",
+                "align": "right",
+                "header": "Change"
+              },
+              {
+                "header": "Volume",
+                "key": "volume",
+                "width": "6rem",
+                "field": "volume",
+                "align": "right",
+                "className": " text-[var(--color-text-muted)]"
+              },
+              {
+                "align": "center",
+                "format": "badge",
+                "header": "Status",
+                "field": "status",
+                "key": "status",
+                "width": "6rem"
+              },
+              {
+                "format": "date",
+                "className": " text-[var(--color-text-muted)]",
+                "width": "9rem",
+                "align": "right",
+                "key": "createdAt",
+                "header": "Created",
+                "field": "createdAt"
+              }
+            ],
             "bodyContent": {
               "direction": "vertical",
+              "type": "stack",
+              "gap": "sm",
               "className": "p-card-md",
               "children": [
                 {
-                  "align": "center",
-                  "type": "stack",
-                  "direction": "horizontal",
                   "className": "w-full max-w-2xl rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 shadow-sm",
+                  "gap": "sm",
+                  "type": "stack",
                   "children": [
                     {
                       "type": "icon",
@@ -80,124 +148,36 @@
                     },
                     {
                       "className": "flex-1",
-                      "inputType": "search",
+                      "action": "REFETCH_QUERY",
                       "type": "input",
-                      "placeholder": "@config.searchPlaceholder",
-                      "action": "REFETCH_QUERY"
+                      "inputType": "search",
+                      "placeholder": "@config.searchPlaceholder"
                     }
                   ],
-                  "gap": "sm"
+                  "direction": "horizontal",
+                  "align": "center"
                 },
                 {
-                  "renderItem": [
-                    "fn",
-                    "f",
-                    {
-                      "options": "@f.options",
-                      "className": "min-w-[10rem]",
-                      "placeholder": "@f.label",
-                      "action": "REFETCH_FILTER",
-                      "type": "select",
-                      "actionPayload": {
-                        "field": "@f.field"
-                      }
-                    }
-                  ],
-                  "type": "data-list",
-                  "gap": "sm",
-                  "entity": "@config.filters",
-                  "fields": []
-                },
-                {
-                  "direction": "vertical",
-                  "type": "stack",
-                  "className": "rounded-lg border border-[var(--color-border)] overflow-x-auto bg-[var(--color-card)] shadow-sm",
-                  "gap": "none",
                   "children": [
                     {
-                      "selectable": true,
+                      "columns": "@config.columns",
+                      "emptyMessage": "No records",
                       "maxInlineActions": "@config.maxInlineActions",
+                      "selectable": true,
                       "look": "dense",
                       "pageSize": "@config.displayPageSize",
                       "entity": "@payload.data",
-                      "type": "table-view",
-                      "columns": "@config.columns",
                       "itemActions": "@config.itemActions",
-                      "emptyMessage": "No records"
+                      "type": "table-view"
                     }
-                  ]
+                  ],
+                  "gap": "none",
+                  "className": "rounded-lg border border-[var(--color-border)] overflow-x-auto bg-[var(--color-card)] shadow-sm",
+                  "direction": "vertical",
+                  "type": "stack"
                 }
-              ],
-              "gap": "sm",
-              "type": "stack"
-            },
-            "columns": [
-              {
-                "field": "id",
-                "header": "ID",
-                "key": "id",
-                "width": "7rem",
-                "align": "left",
-                "className": " text-[var(--color-text-muted)]"
-              },
-              {
-                "header": "Name",
-                "field": "name",
-                "width": "minmax(10rem, 1.5fr)",
-                "weight": "medium",
-                "key": "name",
-                "align": "left"
-              },
-              {
-                "field": "description",
-                "header": "Detail",
-                "className": "text-[var(--color-text-muted)]",
-                "key": "description",
-                "width": "minmax(12rem, 2fr)",
-                "align": "left"
-              },
-              {
-                "align": "right",
-                "key": "value",
-                "width": "6rem",
-                "field": "value",
-                "className": "",
-                "header": "Value"
-              },
-              {
-                "className": "",
-                "header": "Change",
-                "width": "6rem",
-                "key": "change",
-                "field": "change",
-                "align": "right"
-              },
-              {
-                "className": " text-[var(--color-text-muted)]",
-                "key": "volume",
-                "align": "right",
-                "field": "volume",
-                "header": "Volume",
-                "width": "6rem"
-              },
-              {
-                "width": "6rem",
-                "format": "badge",
-                "key": "status",
-                "field": "status",
-                "header": "Status",
-                "align": "center"
-              },
-              {
-                "field": "createdAt",
-                "key": "createdAt",
-                "width": "9rem",
-                "align": "right",
-                "header": "Created",
-                "className": " text-[var(--color-text-muted)]",
-                "format": "date"
-              }
-            ]
+              ]
+            }
           }
         }
       ],
