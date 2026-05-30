@@ -47951,7 +47951,7 @@
       "organism": "std-flag",
       "orbital": "FlagOrbital",
       "tier": "atoms",
-      "factoryPath": "behaviors/functions/core/atoms/std-flag.ts",
+      "factoryPath": "behaviors/functions/core-variations/atoms/std-flag.ts",
       "entities": [
         {
           "name": "Flag",
@@ -47959,12 +47959,12 @@
             {
               "name": "targetId",
               "type": "string",
-              "required": true
+              "required": false
             },
             {
               "name": "targetType",
               "type": "string",
-              "required": true
+              "required": false
             },
             {
               "name": "reportedBy",
@@ -47988,45 +47988,46 @@
       "traits": [
         {
           "name": "FlagReport",
-          "emittedEvents": [
-            "SUBMIT",
-            "SELECT_REASON",
-            "EDIT_NOTES",
-            "FlagLoaded",
-            "FlagLoadFailed",
-            "FlagSubmitted",
-            "FlagSubmitFailed"
-          ],
+          "emittedEvents": [],
           "listenedEvents": [],
           "overridableConfigKeys": [
             {
-              "key": "reasons",
-              "type": "[string]",
+              "key": "fields",
+              "type": "unknown",
               "default": [
-                "spam",
-                "abuse",
-                "off-topic",
-                "misinformation",
-                "nsfw",
-                "other"
-              ],
-              "label": "Reason options",
-              "description": "Selectable reason codes shown to the reporter",
-              "tier": "domain",
-              "items": {
-                "type": "string"
-              }
+                {
+                  "label": "Reason",
+                  "name": "reason",
+                  "values": [
+                    "spam",
+                    "abuse",
+                    "off-topic",
+                    "misinformation",
+                    "nsfw",
+                    "other"
+                  ],
+                  "type": "enum"
+                },
+                {
+                  "type": "textarea",
+                  "name": "notes",
+                  "label": "Details"
+                }
+              ]
+            },
+            {
+              "key": "icon",
+              "type": "unknown",
+              "default": "flag"
             },
             {
               "key": "title",
-              "type": "string",
-              "default": "Report content",
-              "label": "Form title",
-              "description": "Heading shown above the flag-submission form",
-              "tier": "presentation"
+              "type": "unknown",
+              "default": "Report content"
             }
           ],
-          "capabilities": []
+          "capabilities": [],
+          "ref": "FormAdvanced.traits.FormEntryFormAdvanced"
         }
       ],
       "pages": [
@@ -48036,15 +48037,7 @@
           "primaryEntity": "Flag"
         }
       ],
-      "emittedEvents": [
-        "EDIT_NOTES",
-        "FlagLoadFailed",
-        "FlagLoaded",
-        "FlagSubmitFailed",
-        "FlagSubmitted",
-        "SELECT_REASON",
-        "SUBMIT"
-      ],
+      "emittedEvents": [],
       "listenedEvents": [],
       "paramsSchema": {
         "type": "object",
@@ -48262,29 +48255,36 @@
                     "type": "object",
                     "additionalProperties": false,
                     "properties": {
-                      "reasons": {
-                        "type": "array",
-                        "items": {
-                          "type": "string"
-                        },
+                      "fields": {
+                        "type": "object",
                         "default": [
-                          "spam",
-                          "abuse",
-                          "off-topic",
-                          "misinformation",
-                          "nsfw",
-                          "other"
-                        ],
-                        "description": "Selectable reason codes shown to the reporter",
-                        "x-label": "Reason options",
-                        "x-tier": "domain"
+                          {
+                            "label": "Reason",
+                            "name": "reason",
+                            "values": [
+                              "spam",
+                              "abuse",
+                              "off-topic",
+                              "misinformation",
+                              "nsfw",
+                              "other"
+                            ],
+                            "type": "enum"
+                          },
+                          {
+                            "type": "textarea",
+                            "name": "notes",
+                            "label": "Details"
+                          }
+                        ]
+                      },
+                      "icon": {
+                        "type": "object",
+                        "default": "flag"
                       },
                       "title": {
-                        "type": "string",
-                        "default": "Report content",
-                        "description": "Heading shown above the flag-submission form",
-                        "x-label": "Form title",
-                        "x-tier": "presentation"
+                        "type": "object",
+                        "default": "Report content"
                       }
                     }
                   },
@@ -48489,9 +48489,9 @@
               "tier": "domain",
               "items": {
                 "properties": {
-                  "rule": {
-                    "name": "rule",
-                    "required": false,
+                  "field": {
+                    "name": "field",
+                    "required": true,
                     "type": "string"
                   },
                   "message": {
@@ -48499,9 +48499,9 @@
                     "required": false,
                     "type": "string"
                   },
-                  "field": {
-                    "name": "field",
-                    "required": true,
+                  "rule": {
+                    "name": "rule",
+                    "required": false,
                     "type": "string"
                   }
                 },
@@ -48513,26 +48513,26 @@
               "type": "[FieldSpec]",
               "default": [
                 {
-                  "name": "name",
-                  "label": "Name"
+                  "label": "Name",
+                  "name": "name"
                 },
                 {
                   "label": "Description",
                   "name": "description"
                 },
                 {
+                  "name": "status",
                   "type": "enum",
-                  "label": "Status",
                   "values": [
                     "active",
                     "inactive",
                     "pending"
                   ],
-                  "name": "status"
+                  "label": "Status"
                 },
                 {
-                  "label": "Notes",
                   "name": "notes",
+                  "label": "Notes",
                   "type": "textarea"
                 },
                 {
@@ -48541,33 +48541,33 @@
                   "label": "Age"
                 },
                 {
+                  "name": "isActive",
                   "type": "boolean",
-                  "label": "Is Active",
-                  "name": "isActive"
+                  "label": "Is Active"
                 },
                 {
+                  "name": "birthDate",
                   "label": "Birth Date",
-                  "type": "date",
-                  "name": "birthDate"
+                  "type": "date"
                 },
                 {
-                  "name": "priority",
                   "values": [
                     "low",
                     "medium",
                     "high",
                     "critical"
                   ],
-                  "label": "Priority",
-                  "type": "enum"
+                  "type": "enum",
+                  "name": "priority",
+                  "label": "Priority"
                 },
                 {
-                  "name": "categoryId",
                   "label": "Category ID",
+                  "name": "categoryId",
                   "type": "relation",
                   "relation": {
-                    "entity": "FormEntry",
-                    "cardinality": "one"
+                    "cardinality": "one",
+                    "entity": "FormEntry"
                   }
                 }
               ],
@@ -48576,23 +48576,13 @@
               "tier": "presentation",
               "items": {
                 "properties": {
-                  "icon": {
-                    "name": "icon",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "format": {
-                    "name": "format",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "required": false,
-                    "type": "string"
-                  },
                   "label": {
                     "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "icon": {
+                    "name": "icon",
                     "required": false,
                     "type": "string"
                   },
@@ -48601,8 +48591,13 @@
                     "required": true,
                     "type": "string"
                   },
-                  "header": {
-                    "name": "header",
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "format": {
+                    "name": "format",
                     "required": false,
                     "type": "string"
                   },
@@ -48610,13 +48605,39 @@
                     "name": "key",
                     "required": false,
                     "type": "string"
+                  },
+                  "header": {
+                    "name": "header",
+                    "required": false,
+                    "type": "string"
                   }
                 },
                 "type": "object"
               }
+            },
+            {
+              "key": "icon",
+              "type": "string",
+              "default": "file-text",
+              "label": "Header icon",
+              "description": "Icon shown beside the form title",
+              "tier": "presentation"
+            },
+            {
+              "key": "title",
+              "type": "string",
+              "default": "Form",
+              "label": "Form title",
+              "description": "Heading shown above the form",
+              "tier": "presentation"
             }
           ],
-          "capabilities": []
+          "capabilities": [],
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          }
         }
       ],
       "pages": [
@@ -48866,26 +48887,26 @@
                         },
                         "default": [
                           {
-                            "name": "name",
-                            "label": "Name"
+                            "label": "Name",
+                            "name": "name"
                           },
                           {
                             "label": "Description",
                             "name": "description"
                           },
                           {
+                            "name": "status",
                             "type": "enum",
-                            "label": "Status",
                             "values": [
                               "active",
                               "inactive",
                               "pending"
                             ],
-                            "name": "status"
+                            "label": "Status"
                           },
                           {
-                            "label": "Notes",
                             "name": "notes",
+                            "label": "Notes",
                             "type": "textarea"
                           },
                           {
@@ -48894,41 +48915,59 @@
                             "label": "Age"
                           },
                           {
+                            "name": "isActive",
                             "type": "boolean",
-                            "label": "Is Active",
-                            "name": "isActive"
+                            "label": "Is Active"
                           },
                           {
+                            "name": "birthDate",
                             "label": "Birth Date",
-                            "type": "date",
-                            "name": "birthDate"
+                            "type": "date"
                           },
                           {
-                            "name": "priority",
                             "values": [
                               "low",
                               "medium",
                               "high",
                               "critical"
                             ],
-                            "label": "Priority",
-                            "type": "enum"
+                            "type": "enum",
+                            "name": "priority",
+                            "label": "Priority"
                           },
                           {
-                            "name": "categoryId",
                             "label": "Category ID",
+                            "name": "categoryId",
                             "type": "relation",
                             "relation": {
-                              "entity": "FormEntry",
-                              "cardinality": "one"
+                              "cardinality": "one",
+                              "entity": "FormEntry"
                             }
                           }
                         ],
                         "description": "Inputs to render; each entry follows the form-section field schema",
                         "x-label": "Form fields",
                         "x-tier": "presentation"
+                      },
+                      "icon": {
+                        "type": "string",
+                        "default": "file-text",
+                        "description": "Icon shown beside the form title",
+                        "x-label": "Header icon",
+                        "x-tier": "presentation"
+                      },
+                      "title": {
+                        "type": "string",
+                        "default": "Form",
+                        "description": "Heading shown above the form",
+                        "x-label": "Form title",
+                        "x-tier": "presentation"
                       }
                     }
+                  },
+                  "linkedEntity": {
+                    "type": "string",
+                    "description": "Rebind this trait to a different entity in the organism (rewrites every @entity.* / ref / fetch / persist binding inside it)."
                   },
                   "name": {
                     "type": "string",

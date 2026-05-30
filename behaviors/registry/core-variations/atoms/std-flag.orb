@@ -1,0 +1,108 @@
+{
+  "name": "std-flag",
+  "version": "2.0.0",
+  "description": "std-flag — user content-report form. A std-form-advanced variation bound to a Flag entity (reason + details): the form persists the report and emits FlagSubmitted for cross-trait moderation listeners. Stays importable so a consumer orbital gains the Flag entity + report form via `uses` alongside its own primary entity.",
+  "orbitals": [
+    {
+      "name": "FlagOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-form-advanced",
+          "as": "FormAdvanced"
+        }
+      ],
+      "entity": {
+        "name": "Flag",
+        "collection": "flags",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "targetId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "targetType",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "reportedBy",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "reason",
+            "type": "string",
+            "default": "spam",
+            "values": [
+              "spam",
+              "abuse",
+              "off-topic",
+              "misinformation",
+              "nsfw",
+              "other"
+            ]
+          },
+          {
+            "name": "notes",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "createdAt",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "FormAdvanced.traits.FormEntryFormAdvanced",
+          "name": "FlagReport",
+          "linkedEntity": "Flag",
+          "config": {
+            "fields": [
+              {
+                "label": "Reason",
+                "name": "reason",
+                "values": [
+                  "spam",
+                  "abuse",
+                  "off-topic",
+                  "misinformation",
+                  "nsfw",
+                  "other"
+                ],
+                "type": "enum"
+              },
+              {
+                "type": "textarea",
+                "name": "notes",
+                "label": "Details"
+              }
+            ],
+            "icon": "flag",
+            "title": "Report content"
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "FlagReportPage",
+          "path": "/flags/report",
+          "traits": [
+            {
+              "ref": "FlagReport"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
