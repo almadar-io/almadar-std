@@ -63,11 +63,85 @@
           "name": "DenseBrowse",
           "linkedEntity": "DenseRow",
           "config": {
+            "columns": [
+              {
+                "width": "7rem",
+                "className": " text-[var(--color-text-muted)]",
+                "key": "id",
+                "header": "ID",
+                "align": "left",
+                "field": "id"
+              },
+              {
+                "key": "name",
+                "align": "left",
+                "weight": "medium",
+                "field": "name",
+                "header": "Name",
+                "width": "minmax(10rem, 1.5fr)"
+              },
+              {
+                "key": "description",
+                "align": "left",
+                "field": "description",
+                "className": "text-[var(--color-text-muted)]",
+                "width": "minmax(12rem, 2fr)",
+                "header": "Detail"
+              },
+              {
+                "width": "6rem",
+                "className": "",
+                "header": "Value",
+                "field": "value",
+                "align": "right",
+                "key": "value"
+              },
+              {
+                "header": "Change",
+                "key": "change",
+                "field": "change",
+                "align": "right",
+                "className": "",
+                "width": "6rem"
+              },
+              {
+                "width": "6rem",
+                "className": " text-[var(--color-text-muted)]",
+                "align": "right",
+                "field": "volume",
+                "key": "volume",
+                "header": "Volume"
+              },
+              {
+                "align": "center",
+                "field": "status",
+                "header": "Status",
+                "key": "status",
+                "width": "6rem",
+                "format": "badge"
+              },
+              {
+                "header": "Created",
+                "field": "createdAt",
+                "className": " text-[var(--color-text-muted)]",
+                "align": "right",
+                "width": "9rem",
+                "format": "date",
+                "key": "createdAt"
+              }
+            ],
             "bodyContent": {
               "gap": "sm",
               "direction": "vertical",
+              "type": "stack",
+              "className": "p-card-md",
               "children": [
                 {
+                  "gap": "sm",
+                  "align": "center",
+                  "direction": "horizontal",
+                  "type": "stack",
+                  "className": "w-full max-w-2xl rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 shadow-sm",
                   "children": [
                     {
                       "type": "icon",
@@ -76,127 +150,53 @@
                     },
                     {
                       "inputType": "search",
-                      "placeholder": "Filter records…",
                       "action": "REFETCH_QUERY",
+                      "placeholder": "Filter records…",
                       "className": "flex-1",
                       "type": "input"
                     }
-                  ],
-                  "gap": "sm",
-                  "direction": "horizontal",
-                  "align": "center",
-                  "type": "stack",
-                  "className": "w-full max-w-2xl rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 shadow-sm"
+                  ]
                 },
                 {
                   "entity": "@config.filters",
-                  "gap": "sm",
                   "type": "data-list",
-                  "fields": [],
                   "renderItem": [
                     "fn",
                     "f",
                     {
-                      "type": "select",
-                      "placeholder": "@f.label",
-                      "options": "@f.options",
-                      "action": "REFETCH_FILTER",
                       "actionPayload": {
                         "field": "@f.field"
                       },
-                      "className": "min-w-[10rem]"
+                      "className": "min-w-[10rem]",
+                      "action": "REFETCH_FILTER",
+                      "type": "select",
+                      "placeholder": "@f.label",
+                      "options": "@f.options"
                     }
-                  ]
+                  ],
+                  "fields": [],
+                  "gap": "sm"
                 },
                 {
-                  "className": "rounded-lg border border-[var(--color-border)] overflow-x-auto bg-[var(--color-card)] shadow-sm",
                   "direction": "vertical",
-                  "type": "stack",
                   "gap": "none",
                   "children": [
                     {
-                      "look": "dense",
                       "emptyMessage": "No records",
-                      "pageSize": "@config.displayPageSize",
-                      "itemActions": "@config.itemActions",
+                      "look": "dense",
                       "entity": "@payload.data",
                       "columns": "@config.columns",
-                      "selectable": true,
-                      "type": "table-view"
+                      "pageSize": "@config.displayPageSize",
+                      "type": "table-view",
+                      "itemActions": "@config.itemActions",
+                      "selectable": true
                     }
-                  ]
+                  ],
+                  "type": "stack",
+                  "className": "rounded-lg border border-[var(--color-border)] overflow-x-auto bg-[var(--color-card)] shadow-sm"
                 }
-              ],
-              "type": "stack",
-              "className": "p-card-md"
-            },
-            "columns": [
-              {
-                "key": "id",
-                "header": "ID",
-                "field": "id",
-                "align": "left",
-                "className": "font-mono text-[var(--color-text-muted)]",
-                "width": "7rem"
-              },
-              {
-                "field": "name",
-                "align": "left",
-                "header": "Name",
-                "width": "minmax(10rem, 1.5fr)",
-                "weight": "medium",
-                "key": "name"
-              },
-              {
-                "header": "Detail",
-                "field": "description",
-                "key": "description",
-                "width": "minmax(12rem, 2fr)",
-                "className": "text-[var(--color-text-muted)]",
-                "align": "left"
-              },
-              {
-                "width": "6rem",
-                "field": "value",
-                "align": "right",
-                "className": "font-mono tabular-nums",
-                "header": "Value",
-                "key": "value"
-              },
-              {
-                "width": "6rem",
-                "align": "right",
-                "key": "change",
-                "className": "font-mono tabular-nums",
-                "header": "Change",
-                "field": "change"
-              },
-              {
-                "key": "volume",
-                "field": "volume",
-                "width": "6rem",
-                "className": "font-mono tabular-nums text-[var(--color-text-muted)]",
-                "header": "Volume",
-                "align": "right"
-              },
-              {
-                "field": "status",
-                "header": "Status",
-                "width": "6rem",
-                "format": "badge",
-                "key": "status",
-                "align": "center"
-              },
-              {
-                "align": "right",
-                "format": "date",
-                "key": "createdAt",
-                "width": "9rem",
-                "field": "createdAt",
-                "className": "font-mono tabular-nums text-[var(--color-text-muted)]",
-                "header": "Created"
-              }
-            ]
+              ]
+            }
           }
         }
       ],
