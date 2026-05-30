@@ -45281,25 +45281,190 @@
             "CLOSE_VIEW",
             "DOWNLOAD_FILE",
             "ARCHIVE_FILE",
+            "REORDER",
             "StoredFileLoaded",
             "StoredFileLoadFailed"
           ],
           "listenedEvents": [],
           "overridableConfigKeys": [
             {
-              "key": "statLook",
-              "type": "string",
-              "default": "elevated",
-              "label": "Stat display look",
-              "description": "Layer 2 visual treatment for stat / KPI cards.",
+              "key": "detailActions",
+              "type": "[ItemAction]",
+              "default": [
+                {
+                  "label": "Download",
+                  "variant": "primary",
+                  "event": "DOWNLOAD_FILE"
+                },
+                {
+                  "variant": "danger",
+                  "label": "Archive",
+                  "event": "ARCHIVE_FILE"
+                }
+              ],
+              "label": "Detail actions",
+              "description": "Buttons shown on the opened row's detail",
               "tier": "presentation",
-              "enumValues": [
-                "elevated",
-                "flat",
-                "progress-backed",
-                "gauge",
-                "sparkline"
-              ]
+              "items": {
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "event": {
+                    "name": "event",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            },
+            {
+              "key": "fields",
+              "type": "[FieldSpec]",
+              "default": [
+                {
+                  "variant": "caption",
+                  "label": "Name",
+                  "name": "name"
+                },
+                {
+                  "label": "Folder",
+                  "variant": "caption",
+                  "name": "folder"
+                },
+                {
+                  "variant": "badge",
+                  "name": "mimeType",
+                  "label": "Type"
+                },
+                {
+                  "label": "Size",
+                  "variant": "caption",
+                  "name": "sizeBytes"
+                },
+                {
+                  "variant": "caption",
+                  "name": "uploadedAt",
+                  "label": "Uploaded"
+                }
+              ],
+              "label": "Columns to show",
+              "description": "Each column maps to one field on the linked entity",
+              "tier": "presentation",
+              "items": {
+                "properties": {
+                  "format": {
+                    "name": "format",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "key": {
+                    "name": "key",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "header": {
+                    "name": "header",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "name": {
+                    "name": "name",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            },
+            {
+              "key": "headerIcon",
+              "type": "string",
+              "default": "folder",
+              "label": "Header icon",
+              "description": "Icon shown beside the section title and in the detail header",
+              "tier": "presentation"
+            },
+            {
+              "key": "itemActions",
+              "type": "[ItemAction]",
+              "default": [
+                {
+                  "variant": "primary",
+                  "label": "Open",
+                  "event": "OPEN_FILE",
+                  "icon": "arrow-right"
+                },
+                {
+                  "label": "Archive",
+                  "variant": "danger",
+                  "event": "ARCHIVE_FILE"
+                }
+              ],
+              "label": "Row actions",
+              "description": "Buttons on each row",
+              "tier": "presentation",
+              "items": {
+                "properties": {
+                  "event": {
+                    "name": "event",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            },
+            {
+              "key": "reorderable",
+              "type": "boolean",
+              "default": false,
+              "label": "Reorderable rows",
+              "description": "Allow drag-reordering of rows (emits REORDER). On for ordered trees (e.g. wiki page nav).",
+              "tier": "presentation"
             },
             {
               "key": "tableLook",
@@ -45321,11 +45486,108 @@
               "type": "string",
               "default": "Files",
               "label": "Section title",
-              "description": "Heading shown above the file browser",
+              "description": "Heading shown above the browser",
               "tier": "presentation"
+            },
+            {
+              "key": "tree",
+              "type": "[TreeNode]",
+              "default": [
+                {
+                  "name": "Contracts",
+                  "children": [
+                    {
+                      "path": "Active.pdf",
+                      "type": "file",
+                      "name": "Active.pdf"
+                    },
+                    {
+                      "path": "Archived.pdf",
+                      "name": "Archived.pdf",
+                      "type": "file"
+                    }
+                  ],
+                  "type": "dir",
+                  "path": "Contracts"
+                },
+                {
+                  "name": "Policies",
+                  "type": "dir",
+                  "children": [
+                    {
+                      "type": "file",
+                      "name": "HR.docx",
+                      "path": "Policies/HR.docx"
+                    },
+                    {
+                      "name": "Security.md",
+                      "path": "Policies/Security.md",
+                      "type": "file"
+                    }
+                  ],
+                  "path": "Policies"
+                },
+                {
+                  "type": "dir",
+                  "name": "Templates",
+                  "path": "Templates",
+                  "children": [
+                    {
+                      "type": "file",
+                      "name": "Invoice.docx",
+                      "path": "Templates/Invoice.docx"
+                    },
+                    {
+                      "path": "Templates/NDA.pdf",
+                      "type": "file",
+                      "name": "NDA.pdf"
+                    }
+                  ]
+                }
+              ],
+              "label": "Folder tree",
+              "description": "Hierarchical nav tree shown above the table",
+              "tier": "presentation",
+              "items": {
+                "properties": {
+                  "name": {
+                    "name": "name",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "children": {
+                    "name": "children",
+                    "required": false,
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    }
+                  },
+                  "path": {
+                    "name": "path",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
             }
           ],
-          "capabilities": []
+          "capabilities": [],
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": [
+              "folder",
+              "name",
+              "path"
+            ]
+          }
         }
       ],
       "pages": [
@@ -45340,6 +45602,7 @@
         "CLOSE_VIEW",
         "DOWNLOAD_FILE",
         "OPEN_FILE",
+        "REORDER",
         "StoredFileLoadFailed",
         "StoredFileLoaded"
       ],
@@ -45560,18 +45823,97 @@
                     "type": "object",
                     "additionalProperties": false,
                     "properties": {
-                      "statLook": {
-                        "type": "string",
-                        "enum": [
-                          "elevated",
-                          "flat",
-                          "progress-backed",
-                          "gauge",
-                          "sparkline"
+                      "detailActions": {
+                        "type": "array",
+                        "items": {
+                          "type": "object"
+                        },
+                        "default": [
+                          {
+                            "label": "Download",
+                            "variant": "primary",
+                            "event": "DOWNLOAD_FILE"
+                          },
+                          {
+                            "variant": "danger",
+                            "label": "Archive",
+                            "event": "ARCHIVE_FILE"
+                          }
                         ],
-                        "default": "elevated",
-                        "description": "Layer 2 visual treatment for stat / KPI cards.",
-                        "x-label": "Stat display look",
+                        "description": "Buttons shown on the opened row's detail",
+                        "x-label": "Detail actions",
+                        "x-tier": "presentation"
+                      },
+                      "fields": {
+                        "type": "array",
+                        "items": {
+                          "type": "object"
+                        },
+                        "default": [
+                          {
+                            "variant": "caption",
+                            "label": "Name",
+                            "name": "name"
+                          },
+                          {
+                            "label": "Folder",
+                            "variant": "caption",
+                            "name": "folder"
+                          },
+                          {
+                            "variant": "badge",
+                            "name": "mimeType",
+                            "label": "Type"
+                          },
+                          {
+                            "label": "Size",
+                            "variant": "caption",
+                            "name": "sizeBytes"
+                          },
+                          {
+                            "variant": "caption",
+                            "name": "uploadedAt",
+                            "label": "Uploaded"
+                          }
+                        ],
+                        "description": "Each column maps to one field on the linked entity",
+                        "x-label": "Columns to show",
+                        "x-tier": "presentation"
+                      },
+                      "headerIcon": {
+                        "type": "string",
+                        "default": "folder",
+                        "description": "Icon shown beside the section title and in the detail header",
+                        "x-label": "Header icon",
+                        "x-tier": "presentation"
+                      },
+                      "itemActions": {
+                        "type": "array",
+                        "items": {
+                          "type": "object"
+                        },
+                        "default": [
+                          {
+                            "variant": "primary",
+                            "label": "Open",
+                            "event": "OPEN_FILE",
+                            "icon": "arrow-right"
+                          },
+                          {
+                            "label": "Archive",
+                            "variant": "danger",
+                            "event": "ARCHIVE_FILE"
+                          }
+                        ],
+                        "description": "Buttons on each row",
+                        "x-label": "Row actions",
+                        "x-tier": "presentation"
+                      },
+                      "reorderable": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Allow drag-reordering of rows (emits REORDER). On for ordered trees (e.g. wiki page nav).",
+                        "x-label": "Reorderable rows",
                         "x-tier": "presentation"
                       },
                       "tableLook": {
@@ -45591,11 +45933,77 @@
                       "title": {
                         "type": "string",
                         "default": "Files",
-                        "description": "Heading shown above the file browser",
+                        "description": "Heading shown above the browser",
                         "x-label": "Section title",
+                        "x-tier": "presentation"
+                      },
+                      "tree": {
+                        "type": "array",
+                        "items": {
+                          "type": "object"
+                        },
+                        "default": [
+                          {
+                            "name": "Contracts",
+                            "children": [
+                              {
+                                "path": "Active.pdf",
+                                "type": "file",
+                                "name": "Active.pdf"
+                              },
+                              {
+                                "path": "Archived.pdf",
+                                "name": "Archived.pdf",
+                                "type": "file"
+                              }
+                            ],
+                            "type": "dir",
+                            "path": "Contracts"
+                          },
+                          {
+                            "name": "Policies",
+                            "type": "dir",
+                            "children": [
+                              {
+                                "type": "file",
+                                "name": "HR.docx",
+                                "path": "Policies/HR.docx"
+                              },
+                              {
+                                "name": "Security.md",
+                                "path": "Policies/Security.md",
+                                "type": "file"
+                              }
+                            ],
+                            "path": "Policies"
+                          },
+                          {
+                            "type": "dir",
+                            "name": "Templates",
+                            "path": "Templates",
+                            "children": [
+                              {
+                                "type": "file",
+                                "name": "Invoice.docx",
+                                "path": "Templates/Invoice.docx"
+                              },
+                              {
+                                "path": "Templates/NDA.pdf",
+                                "type": "file",
+                                "name": "NDA.pdf"
+                              }
+                            ]
+                          }
+                        ],
+                        "description": "Hierarchical nav tree shown above the table",
+                        "x-label": "Folder tree",
                         "x-tier": "presentation"
                       }
                     }
+                  },
+                  "linkedEntity": {
+                    "type": "string",
+                    "description": "Rebind this trait to a different entity in the organism (rewrites every @entity.* / ref / fetch / persist binding inside it)."
                   },
                   "name": {
                     "type": "string",
@@ -76337,496 +76745,6 @@
                         "description": "Text shown to the recipient; supports payload interpolation",
                         "x-label": "Message template",
                         "x-synonyms": "notification text, message body, alert text",
-                        "x-tier": "presentation"
-                      }
-                    }
-                  },
-                  "name": {
-                    "type": "string",
-                    "description": "Rename the inlined trait at the call site. Does NOT change topology — just the trait's local name."
-                  },
-                  "events": {
-                    "type": "object",
-                    "additionalProperties": {
-                      "type": "string"
-                    },
-                    "description": "Per-key event rename map (e.g. `{ \"OPEN\": \"ADD_ITEM\" }`). Rewrites the events array, transition triggers, emit/listen event keys, and `[\"emit\", X]` SExpression literals inside the trait."
-                  },
-                  "listens": {
-                    "type": "array",
-                    "items": {
-                      "type": "object",
-                      "additionalProperties": false,
-                      "required": [
-                        "event",
-                        "triggers"
-                      ],
-                      "properties": {
-                        "event": {
-                          "type": "string",
-                          "description": "Event key to subscribe to (bare name, no orbital prefix)."
-                        },
-                        "triggers": {
-                          "type": "string",
-                          "description": "Local state-machine event fired when the subscription matches."
-                        },
-                        "scope": {
-                          "type": "string",
-                          "enum": [
-                            "internal",
-                            "external"
-                          ],
-                          "description": "`internal` = same-orbital events. `external` = events from sibling orbitals (use this for cross-orbital reactivity)."
-                        }
-                      }
-                    },
-                    "description": "Replace this trait's `listens` entirely. Empty array clears upstream listeners. For cross-orbital reactivity, add an entry with `scope: \"external\"` matching the source orbital's emit event."
-                  },
-                  "emitsScope": {
-                    "type": "string",
-                    "enum": [
-                      "internal",
-                      "external"
-                    ],
-                    "description": "`internal` = emits stay local to this orbital. `external` = sibling orbitals can listen. Set to `external` when another orbital needs to react to this trait's events (counter updates, list refreshes, badges, etc.)."
-                  }
-                }
-              }
-            }
-          },
-          "extraTraits": {
-            "type": "array",
-            "description": "Sibling traits to compose beyond the factory-authored stack.",
-            "items": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "from",
-                "as",
-                "ref"
-              ],
-              "properties": {
-                "from": {
-                  "type": "string",
-                  "description": "Registry path (e.g. std/behaviors/std-approval-request)."
-                },
-                "as": {
-                  "type": "string",
-                  "description": "Local alias used in `ref`."
-                },
-                "ref": {
-                  "type": "string",
-                  "description": "Trait reference (Alias.traits.X)."
-                },
-                "name": {
-                  "type": "string",
-                  "description": "Optional rename of the inlined trait."
-                },
-                "linkedEntity": {
-                  "type": "string",
-                  "description": "Optional entity rebinding."
-                },
-                "emitsScope": {
-                  "type": "string",
-                  "enum": [
-                    "internal",
-                    "external"
-                  ]
-                }
-              }
-            }
-          },
-          "pages": {
-            "type": "array",
-            "description": "Per-page overrides keyed by canonical page name.",
-            "items": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "name"
-              ],
-              "properties": {
-                "name": {
-                  "type": "string",
-                  "description": "Canonical page name from the orbital."
-                },
-                "path": {
-                  "type": "string",
-                  "description": "URL path override."
-                },
-                "linkedEntity": {
-                  "type": "string",
-                  "description": "Rebind the primary entity."
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    {
-      "organism": "std-page-tree",
-      "orbital": "PageTreeOrbital",
-      "tier": "atoms",
-      "factoryPath": "behaviors/functions/core/atoms/std-page-tree.ts",
-      "entities": [
-        {
-          "name": "PageNode",
-          "fields": [
-            {
-              "name": "title",
-              "type": "string",
-              "required": true
-            },
-            {
-              "name": "parentId",
-              "type": "string",
-              "required": false
-            },
-            {
-              "name": "slug",
-              "type": "string",
-              "required": false
-            },
-            {
-              "name": "order",
-              "type": "number",
-              "required": false
-            },
-            {
-              "name": "documentId",
-              "type": "string",
-              "required": false
-            },
-            {
-              "name": "iconName",
-              "type": "string",
-              "required": false
-            }
-          ],
-          "persistence": "persistent"
-        }
-      ],
-      "traits": [
-        {
-          "name": "PageNodeBrowse",
-          "emittedEvents": [
-            "OPEN_PAGE",
-            "CLOSE_VIEW",
-            "REORDER",
-            "DELETE_PAGE",
-            "PageNodeLoaded",
-            "PageNodeLoadFailed"
-          ],
-          "listenedEvents": [],
-          "overridableConfigKeys": [
-            {
-              "key": "statLook",
-              "type": "string",
-              "default": "elevated",
-              "label": "Stat display look",
-              "description": "Layer 2 visual treatment for stat / KPI cards.",
-              "tier": "presentation",
-              "enumValues": [
-                "elevated",
-                "flat",
-                "progress-backed",
-                "gauge",
-                "sparkline"
-              ]
-            },
-            {
-              "key": "tableLook",
-              "type": "string",
-              "default": "dense",
-              "label": "Table look",
-              "description": "Layer 2 visual treatment for the data table rendered by this atom.",
-              "tier": "presentation",
-              "enumValues": [
-                "dense",
-                "spacious",
-                "striped",
-                "borderless",
-                "card-rows"
-              ]
-            },
-            {
-              "key": "title",
-              "type": "string",
-              "default": "Pages",
-              "label": "Section title",
-              "description": "Heading shown above the page tree",
-              "tier": "presentation"
-            }
-          ],
-          "capabilities": []
-        }
-      ],
-      "pages": [
-        {
-          "name": "PageNodeBrowsePage",
-          "defaultPath": "/pages/browse",
-          "primaryEntity": "PageNode"
-        }
-      ],
-      "emittedEvents": [
-        "CLOSE_VIEW",
-        "DELETE_PAGE",
-        "OPEN_PAGE",
-        "PageNodeLoadFailed",
-        "PageNodeLoaded",
-        "REORDER"
-      ],
-      "listenedEvents": [],
-      "paramsSchema": {
-        "type": "object",
-        "additionalProperties": false,
-        "description": "Typed params for std-page-tree / PageTreeOrbital. Empty {} = factory defaults.",
-        "properties": {
-          "entityName": {
-            "type": "string",
-            "description": "PascalCase singular entity rename (e.g. \"Listing\", \"Member\"). Renames the DOMAIN concept and rewrites every `@Entity.*` reference. Use this when the user wants to rename the THING, not where it's stored."
-          },
-          "collection": {
-            "type": "string",
-            "description": "Override the persistence collection / table name. Defaults to `plural(entityName).toLowerCase()`. Use this when the user names the database/table/storage location (\"save them under X\", \"the table is called X\", \"in our database it's X\") — NOT when they rename the domain concept (that's `entityName`)."
-          },
-          "persistence": {
-            "type": "string",
-            "enum": [
-              "persistent",
-              "runtime"
-            ],
-            "description": "Override the entity persistence mode. `persistent` = stored in the configured backend; `runtime` = in-memory session-scoped only."
-          },
-          "pagePath": {
-            "type": "string",
-            "description": "URL path override for the orbital's first page."
-          },
-          "fields": {
-            "type": "array",
-            "description": "Extra entity fields appended to the canonical entity. Caller wins on name collision.",
-            "items": {
-              "oneOf": [
-                {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "required": [
-                    "name",
-                    "type"
-                  ],
-                  "properties": {
-                    "name": {
-                      "type": "string",
-                      "description": "Field name (camelCase)."
-                    },
-                    "required": {
-                      "type": "boolean"
-                    },
-                    "default": {
-                      "type": [
-                        "string",
-                        "number",
-                        "boolean",
-                        "null"
-                      ]
-                    },
-                    "type": {
-                      "type": "string",
-                      "enum": [
-                        "string",
-                        "number",
-                        "boolean",
-                        "date",
-                        "timestamp",
-                        "datetime",
-                        "object"
-                      ],
-                      "description": "Field type tag."
-                    }
-                  }
-                },
-                {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "required": [
-                    "name",
-                    "type",
-                    "values"
-                  ],
-                  "properties": {
-                    "name": {
-                      "type": "string",
-                      "description": "Field name (camelCase)."
-                    },
-                    "required": {
-                      "type": "boolean"
-                    },
-                    "default": {
-                      "type": [
-                        "string",
-                        "number",
-                        "boolean",
-                        "null"
-                      ]
-                    },
-                    "type": {
-                      "type": "string",
-                      "enum": [
-                        "enum"
-                      ],
-                      "description": "Enum field."
-                    },
-                    "values": {
-                      "type": "array",
-                      "description": "Closed string vocabulary. e.g. [\"active\",\"inactive\",\"pending\"].",
-                      "items": {
-                        "type": "string"
-                      }
-                    }
-                  }
-                },
-                {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "required": [
-                    "name",
-                    "type",
-                    "relation"
-                  ],
-                  "properties": {
-                    "name": {
-                      "type": "string",
-                      "description": "Field name (camelCase)."
-                    },
-                    "required": {
-                      "type": "boolean"
-                    },
-                    "default": {
-                      "type": [
-                        "string",
-                        "number",
-                        "boolean",
-                        "null"
-                      ]
-                    },
-                    "type": {
-                      "type": "string",
-                      "enum": [
-                        "relation"
-                      ],
-                      "description": "Relation (FK) field."
-                    },
-                    "relation": {
-                      "type": "object",
-                      "additionalProperties": false,
-                      "required": [
-                        "entity",
-                        "cardinality"
-                      ],
-                      "properties": {
-                        "entity": {
-                          "type": "string",
-                          "description": "Sibling entity name (PascalCase singular)."
-                        },
-                        "cardinality": {
-                          "type": "string",
-                          "enum": [
-                            "one",
-                            "many"
-                          ]
-                        }
-                      },
-                      "description": "Relation target. `cardinality: \"one\"` for FK (customerId → one Customer); \"many\" for collection (tags → many Tag)."
-                    }
-                  }
-                },
-                {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "required": [
-                    "name",
-                    "type"
-                  ],
-                  "properties": {
-                    "name": {
-                      "type": "string",
-                      "description": "Field name (camelCase)."
-                    },
-                    "required": {
-                      "type": "boolean"
-                    },
-                    "default": {
-                      "type": [
-                        "string",
-                        "number",
-                        "boolean",
-                        "null"
-                      ]
-                    },
-                    "type": {
-                      "type": "string",
-                      "enum": [
-                        "array"
-                      ],
-                      "description": "Array field."
-                    },
-                    "items": {
-                      "type": "object",
-                      "description": "Element shape (optional for primitive arrays)."
-                    }
-                  }
-                }
-              ]
-            }
-          },
-          "traitOverrides": {
-            "type": "object",
-            "additionalProperties": false,
-            "description": "Per-trait knob overrides keyed on the canonical trait name. Each value can include `config` (knob values), `linkedEntity` (rebind), `events` (per-key rename map), `listens` (cross-orbital subscriptions), `emitsScope` (`internal` keeps emits local; `external` lets sibling orbitals listen), and `name` (rename the inlined trait). Only the traits + knobs shown here are valid — the schema rejects unknown keys.",
-            "properties": {
-              "PageNodeBrowse": {
-                "type": "object",
-                "additionalProperties": false,
-                "description": "Override knobs for PageNodeBrowse.",
-                "properties": {
-                  "config": {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "properties": {
-                      "statLook": {
-                        "type": "string",
-                        "enum": [
-                          "elevated",
-                          "flat",
-                          "progress-backed",
-                          "gauge",
-                          "sparkline"
-                        ],
-                        "default": "elevated",
-                        "description": "Layer 2 visual treatment for stat / KPI cards.",
-                        "x-label": "Stat display look",
-                        "x-tier": "presentation"
-                      },
-                      "tableLook": {
-                        "type": "string",
-                        "enum": [
-                          "dense",
-                          "spacious",
-                          "striped",
-                          "borderless",
-                          "card-rows"
-                        ],
-                        "default": "dense",
-                        "description": "Layer 2 visual treatment for the data table rendered by this atom.",
-                        "x-label": "Table look",
-                        "x-tier": "presentation"
-                      },
-                      "title": {
-                        "type": "string",
-                        "default": "Pages",
-                        "description": "Heading shown above the page tree",
-                        "x-label": "Section title",
                         "x-tier": "presentation"
                       }
                     }

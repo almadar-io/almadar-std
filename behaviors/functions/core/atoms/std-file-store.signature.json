@@ -65,25 +65,190 @@
           "CLOSE_VIEW",
           "DOWNLOAD_FILE",
           "ARCHIVE_FILE",
+          "REORDER",
           "StoredFileLoaded",
           "StoredFileLoadFailed"
         ],
         "listenedEvents": [],
         "overridableConfigKeys": [
           {
-            "key": "statLook",
-            "type": "string",
-            "default": "elevated",
-            "label": "Stat display look",
-            "description": "Layer 2 visual treatment for stat / KPI cards.",
+            "key": "detailActions",
+            "type": "[ItemAction]",
+            "default": [
+              {
+                "label": "Download",
+                "variant": "primary",
+                "event": "DOWNLOAD_FILE"
+              },
+              {
+                "variant": "danger",
+                "label": "Archive",
+                "event": "ARCHIVE_FILE"
+              }
+            ],
+            "label": "Detail actions",
+            "description": "Buttons shown on the opened row's detail",
             "tier": "presentation",
-            "enumValues": [
-              "elevated",
-              "flat",
-              "progress-backed",
-              "gauge",
-              "sparkline"
-            ]
+            "items": {
+              "properties": {
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "event": {
+                  "name": "event",
+                  "required": true,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "fields",
+            "type": "[FieldSpec]",
+            "default": [
+              {
+                "variant": "caption",
+                "label": "Name",
+                "name": "name"
+              },
+              {
+                "label": "Folder",
+                "variant": "caption",
+                "name": "folder"
+              },
+              {
+                "variant": "badge",
+                "name": "mimeType",
+                "label": "Type"
+              },
+              {
+                "label": "Size",
+                "variant": "caption",
+                "name": "sizeBytes"
+              },
+              {
+                "variant": "caption",
+                "name": "uploadedAt",
+                "label": "Uploaded"
+              }
+            ],
+            "label": "Columns to show",
+            "description": "Each column maps to one field on the linked entity",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string"
+                },
+                "key": {
+                  "name": "key",
+                  "required": false,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "header": {
+                  "name": "header",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "headerIcon",
+            "type": "string",
+            "default": "folder",
+            "label": "Header icon",
+            "description": "Icon shown beside the section title and in the detail header",
+            "tier": "presentation"
+          },
+          {
+            "key": "itemActions",
+            "type": "[ItemAction]",
+            "default": [
+              {
+                "variant": "primary",
+                "label": "Open",
+                "event": "OPEN_FILE",
+                "icon": "arrow-right"
+              },
+              {
+                "label": "Archive",
+                "variant": "danger",
+                "event": "ARCHIVE_FILE"
+              }
+            ],
+            "label": "Row actions",
+            "description": "Buttons on each row",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "event": {
+                  "name": "event",
+                  "required": true,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "reorderable",
+            "type": "boolean",
+            "default": false,
+            "label": "Reorderable rows",
+            "description": "Allow drag-reordering of rows (emits REORDER). On for ordered trees (e.g. wiki page nav).",
+            "tier": "presentation"
           },
           {
             "key": "tableLook",
@@ -105,11 +270,108 @@
             "type": "string",
             "default": "Files",
             "label": "Section title",
-            "description": "Heading shown above the file browser",
+            "description": "Heading shown above the browser",
             "tier": "presentation"
+          },
+          {
+            "key": "tree",
+            "type": "[TreeNode]",
+            "default": [
+              {
+                "name": "Contracts",
+                "children": [
+                  {
+                    "path": "Active.pdf",
+                    "type": "file",
+                    "name": "Active.pdf"
+                  },
+                  {
+                    "path": "Archived.pdf",
+                    "name": "Archived.pdf",
+                    "type": "file"
+                  }
+                ],
+                "type": "dir",
+                "path": "Contracts"
+              },
+              {
+                "name": "Policies",
+                "type": "dir",
+                "children": [
+                  {
+                    "type": "file",
+                    "name": "HR.docx",
+                    "path": "Policies/HR.docx"
+                  },
+                  {
+                    "name": "Security.md",
+                    "path": "Policies/Security.md",
+                    "type": "file"
+                  }
+                ],
+                "path": "Policies"
+              },
+              {
+                "type": "dir",
+                "name": "Templates",
+                "path": "Templates",
+                "children": [
+                  {
+                    "type": "file",
+                    "name": "Invoice.docx",
+                    "path": "Templates/Invoice.docx"
+                  },
+                  {
+                    "path": "Templates/NDA.pdf",
+                    "type": "file",
+                    "name": "NDA.pdf"
+                  }
+                ]
+              }
+            ],
+            "label": "Folder tree",
+            "description": "Hierarchical nav tree shown above the table",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string"
+                },
+                "children": {
+                  "name": "children",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                },
+                "path": {
+                  "name": "path",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "folder",
+            "name",
+            "path"
+          ]
+        }
       }
     ],
     "pages": [
@@ -124,6 +386,7 @@
       "CLOSE_VIEW",
       "DOWNLOAD_FILE",
       "OPEN_FILE",
+      "REORDER",
       "StoredFileLoadFailed",
       "StoredFileLoaded"
     ],
