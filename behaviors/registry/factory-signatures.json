@@ -7690,18 +7690,18 @@
               "key": "bodyContent",
               "type": "render-ui",
               "default": {
-                "type": "stack",
                 "direction": "vertical",
+                "type": "stack",
                 "children": [
                   {
-                    "entity": "@payload.data",
-                    "type": "data-grid",
                     "fields": "@config.fields",
-                    "imageField": "@config.imageField",
+                    "entity": "@payload.data",
                     "itemActions": "@config.itemActions",
+                    "cols": "@config.cols",
+                    "imageField": "@config.imageField",
                     "pageSize": "@config.displayPageSize",
-                    "gap": "@config.gap",
-                    "cols": "@config.cols"
+                    "type": "data-grid",
+                    "gap": "@config.gap"
                   }
                 ]
               },
@@ -7730,24 +7730,24 @@
               "type": "[ColumnSpec]",
               "default": [
                 {
-                  "key": "name",
-                  "align": "left",
-                  "weight": "medium",
                   "field": "name",
-                  "header": "Name"
+                  "header": "Name",
+                  "weight": "medium",
+                  "key": "name",
+                  "align": "left"
                 },
                 {
-                  "align": "left",
                   "header": "Detail",
-                  "key": "description",
-                  "field": "description"
+                  "field": "description",
+                  "align": "left",
+                  "key": "description"
                 },
                 {
-                  "field": "status",
                   "format": "badge",
-                  "header": "Status",
+                  "align": "center",
                   "key": "status",
-                  "align": "center"
+                  "field": "status",
+                  "header": "Status"
                 }
               ],
               "label": "Table columns",
@@ -7755,23 +7755,38 @@
               "tier": "presentation",
               "items": {
                 "properties": {
-                  "className": {
-                    "name": "className",
-                    "required": false,
-                    "type": "string"
-                  },
                   "align": {
                     "name": "align",
                     "required": false,
                     "type": "string"
                   },
-                  "weight": {
-                    "name": "weight",
+                  "width": {
+                    "name": "width",
                     "required": false,
+                    "type": "string"
+                  },
+                  "key": {
+                    "name": "key",
+                    "required": true,
                     "type": "string"
                   },
                   "format": {
                     "name": "format",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "className": {
+                    "name": "className",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "weight": {
+                    "name": "weight",
                     "required": false,
                     "type": "string"
                   },
@@ -7783,21 +7798,6 @@
                   "field": {
                     "name": "field",
                     "required": false,
-                    "type": "string"
-                  },
-                  "width": {
-                    "name": "width",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "key": {
-                    "name": "key",
-                    "required": true,
                     "type": "string"
                   }
                 },
@@ -7826,18 +7826,18 @@
               "default": [
                 {
                   "label": "Name",
-                  "variant": "h4",
-                  "name": "name"
+                  "name": "name",
+                  "variant": "h4"
                 },
                 {
-                  "name": "description",
                   "variant": "caption",
-                  "label": "Description"
+                  "label": "Description",
+                  "name": "description"
                 },
                 {
+                  "label": "Status",
                   "variant": "badge",
-                  "name": "status",
-                  "label": "Status"
+                  "name": "status"
                 }
               ],
               "label": "Columns to show",
@@ -7845,14 +7845,24 @@
               "tier": "presentation",
               "items": {
                 "properties": {
+                  "name": {
+                    "name": "name",
+                    "required": true,
+                    "type": "string"
+                  },
                   "label": {
                     "name": "label",
                     "required": false,
                     "type": "string"
                   },
-                  "name": {
-                    "name": "name",
-                    "required": true,
+                  "key": {
+                    "name": "key",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "header": {
+                    "name": "header",
+                    "required": false,
                     "type": "string"
                   },
                   "variant": {
@@ -7869,16 +7879,37 @@
                     "name": "format",
                     "required": false,
                     "type": "string"
-                  },
-                  "key": {
-                    "name": "key",
+                  }
+                },
+                "type": "object"
+              }
+            },
+            {
+              "key": "filters",
+              "type": "[FilterSpec]",
+              "default": [],
+              "label": "Faceted filters",
+              "description": "Per-field filter facets ({ field, label, options }); each renders a select that fires REFETCH_FILTER to filter the list by that field. Empty = no filter bar.",
+              "tier": "presentation",
+              "items": {
+                "properties": {
+                  "label": {
+                    "name": "label",
                     "required": false,
                     "type": "string"
                   },
-                  "header": {
-                    "name": "header",
-                    "required": false,
+                  "field": {
+                    "name": "field",
+                    "required": true,
                     "type": "string"
+                  },
+                  "options": {
+                    "name": "options",
+                    "required": false,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 },
                 "type": "object"
@@ -7917,24 +7948,24 @@
               "tier": "presentation",
               "items": {
                 "properties": {
-                  "label": {
-                    "name": "label",
-                    "required": true,
-                    "type": "string"
-                  },
                   "icon": {
                     "name": "icon",
                     "required": false,
                     "type": "string"
                   },
-                  "variant": {
-                    "name": "variant",
-                    "required": false,
+                  "label": {
+                    "name": "label",
+                    "required": true,
                     "type": "string"
                   },
                   "event": {
                     "name": "event",
                     "required": true,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
                     "type": "string"
                   }
                 },
@@ -8336,18 +8367,18 @@
                       "bodyContent": {
                         "type": "object",
                         "default": {
-                          "type": "stack",
                           "direction": "vertical",
+                          "type": "stack",
                           "children": [
                             {
-                              "entity": "@payload.data",
-                              "type": "data-grid",
                               "fields": "@config.fields",
-                              "imageField": "@config.imageField",
+                              "entity": "@payload.data",
                               "itemActions": "@config.itemActions",
+                              "cols": "@config.cols",
+                              "imageField": "@config.imageField",
                               "pageSize": "@config.displayPageSize",
-                              "gap": "@config.gap",
-                              "cols": "@config.cols"
+                              "type": "data-grid",
+                              "gap": "@config.gap"
                             }
                           ]
                         },
@@ -8376,24 +8407,24 @@
                         },
                         "default": [
                           {
-                            "key": "name",
-                            "align": "left",
-                            "weight": "medium",
                             "field": "name",
-                            "header": "Name"
+                            "header": "Name",
+                            "weight": "medium",
+                            "key": "name",
+                            "align": "left"
                           },
                           {
-                            "align": "left",
                             "header": "Detail",
-                            "key": "description",
-                            "field": "description"
+                            "field": "description",
+                            "align": "left",
+                            "key": "description"
                           },
                           {
-                            "field": "status",
                             "format": "badge",
-                            "header": "Status",
+                            "align": "center",
                             "key": "status",
-                            "align": "center"
+                            "field": "status",
+                            "header": "Status"
                           }
                         ],
                         "description": "Column definitions for table-style variants (dense). Each maps an entity field to a column with optional width / align / weight / format.",
@@ -8422,22 +8453,32 @@
                         "default": [
                           {
                             "label": "Name",
-                            "variant": "h4",
-                            "name": "name"
+                            "name": "name",
+                            "variant": "h4"
                           },
                           {
-                            "name": "description",
                             "variant": "caption",
-                            "label": "Description"
+                            "label": "Description",
+                            "name": "description"
                           },
                           {
+                            "label": "Status",
                             "variant": "badge",
-                            "name": "status",
-                            "label": "Status"
+                            "name": "status"
                           }
                         ],
                         "description": "Each column maps to one field on the BrowseItem entity",
                         "x-label": "Columns to show",
+                        "x-tier": "presentation"
+                      },
+                      "filters": {
+                        "type": "array",
+                        "items": {
+                          "type": "object"
+                        },
+                        "default": [],
+                        "description": "Per-field filter facets ({ field, label, options }); each renders a select that fires REFETCH_FILTER to filter the list by that field. Empty = no filter bar.",
+                        "x-label": "Faceted filters",
                         "x-tier": "presentation"
                       },
                       "gap": {
@@ -8837,18 +8878,18 @@
               "key": "bodyContent",
               "type": "render-ui",
               "default": {
-                "type": "stack",
                 "direction": "vertical",
+                "type": "stack",
                 "children": [
                   {
-                    "entity": "@payload.data",
-                    "type": "data-grid",
                     "fields": "@config.fields",
-                    "imageField": "@config.imageField",
+                    "entity": "@payload.data",
                     "itemActions": "@config.itemActions",
+                    "cols": "@config.cols",
+                    "imageField": "@config.imageField",
                     "pageSize": "@config.displayPageSize",
-                    "gap": "@config.gap",
-                    "cols": "@config.cols"
+                    "type": "data-grid",
+                    "gap": "@config.gap"
                   }
                 ]
               },
@@ -8877,24 +8918,24 @@
               "type": "[ColumnSpec]",
               "default": [
                 {
-                  "key": "name",
-                  "align": "left",
-                  "weight": "medium",
                   "field": "name",
-                  "header": "Name"
+                  "header": "Name",
+                  "weight": "medium",
+                  "key": "name",
+                  "align": "left"
                 },
                 {
-                  "align": "left",
                   "header": "Detail",
-                  "key": "description",
-                  "field": "description"
+                  "field": "description",
+                  "align": "left",
+                  "key": "description"
                 },
                 {
-                  "field": "status",
                   "format": "badge",
-                  "header": "Status",
+                  "align": "center",
                   "key": "status",
-                  "align": "center"
+                  "field": "status",
+                  "header": "Status"
                 }
               ],
               "label": "Table columns",
@@ -8902,23 +8943,38 @@
               "tier": "presentation",
               "items": {
                 "properties": {
-                  "className": {
-                    "name": "className",
-                    "required": false,
-                    "type": "string"
-                  },
                   "align": {
                     "name": "align",
                     "required": false,
                     "type": "string"
                   },
-                  "weight": {
-                    "name": "weight",
+                  "width": {
+                    "name": "width",
                     "required": false,
+                    "type": "string"
+                  },
+                  "key": {
+                    "name": "key",
+                    "required": true,
                     "type": "string"
                   },
                   "format": {
                     "name": "format",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "className": {
+                    "name": "className",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "weight": {
+                    "name": "weight",
                     "required": false,
                     "type": "string"
                   },
@@ -8930,21 +8986,6 @@
                   "field": {
                     "name": "field",
                     "required": false,
-                    "type": "string"
-                  },
-                  "width": {
-                    "name": "width",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "key": {
-                    "name": "key",
-                    "required": true,
                     "type": "string"
                   }
                 },
@@ -8973,18 +9014,18 @@
               "default": [
                 {
                   "label": "Name",
-                  "variant": "h4",
-                  "name": "name"
+                  "name": "name",
+                  "variant": "h4"
                 },
                 {
-                  "name": "description",
                   "variant": "caption",
-                  "label": "Description"
+                  "label": "Description",
+                  "name": "description"
                 },
                 {
+                  "label": "Status",
                   "variant": "badge",
-                  "name": "status",
-                  "label": "Status"
+                  "name": "status"
                 }
               ],
               "label": "Columns to show",
@@ -8992,14 +9033,24 @@
               "tier": "presentation",
               "items": {
                 "properties": {
+                  "name": {
+                    "name": "name",
+                    "required": true,
+                    "type": "string"
+                  },
                   "label": {
                     "name": "label",
                     "required": false,
                     "type": "string"
                   },
-                  "name": {
-                    "name": "name",
-                    "required": true,
+                  "key": {
+                    "name": "key",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "header": {
+                    "name": "header",
+                    "required": false,
                     "type": "string"
                   },
                   "variant": {
@@ -9016,16 +9067,37 @@
                     "name": "format",
                     "required": false,
                     "type": "string"
-                  },
-                  "key": {
-                    "name": "key",
+                  }
+                },
+                "type": "object"
+              }
+            },
+            {
+              "key": "filters",
+              "type": "[FilterSpec]",
+              "default": [],
+              "label": "Faceted filters",
+              "description": "Per-field filter facets ({ field, label, options }); each renders a select that fires REFETCH_FILTER to filter the list by that field. Empty = no filter bar.",
+              "tier": "presentation",
+              "items": {
+                "properties": {
+                  "label": {
+                    "name": "label",
                     "required": false,
                     "type": "string"
                   },
-                  "header": {
-                    "name": "header",
-                    "required": false,
+                  "field": {
+                    "name": "field",
+                    "required": true,
                     "type": "string"
+                  },
+                  "options": {
+                    "name": "options",
+                    "required": false,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 },
                 "type": "object"
@@ -9064,24 +9136,24 @@
               "tier": "presentation",
               "items": {
                 "properties": {
-                  "label": {
-                    "name": "label",
-                    "required": true,
-                    "type": "string"
-                  },
                   "icon": {
                     "name": "icon",
                     "required": false,
                     "type": "string"
                   },
-                  "variant": {
-                    "name": "variant",
-                    "required": false,
+                  "label": {
+                    "name": "label",
+                    "required": true,
                     "type": "string"
                   },
                   "event": {
                     "name": "event",
                     "required": true,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
                     "type": "string"
                   }
                 },
@@ -9416,18 +9488,18 @@
                       "bodyContent": {
                         "type": "object",
                         "default": {
-                          "type": "stack",
                           "direction": "vertical",
+                          "type": "stack",
                           "children": [
                             {
-                              "entity": "@payload.data",
-                              "type": "data-grid",
                               "fields": "@config.fields",
-                              "imageField": "@config.imageField",
+                              "entity": "@payload.data",
                               "itemActions": "@config.itemActions",
+                              "cols": "@config.cols",
+                              "imageField": "@config.imageField",
                               "pageSize": "@config.displayPageSize",
-                              "gap": "@config.gap",
-                              "cols": "@config.cols"
+                              "type": "data-grid",
+                              "gap": "@config.gap"
                             }
                           ]
                         },
@@ -9456,24 +9528,24 @@
                         },
                         "default": [
                           {
-                            "key": "name",
-                            "align": "left",
-                            "weight": "medium",
                             "field": "name",
-                            "header": "Name"
+                            "header": "Name",
+                            "weight": "medium",
+                            "key": "name",
+                            "align": "left"
                           },
                           {
-                            "align": "left",
                             "header": "Detail",
-                            "key": "description",
-                            "field": "description"
+                            "field": "description",
+                            "align": "left",
+                            "key": "description"
                           },
                           {
-                            "field": "status",
                             "format": "badge",
-                            "header": "Status",
+                            "align": "center",
                             "key": "status",
-                            "align": "center"
+                            "field": "status",
+                            "header": "Status"
                           }
                         ],
                         "description": "Column definitions for table-style variants (dense). Each maps an entity field to a column with optional width / align / weight / format.",
@@ -9502,22 +9574,32 @@
                         "default": [
                           {
                             "label": "Name",
-                            "variant": "h4",
-                            "name": "name"
+                            "name": "name",
+                            "variant": "h4"
                           },
                           {
-                            "name": "description",
                             "variant": "caption",
-                            "label": "Description"
+                            "label": "Description",
+                            "name": "description"
                           },
                           {
+                            "label": "Status",
                             "variant": "badge",
-                            "name": "status",
-                            "label": "Status"
+                            "name": "status"
                           }
                         ],
                         "description": "Each column maps to one field on the BrowseItem entity",
                         "x-label": "Columns to show",
+                        "x-tier": "presentation"
+                      },
+                      "filters": {
+                        "type": "array",
+                        "items": {
+                          "type": "object"
+                        },
+                        "default": [],
+                        "description": "Per-field filter facets ({ field, label, options }); each renders a select that fires REFETCH_FILTER to filter the list by that field. Empty = no filter bar.",
+                        "x-label": "Faceted filters",
                         "x-tier": "presentation"
                       },
                       "gap": {
@@ -15352,18 +15434,18 @@
               "key": "bodyContent",
               "type": "render-ui",
               "default": {
-                "type": "stack",
                 "direction": "vertical",
+                "type": "stack",
                 "children": [
                   {
-                    "entity": "@payload.data",
-                    "type": "data-grid",
                     "fields": "@config.fields",
-                    "imageField": "@config.imageField",
+                    "entity": "@payload.data",
                     "itemActions": "@config.itemActions",
+                    "cols": "@config.cols",
+                    "imageField": "@config.imageField",
                     "pageSize": "@config.displayPageSize",
-                    "gap": "@config.gap",
-                    "cols": "@config.cols"
+                    "type": "data-grid",
+                    "gap": "@config.gap"
                   }
                 ]
               },
@@ -15392,24 +15474,24 @@
               "type": "[ColumnSpec]",
               "default": [
                 {
-                  "key": "name",
-                  "align": "left",
-                  "weight": "medium",
                   "field": "name",
-                  "header": "Name"
+                  "header": "Name",
+                  "weight": "medium",
+                  "key": "name",
+                  "align": "left"
                 },
                 {
-                  "align": "left",
                   "header": "Detail",
-                  "key": "description",
-                  "field": "description"
+                  "field": "description",
+                  "align": "left",
+                  "key": "description"
                 },
                 {
-                  "field": "status",
                   "format": "badge",
-                  "header": "Status",
+                  "align": "center",
                   "key": "status",
-                  "align": "center"
+                  "field": "status",
+                  "header": "Status"
                 }
               ],
               "label": "Table columns",
@@ -15417,23 +15499,38 @@
               "tier": "presentation",
               "items": {
                 "properties": {
-                  "className": {
-                    "name": "className",
-                    "required": false,
-                    "type": "string"
-                  },
                   "align": {
                     "name": "align",
                     "required": false,
                     "type": "string"
                   },
-                  "weight": {
-                    "name": "weight",
+                  "width": {
+                    "name": "width",
                     "required": false,
+                    "type": "string"
+                  },
+                  "key": {
+                    "name": "key",
+                    "required": true,
                     "type": "string"
                   },
                   "format": {
                     "name": "format",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "className": {
+                    "name": "className",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "weight": {
+                    "name": "weight",
                     "required": false,
                     "type": "string"
                   },
@@ -15445,21 +15542,6 @@
                   "field": {
                     "name": "field",
                     "required": false,
-                    "type": "string"
-                  },
-                  "width": {
-                    "name": "width",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "key": {
-                    "name": "key",
-                    "required": true,
                     "type": "string"
                   }
                 },
@@ -15488,18 +15570,18 @@
               "default": [
                 {
                   "label": "Name",
-                  "variant": "h4",
-                  "name": "name"
+                  "name": "name",
+                  "variant": "h4"
                 },
                 {
-                  "name": "description",
                   "variant": "caption",
-                  "label": "Description"
+                  "label": "Description",
+                  "name": "description"
                 },
                 {
+                  "label": "Status",
                   "variant": "badge",
-                  "name": "status",
-                  "label": "Status"
+                  "name": "status"
                 }
               ],
               "label": "Columns to show",
@@ -15507,14 +15589,24 @@
               "tier": "presentation",
               "items": {
                 "properties": {
+                  "name": {
+                    "name": "name",
+                    "required": true,
+                    "type": "string"
+                  },
                   "label": {
                     "name": "label",
                     "required": false,
                     "type": "string"
                   },
-                  "name": {
-                    "name": "name",
-                    "required": true,
+                  "key": {
+                    "name": "key",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "header": {
+                    "name": "header",
+                    "required": false,
                     "type": "string"
                   },
                   "variant": {
@@ -15531,16 +15623,37 @@
                     "name": "format",
                     "required": false,
                     "type": "string"
-                  },
-                  "key": {
-                    "name": "key",
+                  }
+                },
+                "type": "object"
+              }
+            },
+            {
+              "key": "filters",
+              "type": "[FilterSpec]",
+              "default": [],
+              "label": "Faceted filters",
+              "description": "Per-field filter facets ({ field, label, options }); each renders a select that fires REFETCH_FILTER to filter the list by that field. Empty = no filter bar.",
+              "tier": "presentation",
+              "items": {
+                "properties": {
+                  "label": {
+                    "name": "label",
                     "required": false,
                     "type": "string"
                   },
-                  "header": {
-                    "name": "header",
-                    "required": false,
+                  "field": {
+                    "name": "field",
+                    "required": true,
                     "type": "string"
+                  },
+                  "options": {
+                    "name": "options",
+                    "required": false,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 },
                 "type": "object"
@@ -15579,24 +15692,24 @@
               "tier": "presentation",
               "items": {
                 "properties": {
-                  "label": {
-                    "name": "label",
-                    "required": true,
-                    "type": "string"
-                  },
                   "icon": {
                     "name": "icon",
                     "required": false,
                     "type": "string"
                   },
-                  "variant": {
-                    "name": "variant",
-                    "required": false,
+                  "label": {
+                    "name": "label",
+                    "required": true,
                     "type": "string"
                   },
                   "event": {
                     "name": "event",
                     "required": true,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
                     "type": "string"
                   }
                 },
@@ -15903,18 +16016,18 @@
                       "bodyContent": {
                         "type": "object",
                         "default": {
-                          "type": "stack",
                           "direction": "vertical",
+                          "type": "stack",
                           "children": [
                             {
-                              "entity": "@payload.data",
-                              "type": "data-grid",
                               "fields": "@config.fields",
-                              "imageField": "@config.imageField",
+                              "entity": "@payload.data",
                               "itemActions": "@config.itemActions",
+                              "cols": "@config.cols",
+                              "imageField": "@config.imageField",
                               "pageSize": "@config.displayPageSize",
-                              "gap": "@config.gap",
-                              "cols": "@config.cols"
+                              "type": "data-grid",
+                              "gap": "@config.gap"
                             }
                           ]
                         },
@@ -15943,24 +16056,24 @@
                         },
                         "default": [
                           {
-                            "key": "name",
-                            "align": "left",
-                            "weight": "medium",
                             "field": "name",
-                            "header": "Name"
+                            "header": "Name",
+                            "weight": "medium",
+                            "key": "name",
+                            "align": "left"
                           },
                           {
-                            "align": "left",
                             "header": "Detail",
-                            "key": "description",
-                            "field": "description"
+                            "field": "description",
+                            "align": "left",
+                            "key": "description"
                           },
                           {
-                            "field": "status",
                             "format": "badge",
-                            "header": "Status",
+                            "align": "center",
                             "key": "status",
-                            "align": "center"
+                            "field": "status",
+                            "header": "Status"
                           }
                         ],
                         "description": "Column definitions for table-style variants (dense). Each maps an entity field to a column with optional width / align / weight / format.",
@@ -15989,22 +16102,32 @@
                         "default": [
                           {
                             "label": "Name",
-                            "variant": "h4",
-                            "name": "name"
+                            "name": "name",
+                            "variant": "h4"
                           },
                           {
-                            "name": "description",
                             "variant": "caption",
-                            "label": "Description"
+                            "label": "Description",
+                            "name": "description"
                           },
                           {
+                            "label": "Status",
                             "variant": "badge",
-                            "name": "status",
-                            "label": "Status"
+                            "name": "status"
                           }
                         ],
                         "description": "Each column maps to one field on the BrowseItem entity",
                         "x-label": "Columns to show",
+                        "x-tier": "presentation"
+                      },
+                      "filters": {
+                        "type": "array",
+                        "items": {
+                          "type": "object"
+                        },
+                        "default": [],
+                        "description": "Per-field filter facets ({ field, label, options }); each renders a select that fires REFETCH_FILTER to filter the list by that field. Empty = no filter bar.",
+                        "x-label": "Faceted filters",
                         "x-tier": "presentation"
                       },
                       "gap": {
@@ -20618,18 +20741,18 @@
               "key": "bodyContent",
               "type": "render-ui",
               "default": {
-                "type": "stack",
                 "direction": "vertical",
+                "type": "stack",
                 "children": [
                   {
-                    "entity": "@payload.data",
-                    "type": "data-grid",
                     "fields": "@config.fields",
-                    "imageField": "@config.imageField",
+                    "entity": "@payload.data",
                     "itemActions": "@config.itemActions",
+                    "cols": "@config.cols",
+                    "imageField": "@config.imageField",
                     "pageSize": "@config.displayPageSize",
-                    "gap": "@config.gap",
-                    "cols": "@config.cols"
+                    "type": "data-grid",
+                    "gap": "@config.gap"
                   }
                 ]
               },
@@ -20658,24 +20781,24 @@
               "type": "[ColumnSpec]",
               "default": [
                 {
-                  "key": "name",
-                  "align": "left",
-                  "weight": "medium",
                   "field": "name",
-                  "header": "Name"
+                  "header": "Name",
+                  "weight": "medium",
+                  "key": "name",
+                  "align": "left"
                 },
                 {
-                  "align": "left",
                   "header": "Detail",
-                  "key": "description",
-                  "field": "description"
+                  "field": "description",
+                  "align": "left",
+                  "key": "description"
                 },
                 {
-                  "field": "status",
                   "format": "badge",
-                  "header": "Status",
+                  "align": "center",
                   "key": "status",
-                  "align": "center"
+                  "field": "status",
+                  "header": "Status"
                 }
               ],
               "label": "Table columns",
@@ -20683,23 +20806,38 @@
               "tier": "presentation",
               "items": {
                 "properties": {
-                  "className": {
-                    "name": "className",
-                    "required": false,
-                    "type": "string"
-                  },
                   "align": {
                     "name": "align",
                     "required": false,
                     "type": "string"
                   },
-                  "weight": {
-                    "name": "weight",
+                  "width": {
+                    "name": "width",
                     "required": false,
+                    "type": "string"
+                  },
+                  "key": {
+                    "name": "key",
+                    "required": true,
                     "type": "string"
                   },
                   "format": {
                     "name": "format",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "className": {
+                    "name": "className",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "weight": {
+                    "name": "weight",
                     "required": false,
                     "type": "string"
                   },
@@ -20711,21 +20849,6 @@
                   "field": {
                     "name": "field",
                     "required": false,
-                    "type": "string"
-                  },
-                  "width": {
-                    "name": "width",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "key": {
-                    "name": "key",
-                    "required": true,
                     "type": "string"
                   }
                 },
@@ -20754,18 +20877,18 @@
               "default": [
                 {
                   "label": "Name",
-                  "variant": "h4",
-                  "name": "name"
+                  "name": "name",
+                  "variant": "h4"
                 },
                 {
-                  "name": "description",
                   "variant": "caption",
-                  "label": "Description"
+                  "label": "Description",
+                  "name": "description"
                 },
                 {
+                  "label": "Status",
                   "variant": "badge",
-                  "name": "status",
-                  "label": "Status"
+                  "name": "status"
                 }
               ],
               "label": "Columns to show",
@@ -20773,14 +20896,24 @@
               "tier": "presentation",
               "items": {
                 "properties": {
+                  "name": {
+                    "name": "name",
+                    "required": true,
+                    "type": "string"
+                  },
                   "label": {
                     "name": "label",
                     "required": false,
                     "type": "string"
                   },
-                  "name": {
-                    "name": "name",
-                    "required": true,
+                  "key": {
+                    "name": "key",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "header": {
+                    "name": "header",
+                    "required": false,
                     "type": "string"
                   },
                   "variant": {
@@ -20797,16 +20930,37 @@
                     "name": "format",
                     "required": false,
                     "type": "string"
-                  },
-                  "key": {
-                    "name": "key",
+                  }
+                },
+                "type": "object"
+              }
+            },
+            {
+              "key": "filters",
+              "type": "[FilterSpec]",
+              "default": [],
+              "label": "Faceted filters",
+              "description": "Per-field filter facets ({ field, label, options }); each renders a select that fires REFETCH_FILTER to filter the list by that field. Empty = no filter bar.",
+              "tier": "presentation",
+              "items": {
+                "properties": {
+                  "label": {
+                    "name": "label",
                     "required": false,
                     "type": "string"
                   },
-                  "header": {
-                    "name": "header",
-                    "required": false,
+                  "field": {
+                    "name": "field",
+                    "required": true,
                     "type": "string"
+                  },
+                  "options": {
+                    "name": "options",
+                    "required": false,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 },
                 "type": "object"
@@ -20845,24 +20999,24 @@
               "tier": "presentation",
               "items": {
                 "properties": {
-                  "label": {
-                    "name": "label",
-                    "required": true,
-                    "type": "string"
-                  },
                   "icon": {
                     "name": "icon",
                     "required": false,
                     "type": "string"
                   },
-                  "variant": {
-                    "name": "variant",
-                    "required": false,
+                  "label": {
+                    "name": "label",
+                    "required": true,
                     "type": "string"
                   },
                   "event": {
                     "name": "event",
                     "required": true,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
                     "type": "string"
                   }
                 },
@@ -21169,18 +21323,18 @@
                       "bodyContent": {
                         "type": "object",
                         "default": {
-                          "type": "stack",
                           "direction": "vertical",
+                          "type": "stack",
                           "children": [
                             {
-                              "entity": "@payload.data",
-                              "type": "data-grid",
                               "fields": "@config.fields",
-                              "imageField": "@config.imageField",
+                              "entity": "@payload.data",
                               "itemActions": "@config.itemActions",
+                              "cols": "@config.cols",
+                              "imageField": "@config.imageField",
                               "pageSize": "@config.displayPageSize",
-                              "gap": "@config.gap",
-                              "cols": "@config.cols"
+                              "type": "data-grid",
+                              "gap": "@config.gap"
                             }
                           ]
                         },
@@ -21209,24 +21363,24 @@
                         },
                         "default": [
                           {
-                            "key": "name",
-                            "align": "left",
-                            "weight": "medium",
                             "field": "name",
-                            "header": "Name"
+                            "header": "Name",
+                            "weight": "medium",
+                            "key": "name",
+                            "align": "left"
                           },
                           {
-                            "align": "left",
                             "header": "Detail",
-                            "key": "description",
-                            "field": "description"
+                            "field": "description",
+                            "align": "left",
+                            "key": "description"
                           },
                           {
-                            "field": "status",
                             "format": "badge",
-                            "header": "Status",
+                            "align": "center",
                             "key": "status",
-                            "align": "center"
+                            "field": "status",
+                            "header": "Status"
                           }
                         ],
                         "description": "Column definitions for table-style variants (dense). Each maps an entity field to a column with optional width / align / weight / format.",
@@ -21255,22 +21409,32 @@
                         "default": [
                           {
                             "label": "Name",
-                            "variant": "h4",
-                            "name": "name"
+                            "name": "name",
+                            "variant": "h4"
                           },
                           {
-                            "name": "description",
                             "variant": "caption",
-                            "label": "Description"
+                            "label": "Description",
+                            "name": "description"
                           },
                           {
+                            "label": "Status",
                             "variant": "badge",
-                            "name": "status",
-                            "label": "Status"
+                            "name": "status"
                           }
                         ],
                         "description": "Each column maps to one field on the BrowseItem entity",
                         "x-label": "Columns to show",
+                        "x-tier": "presentation"
+                      },
+                      "filters": {
+                        "type": "array",
+                        "items": {
+                          "type": "object"
+                        },
+                        "default": [],
+                        "description": "Per-field filter facets ({ field, label, options }); each renders a select that fires REFETCH_FILTER to filter the list by that field. Empty = no filter bar.",
+                        "x-label": "Faceted filters",
                         "x-tier": "presentation"
                       },
                       "gap": {
@@ -30115,18 +30279,18 @@
               "key": "bodyContent",
               "type": "render-ui",
               "default": {
-                "type": "stack",
                 "direction": "vertical",
+                "type": "stack",
                 "children": [
                   {
-                    "entity": "@payload.data",
-                    "type": "data-grid",
                     "fields": "@config.fields",
-                    "imageField": "@config.imageField",
+                    "entity": "@payload.data",
                     "itemActions": "@config.itemActions",
+                    "cols": "@config.cols",
+                    "imageField": "@config.imageField",
                     "pageSize": "@config.displayPageSize",
-                    "gap": "@config.gap",
-                    "cols": "@config.cols"
+                    "type": "data-grid",
+                    "gap": "@config.gap"
                   }
                 ]
               },
@@ -30155,24 +30319,24 @@
               "type": "[ColumnSpec]",
               "default": [
                 {
-                  "key": "name",
-                  "align": "left",
-                  "weight": "medium",
                   "field": "name",
-                  "header": "Name"
+                  "header": "Name",
+                  "weight": "medium",
+                  "key": "name",
+                  "align": "left"
                 },
                 {
-                  "align": "left",
                   "header": "Detail",
-                  "key": "description",
-                  "field": "description"
+                  "field": "description",
+                  "align": "left",
+                  "key": "description"
                 },
                 {
-                  "field": "status",
                   "format": "badge",
-                  "header": "Status",
+                  "align": "center",
                   "key": "status",
-                  "align": "center"
+                  "field": "status",
+                  "header": "Status"
                 }
               ],
               "label": "Table columns",
@@ -30180,23 +30344,38 @@
               "tier": "presentation",
               "items": {
                 "properties": {
-                  "className": {
-                    "name": "className",
-                    "required": false,
-                    "type": "string"
-                  },
                   "align": {
                     "name": "align",
                     "required": false,
                     "type": "string"
                   },
-                  "weight": {
-                    "name": "weight",
+                  "width": {
+                    "name": "width",
                     "required": false,
+                    "type": "string"
+                  },
+                  "key": {
+                    "name": "key",
+                    "required": true,
                     "type": "string"
                   },
                   "format": {
                     "name": "format",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "className": {
+                    "name": "className",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "weight": {
+                    "name": "weight",
                     "required": false,
                     "type": "string"
                   },
@@ -30208,21 +30387,6 @@
                   "field": {
                     "name": "field",
                     "required": false,
-                    "type": "string"
-                  },
-                  "width": {
-                    "name": "width",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "key": {
-                    "name": "key",
-                    "required": true,
                     "type": "string"
                   }
                 },
@@ -30251,18 +30415,18 @@
               "default": [
                 {
                   "label": "Name",
-                  "variant": "h4",
-                  "name": "name"
+                  "name": "name",
+                  "variant": "h4"
                 },
                 {
-                  "name": "description",
                   "variant": "caption",
-                  "label": "Description"
+                  "label": "Description",
+                  "name": "description"
                 },
                 {
+                  "label": "Status",
                   "variant": "badge",
-                  "name": "status",
-                  "label": "Status"
+                  "name": "status"
                 }
               ],
               "label": "Columns to show",
@@ -30270,14 +30434,24 @@
               "tier": "presentation",
               "items": {
                 "properties": {
+                  "name": {
+                    "name": "name",
+                    "required": true,
+                    "type": "string"
+                  },
                   "label": {
                     "name": "label",
                     "required": false,
                     "type": "string"
                   },
-                  "name": {
-                    "name": "name",
-                    "required": true,
+                  "key": {
+                    "name": "key",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "header": {
+                    "name": "header",
+                    "required": false,
                     "type": "string"
                   },
                   "variant": {
@@ -30294,16 +30468,37 @@
                     "name": "format",
                     "required": false,
                     "type": "string"
-                  },
-                  "key": {
-                    "name": "key",
+                  }
+                },
+                "type": "object"
+              }
+            },
+            {
+              "key": "filters",
+              "type": "[FilterSpec]",
+              "default": [],
+              "label": "Faceted filters",
+              "description": "Per-field filter facets ({ field, label, options }); each renders a select that fires REFETCH_FILTER to filter the list by that field. Empty = no filter bar.",
+              "tier": "presentation",
+              "items": {
+                "properties": {
+                  "label": {
+                    "name": "label",
                     "required": false,
                     "type": "string"
                   },
-                  "header": {
-                    "name": "header",
-                    "required": false,
+                  "field": {
+                    "name": "field",
+                    "required": true,
                     "type": "string"
+                  },
+                  "options": {
+                    "name": "options",
+                    "required": false,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 },
                 "type": "object"
@@ -30342,24 +30537,24 @@
               "tier": "presentation",
               "items": {
                 "properties": {
-                  "label": {
-                    "name": "label",
-                    "required": true,
-                    "type": "string"
-                  },
                   "icon": {
                     "name": "icon",
                     "required": false,
                     "type": "string"
                   },
-                  "variant": {
-                    "name": "variant",
-                    "required": false,
+                  "label": {
+                    "name": "label",
+                    "required": true,
                     "type": "string"
                   },
                   "event": {
                     "name": "event",
                     "required": true,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
                     "type": "string"
                   }
                 },
@@ -30671,18 +30866,18 @@
                       "bodyContent": {
                         "type": "object",
                         "default": {
-                          "type": "stack",
                           "direction": "vertical",
+                          "type": "stack",
                           "children": [
                             {
-                              "entity": "@payload.data",
-                              "type": "data-grid",
                               "fields": "@config.fields",
-                              "imageField": "@config.imageField",
+                              "entity": "@payload.data",
                               "itemActions": "@config.itemActions",
+                              "cols": "@config.cols",
+                              "imageField": "@config.imageField",
                               "pageSize": "@config.displayPageSize",
-                              "gap": "@config.gap",
-                              "cols": "@config.cols"
+                              "type": "data-grid",
+                              "gap": "@config.gap"
                             }
                           ]
                         },
@@ -30711,24 +30906,24 @@
                         },
                         "default": [
                           {
-                            "key": "name",
-                            "align": "left",
-                            "weight": "medium",
                             "field": "name",
-                            "header": "Name"
+                            "header": "Name",
+                            "weight": "medium",
+                            "key": "name",
+                            "align": "left"
                           },
                           {
-                            "align": "left",
                             "header": "Detail",
-                            "key": "description",
-                            "field": "description"
+                            "field": "description",
+                            "align": "left",
+                            "key": "description"
                           },
                           {
-                            "field": "status",
                             "format": "badge",
-                            "header": "Status",
+                            "align": "center",
                             "key": "status",
-                            "align": "center"
+                            "field": "status",
+                            "header": "Status"
                           }
                         ],
                         "description": "Column definitions for table-style variants (dense). Each maps an entity field to a column with optional width / align / weight / format.",
@@ -30757,22 +30952,32 @@
                         "default": [
                           {
                             "label": "Name",
-                            "variant": "h4",
-                            "name": "name"
+                            "name": "name",
+                            "variant": "h4"
                           },
                           {
-                            "name": "description",
                             "variant": "caption",
-                            "label": "Description"
+                            "label": "Description",
+                            "name": "description"
                           },
                           {
+                            "label": "Status",
                             "variant": "badge",
-                            "name": "status",
-                            "label": "Status"
+                            "name": "status"
                           }
                         ],
                         "description": "Each column maps to one field on the BrowseItem entity",
                         "x-label": "Columns to show",
+                        "x-tier": "presentation"
+                      },
+                      "filters": {
+                        "type": "array",
+                        "items": {
+                          "type": "object"
+                        },
+                        "default": [],
+                        "description": "Per-field filter facets ({ field, label, options }); each renders a select that fires REFETCH_FILTER to filter the list by that field. Empty = no filter bar.",
+                        "x-label": "Faceted filters",
                         "x-tier": "presentation"
                       },
                       "gap": {
@@ -31431,69 +31636,69 @@
               "type": "unknown",
               "default": [
                 {
-                  "className": "font-mono text-[var(--color-text-muted)]",
-                  "field": "id",
-                  "header": "ID",
-                  "align": "left",
                   "key": "id",
+                  "header": "ID",
+                  "field": "id",
+                  "align": "left",
+                  "className": "font-mono text-[var(--color-text-muted)]",
                   "width": "7rem"
                 },
                 {
                   "field": "name",
-                  "width": "minmax(10rem, 1.5fr)",
-                  "header": "Name",
-                  "weight": "medium",
                   "align": "left",
+                  "header": "Name",
+                  "width": "minmax(10rem, 1.5fr)",
+                  "weight": "medium",
                   "key": "name"
                 },
                 {
-                  "align": "left",
-                  "key": "description",
-                  "className": "text-[var(--color-text-muted)]",
-                  "field": "description",
                   "header": "Detail",
-                  "width": "minmax(12rem, 2fr)"
+                  "field": "description",
+                  "key": "description",
+                  "width": "minmax(12rem, 2fr)",
+                  "className": "text-[var(--color-text-muted)]",
+                  "align": "left"
                 },
                 {
+                  "width": "6rem",
+                  "field": "value",
+                  "align": "right",
                   "className": "font-mono tabular-nums",
                   "header": "Value",
-                  "key": "value",
-                  "width": "6rem",
-                  "align": "right",
-                  "field": "value"
+                  "key": "value"
                 },
                 {
                   "width": "6rem",
-                  "field": "change",
                   "align": "right",
-                  "header": "Change",
+                  "key": "change",
                   "className": "font-mono tabular-nums",
-                  "key": "change"
+                  "header": "Change",
+                  "field": "change"
                 },
                 {
-                  "width": "6rem",
-                  "header": "Volume",
-                  "field": "volume",
                   "key": "volume",
-                  "align": "right",
-                  "className": "font-mono tabular-nums text-[var(--color-text-muted)]"
+                  "field": "volume",
+                  "width": "6rem",
+                  "className": "font-mono tabular-nums text-[var(--color-text-muted)]",
+                  "header": "Volume",
+                  "align": "right"
                 },
                 {
-                  "format": "badge",
                   "field": "status",
                   "header": "Status",
-                  "key": "status",
                   "width": "6rem",
+                  "format": "badge",
+                  "key": "status",
                   "align": "center"
                 },
                 {
-                  "format": "date",
-                  "width": "9rem",
                   "align": "right",
+                  "format": "date",
                   "key": "createdAt",
-                  "header": "Created",
+                  "width": "9rem",
                   "field": "createdAt",
-                  "className": "font-mono tabular-nums text-[var(--color-text-muted)]"
+                  "className": "font-mono tabular-nums text-[var(--color-text-muted)]",
+                  "header": "Created"
                 }
               ]
             }
@@ -31734,69 +31939,69 @@
                         "type": "object",
                         "default": [
                           {
-                            "className": "font-mono text-[var(--color-text-muted)]",
-                            "field": "id",
-                            "header": "ID",
-                            "align": "left",
                             "key": "id",
+                            "header": "ID",
+                            "field": "id",
+                            "align": "left",
+                            "className": "font-mono text-[var(--color-text-muted)]",
                             "width": "7rem"
                           },
                           {
                             "field": "name",
-                            "width": "minmax(10rem, 1.5fr)",
-                            "header": "Name",
-                            "weight": "medium",
                             "align": "left",
+                            "header": "Name",
+                            "width": "minmax(10rem, 1.5fr)",
+                            "weight": "medium",
                             "key": "name"
                           },
                           {
-                            "align": "left",
-                            "key": "description",
-                            "className": "text-[var(--color-text-muted)]",
-                            "field": "description",
                             "header": "Detail",
-                            "width": "minmax(12rem, 2fr)"
+                            "field": "description",
+                            "key": "description",
+                            "width": "minmax(12rem, 2fr)",
+                            "className": "text-[var(--color-text-muted)]",
+                            "align": "left"
                           },
                           {
+                            "width": "6rem",
+                            "field": "value",
+                            "align": "right",
                             "className": "font-mono tabular-nums",
                             "header": "Value",
-                            "key": "value",
-                            "width": "6rem",
-                            "align": "right",
-                            "field": "value"
+                            "key": "value"
                           },
                           {
                             "width": "6rem",
-                            "field": "change",
                             "align": "right",
-                            "header": "Change",
+                            "key": "change",
                             "className": "font-mono tabular-nums",
-                            "key": "change"
+                            "header": "Change",
+                            "field": "change"
                           },
                           {
-                            "width": "6rem",
-                            "header": "Volume",
-                            "field": "volume",
                             "key": "volume",
-                            "align": "right",
-                            "className": "font-mono tabular-nums text-[var(--color-text-muted)]"
+                            "field": "volume",
+                            "width": "6rem",
+                            "className": "font-mono tabular-nums text-[var(--color-text-muted)]",
+                            "header": "Volume",
+                            "align": "right"
                           },
                           {
-                            "format": "badge",
                             "field": "status",
                             "header": "Status",
-                            "key": "status",
                             "width": "6rem",
+                            "format": "badge",
+                            "key": "status",
                             "align": "center"
                           },
                           {
-                            "format": "date",
-                            "width": "9rem",
                             "align": "right",
+                            "format": "date",
                             "key": "createdAt",
-                            "header": "Created",
+                            "width": "9rem",
                             "field": "createdAt",
-                            "className": "font-mono tabular-nums text-[var(--color-text-muted)]"
+                            "className": "font-mono tabular-nums text-[var(--color-text-muted)]",
+                            "header": "Created"
                           }
                         ]
                       }
@@ -37662,18 +37867,18 @@
               "key": "bodyContent",
               "type": "render-ui",
               "default": {
-                "type": "stack",
                 "direction": "vertical",
+                "type": "stack",
                 "children": [
                   {
-                    "entity": "@payload.data",
-                    "type": "data-grid",
                     "fields": "@config.fields",
-                    "imageField": "@config.imageField",
+                    "entity": "@payload.data",
                     "itemActions": "@config.itemActions",
+                    "cols": "@config.cols",
+                    "imageField": "@config.imageField",
                     "pageSize": "@config.displayPageSize",
-                    "gap": "@config.gap",
-                    "cols": "@config.cols"
+                    "type": "data-grid",
+                    "gap": "@config.gap"
                   }
                 ]
               },
@@ -37702,24 +37907,24 @@
               "type": "[ColumnSpec]",
               "default": [
                 {
-                  "key": "name",
-                  "align": "left",
-                  "weight": "medium",
                   "field": "name",
-                  "header": "Name"
+                  "header": "Name",
+                  "weight": "medium",
+                  "key": "name",
+                  "align": "left"
                 },
                 {
-                  "align": "left",
                   "header": "Detail",
-                  "key": "description",
-                  "field": "description"
+                  "field": "description",
+                  "align": "left",
+                  "key": "description"
                 },
                 {
-                  "field": "status",
                   "format": "badge",
-                  "header": "Status",
+                  "align": "center",
                   "key": "status",
-                  "align": "center"
+                  "field": "status",
+                  "header": "Status"
                 }
               ],
               "label": "Table columns",
@@ -37727,23 +37932,38 @@
               "tier": "presentation",
               "items": {
                 "properties": {
-                  "className": {
-                    "name": "className",
-                    "required": false,
-                    "type": "string"
-                  },
                   "align": {
                     "name": "align",
                     "required": false,
                     "type": "string"
                   },
-                  "weight": {
-                    "name": "weight",
+                  "width": {
+                    "name": "width",
                     "required": false,
+                    "type": "string"
+                  },
+                  "key": {
+                    "name": "key",
+                    "required": true,
                     "type": "string"
                   },
                   "format": {
                     "name": "format",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "className": {
+                    "name": "className",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "weight": {
+                    "name": "weight",
                     "required": false,
                     "type": "string"
                   },
@@ -37755,21 +37975,6 @@
                   "field": {
                     "name": "field",
                     "required": false,
-                    "type": "string"
-                  },
-                  "width": {
-                    "name": "width",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "key": {
-                    "name": "key",
-                    "required": true,
                     "type": "string"
                   }
                 },
@@ -37819,14 +38024,24 @@
               ],
               "items": {
                 "properties": {
+                  "name": {
+                    "name": "name",
+                    "required": true,
+                    "type": "string"
+                  },
                   "label": {
                     "name": "label",
                     "required": false,
                     "type": "string"
                   },
-                  "name": {
-                    "name": "name",
-                    "required": true,
+                  "key": {
+                    "name": "key",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "header": {
+                    "name": "header",
+                    "required": false,
                     "type": "string"
                   },
                   "variant": {
@@ -37843,16 +38058,6 @@
                     "name": "format",
                     "required": false,
                     "type": "string"
-                  },
-                  "key": {
-                    "name": "key",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "header": {
-                    "name": "header",
-                    "required": false,
-                    "type": "string"
                   }
                 },
                 "type": "object"
@@ -37860,6 +38065,37 @@
               "label": "Columns to show",
               "description": "Each column maps to one field on the BrowseItem entity",
               "tier": "presentation"
+            },
+            {
+              "key": "filters",
+              "type": "[FilterSpec]",
+              "default": [],
+              "label": "Faceted filters",
+              "description": "Per-field filter facets ({ field, label, options }); each renders a select that fires REFETCH_FILTER to filter the list by that field. Empty = no filter bar.",
+              "tier": "presentation",
+              "items": {
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "field": {
+                    "name": "field",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "options": {
+                    "name": "options",
+                    "required": false,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "type": "object"
+              }
             },
             {
               "key": "gap",
@@ -37894,24 +38130,24 @@
               "tier": "presentation",
               "items": {
                 "properties": {
-                  "label": {
-                    "name": "label",
-                    "required": true,
-                    "type": "string"
-                  },
                   "icon": {
                     "name": "icon",
                     "required": false,
                     "type": "string"
                   },
-                  "variant": {
-                    "name": "variant",
-                    "required": false,
+                  "label": {
+                    "name": "label",
+                    "required": true,
                     "type": "string"
                   },
                   "event": {
                     "name": "event",
                     "required": true,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
                     "type": "string"
                   }
                 },
@@ -38931,18 +39167,18 @@
                       "bodyContent": {
                         "type": "object",
                         "default": {
-                          "type": "stack",
                           "direction": "vertical",
+                          "type": "stack",
                           "children": [
                             {
-                              "entity": "@payload.data",
-                              "type": "data-grid",
                               "fields": "@config.fields",
-                              "imageField": "@config.imageField",
+                              "entity": "@payload.data",
                               "itemActions": "@config.itemActions",
+                              "cols": "@config.cols",
+                              "imageField": "@config.imageField",
                               "pageSize": "@config.displayPageSize",
-                              "gap": "@config.gap",
-                              "cols": "@config.cols"
+                              "type": "data-grid",
+                              "gap": "@config.gap"
                             }
                           ]
                         },
@@ -38971,24 +39207,24 @@
                         },
                         "default": [
                           {
-                            "key": "name",
-                            "align": "left",
-                            "weight": "medium",
                             "field": "name",
-                            "header": "Name"
+                            "header": "Name",
+                            "weight": "medium",
+                            "key": "name",
+                            "align": "left"
                           },
                           {
-                            "align": "left",
                             "header": "Detail",
-                            "key": "description",
-                            "field": "description"
+                            "field": "description",
+                            "align": "left",
+                            "key": "description"
                           },
                           {
-                            "field": "status",
                             "format": "badge",
-                            "header": "Status",
+                            "align": "center",
                             "key": "status",
-                            "align": "center"
+                            "field": "status",
+                            "header": "Status"
                           }
                         ],
                         "description": "Column definitions for table-style variants (dense). Each maps an entity field to a column with optional width / align / weight / format.",
@@ -39038,6 +39274,16 @@
                         ],
                         "description": "Each column maps to one field on the BrowseItem entity",
                         "x-label": "Columns to show",
+                        "x-tier": "presentation"
+                      },
+                      "filters": {
+                        "type": "array",
+                        "items": {
+                          "type": "object"
+                        },
+                        "default": [],
+                        "description": "Per-field filter facets ({ field, label, options }); each renders a select that fires REFETCH_FILTER to filter the list by that field. Empty = no filter bar.",
+                        "x-label": "Faceted filters",
                         "x-tier": "presentation"
                       },
                       "gap": {
@@ -46789,18 +47035,18 @@
               "key": "bodyContent",
               "type": "render-ui",
               "default": {
-                "type": "stack",
                 "direction": "vertical",
+                "type": "stack",
                 "children": [
                   {
-                    "entity": "@payload.data",
-                    "type": "data-grid",
                     "fields": "@config.fields",
-                    "imageField": "@config.imageField",
+                    "entity": "@payload.data",
                     "itemActions": "@config.itemActions",
+                    "cols": "@config.cols",
+                    "imageField": "@config.imageField",
                     "pageSize": "@config.displayPageSize",
-                    "gap": "@config.gap",
-                    "cols": "@config.cols"
+                    "type": "data-grid",
+                    "gap": "@config.gap"
                   }
                 ]
               },
@@ -46829,24 +47075,24 @@
               "type": "[ColumnSpec]",
               "default": [
                 {
-                  "key": "name",
-                  "align": "left",
-                  "weight": "medium",
                   "field": "name",
-                  "header": "Name"
+                  "header": "Name",
+                  "weight": "medium",
+                  "key": "name",
+                  "align": "left"
                 },
                 {
-                  "align": "left",
                   "header": "Detail",
-                  "key": "description",
-                  "field": "description"
+                  "field": "description",
+                  "align": "left",
+                  "key": "description"
                 },
                 {
-                  "field": "status",
                   "format": "badge",
-                  "header": "Status",
+                  "align": "center",
                   "key": "status",
-                  "align": "center"
+                  "field": "status",
+                  "header": "Status"
                 }
               ],
               "label": "Table columns",
@@ -46854,23 +47100,38 @@
               "tier": "presentation",
               "items": {
                 "properties": {
-                  "className": {
-                    "name": "className",
-                    "required": false,
-                    "type": "string"
-                  },
                   "align": {
                     "name": "align",
                     "required": false,
                     "type": "string"
                   },
-                  "weight": {
-                    "name": "weight",
+                  "width": {
+                    "name": "width",
                     "required": false,
+                    "type": "string"
+                  },
+                  "key": {
+                    "name": "key",
+                    "required": true,
                     "type": "string"
                   },
                   "format": {
                     "name": "format",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "className": {
+                    "name": "className",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "weight": {
+                    "name": "weight",
                     "required": false,
                     "type": "string"
                   },
@@ -46882,21 +47143,6 @@
                   "field": {
                     "name": "field",
                     "required": false,
-                    "type": "string"
-                  },
-                  "width": {
-                    "name": "width",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "key": {
-                    "name": "key",
-                    "required": true,
                     "type": "string"
                   }
                 },
@@ -46941,14 +47187,24 @@
               ],
               "items": {
                 "properties": {
+                  "name": {
+                    "name": "name",
+                    "required": true,
+                    "type": "string"
+                  },
                   "label": {
                     "name": "label",
                     "required": false,
                     "type": "string"
                   },
-                  "name": {
-                    "name": "name",
-                    "required": true,
+                  "key": {
+                    "name": "key",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "header": {
+                    "name": "header",
+                    "required": false,
                     "type": "string"
                   },
                   "variant": {
@@ -46965,16 +47221,6 @@
                     "name": "format",
                     "required": false,
                     "type": "string"
-                  },
-                  "key": {
-                    "name": "key",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "header": {
-                    "name": "header",
-                    "required": false,
-                    "type": "string"
                   }
                 },
                 "type": "object"
@@ -46982,6 +47228,37 @@
               "label": "Columns to show",
               "description": "Each column maps to one field on the BrowseItem entity",
               "tier": "presentation"
+            },
+            {
+              "key": "filters",
+              "type": "[FilterSpec]",
+              "default": [],
+              "label": "Faceted filters",
+              "description": "Per-field filter facets ({ field, label, options }); each renders a select that fires REFETCH_FILTER to filter the list by that field. Empty = no filter bar.",
+              "tier": "presentation",
+              "items": {
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "field": {
+                    "name": "field",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "options": {
+                    "name": "options",
+                    "required": false,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "type": "object"
+              }
             },
             {
               "key": "gap",
@@ -47016,24 +47293,24 @@
               "tier": "presentation",
               "items": {
                 "properties": {
-                  "label": {
-                    "name": "label",
-                    "required": true,
-                    "type": "string"
-                  },
                   "icon": {
                     "name": "icon",
                     "required": false,
                     "type": "string"
                   },
-                  "variant": {
-                    "name": "variant",
-                    "required": false,
+                  "label": {
+                    "name": "label",
+                    "required": true,
                     "type": "string"
                   },
                   "event": {
                     "name": "event",
                     "required": true,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
                     "type": "string"
                   }
                 },
@@ -47565,18 +47842,18 @@
                       "bodyContent": {
                         "type": "object",
                         "default": {
-                          "type": "stack",
                           "direction": "vertical",
+                          "type": "stack",
                           "children": [
                             {
-                              "entity": "@payload.data",
-                              "type": "data-grid",
                               "fields": "@config.fields",
-                              "imageField": "@config.imageField",
+                              "entity": "@payload.data",
                               "itemActions": "@config.itemActions",
+                              "cols": "@config.cols",
+                              "imageField": "@config.imageField",
                               "pageSize": "@config.displayPageSize",
-                              "gap": "@config.gap",
-                              "cols": "@config.cols"
+                              "type": "data-grid",
+                              "gap": "@config.gap"
                             }
                           ]
                         },
@@ -47605,24 +47882,24 @@
                         },
                         "default": [
                           {
-                            "key": "name",
-                            "align": "left",
-                            "weight": "medium",
                             "field": "name",
-                            "header": "Name"
+                            "header": "Name",
+                            "weight": "medium",
+                            "key": "name",
+                            "align": "left"
                           },
                           {
-                            "align": "left",
                             "header": "Detail",
-                            "key": "description",
-                            "field": "description"
+                            "field": "description",
+                            "align": "left",
+                            "key": "description"
                           },
                           {
-                            "field": "status",
                             "format": "badge",
-                            "header": "Status",
+                            "align": "center",
                             "key": "status",
-                            "align": "center"
+                            "field": "status",
+                            "header": "Status"
                           }
                         ],
                         "description": "Column definitions for table-style variants (dense). Each maps an entity field to a column with optional width / align / weight / format.",
@@ -47667,6 +47944,16 @@
                         ],
                         "description": "Each column maps to one field on the BrowseItem entity",
                         "x-label": "Columns to show",
+                        "x-tier": "presentation"
+                      },
+                      "filters": {
+                        "type": "array",
+                        "items": {
+                          "type": "object"
+                        },
+                        "default": [],
+                        "description": "Per-field filter facets ({ field, label, options }); each renders a select that fires REFETCH_FILTER to filter the list by that field. Empty = no filter bar.",
+                        "x-label": "Faceted filters",
                         "x-tier": "presentation"
                       },
                       "gap": {
@@ -49817,18 +50104,18 @@
               "key": "bodyContent",
               "type": "render-ui",
               "default": {
-                "type": "stack",
                 "direction": "vertical",
+                "type": "stack",
                 "children": [
                   {
-                    "entity": "@payload.data",
-                    "type": "data-grid",
                     "fields": "@config.fields",
-                    "imageField": "@config.imageField",
+                    "entity": "@payload.data",
                     "itemActions": "@config.itemActions",
+                    "cols": "@config.cols",
+                    "imageField": "@config.imageField",
                     "pageSize": "@config.displayPageSize",
-                    "gap": "@config.gap",
-                    "cols": "@config.cols"
+                    "type": "data-grid",
+                    "gap": "@config.gap"
                   }
                 ]
               },
@@ -49857,24 +50144,24 @@
               "type": "[ColumnSpec]",
               "default": [
                 {
-                  "key": "name",
-                  "align": "left",
-                  "weight": "medium",
                   "field": "name",
-                  "header": "Name"
+                  "header": "Name",
+                  "weight": "medium",
+                  "key": "name",
+                  "align": "left"
                 },
                 {
-                  "align": "left",
                   "header": "Detail",
-                  "key": "description",
-                  "field": "description"
+                  "field": "description",
+                  "align": "left",
+                  "key": "description"
                 },
                 {
-                  "field": "status",
                   "format": "badge",
-                  "header": "Status",
+                  "align": "center",
                   "key": "status",
-                  "align": "center"
+                  "field": "status",
+                  "header": "Status"
                 }
               ],
               "label": "Table columns",
@@ -49882,23 +50169,38 @@
               "tier": "presentation",
               "items": {
                 "properties": {
-                  "className": {
-                    "name": "className",
-                    "required": false,
-                    "type": "string"
-                  },
                   "align": {
                     "name": "align",
                     "required": false,
                     "type": "string"
                   },
-                  "weight": {
-                    "name": "weight",
+                  "width": {
+                    "name": "width",
                     "required": false,
+                    "type": "string"
+                  },
+                  "key": {
+                    "name": "key",
+                    "required": true,
                     "type": "string"
                   },
                   "format": {
                     "name": "format",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "className": {
+                    "name": "className",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "weight": {
+                    "name": "weight",
                     "required": false,
                     "type": "string"
                   },
@@ -49910,21 +50212,6 @@
                   "field": {
                     "name": "field",
                     "required": false,
-                    "type": "string"
-                  },
-                  "width": {
-                    "name": "width",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "key": {
-                    "name": "key",
-                    "required": true,
                     "type": "string"
                   }
                 },
@@ -49976,14 +50263,24 @@
               ],
               "items": {
                 "properties": {
+                  "name": {
+                    "name": "name",
+                    "required": true,
+                    "type": "string"
+                  },
                   "label": {
                     "name": "label",
                     "required": false,
                     "type": "string"
                   },
-                  "name": {
-                    "name": "name",
-                    "required": true,
+                  "key": {
+                    "name": "key",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "header": {
+                    "name": "header",
+                    "required": false,
                     "type": "string"
                   },
                   "variant": {
@@ -50000,16 +50297,6 @@
                     "name": "format",
                     "required": false,
                     "type": "string"
-                  },
-                  "key": {
-                    "name": "key",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "header": {
-                    "name": "header",
-                    "required": false,
-                    "type": "string"
                   }
                 },
                 "type": "object"
@@ -50017,6 +50304,37 @@
               "label": "Columns to show",
               "description": "Each column maps to one field on the BrowseItem entity",
               "tier": "presentation"
+            },
+            {
+              "key": "filters",
+              "type": "[FilterSpec]",
+              "default": [],
+              "label": "Faceted filters",
+              "description": "Per-field filter facets ({ field, label, options }); each renders a select that fires REFETCH_FILTER to filter the list by that field. Empty = no filter bar.",
+              "tier": "presentation",
+              "items": {
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "field": {
+                    "name": "field",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "options": {
+                    "name": "options",
+                    "required": false,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "type": "object"
+              }
             },
             {
               "key": "gap",
@@ -50064,24 +50382,24 @@
               ],
               "items": {
                 "properties": {
-                  "label": {
-                    "name": "label",
-                    "required": true,
-                    "type": "string"
-                  },
                   "icon": {
                     "name": "icon",
                     "required": false,
                     "type": "string"
                   },
-                  "variant": {
-                    "name": "variant",
-                    "required": false,
+                  "label": {
+                    "name": "label",
+                    "required": true,
                     "type": "string"
                   },
                   "event": {
                     "name": "event",
                     "required": true,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
                     "type": "string"
                   }
                 },
@@ -50811,18 +51129,18 @@
                       "bodyContent": {
                         "type": "object",
                         "default": {
-                          "type": "stack",
                           "direction": "vertical",
+                          "type": "stack",
                           "children": [
                             {
-                              "entity": "@payload.data",
-                              "type": "data-grid",
                               "fields": "@config.fields",
-                              "imageField": "@config.imageField",
+                              "entity": "@payload.data",
                               "itemActions": "@config.itemActions",
+                              "cols": "@config.cols",
+                              "imageField": "@config.imageField",
                               "pageSize": "@config.displayPageSize",
-                              "gap": "@config.gap",
-                              "cols": "@config.cols"
+                              "type": "data-grid",
+                              "gap": "@config.gap"
                             }
                           ]
                         },
@@ -50851,24 +51169,24 @@
                         },
                         "default": [
                           {
-                            "key": "name",
-                            "align": "left",
-                            "weight": "medium",
                             "field": "name",
-                            "header": "Name"
+                            "header": "Name",
+                            "weight": "medium",
+                            "key": "name",
+                            "align": "left"
                           },
                           {
-                            "align": "left",
                             "header": "Detail",
-                            "key": "description",
-                            "field": "description"
+                            "field": "description",
+                            "align": "left",
+                            "key": "description"
                           },
                           {
-                            "field": "status",
                             "format": "badge",
-                            "header": "Status",
+                            "align": "center",
                             "key": "status",
-                            "align": "center"
+                            "field": "status",
+                            "header": "Status"
                           }
                         ],
                         "description": "Column definitions for table-style variants (dense). Each maps an entity field to a column with optional width / align / weight / format.",
@@ -50920,6 +51238,16 @@
                         ],
                         "description": "Each column maps to one field on the BrowseItem entity",
                         "x-label": "Columns to show",
+                        "x-tier": "presentation"
+                      },
+                      "filters": {
+                        "type": "array",
+                        "items": {
+                          "type": "object"
+                        },
+                        "default": [],
+                        "description": "Per-field filter facets ({ field, label, options }); each renders a select that fires REFETCH_FILTER to filter the list by that field. Empty = no filter bar.",
+                        "x-label": "Faceted filters",
                         "x-tier": "presentation"
                       },
                       "gap": {
@@ -51947,18 +52275,18 @@
               "key": "bodyContent",
               "type": "render-ui",
               "default": {
-                "type": "stack",
                 "direction": "vertical",
+                "type": "stack",
                 "children": [
                   {
-                    "entity": "@payload.data",
-                    "type": "data-grid",
                     "fields": "@config.fields",
-                    "imageField": "@config.imageField",
+                    "entity": "@payload.data",
                     "itemActions": "@config.itemActions",
+                    "cols": "@config.cols",
+                    "imageField": "@config.imageField",
                     "pageSize": "@config.displayPageSize",
-                    "gap": "@config.gap",
-                    "cols": "@config.cols"
+                    "type": "data-grid",
+                    "gap": "@config.gap"
                   }
                 ]
               },
@@ -51987,24 +52315,24 @@
               "type": "[ColumnSpec]",
               "default": [
                 {
-                  "key": "name",
-                  "align": "left",
-                  "weight": "medium",
                   "field": "name",
-                  "header": "Name"
+                  "header": "Name",
+                  "weight": "medium",
+                  "key": "name",
+                  "align": "left"
                 },
                 {
-                  "align": "left",
                   "header": "Detail",
-                  "key": "description",
-                  "field": "description"
+                  "field": "description",
+                  "align": "left",
+                  "key": "description"
                 },
                 {
-                  "field": "status",
                   "format": "badge",
-                  "header": "Status",
+                  "align": "center",
                   "key": "status",
-                  "align": "center"
+                  "field": "status",
+                  "header": "Status"
                 }
               ],
               "label": "Table columns",
@@ -52012,23 +52340,38 @@
               "tier": "presentation",
               "items": {
                 "properties": {
-                  "className": {
-                    "name": "className",
-                    "required": false,
-                    "type": "string"
-                  },
                   "align": {
                     "name": "align",
                     "required": false,
                     "type": "string"
                   },
-                  "weight": {
-                    "name": "weight",
+                  "width": {
+                    "name": "width",
                     "required": false,
+                    "type": "string"
+                  },
+                  "key": {
+                    "name": "key",
+                    "required": true,
                     "type": "string"
                   },
                   "format": {
                     "name": "format",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "className": {
+                    "name": "className",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "weight": {
+                    "name": "weight",
                     "required": false,
                     "type": "string"
                   },
@@ -52040,21 +52383,6 @@
                   "field": {
                     "name": "field",
                     "required": false,
-                    "type": "string"
-                  },
-                  "width": {
-                    "name": "width",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "key": {
-                    "name": "key",
-                    "required": true,
                     "type": "string"
                   }
                 },
@@ -52107,14 +52435,24 @@
               ],
               "items": {
                 "properties": {
+                  "name": {
+                    "name": "name",
+                    "required": true,
+                    "type": "string"
+                  },
                   "label": {
                     "name": "label",
                     "required": false,
                     "type": "string"
                   },
-                  "name": {
-                    "name": "name",
-                    "required": true,
+                  "key": {
+                    "name": "key",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "header": {
+                    "name": "header",
+                    "required": false,
                     "type": "string"
                   },
                   "variant": {
@@ -52131,16 +52469,6 @@
                     "name": "format",
                     "required": false,
                     "type": "string"
-                  },
-                  "key": {
-                    "name": "key",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "header": {
-                    "name": "header",
-                    "required": false,
-                    "type": "string"
                   }
                 },
                 "type": "object"
@@ -52148,6 +52476,37 @@
               "label": "Columns to show",
               "description": "Each column maps to one field on the BrowseItem entity",
               "tier": "presentation"
+            },
+            {
+              "key": "filters",
+              "type": "[FilterSpec]",
+              "default": [],
+              "label": "Faceted filters",
+              "description": "Per-field filter facets ({ field, label, options }); each renders a select that fires REFETCH_FILTER to filter the list by that field. Empty = no filter bar.",
+              "tier": "presentation",
+              "items": {
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "field": {
+                    "name": "field",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "options": {
+                    "name": "options",
+                    "required": false,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "type": "object"
+              }
             },
             {
               "key": "gap",
@@ -52195,24 +52554,24 @@
               ],
               "items": {
                 "properties": {
-                  "label": {
-                    "name": "label",
-                    "required": true,
-                    "type": "string"
-                  },
                   "icon": {
                     "name": "icon",
                     "required": false,
                     "type": "string"
                   },
-                  "variant": {
-                    "name": "variant",
-                    "required": false,
+                  "label": {
+                    "name": "label",
+                    "required": true,
                     "type": "string"
                   },
                   "event": {
                     "name": "event",
                     "required": true,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
                     "type": "string"
                   }
                 },
@@ -53159,18 +53518,18 @@
                       "bodyContent": {
                         "type": "object",
                         "default": {
-                          "type": "stack",
                           "direction": "vertical",
+                          "type": "stack",
                           "children": [
                             {
-                              "entity": "@payload.data",
-                              "type": "data-grid",
                               "fields": "@config.fields",
-                              "imageField": "@config.imageField",
+                              "entity": "@payload.data",
                               "itemActions": "@config.itemActions",
+                              "cols": "@config.cols",
+                              "imageField": "@config.imageField",
                               "pageSize": "@config.displayPageSize",
-                              "gap": "@config.gap",
-                              "cols": "@config.cols"
+                              "type": "data-grid",
+                              "gap": "@config.gap"
                             }
                           ]
                         },
@@ -53199,24 +53558,24 @@
                         },
                         "default": [
                           {
-                            "key": "name",
-                            "align": "left",
-                            "weight": "medium",
                             "field": "name",
-                            "header": "Name"
+                            "header": "Name",
+                            "weight": "medium",
+                            "key": "name",
+                            "align": "left"
                           },
                           {
-                            "align": "left",
                             "header": "Detail",
-                            "key": "description",
-                            "field": "description"
+                            "field": "description",
+                            "align": "left",
+                            "key": "description"
                           },
                           {
-                            "field": "status",
                             "format": "badge",
-                            "header": "Status",
+                            "align": "center",
                             "key": "status",
-                            "align": "center"
+                            "field": "status",
+                            "header": "Status"
                           }
                         ],
                         "description": "Column definitions for table-style variants (dense). Each maps an entity field to a column with optional width / align / weight / format.",
@@ -53269,6 +53628,16 @@
                         ],
                         "description": "Each column maps to one field on the BrowseItem entity",
                         "x-label": "Columns to show",
+                        "x-tier": "presentation"
+                      },
+                      "filters": {
+                        "type": "array",
+                        "items": {
+                          "type": "object"
+                        },
+                        "default": [],
+                        "description": "Per-field filter facets ({ field, label, options }); each renders a select that fires REFETCH_FILTER to filter the list by that field. Empty = no filter bar.",
+                        "x-label": "Faceted filters",
                         "x-tier": "presentation"
                       },
                       "gap": {
@@ -54222,18 +54591,18 @@
               "key": "bodyContent",
               "type": "render-ui",
               "default": {
-                "type": "stack",
                 "direction": "vertical",
+                "type": "stack",
                 "children": [
                   {
-                    "entity": "@payload.data",
-                    "type": "data-grid",
                     "fields": "@config.fields",
-                    "imageField": "@config.imageField",
+                    "entity": "@payload.data",
                     "itemActions": "@config.itemActions",
+                    "cols": "@config.cols",
+                    "imageField": "@config.imageField",
                     "pageSize": "@config.displayPageSize",
-                    "gap": "@config.gap",
-                    "cols": "@config.cols"
+                    "type": "data-grid",
+                    "gap": "@config.gap"
                   }
                 ]
               },
@@ -54262,24 +54631,24 @@
               "type": "[ColumnSpec]",
               "default": [
                 {
-                  "key": "name",
-                  "align": "left",
-                  "weight": "medium",
                   "field": "name",
-                  "header": "Name"
+                  "header": "Name",
+                  "weight": "medium",
+                  "key": "name",
+                  "align": "left"
                 },
                 {
-                  "align": "left",
                   "header": "Detail",
-                  "key": "description",
-                  "field": "description"
+                  "field": "description",
+                  "align": "left",
+                  "key": "description"
                 },
                 {
-                  "field": "status",
                   "format": "badge",
-                  "header": "Status",
+                  "align": "center",
                   "key": "status",
-                  "align": "center"
+                  "field": "status",
+                  "header": "Status"
                 }
               ],
               "label": "Table columns",
@@ -54287,23 +54656,38 @@
               "tier": "presentation",
               "items": {
                 "properties": {
-                  "className": {
-                    "name": "className",
-                    "required": false,
-                    "type": "string"
-                  },
                   "align": {
                     "name": "align",
                     "required": false,
                     "type": "string"
                   },
-                  "weight": {
-                    "name": "weight",
+                  "width": {
+                    "name": "width",
                     "required": false,
+                    "type": "string"
+                  },
+                  "key": {
+                    "name": "key",
+                    "required": true,
                     "type": "string"
                   },
                   "format": {
                     "name": "format",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "className": {
+                    "name": "className",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "weight": {
+                    "name": "weight",
                     "required": false,
                     "type": "string"
                   },
@@ -54315,21 +54699,6 @@
                   "field": {
                     "name": "field",
                     "required": false,
-                    "type": "string"
-                  },
-                  "width": {
-                    "name": "width",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "key": {
-                    "name": "key",
-                    "required": true,
                     "type": "string"
                   }
                 },
@@ -54380,14 +54749,24 @@
               ],
               "items": {
                 "properties": {
+                  "name": {
+                    "name": "name",
+                    "required": true,
+                    "type": "string"
+                  },
                   "label": {
                     "name": "label",
                     "required": false,
                     "type": "string"
                   },
-                  "name": {
-                    "name": "name",
-                    "required": true,
+                  "key": {
+                    "name": "key",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "header": {
+                    "name": "header",
+                    "required": false,
                     "type": "string"
                   },
                   "variant": {
@@ -54404,16 +54783,6 @@
                     "name": "format",
                     "required": false,
                     "type": "string"
-                  },
-                  "key": {
-                    "name": "key",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "header": {
-                    "name": "header",
-                    "required": false,
-                    "type": "string"
                   }
                 },
                 "type": "object"
@@ -54421,6 +54790,37 @@
               "label": "Columns to show",
               "description": "Each column maps to one field on the BrowseItem entity",
               "tier": "presentation"
+            },
+            {
+              "key": "filters",
+              "type": "[FilterSpec]",
+              "default": [],
+              "label": "Faceted filters",
+              "description": "Per-field filter facets ({ field, label, options }); each renders a select that fires REFETCH_FILTER to filter the list by that field. Empty = no filter bar.",
+              "tier": "presentation",
+              "items": {
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "field": {
+                    "name": "field",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "options": {
+                    "name": "options",
+                    "required": false,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "type": "object"
+              }
             },
             {
               "key": "gap",
@@ -54468,24 +54868,24 @@
               ],
               "items": {
                 "properties": {
-                  "label": {
-                    "name": "label",
-                    "required": true,
-                    "type": "string"
-                  },
                   "icon": {
                     "name": "icon",
                     "required": false,
                     "type": "string"
                   },
-                  "variant": {
-                    "name": "variant",
-                    "required": false,
+                  "label": {
+                    "name": "label",
+                    "required": true,
                     "type": "string"
                   },
                   "event": {
                     "name": "event",
                     "required": true,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
                     "type": "string"
                   }
                 },
@@ -55470,18 +55870,18 @@
                       "bodyContent": {
                         "type": "object",
                         "default": {
-                          "type": "stack",
                           "direction": "vertical",
+                          "type": "stack",
                           "children": [
                             {
-                              "entity": "@payload.data",
-                              "type": "data-grid",
                               "fields": "@config.fields",
-                              "imageField": "@config.imageField",
+                              "entity": "@payload.data",
                               "itemActions": "@config.itemActions",
+                              "cols": "@config.cols",
+                              "imageField": "@config.imageField",
                               "pageSize": "@config.displayPageSize",
-                              "gap": "@config.gap",
-                              "cols": "@config.cols"
+                              "type": "data-grid",
+                              "gap": "@config.gap"
                             }
                           ]
                         },
@@ -55510,24 +55910,24 @@
                         },
                         "default": [
                           {
-                            "key": "name",
-                            "align": "left",
-                            "weight": "medium",
                             "field": "name",
-                            "header": "Name"
+                            "header": "Name",
+                            "weight": "medium",
+                            "key": "name",
+                            "align": "left"
                           },
                           {
-                            "align": "left",
                             "header": "Detail",
-                            "key": "description",
-                            "field": "description"
+                            "field": "description",
+                            "align": "left",
+                            "key": "description"
                           },
                           {
-                            "field": "status",
                             "format": "badge",
-                            "header": "Status",
+                            "align": "center",
                             "key": "status",
-                            "align": "center"
+                            "field": "status",
+                            "header": "Status"
                           }
                         ],
                         "description": "Column definitions for table-style variants (dense). Each maps an entity field to a column with optional width / align / weight / format.",
@@ -55578,6 +55978,16 @@
                         ],
                         "description": "Each column maps to one field on the BrowseItem entity",
                         "x-label": "Columns to show",
+                        "x-tier": "presentation"
+                      },
+                      "filters": {
+                        "type": "array",
+                        "items": {
+                          "type": "object"
+                        },
+                        "default": [],
+                        "description": "Per-field filter facets ({ field, label, options }); each renders a select that fires REFETCH_FILTER to filter the list by that field. Empty = no filter bar.",
+                        "x-label": "Faceted filters",
                         "x-tier": "presentation"
                       },
                       "gap": {
@@ -56569,18 +56979,18 @@
               "key": "bodyContent",
               "type": "render-ui",
               "default": {
-                "type": "stack",
                 "direction": "vertical",
+                "type": "stack",
                 "children": [
                   {
-                    "entity": "@payload.data",
-                    "type": "data-grid",
                     "fields": "@config.fields",
-                    "imageField": "@config.imageField",
+                    "entity": "@payload.data",
                     "itemActions": "@config.itemActions",
+                    "cols": "@config.cols",
+                    "imageField": "@config.imageField",
                     "pageSize": "@config.displayPageSize",
-                    "gap": "@config.gap",
-                    "cols": "@config.cols"
+                    "type": "data-grid",
+                    "gap": "@config.gap"
                   }
                 ]
               },
@@ -56609,24 +57019,24 @@
               "type": "[ColumnSpec]",
               "default": [
                 {
-                  "key": "name",
-                  "align": "left",
-                  "weight": "medium",
                   "field": "name",
-                  "header": "Name"
+                  "header": "Name",
+                  "weight": "medium",
+                  "key": "name",
+                  "align": "left"
                 },
                 {
-                  "align": "left",
                   "header": "Detail",
-                  "key": "description",
-                  "field": "description"
+                  "field": "description",
+                  "align": "left",
+                  "key": "description"
                 },
                 {
-                  "field": "status",
                   "format": "badge",
-                  "header": "Status",
+                  "align": "center",
                   "key": "status",
-                  "align": "center"
+                  "field": "status",
+                  "header": "Status"
                 }
               ],
               "label": "Table columns",
@@ -56634,23 +57044,38 @@
               "tier": "presentation",
               "items": {
                 "properties": {
-                  "className": {
-                    "name": "className",
-                    "required": false,
-                    "type": "string"
-                  },
                   "align": {
                     "name": "align",
                     "required": false,
                     "type": "string"
                   },
-                  "weight": {
-                    "name": "weight",
+                  "width": {
+                    "name": "width",
                     "required": false,
+                    "type": "string"
+                  },
+                  "key": {
+                    "name": "key",
+                    "required": true,
                     "type": "string"
                   },
                   "format": {
                     "name": "format",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "className": {
+                    "name": "className",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "weight": {
+                    "name": "weight",
                     "required": false,
                     "type": "string"
                   },
@@ -56662,21 +57087,6 @@
                   "field": {
                     "name": "field",
                     "required": false,
-                    "type": "string"
-                  },
-                  "width": {
-                    "name": "width",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "key": {
-                    "name": "key",
-                    "required": true,
                     "type": "string"
                   }
                 },
@@ -56728,14 +57138,24 @@
               ],
               "items": {
                 "properties": {
+                  "name": {
+                    "name": "name",
+                    "required": true,
+                    "type": "string"
+                  },
                   "label": {
                     "name": "label",
                     "required": false,
                     "type": "string"
                   },
-                  "name": {
-                    "name": "name",
-                    "required": true,
+                  "key": {
+                    "name": "key",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "header": {
+                    "name": "header",
+                    "required": false,
                     "type": "string"
                   },
                   "variant": {
@@ -56752,16 +57172,6 @@
                     "name": "format",
                     "required": false,
                     "type": "string"
-                  },
-                  "key": {
-                    "name": "key",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "header": {
-                    "name": "header",
-                    "required": false,
-                    "type": "string"
                   }
                 },
                 "type": "object"
@@ -56769,6 +57179,37 @@
               "label": "Columns to show",
               "description": "Each column maps to one field on the BrowseItem entity",
               "tier": "presentation"
+            },
+            {
+              "key": "filters",
+              "type": "[FilterSpec]",
+              "default": [],
+              "label": "Faceted filters",
+              "description": "Per-field filter facets ({ field, label, options }); each renders a select that fires REFETCH_FILTER to filter the list by that field. Empty = no filter bar.",
+              "tier": "presentation",
+              "items": {
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "field": {
+                    "name": "field",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "options": {
+                    "name": "options",
+                    "required": false,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "type": "object"
+              }
             },
             {
               "key": "gap",
@@ -56816,24 +57257,24 @@
               ],
               "items": {
                 "properties": {
-                  "label": {
-                    "name": "label",
-                    "required": true,
-                    "type": "string"
-                  },
                   "icon": {
                     "name": "icon",
                     "required": false,
                     "type": "string"
                   },
-                  "variant": {
-                    "name": "variant",
-                    "required": false,
+                  "label": {
+                    "name": "label",
+                    "required": true,
                     "type": "string"
                   },
                   "event": {
                     "name": "event",
                     "required": true,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
                     "type": "string"
                   }
                 },
@@ -57640,18 +58081,18 @@
                       "bodyContent": {
                         "type": "object",
                         "default": {
-                          "type": "stack",
                           "direction": "vertical",
+                          "type": "stack",
                           "children": [
                             {
-                              "entity": "@payload.data",
-                              "type": "data-grid",
                               "fields": "@config.fields",
-                              "imageField": "@config.imageField",
+                              "entity": "@payload.data",
                               "itemActions": "@config.itemActions",
+                              "cols": "@config.cols",
+                              "imageField": "@config.imageField",
                               "pageSize": "@config.displayPageSize",
-                              "gap": "@config.gap",
-                              "cols": "@config.cols"
+                              "type": "data-grid",
+                              "gap": "@config.gap"
                             }
                           ]
                         },
@@ -57680,24 +58121,24 @@
                         },
                         "default": [
                           {
-                            "key": "name",
-                            "align": "left",
-                            "weight": "medium",
                             "field": "name",
-                            "header": "Name"
+                            "header": "Name",
+                            "weight": "medium",
+                            "key": "name",
+                            "align": "left"
                           },
                           {
-                            "align": "left",
                             "header": "Detail",
-                            "key": "description",
-                            "field": "description"
+                            "field": "description",
+                            "align": "left",
+                            "key": "description"
                           },
                           {
-                            "field": "status",
                             "format": "badge",
-                            "header": "Status",
+                            "align": "center",
                             "key": "status",
-                            "align": "center"
+                            "field": "status",
+                            "header": "Status"
                           }
                         ],
                         "description": "Column definitions for table-style variants (dense). Each maps an entity field to a column with optional width / align / weight / format.",
@@ -57749,6 +58190,16 @@
                         ],
                         "description": "Each column maps to one field on the BrowseItem entity",
                         "x-label": "Columns to show",
+                        "x-tier": "presentation"
+                      },
+                      "filters": {
+                        "type": "array",
+                        "items": {
+                          "type": "object"
+                        },
+                        "default": [],
+                        "description": "Per-field filter facets ({ field, label, options }); each renders a select that fires REFETCH_FILTER to filter the list by that field. Empty = no filter bar.",
+                        "x-label": "Faceted filters",
                         "x-tier": "presentation"
                       },
                       "gap": {
@@ -58700,18 +59151,18 @@
               "key": "bodyContent",
               "type": "render-ui",
               "default": {
-                "type": "stack",
                 "direction": "vertical",
+                "type": "stack",
                 "children": [
                   {
-                    "entity": "@payload.data",
-                    "type": "data-grid",
                     "fields": "@config.fields",
-                    "imageField": "@config.imageField",
+                    "entity": "@payload.data",
                     "itemActions": "@config.itemActions",
+                    "cols": "@config.cols",
+                    "imageField": "@config.imageField",
                     "pageSize": "@config.displayPageSize",
-                    "gap": "@config.gap",
-                    "cols": "@config.cols"
+                    "type": "data-grid",
+                    "gap": "@config.gap"
                   }
                 ]
               },
@@ -58740,24 +59191,24 @@
               "type": "[ColumnSpec]",
               "default": [
                 {
-                  "key": "name",
-                  "align": "left",
-                  "weight": "medium",
                   "field": "name",
-                  "header": "Name"
+                  "header": "Name",
+                  "weight": "medium",
+                  "key": "name",
+                  "align": "left"
                 },
                 {
-                  "align": "left",
                   "header": "Detail",
-                  "key": "description",
-                  "field": "description"
+                  "field": "description",
+                  "align": "left",
+                  "key": "description"
                 },
                 {
-                  "field": "status",
                   "format": "badge",
-                  "header": "Status",
+                  "align": "center",
                   "key": "status",
-                  "align": "center"
+                  "field": "status",
+                  "header": "Status"
                 }
               ],
               "label": "Table columns",
@@ -58765,23 +59216,38 @@
               "tier": "presentation",
               "items": {
                 "properties": {
-                  "className": {
-                    "name": "className",
-                    "required": false,
-                    "type": "string"
-                  },
                   "align": {
                     "name": "align",
                     "required": false,
                     "type": "string"
                   },
-                  "weight": {
-                    "name": "weight",
+                  "width": {
+                    "name": "width",
                     "required": false,
+                    "type": "string"
+                  },
+                  "key": {
+                    "name": "key",
+                    "required": true,
                     "type": "string"
                   },
                   "format": {
                     "name": "format",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "className": {
+                    "name": "className",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "weight": {
+                    "name": "weight",
                     "required": false,
                     "type": "string"
                   },
@@ -58793,21 +59259,6 @@
                   "field": {
                     "name": "field",
                     "required": false,
-                    "type": "string"
-                  },
-                  "width": {
-                    "name": "width",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "key": {
-                    "name": "key",
-                    "required": true,
                     "type": "string"
                   }
                 },
@@ -58863,14 +59314,24 @@
               ],
               "items": {
                 "properties": {
+                  "name": {
+                    "name": "name",
+                    "required": true,
+                    "type": "string"
+                  },
                   "label": {
                     "name": "label",
                     "required": false,
                     "type": "string"
                   },
-                  "name": {
-                    "name": "name",
-                    "required": true,
+                  "key": {
+                    "name": "key",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "header": {
+                    "name": "header",
+                    "required": false,
                     "type": "string"
                   },
                   "variant": {
@@ -58887,16 +59348,6 @@
                     "name": "format",
                     "required": false,
                     "type": "string"
-                  },
-                  "key": {
-                    "name": "key",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "header": {
-                    "name": "header",
-                    "required": false,
-                    "type": "string"
                   }
                 },
                 "type": "object"
@@ -58904,6 +59355,37 @@
               "label": "Columns to show",
               "description": "Each column maps to one field on the BrowseItem entity",
               "tier": "presentation"
+            },
+            {
+              "key": "filters",
+              "type": "[FilterSpec]",
+              "default": [],
+              "label": "Faceted filters",
+              "description": "Per-field filter facets ({ field, label, options }); each renders a select that fires REFETCH_FILTER to filter the list by that field. Empty = no filter bar.",
+              "tier": "presentation",
+              "items": {
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "field": {
+                    "name": "field",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "options": {
+                    "name": "options",
+                    "required": false,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "type": "object"
+              }
             },
             {
               "key": "gap",
@@ -58951,24 +59433,24 @@
               ],
               "items": {
                 "properties": {
-                  "label": {
-                    "name": "label",
-                    "required": true,
-                    "type": "string"
-                  },
                   "icon": {
                     "name": "icon",
                     "required": false,
                     "type": "string"
                   },
-                  "variant": {
-                    "name": "variant",
-                    "required": false,
+                  "label": {
+                    "name": "label",
+                    "required": true,
                     "type": "string"
                   },
                   "event": {
                     "name": "event",
                     "required": true,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
                     "type": "string"
                   }
                 },
@@ -59953,18 +60435,18 @@
                       "bodyContent": {
                         "type": "object",
                         "default": {
-                          "type": "stack",
                           "direction": "vertical",
+                          "type": "stack",
                           "children": [
                             {
-                              "entity": "@payload.data",
-                              "type": "data-grid",
                               "fields": "@config.fields",
-                              "imageField": "@config.imageField",
+                              "entity": "@payload.data",
                               "itemActions": "@config.itemActions",
+                              "cols": "@config.cols",
+                              "imageField": "@config.imageField",
                               "pageSize": "@config.displayPageSize",
-                              "gap": "@config.gap",
-                              "cols": "@config.cols"
+                              "type": "data-grid",
+                              "gap": "@config.gap"
                             }
                           ]
                         },
@@ -59993,24 +60475,24 @@
                         },
                         "default": [
                           {
-                            "key": "name",
-                            "align": "left",
-                            "weight": "medium",
                             "field": "name",
-                            "header": "Name"
+                            "header": "Name",
+                            "weight": "medium",
+                            "key": "name",
+                            "align": "left"
                           },
                           {
-                            "align": "left",
                             "header": "Detail",
-                            "key": "description",
-                            "field": "description"
+                            "field": "description",
+                            "align": "left",
+                            "key": "description"
                           },
                           {
-                            "field": "status",
                             "format": "badge",
-                            "header": "Status",
+                            "align": "center",
                             "key": "status",
-                            "align": "center"
+                            "field": "status",
+                            "header": "Status"
                           }
                         ],
                         "description": "Column definitions for table-style variants (dense). Each maps an entity field to a column with optional width / align / weight / format.",
@@ -60066,6 +60548,16 @@
                         ],
                         "description": "Each column maps to one field on the BrowseItem entity",
                         "x-label": "Columns to show",
+                        "x-tier": "presentation"
+                      },
+                      "filters": {
+                        "type": "array",
+                        "items": {
+                          "type": "object"
+                        },
+                        "default": [],
+                        "description": "Per-field filter facets ({ field, label, options }); each renders a select that fires REFETCH_FILTER to filter the list by that field. Empty = no filter bar.",
+                        "x-label": "Faceted filters",
                         "x-tier": "presentation"
                       },
                       "gap": {
@@ -61046,18 +61538,18 @@
               "key": "bodyContent",
               "type": "render-ui",
               "default": {
-                "type": "stack",
                 "direction": "vertical",
+                "type": "stack",
                 "children": [
                   {
-                    "entity": "@payload.data",
-                    "type": "data-grid",
                     "fields": "@config.fields",
-                    "imageField": "@config.imageField",
+                    "entity": "@payload.data",
                     "itemActions": "@config.itemActions",
+                    "cols": "@config.cols",
+                    "imageField": "@config.imageField",
                     "pageSize": "@config.displayPageSize",
-                    "gap": "@config.gap",
-                    "cols": "@config.cols"
+                    "type": "data-grid",
+                    "gap": "@config.gap"
                   }
                 ]
               },
@@ -61086,24 +61578,24 @@
               "type": "[ColumnSpec]",
               "default": [
                 {
-                  "key": "name",
-                  "align": "left",
-                  "weight": "medium",
                   "field": "name",
-                  "header": "Name"
+                  "header": "Name",
+                  "weight": "medium",
+                  "key": "name",
+                  "align": "left"
                 },
                 {
-                  "align": "left",
                   "header": "Detail",
-                  "key": "description",
-                  "field": "description"
+                  "field": "description",
+                  "align": "left",
+                  "key": "description"
                 },
                 {
-                  "field": "status",
                   "format": "badge",
-                  "header": "Status",
+                  "align": "center",
                   "key": "status",
-                  "align": "center"
+                  "field": "status",
+                  "header": "Status"
                 }
               ],
               "label": "Table columns",
@@ -61111,23 +61603,38 @@
               "tier": "presentation",
               "items": {
                 "properties": {
-                  "className": {
-                    "name": "className",
-                    "required": false,
-                    "type": "string"
-                  },
                   "align": {
                     "name": "align",
                     "required": false,
                     "type": "string"
                   },
-                  "weight": {
-                    "name": "weight",
+                  "width": {
+                    "name": "width",
                     "required": false,
+                    "type": "string"
+                  },
+                  "key": {
+                    "name": "key",
+                    "required": true,
                     "type": "string"
                   },
                   "format": {
                     "name": "format",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "className": {
+                    "name": "className",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "weight": {
+                    "name": "weight",
                     "required": false,
                     "type": "string"
                   },
@@ -61139,21 +61646,6 @@
                   "field": {
                     "name": "field",
                     "required": false,
-                    "type": "string"
-                  },
-                  "width": {
-                    "name": "width",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "key": {
-                    "name": "key",
-                    "required": true,
                     "type": "string"
                   }
                 },
@@ -61201,14 +61693,24 @@
               ],
               "items": {
                 "properties": {
+                  "name": {
+                    "name": "name",
+                    "required": true,
+                    "type": "string"
+                  },
                   "label": {
                     "name": "label",
                     "required": false,
                     "type": "string"
                   },
-                  "name": {
-                    "name": "name",
-                    "required": true,
+                  "key": {
+                    "name": "key",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "header": {
+                    "name": "header",
+                    "required": false,
                     "type": "string"
                   },
                   "variant": {
@@ -61225,16 +61727,6 @@
                     "name": "format",
                     "required": false,
                     "type": "string"
-                  },
-                  "key": {
-                    "name": "key",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "header": {
-                    "name": "header",
-                    "required": false,
-                    "type": "string"
                   }
                 },
                 "type": "object"
@@ -61242,6 +61734,37 @@
               "label": "Columns to show",
               "description": "Each column maps to one field on the BrowseItem entity",
               "tier": "presentation"
+            },
+            {
+              "key": "filters",
+              "type": "[FilterSpec]",
+              "default": [],
+              "label": "Faceted filters",
+              "description": "Per-field filter facets ({ field, label, options }); each renders a select that fires REFETCH_FILTER to filter the list by that field. Empty = no filter bar.",
+              "tier": "presentation",
+              "items": {
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "field": {
+                    "name": "field",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "options": {
+                    "name": "options",
+                    "required": false,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "type": "object"
+              }
             },
             {
               "key": "gap",
@@ -61289,24 +61812,24 @@
               ],
               "items": {
                 "properties": {
-                  "label": {
-                    "name": "label",
-                    "required": true,
-                    "type": "string"
-                  },
                   "icon": {
                     "name": "icon",
                     "required": false,
                     "type": "string"
                   },
-                  "variant": {
-                    "name": "variant",
-                    "required": false,
+                  "label": {
+                    "name": "label",
+                    "required": true,
                     "type": "string"
                   },
                   "event": {
                     "name": "event",
                     "required": true,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
                     "type": "string"
                   }
                 },
@@ -62187,18 +62710,18 @@
                       "bodyContent": {
                         "type": "object",
                         "default": {
-                          "type": "stack",
                           "direction": "vertical",
+                          "type": "stack",
                           "children": [
                             {
-                              "entity": "@payload.data",
-                              "type": "data-grid",
                               "fields": "@config.fields",
-                              "imageField": "@config.imageField",
+                              "entity": "@payload.data",
                               "itemActions": "@config.itemActions",
+                              "cols": "@config.cols",
+                              "imageField": "@config.imageField",
                               "pageSize": "@config.displayPageSize",
-                              "gap": "@config.gap",
-                              "cols": "@config.cols"
+                              "type": "data-grid",
+                              "gap": "@config.gap"
                             }
                           ]
                         },
@@ -62227,24 +62750,24 @@
                         },
                         "default": [
                           {
-                            "key": "name",
-                            "align": "left",
-                            "weight": "medium",
                             "field": "name",
-                            "header": "Name"
+                            "header": "Name",
+                            "weight": "medium",
+                            "key": "name",
+                            "align": "left"
                           },
                           {
-                            "align": "left",
                             "header": "Detail",
-                            "key": "description",
-                            "field": "description"
+                            "field": "description",
+                            "align": "left",
+                            "key": "description"
                           },
                           {
-                            "field": "status",
                             "format": "badge",
-                            "header": "Status",
+                            "align": "center",
                             "key": "status",
-                            "align": "center"
+                            "field": "status",
+                            "header": "Status"
                           }
                         ],
                         "description": "Column definitions for table-style variants (dense). Each maps an entity field to a column with optional width / align / weight / format.",
@@ -62292,6 +62815,16 @@
                         ],
                         "description": "Each column maps to one field on the BrowseItem entity",
                         "x-label": "Columns to show",
+                        "x-tier": "presentation"
+                      },
+                      "filters": {
+                        "type": "array",
+                        "items": {
+                          "type": "object"
+                        },
+                        "default": [],
+                        "description": "Per-field filter facets ({ field, label, options }); each renders a select that fires REFETCH_FILTER to filter the list by that field. Empty = no filter bar.",
+                        "x-label": "Faceted filters",
                         "x-tier": "presentation"
                       },
                       "gap": {
@@ -63315,18 +63848,18 @@
               "key": "bodyContent",
               "type": "render-ui",
               "default": {
-                "type": "stack",
                 "direction": "vertical",
+                "type": "stack",
                 "children": [
                   {
-                    "entity": "@payload.data",
-                    "type": "data-grid",
                     "fields": "@config.fields",
-                    "imageField": "@config.imageField",
+                    "entity": "@payload.data",
                     "itemActions": "@config.itemActions",
+                    "cols": "@config.cols",
+                    "imageField": "@config.imageField",
                     "pageSize": "@config.displayPageSize",
-                    "gap": "@config.gap",
-                    "cols": "@config.cols"
+                    "type": "data-grid",
+                    "gap": "@config.gap"
                   }
                 ]
               },
@@ -63355,24 +63888,24 @@
               "type": "[ColumnSpec]",
               "default": [
                 {
-                  "key": "name",
-                  "align": "left",
-                  "weight": "medium",
                   "field": "name",
-                  "header": "Name"
+                  "header": "Name",
+                  "weight": "medium",
+                  "key": "name",
+                  "align": "left"
                 },
                 {
-                  "align": "left",
                   "header": "Detail",
-                  "key": "description",
-                  "field": "description"
+                  "field": "description",
+                  "align": "left",
+                  "key": "description"
                 },
                 {
-                  "field": "status",
                   "format": "badge",
-                  "header": "Status",
+                  "align": "center",
                   "key": "status",
-                  "align": "center"
+                  "field": "status",
+                  "header": "Status"
                 }
               ],
               "label": "Table columns",
@@ -63380,23 +63913,38 @@
               "tier": "presentation",
               "items": {
                 "properties": {
-                  "className": {
-                    "name": "className",
-                    "required": false,
-                    "type": "string"
-                  },
                   "align": {
                     "name": "align",
                     "required": false,
                     "type": "string"
                   },
-                  "weight": {
-                    "name": "weight",
+                  "width": {
+                    "name": "width",
                     "required": false,
+                    "type": "string"
+                  },
+                  "key": {
+                    "name": "key",
+                    "required": true,
                     "type": "string"
                   },
                   "format": {
                     "name": "format",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "className": {
+                    "name": "className",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "weight": {
+                    "name": "weight",
                     "required": false,
                     "type": "string"
                   },
@@ -63408,21 +63956,6 @@
                   "field": {
                     "name": "field",
                     "required": false,
-                    "type": "string"
-                  },
-                  "width": {
-                    "name": "width",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "key": {
-                    "name": "key",
-                    "required": true,
                     "type": "string"
                   }
                 },
@@ -63478,14 +64011,24 @@
               ],
               "items": {
                 "properties": {
+                  "name": {
+                    "name": "name",
+                    "required": true,
+                    "type": "string"
+                  },
                   "label": {
                     "name": "label",
                     "required": false,
                     "type": "string"
                   },
-                  "name": {
-                    "name": "name",
-                    "required": true,
+                  "key": {
+                    "name": "key",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "header": {
+                    "name": "header",
+                    "required": false,
                     "type": "string"
                   },
                   "variant": {
@@ -63502,16 +64045,6 @@
                     "name": "format",
                     "required": false,
                     "type": "string"
-                  },
-                  "key": {
-                    "name": "key",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "header": {
-                    "name": "header",
-                    "required": false,
-                    "type": "string"
                   }
                 },
                 "type": "object"
@@ -63519,6 +64052,37 @@
               "label": "Columns to show",
               "description": "Each column maps to one field on the BrowseItem entity",
               "tier": "presentation"
+            },
+            {
+              "key": "filters",
+              "type": "[FilterSpec]",
+              "default": [],
+              "label": "Faceted filters",
+              "description": "Per-field filter facets ({ field, label, options }); each renders a select that fires REFETCH_FILTER to filter the list by that field. Empty = no filter bar.",
+              "tier": "presentation",
+              "items": {
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "field": {
+                    "name": "field",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "options": {
+                    "name": "options",
+                    "required": false,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "type": "object"
+              }
             },
             {
               "key": "gap",
@@ -63566,24 +64130,24 @@
               ],
               "items": {
                 "properties": {
-                  "label": {
-                    "name": "label",
-                    "required": true,
-                    "type": "string"
-                  },
                   "icon": {
                     "name": "icon",
                     "required": false,
                     "type": "string"
                   },
-                  "variant": {
-                    "name": "variant",
-                    "required": false,
+                  "label": {
+                    "name": "label",
+                    "required": true,
                     "type": "string"
                   },
                   "event": {
                     "name": "event",
                     "required": true,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
                     "type": "string"
                   }
                 },
@@ -64495,18 +65059,18 @@
                       "bodyContent": {
                         "type": "object",
                         "default": {
-                          "type": "stack",
                           "direction": "vertical",
+                          "type": "stack",
                           "children": [
                             {
-                              "entity": "@payload.data",
-                              "type": "data-grid",
                               "fields": "@config.fields",
-                              "imageField": "@config.imageField",
+                              "entity": "@payload.data",
                               "itemActions": "@config.itemActions",
+                              "cols": "@config.cols",
+                              "imageField": "@config.imageField",
                               "pageSize": "@config.displayPageSize",
-                              "gap": "@config.gap",
-                              "cols": "@config.cols"
+                              "type": "data-grid",
+                              "gap": "@config.gap"
                             }
                           ]
                         },
@@ -64535,24 +65099,24 @@
                         },
                         "default": [
                           {
-                            "key": "name",
-                            "align": "left",
-                            "weight": "medium",
                             "field": "name",
-                            "header": "Name"
+                            "header": "Name",
+                            "weight": "medium",
+                            "key": "name",
+                            "align": "left"
                           },
                           {
-                            "align": "left",
                             "header": "Detail",
-                            "key": "description",
-                            "field": "description"
+                            "field": "description",
+                            "align": "left",
+                            "key": "description"
                           },
                           {
-                            "field": "status",
                             "format": "badge",
-                            "header": "Status",
+                            "align": "center",
                             "key": "status",
-                            "align": "center"
+                            "field": "status",
+                            "header": "Status"
                           }
                         ],
                         "description": "Column definitions for table-style variants (dense). Each maps an entity field to a column with optional width / align / weight / format.",
@@ -64608,6 +65172,16 @@
                         ],
                         "description": "Each column maps to one field on the BrowseItem entity",
                         "x-label": "Columns to show",
+                        "x-tier": "presentation"
+                      },
+                      "filters": {
+                        "type": "array",
+                        "items": {
+                          "type": "object"
+                        },
+                        "default": [],
+                        "description": "Per-field filter facets ({ field, label, options }); each renders a select that fires REFETCH_FILTER to filter the list by that field. Empty = no filter bar.",
+                        "x-label": "Faceted filters",
                         "x-tier": "presentation"
                       },
                       "gap": {
@@ -66063,18 +66637,18 @@
               "key": "bodyContent",
               "type": "render-ui",
               "default": {
-                "type": "stack",
                 "direction": "vertical",
+                "type": "stack",
                 "children": [
                   {
-                    "entity": "@payload.data",
-                    "type": "data-grid",
                     "fields": "@config.fields",
-                    "imageField": "@config.imageField",
+                    "entity": "@payload.data",
                     "itemActions": "@config.itemActions",
+                    "cols": "@config.cols",
+                    "imageField": "@config.imageField",
                     "pageSize": "@config.displayPageSize",
-                    "gap": "@config.gap",
-                    "cols": "@config.cols"
+                    "type": "data-grid",
+                    "gap": "@config.gap"
                   }
                 ]
               },
@@ -66103,24 +66677,24 @@
               "type": "[ColumnSpec]",
               "default": [
                 {
-                  "key": "name",
-                  "align": "left",
-                  "weight": "medium",
                   "field": "name",
-                  "header": "Name"
+                  "header": "Name",
+                  "weight": "medium",
+                  "key": "name",
+                  "align": "left"
                 },
                 {
-                  "align": "left",
                   "header": "Detail",
-                  "key": "description",
-                  "field": "description"
+                  "field": "description",
+                  "align": "left",
+                  "key": "description"
                 },
                 {
-                  "field": "status",
                   "format": "badge",
-                  "header": "Status",
+                  "align": "center",
                   "key": "status",
-                  "align": "center"
+                  "field": "status",
+                  "header": "Status"
                 }
               ],
               "label": "Table columns",
@@ -66128,23 +66702,38 @@
               "tier": "presentation",
               "items": {
                 "properties": {
-                  "className": {
-                    "name": "className",
-                    "required": false,
-                    "type": "string"
-                  },
                   "align": {
                     "name": "align",
                     "required": false,
                     "type": "string"
                   },
-                  "weight": {
-                    "name": "weight",
+                  "width": {
+                    "name": "width",
                     "required": false,
+                    "type": "string"
+                  },
+                  "key": {
+                    "name": "key",
+                    "required": true,
                     "type": "string"
                   },
                   "format": {
                     "name": "format",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "className": {
+                    "name": "className",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "weight": {
+                    "name": "weight",
                     "required": false,
                     "type": "string"
                   },
@@ -66156,21 +66745,6 @@
                   "field": {
                     "name": "field",
                     "required": false,
-                    "type": "string"
-                  },
-                  "width": {
-                    "name": "width",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "key": {
-                    "name": "key",
-                    "required": true,
                     "type": "string"
                   }
                 },
@@ -66222,14 +66796,24 @@
               ],
               "items": {
                 "properties": {
+                  "name": {
+                    "name": "name",
+                    "required": true,
+                    "type": "string"
+                  },
                   "label": {
                     "name": "label",
                     "required": false,
                     "type": "string"
                   },
-                  "name": {
-                    "name": "name",
-                    "required": true,
+                  "key": {
+                    "name": "key",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "header": {
+                    "name": "header",
+                    "required": false,
                     "type": "string"
                   },
                   "variant": {
@@ -66246,16 +66830,6 @@
                     "name": "format",
                     "required": false,
                     "type": "string"
-                  },
-                  "key": {
-                    "name": "key",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "header": {
-                    "name": "header",
-                    "required": false,
-                    "type": "string"
                   }
                 },
                 "type": "object"
@@ -66263,6 +66837,37 @@
               "label": "Columns to show",
               "description": "Each column maps to one field on the BrowseItem entity",
               "tier": "presentation"
+            },
+            {
+              "key": "filters",
+              "type": "[FilterSpec]",
+              "default": [],
+              "label": "Faceted filters",
+              "description": "Per-field filter facets ({ field, label, options }); each renders a select that fires REFETCH_FILTER to filter the list by that field. Empty = no filter bar.",
+              "tier": "presentation",
+              "items": {
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "field": {
+                    "name": "field",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "options": {
+                    "name": "options",
+                    "required": false,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "type": "object"
+              }
             },
             {
               "key": "gap",
@@ -66310,24 +66915,24 @@
               ],
               "items": {
                 "properties": {
-                  "label": {
-                    "name": "label",
-                    "required": true,
-                    "type": "string"
-                  },
                   "icon": {
                     "name": "icon",
                     "required": false,
                     "type": "string"
                   },
-                  "variant": {
-                    "name": "variant",
-                    "required": false,
+                  "label": {
+                    "name": "label",
+                    "required": true,
                     "type": "string"
                   },
                   "event": {
                     "name": "event",
                     "required": true,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
                     "type": "string"
                   }
                 },
@@ -67472,18 +68077,18 @@
                       "bodyContent": {
                         "type": "object",
                         "default": {
-                          "type": "stack",
                           "direction": "vertical",
+                          "type": "stack",
                           "children": [
                             {
-                              "entity": "@payload.data",
-                              "type": "data-grid",
                               "fields": "@config.fields",
-                              "imageField": "@config.imageField",
+                              "entity": "@payload.data",
                               "itemActions": "@config.itemActions",
+                              "cols": "@config.cols",
+                              "imageField": "@config.imageField",
                               "pageSize": "@config.displayPageSize",
-                              "gap": "@config.gap",
-                              "cols": "@config.cols"
+                              "type": "data-grid",
+                              "gap": "@config.gap"
                             }
                           ]
                         },
@@ -67512,24 +68117,24 @@
                         },
                         "default": [
                           {
-                            "key": "name",
-                            "align": "left",
-                            "weight": "medium",
                             "field": "name",
-                            "header": "Name"
+                            "header": "Name",
+                            "weight": "medium",
+                            "key": "name",
+                            "align": "left"
                           },
                           {
-                            "align": "left",
                             "header": "Detail",
-                            "key": "description",
-                            "field": "description"
+                            "field": "description",
+                            "align": "left",
+                            "key": "description"
                           },
                           {
-                            "field": "status",
                             "format": "badge",
-                            "header": "Status",
+                            "align": "center",
                             "key": "status",
-                            "align": "center"
+                            "field": "status",
+                            "header": "Status"
                           }
                         ],
                         "description": "Column definitions for table-style variants (dense). Each maps an entity field to a column with optional width / align / weight / format.",
@@ -67581,6 +68186,16 @@
                         ],
                         "description": "Each column maps to one field on the BrowseItem entity",
                         "x-label": "Columns to show",
+                        "x-tier": "presentation"
+                      },
+                      "filters": {
+                        "type": "array",
+                        "items": {
+                          "type": "object"
+                        },
+                        "default": [],
+                        "description": "Per-field filter facets ({ field, label, options }); each renders a select that fires REFETCH_FILTER to filter the list by that field. Empty = no filter bar.",
+                        "x-label": "Faceted filters",
                         "x-tier": "presentation"
                       },
                       "gap": {

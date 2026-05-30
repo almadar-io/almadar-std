@@ -1,6 +1,6 @@
 {
   "name": "std-browse-dense",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "description": "Spreadsheet-style dense browse — column-row data-table molecule with sticky header, monospaced numerics, status badges, tight row padding.",
   "orbitals": [
     {
@@ -64,117 +64,137 @@
           "linkedEntity": "DenseRow",
           "config": {
             "bodyContent": {
-              "direction": "vertical",
               "gap": "sm",
-              "className": "p-card-md",
-              "type": "stack",
+              "direction": "vertical",
               "children": [
                 {
                   "children": [
                     {
-                      "className": "text-muted-foreground",
                       "type": "icon",
+                      "className": "text-muted-foreground",
                       "name": "search"
                     },
                     {
-                      "type": "input",
-                      "placeholder": "Filter records…",
                       "inputType": "search",
+                      "placeholder": "Filter records…",
                       "action": "REFETCH_QUERY",
-                      "className": "flex-1"
+                      "className": "flex-1",
+                      "type": "input"
                     }
                   ],
-                  "direction": "horizontal",
                   "gap": "sm",
-                  "type": "stack",
+                  "direction": "horizontal",
                   "align": "center",
+                  "type": "stack",
                   "className": "w-full max-w-2xl rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 shadow-sm"
                 },
                 {
-                  "className": "rounded-lg border border-[var(--color-border)] overflow-x-auto bg-[var(--color-card)] shadow-sm",
-                  "children": [
+                  "entity": "@config.filters",
+                  "gap": "sm",
+                  "type": "data-list",
+                  "fields": [],
+                  "renderItem": [
+                    "fn",
+                    "f",
                     {
-                      "pageSize": "@config.displayPageSize",
-                      "emptyMessage": "No records",
-                      "look": "dense",
-                      "itemActions": "@config.itemActions",
-                      "selectable": true,
-                      "entity": "@payload.data",
-                      "columns": "@config.columns",
-                      "type": "table-view"
+                      "type": "select",
+                      "placeholder": "@f.label",
+                      "options": "@f.options",
+                      "action": "REFETCH_FILTER",
+                      "actionPayload": {
+                        "field": "@f.field"
+                      },
+                      "className": "min-w-[10rem]"
                     }
-                  ],
+                  ]
+                },
+                {
+                  "className": "rounded-lg border border-[var(--color-border)] overflow-x-auto bg-[var(--color-card)] shadow-sm",
                   "direction": "vertical",
                   "type": "stack",
-                  "gap": "none"
+                  "gap": "none",
+                  "children": [
+                    {
+                      "look": "dense",
+                      "emptyMessage": "No records",
+                      "pageSize": "@config.displayPageSize",
+                      "itemActions": "@config.itemActions",
+                      "entity": "@payload.data",
+                      "columns": "@config.columns",
+                      "selectable": true,
+                      "type": "table-view"
+                    }
+                  ]
                 }
-              ]
+              ],
+              "type": "stack",
+              "className": "p-card-md"
             },
             "columns": [
               {
-                "className": "font-mono text-[var(--color-text-muted)]",
-                "field": "id",
-                "header": "ID",
-                "align": "left",
                 "key": "id",
+                "header": "ID",
+                "field": "id",
+                "align": "left",
+                "className": "font-mono text-[var(--color-text-muted)]",
                 "width": "7rem"
               },
               {
                 "field": "name",
-                "width": "minmax(10rem, 1.5fr)",
-                "header": "Name",
-                "weight": "medium",
                 "align": "left",
+                "header": "Name",
+                "width": "minmax(10rem, 1.5fr)",
+                "weight": "medium",
                 "key": "name"
               },
               {
-                "align": "left",
-                "key": "description",
-                "className": "text-[var(--color-text-muted)]",
-                "field": "description",
                 "header": "Detail",
-                "width": "minmax(12rem, 2fr)"
+                "field": "description",
+                "key": "description",
+                "width": "minmax(12rem, 2fr)",
+                "className": "text-[var(--color-text-muted)]",
+                "align": "left"
               },
               {
+                "width": "6rem",
+                "field": "value",
+                "align": "right",
                 "className": "font-mono tabular-nums",
                 "header": "Value",
-                "key": "value",
-                "width": "6rem",
-                "align": "right",
-                "field": "value"
+                "key": "value"
               },
               {
                 "width": "6rem",
-                "field": "change",
                 "align": "right",
-                "header": "Change",
+                "key": "change",
                 "className": "font-mono tabular-nums",
-                "key": "change"
+                "header": "Change",
+                "field": "change"
               },
               {
-                "width": "6rem",
-                "header": "Volume",
-                "field": "volume",
                 "key": "volume",
-                "align": "right",
-                "className": "font-mono tabular-nums text-[var(--color-text-muted)]"
+                "field": "volume",
+                "width": "6rem",
+                "className": "font-mono tabular-nums text-[var(--color-text-muted)]",
+                "header": "Volume",
+                "align": "right"
               },
               {
-                "format": "badge",
                 "field": "status",
                 "header": "Status",
-                "key": "status",
                 "width": "6rem",
+                "format": "badge",
+                "key": "status",
                 "align": "center"
               },
               {
-                "format": "date",
-                "width": "9rem",
                 "align": "right",
+                "format": "date",
                 "key": "createdAt",
-                "header": "Created",
+                "width": "9rem",
                 "field": "createdAt",
-                "className": "font-mono tabular-nums text-[var(--color-text-muted)]"
+                "className": "font-mono tabular-nums text-[var(--color-text-muted)]",
+                "header": "Created"
               }
             ]
           }

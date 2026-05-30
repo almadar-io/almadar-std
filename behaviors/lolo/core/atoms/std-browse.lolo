@@ -1,9 +1,10 @@
-app std-browse "2.1.0"
+app std-browse "2.2.0"
 "std-browse as a Function — single primitive: data-grid. Owns the fetch + REFETCH (query/filter/page) state machine. Consumers configure fields/imageField/itemActions/cols/gap/variant; the atom renders the grid. Each `fields[]` entry accepts `{ name, label, variant }` plus optional `referenceEntity` + `displayField` to render a foreign-key column as the joined entity's display value (data-grid resolves @list[referenceEntity] at render time when both keys are present)."
 
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
 type ColumnSpec = { key : string!, field : string, header : string, width : string, align : string, className : string, weight : string, format : string, icon : string }
+type FilterSpec = { field : string!, label : string, options : [string] }
 
 orbital BrowseItemOrbital {
   entity BrowseItem [runtime] {
@@ -95,6 +96,10 @@ orbital BrowseItemOrbital {
       displayPageSize : number = 10
         @label "Page size (display)"
         @description "Rows shown per visible page before pagination"
+        @tier "presentation"
+      filters : [FilterSpec] = []
+        @label "Faceted filters"
+        @description "Per-field filter facets ({ field, label, options }); each renders a select that fires REFETCH_FILTER to filter the list by that field. Empty = no filter bar."
         @tier "presentation"
       viewPattern : pattern = "data-grid"
         @label "Render pattern"

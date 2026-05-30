@@ -59,18 +59,18 @@
             "key": "bodyContent",
             "type": "render-ui",
             "default": {
-              "type": "stack",
               "direction": "vertical",
+              "type": "stack",
               "children": [
                 {
-                  "entity": "@payload.data",
-                  "type": "data-grid",
                   "fields": "@config.fields",
-                  "imageField": "@config.imageField",
+                  "entity": "@payload.data",
                   "itemActions": "@config.itemActions",
+                  "cols": "@config.cols",
+                  "imageField": "@config.imageField",
                   "pageSize": "@config.displayPageSize",
-                  "gap": "@config.gap",
-                  "cols": "@config.cols"
+                  "type": "data-grid",
+                  "gap": "@config.gap"
                 }
               ]
             },
@@ -99,24 +99,24 @@
             "type": "[ColumnSpec]",
             "default": [
               {
-                "key": "name",
-                "align": "left",
-                "weight": "medium",
                 "field": "name",
-                "header": "Name"
+                "header": "Name",
+                "weight": "medium",
+                "key": "name",
+                "align": "left"
               },
               {
-                "align": "left",
                 "header": "Detail",
-                "key": "description",
-                "field": "description"
+                "field": "description",
+                "align": "left",
+                "key": "description"
               },
               {
-                "field": "status",
                 "format": "badge",
-                "header": "Status",
+                "align": "center",
                 "key": "status",
-                "align": "center"
+                "field": "status",
+                "header": "Status"
               }
             ],
             "label": "Table columns",
@@ -124,23 +124,38 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "className": {
-                  "name": "className",
-                  "required": false,
-                  "type": "string"
-                },
                 "align": {
                   "name": "align",
                   "required": false,
                   "type": "string"
                 },
-                "weight": {
-                  "name": "weight",
+                "width": {
+                  "name": "width",
                   "required": false,
+                  "type": "string"
+                },
+                "key": {
+                  "name": "key",
+                  "required": true,
                   "type": "string"
                 },
                 "format": {
                   "name": "format",
+                  "required": false,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "className": {
+                  "name": "className",
+                  "required": false,
+                  "type": "string"
+                },
+                "weight": {
+                  "name": "weight",
                   "required": false,
                   "type": "string"
                 },
@@ -152,21 +167,6 @@
                 "field": {
                   "name": "field",
                   "required": false,
-                  "type": "string"
-                },
-                "width": {
-                  "name": "width",
-                  "required": false,
-                  "type": "string"
-                },
-                "icon": {
-                  "name": "icon",
-                  "required": false,
-                  "type": "string"
-                },
-                "key": {
-                  "name": "key",
-                  "required": true,
                   "type": "string"
                 }
               },
@@ -195,18 +195,18 @@
             "default": [
               {
                 "label": "Name",
-                "variant": "h4",
-                "name": "name"
+                "name": "name",
+                "variant": "h4"
               },
               {
-                "name": "description",
                 "variant": "caption",
-                "label": "Description"
+                "label": "Description",
+                "name": "description"
               },
               {
+                "label": "Status",
                 "variant": "badge",
-                "name": "status",
-                "label": "Status"
+                "name": "status"
               }
             ],
             "label": "Columns to show",
@@ -214,14 +214,24 @@
             "tier": "presentation",
             "items": {
               "properties": {
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
                 "label": {
                   "name": "label",
                   "required": false,
                   "type": "string"
                 },
-                "name": {
-                  "name": "name",
-                  "required": true,
+                "key": {
+                  "name": "key",
+                  "required": false,
+                  "type": "string"
+                },
+                "header": {
+                  "name": "header",
+                  "required": false,
                   "type": "string"
                 },
                 "variant": {
@@ -238,16 +248,37 @@
                   "name": "format",
                   "required": false,
                   "type": "string"
-                },
-                "key": {
-                  "name": "key",
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "filters",
+            "type": "[FilterSpec]",
+            "default": [],
+            "label": "Faceted filters",
+            "description": "Per-field filter facets ({ field, label, options }); each renders a select that fires REFETCH_FILTER to filter the list by that field. Empty = no filter bar.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "label": {
+                  "name": "label",
                   "required": false,
                   "type": "string"
                 },
-                "header": {
-                  "name": "header",
-                  "required": false,
+                "field": {
+                  "name": "field",
+                  "required": true,
                   "type": "string"
+                },
+                "options": {
+                  "name": "options",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
                 }
               },
               "type": "object"
@@ -286,24 +317,24 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "label": {
-                  "name": "label",
-                  "required": true,
-                  "type": "string"
-                },
                 "icon": {
                   "name": "icon",
                   "required": false,
                   "type": "string"
                 },
-                "variant": {
-                  "name": "variant",
-                  "required": false,
+                "label": {
+                  "name": "label",
+                  "required": true,
                   "type": "string"
                 },
                 "event": {
                   "name": "event",
                   "required": true,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
                   "type": "string"
                 }
               },
