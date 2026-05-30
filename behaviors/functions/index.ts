@@ -104,7 +104,6 @@ export * from './core-variations/atoms/std-stats-sparkline-row.js';
 export * from './core/atoms/std-step-flow.js';
 export * from './core-variations/atoms/std-step-flow-cards-deck.js';
 export * from './core-variations/atoms/std-step-flow-progress-vertical.js';
-export * from './core-variations/atoms/std-step-flow-stepper-horizontal.js';
 export * from './core/atoms/std-tabs.js';
 export * from './core-variations/atoms/std-tabs-segmented-pills.js';
 export * from './core-variations/atoms/std-tabs-sidebar-rail.js';
