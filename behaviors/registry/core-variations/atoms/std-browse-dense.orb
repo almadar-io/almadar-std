@@ -64,12 +64,13 @@
           "linkedEntity": "DenseRow",
           "config": {
             "bodyContent": {
-              "gap": "sm",
-              "className": "p-card-md",
               "direction": "vertical",
-              "type": "stack",
+              "className": "p-card-md",
               "children": [
                 {
+                  "align": "center",
+                  "type": "stack",
+                  "direction": "horizontal",
                   "className": "w-full max-w-2xl rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 shadow-sm",
                   "children": [
                     {
@@ -79,123 +80,122 @@
                     },
                     {
                       "className": "flex-1",
-                      "action": "REFETCH_QUERY",
+                      "inputType": "search",
                       "type": "input",
-                      "placeholder": "Filter records…",
-                      "inputType": "search"
-                    }
-                  ],
-                  "gap": "sm",
-                  "direction": "horizontal",
-                  "align": "center",
-                  "type": "stack"
-                },
-                {
-                  "type": "data-list",
-                  "fields": [],
-                  "entity": "@config.filters",
-                  "renderItem": [
-                    "fn",
-                    "f",
-                    {
-                      "actionPayload": {
-                        "field": "@f.field"
-                      },
-                      "placeholder": "@f.label",
-                      "action": "REFETCH_FILTER",
-                      "type": "select",
-                      "className": "min-w-[10rem]",
-                      "options": "@f.options"
+                      "placeholder": "@config.searchPlaceholder",
+                      "action": "REFETCH_QUERY"
                     }
                   ],
                   "gap": "sm"
                 },
                 {
-                  "children": [
+                  "renderItem": [
+                    "fn",
+                    "f",
                     {
-                      "entity": "@payload.data",
-                      "maxInlineActions": "@config.maxInlineActions",
-                      "emptyMessage": "No records",
-                      "columns": "@config.columns",
-                      "type": "table-view",
-                      "selectable": true,
-                      "pageSize": "@config.displayPageSize",
-                      "itemActions": "@config.itemActions",
-                      "look": "dense"
+                      "options": "@f.options",
+                      "className": "min-w-[10rem]",
+                      "placeholder": "@f.label",
+                      "action": "REFETCH_FILTER",
+                      "type": "select",
+                      "actionPayload": {
+                        "field": "@f.field"
+                      }
                     }
                   ],
+                  "type": "data-list",
+                  "gap": "sm",
+                  "entity": "@config.filters",
+                  "fields": []
+                },
+                {
                   "direction": "vertical",
-                  "className": "rounded-lg border border-[var(--color-border)] overflow-x-auto bg-[var(--color-card)] shadow-sm",
                   "type": "stack",
-                  "gap": "none"
+                  "className": "rounded-lg border border-[var(--color-border)] overflow-x-auto bg-[var(--color-card)] shadow-sm",
+                  "gap": "none",
+                  "children": [
+                    {
+                      "selectable": true,
+                      "maxInlineActions": "@config.maxInlineActions",
+                      "look": "dense",
+                      "pageSize": "@config.displayPageSize",
+                      "entity": "@payload.data",
+                      "type": "table-view",
+                      "columns": "@config.columns",
+                      "itemActions": "@config.itemActions",
+                      "emptyMessage": "No records"
+                    }
+                  ]
                 }
-              ]
+              ],
+              "gap": "sm",
+              "type": "stack"
             },
             "columns": [
               {
                 "field": "id",
-                "key": "id",
                 "header": "ID",
+                "key": "id",
                 "width": "7rem",
                 "align": "left",
                 "className": " text-[var(--color-text-muted)]"
               },
               {
                 "header": "Name",
-                "align": "left",
+                "field": "name",
+                "width": "minmax(10rem, 1.5fr)",
                 "weight": "medium",
                 "key": "name",
-                "field": "name",
-                "width": "minmax(10rem, 1.5fr)"
+                "align": "left"
               },
               {
-                "align": "left",
-                "key": "description",
-                "className": "text-[var(--color-text-muted)]",
-                "width": "minmax(12rem, 2fr)",
+                "field": "description",
                 "header": "Detail",
-                "field": "description"
+                "className": "text-[var(--color-text-muted)]",
+                "key": "description",
+                "width": "minmax(12rem, 2fr)",
+                "align": "left"
               },
               {
                 "align": "right",
-                "className": "",
                 "key": "value",
+                "width": "6rem",
                 "field": "value",
-                "header": "Value",
+                "className": "",
+                "header": "Value"
+              },
+              {
+                "className": "",
+                "header": "Change",
+                "width": "6rem",
+                "key": "change",
+                "field": "change",
+                "align": "right"
+              },
+              {
+                "className": " text-[var(--color-text-muted)]",
+                "key": "volume",
+                "align": "right",
+                "field": "volume",
+                "header": "Volume",
                 "width": "6rem"
               },
               {
                 "width": "6rem",
-                "align": "right",
-                "className": "",
-                "key": "change",
-                "field": "change",
-                "header": "Change"
-              },
-              {
-                "field": "volume",
-                "width": "6rem",
-                "key": "volume",
-                "header": "Volume",
-                "align": "right",
-                "className": " text-[var(--color-text-muted)]"
-              },
-              {
-                "align": "center",
-                "header": "Status",
-                "key": "status",
-                "width": "6rem",
                 "format": "badge",
-                "field": "status"
+                "key": "status",
+                "field": "status",
+                "header": "Status",
+                "align": "center"
               },
               {
-                "align": "right",
                 "field": "createdAt",
-                "className": " text-[var(--color-text-muted)]",
-                "width": "9rem",
-                "format": "date",
                 "key": "createdAt",
-                "header": "Created"
+                "width": "9rem",
+                "align": "right",
+                "header": "Created",
+                "className": " text-[var(--color-text-muted)]",
+                "format": "date"
               }
             ]
           }
