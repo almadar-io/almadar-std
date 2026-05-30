@@ -42,7 +42,6 @@ export * from './core-variations/atoms/std-browse-command-palette.js';
 export * from './core-variations/atoms/std-browse-dense.js';
 export * from './core-variations/atoms/std-browse-feed.js';
 export * from './core-variations/atoms/std-browse-gallery.js';
-export * from './core-variations/atoms/std-browse-triage.js';
 export * from './core/atoms/std-cache-aside.js';
 export * from './core/atoms/std-calendar.js';
 export * from './core-variations/atoms/std-calendar-agenda-list.js';
