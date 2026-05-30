@@ -31,8 +31,8 @@ const ALIAS = 'BrowseDense';
  * without modifying its state-machine topology.
  */
 export interface StdBrowseDenseConfig {
-  bodyContent?: unknown;
   columns?: TraitConfig;
+  bodyContent?: unknown;
 }
 
 /**
