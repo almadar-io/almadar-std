@@ -1,0 +1,142 @@
+{
+  "name": "std-browse-map",
+  "version": "1.0.0",
+  "description": "Map browse — geo pin map: rows with lat/lng render as markers on a map-view, with a compact list beneath. For fleet vehicles, field technicians, store locations, delivery routes — anything with coordinates. Same BrowseItemBrowse trait + state machine as std-browse; only the bodyContent differs (a map instead of a grid).",
+  "orbitals": [
+    {
+      "name": "MapBrowseOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
+        }
+      ],
+      "entity": {
+        "name": "MapRow",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "inactive",
+              "pending"
+            ]
+          },
+          {
+            "name": "lat",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "lng",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "address",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "createdAt",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "MapBrowse",
+          "linkedEntity": "MapRow",
+          "config": {
+            "fields": [
+              {
+                "name": "name",
+                "label": "Name",
+                "variant": "h4"
+              },
+              {
+                "name": "address",
+                "label": "Address",
+                "variant": "caption"
+              },
+              {
+                "label": "Status",
+                "variant": "badge",
+                "name": "status"
+              }
+            ],
+            "bodyContent": {
+              "direction": "vertical",
+              "children": [
+                {
+                  "type": "stack",
+                  "direction": "horizontal",
+                  "gap": "sm",
+                  "align": "center",
+                  "children": [
+                    {
+                      "name": "search",
+                      "className": "text-muted-foreground",
+                      "type": "icon"
+                    },
+                    {
+                      "action": "REFETCH_QUERY",
+                      "className": "flex-1",
+                      "inputType": "search",
+                      "type": "input",
+                      "placeholder": "@config.searchPlaceholder"
+                    }
+                  ],
+                  "className": "w-full max-w-2xl rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 shadow-sm"
+                },
+                {
+                  "className": "w-full rounded-lg overflow-hidden border border-[var(--color-border)]",
+                  "height": "440px",
+                  "type": "map-view",
+                  "markers": "@payload.data"
+                },
+                {
+                  "itemActions": "@config.itemActions",
+                  "entity": "@payload.data",
+                  "gap": "sm",
+                  "look": "@config.tableLook",
+                  "type": "data-list",
+                  "fields": "@config.fields"
+                }
+              ],
+              "type": "stack",
+              "gap": "md",
+              "className": "p-card-md"
+            }
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "MapBrowsePage",
+          "path": "/map-browse",
+          "traits": [
+            {
+              "ref": "MapBrowse"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
