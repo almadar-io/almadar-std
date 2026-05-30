@@ -1,5 +1,5 @@
-app std-esign-request "1.0.0"
-"Generic e-signature request primitive: send a document for signing and track status."
+app std-esign-request "1.1.0"
+"std-esign-request — specialized e-signature request tracker: send a document out for signing and track its status (draft/sent/viewed/signed/declined/expired). Just the request list + send/revoke; signature capture is std-signature-capture's job."
 
 orbital ESignRequestOrbital {
   entity ESignRequest [persistent: esignrequests] {
@@ -34,7 +34,7 @@ orbital ESignRequestOrbital {
         (fetch ESignRequest { emit: { success: "ESignRequestLoaded", failure: "ESignRequestLoadFailed" } })
         (render-ui main { type: "spinner", size: "md" })
       ESignRequestLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@config.title", variant: "h3" }, { type: "signature-pad", label: "Recipient signature preview", helperText: "Read-only preview of the captured signature", height: 160, readOnly: true }, { type: "data-grid", look: "@config.tableLook", entity: @payload.data, fields: [{ name: "documentName", label: "Document", variant: "h4" }, { name: "recipientName", label: "Recipient", variant: "body" }, { name: "recipientEmail", label: "Email", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "sentAt", label: "Sent", variant: "caption" }], itemActions: [{ label: "Send", event: "SEND_REQUEST", variant: "primary" }, { label: "Revoke", event: "REVOKE_REQUEST", variant: "danger" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@config.title", variant: "h3" }, { type: "data-grid", look: "@config.tableLook", entity: @payload.data, fields: [{ name: "documentName", label: "Document", variant: "h4" }, { name: "recipientName", label: "Recipient", variant: "body" }, { name: "recipientEmail", label: "Email", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "sentAt", label: "Sent", variant: "caption" }], itemActions: [{ label: "Send", event: "SEND_REQUEST", variant: "primary" }, { label: "Revoke", event: "REVOKE_REQUEST", variant: "danger" }] }] })
       ESignRequestLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", title: "Failed to load signature requests", message: "@payload.error" })
     }
