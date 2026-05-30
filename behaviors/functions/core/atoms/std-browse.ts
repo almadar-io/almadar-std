@@ -97,46 +97,48 @@ export interface StdBrowseDeletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdBrowseConfig {
-  /** Default: `[]` */
-  itemActions?: EntityRow[];
-  /** Default: `"@item.name"` */
-  titleBinding?: string;
-  /** Default: `"@item.assignee"` */
-  assigneeBinding?: string;
-  /** Default: `""` */
-  imageField?: string;
-  /** Default: `1` */
-  cols?: number;
-  /** Default: `"md"` */
-  gap?: string;
   /** Default: `"@item.status"` */
   badgeBinding?: string;
-  /** Default: `"@item.priority"` */
-  priorityBinding?: string;
-  /** Default: `10` */
-  pageSize?: number;
-  /** Default: `"@item.thumbnailLabel"` */
-  imageLabelBinding?: string;
-  /** Default: `"@item.createdAt"` */
-  metaBinding?: string;
-  /** Default: `{"direction":"vertical","type":"stack","children":[{"fields":"@config.fields","entity":"@payload.data","itemActions":"@config.itemActions","cols":"@config.cols","imageField":"@config.imageField","pageSize":"@config.displayPageSize","type":"data-grid","gap":"@config.gap"}]}` */
-  bodyContent?: unknown;
-  /** Default: `"@item.category"` */
-  categoryBinding?: string;
-  /** Default: `[]` */
-  filters?: EntityRow[];
-  /** Default: `[{"label":"Name","name":"name","variant":"h4"},{"variant":"caption","label":"Description","name":"description"},{"label":"Status","variant":"badge","name":"status"}]` */
-  fields?: EntityRow[];
-  /** Default: `[{"field":"name","header":"Name","weight":"medium","key":"name","align":"left"},{"header":"Detail","field":"description","align":"left","key":"description"},{"format":"badge","align":"center","key":"status","field":"status","header":"Status"}]` */
-  columns?: EntityRow[];
-  /** Default: `"data-grid"` */
-  viewPattern?: unknown;
-  /** Default: `"@item.price"` */
-  priceBinding?: string;
-  /** Default: `10` */
-  displayPageSize?: number;
+  /** Default: `1` */
+  cols?: number;
   /** Default: `"@item.description"` */
   descriptionBinding?: string;
+  /** Default: `10` */
+  displayPageSize?: number;
+  /** Default: `""` */
+  imageField?: string;
+  /** Default: `10` */
+  pageSize?: number;
+  /** Default: `[{"header":"Name","field":"name","align":"left","key":"name","weight":"medium"},{"key":"description","field":"description","header":"Detail","align":"left"},{"key":"status","header":"Status","align":"center","format":"badge","field":"status"}]` */
+  columns?: EntityRow[];
+  /** Default: `"@item.name"` */
+  titleBinding?: string;
+  /** Default: `"@item.createdAt"` */
+  metaBinding?: string;
+  /** Default: `[]` */
+  filters?: EntityRow[];
+  /** Default: `"data-grid"` */
+  viewPattern?: unknown;
+  /** Default: `99` */
+  maxInlineActions?: number;
+  /** Default: `"@item.assignee"` */
+  assigneeBinding?: string;
+  /** Default: `[{"name":"name","label":"Name","variant":"h4"},{"label":"Description","variant":"caption","name":"description"},{"variant":"badge","label":"Status","name":"status"}]` */
+  fields?: EntityRow[];
+  /** Default: `{"type":"stack","direction":"vertical","children":[{"itemActions":"@config.itemActions","gap":"@config.gap","imageField":"@config.imageField","entity":"@payload.data","fields":"@config.fields","type":"data-grid","pageSize":"@config.displayPageSize","cols":"@config.cols"}]}` */
+  bodyContent?: unknown;
+  /** Default: `"@item.thumbnailLabel"` */
+  imageLabelBinding?: string;
+  /** Default: `"@item.price"` */
+  priceBinding?: string;
+  /** Default: `"@item.priority"` */
+  priorityBinding?: string;
+  /** Default: `[]` */
+  itemActions?: EntityRow[];
+  /** Default: `"md"` */
+  gap?: string;
+  /** Default: `"@item.category"` */
+  categoryBinding?: string;
 }
 
 /**
