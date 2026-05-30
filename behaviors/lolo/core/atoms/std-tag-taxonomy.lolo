@@ -1,4 +1,4 @@
-app std-tag-taxonomy "1.0.0"
+app std-tag-taxonomy "1.1.0"
 "std-tag-taxonomy — hierarchical category tag tree (parent/child). TagBrowse fetches Tag rows on INIT, renders the active level via data-grid, and on SELECT_TAG drills into a tag's children by binding @entity.id to the chosen parent."
 
 orbital TagTaxonomyOrbital {
@@ -37,7 +37,7 @@ orbital TagTaxonomyOrbital {
         (fetch Tag { emit: { success: "TagLoaded", failure: "TagLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading categories…" }] })
       TagLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@config.title", variant: "h3" }, { type: "data-grid", look: "@config.tableLook", entity: @payload.data, fields: [{ name: "name", label: "Name" }, { name: "count", label: "Items" }], itemActions: [{ label: "Open", event: "SELECT_TAG", icon: "chevron-right" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@config.title", variant: "h3" }, { type: "data-grid", entity: @payload.data, minCardWidth: 180, gap: "sm", fields: [], renderItem: ["fn", "tag", { type: "card", look: "flat-bordered", padding: "sm", className: "cursor-pointer hover:shadow-md transition-shadow", children: [{ type: "stack", direction: "vertical", gap: "xs", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", className: "min-w-0", children: [{ type: "icon", name: "tag", size: "sm" }, { type: "typography", content: "@tag.name", variant: "body", weight: "medium", className: "truncate" }] }, { type: "badge", label: "@tag.count", variant: "neutral", size: "sm" }] }, { type: "button", label: "Open", variant: "ghost", size: "sm", action: "SELECT_TAG", actionPayload: { tagId: "@tag.id" }, icon: "chevron-right", className: "w-full justify-center" }] }] }] }] })
       TagLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
@@ -48,7 +48,7 @@ orbital TagTaxonomyOrbital {
         (fetch Tag { emit: { success: "TagLoaded", failure: "TagLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading children…" }] })
       TagLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@config.title", variant: "h3" }, { type: "data-grid", look: "@config.tableLook", entity: @payload.data, fields: [{ name: "name", label: "Name" }, { name: "count", label: "Items" }], itemActions: [{ label: "Open", event: "SELECT_TAG", icon: "chevron-right" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@config.title", variant: "h3" }, { type: "data-grid", entity: @payload.data, minCardWidth: 180, gap: "sm", fields: [], renderItem: ["fn", "tag", { type: "card", look: "flat-bordered", padding: "sm", className: "cursor-pointer hover:shadow-md transition-shadow", children: [{ type: "stack", direction: "vertical", gap: "xs", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", className: "min-w-0", children: [{ type: "icon", name: "tag", size: "sm" }, { type: "typography", content: "@tag.name", variant: "body", weight: "medium", className: "truncate" }] }, { type: "badge", label: "@tag.count", variant: "neutral", size: "sm" }] }, { type: "button", label: "Open", variant: "ghost", size: "sm", action: "SELECT_TAG", actionPayload: { tagId: "@tag.id" }, icon: "chevron-right", className: "w-full justify-center" }] }] }] }] })
       TagLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
@@ -62,7 +62,7 @@ orbital TagTaxonomyOrbital {
       TagSelected -> editing
         (set @entity.id @payload.tagId)
       TagLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@config.title", variant: "h3" }, { type: "data-grid", look: "@config.tableLook", entity: @payload.data, fields: [{ name: "name", label: "Name" }, { name: "count", label: "Items" }], itemActions: [{ label: "Open", event: "SELECT_TAG", icon: "chevron-right" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@config.title", variant: "h3" }, { type: "data-grid", entity: @payload.data, minCardWidth: 180, gap: "sm", fields: [], renderItem: ["fn", "tag", { type: "card", look: "flat-bordered", padding: "sm", className: "cursor-pointer hover:shadow-md transition-shadow", children: [{ type: "stack", direction: "vertical", gap: "xs", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", className: "min-w-0", children: [{ type: "icon", name: "tag", size: "sm" }, { type: "typography", content: "@tag.name", variant: "body", weight: "medium", className: "truncate" }] }, { type: "badge", label: "@tag.count", variant: "neutral", size: "sm" }] }, { type: "button", label: "Open", variant: "ghost", size: "sm", action: "SELECT_TAG", actionPayload: { tagId: "@tag.id" }, icon: "chevron-right", className: "w-full justify-center" }] }] }] }] })
       TagLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
