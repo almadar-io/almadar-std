@@ -59,20 +59,20 @@
             "key": "bodyContent",
             "type": "render-ui",
             "default": {
-              "type": "stack",
               "direction": "vertical",
               "children": [
                 {
-                  "itemActions": "@config.itemActions",
-                  "gap": "@config.gap",
+                  "pageSize": "@config.displayPageSize",
                   "imageField": "@config.imageField",
-                  "entity": "@payload.data",
+                  "cols": "@config.cols",
                   "fields": "@config.fields",
                   "type": "data-grid",
-                  "pageSize": "@config.displayPageSize",
-                  "cols": "@config.cols"
+                  "entity": "@payload.data",
+                  "itemActions": "@config.itemActions",
+                  "gap": "@config.gap"
                 }
-              ]
+              ],
+              "type": "stack"
             },
             "label": "Body content tree",
             "description": "Render-ui SExpr rendered after rows load. Default is the canonical data-grid call wrapped in a stack. Layer 3 variants override this with their own tree (composing data-list/data-grid/entity-table + custom renderItem lambdas + filter-group, kbd, card, etc.) to deliver entirely different browse UX while inheriting the same trait, state machine, emits, and listens.",
@@ -99,24 +99,24 @@
             "type": "[ColumnSpec]",
             "default": [
               {
-                "header": "Name",
-                "field": "name",
                 "align": "left",
-                "key": "name",
-                "weight": "medium"
+                "header": "Name",
+                "weight": "medium",
+                "field": "name",
+                "key": "name"
               },
               {
-                "key": "description",
-                "field": "description",
+                "align": "left",
                 "header": "Detail",
-                "align": "left"
+                "key": "description",
+                "field": "description"
               },
               {
                 "key": "status",
-                "header": "Status",
-                "align": "center",
                 "format": "badge",
-                "field": "status"
+                "header": "Status",
+                "field": "status",
+                "align": "center"
               }
             ],
             "label": "Table columns",
@@ -124,13 +124,13 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "field": {
-                  "name": "field",
+                "weight": {
+                  "name": "weight",
                   "required": false,
                   "type": "string"
                 },
-                "className": {
-                  "name": "className",
+                "header": {
+                  "name": "header",
                   "required": false,
                   "type": "string"
                 },
@@ -139,9 +139,9 @@
                   "required": false,
                   "type": "string"
                 },
-                "key": {
-                  "name": "key",
-                  "required": true,
+                "width": {
+                  "name": "width",
+                  "required": false,
                   "type": "string"
                 },
                 "align": {
@@ -149,23 +149,23 @@
                   "required": false,
                   "type": "string"
                 },
-                "weight": {
-                  "name": "weight",
+                "className": {
+                  "name": "className",
                   "required": false,
+                  "type": "string"
+                },
+                "field": {
+                  "name": "field",
+                  "required": false,
+                  "type": "string"
+                },
+                "key": {
+                  "name": "key",
+                  "required": true,
                   "type": "string"
                 },
                 "icon": {
                   "name": "icon",
-                  "required": false,
-                  "type": "string"
-                },
-                "width": {
-                  "name": "width",
-                  "required": false,
-                  "type": "string"
-                },
-                "header": {
-                  "name": "header",
                   "required": false,
                   "type": "string"
                 }
@@ -194,18 +194,18 @@
             "type": "[FieldSpec]",
             "default": [
               {
-                "name": "name",
                 "label": "Name",
-                "variant": "h4"
+                "variant": "h4",
+                "name": "name"
               },
               {
-                "label": "Description",
                 "variant": "caption",
-                "name": "description"
+                "name": "description",
+                "label": "Description"
               },
               {
-                "variant": "badge",
                 "label": "Status",
+                "variant": "badge",
                 "name": "status"
               }
             ],
@@ -214,6 +214,11 @@
             "tier": "presentation",
             "items": {
               "properties": {
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
                 "label": {
                   "name": "label",
                   "required": false,
@@ -229,18 +234,13 @@
                   "required": false,
                   "type": "string"
                 },
-                "format": {
-                  "name": "format",
+                "key": {
+                  "name": "key",
                   "required": false,
                   "type": "string"
                 },
-                "name": {
-                  "name": "name",
-                  "required": true,
-                  "type": "string"
-                },
-                "key": {
-                  "name": "key",
+                "format": {
+                  "name": "format",
                   "required": false,
                   "type": "string"
                 },
@@ -262,11 +262,6 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "label": {
-                  "name": "label",
-                  "required": false,
-                  "type": "string"
-                },
                 "options": {
                   "name": "options",
                   "required": false,
@@ -278,6 +273,11 @@
                 "field": {
                   "name": "field",
                   "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
                   "type": "string"
                 }
               },
@@ -317,8 +317,13 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "icon": {
-                  "name": "icon",
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
                   "required": false,
                   "type": "string"
                 },
@@ -327,13 +332,8 @@
                   "required": true,
                   "type": "string"
                 },
-                "label": {
-                  "name": "label",
-                  "required": true,
-                  "type": "string"
-                },
-                "variant": {
-                  "name": "variant",
+                "icon": {
+                  "name": "icon",
                   "required": false,
                   "type": "string"
                 }
@@ -379,6 +379,14 @@
             "default": "@item.priority",
             "label": "Priority binding",
             "description": "Per-row binding string for the priority slot (triage / work-queue variants).",
+            "tier": "presentation"
+          },
+          {
+            "key": "searchPlaceholder",
+            "type": "string",
+            "default": "Search…",
+            "label": "Search placeholder",
+            "description": "Placeholder text in the list's search box. Set per-domain (e.g. 'Search events…') so the box never leaks the variation name.",
             "tier": "presentation"
           },
           {
