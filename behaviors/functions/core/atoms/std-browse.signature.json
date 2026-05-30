@@ -59,18 +59,18 @@
             "key": "bodyContent",
             "type": "render-ui",
             "default": {
-              "direction": "vertical",
               "type": "stack",
+              "direction": "vertical",
               "children": [
                 {
-                  "fields": "@config.fields",
-                  "entity": "@payload.data",
                   "itemActions": "@config.itemActions",
-                  "cols": "@config.cols",
+                  "gap": "@config.gap",
                   "imageField": "@config.imageField",
-                  "pageSize": "@config.displayPageSize",
+                  "entity": "@payload.data",
+                  "fields": "@config.fields",
                   "type": "data-grid",
-                  "gap": "@config.gap"
+                  "pageSize": "@config.displayPageSize",
+                  "cols": "@config.cols"
                 }
               ]
             },
@@ -99,24 +99,24 @@
             "type": "[ColumnSpec]",
             "default": [
               {
-                "field": "name",
                 "header": "Name",
-                "weight": "medium",
+                "field": "name",
+                "align": "left",
                 "key": "name",
+                "weight": "medium"
+              },
+              {
+                "key": "description",
+                "field": "description",
+                "header": "Detail",
                 "align": "left"
               },
               {
-                "header": "Detail",
-                "field": "description",
-                "align": "left",
-                "key": "description"
-              },
-              {
-                "format": "badge",
-                "align": "center",
                 "key": "status",
-                "field": "status",
-                "header": "Status"
+                "header": "Status",
+                "align": "center",
+                "format": "badge",
+                "field": "status"
               }
             ],
             "label": "Table columns",
@@ -124,28 +124,8 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "align": {
-                  "name": "align",
-                  "required": false,
-                  "type": "string"
-                },
-                "width": {
-                  "name": "width",
-                  "required": false,
-                  "type": "string"
-                },
-                "key": {
-                  "name": "key",
-                  "required": true,
-                  "type": "string"
-                },
-                "format": {
-                  "name": "format",
-                  "required": false,
-                  "type": "string"
-                },
-                "icon": {
-                  "name": "icon",
+                "field": {
+                  "name": "field",
                   "required": false,
                   "type": "string"
                 },
@@ -154,18 +134,38 @@
                   "required": false,
                   "type": "string"
                 },
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string"
+                },
+                "key": {
+                  "name": "key",
+                  "required": true,
+                  "type": "string"
+                },
+                "align": {
+                  "name": "align",
+                  "required": false,
+                  "type": "string"
+                },
                 "weight": {
                   "name": "weight",
                   "required": false,
                   "type": "string"
                 },
-                "header": {
-                  "name": "header",
+                "icon": {
+                  "name": "icon",
                   "required": false,
                   "type": "string"
                 },
-                "field": {
-                  "name": "field",
+                "width": {
+                  "name": "width",
+                  "required": false,
+                  "type": "string"
+                },
+                "header": {
+                  "name": "header",
                   "required": false,
                   "type": "string"
                 }
@@ -194,18 +194,18 @@
             "type": "[FieldSpec]",
             "default": [
               {
-                "label": "Name",
                 "name": "name",
+                "label": "Name",
                 "variant": "h4"
               },
               {
-                "variant": "caption",
                 "label": "Description",
+                "variant": "caption",
                 "name": "description"
               },
               {
-                "label": "Status",
                 "variant": "badge",
+                "label": "Status",
                 "name": "status"
               }
             ],
@@ -214,23 +214,8 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "name": {
-                  "name": "name",
-                  "required": true,
-                  "type": "string"
-                },
                 "label": {
                   "name": "label",
-                  "required": false,
-                  "type": "string"
-                },
-                "key": {
-                  "name": "key",
-                  "required": false,
-                  "type": "string"
-                },
-                "header": {
-                  "name": "header",
                   "required": false,
                   "type": "string"
                 },
@@ -246,6 +231,21 @@
                 },
                 "format": {
                   "name": "format",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
+                "key": {
+                  "name": "key",
+                  "required": false,
+                  "type": "string"
+                },
+                "header": {
+                  "name": "header",
                   "required": false,
                   "type": "string"
                 }
@@ -267,11 +267,6 @@
                   "required": false,
                   "type": "string"
                 },
-                "field": {
-                  "name": "field",
-                  "required": true,
-                  "type": "string"
-                },
                 "options": {
                   "name": "options",
                   "required": false,
@@ -279,6 +274,11 @@
                   "items": {
                     "type": "string"
                   }
+                },
+                "field": {
+                  "name": "field",
+                  "required": true,
+                  "type": "string"
                 }
               },
               "type": "object"
@@ -322,13 +322,13 @@
                   "required": false,
                   "type": "string"
                 },
-                "label": {
-                  "name": "label",
+                "event": {
+                  "name": "event",
                   "required": true,
                   "type": "string"
                 },
-                "event": {
-                  "name": "event",
+                "label": {
+                  "name": "label",
                   "required": true,
                   "type": "string"
                 },
@@ -340,6 +340,14 @@
               },
               "type": "object"
             }
+          },
+          {
+            "key": "maxInlineActions",
+            "type": "number",
+            "default": 99,
+            "label": "Max inline row actions",
+            "description": "Row actions beyond this count collapse into a '⋯' overflow menu. Default 99 = all inline; set 2–3 for dense tables to avoid action overflow.",
+            "tier": "presentation"
           },
           {
             "key": "metaBinding",
