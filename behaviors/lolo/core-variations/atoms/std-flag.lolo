@@ -1,0 +1,29 @@
+app std-flag "2.0.0"
+"std-flag — user content-report form. A std-form-advanced variation bound to a Flag entity (reason + details): the form persists the report and emits FlagSubmitted for cross-trait moderation listeners. Stays importable so a consumer orbital gains the Flag entity + report form via `uses` alongside its own primary entity."
+
+orbital FlagOrbital {
+  uses FormAdvanced from "std/behaviors/std-form-advanced"
+
+  entity Flag [persistent: flags] {
+    id         : string!
+    targetId   : string = ""
+    targetType : string = ""
+    reportedBy : string = ""
+    reason     : "spam" | "abuse" | "off-topic" | "misinformation" | "nsfw" | "other" = "spam"
+    notes      : string = ""
+    createdAt  : string = ""
+  }
+
+  trait FlagReport = FormAdvanced.traits.FormEntryFormAdvanced -> Flag {
+    config: {
+      title: "Report content",
+      icon: "flag",
+      fields: [
+        { name: "reason", label: "Reason", type: "enum", values: ["spam", "abuse", "off-topic", "misinformation", "nsfw", "other"] },
+        { name: "notes",  label: "Details", type: "textarea" }
+      ]
+    }
+  }
+
+  page "/flags/report" as FlagReportPage -> FlagReport
+}

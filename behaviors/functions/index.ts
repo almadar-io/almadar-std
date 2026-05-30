@@ -62,7 +62,7 @@ export * from './core/atoms/std-event-log.js';
 export * from './core/atoms/std-export.js';
 export * from './core/atoms/std-file-store.js';
 export * from './core/atoms/std-filter.js';
-export * from './core/atoms/std-flag.js';
+export * from './core-variations/atoms/std-flag.js';
 export * from './core/atoms/std-form-advanced.js';
 export * from './core/atoms/std-gallery.js';
 export * from './core/atoms/std-geosearch.js';
