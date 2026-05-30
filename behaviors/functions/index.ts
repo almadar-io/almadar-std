@@ -81,7 +81,6 @@ export * from './core/atoms/std-mod-queue.js';
 export * from './core/atoms/std-modal.js';
 export * from './core/atoms/std-multi-party-flow.js';
 export * from './infra/atoms/std-notify-on-event.js';
-export * from './core/atoms/std-page-tree.js';
 export * from './core/atoms/std-pagination.js';
 export * from './core/atoms/std-push.js';
 export * from './core/atoms/std-rate-limiter.js';
