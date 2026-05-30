@@ -1,4 +1,4 @@
-app std-calendar-week-timeline "1.1.3"
+app std-calendar-week-timeline "1.2.0"
 "Week-timeline calendar — events grouped by weekday in a 7-column timeline. The visible window normalizes to the payload's actual date range, so events stack into whichever day-of-week they fall on. Same CalendarEventCalendar trait, same state machine as std-calendar — only bodyContent differs. For weekly schedule views (fitness class week, healthcare appointment week)."
 
 orbital WeekTimelineCalendarOrbital {
@@ -29,33 +29,10 @@ orbital WeekTimelineCalendarOrbital {
               { type: "icon", name: "calendar" },
               { type: "typography", content: "Week", variant: "h2" }
             ]},
-            { type: "date-range-selector", onSelect: "SELECT_DAY", selected: "week" }
+            { type: "date-range-selector", onSelect: "SELECT_DAY", selected: "@entity.selectedRange" }
           ]},
           { type: "divider" },
-          { type: "data-grid",
-            entity: "@payload.data",
-            gap: "md",
-            minCardWidth: 220,
-            fields: [],
-            className: "w-full",
-            renderItem: ["fn", "item", {
-              type: "card",
-              look: "flat-bordered",
-              padding: "sm",
-              shadow: "sm",
-              className: "h-full",
-              children: [
-                { type: "stack", direction: "vertical", gap: "xs", children: [
-                  { type: "stack", direction: "horizontal", gap: "sm", justify: "between", align: "center", children: [
-                    { type: "typography", variant: "caption", weight: "medium", color: "muted", content: "@config.timeBinding" },
-                    { type: "badge", label: "@config.badgeBinding", variant: "default", size: "sm" }
-                  ]},
-                  { type: "typography", variant: "body2", weight: "medium", content: "@config.titleBinding", className: "truncate" },
-                  { type: "typography", variant: "caption", color: "muted", content: "@config.descriptionBinding", className: "truncate" }
-                ]}
-              ]
-            }]
-          }
+          { type: "calendar-grid", events: "@payload.data", dayWindow: 7, className: "w-full" }
         ]
       }
     }

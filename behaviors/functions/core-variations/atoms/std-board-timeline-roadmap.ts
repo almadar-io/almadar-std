@@ -31,8 +31,8 @@ const ALIAS = 'BoardTimelineRoadmap';
  * without modifying its state-machine topology.
  */
 export interface StdBoardTimelineRoadmapConfig {
-  bodyContent?: unknown;
   columns?: TraitConfig;
+  bodyContent?: unknown;
 }
 
 /**
