@@ -23,11 +23,15 @@
           {
             "name": "name",
             "type": "string",
-            "required": true
+            "required": true,
+            "description": "The item's identifier or display text.",
+            "synonyms": "title, label, identifier"
           },
           {
             "name": "description",
-            "type": "string"
+            "type": "string",
+            "description": "A brief explanation of the item's content or function.",
+            "synonyms": "text, details, explanation, notes"
           },
           {
             "name": "status",
@@ -37,7 +41,9 @@
               "active",
               "inactive",
               "pending"
-            ]
+            ],
+            "description": "Indicates the current operational state of the item.",
+            "synonyms": "state, condition, enabled"
           },
           {
             "name": "createdAt",
@@ -52,22 +58,23 @@
           "linkedEntity": "CommandPaletteItem",
           "config": {
             "bodyContent": {
-              "type": "stack",
-              "gap": "lg",
               "direction": "vertical",
-              "align": "center",
               "className": "pt-card-md px-card-md w-full",
+              "gap": "lg",
+              "type": "stack",
               "children": [
                 {
+                  "look": "elevated",
                   "className": "w-full max-w-2xl",
                   "padding": "md",
-                  "type": "card",
-                  "look": "elevated",
                   "children": [
                     {
+                      "type": "stack",
                       "direction": "vertical",
                       "children": [
                         {
+                          "align": "center",
+                          "gap": "sm",
                           "children": [
                             {
                               "className": "text-muted-foreground",
@@ -75,34 +82,36 @@
                               "type": "icon"
                             },
                             {
-                              "inputType": "search",
                               "action": "REFETCH_QUERY",
-                              "placeholder": "@config.searchPlaceholder",
+                              "inputType": "search",
                               "type": "input",
-                              "className": "flex-1"
+                              "className": "flex-1",
+                              "placeholder": "@config.searchPlaceholder"
                             },
                             {
+                              "label": "ESC",
                               "type": "badge",
                               "variant": "neutral",
-                              "size": "sm",
-                              "label": "ESC"
+                              "size": "sm"
                             }
                           ],
-                          "gap": "sm",
-                          "type": "stack",
-                          "align": "center",
                           "direction": "horizontal",
-                          "className": "px-card-md py-3"
+                          "className": "px-card-md py-3",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "entity": "@payload.data",
+                          "gap": "none",
                           "type": "data-list",
+                          "fields": [],
                           "renderItem": [
                             "fn",
                             "item",
                             {
+                              "align": "center",
                               "className": "px-3 py-2 rounded-sm cursor-pointer hover:bg-muted/50 transition-colors",
                               "children": [
                                 {
@@ -110,115 +119,112 @@
                                   "name": "file"
                                 },
                                 {
-                                  "children": [
-                                    {
-                                      "variant": "body",
-                                      "type": "typography",
-                                      "weight": "medium",
-                                      "className": "truncate",
-                                      "content": "@config.titleBinding"
-                                    },
-                                    {
-                                      "content": "@config.descriptionBinding",
-                                      "type": "typography",
-                                      "className": "truncate",
-                                      "variant": "caption",
-                                      "color": "muted"
-                                    }
-                                  ],
-                                  "gap": "none",
                                   "type": "stack",
                                   "className": "flex-1 min-w-0",
-                                  "direction": "vertical"
+                                  "direction": "vertical",
+                                  "gap": "none",
+                                  "children": [
+                                    {
+                                      "weight": "medium",
+                                      "content": "@config.titleBinding",
+                                      "className": "truncate",
+                                      "type": "typography",
+                                      "variant": "body"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "className": "truncate",
+                                      "content": "@config.descriptionBinding",
+                                      "color": "muted"
+                                    }
+                                  ]
                                 },
                                 {
-                                  "variant": "neutral",
                                   "size": "sm",
+                                  "type": "badge",
                                   "label": "@config.badgeBinding",
-                                  "type": "badge"
+                                  "variant": "neutral"
                                 },
                                 {
-                                  "variant": "neutral",
-                                  "size": "sm",
                                   "label": "↵",
-                                  "type": "badge"
+                                  "size": "sm",
+                                  "type": "badge",
+                                  "variant": "neutral"
                                 }
                               ],
+                              "type": "stack",
                               "direction": "horizontal",
-                              "align": "center",
-                              "gap": "sm",
-                              "type": "stack"
+                              "gap": "sm"
                             }
                           ],
-                          "entity": "@payload.data",
-                          "fields": [],
-                          "className": "max-h-96 overflow-y-auto p-1",
-                          "gap": "none"
+                          "className": "max-h-96 overflow-y-auto p-1"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "direction": "horizontal",
-                          "className": "px-card-md py-2 bg-[var(--color-surface-muted)]",
+                          "type": "stack",
                           "children": [
                             {
-                              "size": "sm",
-                              "variant": "neutral",
-                              "label": "↑↓",
-                              "type": "badge"
-                            },
-                            {
-                              "content": "Navigate",
-                              "type": "typography",
-                              "variant": "caption",
-                              "color": "muted"
-                            },
-                            {
-                              "size": "sm",
                               "type": "badge",
-                              "variant": "neutral",
-                              "label": "↵"
+                              "label": "↑↓",
+                              "size": "sm",
+                              "variant": "neutral"
                             },
                             {
-                              "type": "typography",
                               "variant": "caption",
-                              "content": "Select",
-                              "color": "muted"
+                              "type": "typography",
+                              "color": "muted",
+                              "content": "Navigate"
                             },
                             {
-                              "type": "stack",
+                              "variant": "neutral",
+                              "type": "badge",
+                              "label": "↵",
+                              "size": "sm"
+                            },
+                            {
+                              "color": "muted",
+                              "type": "typography",
+                              "content": "Select",
+                              "variant": "caption"
+                            },
+                            {
                               "className": "ml-auto",
-                              "align": "center",
+                              "type": "stack",
                               "direction": "horizontal",
+                              "align": "center",
+                              "gap": "sm",
                               "children": [
                                 {
                                   "variant": "neutral",
-                                  "size": "sm",
+                                  "label": "⌘K",
                                   "type": "badge",
-                                  "label": "⌘K"
+                                  "size": "sm"
                                 },
                                 {
-                                  "color": "muted",
+                                  "content": "Toggle",
                                   "type": "typography",
-                                  "variant": "caption",
-                                  "content": "Toggle"
+                                  "color": "muted",
+                                  "variant": "caption"
                                 }
-                              ],
-                              "gap": "sm"
+                              ]
                             }
                           ],
-                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
                           "align": "center",
-                          "gap": "md"
+                          "className": "px-card-md py-2 bg-[var(--color-surface-muted)]"
                         }
                       ],
-                      "type": "stack",
                       "gap": "none"
                     }
-                  ]
+                  ],
+                  "type": "card"
                 }
-              ]
+              ],
+              "align": "center"
             }
           }
         }

@@ -17,11 +17,15 @@
           {
             "name": "name",
             "type": "string",
-            "required": true
+            "required": true,
+            "description": "A user-friendly identifier for the item.",
+            "synonyms": "title, label, identifier"
           },
           {
             "name": "description",
-            "type": "string"
+            "type": "string",
+            "description": "A brief textual summary of the item's content.",
+            "synonyms": "caption, summary, details, notes"
           },
           {
             "name": "status",
@@ -31,7 +35,9 @@
               "active",
               "inactive",
               "pending"
-            ]
+            ],
+            "description": "Indicates the current state of the item.",
+            "synonyms": "state, condition, flag"
           },
           {
             "name": "createdAt",
@@ -40,7 +46,9 @@
           {
             "name": "imageUrl",
             "type": "string",
-            "default": "https://picsum.photos/seed/gallery/800/600"
+            "default": "https://picsum.photos/seed/gallery/800/600",
+            "description": "The URL pointing to the image resource.",
+            "synonyms": "image, src, path"
           }
         ]
       },
@@ -207,22 +215,22 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "className": "py-12",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
+                          "type": "typography",
                           "variant": "caption",
                           "content": "Loading gallery…",
-                          "type": "typography"
+                          "color": "muted"
                         }
                       ],
-                      "direction": "vertical",
                       "gap": "md",
-                      "type": "stack",
-                      "align": "center"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -236,9 +244,13 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack",
                           "align": "center",
                           "children": [
                             {
@@ -246,25 +258,21 @@
                               "name": "image"
                             },
                             {
-                              "type": "typography",
                               "content": "@config.title",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "type": "typography"
                             }
-                          ],
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "sm"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "media-gallery",
-                          "entity": "@payload.data"
+                          "entity": "@payload.data",
+                          "type": "media-gallery"
                         }
                       ],
-                      "type": "stack",
-                      "direction": "vertical"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -278,9 +286,9 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "alert",
                       "variant": "error",
-                      "message": "@payload.error",
-                      "type": "alert"
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -314,9 +322,8 @@
                     "render-ui",
                     "modal",
                     {
-                      "closeAction": "CLOSE",
                       "type": "lightbox",
-                      "isOpen": true,
+                      "showCounter": true,
                       "images": [
                         {
                           "caption": "@entity.name",
@@ -324,8 +331,9 @@
                           "alt": "@entity.name"
                         }
                       ],
-                      "currentIndex": 0.0,
-                      "showCounter": true
+                      "closeAction": "CLOSE",
+                      "isOpen": true,
+                      "currentIndex": 0.0
                     }
                   ]
                 ]
@@ -355,21 +363,21 @@
                     "main",
                     {
                       "align": "center",
-                      "className": "py-12",
                       "direction": "vertical",
+                      "type": "stack",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "color": "muted",
-                          "type": "typography",
+                          "content": "Loading gallery…",
                           "variant": "caption",
-                          "content": "Loading gallery…"
+                          "type": "typography"
                         }
                       ],
-                      "gap": "md",
-                      "type": "stack"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -384,8 +392,8 @@
                     "GalleryItem",
                     {
                       "emit": {
-                        "success": "GalleryItemLoaded",
-                        "failure": "GalleryItemLoadFailed"
+                        "failure": "GalleryItemLoadFailed",
+                        "success": "GalleryItemLoaded"
                       }
                     }
                   ],

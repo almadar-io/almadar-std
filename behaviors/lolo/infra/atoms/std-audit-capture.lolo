@@ -4,13 +4,13 @@ app std-audit-capture "1.1.0"
 orbital AuditCaptureOrbital {
   entity AuditEntry [persistent: audit_entries] {
     id         : string!
-    actor      : string  = ""
-    action     : string  = ""
-    entityType : string  = ""
-    entityId   : string  = ""
-    before     : object  = {}
-    after      : object  = {}
-    recordedAt : number  = 0
+    actor      : string  @description "The user or system performing the action." @synonyms "user, source, originator" = ""
+    action     : string  @description "The specific operation performed on the entity." @synonyms "operation, event, activity, change" = ""
+    entityType : string  @description "The type of entity that was modified." @synonyms "type, kind, class" = ""
+    entityId   : string  @description "Unique identifier for the entity being audited." @synonyms "entity identifier, record id, item id" = ""
+    before     : object  @description "The state of the entity prior to the modification." @synonyms "previous, original, old value" = {}
+    after      : object  @description "The state of the entity after a modification." @synonyms "new, updated, post, subsequent" = {}
+    recordedAt : number  @description "Timestamp indicating when the audit event was recorded." @synonyms "timestamp, date, time" = 0
   }
 
   type EntityMutated  = Event { data : object }                                                                                    "Rename via traitOverrides.events to the upstream mutation event (e.g. ContactSaved, ContactDeleted)."

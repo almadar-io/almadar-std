@@ -31,11 +31,15 @@
           },
           {
             "name": "name",
-            "type": "string"
+            "type": "string",
+            "description": "A human-readable identifier for the item.",
+            "synonyms": "title, label, identifier"
           },
           {
             "name": "category",
-            "type": "string"
+            "type": "string",
+            "description": "The type or classification of the dashboard item.",
+            "synonyms": "type, kind, group"
           },
           {
             "name": "status",
@@ -45,17 +49,23 @@
               "active",
               "inactive",
               "pending"
-            ]
+            ],
+            "description": "Indicates the current operational state of the item.",
+            "synonyms": "state, condition, enabled, disabled"
           },
           {
             "name": "amount",
             "type": "number",
-            "default": 0.0
+            "default": 0.0,
+            "description": "The numerical value being represented.",
+            "synonyms": "value, quantity, count, total"
           },
           {
             "name": "units",
             "type": "number",
-            "default": 0.0
+            "default": 0.0,
+            "description": "Represents a numerical measurement or quantity.",
+            "synonyms": "value, count, measure"
           }
         ]
       },
@@ -64,20 +74,20 @@
           "ref": "Stats.traits.StatsItemStats",
           "name": "DashboardSummary",
           "config": {
-            "title": "Summary",
             "metrics": [
               {
+                "aggregation": "count",
                 "label": "Total Items",
-                "variant": "primary",
-                "format": "number",
                 "icon": "list",
-                "aggregation": "count"
+                "format": "number",
+                "variant": "primary"
               },
               {
-                "icon": "check-circle",
                 "aggregation": "count",
-                "label": "Active",
                 "variant": "success",
+                "format": "number",
+                "label": "Active",
+                "icon": "check-circle",
                 "filter": [
                   "fn",
                   "row",
@@ -86,28 +96,28 @@
                     "@row.status",
                     "active"
                   ]
-                ],
-                "format": "number"
+                ]
               },
               {
-                "format": "currency",
+                "field": "amount",
                 "target": 10000.0,
                 "aggregation": "sum",
                 "label": "Total Revenue",
                 "variant": "info",
-                "field": "amount",
-                "icon": "dollar-sign"
+                "icon": "dollar-sign",
+                "format": "currency"
               },
               {
+                "label": "Avg Units",
                 "icon": "trending-up",
                 "aggregation": "avg",
-                "suffix": " units",
-                "variant": "default",
-                "format": "number",
                 "field": "units",
-                "label": "Avg Units"
+                "variant": "default",
+                "suffix": " units",
+                "format": "number"
               }
-            ]
+            ],
+            "title": "Summary"
           },
           "listens": [
             {
@@ -124,12 +134,12 @@
           "ref": "Graphs.traits.GraphItemGraph",
           "name": "DashboardCategoryChart",
           "config": {
-            "chartType": "bar",
             "subtitle": "Count across categories",
-            "aggregation": "count",
-            "height": 280.0,
-            "categoryField": "category",
             "showLegend": false,
+            "chartType": "bar",
+            "aggregation": "count",
+            "categoryField": "category",
+            "height": 280.0,
             "title": "Items by Category"
           },
           "listens": [
@@ -147,12 +157,12 @@
           "ref": "Graphs.traits.GraphItemGraph",
           "name": "DashboardStatusChart",
           "config": {
+            "aggregation": "count",
             "chartType": "donut",
-            "title": "Status Mix",
             "categoryField": "status",
             "height": 280.0,
             "showLegend": true,
-            "aggregation": "count"
+            "title": "Status Mix"
           },
           "listens": [
             {
@@ -170,16 +180,18 @@
           "name": "DashboardItemBrowse",
           "linkedEntity": "DashboardItem",
           "config": {
+            "pageSize": 100.0,
+            "displayPageSize": 5.0,
             "fields": [
               {
-                "variant": "h4",
                 "label": "Name",
+                "variant": "h4",
                 "name": "name"
               },
               {
+                "name": "category",
                 "label": "Category",
-                "variant": "caption",
-                "name": "category"
+                "variant": "caption"
               },
               {
                 "variant": "badge",
@@ -187,13 +199,11 @@
                 "label": "Status"
               },
               {
+                "name": "amount",
                 "label": "Amount",
-                "variant": "caption",
-                "name": "amount"
+                "variant": "caption"
               }
-            ],
-            "pageSize": 100.0,
-            "displayPageSize": 5.0
+            ]
           }
         },
         {
@@ -283,17 +293,15 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "max-w-6xl mx-auto w-full p-4",
-                      "type": "stack",
-                      "direction": "vertical",
+                      "gap": "lg",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "align": "center",
+                          "type": "stack",
+                          "gap": "sm",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "bar-chart-2"
+                              "name": "bar-chart-2",
+                              "type": "icon"
                             },
                             {
                               "type": "typography",
@@ -301,33 +309,35 @@
                               "content": "Dashboard"
                             }
                           ],
-                          "type": "stack",
-                          "gap": "sm"
+                          "direction": "horizontal",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         "@trait.DashboardSummary",
                         {
+                          "cols": 2.0,
+                          "gap": "md",
                           "children": [
                             "@trait.DashboardCategoryChart",
                             "@trait.DashboardStatusChart"
                           ],
-                          "type": "simple-grid",
-                          "cols": 2.0,
-                          "gap": "md"
+                          "type": "simple-grid"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "content": "Recent Items",
                           "type": "typography",
-                          "variant": "h3",
-                          "content": "Recent Items"
+                          "variant": "h3"
                         },
                         "@trait.DashboardItemBrowse"
                       ],
-                      "gap": "lg"
+                      "className": "max-w-6xl mx-auto w-full p-4",
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]

@@ -37,7 +37,9 @@
                   "required": true
                 }
               }
-            }
+            },
+            "description": "Configuration settings for available export formats.",
+            "synonyms": "format, export-types, configurations"
           }
         ]
       },
@@ -110,38 +112,38 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "popover",
-                      "position": "bottom",
-                      "children": {
-                        "action": "OPEN_EXPORT",
-                        "variant": "ghost",
-                        "size": "sm",
-                        "type": "button",
-                        "label": "@config.buttonLabel",
-                        "icon": "download"
-                      },
                       "content": {
-                        "fields": [],
-                        "entity": "@entity.options",
-                        "look": "@config.tableLook",
                         "type": "data-list",
+                        "fields": [],
                         "renderItem": [
                           "fn",
                           "fmt",
                           {
-                            "icon": "file-down",
-                            "action": "@config.event",
-                            "variant": "ghost",
-                            "label": "@fmt.label",
                             "size": "sm",
+                            "variant": "ghost",
+                            "action": "@config.event",
                             "actionPayload": {
                               "format": "@fmt.format",
                               "tileId": "@config.tileId"
                             },
-                            "type": "button"
+                            "type": "button",
+                            "icon": "file-down",
+                            "label": "@fmt.label"
                           }
-                        ]
-                      }
+                        ],
+                        "look": "@config.tableLook",
+                        "entity": "@entity.options"
+                      },
+                      "type": "popover",
+                      "children": {
+                        "type": "button",
+                        "size": "sm",
+                        "variant": "ghost",
+                        "label": "@config.buttonLabel",
+                        "action": "OPEN_EXPORT",
+                        "icon": "download"
+                      },
+                      "position": "bottom"
                     }
                   ]
                 ]
@@ -173,23 +175,31 @@
             ]
           },
           "config": {
+            "buttonLabel": {
+              "type": "string",
+              "default": "Export",
+              "label": "Button label",
+              "description": "Text shown on the toolbar button that opens the export popover",
+              "synonyms": "the text on the export trigger button. user phrases: 'rename export button to X' / 'set the button label to X' / 'call the button X' / 'change export button text to X' -> X (e.g. 'Download CSV', 'Download', 'Export Data')",
+              "tier": "presentation"
+            },
             "formats": {
               "type": "[FormatOption]",
               "default": [
                 {
+                  "label": "CSV",
                   "id": "csv",
-                  "format": "csv",
-                  "label": "CSV"
+                  "format": "csv"
                 },
                 {
+                  "id": "xlsx",
                   "label": "XLSX",
-                  "format": "xlsx",
-                  "id": "xlsx"
+                  "format": "xlsx"
                 },
                 {
-                  "id": "pdf",
+                  "format": "pdf",
                   "label": "PDF",
-                  "format": "pdf"
+                  "id": "pdf"
                 }
               ],
               "label": "Available formats",
@@ -199,6 +209,11 @@
               "items": {
                 "type": "object",
                 "properties": {
+                  "format": {
+                    "name": "format",
+                    "type": "string",
+                    "required": true
+                  },
                   "label": {
                     "name": "label",
                     "type": "string",
@@ -208,22 +223,9 @@
                     "name": "id",
                     "type": "string",
                     "required": true
-                  },
-                  "format": {
-                    "name": "format",
-                    "type": "string",
-                    "required": true
                   }
                 }
               }
-            },
-            "event": {
-              "type": "string",
-              "default": "EXPORT_REQUESTED",
-              "label": "Export event",
-              "description": "Event emitted when the user picks a format",
-              "synonyms": "bus event name. internal wiring; users rarely target directly",
-              "tier": "internal"
             },
             "tileId": {
               "type": "string",
@@ -233,13 +235,13 @@
               "synonyms": "internal identifier — host orbital wires this; users rarely set it directly",
               "tier": "internal"
             },
-            "buttonLabel": {
+            "event": {
               "type": "string",
-              "default": "Export",
-              "label": "Button label",
-              "description": "Text shown on the toolbar button that opens the export popover",
-              "synonyms": "the text on the export trigger button. user phrases: 'rename export button to X' / 'set the button label to X' / 'call the button X' / 'change export button text to X' -> X (e.g. 'Download CSV', 'Download', 'Export Data')",
-              "tier": "presentation"
+              "default": "EXPORT_REQUESTED",
+              "label": "Export event",
+              "description": "Event emitted when the user picks a format",
+              "synonyms": "bus event name. internal wiring; users rarely target directly",
+              "tier": "internal"
             },
             "tableLook": {
               "type": "string",

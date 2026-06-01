@@ -4,14 +4,14 @@ app std-mod-queue "1.0.0"
 orbital ModQueueItemOrbital {
   entity ModQueueItem [persistent: modqueueitems] {
     id         : string!
-    targetId   : string!
-    targetType : string!
-    reason     : "spam" | "abuse" | "off-topic" | "misinformation" | "nsfw" | "other"
-    flagCount  : number
-    status     : "pending" | "approved" | "rejected" | "escalated" = "pending"
-    reviewedBy : string
-    reviewedAt : string
-    notes      : string
+    targetId   : string! @description "Unique identifier for the item being moderated." @synonyms "item id, reference id, identifier"
+    targetType : string! @description "Specifies the kind of item being moderated." @synonyms "item type, content type, object type"
+    reason     : "spam" | "abuse" | "off-topic" | "misinformation" | "nsfw" | "other" @description "The justification for flagging the content." @synonyms "flag reason, justification, cause"
+    flagCount  : number @description "The number of times this item has been flagged." @synonyms "flags, flag_count, count"
+    status     : "pending" | "approved" | "rejected" | "escalated" @description "Current state of the moderation item." @synonyms "state, condition, stage" = "pending"
+    reviewedBy : string @description "The user who performed the review action." @synonyms "reviewer, reviewerId, assignedTo"
+    reviewedAt : string @description "Timestamp indicating when the item was last reviewed." @synonyms "review date, review time, last reviewed"
+    notes      : string @description "Free-text comments or observations related to the item." @synonyms "comment, remark, observation, details"
   }
 
   type ModQueueItemLoaded     = Event { data : [ModQueueItem] }              "Fired when the moderation queue collection finishes loading"

@@ -23,11 +23,15 @@
           {
             "name": "name",
             "type": "string",
-            "required": true
+            "required": true,
+            "description": "The item's display name or title.",
+            "synonyms": "title, label, heading"
           },
           {
             "name": "description",
-            "type": "string"
+            "type": "string",
+            "description": "A brief text providing details about the item.",
+            "synonyms": "details, summary, notes, info"
           },
           {
             "name": "status",
@@ -37,15 +41,21 @@
               "active",
               "draft",
               "archived"
-            ]
+            ],
+            "description": "Indicates the current state of the item.",
+            "synonyms": "state, condition, lifecycle"
           },
           {
             "name": "price",
-            "type": "string"
+            "type": "string",
+            "description": "The monetary cost associated with the item.",
+            "synonyms": "cost, amount, value"
           },
           {
             "name": "thumbnailLabel",
-            "type": "string"
+            "type": "string",
+            "description": "Text displayed for the image preview.",
+            "synonyms": "caption, title, altText"
           },
           {
             "name": "createdAt",
@@ -59,132 +69,132 @@
           "name": "GalleryBrowse",
           "linkedEntity": "GalleryItem",
           "config": {
-            "descriptionBinding": "@item.description",
-            "titleBinding": "@item.name",
             "priceBinding": "@item.price",
-            "badgeBinding": "@item.status",
-            "imageLabelBinding": "@item.thumbnailLabel",
             "bodyContent": {
-              "direction": "vertical",
-              "gap": "lg",
-              "className": "w-full px-card-md py-section",
-              "type": "stack",
               "children": [
                 {
                   "type": "stack",
-                  "className": "sticky top-0 z-10 -mx-6 px-6 py-3 bg-[var(--color-surface)]/95 backdrop-blur border-b border-[var(--color-border)]",
-                  "gap": "sm",
                   "children": [
                     {
-                      "name": "search",
+                      "className": "text-muted-foreground",
                       "type": "icon",
-                      "className": "text-muted-foreground"
+                      "name": "search"
                     },
                     {
                       "placeholder": "@config.searchPlaceholder",
                       "action": "REFETCH_QUERY",
-                      "className": "flex-1",
+                      "type": "input",
                       "inputType": "search",
-                      "type": "input"
+                      "className": "flex-1"
                     }
                   ],
+                  "gap": "sm",
+                  "align": "center",
                   "direction": "horizontal",
-                  "align": "center"
+                  "className": "sticky top-0 z-10 -mx-6 px-6 py-3 bg-[var(--color-surface)]/95 backdrop-blur border-b border-[var(--color-border)]"
                 },
                 {
-                  "gap": "lg",
+                  "fields": [],
+                  "minCardWidth": 260.0,
                   "className": "w-full",
                   "renderItem": [
                     "fn",
                     "item",
                     {
-                      "gap": "sm",
-                      "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "stack",
-                          "justify": "center",
-                          "direction": "vertical",
-                          "gap": "xs",
-                          "align": "center",
-                          "className": "relative aspect-square w-full bg-muted overflow-hidden",
                           "children": [
                             {
-                              "size": "lg",
-                              "name": "image",
                               "type": "icon",
-                              "className": "text-muted-foreground opacity-50 transition-transform duration-normal group-hover:scale-105"
+                              "size": "lg",
+                              "className": "text-muted-foreground opacity-50 transition-transform duration-normal group-hover:scale-105",
+                              "name": "image"
                             },
                             {
-                              "className": "px-2 text-center truncate max-w-full",
-                              "color": "muted",
+                              "content": "@config.imageLabelBinding",
                               "type": "typography",
                               "variant": "caption",
-                              "content": "@config.imageLabelBinding"
+                              "color": "muted",
+                              "className": "px-2 text-center truncate max-w-full"
                             },
                             {
-                              "gap": "xs",
-                              "align": "center",
                               "type": "stack",
+                              "gap": "xs",
                               "className": "absolute top-2 right-2",
+                              "direction": "horizontal",
+                              "align": "center",
                               "children": [
                                 {
-                                  "type": "badge",
                                   "label": "@config.priceBinding",
-                                  "variant": "primary"
+                                  "variant": "primary",
+                                  "type": "badge"
                                 }
-                              ],
-                              "direction": "horizontal"
+                              ]
                             },
                             {
+                              "type": "stack",
                               "direction": "horizontal",
                               "gap": "xs",
-                              "type": "stack",
+                              "align": "center",
+                              "className": "absolute top-2 left-2",
                               "children": [
                                 {
                                   "type": "badge",
                                   "label": "@config.badgeBinding",
                                   "variant": "neutral"
                                 }
-                              ],
-                              "className": "absolute top-2 left-2",
-                              "align": "center"
-                            }
-                          ]
-                        },
-                        {
-                          "direction": "vertical",
-                          "className": "p-card-md",
-                          "children": [
-                            {
-                              "className": "truncate",
-                              "type": "typography",
-                              "variant": "h4",
-                              "content": "@config.titleBinding"
-                            },
-                            {
-                              "className": "line-clamp-2",
-                              "content": "@config.descriptionBinding",
-                              "variant": "caption",
-                              "type": "typography",
-                              "color": "muted"
+                              ]
                             }
                           ],
                           "gap": "xs",
-                          "type": "stack"
+                          "justify": "center",
+                          "className": "relative aspect-square w-full bg-muted overflow-hidden",
+                          "type": "stack",
+                          "align": "center",
+                          "direction": "vertical"
+                        },
+                        {
+                          "direction": "vertical",
+                          "children": [
+                            {
+                              "variant": "h4",
+                              "type": "typography",
+                              "content": "@config.titleBinding",
+                              "className": "truncate"
+                            },
+                            {
+                              "color": "muted",
+                              "content": "@config.descriptionBinding",
+                              "className": "line-clamp-2",
+                              "variant": "caption",
+                              "type": "typography"
+                            }
+                          ],
+                          "className": "p-card-md",
+                          "type": "stack",
+                          "gap": "xs"
                         }
                       ],
-                      "className": "group rounded-lg overflow-hidden bg-[var(--color-card)] border border-[var(--color-border)] shadow-sm hover:shadow-hover hover:-translate-y-0.5 transition-all duration-normal cursor-pointer"
+                      "gap": "sm",
+                      "direction": "vertical",
+                      "className": "group rounded-lg overflow-hidden bg-[var(--color-card)] border border-[var(--color-border)] shadow-sm hover:shadow-hover hover:-translate-y-0.5 transition-all duration-normal cursor-pointer",
+                      "type": "stack"
                     }
                   ],
+                  "gap": "lg",
                   "type": "data-grid",
-                  "entity": "@payload.data",
-                  "minCardWidth": 260.0,
-                  "fields": []
+                  "entity": "@payload.data"
                 }
-              ]
-            }
+              ],
+              "type": "stack",
+              "direction": "vertical",
+              "gap": "lg",
+              "className": "w-full px-card-md py-section"
+            },
+            "badgeBinding": "@item.status",
+            "descriptionBinding": "@item.description",
+            "titleBinding": "@item.name",
+            "imageLabelBinding": "@item.thumbnailLabel"
           }
         }
       ],

@@ -18,22 +18,30 @@
           {
             "name": "documentId",
             "type": "string",
-            "required": true
+            "required": true,
+            "description": "Unique identifier for the associated document.",
+            "synonyms": "document reference, file ID"
           },
           {
             "name": "documentName",
             "type": "string",
-            "default": ""
+            "default": "",
+            "description": "The name of the document being requested for signature.",
+            "synonyms": "filename, document title, file name"
           },
           {
             "name": "recipientName",
             "type": "string",
-            "required": true
+            "required": true,
+            "description": "The name of the recipient for the e-signature request.",
+            "synonyms": "recipient, name, user"
           },
           {
             "name": "recipientEmail",
             "type": "string",
-            "required": true
+            "required": true,
+            "description": "The email address of the recipient.",
+            "synonyms": "email, address, contact"
           },
           {
             "name": "status",
@@ -46,27 +54,37 @@
               "signed",
               "declined",
               "expired"
-            ]
+            ],
+            "description": "The current stage of the request lifecycle.",
+            "synonyms": "state, condition, phase"
           },
           {
             "name": "sentAt",
             "type": "string",
-            "default": ""
+            "default": "",
+            "description": "Timestamp indicating when the request was sent.",
+            "synonyms": "sent date, send time, dispatched at"
           },
           {
             "name": "signedAt",
             "type": "string",
-            "default": ""
+            "default": "",
+            "description": "Timestamp indicating when the request was signed.",
+            "synonyms": "signed date, signature date, completion date"
           },
           {
             "name": "expiresAt",
             "type": "string",
-            "default": ""
+            "default": "",
+            "description": "The date and time when the request is no longer valid.",
+            "synonyms": "expiration, expiry, due date"
           },
           {
             "name": "notes",
             "type": "string",
-            "default": ""
+            "default": "",
+            "description": "Free-text comments or additional information.",
+            "synonyms": "comment, remark, description, details"
           }
         ]
       },
@@ -195,8 +213,8 @@
                     "ESignRequest",
                     {
                       "emit": {
-                        "failure": "ESignRequestLoadFailed",
-                        "success": "ESignRequestLoaded"
+                        "success": "ESignRequestLoaded",
+                        "failure": "ESignRequestLoadFailed"
                       }
                     }
                   ],
@@ -204,8 +222,8 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "md",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "md"
                     }
                   ]
                 ]
@@ -220,59 +238,59 @@
                     "main",
                     {
                       "type": "stack",
-                      "gap": "md",
-                      "direction": "vertical",
                       "children": [
                         {
-                          "content": "@config.title",
                           "variant": "h3",
-                          "type": "typography"
+                          "type": "typography",
+                          "content": "@config.title"
                         },
                         {
-                          "entity": "@payload.data",
+                          "itemActions": [
+                            {
+                              "label": "Send",
+                              "variant": "primary",
+                              "event": "SEND_REQUEST"
+                            },
+                            {
+                              "event": "REVOKE_REQUEST",
+                              "label": "Revoke",
+                              "variant": "danger"
+                            }
+                          ],
                           "look": "@config.tableLook",
                           "fields": [
                             {
-                              "name": "documentName",
                               "label": "Document",
-                              "variant": "h4"
+                              "variant": "h4",
+                              "name": "documentName"
                             },
                             {
+                              "name": "recipientName",
                               "label": "Recipient",
-                              "variant": "body",
-                              "name": "recipientName"
+                              "variant": "body"
                             },
                             {
                               "label": "Email",
-                              "variant": "caption",
-                              "name": "recipientEmail"
+                              "name": "recipientEmail",
+                              "variant": "caption"
                             },
                             {
-                              "label": "Status",
+                              "name": "status",
                               "variant": "badge",
-                              "name": "status"
+                              "label": "Status"
                             },
                             {
                               "name": "sentAt",
-                              "variant": "caption",
-                              "label": "Sent"
+                              "label": "Sent",
+                              "variant": "caption"
                             }
                           ],
-                          "type": "data-grid",
-                          "itemActions": [
-                            {
-                              "event": "SEND_REQUEST",
-                              "variant": "primary",
-                              "label": "Send"
-                            },
-                            {
-                              "variant": "danger",
-                              "event": "REVOKE_REQUEST",
-                              "label": "Revoke"
-                            }
-                          ]
+                          "entity": "@payload.data",
+                          "type": "data-grid"
                         }
-                      ]
+                      ],
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -286,10 +304,10 @@
                     "render-ui",
                     "main",
                     {
-                      "title": "Failed to load signature requests",
                       "type": "alert",
-                      "variant": "error",
-                      "message": "@payload.error"
+                      "message": "@payload.error",
+                      "title": "Failed to load signature requests",
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -356,6 +374,13 @@
             ]
           },
           "config": {
+            "title": {
+              "type": "string",
+              "default": "Signature Requests",
+              "label": "Section title",
+              "description": "Heading shown above the signature-request list",
+              "tier": "presentation"
+            },
             "tableLook": {
               "type": "string",
               "default": "dense",
@@ -369,13 +394,6 @@
                 "borderless",
                 "card-rows"
               ]
-            },
-            "title": {
-              "type": "string",
-              "default": "Signature Requests",
-              "label": "Section title",
-              "description": "Heading shown above the signature-request list",
-              "tier": "presentation"
             }
           },
           "scope": "collection"

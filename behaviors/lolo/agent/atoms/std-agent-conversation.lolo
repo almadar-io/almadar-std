@@ -4,18 +4,18 @@ app std-agent-conversation "1.0.0"
 orbital AgentConversationOrbital {
   entity AgentConversation [persistent: agentconversations] {
     id          : string!
-    name        : string
-    description : string
-    status      : "active" | "inactive" | "pending" | "sent" = "active"
+    name        : string @description "A human-readable identifier for the conversation." @synonyms "title, label, identifier"
+    description : string @description "A textual summary or explanation of the conversation." @synonyms "summary, explanation, details, overview"
+    status      : "active" | "inactive" | "pending" | "sent" @description "Current operational state of the conversation." @synonyms "state, condition, mode" = "active"
     createdAt   : string
-    messages    : [string] = []
-    turnCount   : number = 0
-    lastMessage : string = ""
-    tokenCount  : number = 0
-    role        : "user" | "assistant" | "system" | "tool" = "user"
-    content     : string = ""
-    timestamp   : string = ""
-    toolName    : string = ""
+    messages    : [string] @description "An array of messages exchanged during the conversation." @synonyms "conversation history, chat log, message list" = []
+    turnCount   : number @description "The number of turns in the conversation." @synonyms "count, number, iterations" = 0
+    lastMessage : string @description "The text of the most recent message." @synonyms "latest message, recent message, last text" = ""
+    tokenCount  : number @description "The number of tokens used in the conversation." @synonyms "count, length, size" = 0
+    role        : "user" | "assistant" | "system" | "tool" @description "Identifies the participant in the conversation." @synonyms "participant, speaker, actor, persona" = "user"
+    content     : string @description "The textual body of a message or response." @synonyms "text, body, payload, value" = ""
+    timestamp   : string @description "The date and time when an event occurred." @synonyms "date, time, when" = ""
+    toolName    : string @description "The name of the tool utilized in this conversation." @synonyms "tool, utility, application" = ""
   }
 
   type AgentConversationLoaded       = Event { data : [AgentConversation] }      "Fired when conversation finishes loading; payload.data holds the turns"

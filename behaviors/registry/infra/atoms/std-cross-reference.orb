@@ -18,12 +18,16 @@
           {
             "name": "leftId",
             "type": "string",
-            "default": ""
+            "default": "",
+            "description": "Identifier for the related entity on the left side.",
+            "synonyms": "sourceId, originId, parentId"
           },
           {
             "name": "rightId",
             "type": "string",
-            "default": ""
+            "default": "",
+            "description": "Identifier for the related entity on the right side.",
+            "synonyms": "targetId, relatedId, counterpartId"
           },
           {
             "name": "createdAt",
@@ -37,11 +41,6 @@
             "items": {
               "type": "object",
               "properties": {
-                "href": {
-                  "name": "href",
-                  "type": "string",
-                  "required": true
-                },
                 "label": {
                   "name": "label",
                   "type": "string",
@@ -51,9 +50,16 @@
                   "name": "icon",
                   "type": "string",
                   "required": false
+                },
+                "href": {
+                  "name": "href",
+                  "type": "string",
+                  "required": true
                 }
               }
-            }
+            },
+            "description": "A list of filtered link specifications.",
+            "synonyms": "links, references, connections"
           }
         ]
       },
@@ -251,8 +257,8 @@
                     },
                     {
                       "emit": {
-                        "success": "LinkCreated",
-                        "failure": "LinkOpFailed"
+                        "failure": "LinkOpFailed",
+                        "success": "LinkCreated"
                       }
                     }
                   ]
@@ -270,8 +276,8 @@
                     "@payload",
                     {
                       "emit": {
-                        "success": "LinkRemoved",
-                        "failure": "LinkOpFailed"
+                        "failure": "LinkOpFailed",
+                        "success": "LinkRemoved"
                       }
                     }
                   ]
@@ -338,14 +344,6 @@
             ]
           },
           "config": {
-            "leftEntity": {
-              "type": "string",
-              "default": "",
-              "label": "Left entity",
-              "description": "Entity type on the left side of the N:M relationship",
-              "synonyms": "left side, source entity, from entity, parent entity",
-              "tier": "domain"
-            },
             "junctionEntity": {
               "type": "string",
               "default": "",
@@ -354,12 +352,12 @@
               "synonyms": "join table, link table, bridge table, junction table, mapping table",
               "tier": "domain"
             },
-            "leftIdField": {
+            "leftEntity": {
               "type": "string",
               "default": "",
-              "label": "Left FK field",
-              "description": "Junction column holding the left entity's id",
-              "synonyms": "left foreign key, left FK, source key, parent key",
+              "label": "Left entity",
+              "description": "Entity type on the left side of the N:M relationship",
+              "synonyms": "left side, source entity, from entity, parent entity",
               "tier": "domain"
             },
             "rightEntity": {
@@ -376,6 +374,14 @@
               "label": "Right FK field",
               "description": "Junction column holding the right entity's id",
               "synonyms": "right foreign key, right FK, target key, child key",
+              "tier": "domain"
+            },
+            "leftIdField": {
+              "type": "string",
+              "default": "",
+              "label": "Left FK field",
+              "description": "Junction column holding the left entity's id",
+              "synonyms": "left foreign key, left FK, source key, parent key",
               "tier": "domain"
             }
           },

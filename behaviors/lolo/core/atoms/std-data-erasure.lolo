@@ -4,14 +4,14 @@ app std-data-erasure "1.0.0"
 orbital DataErasureOrbital {
   entity ErasureRequest [persistent: erasure_requests] {
     id            : string!
-    subjectId     : string  = ""
-    targetEntity  : string  = ""
-    status        : "pending" | "grace" | "executed" | "cancelled" = "pending"
-    requestedAt   : number  = 0
-    executesAt    : number  = 0
-    executedAt    : number  = 0
-    cancelledAt   : number  = 0
-    notes         : string  = ""
+    subjectId     : string  @description "Unique identifier for the data subject." @synonyms "data subject ID, identifier, user ID" = ""
+    targetEntity  : string  @description "The entity or system affected by the erasure request." @synonyms "affected entity, target system, destination" = ""
+    status        : "pending" | "grace" | "executed" | "cancelled" @description "Current state of the erasure request." @synonyms "state, lifecycle, condition" = "pending"
+    requestedAt   : number  @description "Timestamp indicating when the erasure request was initially submitted." @synonyms "submission time, creation time, request date" = 0
+    executesAt    : number  @description "Timestamp indicating when the erasure process completed." @synonyms "completion time, finish time, end time" = 0
+    executedAt    : number  @description "Timestamp indicating when the erasure process completed." @synonyms "completion time, finish time, end time" = 0
+    cancelledAt   : number  @description "Timestamp when the erasure request was cancelled." @synonyms "cancellation time, cancelled timestamp, cancel date" = 0
+    notes         : string  @description "Free-form text providing additional information or context." @synonyms "comment, remark, description, details" = ""
   }
 
   type ErasureLoaded     = Event { data : [ErasureRequest] }                "Fired when the erasure queue finishes loading."

@@ -18,7 +18,9 @@
           {
             "name": "gatedEvent",
             "type": "string",
-            "default": ""
+            "default": "",
+            "description": "The event that triggered the approval request.",
+            "synonyms": "trigger, event, source"
           },
           {
             "name": "status",
@@ -29,32 +31,44 @@
               "approved",
               "denied",
               "escalated"
-            ]
+            ],
+            "description": "Current state of the approval process.",
+            "synonyms": "approval status, state, condition"
           },
           {
             "name": "reviewer",
             "type": "string",
-            "default": ""
+            "default": "",
+            "description": "The user or system responsible for reviewing the request.",
+            "synonyms": "assignee, owner, approver, responsible party"
           },
           {
             "name": "requestedAt",
             "type": "number",
-            "default": 0.0
+            "default": 0.0,
+            "description": "Timestamp indicating when the approval request was initiated.",
+            "synonyms": "creation time, request date, submission time"
           },
           {
             "name": "decidedAt",
             "type": "number",
-            "default": 0.0
+            "default": 0.0,
+            "description": "Timestamp indicating when a decision was made on the request.",
+            "synonyms": "decision time, resolved at, completed at"
           },
           {
             "name": "escalatedAt",
             "type": "number",
-            "default": 0.0
+            "default": 0.0,
+            "description": "Timestamp indicating when the request was escalated.",
+            "synonyms": "escalation time, escalation timestamp, escalated time"
           },
           {
             "name": "notes",
             "type": "string",
-            "default": ""
+            "default": "",
+            "description": "Free-form text providing additional context or details.",
+            "synonyms": "comments, remarks, explanation, details"
           }
         ]
       },
@@ -384,8 +398,8 @@
                     "ApprovalRequest",
                     {
                       "emit": {
-                        "success": "ApprovalRequestLoaded",
-                        "failure": "ApprovalRequestLoadFailed"
+                        "failure": "ApprovalRequestLoadFailed",
+                        "success": "ApprovalRequestLoaded"
                       }
                     }
                   ],
@@ -393,22 +407,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "type": "stack",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "variant": "caption",
                           "color": "muted",
-                          "content": "Loading approval queue…"
+                          "type": "typography",
+                          "content": "Loading approval queue…",
+                          "variant": "caption"
                         }
                       ],
-                      "align": "center",
-                      "direction": "vertical"
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -422,49 +436,30 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
+                          "align": "center",
                           "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "sm",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "shield-check"
+                              "name": "shield-check",
+                              "type": "icon"
                             },
                             {
+                              "content": "Approval queue",
                               "variant": "h3",
-                              "type": "typography",
-                              "content": "Approval queue"
+                              "type": "typography"
                             }
-                          ],
-                          "gap": "sm",
-                          "align": "center",
-                          "type": "stack"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "itemActions": [
-                            {
-                              "label": "Approve",
-                              "icon": "check",
-                              "event": "APPROVE",
-                              "variant": "primary"
-                            },
-                            {
-                              "variant": "danger",
-                              "icon": "x",
-                              "label": "Deny",
-                              "event": "DENY"
-                            }
-                          ],
-                          "entity": "@payload.data",
-                          "look": "@config.tableLook",
                           "type": "data-grid",
-                          "cols": 1.0,
                           "fields": [
                             {
                               "variant": "badge",
@@ -472,19 +467,38 @@
                               "label": "Action"
                             },
                             {
+                              "variant": "caption",
                               "label": "Requested",
-                              "name": "requestedAt",
-                              "variant": "caption"
+                              "name": "requestedAt"
                             },
                             {
+                              "name": "status",
                               "label": "Status",
-                              "variant": "badge",
-                              "name": "status"
+                              "variant": "badge"
                             }
                           ],
-                          "gap": "sm"
+                          "look": "@config.tableLook",
+                          "cols": 1.0,
+                          "gap": "sm",
+                          "itemActions": [
+                            {
+                              "event": "APPROVE",
+                              "label": "Approve",
+                              "icon": "check",
+                              "variant": "primary"
+                            },
+                            {
+                              "label": "Deny",
+                              "icon": "x",
+                              "event": "DENY",
+                              "variant": "danger"
+                            }
+                          ],
+                          "entity": "@payload.data"
                         }
-                      ]
+                      ],
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -532,8 +546,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "success": "ApprovalRequestReviewed",
-                        "failure": "ApprovalRequestReviewFailed"
+                        "failure": "ApprovalRequestReviewFailed",
+                        "success": "ApprovalRequestReviewed"
                       }
                     }
                   ],
@@ -573,8 +587,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "failure": "ApprovalRequestReviewFailed",
-                        "success": "ApprovalRequestReviewed"
+                        "success": "ApprovalRequestReviewed",
+                        "failure": "ApprovalRequestReviewFailed"
                       }
                     }
                   ],
@@ -613,9 +627,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
+                      "variant": "error",
                       "message": "@payload.error",
-                      "variant": "error"
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -630,8 +644,8 @@
                     "ApprovalRequest",
                     {
                       "emit": {
-                        "success": "ApprovalRequestLoaded",
-                        "failure": "ApprovalRequestLoadFailed"
+                        "failure": "ApprovalRequestLoadFailed",
+                        "success": "ApprovalRequestLoaded"
                       }
                     }
                   ],
@@ -648,53 +662,11 @@
             ]
           },
           "config": {
-            "escalationRoles": {
-              "type": "[string]",
-              "default": [],
-              "label": "Escalation roles",
-              "description": "Roles notified when a request escalates (compose sibling std-notify-on-event).",
-              "tier": "domain",
-              "items": {
-                "type": "string"
-              }
-            },
-            "approverRoles": {
-              "type": "[string]",
-              "default": [],
-              "label": "Approver roles",
-              "description": "Roles eligible to approve. The host application enforces role-gating on the page.",
-              "tier": "domain",
-              "items": {
-                "type": "string"
-              }
-            },
             "threshold": {
               "type": "number",
               "default": 0.0,
               "label": "Auto-approve threshold",
               "description": "Below this value, requests should be auto-approved. v1.0 declarative only; wiring lands in v1.1 (gap).",
-              "tier": "domain"
-            },
-            "enabled": {
-              "type": "boolean",
-              "default": false,
-              "label": "Enabled",
-              "description": "Whether the approval gate is active for the host orbital. Off by default; turn on to require sign-off.",
-              "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, approval, needs approval, sign-off, signed off, review before, gatekeeper, editor approval, publishing approval, draft approval, content review, requires approval, manager approval, supervisor approval, admin approval, before going live",
-              "tier": "domain"
-            },
-            "autoApproveBelowThreshold": {
-              "type": "boolean",
-              "default": true,
-              "label": "Auto-approve below threshold",
-              "description": "Skip the review queue when the gated event's value is below the threshold. v1.0 declarative only.",
-              "tier": "domain"
-            },
-            "valueField": {
-              "type": "string",
-              "default": "",
-              "label": "Value field",
-              "description": "Payload field name to compare against threshold (e.g. 'amount' on a RefundRequested event). v1.0 declarative only.",
               "tier": "domain"
             },
             "escalationHours": {
@@ -717,6 +689,48 @@
                 "borderless",
                 "card-rows"
               ]
+            },
+            "escalationRoles": {
+              "type": "[string]",
+              "default": [],
+              "label": "Escalation roles",
+              "description": "Roles notified when a request escalates (compose sibling std-notify-on-event).",
+              "tier": "domain",
+              "items": {
+                "type": "string"
+              }
+            },
+            "autoApproveBelowThreshold": {
+              "type": "boolean",
+              "default": true,
+              "label": "Auto-approve below threshold",
+              "description": "Skip the review queue when the gated event's value is below the threshold. v1.0 declarative only.",
+              "tier": "domain"
+            },
+            "approverRoles": {
+              "type": "[string]",
+              "default": [],
+              "label": "Approver roles",
+              "description": "Roles eligible to approve. The host application enforces role-gating on the page.",
+              "tier": "domain",
+              "items": {
+                "type": "string"
+              }
+            },
+            "valueField": {
+              "type": "string",
+              "default": "",
+              "label": "Value field",
+              "description": "Payload field name to compare against threshold (e.g. 'amount' on a RefundRequested event). v1.0 declarative only.",
+              "tier": "domain"
+            },
+            "enabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Enabled",
+              "description": "Whether the approval gate is active for the host orbital. Off by default; turn on to require sign-off.",
+              "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, approval, needs approval, sign-off, signed off, review before, gatekeeper, editor approval, publishing approval, draft approval, content review, requires approval, manager approval, supervisor approval, admin approval, before going live",
+              "tier": "domain"
             }
           },
           "scope": "collection"

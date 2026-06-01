@@ -11,47 +11,65 @@
           {
             "name": "name",
             "type": "string",
-            "required": true
+            "required": true,
+            "description": "The file's display name or title.",
+            "synonyms": "title, label, filename"
           },
           {
             "name": "path",
             "type": "string",
-            "required": false
+            "required": false,
+            "description": "The location of the file within the storage system.",
+            "synonyms": "location, filepath, address"
           },
           {
             "name": "mimeType",
             "type": "string",
-            "required": false
+            "required": false,
+            "description": "The file's content type, indicating its format.",
+            "synonyms": "type, format, media type"
           },
           {
             "name": "sizeBytes",
             "type": "number",
-            "required": false
+            "required": false,
+            "description": "The file's size in bytes.",
+            "synonyms": "length, filesize, byteCount"
           },
           {
             "name": "uploaderId",
             "type": "string",
-            "required": false
+            "required": false,
+            "description": "Identifier of the user who uploaded the file.",
+            "synonyms": "user, owner, creator"
           },
           {
             "name": "uploaderName",
             "type": "string",
-            "required": false
+            "required": false,
+            "description": "The name of the user who uploaded the file.",
+            "synonyms": "owner, user, author"
           },
           {
             "name": "folder",
             "type": "string",
-            "required": false
+            "required": false,
+            "description": "The path to the containing directory.",
+            "synonyms": "parent, directory, location"
           },
           {
             "name": "uploadedAt",
             "type": "string",
-            "required": false
+            "required": false,
+            "description": "Timestamp indicating when the file was uploaded.",
+            "synonyms": "upload date, date uploaded, upload time"
           },
           {
             "name": "isArchived",
             "type": "boolean",
-            "required": false
+            "required": false,
+            "description": "Indicates whether the file is archived.",
+            "synonyms": "archived, status, state"
           }
         ],
         "persistence": "persistent"
@@ -76,14 +94,14 @@
             "type": "[ItemAction]",
             "default": [
               {
-                "label": "Download",
+                "event": "DOWNLOAD_FILE",
                 "variant": "primary",
-                "event": "DOWNLOAD_FILE"
+                "label": "Download"
               },
               {
-                "variant": "danger",
                 "label": "Archive",
-                "event": "ARCHIVE_FILE"
+                "event": "ARCHIVE_FILE",
+                "variant": "danger"
               }
             ],
             "label": "Detail actions",
@@ -91,14 +109,9 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "label": {
-                  "name": "label",
-                  "required": true,
-                  "type": "string"
-                },
-                "event": {
-                  "name": "event",
-                  "required": true,
+                "variant": {
+                  "name": "variant",
+                  "required": false,
                   "type": "string"
                 },
                 "icon": {
@@ -106,9 +119,14 @@
                   "required": false,
                   "type": "string"
                 },
-                "variant": {
-                  "name": "variant",
-                  "required": false,
+                "event": {
+                  "name": "event",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
                   "type": "string"
                 }
               },
@@ -120,14 +138,14 @@
             "type": "[FieldSpec]",
             "default": [
               {
-                "variant": "caption",
                 "label": "Name",
-                "name": "name"
+                "name": "name",
+                "variant": "caption"
               },
               {
-                "label": "Folder",
                 "variant": "caption",
-                "name": "folder"
+                "name": "folder",
+                "label": "Folder"
               },
               {
                 "variant": "badge",
@@ -135,8 +153,8 @@
                 "label": "Type"
               },
               {
-                "label": "Size",
                 "variant": "caption",
+                "label": "Size",
                 "name": "sizeBytes"
               },
               {
@@ -150,18 +168,8 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "format": {
-                  "name": "format",
-                  "required": false,
-                  "type": "string"
-                },
-                "key": {
-                  "name": "key",
-                  "required": false,
-                  "type": "string"
-                },
-                "variant": {
-                  "name": "variant",
+                "label": {
+                  "name": "label",
                   "required": false,
                   "type": "string"
                 },
@@ -175,13 +183,23 @@
                   "required": false,
                   "type": "string"
                 },
+                "key": {
+                  "name": "key",
+                  "required": false,
+                  "type": "string"
+                },
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string"
+                },
                 "name": {
                   "name": "name",
                   "required": true,
                   "type": "string"
                 },
-                "label": {
-                  "name": "label",
+                "variant": {
+                  "name": "variant",
                   "required": false,
                   "type": "string"
                 }
@@ -202,10 +220,10 @@
             "type": "[ItemAction]",
             "default": [
               {
-                "variant": "primary",
+                "icon": "arrow-right",
                 "label": "Open",
                 "event": "OPEN_FILE",
-                "icon": "arrow-right"
+                "variant": "primary"
               },
               {
                 "label": "Archive",
@@ -218,6 +236,11 @@
             "tier": "presentation",
             "items": {
               "properties": {
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
                 "event": {
                   "name": "event",
                   "required": true,
@@ -226,11 +249,6 @@
                 "variant": {
                   "name": "variant",
                   "required": false,
-                  "type": "string"
-                },
-                "label": {
-                  "name": "label",
-                  "required": true,
                   "type": "string"
                 },
                 "icon": {
@@ -281,49 +299,49 @@
                 "name": "Contracts",
                 "children": [
                   {
-                    "path": "Active.pdf",
+                    "name": "Active.pdf",
                     "type": "file",
-                    "name": "Active.pdf"
+                    "path": "Active.pdf"
                   },
                   {
-                    "path": "Archived.pdf",
+                    "type": "file",
                     "name": "Archived.pdf",
-                    "type": "file"
+                    "path": "Archived.pdf"
                   }
                 ],
-                "type": "dir",
-                "path": "Contracts"
+                "path": "Contracts",
+                "type": "dir"
               },
               {
-                "name": "Policies",
                 "type": "dir",
+                "name": "Policies",
+                "path": "Policies",
                 "children": [
                   {
+                    "path": "Policies/HR.docx",
                     "type": "file",
-                    "name": "HR.docx",
-                    "path": "Policies/HR.docx"
+                    "name": "HR.docx"
                   },
                   {
-                    "name": "Security.md",
+                    "type": "file",
                     "path": "Policies/Security.md",
-                    "type": "file"
+                    "name": "Security.md"
                   }
-                ],
-                "path": "Policies"
+                ]
               },
               {
-                "type": "dir",
                 "name": "Templates",
+                "type": "dir",
                 "path": "Templates",
                 "children": [
                   {
                     "type": "file",
-                    "name": "Invoice.docx",
-                    "path": "Templates/Invoice.docx"
+                    "path": "Templates/Invoice.docx",
+                    "name": "Invoice.docx"
                   },
                   {
-                    "path": "Templates/NDA.pdf",
                     "type": "file",
+                    "path": "Templates/NDA.pdf",
                     "name": "NDA.pdf"
                   }
                 ]
@@ -334,16 +352,6 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "name": {
-                  "name": "name",
-                  "required": true,
-                  "type": "string"
-                },
-                "type": {
-                  "name": "type",
-                  "required": true,
-                  "type": "string"
-                },
                 "children": {
                   "name": "children",
                   "required": false,
@@ -352,8 +360,18 @@
                     "type": "object"
                   }
                 },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string"
+                },
                 "path": {
                   "name": "path",
+                  "required": true,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
                   "required": true,
                   "type": "string"
                 }

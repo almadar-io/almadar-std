@@ -18,7 +18,9 @@
           {
             "name": "title",
             "type": "string",
-            "required": true
+            "required": true,
+            "description": "The human-readable name of the document.",
+            "synonyms": "name, heading, label"
           },
           {
             "name": "blocksJson",
@@ -26,6 +28,11 @@
             "items": {
               "type": "object",
               "properties": {
+                "type": {
+                  "name": "type",
+                  "type": "string",
+                  "required": true
+                },
                 "content": {
                   "name": "content",
                   "type": "string",
@@ -35,22 +42,23 @@
                   "name": "id",
                   "type": "string",
                   "required": false
-                },
-                "type": {
-                  "name": "type",
-                  "type": "string",
-                  "required": true
                 }
               }
-            }
+            },
+            "description": "Serialized representation of the document's content blocks.",
+            "synonyms": "content, data, structure, blocks"
           },
           {
             "name": "authorId",
-            "type": "string"
+            "type": "string",
+            "description": "Unique identifier of the user who created the document.",
+            "synonyms": "creatorId, userId, ownerId"
           },
           {
             "name": "parentId",
-            "type": "string"
+            "type": "string",
+            "description": "Reference to the parent document or container.",
+            "synonyms": "parent, container, owner"
           },
           {
             "name": "kind",
@@ -60,7 +68,9 @@
               "page",
               "doc",
               "post"
-            ]
+            ],
+            "description": "Specifies the document type.",
+            "synonyms": "type, documentType, category"
           },
           {
             "name": "status",
@@ -70,12 +80,16 @@
               "draft",
               "published",
               "archived"
-            ]
+            ],
+            "description": "Indicates the current state of the document.",
+            "synonyms": "state, condition, lifecycle"
           },
           {
             "name": "version",
             "type": "number",
-            "default": 1.0
+            "default": 1.0,
+            "description": "Represents the version number of the document.",
+            "synonyms": "revision, release, iteration"
           },
           {
             "name": "createdAt",
@@ -458,7 +472,9 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
@@ -466,13 +482,11 @@
                         {
                           "variant": "caption",
                           "color": "muted",
-                          "type": "typography",
-                          "content": "Loading documents…"
+                          "content": "Loading documents…",
+                          "type": "typography"
                         }
                       ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "className": "py-12",
+                      "gap": "md",
                       "align": "center"
                     }
                   ]
@@ -487,14 +501,12 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "gap": "md",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
-                          "gap": "sm",
                           "align": "center",
-                          "direction": "horizontal",
+                          "gap": "sm",
                           "children": [
                             {
                               "type": "icon",
@@ -502,60 +514,62 @@
                             },
                             {
                               "type": "typography",
-                              "content": "@config.title",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "content": "@config.title"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "type": "stack"
                         },
                         {
                           "children": [
                             {
-                              "value": "@payload.data.length",
                               "type": "stat-display",
+                              "value": "@payload.data.length",
                               "look": "@config.statLook",
-                              "icon": "file-text",
-                              "label": "Total docs"
+                              "label": "Total docs",
+                              "icon": "file-text"
                             },
                             {
+                              "look": "@config.statLook",
                               "value": "12",
                               "icon": "edit-3",
                               "type": "stat-display",
-                              "look": "@config.statLook",
                               "label": "Drafts"
                             },
                             {
+                              "type": "stat-display",
                               "icon": "check-circle",
                               "look": "@config.statLook",
                               "label": "Published",
-                              "value": "84",
-                              "type": "stat-display"
+                              "value": "84"
                             },
                             {
-                              "value": "9",
-                              "icon": "archive",
-                              "look": "@config.statLook",
                               "label": "Archived",
-                              "type": "stat-display"
+                              "type": "stat-display",
+                              "look": "@config.statLook",
+                              "value": "9",
+                              "icon": "archive"
                             }
                           ],
-                          "cols": 4.0,
-                          "type": "simple-grid"
+                          "type": "simple-grid",
+                          "cols": 4.0
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
+                          "look": "@config.tableLook",
                           "fields": [
                             {
+                              "variant": "caption",
                               "name": "title",
-                              "label": "Title",
-                              "variant": "caption"
+                              "label": "Title"
                             },
                             {
-                              "variant": "badge",
                               "name": "kind",
-                              "label": "Kind"
+                              "label": "Kind",
+                              "variant": "badge"
                             },
                             {
                               "label": "Status",
@@ -568,29 +582,29 @@
                               "name": "version"
                             },
                             {
+                              "variant": "caption",
                               "name": "updatedAt",
-                              "label": "Updated",
-                              "variant": "caption"
+                              "label": "Updated"
                             }
                           ],
                           "cols": 1.0,
-                          "look": "@config.tableLook",
                           "gap": "sm",
                           "itemActions": [
                             {
-                              "event": "OPEN",
+                              "icon": "edit",
                               "label": "Open",
                               "variant": "primary",
-                              "icon": "edit"
+                              "event": "OPEN"
                             },
                             {
-                              "event": "PUBLISH",
-                              "icon": "send",
                               "label": "Publish",
-                              "variant": "secondary"
+                              "icon": "send",
+                              "variant": "secondary",
+                              "event": "PUBLISH"
                             }
                           ],
-                          "entity": "@payload.data"
+                          "entity": "@payload.data",
+                          "type": "data-grid"
                         }
                       ],
                       "direction": "vertical"
@@ -608,8 +622,8 @@
                     "Document",
                     {
                       "emit": {
-                        "success": "DocumentLoaded",
-                        "failure": "DocumentLoadFailed"
+                        "failure": "DocumentLoadFailed",
+                        "success": "DocumentLoaded"
                       }
                     }
                   ]
@@ -625,8 +639,8 @@
                     "Document",
                     {
                       "emit": {
-                        "failure": "DocumentLoadFailed",
-                        "success": "DocumentLoaded"
+                        "success": "DocumentLoaded",
+                        "failure": "DocumentLoadFailed"
                       }
                     }
                   ]
@@ -641,9 +655,9 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "@payload.error",
                       "type": "alert",
-                      "variant": "error"
+                      "variant": "error",
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -657,9 +671,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
                       "message": "@payload.error",
-                      "variant": "error"
+                      "variant": "error",
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -724,74 +738,74 @@
                     "main",
                     {
                       "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
                       "children": [
                         {
-                          "type": "stack",
                           "direction": "horizontal",
+                          "type": "stack",
                           "gap": "sm",
+                          "align": "center",
                           "children": [
                             {
-                              "variant": "ghost",
                               "label": "Back",
                               "type": "button",
+                              "variant": "ghost",
                               "action": "CLOSE_VIEW"
                             },
                             {
-                              "type": "icon",
-                              "name": "file-text"
+                              "name": "file-text",
+                              "type": "icon"
                             },
                             {
-                              "content": "@entity.title",
+                              "variant": "h3",
                               "type": "typography",
-                              "variant": "h3"
+                              "content": "@entity.title"
                             },
                             {
                               "type": "badge",
-                              "variant": "secondary",
-                              "label": "@entity.status"
+                              "label": "@entity.status",
+                              "variant": "secondary"
                             }
-                          ],
-                          "align": "center"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "rich-block-editor",
                           "showToolbar": true,
+                          "placeholder": "Start writing…",
                           "initialBlocks": "@entity.blocksJson",
-                          "changeEvent": "BLOCKS_CHANGE",
-                          "placeholder": "Start writing…"
+                          "type": "rich-block-editor",
+                          "changeEvent": "BLOCKS_CHANGE"
                         },
                         {
-                          "align": "center",
+                          "direction": "horizontal",
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "button",
-                              "action": "SAVE",
                               "label": "Save",
-                              "variant": "primary",
-                              "actionPayload": {
-                                "id": "@entity.id"
-                              }
-                            },
-                            {
-                              "action": "PUBLISH",
+                              "action": "SAVE",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
                               "type": "button",
+                              "variant": "primary"
+                            },
+                            {
                               "variant": "secondary",
-                              "label": "Publish"
+                              "label": "Publish",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "action": "PUBLISH",
+                              "type": "button"
                             }
                           ],
-                          "direction": "horizontal",
-                          "type": "stack",
+                          "align": "center",
                           "gap": "sm"
                         }
-                      ],
-                      "direction": "vertical",
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -811,8 +825,8 @@
                     "Document",
                     {
                       "emit": {
-                        "failure": "DocumentLoadFailed",
-                        "success": "DocumentLoaded"
+                        "success": "DocumentLoaded",
+                        "failure": "DocumentLoadFailed"
                       }
                     }
                   ],
@@ -821,21 +835,21 @@
                     "main",
                     {
                       "className": "py-12",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "type": "typography",
                           "content": "Publishing document…",
                           "color": "muted",
-                          "variant": "caption",
-                          "type": "typography"
+                          "variant": "caption"
                         }
                       ],
-                      "type": "stack",
-                      "align": "center",
                       "direction": "vertical",
-                      "gap": "md"
+                      "gap": "md",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -871,22 +885,22 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
-                          "color": "muted",
                           "type": "typography",
-                          "content": "Loading documents…"
+                          "variant": "caption",
+                          "content": "Loading documents…",
+                          "color": "muted"
                         }
                       ],
+                      "type": "stack",
                       "direction": "vertical",
-                      "gap": "md",
-                      "align": "center",
-                      "className": "py-12",
-                      "type": "stack"
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -917,22 +931,22 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
                       "className": "py-12",
-                      "direction": "vertical",
                       "gap": "md",
-                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "variant": "caption",
+                          "color": "muted",
                           "type": "typography",
-                          "content": "Saving document…",
-                          "color": "muted"
+                          "content": "Saving document…"
                         }
                       ],
-                      "align": "center"
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -968,22 +982,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
-                      "gap": "md",
                       "type": "stack",
-                      "direction": "vertical",
                       "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "content": "Publishing document…",
                           "variant": "caption",
-                          "color": "muted"
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "Publishing document…"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -998,8 +1012,8 @@
                     "Document",
                     {
                       "emit": {
-                        "failure": "DocumentLoadFailed",
-                        "success": "DocumentLoaded"
+                        "success": "DocumentLoaded",
+                        "failure": "DocumentLoadFailed"
                       }
                     }
                   ],
@@ -1007,8 +1021,8 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]
@@ -1016,6 +1030,13 @@
             ]
           },
           "config": {
+            "title": {
+              "type": "string",
+              "default": "Documents",
+              "label": "Section title",
+              "description": "Heading shown above the document list",
+              "tier": "presentation"
+            },
             "statLook": {
               "type": "string",
               "default": "elevated",
@@ -1029,13 +1050,6 @@
                 "gauge",
                 "sparkline"
               ]
-            },
-            "title": {
-              "type": "string",
-              "default": "Documents",
-              "label": "Section title",
-              "description": "Heading shown above the document list",
-              "tier": "presentation"
             },
             "tableLook": {
               "type": "string",

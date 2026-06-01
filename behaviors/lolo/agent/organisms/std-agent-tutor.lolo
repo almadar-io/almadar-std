@@ -9,15 +9,15 @@ orbital TutorSessionOrbital {
 
   entity TutorSession [runtime] {
     id : string!
-    topic : string = ""
-    studentLevel : string = "unknown"
-    explanation : string = ""
-    questionsAsked : number = 0
-    correctAnswers : number = 0
-    sessionStatus : string = "idle"
-    error : string = ""
-    activeTab : string = ""
-    items : [ItemSpec] = []
+    topic : string @description "The subject or area of study being addressed." @synonyms "subject, area, theme, focus" = ""
+    studentLevel : string @description "Represents the student's proficiency level." @synonyms "level, skill, proficiency" = "unknown"
+    explanation : string @description "Detailed clarification or reasoning for a concept or answer." @synonyms "reasoning, justification, details, elaboration" = ""
+    questionsAsked : number @description "The total number of questions presented during the session." @synonyms "count, number, total" = 0
+    correctAnswers : number @description "The number of questions answered correctly." @synonyms "count, total, score" = 0
+    sessionStatus : string @description "The current state of the tutoring session." @synonyms "status, state, condition" = "idle"
+    error : string @description "A textual description of any encountered problem." @synonyms "issue, problem, fault, failure" = ""
+    activeTab : string @description "The currently selected tab or view within the session." @synonyms "tab, view, selection" = ""
+    items : [ItemSpec] @description "A list of items associated with the session." @synonyms "elements, entries, list" = []
 
   }
 
@@ -91,13 +91,13 @@ orbital TutorSessionOrbital {
 orbital QuizQuestionOrbital {
   entity QuizQuestion [runtime] {
     id : string!
-    question : string
-    options : string
-    correctAnswer : string
-    studentAnswer : string
-    isCorrect : boolean
-    feedback : string
-    quizStatus : string
+    question : string @description "The text of a question presented to the student." @synonyms "prompt, query, inquiry"
+    options : string @description "A string representing available choices or settings." @synonyms "choices, settings, selections, alternatives"
+    correctAnswer : string @description "The correct answer to a question." @synonyms "solution, answer, result"
+    studentAnswer : string @description "The student's response to a question or prompt." @synonyms "response, answer, input, submission"
+    isCorrect : boolean @description "Indicates whether an answer is correct." @synonyms "correct, accuracy, validity"
+    feedback : string @description "Textual comments or evaluations provided during the session." @synonyms "comments, evaluation, remarks, notes"
+    quizStatus : string @description "Indicates the current state of a quiz." @synonyms "status, progress, state"
   }
 
   type QuizQuestionLoaded     = Event { data : [QuizQuestion] }                  "Fired when QuizQuestion finishes loading"
@@ -156,15 +156,15 @@ orbital QuizQuestionOrbital {
 orbital TutorChatOrbital {
   entity TutorChat [runtime] {
     id : string!
-    messages : [string]
-    turnCount : number
-    lastMessage : string
-    tokenCount : number
-    role : string
-    content : string
-    timestamp : string
-    toolName : string
-    status : string
+    messages : [string] @description "A sequence of messages exchanged during the session." @synonyms "dialogue, conversation, transcript"
+    turnCount : number @description "The number of interactions or turns in the session." @synonyms "count, number, iterations"
+    lastMessage : string @description "The text of the most recent message in the session." @synonyms "message, text, content"
+    tokenCount : number @description "The number of tokens used in the session." @synonyms "count, quantity, size"
+    role : string @description "The user's function or responsibility within the session." @synonyms "user type, function, designation"
+    content : string @description "The textual data associated with a specific item." @synonyms "text, data, body, value"
+    timestamp : string @description "Date and time when an event occurred." @synonyms "date, time, when"
+    toolName : string @description "The name of the tool used during the session." @synonyms "tool, utility, application"
+    status : string @description "The current state or condition of the session." @synonyms "state, condition, progress"
   }
 
   type TutorChatLoaded     = Event { data : [TutorChat] }                  "Fired when TutorChat finishes loading"
@@ -261,12 +261,12 @@ orbital TutorChatOrbital {
 orbital ConceptOrbital {
   entity Concept [persistent: concepts] {
     id : string!
-    content : string
-    category : string
-    strength : number
-    pinned : boolean
-    scope : string
-    lastAccessedAt : string
+    content : string @description "The textual material presented to the user." @synonyms "text, body, material, data"
+    category : string @description "A classification or grouping for the session content." @synonyms "type, classification, group"
+    strength : number @description "A numerical value representing a quality or magnitude." @synonyms "value, measure, score, rating"
+    pinned : boolean @description "Indicates whether the item is fixed in position." @synonyms "fixed, locked, persistent"
+    scope : string @description "The area or subject covered by the session." @synonyms "subject, area, focus, domain"
+    lastAccessedAt : string @description "Timestamp of the last access or usage." @synonyms "accessed, last use, timestamp"
     createdAt : string
   }
 
@@ -397,12 +397,12 @@ orbital ConceptOrbital {
 orbital StudentAssessmentOrbital {
   entity StudentAssessment [runtime] {
     id : string!
-    input : string
-    category : string
-    confidence : number
-    model : string
-    message : string
-    notificationType : "info" | "success" | "warning" | "error" = "info"
+    input : string @description "User-provided text or data for processing." @synonyms "prompt, query, text, data"
+    category : string @description "Classification or grouping of the session content." @synonyms "type, classification, group"
+    confidence : number @description "Represents a numerical measure of certainty or likelihood." @synonyms "probability, certainty, likelihood, score"
+    model : string @description "The underlying language model used for the session." @synonyms "engine, algorithm, LLM"
+    message : string @description "Text content of a message exchange." @synonyms "text, content, body"
+    notificationType : "info" | "success" | "warning" | "error" @description "Indicates the type of notification displayed to the user." @synonyms "alert type, message type, notification level" = "info"
   }
 
   type StudentAssessmentLoaded     = Event { data : [StudentAssessment] }                  "Fired when StudentAssessment finishes loading"
@@ -511,13 +511,13 @@ orbital TutorNavOrbital {
 
   entity TutorNav [runtime] {
     id : string!
-    topic : string = ""
-    studentLevel : string = "unknown"
-    explanation : string = ""
-    questionsAsked : number = 0
-    correctAnswers : number = 0
-    sessionStatus : string = "idle"
-    error : string = ""
+    topic : string @description "The subject or area of study being addressed." @synonyms "subject, theme, area, focus" = ""
+    studentLevel : string @description "Represents the student's proficiency level." @synonyms "level, skill, expertise, proficiency" = "unknown"
+    explanation : string @description "Detailed textual clarification or justification." @synonyms "justification, rationale, details, clarification" = ""
+    questionsAsked : number @description "The total number of questions presented during the session." @synonyms "count, number, total" = 0
+    correctAnswers : number @description "The number of questions answered correctly." @synonyms "count, total, number, score" = 0
+    sessionStatus : string @description "Indicates the current state of the session." @synonyms "status, state, condition" = "idle"
+    error : string @description "A textual description of any encountered problem." @synonyms "issue, problem, fault, exception" = ""
   }
   trait TutorTabs = Tabs.traits.TabsItemTabs -> TutorSession {
   }
@@ -528,9 +528,9 @@ orbital ConceptViewOrbital {
 
   entity ConceptView [persistent: conceptviews] {
     id : string!
-    content : string
-    category : string
-    strength : number
+    content : string @description "The textual material presented or displayed." @synonyms "text, body, material, data"
+    category : string @description "A classification or grouping for the session content." @synonyms "type, classification, group"
+    strength : number @description "A numerical value representing a measure of proficiency." @synonyms "score, level, rating, proficiency"
   }
   trait ConceptsBrowse = Browse.traits.BrowseItemBrowse -> Concept {
   }

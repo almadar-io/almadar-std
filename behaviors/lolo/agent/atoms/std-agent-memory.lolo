@@ -4,16 +4,16 @@ app std-agent-memory "1.0.0"
 orbital AgentMemoryOrbital {
   entity AgentMemory [persistent: agentmemorys] {
     id             : string!
-    name           : string
-    description    : string
-    status         : "active" | "inactive" | "pending" = "active"
+    name           : string @description "A human-readable identifier for the memory." @synonyms "label, identifier, title"
+    description    : string @description "A textual explanation of the memory's purpose or contents." @synonyms "details, notes, explanation, summary"
+    status         : "active" | "inactive" | "pending" @description "Current operational state of the component." @synonyms "state, condition, operational_status" = "active"
     createdAt      : string
-    content        : string = ""
-    category       : string = "general"
-    strength       : number = 1
-    pinned         : boolean = false
-    scope          : "session" | "persistent" | "shared" = "session"
-    lastAccessedAt : string = ""
+    content        : string @description "The data stored within the memory." @synonyms "data, value, payload" = ""
+    category       : string @description "Classification or type of the memory data." @synonyms "type, kind, class" = "general"
+    strength       : number @description "A numerical value representing the intensity or magnitude." @synonyms "value, magnitude, level, intensity" = 1
+    pinned         : boolean @description "Indicates whether the item is marked as important." @synonyms "flagged, marked, important" = false
+    scope          : "session" | "persistent" | "shared" @description "Indicates the data's lifecycle and accessibility." @synonyms "lifetime, access, persistence" = "session"
+    lastAccessedAt : string @description "Timestamp of the last access to the data." @synonyms "accessed, last modified, updated" = ""
   }
 
   type AgentMemoryLoaded     = Event { data : [AgentMemory] }        "Fired when the AgentMemory collection finishes loading; payload.data holds the list"

@@ -7,16 +7,16 @@ type ValidationSpec = { field : string!, rule : string, message : string }
 orbital FormEntryOrbital {
   entity FormEntry [runtime] {
     id : string
-    name : string
-    description : string
-    status : "active" | "inactive" | "pending" = "active"
+    name : string @description "The identifier or title for the form entry." @synonyms "title, label, identifier"
+    description : string @description "A textual explanation or details about the entry." @synonyms "details, explanation, notes, summary"
+    status : "active" | "inactive" | "pending" @description "Indicates the current operational state of the entry." @synonyms "state, condition, mode" = "active"
     createdAt : string
-    notes : string = ""
-    age : number = 0
-    isActive : boolean = false
-    birthDate : datetime = ""
-    priority : "low" | "medium" | "high" | "critical" = "medium"
-    categoryId : relation = ""
+    notes : string @description "Free-text comments or additional information." @synonyms "comment, remark, details, memo" = ""
+    age : number @description "Numerical value representing a person's age." @synonyms "years, age, period" = 0
+    isActive : boolean @description "Indicates whether the entry is currently active." @synonyms "active, enabled, status" = false
+    birthDate : datetime @description "Date of birth." @synonyms "dob, date of birth, birthday" = ""
+    priority : "low" | "medium" | "high" | "critical" @description "Indicates the level of importance or urgency." @synonyms "level, importance, urgency" = "medium"
+    categoryId : relation @description "Identifies the related category record." @synonyms "category, type, group" = ""
   }
 
   type FormEntryLoaded     = Event FormEntry                  "Fired when FormEntry finishes loading"

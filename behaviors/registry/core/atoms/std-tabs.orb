@@ -17,7 +17,9 @@
           {
             "name": "activeTab",
             "type": "string",
-            "default": ""
+            "default": "",
+            "description": "The currently selected tab's identifier.",
+            "synonyms": "selection, currentTab, highlightedTab"
           },
           {
             "name": "items",
@@ -26,14 +28,14 @@
             "items": {
               "type": "object",
               "properties": {
+                "label": {
+                  "name": "label",
+                  "type": "string",
+                  "required": true
+                },
                 "icon": {
                   "name": "icon",
                   "type": "string",
-                  "required": false
-                },
-                "content": {
-                  "name": "content",
-                  "type": "trait",
                   "required": false
                 },
                 "badge": {
@@ -46,13 +48,15 @@
                   "type": "string",
                   "required": true
                 },
-                "label": {
-                  "name": "label",
-                  "type": "string",
-                  "required": true
+                "content": {
+                  "name": "content",
+                  "type": "trait",
+                  "required": false
                 }
               }
-            }
+            },
+            "description": "A collection of tab specifications defining the tab structure.",
+            "synonyms": "tabs, tab list, tab definitions"
           }
         ]
       },
@@ -154,17 +158,19 @@
             ]
           },
           "config": {
-            "variant": {
-              "type": "string",
-              "default": "default",
-              "label": "Tab style",
-              "description": "Visual style of the tab strip",
-              "tier": "presentation",
-              "values": [
-                "default",
-                "pills",
-                "underline"
-              ]
+            "bodyContent": {
+              "type": "render-ui",
+              "default": {
+                "orientation": "@config.orientation",
+                "variant": "@config.variant",
+                "tabChangeEvent": "TAB_CHANGED",
+                "items": "@entity.items",
+                "activeTab": "@entity.activeTab",
+                "type": "tabs"
+              },
+              "label": "Body content tree",
+              "description": "Render-ui SExpr rendered for the tabs surface. Default is the canonical tabs pattern bound to @entity.items / @entity.activeTab. Layer 3 variants override this with their own tree (segmented-pill bar, vertical sidebar rail, etc.) while inheriting the same trait, state machine, emits, and listens.",
+              "tier": "internal"
             },
             "tabs": {
               "type": "[TabSpec]",
@@ -191,15 +197,15 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "content": {
-                    "name": "content",
-                    "type": "trait",
-                    "required": false
-                  },
                   "label": {
                     "name": "label",
                     "type": "string",
                     "required": true
+                  },
+                  "content": {
+                    "name": "content",
+                    "type": "trait",
+                    "required": false
                   },
                   "icon": {
                     "name": "icon",
@@ -230,19 +236,17 @@
                 "vertical"
               ]
             },
-            "bodyContent": {
-              "type": "render-ui",
-              "default": {
-                "tabChangeEvent": "TAB_CHANGED",
-                "activeTab": "@entity.activeTab",
-                "items": "@entity.items",
-                "type": "tabs",
-                "orientation": "@config.orientation",
-                "variant": "@config.variant"
-              },
-              "label": "Body content tree",
-              "description": "Render-ui SExpr rendered for the tabs surface. Default is the canonical tabs pattern bound to @entity.items / @entity.activeTab. Layer 3 variants override this with their own tree (segmented-pill bar, vertical sidebar rail, etc.) while inheriting the same trait, state machine, emits, and listens.",
-              "tier": "internal"
+            "variant": {
+              "type": "string",
+              "default": "default",
+              "label": "Tab style",
+              "description": "Visual style of the tab strip",
+              "tier": "presentation",
+              "values": [
+                "default",
+                "pills",
+                "underline"
+              ]
             },
             "defaultTab": {
               "type": "string",

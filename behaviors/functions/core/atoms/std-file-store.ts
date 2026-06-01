@@ -106,22 +106,22 @@ export interface StdFileStoreStoredFileLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdFileStoreConfig {
-  /** Default: `[{"variant":"caption","label":"Name","name":"name"},{"label":"Folder","variant":"caption","name":"folder"},{"variant":"badge","name":"mimeType","label":"Type"},{"label":"Size","variant":"caption","name":"sizeBytes"},{"variant":"caption","name":"uploadedAt","label":"Uploaded"}]` */
-  fields?: EntityRow[];
-  /** Default: `false` */
-  reorderable?: boolean;
-  /** Default: `[{"label":"Download","variant":"primary","event":"DOWNLOAD_FILE"},{"variant":"danger","label":"Archive","event":"ARCHIVE_FILE"}]` */
-  detailActions?: EntityRow[];
-  /** Default: `[{"variant":"primary","label":"Open","event":"OPEN_FILE","icon":"arrow-right"},{"label":"Archive","variant":"danger","event":"ARCHIVE_FILE"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `"dense"` */
-  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
   /** Default: `"Files"` */
   title?: string;
+  /** Default: `[{"label":"Name","name":"name","variant":"caption"},{"variant":"caption","name":"folder","label":"Folder"},{"variant":"badge","name":"mimeType","label":"Type"},{"variant":"caption","label":"Size","name":"sizeBytes"},{"variant":"caption","name":"uploadedAt","label":"Uploaded"}]` */
+  fields?: EntityRow[];
+  /** Default: `[{"name":"Contracts","children":[{"name":"Active.pdf","type":"file","path":"Active.pdf"},{"type":"file","name":"Archived.pdf","path":"Archived.pdf"}],"path":"Contracts","type":"dir"},{"type":"dir","name":"Policies","path":"Policies","children":[{"path":"Policies/HR.docx","type":"file","name":"HR.docx"},{"type":"file","path":"Policies/Security.md","name":"Security.md"}]},{"name":"Templates","type":"dir","path":"Templates","children":[{"type":"file","path":"Templates/Invoice.docx","name":"Invoice.docx"},{"type":"file","path":"Templates/NDA.pdf","name":"NDA.pdf"}]}]` */
+  tree?: EntityRow[];
+  /** Default: `"dense"` */
+  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
+  /** Default: `[{"icon":"arrow-right","label":"Open","event":"OPEN_FILE","variant":"primary"},{"label":"Archive","variant":"danger","event":"ARCHIVE_FILE"}]` */
+  itemActions?: EntityRow[];
   /** Default: `"folder"` */
   headerIcon?: string;
-  /** Default: `[{"name":"Contracts","children":[{"path":"Active.pdf","type":"file","name":"Active.pdf"},{"path":"Archived.pdf","name":"Archived.pdf","type":"file"}],"type":"dir","path":"Contracts"},{"name":"Policies","type":"dir","children":[{"type":"file","name":"HR.docx","path":"Policies/HR.docx"},{"name":"Security.md","path":"Policies/Security.md","type":"file"}],"path":"Policies"},{"type":"dir","name":"Templates","path":"Templates","children":[{"type":"file","name":"Invoice.docx","path":"Templates/Invoice.docx"},{"path":"Templates/NDA.pdf","type":"file","name":"NDA.pdf"}]}]` */
-  tree?: EntityRow[];
+  /** Default: `[{"event":"DOWNLOAD_FILE","variant":"primary","label":"Download"},{"label":"Archive","event":"ARCHIVE_FILE","variant":"danger"}]` */
+  detailActions?: EntityRow[];
+  /** Default: `false` */
+  reorderable?: boolean;
 }
 
 /**

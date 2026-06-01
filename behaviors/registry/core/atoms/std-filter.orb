@@ -16,11 +16,15 @@
           },
           {
             "name": "field",
-            "type": "string"
+            "type": "string",
+            "description": "The name of the data field being filtered.",
+            "synonyms": "attribute, property, key"
           },
           {
             "name": "value",
-            "type": "string"
+            "type": "string",
+            "description": "The data associated with the filter criterion.",
+            "synonyms": "data, criterion, content"
           }
         ]
       },
@@ -94,10 +98,10 @@
                     "render-ui",
                     "main",
                     {
+                      "look": "@config.filterBarLook",
                       "entity": "FilterTarget",
                       "type": "filter-group",
-                      "filters": "@config.filters",
-                      "look": "@config.filterBarLook"
+                      "filters": "@config.filters"
                     }
                   ]
                 ]
@@ -121,10 +125,10 @@
                     "render-ui",
                     "main",
                     {
-                      "entity": "FilterTarget",
+                      "type": "filter-group",
                       "filters": "@config.filters",
                       "look": "@config.filterBarLook",
-                      "type": "filter-group"
+                      "entity": "FilterTarget"
                     }
                   ]
                 ]
@@ -158,8 +162,8 @@
                     {
                       "entity": "FilterTarget",
                       "look": "@config.filterBarLook",
-                      "type": "filter-group",
-                      "filters": "@config.filters"
+                      "filters": "@config.filters",
+                      "type": "filter-group"
                     }
                   ]
                 ]
@@ -167,13 +171,6 @@
             ]
           },
           "config": {
-            "event": {
-              "type": "string",
-              "default": "FILTER",
-              "label": "Filter event",
-              "description": "Event emitted when the user changes a filter selection",
-              "tier": "internal"
-            },
             "filterBarLook": {
               "type": "string",
               "default": "toolbar",
@@ -192,14 +189,14 @@
               "type": "[FilterSpec]",
               "default": [
                 {
+                  "field": "status",
+                  "label": "Status",
+                  "filterType": "select",
                   "options": [
                     "active",
                     "inactive",
                     "pending"
-                  ],
-                  "filterType": "select",
-                  "field": "status",
-                  "label": "Status"
+                  ]
                 }
               ],
               "label": "Filter controls",
@@ -218,11 +215,6 @@
                     "type": "string",
                     "required": true
                   },
-                  "filterType": {
-                    "name": "filterType",
-                    "type": "string",
-                    "required": false
-                  },
                   "options": {
                     "name": "options",
                     "type": "array",
@@ -230,9 +222,21 @@
                     "items": {
                       "type": "string"
                     }
+                  },
+                  "filterType": {
+                    "name": "filterType",
+                    "type": "string",
+                    "required": false
                   }
                 }
               }
+            },
+            "event": {
+              "type": "string",
+              "default": "FILTER",
+              "label": "Filter event",
+              "description": "Event emitted when the user changes a filter selection",
+              "tier": "internal"
             }
           },
           "scope": "instance"

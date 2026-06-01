@@ -78,15 +78,15 @@ export interface StdCrossReferenceLinkOpFailedPayload {
  */
 export interface StdCrossReferenceConfig {
   /** Default: `""` */
-  leftEntity?: string;
-  /** Default: `""` */
   junctionEntity?: string;
   /** Default: `""` */
-  leftIdField?: string;
+  leftEntity?: string;
   /** Default: `""` */
   rightEntity?: string;
   /** Default: `""` */
   rightIdField?: string;
+  /** Default: `""` */
+  leftIdField?: string;
 }
 
 /**

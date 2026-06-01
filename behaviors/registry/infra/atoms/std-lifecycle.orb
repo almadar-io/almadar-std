@@ -18,22 +18,30 @@
           {
             "name": "targetEntity",
             "type": "string",
-            "default": ""
+            "default": "",
+            "description": "The entity to which lifecycle rules apply.",
+            "synonyms": "subject, reference, target"
           },
           {
             "name": "recordCount",
             "type": "number",
-            "default": 0.0
+            "default": 0.0,
+            "description": "The number of records processed.",
+            "synonyms": "count, size, quantity"
           },
           {
             "name": "ranAt",
             "type": "number",
-            "default": 0.0
+            "default": 0.0,
+            "description": "Timestamp indicating when the lifecycle run occurred.",
+            "synonyms": "timestamp, execution time, run time"
           },
           {
             "name": "errors",
             "type": "string",
-            "default": ""
+            "default": "",
+            "description": "A textual description of any errors encountered.",
+            "synonyms": "error message, problem, issue, fault"
           }
         ]
       },
@@ -257,8 +265,8 @@
                   "LifecycleRunLog",
                   {
                     "emit": {
-                      "success": "ScanRecordsLoaded",
-                      "failure": "ScanFailed"
+                      "failure": "ScanFailed",
+                      "success": "ScanRecordsLoaded"
                     }
                   }
                 ]
@@ -266,19 +274,11 @@
             }
           ],
           "config": {
-            "enabled": {
+            "dryRun": {
               "type": "boolean",
               "default": false,
-              "label": "Enabled",
-              "description": "Whether the lifecycle scheduler is active for the host orbital. Off by default; turn on to enforce retention / status transitions.",
-              "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, retention, ttl, expire, archive after, sunset, lifecycle, age out, time-based status, scheduled transitions, expire old records, auto-archive",
-              "tier": "domain"
-            },
-            "targetEntity": {
-              "type": "string",
-              "default": "",
-              "label": "Target entity",
-              "description": "Entity name to scan (e.g. 'InvoiceRecord'). v1.1 will drive SET_STATUS transitions on this entity.",
+              "label": "Dry-run mode",
+              "description": "When true, log scan results without emitting transitions.",
               "tier": "domain"
             },
             "rules": {
@@ -290,23 +290,18 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "toStatus": {
-                    "name": "toStatus",
-                    "type": "string",
-                    "required": false
-                  },
                   "condition": {
                     "name": "condition",
                     "type": "object",
                     "required": false,
                     "properties": {
-                      "kind": {
-                        "name": "kind",
+                      "dateField": {
+                        "name": "dateField",
                         "type": "string",
                         "required": false
                       },
-                      "dateField": {
-                        "name": "dateField",
+                      "kind": {
+                        "name": "kind",
                         "type": "string",
                         "required": false
                       },
@@ -321,15 +316,28 @@
                     "name": "fromStatus",
                     "type": "string",
                     "required": false
+                  },
+                  "toStatus": {
+                    "name": "toStatus",
+                    "type": "string",
+                    "required": false
                   }
                 }
               }
             },
-            "dryRun": {
+            "enabled": {
               "type": "boolean",
               "default": false,
-              "label": "Dry-run mode",
-              "description": "When true, log scan results without emitting transitions.",
+              "label": "Enabled",
+              "description": "Whether the lifecycle scheduler is active for the host orbital. Off by default; turn on to enforce retention / status transitions.",
+              "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, retention, ttl, expire, archive after, sunset, lifecycle, age out, time-based status, scheduled transitions, expire old records, auto-archive",
+              "tier": "domain"
+            },
+            "targetEntity": {
+              "type": "string",
+              "default": "",
+              "label": "Target entity",
+              "description": "Entity name to scan (e.g. 'InvoiceRecord'). v1.1 will drive SET_STATUS transitions on this entity.",
               "tier": "domain"
             }
           },

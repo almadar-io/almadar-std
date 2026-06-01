@@ -17,11 +17,15 @@
           },
           {
             "name": "name",
-            "type": "string"
+            "type": "string",
+            "description": "A user-defined identifier for the session.",
+            "synonyms": "identifier, sessionName, title"
           },
           {
             "name": "description",
-            "type": "string"
+            "type": "string",
+            "description": "A textual explanation of the session's purpose or content.",
+            "synonyms": "summary, details, notes, explanation"
           },
           {
             "name": "status",
@@ -33,7 +37,9 @@
               "pending",
               "forked",
               "ended"
-            ]
+            ],
+            "description": "Current operational state of the session.",
+            "synonyms": "state, condition, mode"
           },
           {
             "name": "createdAt",
@@ -42,17 +48,23 @@
           {
             "name": "sessionId",
             "type": "string",
-            "default": ""
+            "default": "",
+            "description": "Unique identifier for a session.",
+            "synonyms": "session ID, session identifier"
           },
           {
             "name": "parentId",
             "type": "string",
-            "default": ""
+            "default": "",
+            "description": "Reference to the parent entity's identifier.",
+            "synonyms": "parent, reference, source"
           },
           {
             "name": "label",
             "type": "string",
-            "default": ""
+            "default": "",
+            "description": "A user-friendly identifier for the session.",
+            "synonyms": "title, identifier, display name"
           }
         ]
       },
@@ -419,22 +431,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
                       "align": "center",
-                      "type": "stack",
                       "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "type": "typography",
                           "content": "Loading sessions…",
                           "color": "muted",
-                          "type": "typography",
                           "variant": "caption"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -449,25 +461,22 @@
                     "main",
                     {
                       "type": "stack",
-                      "gap": "lg",
-                      "className": "max-w-5xl mx-auto w-full",
-                      "direction": "vertical",
                       "children": [
                         {
+                          "type": "stack",
                           "direction": "horizontal",
-                          "align": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "terminal"
+                              "name": "terminal",
+                              "type": "icon"
                             },
                             {
-                              "type": "typography",
                               "variant": "h2",
-                              "content": "AgentSession Manager"
+                              "content": "AgentSession Manager",
+                              "type": "typography"
                             }
                           ],
-                          "type": "stack",
+                          "align": "center",
                           "gap": "sm"
                         },
                         {
@@ -476,31 +485,31 @@
                         {
                           "itemActions": [
                             {
+                              "variant": "secondary",
                               "event": "FORK",
-                              "variant": "secondary",
-                              "label": "Fork",
-                              "icon": "git-branch"
+                              "icon": "git-branch",
+                              "label": "Fork"
                             },
                             {
-                              "variant": "secondary",
-                              "event": "LABEL",
                               "icon": "tag",
-                              "label": "Label"
+                              "variant": "secondary",
+                              "label": "Label",
+                              "event": "LABEL"
                             },
                             {
-                              "label": "End",
-                              "variant": "ghost",
                               "icon": "square",
-                              "event": "END"
+                              "event": "END",
+                              "label": "End",
+                              "variant": "ghost"
                             }
                           ],
-                          "entity": "@payload.data",
+                          "type": "data-grid",
                           "fields": [
                             {
-                              "variant": "h4",
-                              "icon": "terminal",
                               "label": "Session ID",
-                              "name": "sessionId"
+                              "variant": "h4",
+                              "name": "sessionId",
+                              "icon": "terminal"
                             },
                             {
                               "name": "status",
@@ -508,14 +517,17 @@
                               "variant": "badge"
                             },
                             {
-                              "name": "label",
                               "label": "Label",
-                              "variant": "caption"
+                              "variant": "caption",
+                              "name": "label"
                             }
                           ],
-                          "type": "data-grid"
+                          "entity": "@payload.data"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "className": "max-w-5xl mx-auto w-full"
                     }
                   ]
                 ]
@@ -529,9 +541,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "gap": "md",
-                      "align": "center",
+                      "direction": "vertical",
                       "children": [
                         {
                           "color": "destructive",
@@ -540,25 +551,26 @@
                         },
                         {
                           "variant": "h3",
-                          "type": "typography",
-                          "content": "Failed to load sessions"
+                          "content": "Failed to load sessions",
+                          "type": "typography"
                         },
                         {
-                          "color": "muted",
-                          "type": "typography",
+                          "variant": "body",
                           "content": "@payload.error",
-                          "variant": "body"
+                          "color": "muted",
+                          "type": "typography"
                         },
                         {
-                          "label": "Retry",
+                          "action": "INIT",
                           "type": "button",
-                          "variant": "primary",
                           "icon": "rotate-ccw",
-                          "action": "INIT"
+                          "variant": "primary",
+                          "label": "Retry"
                         }
                       ],
-                      "className": "py-12",
-                      "direction": "vertical"
+                      "align": "center",
+                      "type": "stack",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -596,17 +608,17 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
-                          "align": "center",
-                          "type": "stack",
                           "direction": "horizontal",
                           "gap": "sm",
+                          "type": "stack",
+                          "align": "center",
                           "children": [
                             {
-                              "name": "terminal",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "terminal"
                             },
                             {
                               "type": "typography",
@@ -621,48 +633,48 @@
                         {
                           "itemActions": [
                             {
+                              "variant": "secondary",
                               "label": "Fork",
                               "event": "FORK",
-                              "variant": "secondary",
                               "icon": "git-branch"
                             },
                             {
-                              "variant": "secondary",
                               "event": "LABEL",
-                              "label": "Label",
-                              "icon": "tag"
+                              "variant": "secondary",
+                              "icon": "tag",
+                              "label": "Label"
                             },
                             {
-                              "icon": "square",
                               "event": "END",
                               "variant": "ghost",
+                              "icon": "square",
                               "label": "End"
                             }
                           ],
+                          "type": "data-grid",
+                          "entity": "@payload.data",
                           "fields": [
                             {
-                              "name": "sessionId",
                               "label": "Session ID",
+                              "name": "sessionId",
                               "variant": "h4",
                               "icon": "terminal"
                             },
                             {
+                              "name": "status",
                               "variant": "badge",
-                              "label": "Status",
-                              "name": "status"
+                              "label": "Status"
                             },
                             {
                               "name": "label",
-                              "label": "Label",
-                              "variant": "caption"
+                              "variant": "caption",
+                              "label": "Label"
                             }
-                          ],
-                          "type": "data-grid",
-                          "entity": "@payload.data"
+                          ]
                         }
                       ],
+                      "direction": "vertical",
                       "gap": "lg",
-                      "type": "stack",
                       "className": "max-w-5xl mx-auto w-full"
                     }
                   ]
@@ -677,36 +689,36 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "direction": "vertical",
                       "gap": "md",
+                      "className": "py-12",
                       "children": [
                         {
-                          "color": "destructive",
+                          "type": "icon",
                           "name": "alert-triangle",
-                          "type": "icon"
+                          "color": "destructive"
                         },
                         {
-                          "variant": "h3",
                           "content": "Failed to load sessions",
+                          "variant": "h3",
                           "type": "typography"
                         },
                         {
-                          "type": "typography",
                           "content": "@payload.error",
+                          "variant": "body",
                           "color": "muted",
-                          "variant": "body"
+                          "type": "typography"
                         },
                         {
-                          "icon": "rotate-ccw",
+                          "variant": "primary",
                           "action": "INIT",
-                          "label": "Retry",
+                          "icon": "rotate-ccw",
                           "type": "button",
-                          "variant": "primary"
+                          "label": "Retry"
                         }
                       ],
-                      "align": "center",
-                      "className": "py-12",
-                      "type": "stack"
+                      "align": "center"
                     }
                   ]
                 ]
@@ -721,8 +733,8 @@
                     "AgentSession",
                     {
                       "emit": {
-                        "failure": "AgentSessionLoadFailed",
-                        "success": "AgentSessionLoaded"
+                        "success": "AgentSessionLoaded",
+                        "failure": "AgentSessionLoadFailed"
                       }
                     }
                   ],
@@ -942,21 +954,22 @@
                     "render-ui",
                     "modal",
                     {
+                      "type": "stack",
                       "children": [
                         {
-                          "direction": "horizontal",
+                          "type": "stack",
                           "children": [
                             {
                               "type": "icon",
                               "name": "tag"
                             },
                             {
+                              "content": "Label Session",
                               "variant": "h3",
-                              "type": "typography",
-                              "content": "Label Session"
+                              "type": "typography"
                             }
                           ],
-                          "type": "stack",
+                          "direction": "horizontal",
                           "gap": "sm"
                         },
                         {
@@ -965,16 +978,15 @@
                         {
                           "submitEvent": "SAVE",
                           "cancelEvent": "CLOSE",
+                          "mode": "edit",
                           "entity": "@payload.row",
                           "type": "form-section",
-                          "mode": "edit",
                           "fields": [
                             "label"
                           ]
                         }
                       ],
                       "gap": "md",
-                      "type": "stack",
                       "direction": "vertical"
                     }
                   ]
@@ -1011,8 +1023,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "success": "AgentSessionUpdated",
-                        "failure": "AgentSessionUpdateFailed"
+                        "failure": "AgentSessionUpdateFailed",
+                        "success": "AgentSessionUpdated"
                       }
                     }
                   ],
@@ -1315,8 +1327,8 @@
                     "AgentSession",
                     {
                       "emit": {
-                        "success": "AgentSessionLoaded",
-                        "failure": "AgentSessionLoadFailed"
+                        "failure": "AgentSessionLoadFailed",
+                        "success": "AgentSessionLoaded"
                       }
                     }
                   ],
@@ -1324,10 +1336,10 @@
                     "render-ui",
                     "main",
                     {
-                      "icon": "git-branch",
-                      "description": "Session is ready",
+                      "type": "empty-state",
                       "title": "Session",
-                      "type": "empty-state"
+                      "icon": "git-branch",
+                      "description": "Session is ready"
                     }
                   ]
                 ]
@@ -1345,9 +1357,9 @@
                     "create",
                     "AgentSession",
                     {
+                      "createdAt": "@now",
                       "status": "forked",
-                      "parentId": "@payload.row.id",
-                      "createdAt": "@now"
+                      "parentId": "@payload.row.id"
                     },
                     {
                       "emit": {
@@ -1386,13 +1398,13 @@
                     "update",
                     "AgentSession",
                     {
-                      "status": "ended",
-                      "id": "@payload.row.id"
+                      "id": "@payload.row.id",
+                      "status": "ended"
                     },
                     {
                       "emit": {
-                        "success": "AgentSessionUpdated",
-                        "failure": "AgentSessionUpdateFailed"
+                        "failure": "AgentSessionUpdateFailed",
+                        "success": "AgentSessionUpdated"
                       }
                     }
                   ],
@@ -1424,8 +1436,8 @@
                     },
                     {
                       "emit": {
-                        "failure": "AgentSessionSaveFailed",
-                        "success": "AgentSessionSaved"
+                        "success": "AgentSessionSaved",
+                        "failure": "AgentSessionSaveFailed"
                       }
                     }
                   ],
@@ -1453,8 +1465,8 @@
                     },
                     {
                       "emit": {
-                        "failure": "AgentSessionUpdateFailed",
-                        "success": "AgentSessionUpdated"
+                        "success": "AgentSessionUpdated",
+                        "failure": "AgentSessionUpdateFailed"
                       }
                     }
                   ],
@@ -1486,10 +1498,10 @@
                     "render-ui",
                     "main",
                     {
-                      "icon": "git-branch",
-                      "type": "empty-state",
+                      "title": "Session",
                       "description": "Session is ready",
-                      "title": "Session"
+                      "icon": "git-branch",
+                      "type": "empty-state"
                     }
                   ]
                 ]
@@ -1507,14 +1519,14 @@
                     "create",
                     "AgentSession",
                     {
-                      "createdAt": "@now",
                       "status": "forked",
-                      "parentId": "@payload.row.id"
+                      "parentId": "@payload.row.id",
+                      "createdAt": "@now"
                     },
                     {
                       "emit": {
-                        "success": "AgentSessionSaved",
-                        "failure": "AgentSessionSaveFailed"
+                        "failure": "AgentSessionSaveFailed",
+                        "success": "AgentSessionSaved"
                       }
                     }
                   ],

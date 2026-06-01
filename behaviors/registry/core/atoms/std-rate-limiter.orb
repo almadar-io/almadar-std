@@ -15,11 +15,15 @@
           },
           {
             "name": "name",
-            "type": "string"
+            "type": "string",
+            "description": "A user-defined identifier for the rate limiting bucket.",
+            "synonyms": "label, identifier, alias"
           },
           {
             "name": "description",
-            "type": "string"
+            "type": "string",
+            "description": "A textual explanation of the rate bucket's purpose.",
+            "synonyms": "explanation, details, notes"
           },
           {
             "name": "status",
@@ -29,7 +33,9 @@
               "active",
               "inactive",
               "pending"
-            ]
+            ],
+            "description": "Current operational state of the rate limiting bucket.",
+            "synonyms": "state, condition, operationalStatus"
           },
           {
             "name": "createdAt",
@@ -38,17 +44,23 @@
           {
             "name": "count",
             "type": "number",
-            "default": 0.0
+            "default": 0.0,
+            "description": "The current value of a counter.",
+            "synonyms": "value, amount, total"
           },
           {
             "name": "window",
             "type": "number",
-            "default": 0.0
+            "default": 0.0,
+            "description": "The duration of the rate limiting window, in seconds.",
+            "synonyms": "duration, time, interval, period"
           },
           {
             "name": "limiterStatus",
             "type": "string",
-            "default": "open"
+            "default": "open",
+            "description": "Current operational state of the rate limiter.",
+            "synonyms": "state, condition, mode"
           }
         ]
       },
@@ -113,45 +125,45 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
-                          "justify": "between",
                           "direction": "horizontal",
                           "gap": "md",
-                          "align": "center",
                           "type": "stack",
+                          "justify": "between",
                           "children": [
                             {
-                              "direction": "horizontal",
                               "gap": "md",
-                              "type": "stack",
-                              "align": "center",
                               "children": [
                                 {
                                   "type": "icon",
                                   "name": "shield"
                                 },
                                 {
+                                  "type": "typography",
                                   "content": "RateBucket Rate Limiter",
-                                  "variant": "h2",
-                                  "type": "typography"
+                                  "variant": "h2"
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "align": "center"
                             },
                             {
                               "status": "online",
-                              "type": "status-dot",
                               "label": "Open",
+                              "type": "status-dot",
                               "pulse": false
                             }
-                          ]
+                          ],
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "simple-grid",
-                          "cols": 2.0,
                           "children": [
                             {
                               "type": "stat-display",
@@ -160,50 +172,50 @@
                               "label": "Requests"
                             },
                             {
-                              "look": "@config.statLook",
                               "type": "stat-display",
+                              "look": "@config.statLook",
                               "label": "Window",
                               "value": "@entity.window"
                             }
-                          ]
+                          ],
+                          "type": "simple-grid",
+                          "cols": 2.0
                         },
                         {
-                          "max": 100.0,
+                          "type": "meter",
+                          "value": "@entity.count",
                           "min": 0.0,
-                          "value": "@entity.count",
-                          "type": "meter"
+                          "max": 100.0
                         },
                         {
                           "max": 100.0,
+                          "type": "progress-bar",
                           "value": "@entity.count",
-                          "showPercentage": true,
-                          "type": "progress-bar"
+                          "showPercentage": true
                         },
                         {
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "button",
-                              "action": "REQUEST",
                               "label": "Request",
-                              "variant": "primary",
-                              "icon": "send"
+                              "icon": "send",
+                              "action": "REQUEST",
+                              "type": "button",
+                              "variant": "primary"
                             },
                             {
-                              "variant": "ghost",
-                              "type": "button",
                               "label": "Reset",
+                              "variant": "ghost",
                               "action": "RESET",
-                              "icon": "rotate-ccw"
+                              "icon": "rotate-ccw",
+                              "type": "button"
                             }
                           ],
-                          "direction": "horizontal",
+                          "gap": "sm",
                           "justify": "center",
-                          "type": "stack",
-                          "gap": "sm"
+                          "direction": "horizontal"
                         }
                       ],
-                      "direction": "vertical",
-                      "type": "stack",
                       "gap": "lg"
                     }
                   ]
@@ -219,77 +231,75 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
+                      "gap": "lg",
                       "children": [
                         {
+                          "direction": "horizontal",
                           "justify": "between",
+                          "type": "stack",
+                          "gap": "md",
                           "children": [
                             {
                               "type": "stack",
-                              "gap": "md",
-                              "align": "center",
                               "children": [
                                 {
-                                  "name": "shield",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "shield"
                                 },
                                 {
                                   "content": "RateBucket Rate Limiter",
-                                  "variant": "h2",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "variant": "h2"
                                 }
                               ],
+                              "align": "center",
+                              "gap": "md",
                               "direction": "horizontal"
                             },
                             {
-                              "status": "online",
-                              "label": "Open",
                               "pulse": false,
-                              "type": "status-dot"
+                              "type": "status-dot",
+                              "status": "online",
+                              "label": "Open"
                             }
                           ],
-                          "gap": "md",
-                          "direction": "horizontal",
-                          "align": "center",
-                          "type": "stack"
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "cols": 2.0,
-                          "type": "simple-grid",
                           "children": [
                             {
                               "value": "@entity.count",
                               "label": "Requests",
-                              "look": "@config.statLook",
-                              "type": "stat-display"
+                              "type": "stat-display",
+                              "look": "@config.statLook"
                             },
                             {
-                              "label": "Window",
-                              "type": "stat-display",
                               "value": "@entity.window",
+                              "type": "stat-display",
+                              "label": "Window",
                               "look": "@config.statLook"
                             }
-                          ]
+                          ],
+                          "cols": 2.0,
+                          "type": "simple-grid"
                         },
                         {
-                          "type": "meter",
                           "value": "@entity.count",
                           "min": 0.0,
+                          "type": "meter",
                           "max": 100.0
                         },
                         {
-                          "value": "@entity.count",
-                          "showPercentage": true,
                           "type": "progress-bar",
+                          "showPercentage": true,
+                          "value": "@entity.count",
                           "max": 100.0
                         },
                         {
-                          "type": "stack",
-                          "gap": "sm",
+                          "direction": "horizontal",
                           "justify": "center",
                           "children": [
                             {
@@ -300,17 +310,19 @@
                               "action": "REQUEST"
                             },
                             {
-                              "action": "RESET",
-                              "variant": "ghost",
-                              "type": "button",
                               "label": "Reset",
+                              "type": "button",
+                              "variant": "ghost",
+                              "action": "RESET",
                               "icon": "rotate-ccw"
                             }
                           ],
-                          "direction": "horizontal"
+                          "type": "stack",
+                          "gap": "sm"
                         }
                       ],
-                      "gap": "lg"
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -334,83 +346,83 @@
                       "direction": "vertical",
                       "children": [
                         {
+                          "justify": "between",
                           "children": [
                             {
-                              "gap": "md",
                               "type": "stack",
-                              "align": "center",
                               "direction": "horizontal",
+                              "gap": "md",
+                              "align": "center",
                               "children": [
                                 {
                                   "type": "icon",
                                   "name": "shield"
                                 },
                                 {
-                                  "content": "RateBucket Rate Limiter",
                                   "variant": "h2",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "content": "RateBucket Rate Limiter"
                                 }
                               ]
                             },
                             {
+                              "type": "status-dot",
                               "label": "Throttled",
                               "status": "critical",
-                              "pulse": true,
-                              "type": "status-dot"
+                              "pulse": true
                             }
                           ],
                           "direction": "horizontal",
-                          "type": "stack",
-                          "justify": "between",
                           "gap": "md",
+                          "type": "stack",
                           "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "variant": "error",
                           "type": "alert",
-                          "message": "Rate limit exceeded. Requests are being throttled."
+                          "message": "Rate limit exceeded. Requests are being throttled.",
+                          "variant": "error"
                         },
                         {
+                          "cols": 2.0,
                           "children": [
                             {
                               "type": "stat-display",
-                              "look": "@config.statLook",
                               "value": "@entity.count",
+                              "look": "@config.statLook",
                               "label": "Requests"
                             },
                             {
+                              "type": "stat-display",
                               "value": "@entity.window",
                               "look": "@config.statLook",
-                              "type": "stat-display",
                               "label": "Window"
                             }
                           ],
-                          "type": "simple-grid",
-                          "cols": 2.0
+                          "type": "simple-grid"
                         },
                         {
-                          "type": "meter",
-                          "min": 0.0,
+                          "value": "@entity.count",
                           "max": 100.0,
-                          "value": "@entity.count"
+                          "min": 0.0,
+                          "type": "meter"
                         },
                         {
-                          "gap": "sm",
-                          "type": "stack",
                           "direction": "horizontal",
+                          "gap": "sm",
                           "justify": "center",
                           "children": [
                             {
-                              "label": "Reset",
-                              "variant": "primary",
+                              "action": "RESET",
                               "type": "button",
-                              "icon": "rotate-ccw",
-                              "action": "RESET"
+                              "variant": "primary",
+                              "label": "Reset",
+                              "icon": "rotate-ccw"
                             }
-                          ]
+                          ],
+                          "type": "stack"
                         }
                       ]
                     }
@@ -436,38 +448,37 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "lg",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "align": "center",
                           "direction": "horizontal",
+                          "align": "center",
+                          "gap": "md",
                           "type": "stack",
                           "justify": "between",
-                          "gap": "md",
                           "children": [
                             {
-                              "align": "center",
+                              "gap": "md",
                               "children": [
                                 {
                                   "type": "icon",
                                   "name": "shield"
                                 },
                                 {
-                                  "content": "RateBucket Rate Limiter",
+                                  "variant": "h2",
                                   "type": "typography",
-                                  "variant": "h2"
+                                  "content": "RateBucket Rate Limiter"
                                 }
                               ],
-                              "gap": "md",
                               "direction": "horizontal",
+                              "align": "center",
                               "type": "stack"
                             },
                             {
-                              "label": "Open",
                               "type": "status-dot",
+                              "pulse": false,
                               "status": "online",
-                              "pulse": false
+                              "label": "Open"
                             }
                           ]
                         },
@@ -475,13 +486,14 @@
                           "type": "divider"
                         },
                         {
+                          "type": "simple-grid",
                           "cols": 2.0,
                           "children": [
                             {
+                              "look": "@config.statLook",
                               "label": "Requests",
-                              "value": "@entity.count",
                               "type": "stat-display",
-                              "look": "@config.statLook"
+                              "value": "@entity.count"
                             },
                             {
                               "label": "Window",
@@ -489,45 +501,45 @@
                               "look": "@config.statLook",
                               "type": "stat-display"
                             }
-                          ],
-                          "type": "simple-grid"
+                          ]
                         },
                         {
-                          "value": "@entity.count",
-                          "min": 0.0,
                           "type": "meter",
-                          "max": 100.0
-                        },
-                        {
-                          "type": "progress-bar",
                           "max": 100.0,
-                          "showPercentage": true,
+                          "min": 0.0,
                           "value": "@entity.count"
                         },
                         {
+                          "value": "@entity.count",
+                          "max": 100.0,
+                          "type": "progress-bar",
+                          "showPercentage": true
+                        },
+                        {
                           "type": "stack",
+                          "justify": "center",
+                          "gap": "sm",
                           "direction": "horizontal",
                           "children": [
                             {
-                              "label": "Request",
-                              "icon": "send",
-                              "type": "button",
                               "action": "REQUEST",
+                              "icon": "send",
+                              "label": "Request",
+                              "type": "button",
                               "variant": "primary"
                             },
                             {
-                              "variant": "ghost",
                               "type": "button",
-                              "icon": "rotate-ccw",
                               "action": "RESET",
-                              "label": "Reset"
+                              "variant": "ghost",
+                              "label": "Reset",
+                              "icon": "rotate-ccw"
                             }
-                          ],
-                          "gap": "sm",
-                          "justify": "center"
+                          ]
                         }
                       ],
-                      "direction": "vertical"
+                      "type": "stack",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -551,31 +563,27 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
                       "children": [
                         {
-                          "gap": "md",
-                          "align": "center",
-                          "justify": "between",
                           "type": "stack",
                           "direction": "horizontal",
+                          "gap": "md",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
                               "align": "center",
                               "children": [
                                 {
-                                  "name": "shield",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "shield"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "RateBucket Rate Limiter",
+                                  "type": "typography",
                                   "variant": "h2"
                                 }
                               ],
+                              "type": "stack",
+                              "direction": "horizontal",
                               "gap": "md"
                             },
                             {
@@ -584,7 +592,9 @@
                               "pulse": false,
                               "type": "status-dot"
                             }
-                          ]
+                          ],
+                          "align": "center",
+                          "justify": "between"
                         },
                         {
                           "type": "divider"
@@ -593,55 +603,57 @@
                           "cols": 2.0,
                           "children": [
                             {
+                              "look": "@config.statLook",
                               "label": "Requests",
-                              "value": "@entity.count",
                               "type": "stat-display",
-                              "look": "@config.statLook"
+                              "value": "@entity.count"
                             },
                             {
-                              "label": "Window",
-                              "look": "@config.statLook",
                               "type": "stat-display",
-                              "value": "@entity.window"
+                              "value": "@entity.window",
+                              "look": "@config.statLook",
+                              "label": "Window"
                             }
                           ],
                           "type": "simple-grid"
                         },
                         {
-                          "min": 0.0,
-                          "type": "meter",
-                          "value": "@entity.count",
-                          "max": 100.0
-                        },
-                        {
-                          "type": "progress-bar",
                           "max": 100.0,
-                          "showPercentage": true,
+                          "type": "meter",
+                          "min": 0.0,
                           "value": "@entity.count"
                         },
                         {
+                          "max": 100.0,
+                          "type": "progress-bar",
+                          "value": "@entity.count",
+                          "showPercentage": true
+                        },
+                        {
                           "gap": "sm",
+                          "justify": "center",
                           "direction": "horizontal",
                           "type": "stack",
                           "children": [
                             {
-                              "variant": "primary",
-                              "action": "REQUEST",
-                              "icon": "send",
+                              "label": "Request",
                               "type": "button",
-                              "label": "Request"
+                              "variant": "primary",
+                              "icon": "send",
+                              "action": "REQUEST"
                             },
                             {
-                              "icon": "rotate-ccw",
-                              "type": "button",
+                              "action": "RESET",
                               "label": "Reset",
+                              "icon": "rotate-ccw",
                               "variant": "ghost",
-                              "action": "RESET"
+                              "type": "button"
                             }
-                          ],
-                          "justify": "center"
+                          ]
                         }
                       ],
+                      "direction": "vertical",
+                      "type": "stack",
                       "gap": "lg"
                     }
                   ]
@@ -656,18 +668,16 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
+                          "gap": "md",
                           "type": "stack",
                           "direction": "horizontal",
-                          "justify": "between",
+                          "align": "center",
                           "children": [
                             {
-                              "direction": "horizontal",
-                              "gap": "md",
                               "type": "stack",
+                              "direction": "horizontal",
                               "align": "center",
                               "children": [
                                 {
@@ -676,70 +686,72 @@
                                 },
                                 {
                                   "variant": "h2",
-                                  "type": "typography",
-                                  "content": "RateBucket Rate Limiter"
+                                  "content": "RateBucket Rate Limiter",
+                                  "type": "typography"
                                 }
-                              ]
+                              ],
+                              "gap": "md"
                             },
                             {
                               "type": "status-dot",
                               "pulse": true,
-                              "label": "Throttled",
-                              "status": "critical"
+                              "status": "critical",
+                              "label": "Throttled"
                             }
                           ],
-                          "gap": "md",
-                          "align": "center"
+                          "justify": "between"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "message": "Rate limit exceeded. Requests are being throttled.",
                           "type": "alert",
-                          "variant": "error"
+                          "variant": "error",
+                          "message": "Rate limit exceeded. Requests are being throttled."
                         },
                         {
-                          "cols": 2.0,
-                          "type": "simple-grid",
                           "children": [
                             {
-                              "value": "@entity.count",
-                              "look": "@config.statLook",
+                              "type": "stat-display",
                               "label": "Requests",
-                              "type": "stat-display"
+                              "look": "@config.statLook",
+                              "value": "@entity.count"
                             },
                             {
+                              "value": "@entity.window",
                               "look": "@config.statLook",
                               "label": "Window",
-                              "type": "stat-display",
-                              "value": "@entity.window"
+                              "type": "stat-display"
                             }
-                          ]
+                          ],
+                          "cols": 2.0,
+                          "type": "simple-grid"
                         },
                         {
-                          "type": "meter",
                           "min": 0.0,
+                          "type": "meter",
                           "value": "@entity.count",
                           "max": 100.0
                         },
                         {
-                          "gap": "sm",
+                          "justify": "center",
                           "type": "stack",
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "variant": "primary",
                               "type": "button",
-                              "label": "Reset",
                               "action": "RESET",
-                              "icon": "rotate-ccw"
+                              "variant": "primary",
+                              "icon": "rotate-ccw",
+                              "label": "Reset"
                             }
                           ],
-                          "justify": "center"
+                          "gap": "sm",
+                          "direction": "horizontal"
                         }
                       ],
-                      "gap": "lg"
+                      "gap": "lg",
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -747,6 +759,14 @@
             ]
           },
           "config": {
+            "requestsPerMinute": {
+              "type": "number",
+              "default": 60.0,
+              "label": "Requests per minute",
+              "description": "Maximum number of requests allowed per minute before throttling begins.",
+              "synonyms": "rate limit, request cap, RPS, throttle threshold",
+              "tier": "domain"
+            },
             "enabled": {
               "type": "boolean",
               "default": false,
@@ -755,21 +775,30 @@
               "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, rate limit, throttle, requests per minute, slow down, cap usage, request cap, limit traffic, prevent abuse",
               "tier": "domain"
             },
-            "burstSize": {
-              "type": "number",
-              "default": 10.0,
-              "label": "Burst size",
-              "description": "Requests allowed to burst above the per-minute rate before steady-state throttling kicks in. Lower burst = strict/no-spikes; higher burst = forgiving/allow-spikes.",
-              "synonyms": "burst capacity, allowance, spike allowance, no-spike (low) vs allow-bursts (high)",
-              "tier": "domain"
+            "statLook": {
+              "type": "string",
+              "default": "elevated",
+              "label": "Stat display look",
+              "description": "Layer 2 visual treatment for stat / KPI cards.",
+              "tier": "presentation",
+              "values": [
+                "elevated",
+                "flat",
+                "progress-backed",
+                "gauge",
+                "sparkline"
+              ]
             },
-            "requestsPerMinute": {
-              "type": "number",
-              "default": 60.0,
-              "label": "Requests per minute",
-              "description": "Maximum number of requests allowed per minute before throttling begins.",
-              "synonyms": "rate limit, request cap, RPS, throttle threshold",
-              "tier": "domain"
+            "overrideRoles": {
+              "type": "[string]",
+              "default": [],
+              "label": "Override roles",
+              "description": "Roles exempt from rate limiting (e.g. internal services, admin override). Empty = no exemptions.",
+              "synonyms": "exempt roles, bypass list",
+              "tier": "domain",
+              "items": {
+                "type": "string"
+              }
             },
             "keyStrategy": {
               "type": "string",
@@ -785,30 +814,13 @@
                 "global"
               ]
             },
-            "overrideRoles": {
-              "type": "[string]",
-              "default": [],
-              "label": "Override roles",
-              "description": "Roles exempt from rate limiting (e.g. internal services, admin override). Empty = no exemptions.",
-              "synonyms": "exempt roles, bypass list",
-              "tier": "domain",
-              "items": {
-                "type": "string"
-              }
-            },
-            "statLook": {
-              "type": "string",
-              "default": "elevated",
-              "label": "Stat display look",
-              "description": "Layer 2 visual treatment for stat / KPI cards.",
-              "tier": "presentation",
-              "values": [
-                "elevated",
-                "flat",
-                "progress-backed",
-                "gauge",
-                "sparkline"
-              ]
+            "burstSize": {
+              "type": "number",
+              "default": 10.0,
+              "label": "Burst size",
+              "description": "Requests allowed to burst above the per-minute rate before steady-state throttling kicks in. Lower burst = strict/no-spikes; higher burst = forgiving/allow-spikes.",
+              "synonyms": "burst capacity, allowance, spike allowance, no-spike (low) vs allow-bursts (high)",
+              "tier": "domain"
             }
           },
           "scope": "collection"

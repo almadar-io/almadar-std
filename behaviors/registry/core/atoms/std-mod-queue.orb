@@ -18,12 +18,16 @@
           {
             "name": "targetId",
             "type": "string",
-            "required": true
+            "required": true,
+            "description": "Unique identifier for the item being moderated.",
+            "synonyms": "item id, reference id, identifier"
           },
           {
             "name": "targetType",
             "type": "string",
-            "required": true
+            "required": true,
+            "description": "Specifies the kind of item being moderated.",
+            "synonyms": "item type, content type, object type"
           },
           {
             "name": "reason",
@@ -35,11 +39,15 @@
               "misinformation",
               "nsfw",
               "other"
-            ]
+            ],
+            "description": "The justification for flagging the content.",
+            "synonyms": "flag reason, justification, cause"
           },
           {
             "name": "flagCount",
-            "type": "number"
+            "type": "number",
+            "description": "The number of times this item has been flagged.",
+            "synonyms": "flags, flag_count, count"
           },
           {
             "name": "status",
@@ -50,19 +58,27 @@
               "approved",
               "rejected",
               "escalated"
-            ]
+            ],
+            "description": "Current state of the moderation item.",
+            "synonyms": "state, condition, stage"
           },
           {
             "name": "reviewedBy",
-            "type": "string"
+            "type": "string",
+            "description": "The user who performed the review action.",
+            "synonyms": "reviewer, reviewerId, assignedTo"
           },
           {
             "name": "reviewedAt",
-            "type": "string"
+            "type": "string",
+            "description": "Timestamp indicating when the item was last reviewed.",
+            "synonyms": "review date, review time, last reviewed"
           },
           {
             "name": "notes",
-            "type": "string"
+            "type": "string",
+            "description": "Free-text comments or observations related to the item.",
+            "synonyms": "comment, remark, observation, details"
           }
         ]
       },
@@ -435,22 +451,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "type": "stack",
-                      "align": "center",
-                      "direction": "vertical",
                       "className": "py-12",
+                      "align": "center",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "content": "Loading moderation queue…",
-                          "variant": "caption",
                           "color": "muted",
-                          "type": "typography"
+                          "type": "typography",
+                          "variant": "caption"
                         }
-                      ]
+                      ],
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -464,22 +480,23 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
+                          "type": "stack",
                           "children": [
                             {
                               "type": "icon",
                               "name": "shield-alert"
                             },
                             {
-                              "type": "typography",
+                              "content": "@config.title",
                               "variant": "h3",
-                              "content": "@config.title"
+                              "type": "typography"
                             }
                           ],
-                          "type": "stack",
                           "direction": "horizontal",
                           "gap": "sm"
                         },
@@ -489,26 +506,29 @@
                         {
                           "itemActions": [
                             {
-                              "variant": "primary",
-                              "label": "Approve",
                               "event": "APPROVE",
+                              "label": "Approve",
+                              "variant": "primary",
                               "icon": "check"
                             },
                             {
-                              "label": "Reject",
                               "variant": "danger",
                               "icon": "x",
+                              "label": "Reject",
                               "event": "REJECT"
                             },
                             {
+                              "label": "Escalate",
                               "variant": "secondary",
                               "icon": "alert-triangle",
-                              "event": "ESCALATE",
-                              "label": "Escalate"
+                              "event": "ESCALATE"
                             }
                           ],
                           "entity": "@payload.data",
+                          "look": "@config.tableLook",
                           "type": "data-grid",
+                          "gap": "sm",
+                          "cols": 1.0,
                           "fields": [
                             {
                               "name": "targetType",
@@ -517,26 +537,22 @@
                             },
                             {
                               "name": "reason",
-                              "variant": "caption",
-                              "label": "Reason"
+                              "label": "Reason",
+                              "variant": "caption"
                             },
                             {
-                              "variant": "caption",
                               "name": "flagCount",
-                              "label": "Flags"
+                              "label": "Flags",
+                              "variant": "caption"
                             },
                             {
-                              "name": "status",
                               "variant": "badge",
-                              "label": "Status"
+                              "label": "Status",
+                              "name": "status"
                             }
-                          ],
-                          "cols": 1.0,
-                          "look": "@config.tableLook",
-                          "gap": "sm"
+                          ]
                         }
-                      ],
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -567,8 +583,8 @@
                     "update",
                     "ModQueueItem",
                     {
-                      "id": "@payload.row.id",
-                      "status": "approved"
+                      "status": "approved",
+                      "id": "@payload.row.id"
                     },
                     {
                       "emit": {
@@ -616,8 +632,8 @@
                     },
                     {
                       "emit": {
-                        "failure": "ModQueueItemReviewFailed",
-                        "success": "ModQueueItemReviewed"
+                        "success": "ModQueueItemReviewed",
+                        "failure": "ModQueueItemReviewFailed"
                       }
                     }
                   ]
@@ -633,8 +649,8 @@
                     "ModQueueItem",
                     {
                       "emit": {
-                        "failure": "ModQueueItemLoadFailed",
-                        "success": "ModQueueItemLoaded"
+                        "success": "ModQueueItemLoaded",
+                        "failure": "ModQueueItemLoadFailed"
                       }
                     }
                   ]
@@ -649,8 +665,8 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
                       "type": "alert",
+                      "variant": "error",
                       "message": "@payload.error"
                     }
                   ]
@@ -666,8 +682,8 @@
                     "ModQueueItem",
                     {
                       "emit": {
-                        "success": "ModQueueItemLoaded",
-                        "failure": "ModQueueItemLoadFailed"
+                        "failure": "ModQueueItemLoadFailed",
+                        "success": "ModQueueItemLoaded"
                       }
                     }
                   ],
@@ -684,21 +700,6 @@
             ]
           },
           "config": {
-            "enabled": {
-              "type": "boolean",
-              "default": false,
-              "label": "Enabled",
-              "description": "Whether the moderation queue is active for the host orbital. Off by default; turn on to surface flagged content for review.",
-              "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, moderation, moderation queue, content review queue, flag for review, content moderation, review flagged content, abuse review, spam queue, report queue",
-              "tier": "domain"
-            },
-            "title": {
-              "type": "string",
-              "default": "Moderation Queue",
-              "label": "Section title",
-              "description": "Heading shown above the moderation queue",
-              "tier": "presentation"
-            },
             "autoEscalateThreshold": {
               "type": "number",
               "default": 5.0,
@@ -719,6 +720,21 @@
                 "borderless",
                 "card-rows"
               ]
+            },
+            "title": {
+              "type": "string",
+              "default": "Moderation Queue",
+              "label": "Section title",
+              "description": "Heading shown above the moderation queue",
+              "tier": "presentation"
+            },
+            "enabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Enabled",
+              "description": "Whether the moderation queue is active for the host orbital. Off by default; turn on to surface flagged content for review.",
+              "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, moderation, moderation queue, content review queue, flag for review, content moderation, review flagged content, abuse review, spam queue, report queue",
+              "tier": "domain"
             }
           },
           "scope": "collection"

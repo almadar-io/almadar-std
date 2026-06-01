@@ -23,27 +23,37 @@
           },
           {
             "name": "parentId",
-            "type": "string"
+            "type": "string",
+            "description": "Identifier of the comment this comment replies to.",
+            "synonyms": "parent, replyTo, source"
           },
           {
             "name": "threadRootId",
             "type": "string",
-            "required": true
+            "required": true,
+            "description": "Identifier of the top-level comment in the thread.",
+            "synonyms": "rootId, topLevelId, originId"
           },
           {
             "name": "authorId",
             "type": "string",
-            "required": true
+            "required": true,
+            "description": "Unique identifier for the comment's author.",
+            "synonyms": "user identifier, author reference, contributor ID"
           },
           {
             "name": "authorName",
             "type": "string",
-            "required": true
+            "required": true,
+            "description": "The name of the comment's author.",
+            "synonyms": "author, user, contributor"
           },
           {
             "name": "content",
             "type": "string",
-            "required": true
+            "required": true,
+            "description": "The text of the comment or post.",
+            "synonyms": "text, body, message, postContent"
           },
           {
             "name": "createdAt",
@@ -52,12 +62,16 @@
           {
             "name": "voteCount",
             "type": "number",
-            "default": 0.0
+            "default": 0.0,
+            "description": "The number of votes or ratings associated with the comment.",
+            "synonyms": "rating, score, likes, upvotes"
           },
           {
             "name": "replyCount",
             "type": "number",
-            "default": 0.0
+            "default": 0.0,
+            "description": "The number of replies to this comment.",
+            "synonyms": "child comments, responses, sub-comments"
           },
           {
             "name": "replies",
@@ -65,12 +79,16 @@
             "relation": {
               "entity": "CommentsLinearPost",
               "cardinality": "many"
-            }
+            },
+            "description": "A list of child comments in the thread.",
+            "synonyms": "replies, children, descendants"
           },
           {
             "name": "focusedRow",
             "type": "object",
-            "default": {}
+            "default": {},
+            "description": "The currently selected comment within the comment thread.",
+            "synonyms": "selected, active, highlighted"
           }
         ]
       },
@@ -81,83 +99,83 @@
           "linkedEntity": "CommentsLinearPost",
           "config": {
             "bodyContent": {
-              "direction": "vertical",
               "className": "w-full px-card-md py-section",
-              "gap": "lg",
+              "type": "stack",
               "children": [
                 {
-                  "type": "stack",
-                  "align": "center",
-                  "gap": "sm",
                   "direction": "horizontal",
                   "children": [
                     {
-                      "size": "md",
+                      "name": "message-square",
                       "type": "icon",
-                      "name": "message-square"
+                      "size": "md"
                     },
                     {
                       "content": "@config.sectionTitle",
                       "type": "typography",
                       "variant": "h3"
                     }
-                  ]
+                  ],
+                  "type": "stack",
+                  "gap": "sm",
+                  "align": "center"
                 },
                 {
+                  "look": "flat-bordered",
+                  "type": "card",
+                  "padding": "md",
                   "children": {
+                    "gap": "sm",
                     "type": "stack",
+                    "direction": "vertical",
                     "children": [
                       {
                         "content": "Add a comment",
-                        "variant": "label",
-                        "type": "typography"
+                        "type": "typography",
+                        "variant": "label"
                       },
                       {
-                        "type": "input",
-                        "placeholder": "Share your thoughts…",
-                        "inputType": "textarea",
                         "action": "EDIT_REPLY",
-                        "rows": 3.0
+                        "inputType": "textarea",
+                        "placeholder": "Share your thoughts…",
+                        "rows": 3.0,
+                        "type": "input"
                       },
                       {
-                        "gap": "sm",
-                        "type": "stack",
                         "justify": "end",
-                        "direction": "horizontal",
                         "children": [
                           {
+                            "size": "sm",
                             "variant": "ghost",
                             "type": "button",
-                            "label": "Cancel",
                             "action": "CANCEL_REPLY",
-                            "size": "sm"
+                            "label": "Cancel"
                           },
                           {
-                            "action": "SUBMIT_REPLY",
-                            "type": "button",
-                            "size": "sm",
-                            "variant": "primary",
                             "icon": "send",
-                            "label": "Comment"
+                            "label": "Comment",
+                            "type": "button",
+                            "variant": "primary",
+                            "size": "sm",
+                            "action": "SUBMIT_REPLY"
                           }
-                        ]
+                        ],
+                        "gap": "sm",
+                        "type": "stack",
+                        "direction": "horizontal"
                       }
-                    ],
-                    "gap": "sm",
-                    "direction": "vertical"
-                  },
-                  "padding": "md",
-                  "look": "flat-bordered",
-                  "type": "card"
+                    ]
+                  }
                 },
                 {
                   "nodes": "@payload.data",
                   "replyEvent": "REPLY",
-                  "type": "reply-tree",
-                  "showActions": true
+                  "showActions": true,
+                  "type": "reply-tree"
                 }
               ],
-              "type": "stack"
+              "gap": "lg",
+              "direction": "vertical"
             }
           }
         }

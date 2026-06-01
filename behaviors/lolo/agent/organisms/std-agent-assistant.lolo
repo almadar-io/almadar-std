@@ -4,22 +4,22 @@ app std-agent-assistant "1.0.0"
 orbital AssistantOrbital {
   entity Assistant [runtime] {
     id : string!
-    messages : string = ""
-    currentMessage : string = ""
-    response : string = ""
-    memoryCount : number = 0
-    contextUsage : number = 0
-    provider : string = "default"
-    sessionId : string = ""
-    status : string = "idle"
-    error : string = ""
-    turnCount : number = 0
-    lastMessage : string = ""
-    tokenCount : number = 0
-    role : string = "user"
-    content : string = ""
-    timestamp : string = ""
-    toolName : string = ""
+    messages : string @description "A sequence of text representing a conversation." @synonyms "conversation, transcript, dialogue, chat" = ""
+    currentMessage : string @description "The text of the most recent message in the conversation." @synonyms "text, body, content" = ""
+    response : string @description "The text generated as an output." @synonyms "reply, answer, output, result" = ""
+    memoryCount : number @description "The number of memory entries." @synonyms "count, size, quantity" = 0
+    contextUsage : number @description "Represents the amount of context utilized." @synonyms "usage, consumption, utilization" = 0
+    provider : string @description "Specifies the external service or system used." @synonyms "service, source, backend" = "default"
+    sessionId : string @description "Unique identifier for a user's session." @synonyms "session, sessionID" = ""
+    status : string @description "Indicates the current operational state of the component." @synonyms "state, condition, mode" = "idle"
+    error : string @description "Details about any errors encountered during operation." @synonyms "issue, problem, fault, exception" = ""
+    turnCount : number @description "The number of interactions in the conversation." @synonyms "interaction count, round number, sequence number" = 0
+    lastMessage : string @description "The text of the most recent message." @synonyms "last, recent, previous" = ""
+    tokenCount : number @description "The number of tokens used." @synonyms "count, quantity, total" = 0
+    role : string @description "Specifies the function or identity within the interaction." @synonyms "function, identity, persona, type" = "user"
+    content : string @description "The text of the message or content being processed." @synonyms "text, body, data" = ""
+    timestamp : string @description "Date and time when the event occurred." @synonyms "date, time, when" = ""
+    toolName : string @description "Name of the tool utilized by the assistant." @synonyms "tool, function, action" = ""
   }
 
   type AssistantLoaded     = Event { data : [Assistant] }                  "Fired when Assistant finishes loading"
@@ -131,12 +131,12 @@ orbital AssistantOrbital {
 orbital MemoryOrbital {
   entity Memory [persistent: memorys] {
     id : string!
-    content : string = ""
-    category : string
-    strength : number
-    pinned : boolean
-    scope : string
-    lastAccessedAt : string
+    content : string @description "The text content of a message or data item." @synonyms "text, body, data, value" = ""
+    category : string @description "Classification or type of the item." @synonyms "type, class, kind"
+    strength : number @description "Numerical value representing a level or intensity." @synonyms "level, intensity, power, score"
+    pinned : boolean @description "Indicates whether the item is marked as important." @synonyms "flagged, marked, important"
+    scope : string @description "Defines the area or subject of the conversation." @synonyms "topic, subject, area, domain"
+    lastAccessedAt : string @description "Timestamp of the last access or usage." @synonyms "accessed, last used, accessed time"
     createdAt : string
   }
 
@@ -267,15 +267,15 @@ orbital MemoryOrbital {
 orbital AssistantContextOrbital {
   entity AssistantContext [runtime] {
     id : string!
-    tokenCount : number = 0
-    maxTokens : number
-    usage : number
-    lastCompactedAt : string
-    current : number
-    max : number
-    threshold : number
-    message : string
-    notificationType : "info" | "success" | "warning" | "error" = "info"
+    tokenCount : number @description "The number of tokens used." @synonyms "tokens, count" = 0
+    maxTokens : number @description "The maximum number of tokens allowed for a request." @synonyms "limit, maximum, cap"
+    usage : number @description "Represents the amount of resource consumed." @synonyms "consumption, utilization, amount"
+    lastCompactedAt : string @description "Timestamp of the last compaction event." @synonyms "compacted, last compacted, compaction time"
+    current : number @description "The present value of a numerical measurement." @synonyms "value, amount, quantity"
+    max : number @description "The maximum value allowed for a related quantity." @synonyms "limit, maximum, upper bound"
+    threshold : number @description "The minimum value required to trigger an action." @synonyms "limit, cutoff, boundary"
+    message : string @description "The text content of a message." @synonyms "text, body, value"
+    notificationType : "info" | "success" | "warning" | "error" @description "Indicates the type of notification (info, success, warning, error)." @synonyms "type, alert, status" = "info"
   }
 
   type AssistantContextLoaded     = Event { data : [AssistantContext] }                  "Fired when AssistantContext finishes loading"
@@ -454,12 +454,12 @@ emits {
 orbital ProviderConfigOrbital {
   entity ProviderConfig [runtime] {
     id : string!
-    currentProvider : string
-    currentModel : string
-    fallbackProvider : string
-    requestCount : number
-    message : string
-    notificationType : "info" | "success" | "warning" | "error" = "info"
+    currentProvider : string @description "The currently active provider for the assistant." @synonyms "provider, service, source"
+    currentModel : string @description "The currently active model identifier." @synonyms "model, version, identifier"
+    fallbackProvider : string @description "Specifies an alternative provider to use when the primary fails." @synonyms "alternative, backup, secondary"
+    requestCount : number @description "The number of requests made to the assistant." @synonyms "count, requests, number of requests"
+    message : string @description "The text content of a message." @synonyms "text, body, value"
+    notificationType : "info" | "success" | "warning" | "error" @description "Indicates the type of notification (info, success, warning, error)." @synonyms "type, level, severity" = "info"
   }
 
   type ProviderConfigLoaded     = Event { data : [ProviderConfig] }                  "Fired when ProviderConfig finishes loading"
@@ -581,15 +581,15 @@ emits {
 orbital AssistantNavOrbital {
   entity AssistantNav [runtime] {
     id : string!
-    messages : string = ""
-    currentMessage : string = ""
-    response : string = ""
-    memoryCount : number = 0
-    contextUsage : number = 0
-    provider : string = "default"
-    sessionId : string = ""
-    status : string = "idle"
-    error : string = ""
+    messages : string @description "A sequence of text representing the conversation history." @synonyms "history, transcript, dialogue" = ""
+    currentMessage : string @description "The text of the most recent message in the conversation." @synonyms "text, latest message, recent content" = ""
+    response : string @description "The text generated as an output." @synonyms "reply, answer, output, result" = ""
+    memoryCount : number @description "The number of memory entries stored." @synonyms "count, size, quantity" = 0
+    contextUsage : number @description "Represents the amount of context utilized." @synonyms "usage, consumption, utilization" = 0
+    provider : string @description "Specifies the external service or system providing the functionality." @synonyms "source, origin, backend, service" = "default"
+    sessionId : string @description "Unique identifier for a user's session." @synonyms "session, sessionID" = ""
+    status : string @description "Indicates the current operational state of the component." @synonyms "state, condition, mode" = "idle"
+    error : string @description "Details about any errors encountered during processing." @synonyms "problem, fault, issue, exception" = ""
   }
 
   type AssistantNavLoaded     = Event { data : [AssistantNav] }         "Fired when AssistantNav finishes loading"
@@ -624,9 +624,9 @@ emits {
 orbital MemorySidebarOrbital {
   entity MemorySidebar [runtime] {
     id : string!
-    content : string = ""
-    query : string
-    strength : number
+    content : string @description "The textual data of a message or response." @synonyms "text, body, data" = ""
+    query : string @description "User-initiated text input for the assistant." @synonyms "prompt, question, input, request"
+    strength : number @description "A numerical value representing intensity or magnitude." @synonyms "magnitude, intensity, power, value"
   }
 
   type MemorySidebarLoaded     = Event { data : [MemorySidebar] }                  "Fired when MemorySidebar finishes loading"

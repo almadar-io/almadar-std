@@ -24,12 +24,16 @@
           {
             "name": "title",
             "type": "string",
-            "required": true
+            "required": true,
+            "description": "The item's displayed name or heading.",
+            "synonyms": "name, heading, label"
           },
           {
             "name": "description",
             "type": "string",
-            "default": ""
+            "default": "",
+            "description": "A textual explanation or summary of the item.",
+            "synonyms": "details, summary, explanation, notes"
           },
           {
             "name": "stage",
@@ -40,17 +44,23 @@
               "Q2",
               "Q3",
               "Q4"
-            ]
+            ],
+            "description": "The item's position within the timeline's time divisions.",
+            "synonyms": "period, timeframe, phase, quarter, month"
           },
           {
             "name": "notes",
             "type": "string",
-            "default": ""
+            "default": "",
+            "description": "Free-form text providing additional information.",
+            "synonyms": "comments, remarks, details, annotations"
           },
           {
             "name": "position",
             "type": "number",
-            "default": 0.0
+            "default": 0.0,
+            "description": "Numerical order within the timeline.",
+            "synonyms": "order, sequence, index"
           },
           {
             "name": "boards",
@@ -105,80 +115,81 @@
           "name": "TimelineRoadmapBoard",
           "linkedEntity": "TimelineRoadmapItem",
           "config": {
+            "gridCols": 4.0,
             "columns": [
               {
-                "key": "Q1",
                 "icon": "calendar",
+                "label": "Q1",
                 "variant": "default",
-                "label": "Q1"
+                "key": "Q1"
               },
               {
+                "icon": "calendar",
                 "key": "Q2",
-                "label": "Q2",
-                "icon": "calendar",
-                "variant": "primary"
+                "variant": "primary",
+                "label": "Q2"
               },
               {
-                "icon": "calendar",
+                "label": "Q3",
                 "variant": "info",
                 "key": "Q3",
-                "label": "Q3"
+                "icon": "calendar"
               },
               {
+                "icon": "calendar",
                 "label": "Q4",
-                "variant": "success",
                 "key": "Q4",
-                "icon": "calendar"
+                "variant": "success"
               }
             ],
-            "gridCols": 4.0,
             "bodyContent": {
-              "direction": "vertical",
+              "type": "stack",
               "gap": "md",
+              "direction": "vertical",
               "children": [
                 {
-                  "gap": "sm",
                   "direction": "horizontal",
-                  "className": "px-card-md",
-                  "align": "center",
                   "children": [
                     {
-                      "type": "icon",
-                      "name": "calendar-range"
+                      "name": "calendar-range",
+                      "type": "icon"
                     },
                     {
-                      "content": "@config.title",
                       "variant": "h2",
+                      "content": "@config.title",
                       "type": "typography"
                     },
                     {
-                      "variant": "caption",
-                      "content": "Roadmap",
                       "className": "ml-2",
+                      "content": "Roadmap",
                       "type": "typography",
+                      "variant": "caption",
                       "color": "muted"
                     }
                   ],
-                  "type": "stack"
+                  "align": "center",
+                  "className": "px-card-md",
+                  "type": "stack",
+                  "gap": "sm"
                 },
                 {
                   "type": "divider"
                 },
                 {
-                  "align": "stretch",
-                  "direction": "horizontal",
-                  "type": "stack",
-                  "className": "overflow-x-auto border-y border-[var(--color-border)]",
                   "children": [
                     {
+                      "dndRoot": true,
+                      "entity": "@entity.boards",
+                      "cols": "@config.gridCols",
+                      "gap": "none",
                       "fields": [],
                       "className": "min-w-full",
                       "type": "data-grid",
-                      "dndRoot": true,
                       "renderItem": [
                         "fn",
                         "col",
                         {
+                          "direction": "vertical",
                           "className": "min-w-[240px] border-r border-[var(--color-border)] last:border-r-0",
                           "gap": "none",
                           "children": [
@@ -189,42 +200,37 @@
                                   "type": "icon"
                                 },
                                 {
-                                  "type": "typography",
                                   "className": "flex-1",
-                                  "variant": "h4",
-                                  "content": "@col.label"
+                                  "type": "typography",
+                                  "content": "@col.label",
+                                  "variant": "h4"
                                 },
                                 {
+                                  "type": "badge",
                                   "label": "@col.count",
                                   "variant": "primary",
-                                  "type": "badge",
                                   "size": "sm"
                                 }
                               ],
-                              "direction": "horizontal",
-                              "className": "px-card-md py-2 bg-[var(--color-surface-subtle)] border-b border-[var(--color-border)] sticky top-0",
-                              "align": "center",
                               "gap": "xs",
-                              "type": "stack"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "align": "center",
+                              "className": "px-card-md py-2 bg-[var(--color-surface-subtle)] border-b border-[var(--color-border)] sticky top-0"
                             },
                             {
-                              "type": "data-list",
-                              "accepts": "*",
-                              "reorderEvent": "REORDER_CARD",
+                              "fields": [],
                               "dragGroup": "@col.key",
                               "sortable": true,
+                              "accepts": "*",
+                              "type": "data-list",
                               "className": "p-card-md min-h-[160px]",
-                              "gap": "sm",
-                              "fields": [],
-                              "dropEvent": "MOVE_CARD",
-                              "positionEvent": "REORDER_POSITION",
-                              "entity": "@col.items",
                               "renderItem": [
                                 "fn",
                                 "item",
                                 {
-                                  "look": "elevated",
                                   "padding": "sm",
+                                  "look": "elevated",
                                   "className": "cursor-grab hover:shadow-md transition-shadow",
                                   "type": "card",
                                   "children": [
@@ -232,58 +238,58 @@
                                       "direction": "vertical",
                                       "children": [
                                         {
-                                          "type": "stack",
-                                          "direction": "horizontal",
-                                          "align": "center",
                                           "gap": "xs",
+                                          "direction": "horizontal",
+                                          "type": "stack",
                                           "children": [
                                             {
                                               "type": "icon",
                                               "name": "flag"
                                             },
                                             {
-                                              "weight": "medium",
                                               "className": "flex-1",
-                                              "content": "@config.cardTitleBinding",
+                                              "variant": "body",
                                               "type": "typography",
-                                              "variant": "body"
+                                              "content": "@config.cardTitleBinding",
+                                              "weight": "medium"
                                             }
-                                          ]
+                                          ],
+                                          "align": "center"
                                         },
                                         {
-                                          "variant": "caption",
-                                          "className": "line-clamp-2",
                                           "type": "typography",
+                                          "variant": "caption",
                                           "color": "muted",
-                                          "content": "@config.cardDescriptionBinding"
+                                          "content": "@config.cardDescriptionBinding",
+                                          "className": "line-clamp-2"
                                         },
                                         {
                                           "children": [
                                             {
-                                              "label": "@config.cardStageBinding",
-                                              "size": "sm",
                                               "type": "badge",
-                                              "variant": "primary"
+                                              "label": "@config.cardStageBinding",
+                                              "variant": "primary",
+                                              "size": "sm"
                                             },
                                             {
-                                              "label": "Details",
-                                              "type": "button",
-                                              "action": "OPEN_CARD",
-                                              "variant": "ghost",
                                               "size": "sm",
+                                              "label": "Details",
+                                              "action": "OPEN_CARD",
+                                              "type": "button",
                                               "className": "ml-auto",
-                                              "icon": "arrow-right",
                                               "actionPayload": {
                                                 "row": "@item",
                                                 "id": "@config.cardIdBinding"
-                                              }
+                                              },
+                                              "variant": "ghost",
+                                              "icon": "arrow-right"
                                             }
                                           ],
-                                          "type": "stack",
+                                          "className": "pt-1",
                                           "gap": "xs",
                                           "align": "center",
-                                          "className": "pt-1",
-                                          "direction": "horizontal"
+                                          "direction": "horizontal",
+                                          "type": "stack"
                                         }
                                       ],
                                       "gap": "xs",
@@ -291,29 +297,33 @@
                                     }
                                   ]
                                 }
-                              ]
+                              ],
+                              "dropEvent": "MOVE_CARD",
+                              "gap": "sm",
+                              "entity": "@col.items",
+                              "reorderEvent": "REORDER_CARD",
+                              "positionEvent": "REORDER_POSITION"
                             }
                           ],
-                          "type": "stack",
-                          "direction": "vertical"
+                          "type": "stack"
                         }
-                      ],
-                      "cols": "@config.gridCols",
-                      "entity": "@entity.boards",
-                      "gap": "none"
+                      ]
                     }
                   ],
-                  "gap": "none"
+                  "type": "stack",
+                  "direction": "horizontal",
+                  "gap": "none",
+                  "className": "overflow-x-auto border-y border-[var(--color-border)]",
+                  "align": "stretch"
                 },
                 {
-                  "icon": "plus",
-                  "type": "floating-action-button",
-                  "label": "Add milestone",
                   "action": "ADD_CARD",
-                  "variant": "primary"
+                  "icon": "plus",
+                  "label": "Add milestone",
+                  "variant": "primary",
+                  "type": "floating-action-button"
                 }
-              ],
-              "type": "stack"
+              ]
             }
           }
         }

@@ -4,13 +4,13 @@ app std-agent-session "1.0.0"
 orbital AgentSessionOrbital {
   entity AgentSession [persistent: agentsessions] {
     id          : string!
-    name        : string
-    description : string
-    status      : "active" | "inactive" | "pending" | "forked" | "ended" = "active"
+    name        : string @description "A user-defined identifier for the session." @synonyms "identifier, sessionName, title"
+    description : string @description "A textual explanation of the session's purpose or content." @synonyms "summary, details, notes, explanation"
+    status      : "active" | "inactive" | "pending" | "forked" | "ended" @description "Current operational state of the session." @synonyms "state, condition, mode" = "active"
     createdAt   : string
-    sessionId   : string = ""
-    parentId    : string = ""
-    label       : string = ""
+    sessionId   : string @description "Unique identifier for a session." @synonyms "session ID, session identifier" = ""
+    parentId    : string @description "Reference to the parent entity's identifier." @synonyms "parent, reference, source" = ""
+    label       : string @description "A user-friendly identifier for the session." @synonyms "title, identifier, display name" = ""
   }
 
   type AgentSessionLoaded        = Event { data : [AgentSession] }        "Fired when AgentSession finishes loading; payload.data holds the sessions"

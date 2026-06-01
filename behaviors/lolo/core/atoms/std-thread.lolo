@@ -4,14 +4,14 @@ app std-thread "1.3.0"
 orbital ThreadPostOrbital {
   entity ThreadPost [persistent: threadposts] {
     id            : string!
-    parentId      : string
-    threadRootId  : string!
-    authorId      : string!
-    authorName    : string!
-    content       : string!
+    parentId      : string @description "Identifier of the parent ThreadPost in a nested thread." @synonyms "parent, ancestor, source"
+    threadRootId  : string! @description "Identifier of the top-level thread this post belongs to." @synonyms "rootId, topLevelId, parentThreadId"
+    authorId      : string! @description "Unique identifier for the post's author." @synonyms "user id, creator id, author"
+    authorName    : string! @description "The name of the post's author." @synonyms "author, username, poster"
+    content       : string! @description "The main text content of the post." @synonyms "text, message, body"
     createdAt     : string
-    voteCount     : number = 0
-    replyCount    : number = 0
+    voteCount     : number @description "The number of votes associated with this item." @synonyms "votes, rating, score" = 0
+    replyCount    : number @description "The number of replies to this post." @synonyms "count, number of replies, child posts" = 0
     ;; Forward relation: array of child ThreadPost IDs whose parentId === this.id.
     ;; Lowers to `type: "relation", cardinality: "many"` (orbital-lolo lower.rs).
     ;; @rebindable rewrites the target to the rebound entity in variant atoms.
@@ -19,11 +19,11 @@ orbital ThreadPostOrbital {
     ;; populateRelations to hydrate each ID into the full row inline so the
     ;; variant's bodyContent can render `@reply.authorName` etc. without
     ;; per-reply lookups.
-    replies       : [ThreadPost]
+    replies       : [ThreadPost] @description "A list of child ThreadPost entities." @synonyms "children, descendants, sub-posts"
     ;; Master-detail focus: SELECT sets this to the clicked row so split-pane
     ;; variants (email-threaded) can bind @entity.focusedRow.<field> in their
     ;; detail pane. Unused by list/bubble variants.
-    focusedRow    : object = {}
+    focusedRow    : object @description "The currently selected or active row within the thread." @synonyms "selection, active, current" = {}
   }
 
   type ThreadPostLoaded        = Event { data : [ThreadPost] }              "Fired when the thread-post collection finishes loading"

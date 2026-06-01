@@ -4,16 +4,16 @@ app std-billable-hour "1.0.0"
 orbital BillableHourOrbital {
   entity BillableHour [persistent: billablehours] {
     id            : string!
-    workerId      : string!
-    workerName    : string = ""
-    matterId      : string = ""
-    projectId     : string = ""
-    workDate      : string!
-    hours         : number = 0
-    rate          : number = 0
-    description   : string = ""
-    isBillable    : boolean = true
-    invoiceStatus : "unbilled" | "invoiced" | "paid" | "written_off" = "unbilled"
+    workerId      : string! @description "Unique identifier for the worker." @synonyms "employeeId, staffId, userId"
+    workerName    : string @description "The name of the worker associated with the time entry." @synonyms "employee, staff, personnel" = ""
+    matterId      : string @description "Unique identifier for the associated case or project." @synonyms "caseId, projectID, reference" = ""
+    projectId     : string @description "Identifier for the project associated with the time entry." @synonyms "project, task, reference" = ""
+    workDate      : string! @description "The date on which the work was performed." @synonyms "date, transaction date, service date"
+    hours         : number @description "The quantity of time recorded." @synonyms "duration, time, amount" = 0
+    rate          : number @description "The hourly charge for the work performed." @synonyms "price, cost, amount" = 0
+    description   : string @description "A textual explanation of the hour entry." @synonyms "explanation, notes, details, comment" = ""
+    isBillable    : boolean @description "Indicates whether the hour is eligible for billing." @synonyms "billable flag, billing status, billable indicator" = true
+    invoiceStatus : "unbilled" | "invoiced" | "paid" | "written_off" @description "The current billing status of the hour entry." @synonyms "status, billing status, payment status" = "unbilled"
   }
 
   type BillableHourLoaded     = Event { data : [BillableHour] }           "Fired when the billable-hour collection finishes loading"

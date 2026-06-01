@@ -4,13 +4,13 @@ app std-approval-gate "1.0.1"
 orbital ApprovalGateOrbital {
   entity ApprovalRequest [persistent: approval_requests] {
     id           : string!
-    gatedEvent   : string  = ""
-    status       : "pending" | "approved" | "denied" | "escalated" = "pending"
-    reviewer     : string  = ""
-    requestedAt  : number  = 0
-    decidedAt    : number  = 0
-    escalatedAt  : number  = 0
-    notes        : string  = ""
+    gatedEvent   : string  @description "The event that triggered the approval request." @synonyms "trigger, event, source" = ""
+    status       : "pending" | "approved" | "denied" | "escalated" @description "Current state of the approval process." @synonyms "approval status, state, condition" = "pending"
+    reviewer     : string  @description "The user or system responsible for reviewing the request." @synonyms "assignee, owner, approver, responsible party" = ""
+    requestedAt  : number  @description "Timestamp indicating when the approval request was initiated." @synonyms "creation time, request date, submission time" = 0
+    decidedAt    : number  @description "Timestamp indicating when a decision was made on the request." @synonyms "decision time, resolved at, completed at" = 0
+    escalatedAt  : number  @description "Timestamp indicating when the request was escalated." @synonyms "escalation time, escalation timestamp, escalated time" = 0
+    notes        : string  @description "Free-form text providing additional context or details." @synonyms "comments, remarks, explanation, details" = ""
   }
 
   type ApprovalRequestLoaded     = Event { data : [ApprovalRequest] }            "Fired when the approval queue collection finishes loading"

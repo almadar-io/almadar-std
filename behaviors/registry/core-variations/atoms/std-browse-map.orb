@@ -23,7 +23,9 @@
           {
             "name": "name",
             "type": "string",
-            "required": true
+            "required": true,
+            "description": "A descriptive label for the row.",
+            "synonyms": "title, label, identifier"
           },
           {
             "name": "status",
@@ -33,22 +35,30 @@
               "active",
               "inactive",
               "pending"
-            ]
+            ],
+            "description": "Indicates the current operational state of the row.",
+            "synonyms": "state, condition, enabled, disabled"
           },
           {
             "name": "lat",
             "type": "number",
-            "default": 0.0
+            "default": 0.0,
+            "description": "Represents the latitude coordinate.",
+            "synonyms": "latitude, y-coordinate, north-south position"
           },
           {
             "name": "lng",
             "type": "number",
-            "default": 0.0
+            "default": 0.0,
+            "description": "The longitude coordinate of a location.",
+            "synonyms": "longitude, x, horizontal position"
           },
           {
             "name": "address",
             "type": "string",
-            "default": ""
+            "default": "",
+            "description": "The textual location associated with the coordinate data.",
+            "synonyms": "location, place, addressString"
           },
           {
             "name": "createdAt",
@@ -63,66 +73,66 @@
           "name": "MapBrowse",
           "linkedEntity": "MapRow",
           "config": {
-            "fields": [
-              {
-                "name": "name",
-                "label": "Name",
-                "variant": "h4"
-              },
-              {
-                "name": "address",
-                "label": "Address",
-                "variant": "caption"
-              },
-              {
-                "label": "Status",
-                "variant": "badge",
-                "name": "status"
-              }
-            ],
             "bodyContent": {
-              "direction": "vertical",
               "children": [
                 {
-                  "type": "stack",
                   "direction": "horizontal",
-                  "gap": "sm",
-                  "align": "center",
+                  "className": "w-full max-w-2xl rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 shadow-sm",
                   "children": [
                     {
+                      "type": "icon",
                       "name": "search",
-                      "className": "text-muted-foreground",
-                      "type": "icon"
+                      "className": "text-muted-foreground"
                     },
                     {
+                      "inputType": "search",
+                      "placeholder": "@config.searchPlaceholder",
                       "action": "REFETCH_QUERY",
                       "className": "flex-1",
-                      "inputType": "search",
-                      "type": "input",
-                      "placeholder": "@config.searchPlaceholder"
+                      "type": "input"
                     }
                   ],
-                  "className": "w-full max-w-2xl rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 shadow-sm"
+                  "type": "stack",
+                  "gap": "sm",
+                  "align": "center"
                 },
                 {
                   "className": "w-full rounded-lg overflow-hidden border border-[var(--color-border)]",
+                  "markers": "@payload.data",
                   "height": "440px",
-                  "type": "map-view",
-                  "markers": "@payload.data"
+                  "type": "map-view"
                 },
                 {
+                  "fields": "@config.fields",
                   "itemActions": "@config.itemActions",
-                  "entity": "@payload.data",
                   "gap": "sm",
                   "look": "@config.tableLook",
                   "type": "data-list",
-                  "fields": "@config.fields"
+                  "entity": "@payload.data"
                 }
               ],
               "type": "stack",
+              "direction": "vertical",
               "gap": "md",
               "className": "p-card-md"
-            }
+            },
+            "fields": [
+              {
+                "label": "Name",
+                "variant": "h4",
+                "name": "name"
+              },
+              {
+                "label": "Address",
+                "variant": "caption",
+                "name": "address"
+              },
+              {
+                "variant": "badge",
+                "name": "status",
+                "label": "Status"
+              }
+            ]
           }
         }
       ],

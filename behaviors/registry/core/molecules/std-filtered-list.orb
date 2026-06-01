@@ -35,11 +35,15 @@
           },
           {
             "name": "name",
-            "type": "string"
+            "type": "string",
+            "description": "The displayed text for the list item.",
+            "synonyms": "label, title, display_name"
           },
           {
             "name": "description",
-            "type": "string"
+            "type": "string",
+            "description": "A textual explanation of the list item's content.",
+            "synonyms": "text, details, explanation, summary"
           },
           {
             "name": "status",
@@ -49,7 +53,9 @@
               "active",
               "inactive",
               "pending"
-            ]
+            ],
+            "description": "Indicates the current operational state of the item.",
+            "synonyms": "state, condition, enabled, disabled"
           }
         ]
       },
@@ -66,19 +72,19 @@
           "ref": "Filter.traits.FilterTargetFilter",
           "name": "FilteredItemFilter",
           "config": {
-            "event": "FILTER",
             "filters": [
               {
-                "filterType": "select",
-                "field": "status",
-                "label": "Status",
                 "options": [
                   "active",
                   "inactive",
                   "pending"
-                ]
+                ],
+                "field": "status",
+                "label": "Status",
+                "filterType": "select"
               }
-            ]
+            ],
+            "event": "FILTER"
           }
         },
         {
@@ -86,6 +92,7 @@
           "name": "FilteredItemBrowse",
           "linkedEntity": "FilteredListItem",
           "config": {
+            "pageSize": 3.0,
             "fields": [
               {
                 "label": "Name",
@@ -93,17 +100,16 @@
                 "name": "name"
               },
               {
-                "name": "description",
+                "variant": "caption",
                 "label": "Description",
-                "variant": "caption"
+                "name": "description"
               },
               {
                 "label": "Status",
                 "name": "status",
                 "variant": "badge"
               }
-            ],
-            "pageSize": 3.0
+            ]
           },
           "listens": [
             {
@@ -237,43 +243,43 @@
                     "render-ui",
                     "main",
                     {
+                      "className": "max-w-5xl mx-auto w-full",
+                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
+                          "gap": "sm",
+                          "align": "center",
                           "type": "stack",
                           "direction": "horizontal",
-                          "gap": "sm",
                           "children": [
                             {
-                              "name": "list",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "list"
                             },
                             {
-                              "variant": "h2",
                               "content": "Filtered List",
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "h2"
                             }
-                          ],
-                          "align": "center"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "type": "stack",
+                          "gap": "sm",
                           "direction": "horizontal",
                           "children": [
                             "@trait.FilteredItemSearch",
                             "@trait.FilteredItemFilter"
-                          ],
-                          "gap": "sm"
+                          ]
                         },
                         "@trait.FilteredItemBrowse",
                         "@trait.FilteredItemPagination"
                       ],
-                      "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack",
-                      "className": "max-w-5xl mx-auto w-full"
+                      "gap": "md"
                     }
                   ]
                 ]
