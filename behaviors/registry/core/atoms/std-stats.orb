@@ -21,17 +21,65 @@
             "items": {
               "type": "object",
               "properties": {
-                "trendFormat": {
-                  "name": "trendFormat",
-                  "type": "string",
-                  "required": false,
-                  "values": [
-                    "absolute",
-                    "percent"
-                  ]
+                "trend": {
+                  "name": "trend",
+                  "type": "number",
+                  "required": false
                 },
                 "icon": {
                   "name": "icon",
+                  "type": "string",
+                  "required": false
+                },
+                "label": {
+                  "name": "label",
+                  "type": "string",
+                  "required": true
+                },
+                "format": {
+                  "name": "format",
+                  "type": "string",
+                  "required": false,
+                  "values": [
+                    "number",
+                    "currency",
+                    "percent"
+                  ]
+                },
+                "sparklineData": {
+                  "name": "sparklineData",
+                  "type": "array",
+                  "required": false,
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                "value": {
+                  "name": "value",
+                  "type": "number",
+                  "required": false
+                },
+                "prefix": {
+                  "name": "prefix",
+                  "type": "string",
+                  "required": false
+                },
+                "trendPolarity": {
+                  "name": "trendPolarity",
+                  "type": "string",
+                  "required": false,
+                  "values": [
+                    "higher-is-better",
+                    "lower-is-better"
+                  ]
+                },
+                "clickEvent": {
+                  "name": "clickEvent",
+                  "type": "string",
+                  "required": false
+                },
+                "suffix": {
+                  "name": "suffix",
                   "type": "string",
                   "required": false
                 },
@@ -48,22 +96,9 @@
                     "info"
                   ]
                 },
-                "sparklineData": {
-                  "name": "sparklineData",
-                  "type": "array",
-                  "required": false,
-                  "items": {
-                    "type": "number"
-                  }
-                },
-                "clickEvent": {
-                  "name": "clickEvent",
-                  "type": "string",
-                  "required": false
-                },
-                "suffix": {
-                  "name": "suffix",
-                  "type": "string",
+                "max": {
+                  "name": "max",
+                  "type": "number",
                   "required": false
                 },
                 "target": {
@@ -71,48 +106,13 @@
                   "type": "number",
                   "required": false
                 },
-                "trend": {
-                  "name": "trend",
-                  "type": "number",
-                  "required": false
-                },
-                "label": {
-                  "name": "label",
-                  "type": "string",
-                  "required": true
-                },
-                "value": {
-                  "name": "value",
-                  "type": "number",
-                  "required": false
-                },
-                "max": {
-                  "name": "max",
-                  "type": "number",
-                  "required": false
-                },
-                "format": {
-                  "name": "format",
+                "trendFormat": {
+                  "name": "trendFormat",
                   "type": "string",
                   "required": false,
                   "values": [
-                    "number",
-                    "currency",
+                    "absolute",
                     "percent"
-                  ]
-                },
-                "prefix": {
-                  "name": "prefix",
-                  "type": "string",
-                  "required": false
-                },
-                "trendPolarity": {
-                  "name": "trendPolarity",
-                  "type": "string",
-                  "required": false,
-                  "values": [
-                    "higher-is-better",
-                    "lower-is-better"
                   ]
                 }
               }
@@ -149,6 +149,9 @@
               {
                 "key": "ITEMS_LOADED",
                 "name": "Items Loaded",
+                "description": "Data has been loaded and is ready for processing.",
+                "synonyms": "data ready, update, refresh, loaded",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "data",
@@ -177,6 +180,23 @@
                         "fn",
                         "metric",
                         {
+                          "variant": [
+                            "object/get",
+                            "@metric",
+                            "variant",
+                            "default"
+                          ],
+                          "label": [
+                            "object/get",
+                            "@metric",
+                            "label"
+                          ],
+                          "icon": [
+                            "object/get",
+                            "@metric",
+                            "icon",
+                            ""
+                          ],
                           "suffix": [
                             "object/get",
                             "@metric",
@@ -189,16 +209,11 @@
                             "sparklineData",
                             []
                           ],
-                          "label": [
+                          "prefix": [
                             "object/get",
                             "@metric",
-                            "label"
-                          ],
-                          "trendFormat": [
-                            "object/get",
-                            "@metric",
-                            "trendFormat",
-                            "absolute"
+                            "prefix",
+                            ""
                           ],
                           "format": [
                             "object/get",
@@ -206,10 +221,16 @@
                             "format",
                             "number"
                           ],
-                          "max": [
+                          "target": [
                             "object/get",
                             "@metric",
-                            "max",
+                            "target",
+                            0.0
+                          ],
+                          "trend": [
+                            "object/get",
+                            "@metric",
+                            "trend",
                             0.0
                           ],
                           "trendPolarity": [
@@ -224,41 +245,23 @@
                             "clickEvent",
                             ""
                           ],
+                          "max": [
+                            "object/get",
+                            "@metric",
+                            "max",
+                            0.0
+                          ],
                           "value": [
                             "object/get",
                             "@metric",
                             "value",
                             0.0
                           ],
-                          "icon": [
+                          "trendFormat": [
                             "object/get",
                             "@metric",
-                            "icon",
-                            ""
-                          ],
-                          "variant": [
-                            "object/get",
-                            "@metric",
-                            "variant",
-                            "default"
-                          ],
-                          "target": [
-                            "object/get",
-                            "@metric",
-                            "target",
-                            0.0
-                          ],
-                          "prefix": [
-                            "object/get",
-                            "@metric",
-                            "prefix",
-                            ""
-                          ],
-                          "trend": [
-                            "object/get",
-                            "@metric",
-                            "trend",
-                            0.0
+                            "trendFormat",
+                            "absolute"
                           ]
                         }
                       ]
@@ -286,113 +289,6 @@
                         "fn",
                         "metric",
                         {
-                          "label": [
-                            "object/get",
-                            "@metric",
-                            "label"
-                          ],
-                          "suffix": [
-                            "object/get",
-                            "@metric",
-                            "suffix",
-                            ""
-                          ],
-                          "trendFormat": [
-                            "object/get",
-                            "@metric",
-                            "trendFormat",
-                            "absolute"
-                          ],
-                          "trend": [
-                            "if",
-                            [
-                              "=",
-                              [
-                                "object/get",
-                                "@metric",
-                                "aggregation",
-                                "count"
-                              ],
-                              "variance"
-                            ],
-                            [
-                              "-",
-                              [
-                                "array/sum",
-                                [
-                                  "array/filter",
-                                  "@payload.data",
-                                  [
-                                    "object/get",
-                                    "@metric",
-                                    "filter",
-                                    true
-                                  ]
-                                ],
-                                [
-                                  "object/get",
-                                  "@metric",
-                                  "field",
-                                  ""
-                                ]
-                              ],
-                              [
-                                "array/sum",
-                                [
-                                  "array/filter",
-                                  "@payload.data",
-                                  [
-                                    "object/get",
-                                    "@metric",
-                                    "baselineFilter",
-                                    true
-                                  ]
-                                ],
-                                [
-                                  "object/get",
-                                  "@metric",
-                                  "field",
-                                  ""
-                                ]
-                              ]
-                            ],
-                            [
-                              "object/get",
-                              "@metric",
-                              "trend",
-                              0.0
-                            ]
-                          ],
-                          "format": [
-                            "object/get",
-                            "@metric",
-                            "format",
-                            "number"
-                          ],
-                          "prefix": [
-                            "object/get",
-                            "@metric",
-                            "prefix",
-                            ""
-                          ],
-                          "variant": [
-                            "object/get",
-                            "@metric",
-                            "variant",
-                            "default"
-                          ],
-                          "target": [
-                            "object/get",
-                            "@metric",
-                            "target",
-                            0.0
-                          ],
-                          "trendPolarity": [
-                            "object/get",
-                            "@metric",
-                            "trendPolarity",
-                            "higher-is-better"
-                          ],
                           "sparklineData": [
                             "object/get",
                             "@metric",
@@ -578,10 +474,39 @@
                               ]
                             ]
                           ],
-                          "icon": [
+                          "format": [
                             "object/get",
                             "@metric",
-                            "icon",
+                            "format",
+                            "number"
+                          ],
+                          "prefix": [
+                            "object/get",
+                            "@metric",
+                            "prefix",
+                            ""
+                          ],
+                          "label": [
+                            "object/get",
+                            "@metric",
+                            "label"
+                          ],
+                          "trendPolarity": [
+                            "object/get",
+                            "@metric",
+                            "trendPolarity",
+                            "higher-is-better"
+                          ],
+                          "trendFormat": [
+                            "object/get",
+                            "@metric",
+                            "trendFormat",
+                            "absolute"
+                          ],
+                          "suffix": [
+                            "object/get",
+                            "@metric",
+                            "suffix",
                             ""
                           ],
                           "max": [
@@ -589,6 +514,84 @@
                             "@metric",
                             "max",
                             0.0
+                          ],
+                          "target": [
+                            "object/get",
+                            "@metric",
+                            "target",
+                            0.0
+                          ],
+                          "trend": [
+                            "if",
+                            [
+                              "=",
+                              [
+                                "object/get",
+                                "@metric",
+                                "aggregation",
+                                "count"
+                              ],
+                              "variance"
+                            ],
+                            [
+                              "-",
+                              [
+                                "array/sum",
+                                [
+                                  "array/filter",
+                                  "@payload.data",
+                                  [
+                                    "object/get",
+                                    "@metric",
+                                    "filter",
+                                    true
+                                  ]
+                                ],
+                                [
+                                  "object/get",
+                                  "@metric",
+                                  "field",
+                                  ""
+                                ]
+                              ],
+                              [
+                                "array/sum",
+                                [
+                                  "array/filter",
+                                  "@payload.data",
+                                  [
+                                    "object/get",
+                                    "@metric",
+                                    "baselineFilter",
+                                    true
+                                  ]
+                                ],
+                                [
+                                  "object/get",
+                                  "@metric",
+                                  "field",
+                                  ""
+                                ]
+                              ]
+                            ],
+                            [
+                              "object/get",
+                              "@metric",
+                              "trend",
+                              0.0
+                            ]
+                          ],
+                          "variant": [
+                            "object/get",
+                            "@metric",
+                            "variant",
+                            "default"
+                          ],
+                          "icon": [
+                            "object/get",
+                            "@metric",
+                            "icon",
+                            ""
                           ]
                         }
                       ]
@@ -604,6 +607,14 @@
             ]
           },
           "config": {
+            "title": {
+              "type": "string",
+              "default": "Summary",
+              "label": "Section title",
+              "description": "Heading shown above the stat-card grid",
+              "synonyms": "the section header text. user phrases: 'rename section to X' / 'title the KPIs X' / 'change section title to X' -> X",
+              "tier": "presentation"
+            },
             "viewPattern": {
               "type": "pattern",
               "default": "data-grid",
@@ -616,26 +627,26 @@
               "type": "[MetricSpec]",
               "default": [
                 {
-                  "format": "number",
+                  "aggregation": "count",
                   "icon": "list",
+                  "format": "number",
                   "label": "Total Items",
-                  "variant": "primary",
-                  "aggregation": "count"
+                  "variant": "primary"
                 },
                 {
                   "label": "Active",
-                  "aggregation": "count",
                   "icon": "check-circle",
-                  "variant": "success",
-                  "format": "number"
+                  "aggregation": "count",
+                  "format": "number",
+                  "variant": "success"
                 },
                 {
                   "label": "Avg Value",
-                  "aggregation": "avg",
-                  "variant": "info",
                   "format": "number",
-                  "field": "value",
-                  "icon": "trending-up"
+                  "aggregation": "avg",
+                  "icon": "trending-up",
+                  "variant": "info",
+                  "field": "value"
                 }
               ],
               "label": "Metrics",
@@ -645,37 +656,9 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "value": {
-                    "name": "value",
-                    "type": "number",
-                    "required": false
-                  },
-                  "suffix": {
-                    "name": "suffix",
+                  "icon": {
+                    "name": "icon",
                     "type": "string",
-                    "required": false
-                  },
-                  "trendPolarity": {
-                    "name": "trendPolarity",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "higher-is-better",
-                      "lower-is-better"
-                    ]
-                  },
-                  "trendFormat": {
-                    "name": "trendFormat",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "absolute",
-                      "percent"
-                    ]
-                  },
-                  "trend": {
-                    "name": "trend",
-                    "type": "number",
                     "required": false
                   },
                   "variant": {
@@ -691,15 +674,61 @@
                       "info"
                     ]
                   },
+                  "sparklineData": {
+                    "name": "sparklineData",
+                    "type": "array",
+                    "required": false,
+                    "items": {
+                      "type": "number"
+                    }
+                  },
+                  "prefix": {
+                    "name": "prefix",
+                    "type": "string",
+                    "required": false
+                  },
                   "max": {
                     "name": "max",
                     "type": "number",
                     "required": false
                   },
+                  "value": {
+                    "name": "value",
+                    "type": "number",
+                    "required": false
+                  },
+                  "trendPolarity": {
+                    "name": "trendPolarity",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "higher-is-better",
+                      "lower-is-better"
+                    ]
+                  },
+                  "target": {
+                    "name": "target",
+                    "type": "number",
+                    "required": false
+                  },
+                  "trendFormat": {
+                    "name": "trendFormat",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "absolute",
+                      "percent"
+                    ]
+                  },
                   "label": {
                     "name": "label",
                     "type": "string",
                     "required": true
+                  },
+                  "field": {
+                    "name": "field",
+                    "type": "string",
+                    "required": false
                   },
                   "format": {
                     "name": "format",
@@ -711,8 +740,13 @@
                       "percent"
                     ]
                   },
-                  "target": {
-                    "name": "target",
+                  "clickEvent": {
+                    "name": "clickEvent",
+                    "type": "string",
+                    "required": false
+                  },
+                  "trend": {
+                    "name": "trend",
                     "type": "number",
                     "required": false
                   },
@@ -729,33 +763,10 @@
                       "variance"
                     ]
                   },
-                  "field": {
-                    "name": "field",
+                  "suffix": {
+                    "name": "suffix",
                     "type": "string",
                     "required": false
-                  },
-                  "clickEvent": {
-                    "name": "clickEvent",
-                    "type": "string",
-                    "required": false
-                  },
-                  "prefix": {
-                    "name": "prefix",
-                    "type": "string",
-                    "required": false
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "sparklineData": {
-                    "name": "sparklineData",
-                    "type": "array",
-                    "required": false,
-                    "items": {
-                      "type": "number"
-                    }
                   }
                 }
               }
@@ -774,42 +785,34 @@
                 "sparkline"
               ]
             },
-            "title": {
-              "type": "string",
-              "default": "Summary",
-              "label": "Section title",
-              "description": "Heading shown above the stat-card grid",
-              "synonyms": "the section header text. user phrases: 'rename section to X' / 'title the KPIs X' / 'change section title to X' -> X",
-              "tier": "presentation"
-            },
             "bodyContent": {
               "type": "render-ui",
               "default": {
-                "entity": "@entity.cards",
                 "renderItem": [
                   "fn",
                   "card",
                   {
-                    "clickEvent": "@card.clickEvent",
-                    "value": "@card.value",
-                    "format": "@card.format",
-                    "suffix": "@card.suffix",
                     "trendFormat": "@card.trendFormat",
-                    "max": "@card.max",
-                    "label": "@card.label",
-                    "target": "@card.target",
+                    "value": "@card.value",
+                    "clickEvent": "@card.clickEvent",
+                    "format": "@card.format",
+                    "type": "stat-display",
                     "trend": "@card.trend",
                     "trendPolarity": "@card.trendPolarity",
-                    "icon": "@card.icon",
-                    "prefix": "@card.prefix",
-                    "type": "stat-display",
-                    "sparklineData": "@card.sparklineData",
+                    "look": "@config.statLook",
+                    "suffix": "@card.suffix",
+                    "max": "@card.max",
                     "variant": "@card.variant",
-                    "look": "@config.statLook"
+                    "target": "@card.target",
+                    "sparklineData": "@card.sparklineData",
+                    "label": "@card.label",
+                    "prefix": "@card.prefix",
+                    "icon": "@card.icon"
                   }
                 ],
+                "type": "@config.viewPattern",
                 "fields": [],
-                "type": "@config.viewPattern"
+                "entity": "@entity.cards"
               },
               "label": "Body content tree",
               "description": "Render-ui SExpr rendered after metrics aggregate. Default is the canonical data-grid call mapping @entity.cards through stat-display. Layer 3 variants override this with their own tree (hero numbers, sparkline rows, tile splashes) to deliver entirely different KPI UX while inheriting the same trait, state machine, aggregation pipeline, and listens.",

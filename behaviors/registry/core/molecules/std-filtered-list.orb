@@ -74,14 +74,14 @@
           "config": {
             "filters": [
               {
+                "label": "Status",
+                "filterType": "select",
                 "options": [
                   "active",
                   "inactive",
                   "pending"
                 ],
-                "field": "status",
-                "label": "Status",
-                "filterType": "select"
+                "field": "status"
               }
             ],
             "event": "FILTER"
@@ -92,24 +92,24 @@
           "name": "FilteredItemBrowse",
           "linkedEntity": "FilteredListItem",
           "config": {
-            "pageSize": 3.0,
             "fields": [
               {
+                "name": "name",
                 "label": "Name",
-                "variant": "h4",
-                "name": "name"
+                "variant": "h4"
               },
               {
-                "variant": "caption",
+                "name": "description",
                 "label": "Description",
-                "name": "description"
+                "variant": "caption"
               },
               {
                 "label": "Status",
                 "name": "status",
                 "variant": "badge"
               }
-            ]
+            ],
+            "pageSize": 3.0
           },
           "listens": [
             {
@@ -142,8 +142,8 @@
           "ref": "Pagination.traits.PagedItemPagination",
           "name": "FilteredItemPagination",
           "config": {
-            "event": "PAGE",
-            "pageSize": 3.0
+            "pageSize": 3.0,
+            "event": "PAGE"
           },
           "listens": [
             {
@@ -163,6 +163,9 @@
           "emits": [
             {
               "event": "FilteredListItemLoadFailed",
+              "description": "Indicates failure to load a list item.",
+              "synonyms": "error, fail, problem, unsuccessful",
+              "tier": "internal",
               "scope": "internal",
               "payloadSchema": [
                 {
@@ -177,6 +180,9 @@
             },
             {
               "event": "FilteredListItemLoaded",
+              "description": "Signals a filtered list item has been successfully loaded.",
+              "synonyms": "loaded, received, populated",
+              "tier": "essential",
               "scope": "internal",
               "payloadSchema": [
                 {
@@ -201,6 +207,9 @@
               {
                 "key": "FilteredListItemLoadFailed",
                 "name": "FilteredListItem load failed",
+                "description": "Indicates failure to load a list item.",
+                "synonyms": "error, fail, problem, unsuccessful",
+                "tier": "internal",
                 "payloadSchema": [
                   {
                     "name": "error",
@@ -215,6 +224,9 @@
               {
                 "key": "FilteredListItemLoaded",
                 "name": "FilteredListItem loaded",
+                "description": "Signals a filtered list item has been successfully loaded.",
+                "synonyms": "loaded, received, populated",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "data",
@@ -234,8 +246,8 @@
                     "FilteredListItem",
                     {
                       "emit": {
-                        "success": "FilteredListItemLoaded",
-                        "failure": "FilteredListItemLoadFailed"
+                        "failure": "FilteredListItemLoadFailed",
+                        "success": "FilteredListItemLoaded"
                       }
                     }
                   ],
@@ -243,24 +255,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "max-w-5xl mx-auto w-full",
-                      "direction": "vertical",
-                      "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
-                          "gap": "sm",
-                          "align": "center",
                           "type": "stack",
                           "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
                           "children": [
                             {
                               "type": "icon",
                               "name": "list"
                             },
                             {
-                              "content": "Filtered List",
                               "type": "typography",
-                              "variant": "h2"
+                              "variant": "h2",
+                              "content": "Filtered List"
                             }
                           ]
                         },
@@ -268,9 +278,9 @@
                           "type": "divider"
                         },
                         {
-                          "type": "stack",
-                          "gap": "sm",
                           "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack",
                           "children": [
                             "@trait.FilteredItemSearch",
                             "@trait.FilteredItemFilter"
@@ -279,7 +289,9 @@
                         "@trait.FilteredItemBrowse",
                         "@trait.FilteredItemPagination"
                       ],
-                      "gap": "md"
+                      "className": "max-w-5xl mx-auto w-full",
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]

@@ -68,21 +68,63 @@ orbital ModQueueItemOrbital {
     }
     emits {
       APPROVE  { id : string!, row : ModQueueItem }
+        @description "Signals that a moderation item has been approved."
+        @synonyms "accept, confirm, pass"
+        @tier "essential"
       REJECT   { id : string!, row : ModQueueItem }
+        @description "Signals that a moderation item has been rejected."
+        @synonyms "deny, dismiss, decline"
+        @tier "essential"
       ESCALATE { id : string!, row : ModQueueItem }
+        @description "Signals a flagged item requires further review."
+        @synonyms "flag, defer, elevate"
+        @tier "customization"
       ModQueueItemLoaded       { data : [ModQueueItem] }
+        @description "A new moderation item is ready for review."
+        @synonyms "loaded, fetched, available, ready"
+        @tier "essential"
       ModQueueItemLoadFailed   { error : string, code : string }
+        @description "Indicates failure to load moderation queue items."
+        @synonyms "error, failure, problem, failed"
+        @tier "internal"
       ModQueueItemReviewed     { row : ModQueueItem }
+        @description "Signals a moderation queue item has been reviewed and a verdict recorded."
+        @synonyms "reviewed, processed, judged, completed"
+        @tier "essential"
       ModQueueItemReviewFailed { error : string, code : string }
+        @description "Indicates a failure to load or process a moderation queue item."
+        @synonyms "error, failure, problem, issue"
+        @tier "internal"
     }
     listens {
       APPROVE  { id : string!, row : ModQueueItem }
+        @description "Signals that a moderation item has been approved."
+        @synonyms "accept, confirm, pass"
+        @tier "essential"
       REJECT   { id : string!, row : ModQueueItem }
+        @description "Signals a content item has been rejected during review."
+        @synonyms "dismiss, deny, decline"
+        @tier "essential"
       ESCALATE { id : string!, row : ModQueueItem }
+        @description "Signals a moderation item requires further review."
+        @synonyms "flag, defer, elevate"
+        @tier "customization"
       ModQueueItemLoaded       { data : [ModQueueItem] }
+        @description "A new moderation item is ready for review."
+        @synonyms "loaded, fetched, available, ready"
+        @tier "essential"
       ModQueueItemLoadFailed   { error : string, code : string }
+        @description "Indicates failure to load a moderation queue item."
+        @synonyms "error, failure, problem, issue"
+        @tier "internal"
       ModQueueItemReviewed     { row : ModQueueItem }
+        @description "A moderation queue item's review status has been updated."
+        @synonyms "reviewed, updated, verdict, decision"
+        @tier "essential"
       ModQueueItemReviewFailed { error : string, code : string }
+        @description "Indicates failure to load a moderation queue item for review."
+        @synonyms "error, failure, problem, issue"
+        @tier "internal"
     }
   }
   page "/modqueueitems/review" as ModQueueItemReviewPage -> ModQueueItemReview

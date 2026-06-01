@@ -49,10 +49,10 @@ export interface StdGeosearchGeoSearchPayload {
  * without modifying its state-machine topology.
  */
 export interface StdGeosearchConfig {
-  /** Default: `10` */
-  defaultRadiusKm?: number;
   /** Default: `"GEO_SEARCH"` */
   event?: string;
+  /** Default: `10` */
+  defaultRadiusKm?: number;
   /** Default: `"Search nearby…"` */
   placeholder?: string;
 }

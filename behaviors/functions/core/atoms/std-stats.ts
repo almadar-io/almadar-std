@@ -39,15 +39,15 @@ export type StdStatsEventKey = 'INIT' | 'ITEMS_LOADED';
  * without modifying its state-machine topology.
  */
 export interface StdStatsConfig {
+  /** Default: `"Summary"` */
+  title?: string;
   /** Default: `"data-grid"` */
   viewPattern?: unknown;
-  /** Default: `[{"format":"number","icon":"list","label":"Total Items","variant":"primary","aggregation":"count"},{"label":"Active","aggregation":"count","icon":"check-circle","variant":"success","format":"number"},{"label":"Avg Value","aggregation":"avg","variant":"info","format":"number","field":"value","icon":"trending-up"}]` */
+  /** Default: `[{"aggregation":"count","icon":"list","format":"number","label":"Total Items","variant":"primary"},{"label":"Active","icon":"check-circle","aggregation":"count","format":"number","variant":"success"},{"label":"Avg Value","format":"number","aggregation":"avg","icon":"trending-up","variant":"info","field":"value"}]` */
   metrics?: EntityRow[];
   /** Default: `"elevated"` */
   statLook?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
-  /** Default: `"Summary"` */
-  title?: string;
-  /** Default: `{"entity":"@entity.cards","renderItem":["fn","card",{"clickEvent":"@card.clickEvent","value":"@card.value","format":"@card.format","suffix":"@card.suffix","trendFormat":"@card.trendFormat","max":"@card.max","label":"@card.label","target":"@card.target","trend":"@card.trend","trendPolarity":"@card.trendPolarity","icon":"@card.icon","prefix":"@card.prefix","type":"stat-display","sparklineData":"@card.sparklineData","variant":"@card.variant","look":"@config.statLook"}],"fields":[],"type":"@config.viewPattern"}` */
+  /** Default: `{"renderItem":["fn","card",{"trendFormat":"@card.trendFormat","value":"@card.value","clickEvent":"@card.clickEvent","format":"@card.format","type":"stat-display","trend":"@card.trend","trendPolarity":"@card.trendPolarity","look":"@config.statLook","suffix":"@card.suffix","max":"@card.max","variant":"@card.variant","target":"@card.target","sparklineData":"@card.sparklineData","label":"@card.label","prefix":"@card.prefix","icon":"@card.icon"}],"type":"@config.viewPattern","fields":[],"entity":"@entity.cards"}` */
   bodyContent?: unknown;
 }
 

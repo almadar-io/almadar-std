@@ -43,13 +43,13 @@
             "items": {
               "type": "object",
               "properties": {
-                "icon": {
-                  "name": "icon",
-                  "type": "string",
-                  "required": false
-                },
                 "value": {
                   "name": "value",
+                  "type": "string",
+                  "required": true
+                },
+                "label": {
+                  "name": "label",
                   "type": "string",
                   "required": true
                 },
@@ -58,10 +58,10 @@
                   "type": "number",
                   "required": false
                 },
-                "label": {
-                  "name": "label",
+                "icon": {
+                  "name": "icon",
                   "type": "string",
-                  "required": true
+                  "required": false
                 }
               }
             },
@@ -158,10 +158,16 @@
           "linkedEntity": "SummaryRecord",
           "emits": [
             {
-              "event": "OPEN_FILTER"
+              "event": "OPEN_FILTER",
+              "description": "Requests the opening of a filter panel or modal.",
+              "synonyms": "show filter, open filters, filter panel",
+              "tier": "essential"
             },
             {
               "event": "SummaryRecordLoaded",
+              "description": "Signals successful data retrieval and component initialization.",
+              "synonyms": "loaded, ready, initialized, data-ready",
+              "tier": "essential",
               "payloadSchema": [
                 {
                   "name": "data",
@@ -171,6 +177,9 @@
             },
             {
               "event": "SummaryRecordLoadFailed",
+              "description": "Indicates failure to retrieve the summary data.",
+              "synonyms": "error, failed, problem, issue",
+              "tier": "internal",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -204,6 +213,9 @@
               {
                 "key": "SummaryRecordLoaded",
                 "name": "SummaryRecord loaded",
+                "description": "Signals successful data retrieval and component initialization.",
+                "synonyms": "loaded, ready, initialized, data-ready",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "data",
@@ -214,6 +226,9 @@
               {
                 "key": "SummaryRecordLoadFailed",
                 "name": "SummaryRecord load failed",
+                "description": "Indicates failure to retrieve the summary data.",
+                "synonyms": "error, failed, problem, issue",
+                "tier": "internal",
                 "payloadSchema": [
                   {
                     "name": "error",
@@ -227,7 +242,10 @@
               },
               {
                 "key": "OPEN_FILTER",
-                "name": "Open Filter"
+                "name": "Open Filter",
+                "description": "Requests the opening of a filter panel or modal.",
+                "synonyms": "show filter, open filters, filter panel",
+                "tier": "essential"
               }
             ],
             "transitions": [
@@ -241,8 +259,8 @@
                     "SummaryRecord",
                     {
                       "emit": {
-                        "success": "SummaryRecordLoaded",
-                        "failure": "SummaryRecordLoadFailed"
+                        "failure": "SummaryRecordLoadFailed",
+                        "success": "SummaryRecordLoaded"
                       },
                       "limit": 1.0
                     }
@@ -374,194 +392,194 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
                       "children": [
                         {
-                          "align": "center",
-                          "type": "stack",
-                          "gap": "md",
                           "justify": "between",
-                          "direction": "horizontal",
                           "children": [
                             {
                               "gap": "xs",
+                              "direction": "vertical",
                               "type": "stack",
                               "children": [
                                 {
-                                  "variant": "h3",
-                                  "content": "@entity.title",
+                                  "weight": "semibold",
                                   "type": "typography",
-                                  "weight": "semibold"
+                                  "content": "@entity.title",
+                                  "variant": "h3"
                                 },
                                 {
-                                  "color": "muted",
                                   "content": "@entity.period",
                                   "type": "typography",
-                                  "variant": "caption"
+                                  "variant": "caption",
+                                  "color": "muted"
                                 }
-                              ],
-                              "direction": "vertical"
+                              ]
                             },
                             {
-                              "icon": "filter",
-                              "type": "button",
                               "size": "sm",
-                              "label": "Filter",
+                              "icon": "filter",
                               "action": "@entity.filterEvent",
+                              "type": "button",
+                              "label": "Filter",
                               "variant": "ghost"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "align": "center",
+                          "type": "stack",
+                          "gap": "md"
                         },
                         {
-                          "gap": "md",
                           "cols": 4.0,
+                          "gap": "md",
                           "children": [
                             {
-                              "entity": "@entity.tiles",
                               "type": "data-list",
+                              "gap": "md",
+                              "fields": [],
                               "renderItem": [
                                 "fn",
                                 "tile",
                                 {
                                   "look": "elevated",
-                                  "type": "card",
+                                  "padding": "md",
                                   "children": [
                                     {
-                                      "gap": "xs",
-                                      "type": "stack",
-                                      "direction": "vertical",
                                       "children": [
                                         {
-                                          "direction": "horizontal",
+                                          "align": "center",
                                           "children": [
                                             {
-                                              "type": "typography",
-                                              "variant": "overline",
                                               "color": "muted",
+                                              "content": "@tile.label",
                                               "weight": "semibold",
-                                              "content": "@tile.label"
+                                              "variant": "overline",
+                                              "type": "typography"
                                             },
                                             {
                                               "size": "sm",
+                                              "color": "muted",
                                               "type": "icon",
-                                              "name": "@tile.icon",
-                                              "color": "muted"
+                                              "name": "@tile.icon"
                                             }
                                           ],
                                           "gap": "xs",
-                                          "align": "center",
-                                          "type": "stack",
-                                          "justify": "between"
+                                          "justify": "between",
+                                          "direction": "horizontal",
+                                          "type": "stack"
                                         },
                                         {
-                                          "weight": "semibold",
-                                          "type": "typography",
                                           "variant": "h2",
-                                          "content": "@tile.value"
+                                          "type": "typography",
+                                          "content": "@tile.value",
+                                          "weight": "semibold"
                                         },
                                         {
-                                          "type": "trend-indicator",
                                           "value": "@tile.trend",
+                                          "showValue": true,
                                           "size": "sm",
-                                          "showValue": true
+                                          "type": "trend-indicator"
                                         }
-                                      ]
+                                      ],
+                                      "type": "stack",
+                                      "direction": "vertical",
+                                      "gap": "xs"
                                     }
                                   ],
-                                  "padding": "md"
+                                  "type": "card"
                                 }
                               ],
-                              "fields": [],
-                              "gap": "md"
+                              "entity": "@entity.tiles"
                             }
                           ],
                           "type": "simple-grid"
                         },
                         {
+                          "gap": "sm",
                           "children": [
                             {
-                              "type": "data-list",
+                              "gap": "sm",
+                              "entity": "@entity.statuses",
+                              "fields": [],
                               "renderItem": [
                                 "fn",
                                 "pill",
                                 {
                                   "type": "badge",
-                                  "variant": "@pill.tone",
                                   "size": "sm",
-                                  "label": "@pill.label"
+                                  "label": "@pill.label",
+                                  "variant": "@pill.tone"
                                 }
                               ],
-                              "gap": "sm",
-                              "fields": [],
-                              "entity": "@entity.statuses"
+                              "type": "data-list"
                             }
                           ],
-                          "direction": "horizontal",
                           "align": "center",
-                          "gap": "sm",
+                          "direction": "horizontal",
                           "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "card",
+                          "look": "elevated",
                           "children": [
                             {
-                              "gap": "md",
                               "direction": "vertical",
+                              "gap": "md",
                               "type": "stack",
                               "children": [
                                 {
-                                  "gap": "sm",
+                                  "align": "center",
                                   "children": [
                                     {
                                       "type": "stack",
+                                      "direction": "vertical",
+                                      "gap": "xs",
                                       "children": [
                                         {
-                                          "type": "typography",
-                                          "content": "@entity.chartTitle",
                                           "weight": "semibold",
-                                          "variant": "h4"
+                                          "content": "@entity.chartTitle",
+                                          "variant": "h4",
+                                          "type": "typography"
                                         },
                                         {
+                                          "type": "typography",
                                           "variant": "caption",
                                           "color": "muted",
-                                          "content": "@entity.chartSubtitle",
-                                          "type": "typography"
+                                          "content": "@entity.chartSubtitle"
                                         }
-                                      ],
-                                      "gap": "xs",
-                                      "direction": "vertical"
+                                      ]
                                     },
                                     {
                                       "variant": "default",
-                                      "size": "sm",
+                                      "label": "@entity.period",
                                       "type": "badge",
-                                      "label": "@entity.period"
+                                      "size": "sm"
                                     }
                                   ],
-                                  "align": "center",
-                                  "direction": "horizontal",
+                                  "gap": "sm",
                                   "justify": "between",
-                                  "type": "stack"
+                                  "type": "stack",
+                                  "direction": "horizontal"
                                 },
                                 {
                                   "showLegend": false,
-                                  "height": 280.0,
-                                  "chartType": "line",
                                   "type": "chart",
-                                  "data": "@entity.chartData"
+                                  "height": 280.0,
+                                  "data": "@entity.chartData",
+                                  "chartType": "line"
                                 }
                               ]
                             }
                           ],
-                          "look": "elevated",
-                          "type": "card",
                           "padding": "lg"
                         }
                       ],
-                      "type": "stack"
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -580,9 +598,9 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "@entity.errorMessage",
+                      "title": "Failed to load dashboard",
                       "type": "error-state",
-                      "title": "Failed to load dashboard"
+                      "message": "@entity.errorMessage"
                     }
                   ]
                 ]
@@ -601,8 +619,8 @@
                     "render-ui",
                     "main",
                     {
-                      "title": "Retrying…",
-                      "type": "loading-state"
+                      "type": "loading-state",
+                      "title": "Retrying…"
                     }
                   ]
                 ]

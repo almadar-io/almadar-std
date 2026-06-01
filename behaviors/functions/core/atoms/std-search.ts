@@ -46,10 +46,10 @@ export interface StdSearchSearchPayload {
  * without modifying its state-machine topology.
  */
 export interface StdSearchConfig {
-  /** Default: `"SEARCH"` */
-  event?: string;
   /** Default: `"Search…"` */
   placeholder?: string;
+  /** Default: `"SEARCH"` */
+  event?: string;
 }
 
 /**

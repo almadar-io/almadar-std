@@ -55,17 +55,47 @@ orbital VoteOrbital {
     }
     emits {
       VOTE { next : "up" | "down" | "none", data : object! }
+        @description "Signals a vote has been successfully recorded."
+        @synonyms "voted, submitted, confirmed"
+        @tier "essential"
       VoteLoaded { data : [Vote] }
+        @description "Indicates a vote has been successfully retrieved."
+        @synonyms "loaded, fetched, retrieved"
+        @tier "internal"
       VoteLoadFailed { error : string, code : string }
+        @description "Indicates that loading a vote failed."
+        @synonyms "load error, failed load, fetch failure"
+        @tier "internal"
       VoteCasted { row : Vote }
+        @description "Indicates a vote has been successfully recorded."
+        @synonyms "voted, vote-submitted, vote-changed"
+        @tier "essential"
       VoteCastFailed { error : string, code : string }
+        @description "Indicates a vote submission failed, likely due to a constraint."
+        @synonyms "failed, rejected, error"
+        @tier "customization"
     }
     listens {
       VOTE { next : "up" | "down" | "none", data : object! }
+        @description "A user has submitted or changed their vote."
+        @synonyms "voted, submitted, updated"
+        @tier "essential"
       VoteLoaded { data : [Vote] }
+        @description "Indicates a vote data load has completed."
+        @synonyms "loaded, fetched, retrieved"
+        @tier "internal"
       VoteLoadFailed { error : string, code : string }
+        @description "Indicates a failure to load vote data."
+        @synonyms "error, failed, problem, issue"
+        @tier "internal"
       VoteCasted { row : Vote }
+        @description "A vote has been successfully recorded."
+        @synonyms "voted, tallied, updated"
+        @tier "essential"
       VoteCastFailed { error : string, code : string }
+        @description "Indicates a vote submission could not be processed."
+        @synonyms "error, rejected, failed, invalid"
+        @tier "internal"
     }
   }
   page "/votes/cast" as VoteCastPage -> VoteCast

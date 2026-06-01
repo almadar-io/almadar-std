@@ -91,6 +91,9 @@
           "emits": [
             {
               "event": "APPROVE",
+              "description": "Signals that an approval request has been approved.",
+              "synonyms": "accept, authorize, confirm, pass",
+              "tier": "essential",
               "payloadSchema": [
                 {
                   "name": "id",
@@ -134,6 +137,9 @@
             },
             {
               "event": "DENY",
+              "description": "Signals that an approval request has been denied.",
+              "synonyms": "reject, decline",
+              "tier": "essential",
               "payloadSchema": [
                 {
                   "name": "id",
@@ -177,6 +183,9 @@
             },
             {
               "event": "ApprovalGranted",
+              "description": "Signals that an approval process has been successfully completed.",
+              "synonyms": "approved, authorized, confirmed, validated",
+              "tier": "essential",
               "scope": "external",
               "payloadSchema": [
                 {
@@ -187,6 +196,9 @@
             },
             {
               "event": "ApprovalDenied",
+              "description": "Indicates an approval request has been denied.",
+              "synonyms": "rejected, declined",
+              "tier": "essential",
               "scope": "external",
               "payloadSchema": [
                 {
@@ -197,6 +209,9 @@
             },
             {
               "event": "ApprovalRequestLoaded",
+              "description": "Indicates an approval request has been successfully loaded.",
+              "synonyms": "loaded, fetched, retrieved",
+              "tier": "internal",
               "payloadSchema": [
                 {
                   "name": "data",
@@ -206,6 +221,9 @@
             },
             {
               "event": "ApprovalRequestLoadFailed",
+              "description": "Indicates failure to load an approval request.",
+              "synonyms": "load error, failed load, request failure",
+              "tier": "internal",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -219,6 +237,9 @@
             },
             {
               "event": "ApprovalRequestReviewed",
+              "description": "Signals that an approval request has been reviewed.",
+              "synonyms": "reviewed, processed, examined",
+              "tier": "internal",
               "payloadSchema": [
                 {
                   "name": "row.id",
@@ -257,6 +278,9 @@
             },
             {
               "event": "ApprovalRequestReviewFailed",
+              "description": "Indicates a failure to load or process an approval request for review.",
+              "synonyms": "load error, failed review, processing failure",
+              "tier": "internal",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -290,6 +314,9 @@
               {
                 "key": "ApprovalRequestLoaded",
                 "name": "ApprovalRequest loaded",
+                "description": "Indicates an approval request has been successfully loaded.",
+                "synonyms": "loaded, fetched, retrieved",
+                "tier": "internal",
                 "payloadSchema": [
                   {
                     "name": "data",
@@ -300,6 +327,9 @@
               {
                 "key": "ApprovalRequestLoadFailed",
                 "name": "ApprovalRequest load failed",
+                "description": "Indicates failure to load an approval request.",
+                "synonyms": "load error, failed load, request failure",
+                "tier": "internal",
                 "payloadSchema": [
                   {
                     "name": "error",
@@ -314,6 +344,9 @@
               {
                 "key": "APPROVE",
                 "name": "Approve",
+                "description": "Signals that an approval request has been approved.",
+                "synonyms": "accept, authorize, confirm, pass",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "id",
@@ -329,6 +362,9 @@
               {
                 "key": "DENY",
                 "name": "Deny",
+                "description": "Signals that an approval request has been denied.",
+                "synonyms": "reject, decline",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "id",
@@ -344,6 +380,9 @@
               {
                 "key": "ApprovalRequestReviewed",
                 "name": "ApprovalRequest reviewed",
+                "description": "Signals that an approval request has been reviewed.",
+                "synonyms": "reviewed, processed, examined",
+                "tier": "internal",
                 "payloadSchema": [
                   {
                     "name": "row",
@@ -354,6 +393,9 @@
               {
                 "key": "ApprovalRequestReviewFailed",
                 "name": "ApprovalRequest review failed",
+                "description": "Indicates a failure to load or process an approval request for review.",
+                "synonyms": "load error, failed review, processing failure",
+                "tier": "internal",
                 "payloadSchema": [
                   {
                     "name": "error",
@@ -368,6 +410,9 @@
               {
                 "key": "ApprovalGranted",
                 "name": "Approval granted",
+                "description": "Signals that an approval process has been successfully completed.",
+                "synonyms": "approved, authorized, confirmed, validated",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "requestId",
@@ -378,6 +423,9 @@
               {
                 "key": "ApprovalDenied",
                 "name": "Approval denied",
+                "description": "Indicates an approval request has been denied.",
+                "synonyms": "rejected, declined",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "requestId",
@@ -398,8 +446,8 @@
                     "ApprovalRequest",
                     {
                       "emit": {
-                        "failure": "ApprovalRequestLoadFailed",
-                        "success": "ApprovalRequestLoaded"
+                        "success": "ApprovalRequestLoaded",
+                        "failure": "ApprovalRequestLoadFailed"
                       }
                     }
                   ],
@@ -407,22 +455,22 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
+                      "align": "center",
+                      "direction": "vertical",
                       "type": "stack",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
                           "type": "typography",
-                          "content": "Loading approval queue…",
-                          "variant": "caption"
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "Loading approval queue…"
                         }
-                      ],
-                      "className": "py-12",
-                      "direction": "vertical",
-                      "gap": "md",
-                      "align": "center"
+                      ]
                     }
                   ]
                 ]
@@ -436,35 +484,51 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
                       "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "align": "center",
                           "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "sm",
                           "children": [
                             {
                               "name": "shield-check",
                               "type": "icon"
                             },
                             {
-                              "content": "Approval queue",
                               "variant": "h3",
-                              "type": "typography"
+                              "type": "typography",
+                              "content": "Approval queue"
                             }
-                          ]
+                          ],
+                          "align": "center",
+                          "type": "stack",
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
+                          "itemActions": [
+                            {
+                              "icon": "check",
+                              "event": "APPROVE",
+                              "label": "Approve",
+                              "variant": "primary"
+                            },
+                            {
+                              "label": "Deny",
+                              "icon": "x",
+                              "variant": "danger",
+                              "event": "DENY"
+                            }
+                          ],
+                          "entity": "@payload.data",
                           "fields": [
                             {
-                              "variant": "badge",
                               "name": "gatedEvent",
-                              "label": "Action"
+                              "label": "Action",
+                              "variant": "badge"
                             },
                             {
                               "variant": "caption",
@@ -473,32 +537,16 @@
                             },
                             {
                               "name": "status",
-                              "label": "Status",
-                              "variant": "badge"
+                              "variant": "badge",
+                              "label": "Status"
                             }
                           ],
                           "look": "@config.tableLook",
                           "cols": 1.0,
-                          "gap": "sm",
-                          "itemActions": [
-                            {
-                              "event": "APPROVE",
-                              "label": "Approve",
-                              "icon": "check",
-                              "variant": "primary"
-                            },
-                            {
-                              "label": "Deny",
-                              "icon": "x",
-                              "event": "DENY",
-                              "variant": "danger"
-                            }
-                          ],
-                          "entity": "@payload.data"
+                          "type": "data-grid",
+                          "gap": "sm"
                         }
-                      ],
-                      "gap": "md",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -546,8 +594,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "failure": "ApprovalRequestReviewFailed",
-                        "success": "ApprovalRequestReviewed"
+                        "success": "ApprovalRequestReviewed",
+                        "failure": "ApprovalRequestReviewFailed"
                       }
                     }
                   ],
@@ -611,8 +659,8 @@
                     "ApprovalRequest",
                     {
                       "emit": {
-                        "success": "ApprovalRequestLoaded",
-                        "failure": "ApprovalRequestLoadFailed"
+                        "failure": "ApprovalRequestLoadFailed",
+                        "success": "ApprovalRequestLoaded"
                       }
                     }
                   ]
@@ -644,8 +692,8 @@
                     "ApprovalRequest",
                     {
                       "emit": {
-                        "failure": "ApprovalRequestLoadFailed",
-                        "success": "ApprovalRequestLoaded"
+                        "success": "ApprovalRequestLoaded",
+                        "failure": "ApprovalRequestLoadFailed"
                       }
                     }
                   ],
@@ -653,8 +701,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "sm"
+                      "size": "sm",
+                      "type": "spinner"
                     }
                   ]
                 ]
@@ -669,11 +717,36 @@
               "description": "Below this value, requests should be auto-approved. v1.0 declarative only; wiring lands in v1.1 (gap).",
               "tier": "domain"
             },
-            "escalationHours": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Escalation hours",
-              "description": "Hours a request can sit pending before escalating. v1.0 declarative only; per-row escalation needs loop-with-emit primitive (gap).",
+            "valueField": {
+              "type": "string",
+              "default": "",
+              "label": "Value field",
+              "description": "Payload field name to compare against threshold (e.g. 'amount' on a RefundRequested event). v1.0 declarative only.",
+              "tier": "domain"
+            },
+            "escalationRoles": {
+              "type": "[string]",
+              "default": [],
+              "label": "Escalation roles",
+              "description": "Roles notified when a request escalates (compose sibling std-notify-on-event).",
+              "tier": "domain",
+              "items": {
+                "type": "string"
+              }
+            },
+            "enabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Enabled",
+              "description": "Whether the approval gate is active for the host orbital. Off by default; turn on to require sign-off.",
+              "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, approval, needs approval, sign-off, signed off, review before, gatekeeper, editor approval, publishing approval, draft approval, content review, requires approval, manager approval, supervisor approval, admin approval, before going live",
+              "tier": "domain"
+            },
+            "autoApproveBelowThreshold": {
+              "type": "boolean",
+              "default": true,
+              "label": "Auto-approve below threshold",
+              "description": "Skip the review queue when the gated event's value is below the threshold. v1.0 declarative only.",
               "tier": "domain"
             },
             "tableLook": {
@@ -690,23 +763,6 @@
                 "card-rows"
               ]
             },
-            "escalationRoles": {
-              "type": "[string]",
-              "default": [],
-              "label": "Escalation roles",
-              "description": "Roles notified when a request escalates (compose sibling std-notify-on-event).",
-              "tier": "domain",
-              "items": {
-                "type": "string"
-              }
-            },
-            "autoApproveBelowThreshold": {
-              "type": "boolean",
-              "default": true,
-              "label": "Auto-approve below threshold",
-              "description": "Skip the review queue when the gated event's value is below the threshold. v1.0 declarative only.",
-              "tier": "domain"
-            },
             "approverRoles": {
               "type": "[string]",
               "default": [],
@@ -717,19 +773,11 @@
                 "type": "string"
               }
             },
-            "valueField": {
-              "type": "string",
-              "default": "",
-              "label": "Value field",
-              "description": "Payload field name to compare against threshold (e.g. 'amount' on a RefundRequested event). v1.0 declarative only.",
-              "tier": "domain"
-            },
-            "enabled": {
-              "type": "boolean",
-              "default": false,
-              "label": "Enabled",
-              "description": "Whether the approval gate is active for the host orbital. Off by default; turn on to require sign-off.",
-              "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, approval, needs approval, sign-off, signed off, review before, gatekeeper, editor approval, publishing approval, draft approval, content review, requires approval, manager approval, supervisor approval, admin approval, before going live",
+            "escalationHours": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Escalation hours",
+              "description": "Hours a request can sit pending before escalating. v1.0 declarative only; per-row escalation needs loop-with-emit primitive (gap).",
               "tier": "domain"
             }
           },

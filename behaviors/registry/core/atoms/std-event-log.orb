@@ -55,6 +55,11 @@
             "items": {
               "type": "object",
               "properties": {
+                "title": {
+                  "name": "title",
+                  "type": "string",
+                  "required": true
+                },
                 "status": {
                   "name": "status",
                   "type": "string",
@@ -82,20 +87,15 @@
                     "rejected"
                   ]
                 },
-                "id": {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                },
-                "title": {
-                  "name": "title",
-                  "type": "string",
-                  "required": true
-                },
                 "description": {
                   "name": "description",
                   "type": "string",
                   "required": false
+                },
+                "id": {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
                 }
               }
             },
@@ -119,10 +119,10 @@
                   "type": "string",
                   "required": false
                 },
-                "title": {
-                  "name": "title",
+                "date": {
+                  "name": "date",
                   "type": "string",
-                  "required": true
+                  "required": false
                 },
                 "status": {
                   "name": "status",
@@ -146,10 +146,10 @@
                     "rejected"
                   ]
                 },
-                "date": {
-                  "name": "date",
+                "title": {
+                  "name": "title",
                   "type": "string",
-                  "required": false
+                  "required": true
                 }
               }
             },
@@ -163,20 +163,20 @@
             "items": {
               "type": "object",
               "properties": {
-                "label": {
-                  "name": "label",
+                "icon": {
+                  "name": "icon",
                   "type": "string",
-                  "required": true
+                  "required": false
                 },
                 "id": {
                   "name": "id",
                   "type": "string",
                   "required": true
                 },
-                "icon": {
-                  "name": "icon",
+                "label": {
+                  "name": "label",
                   "type": "string",
-                  "required": false
+                  "required": true
                 }
               }
             },
@@ -235,6 +235,9 @@
           "emits": [
             {
               "event": "APPLY_FILTER",
+              "description": "Signals a filter has been applied to the event log.",
+              "synonyms": "filter, refine, narrow, update",
+              "tier": "customization",
               "payloadSchema": [
                 {
                   "name": "tabId",
@@ -243,10 +246,16 @@
               ]
             },
             {
-              "event": "OPEN_BACKFILL"
+              "event": "OPEN_BACKFILL",
+              "description": "Initiates a backfill operation to retrieve historical events.",
+              "synonyms": "refresh, retrieve, load history",
+              "tier": "advanced"
             },
             {
               "event": "SAVE_BACKFILL",
+              "description": "Indicates successful completion of backfill data saving.",
+              "synonyms": "saved, persisted, committed",
+              "tier": "customization",
               "payloadSchema": [
                 {
                   "name": "data",
@@ -255,10 +264,16 @@
               ]
             },
             {
-              "event": "CANCEL_BACKFILL"
+              "event": "CANCEL_BACKFILL",
+              "description": "Aborts the backfill process.",
+              "synonyms": "abort, stop, dismiss, undo",
+              "tier": "customization"
             },
             {
               "event": "EventLogLoaded",
+              "description": "Signals the event log has finished loading.",
+              "synonyms": "loaded, ready, initialized",
+              "tier": "essential",
               "payloadSchema": [
                 {
                   "name": "data",
@@ -268,6 +283,9 @@
             },
             {
               "event": "EventLogLoadFailed",
+              "description": "Indicates that loading the event log failed.",
+              "synonyms": "error, failure, failed, problem",
+              "tier": "internal",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -281,6 +299,9 @@
             },
             {
               "event": "EventLogSaved",
+              "description": "Indicates a new event has been successfully logged.",
+              "synonyms": "saved, added, created, recorded",
+              "tier": "essential",
               "payloadSchema": [
                 {
                   "name": "row",
@@ -290,6 +311,9 @@
             },
             {
               "event": "EventLogSaveFailed",
+              "description": "Indicates that saving an event failed.",
+              "synonyms": "error, failure, failed, problem",
+              "tier": "internal",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -326,6 +350,9 @@
               {
                 "key": "EventLogLoaded",
                 "name": "Event log loaded",
+                "description": "Signals the event log has finished loading.",
+                "synonyms": "loaded, ready, initialized",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "data",
@@ -336,6 +363,9 @@
               {
                 "key": "EventLogLoadFailed",
                 "name": "Event log load failed",
+                "description": "Indicates that loading the event log failed.",
+                "synonyms": "error, failure, failed, problem",
+                "tier": "internal",
                 "payloadSchema": [
                   {
                     "name": "error",
@@ -350,6 +380,9 @@
               {
                 "key": "EventLogSaved",
                 "name": "Event log saved",
+                "description": "Indicates a new event has been successfully logged.",
+                "synonyms": "saved, added, created, recorded",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "row",
@@ -360,6 +393,9 @@
               {
                 "key": "EventLogSaveFailed",
                 "name": "Event log save failed",
+                "description": "Indicates that saving an event failed.",
+                "synonyms": "error, failure, failed, problem",
+                "tier": "internal",
                 "payloadSchema": [
                   {
                     "name": "error",
@@ -374,6 +410,9 @@
               {
                 "key": "APPLY_FILTER",
                 "name": "Apply Filter",
+                "description": "Signals a filter has been applied to the event log.",
+                "synonyms": "filter, refine, narrow, update",
+                "tier": "customization",
                 "payloadSchema": [
                   {
                     "name": "tabId",
@@ -383,11 +422,17 @@
               },
               {
                 "key": "OPEN_BACKFILL",
-                "name": "Open Backfill"
+                "name": "Open Backfill",
+                "description": "Initiates a backfill operation to retrieve historical events.",
+                "synonyms": "refresh, retrieve, load history",
+                "tier": "advanced"
               },
               {
                 "key": "SAVE_BACKFILL",
                 "name": "Save Backfill",
+                "description": "Indicates successful completion of backfill data saving.",
+                "synonyms": "saved, persisted, committed",
+                "tier": "customization",
                 "payloadSchema": [
                   {
                     "name": "data",
@@ -397,7 +442,10 @@
               },
               {
                 "key": "CANCEL_BACKFILL",
-                "name": "Cancel Backfill"
+                "name": "Cancel Backfill",
+                "description": "Aborts the backfill process.",
+                "synonyms": "abort, stop, dismiss, undo",
+                "tier": "customization"
               }
             ],
             "transitions": [
@@ -411,8 +459,8 @@
                     "EventLogView",
                     {
                       "emit": {
-                        "failure": "EventLogLoadFailed",
-                        "success": "EventLogLoaded"
+                        "success": "EventLogLoaded",
+                        "failure": "EventLogLoadFailed"
                       }
                     }
                   ],
@@ -448,16 +496,16 @@
                               "@k",
                               "key"
                             ],
+                            "label": [
+                              "object/get",
+                              "@k",
+                              "label"
+                            ],
                             "icon": [
                               "object/get",
                               "@k",
                               "icon",
                               "circle"
-                            ],
-                            "label": [
-                              "object/get",
-                              "@k",
-                              "label"
                             ]
                           }
                         ]
@@ -481,6 +529,18 @@
                           "fn",
                           "row",
                           {
+                            "id": [
+                              "object/get",
+                              "@row",
+                              "id",
+                              ""
+                            ],
+                            "description": [
+                              "object/get",
+                              "@row",
+                              "description",
+                              ""
+                            ],
                             "status": [
                               "object/get",
                               [
@@ -512,16 +572,16 @@
                               "status",
                               "pending"
                             ],
+                            "kind": [
+                              "object/get",
+                              "@row",
+                              "kind",
+                              ""
+                            ],
                             "title": [
                               "object/get",
                               "@row",
                               "title",
-                              ""
-                            ],
-                            "id": [
-                              "object/get",
-                              "@row",
-                              "id",
                               ""
                             ],
                             "date": [
@@ -534,18 +594,6 @@
                                 "date",
                                 ""
                               ]
-                            ],
-                            "kind": [
-                              "object/get",
-                              "@row",
-                              "kind",
-                              ""
-                            ],
-                            "description": [
-                              "object/get",
-                              "@row",
-                              "description",
-                              ""
                             ]
                           }
                         ]
@@ -566,16 +614,22 @@
                           "fn",
                           "row",
                           {
+                            "id": [
+                              "object/get",
+                              "@row",
+                              "id",
+                              ""
+                            ],
+                            "title": [
+                              "object/get",
+                              "@row",
+                              "title",
+                              ""
+                            ],
                             "kind": [
                               "object/get",
                               "@row",
                               "kind",
-                              ""
-                            ],
-                            "description": [
-                              "object/get",
-                              "@row",
-                              "description",
                               ""
                             ],
                             "date": [
@@ -588,6 +642,12 @@
                                 "date",
                                 ""
                               ]
+                            ],
+                            "description": [
+                              "object/get",
+                              "@row",
+                              "description",
+                              ""
                             ],
                             "status": [
                               "object/get",
@@ -619,18 +679,6 @@
                               ],
                               "status",
                               "pending"
-                            ],
-                            "id": [
-                              "object/get",
-                              "@row",
-                              "id",
-                              ""
-                            ],
-                            "title": [
-                              "object/get",
-                              "@row",
-                              "title",
-                              ""
                             ]
                           }
                         ]
@@ -643,13 +691,15 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
                       "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
                           "gap": "sm",
-                          "type": "stack",
-                          "direction": "horizontal",
                           "align": "center",
+                          "direction": "horizontal",
+                          "type": "stack",
                           "children": [
                             {
                               "type": "icon",
@@ -661,21 +711,22 @@
                               "variant": "h3"
                             },
                             {
-                              "action": "OPEN_BACKFILL",
-                              "label": "Log event",
-                              "variant": "primary",
+                              "icon": "plus",
                               "type": "button",
-                              "icon": "plus"
+                              "variant": "primary",
+                              "action": "OPEN_BACKFILL",
+                              "label": "Log event"
                             }
                           ]
                         },
                         {
-                          "tabChangeEvent": "APPLY_FILTER",
                           "type": "tabs",
-                          "tabs": "@entity.filterChips",
-                          "activeTab": "@entity.filterKind"
+                          "activeTab": "@entity.filterKind",
+                          "tabChangeEvent": "APPLY_FILTER",
+                          "tabs": "@entity.filterChips"
                         },
                         {
+                          "look": "@config.timelineLook",
                           "type": "timeline",
                           "fields": [
                             "title",
@@ -683,12 +734,9 @@
                             "date",
                             "status"
                           ],
-                          "look": "@config.timelineLook",
                           "entity": "@entity.entries"
                         }
-                      ],
-                      "gap": "md",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -707,9 +755,9 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "@entity.errorMessage",
+                      "type": "error-state",
                       "title": "Failed to load",
-                      "type": "error-state"
+                      "message": "@entity.errorMessage"
                     }
                   ]
                 ]
@@ -724,8 +772,8 @@
                     "EventLogView",
                     {
                       "emit": {
-                        "success": "EventLogLoaded",
-                        "failure": "EventLogLoadFailed"
+                        "failure": "EventLogLoadFailed",
+                        "success": "EventLogLoaded"
                       }
                     }
                   ],
@@ -753,9 +801,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "error-state",
+                      "message": "@entity.errorMessage",
                       "title": "Save failed",
-                      "message": "@entity.errorMessage"
+                      "type": "error-state"
                     }
                   ]
                 ]
@@ -803,52 +851,52 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "gap": "md",
-                      "type": "stack",
                       "children": [
                         {
-                          "gap": "sm",
                           "align": "center",
                           "direction": "horizontal",
-                          "type": "stack",
+                          "gap": "sm",
                           "children": [
                             {
-                              "name": "history",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "history"
                             },
                             {
                               "type": "typography",
-                              "content": "@config.title",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "content": "@config.title"
                             },
                             {
+                              "icon": "plus",
                               "label": "Log event",
                               "type": "button",
-                              "icon": "plus",
-                              "action": "OPEN_BACKFILL",
-                              "variant": "primary"
+                              "variant": "primary",
+                              "action": "OPEN_BACKFILL"
                             }
-                          ]
+                          ],
+                          "type": "stack"
                         },
                         {
-                          "tabChangeEvent": "APPLY_FILTER",
-                          "activeTab": "@entity.filterKind",
+                          "type": "tabs",
                           "tabs": "@entity.filterChips",
-                          "type": "tabs"
+                          "tabChangeEvent": "APPLY_FILTER",
+                          "activeTab": "@entity.filterKind"
                         },
                         {
-                          "type": "timeline",
-                          "look": "@config.timelineLook",
                           "fields": [
                             "title",
                             "description",
                             "date",
                             "status"
                           ],
-                          "entity": "@entity.entries"
+                          "entity": "@entity.entries",
+                          "type": "timeline",
+                          "look": "@config.timelineLook"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -883,30 +931,31 @@
                     "main",
                     {
                       "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
-                          "gap": "sm",
                           "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
                           "children": [
                             {
-                              "label": "Back",
-                              "action": "CANCEL_BACKFILL",
                               "icon": "arrow-left",
+                              "action": "CANCEL_BACKFILL",
+                              "type": "button",
                               "variant": "ghost",
-                              "type": "button"
+                              "label": "Back"
                             },
                             {
-                              "type": "icon",
-                              "name": "plus-circle"
+                              "name": "plus-circle",
+                              "type": "icon"
                             },
                             {
+                              "type": "typography",
                               "variant": "h3",
-                              "content": "Log event",
-                              "type": "typography"
+                              "content": "Log event"
                             }
                           ],
-                          "align": "center"
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
@@ -914,20 +963,19 @@
                         {
                           "children": [
                             {
-                              "submitEvent": "SAVE_BACKFILL",
-                              "type": "form-section",
-                              "cancelEvent": "CANCEL_BACKFILL",
                               "fields": "@config.formFields",
-                              "mode": "create",
-                              "entity": "@entity"
+                              "submitEvent": "SAVE_BACKFILL",
+                              "entity": "@entity",
+                              "cancelEvent": "CANCEL_BACKFILL",
+                              "type": "form-section",
+                              "mode": "create"
                             }
                           ],
                           "type": "card",
                           "look": "@config.cardLook"
                         }
                       ],
-                      "gap": "md",
-                      "type": "stack"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -944,8 +992,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "failure": "EventLogSaveFailed",
-                        "success": "EventLogSaved"
+                        "success": "EventLogSaved",
+                        "failure": "EventLogSaveFailed"
                       }
                     }
                   ],
@@ -953,8 +1001,8 @@
                     "render-ui",
                     "main",
                     {
-                      "title": "Saving entry…",
-                      "type": "loading-state"
+                      "type": "loading-state",
+                      "title": "Saving entry…"
                     }
                   ]
                 ]
@@ -968,52 +1016,52 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "history"
+                              "name": "history",
+                              "type": "icon"
                             },
                             {
-                              "content": "@config.title",
+                              "variant": "h3",
                               "type": "typography",
-                              "variant": "h3"
+                              "content": "@config.title"
                             },
                             {
-                              "type": "button",
+                              "icon": "plus",
                               "variant": "primary",
                               "action": "OPEN_BACKFILL",
                               "label": "Log event",
-                              "icon": "plus"
+                              "type": "button"
                             }
                           ],
-                          "direction": "horizontal",
-                          "align": "center",
-                          "gap": "sm"
+                          "type": "stack"
                         },
                         {
                           "tabs": "@entity.filterChips",
+                          "type": "tabs",
                           "tabChangeEvent": "APPLY_FILTER",
-                          "activeTab": "@entity.filterKind",
-                          "type": "tabs"
+                          "activeTab": "@entity.filterKind"
                         },
                         {
+                          "look": "@config.timelineLook",
                           "fields": [
                             "title",
                             "description",
                             "date",
                             "status"
                           ],
-                          "entity": "@entity.entries",
                           "type": "timeline",
-                          "look": "@config.timelineLook"
+                          "entity": "@entity.entries"
                         }
-                      ]
+                      ],
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1027,8 +1075,8 @@
                     "render-ui",
                     "main",
                     {
-                      "title": "Retrying…",
-                      "type": "loading-state"
+                      "type": "loading-state",
+                      "title": "Retrying…"
                     }
                   ]
                 ]
@@ -1036,84 +1084,6 @@
             ]
           },
           "config": {
-            "formFields": {
-              "type": "[string]",
-              "default": [
-                "backfillTitle",
-                "backfillDescription",
-                "backfillKind",
-                "backfillDate"
-              ],
-              "label": "Backfill fields",
-              "description": "Inputs shown in the form for manually logging missed events",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
-            },
-            "kindOptions": {
-              "type": "[KindOption]",
-              "default": [
-                {
-                  "status": "active",
-                  "label": "Created",
-                  "key": "created",
-                  "icon": "plus-circle"
-                },
-                {
-                  "status": "pending",
-                  "label": "Updated",
-                  "icon": "edit-3",
-                  "key": "updated"
-                },
-                {
-                  "status": "complete",
-                  "key": "approved",
-                  "label": "Approved",
-                  "icon": "check-circle"
-                },
-                {
-                  "icon": "x-circle",
-                  "label": "Rejected",
-                  "key": "rejected",
-                  "status": "error"
-                }
-              ],
-              "label": "Event kinds",
-              "description": "Maps each event kind to its label, icon, and status color",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "status": {
-                    "name": "status",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "complete",
-                      "active",
-                      "pending",
-                      "error"
-                    ]
-                  },
-                  "key": {
-                    "name": "key",
-                    "type": "string",
-                    "required": true
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
             "cardLook": {
               "type": "string",
               "default": "elevated",
@@ -1142,6 +1112,84 @@
                 "horizontal",
                 "swimlane"
               ]
+            },
+            "formFields": {
+              "type": "[string]",
+              "default": [
+                "backfillTitle",
+                "backfillDescription",
+                "backfillKind",
+                "backfillDate"
+              ],
+              "label": "Backfill fields",
+              "description": "Inputs shown in the form for manually logging missed events",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "kindOptions": {
+              "type": "[KindOption]",
+              "default": [
+                {
+                  "label": "Created",
+                  "status": "active",
+                  "key": "created",
+                  "icon": "plus-circle"
+                },
+                {
+                  "label": "Updated",
+                  "icon": "edit-3",
+                  "key": "updated",
+                  "status": "pending"
+                },
+                {
+                  "label": "Approved",
+                  "status": "complete",
+                  "icon": "check-circle",
+                  "key": "approved"
+                },
+                {
+                  "label": "Rejected",
+                  "status": "error",
+                  "key": "rejected",
+                  "icon": "x-circle"
+                }
+              ],
+              "label": "Event kinds",
+              "description": "Maps each event kind to its label, icon, and status color",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "name": "key",
+                    "type": "string",
+                    "required": true
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "status": {
+                    "name": "status",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "complete",
+                      "active",
+                      "pending",
+                      "error"
+                    ]
+                  }
+                }
+              }
             },
             "title": {
               "type": "string",

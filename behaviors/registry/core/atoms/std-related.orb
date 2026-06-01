@@ -36,7 +36,9 @@
           "emits": [
             {
               "event": "RelatedItemLoaded",
-              "description": "Fired when RelatedItem finishes loading; payload.data holds the list",
+              "description": "Signals that related items have been successfully loaded.",
+              "synonyms": "loaded, fetched, retrieved",
+              "tier": "essential",
               "scope": "internal",
               "payloadSchema": [
                 {
@@ -47,7 +49,9 @@
             },
             {
               "event": "RelatedItemLoadFailed",
-              "description": "Fired when RelatedItem fails to load",
+              "description": "Indicates failure to load related items.",
+              "synonyms": "error, failure, problem, unsuccessful",
+              "tier": "internal",
               "scope": "internal",
               "payloadSchema": [
                 {
@@ -82,6 +86,9 @@
               {
                 "key": "RelatedItemLoaded",
                 "name": "RelatedItem loaded",
+                "description": "Signals that related items have been successfully loaded.",
+                "synonyms": "loaded, fetched, retrieved",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "data",
@@ -92,6 +99,9 @@
               {
                 "key": "RelatedItemLoadFailed",
                 "name": "RelatedItem load failed",
+                "description": "Indicates failure to load related items.",
+                "synonyms": "error, failure, problem, unsuccessful",
+                "tier": "internal",
                 "payloadSchema": [
                   {
                     "name": "error",
@@ -115,8 +125,8 @@
                     "RelatedItem",
                     {
                       "emit": {
-                        "failure": "RelatedItemLoadFailed",
-                        "success": "RelatedItemLoaded"
+                        "success": "RelatedItemLoaded",
+                        "failure": "RelatedItemLoadFailed"
                       }
                     }
                   ],
@@ -124,20 +134,20 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "sm",
-                      "type": "stack",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "content": "Loading related…",
                           "type": "typography",
                           "color": "muted",
-                          "variant": "caption",
-                          "content": "Loading related…"
+                          "variant": "caption"
                         }
                       ],
-                      "align": "center",
+                      "type": "stack",
+                      "gap": "sm",
                       "direction": "vertical",
                       "className": "py-8"
                     }
@@ -153,8 +163,12 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
+                          "type": "stack",
                           "align": "center",
                           "direction": "horizontal",
                           "children": [
@@ -163,43 +177,39 @@
                               "name": "link"
                             },
                             {
-                              "variant": "h3",
                               "type": "typography",
+                              "variant": "h3",
                               "content": "Related"
                             }
                           ],
-                          "type": "stack",
                           "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "entity": "@payload.data",
+                          "fields": [],
                           "renderItem": [
                             "fn",
                             "item",
                             {
-                              "gap": "xs",
-                              "type": "stack",
-                              "direction": "vertical",
                               "children": [
                                 {
                                   "variant": "body",
                                   "content": "@item.name",
                                   "type": "typography"
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "xs"
                             }
                           ],
+                          "entity": "@payload.data",
                           "type": "data-list",
-                          "look": "@config.tableLook",
-                          "fields": []
+                          "look": "@config.tableLook"
                         }
-                      ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -213,35 +223,35 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-8",
                       "direction": "vertical",
+                      "gap": "sm",
+                      "align": "center",
+                      "className": "py-8",
                       "children": [
                         {
-                          "type": "icon",
                           "name": "alert-triangle",
-                          "color": "destructive"
+                          "color": "destructive",
+                          "type": "icon"
                         },
                         {
-                          "variant": "body",
                           "type": "typography",
+                          "variant": "body",
                           "content": "Failed to load related"
                         },
                         {
-                          "color": "muted",
                           "variant": "caption",
+                          "type": "typography",
                           "content": "@payload.error",
-                          "type": "typography"
+                          "color": "muted"
                         },
                         {
-                          "type": "button",
-                          "action": "INIT",
-                          "label": "Retry",
+                          "variant": "ghost",
                           "icon": "rotate-ccw",
-                          "variant": "ghost"
+                          "label": "Retry",
+                          "action": "INIT",
+                          "type": "button"
                         }
                       ],
-                      "gap": "sm",
-                      "align": "center",
                       "type": "stack"
                     }
                   ]

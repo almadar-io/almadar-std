@@ -44,6 +44,68 @@
           "DELETE"
         ],
         "listenedEvents": [],
+        "events": [
+          {
+            "name": "BrowseItemLoaded",
+            "direction": "emit",
+            "description": "Signals that a browse item has been successfully loaded.",
+            "synonyms": "loaded, received, populated",
+            "tier": "essential"
+          },
+          {
+            "name": "BrowseItemLoadFailed",
+            "direction": "emit",
+            "description": "Indicates a failure to load a browse item.",
+            "synonyms": "error, failed, problem, unsuccessful",
+            "tier": "internal"
+          },
+          {
+            "name": "VIEW",
+            "direction": "emit",
+            "description": "Signals a grid view has been displayed or updated.",
+            "synonyms": "display, show, update, render",
+            "tier": "essential"
+          },
+          {
+            "name": "EDIT",
+            "direction": "emit",
+            "description": "Signals a request to edit the selected item.",
+            "synonyms": "modify, update, change",
+            "tier": "essential"
+          },
+          {
+            "name": "DELETE",
+            "direction": "emit",
+            "description": "Signals a request to remove an item from the dataset.",
+            "synonyms": "remove, discard, delete, purge",
+            "tier": "customization"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "REFETCH_QUERY",
+            "direction": "listen",
+            "description": "Triggers a data refresh based on the current query.",
+            "synonyms": "refresh, reload, update, re-query",
+            "tier": "essential"
+          },
+          {
+            "name": "REFETCH_FILTER",
+            "direction": "listen",
+            "description": "Triggers a data refresh based on current filter criteria.",
+            "synonyms": "refresh, filter, update, reload",
+            "tier": "essential"
+          },
+          {
+            "name": "REFETCH_PAGE",
+            "direction": "listen",
+            "description": "Triggers a data grid page refresh.",
+            "synonyms": "reload, refresh, update, paginate",
+            "tier": "essential"
+          }
+        ],
         "overridableConfigKeys": [
           {
             "key": "assigneeBinding",
@@ -65,20 +127,20 @@
             "key": "bodyContent",
             "type": "render-ui",
             "default": {
-              "type": "stack",
-              "direction": "vertical",
               "children": [
                 {
-                  "imageField": "@config.imageField",
                   "entity": "@payload.data",
-                  "fields": "@config.fields",
                   "itemActions": "@config.itemActions",
-                  "gap": "@config.gap",
-                  "pageSize": "@config.displayPageSize",
                   "type": "data-grid",
-                  "cols": "@config.cols"
+                  "fields": "@config.fields",
+                  "cols": "@config.cols",
+                  "pageSize": "@config.displayPageSize",
+                  "imageField": "@config.imageField",
+                  "gap": "@config.gap"
                 }
-              ]
+              ],
+              "type": "stack",
+              "direction": "vertical"
             },
             "label": "Body content tree",
             "description": "Render-ui SExpr rendered after rows load. Default is the canonical data-grid call wrapped in a stack. Layer 3 variants override this with their own tree (composing data-list/data-grid/entity-table + custom renderItem lambdas + filter-group, kbd, card, etc.) to deliver entirely different browse UX while inheriting the same trait, state machine, emits, and listens.",
@@ -105,24 +167,24 @@
             "type": "[ColumnSpec]",
             "default": [
               {
-                "weight": "medium",
-                "key": "name",
+                "align": "left",
                 "field": "name",
                 "header": "Name",
-                "align": "left"
+                "weight": "medium",
+                "key": "name"
               },
               {
                 "align": "left",
-                "key": "description",
                 "header": "Detail",
+                "key": "description",
                 "field": "description"
               },
               {
-                "key": "status",
-                "format": "badge",
                 "align": "center",
+                "header": "Status",
                 "field": "status",
-                "header": "Status"
+                "format": "badge",
+                "key": "status"
               }
             ],
             "label": "Table columns",
@@ -130,28 +192,8 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "className": {
-                  "name": "className",
-                  "required": false,
-                  "type": "string"
-                },
-                "align": {
-                  "name": "align",
-                  "required": false,
-                  "type": "string"
-                },
-                "header": {
-                  "name": "header",
-                  "required": false,
-                  "type": "string"
-                },
                 "icon": {
                   "name": "icon",
-                  "required": false,
-                  "type": "string"
-                },
-                "weight": {
-                  "name": "weight",
                   "required": false,
                   "type": "string"
                 },
@@ -160,8 +202,8 @@
                   "required": false,
                   "type": "string"
                 },
-                "width": {
-                  "name": "width",
+                "className": {
+                  "name": "className",
                   "required": false,
                   "type": "string"
                 },
@@ -170,9 +212,29 @@
                   "required": false,
                   "type": "string"
                 },
+                "weight": {
+                  "name": "weight",
+                  "required": false,
+                  "type": "string"
+                },
                 "key": {
                   "name": "key",
                   "required": true,
+                  "type": "string"
+                },
+                "header": {
+                  "name": "header",
+                  "required": false,
+                  "type": "string"
+                },
+                "width": {
+                  "name": "width",
+                  "required": false,
+                  "type": "string"
+                },
+                "align": {
+                  "name": "align",
+                  "required": false,
                   "type": "string"
                 }
               },
@@ -200,18 +262,18 @@
             "type": "[FieldSpec]",
             "default": [
               {
-                "variant": "h4",
                 "label": "Name",
+                "variant": "h4",
                 "name": "name"
               },
               {
+                "variant": "caption",
                 "name": "description",
-                "label": "Description",
-                "variant": "caption"
+                "label": "Description"
               },
               {
-                "variant": "badge",
                 "label": "Status",
+                "variant": "badge",
                 "name": "status"
               }
             ],
@@ -220,13 +282,23 @@
             "tier": "presentation",
             "items": {
               "properties": {
+                "header": {
+                  "name": "header",
+                  "required": false,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
                 "key": {
                   "name": "key",
                   "required": false,
                   "type": "string"
                 },
-                "header": {
-                  "name": "header",
+                "variant": {
+                  "name": "variant",
                   "required": false,
                   "type": "string"
                 },
@@ -235,18 +307,8 @@
                   "required": true,
                   "type": "string"
                 },
-                "icon": {
-                  "name": "icon",
-                  "required": false,
-                  "type": "string"
-                },
                 "label": {
                   "name": "label",
-                  "required": false,
-                  "type": "string"
-                },
-                "variant": {
-                  "name": "variant",
                   "required": false,
                   "type": "string"
                 },
@@ -268,11 +330,6 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "field": {
-                  "name": "field",
-                  "required": true,
-                  "type": "string"
-                },
                 "options": {
                   "name": "options",
                   "required": false,
@@ -280,6 +337,11 @@
                   "items": {
                     "type": "string"
                   }
+                },
+                "field": {
+                  "name": "field",
+                  "required": true,
+                  "type": "string"
                 },
                 "label": {
                   "name": "label",
@@ -328,8 +390,8 @@
                   "required": true,
                   "type": "string"
                 },
-                "variant": {
-                  "name": "variant",
+                "icon": {
+                  "name": "icon",
                   "required": false,
                   "type": "string"
                 },
@@ -338,8 +400,8 @@
                   "required": true,
                   "type": "string"
                 },
-                "icon": {
-                  "name": "icon",
+                "variant": {
+                  "name": "variant",
                   "required": false,
                   "type": "string"
                 }

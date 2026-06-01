@@ -28,25 +28,25 @@
             "items": {
               "type": "object",
               "properties": {
+                "id": {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
                 "label": {
                   "name": "label",
                   "type": "string",
                   "required": true
-                },
-                "icon": {
-                  "name": "icon",
-                  "type": "string",
-                  "required": false
                 },
                 "badge": {
                   "name": "badge",
                   "type": "string",
                   "required": false
                 },
-                "id": {
-                  "name": "id",
+                "icon": {
+                  "name": "icon",
                   "type": "string",
-                  "required": true
+                  "required": false
                 },
                 "content": {
                   "name": "content",
@@ -76,6 +76,9 @@
           "emits": [
             {
               "event": "TAB_CHANGED",
+              "description": "Signals a tab selection has occurred.",
+              "synonyms": "selected, activated, switched",
+              "tier": "essential",
               "scope": "external",
               "payloadSchema": [
                 {
@@ -101,6 +104,9 @@
               {
                 "key": "TAB_CHANGED",
                 "name": "Tab Changed",
+                "description": "Signals a tab selection has occurred.",
+                "synonyms": "selected, activated, switched",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "tabId",
@@ -158,15 +164,27 @@
             ]
           },
           "config": {
+            "variant": {
+              "type": "string",
+              "default": "default",
+              "label": "Tab style",
+              "description": "Visual style of the tab strip",
+              "tier": "presentation",
+              "values": [
+                "default",
+                "pills",
+                "underline"
+              ]
+            },
             "bodyContent": {
               "type": "render-ui",
               "default": {
-                "orientation": "@config.orientation",
-                "variant": "@config.variant",
-                "tabChangeEvent": "TAB_CHANGED",
+                "type": "tabs",
                 "items": "@entity.items",
                 "activeTab": "@entity.activeTab",
-                "type": "tabs"
+                "orientation": "@config.orientation",
+                "variant": "@config.variant",
+                "tabChangeEvent": "TAB_CHANGED"
               },
               "label": "Body content tree",
               "description": "Render-ui SExpr rendered for the tabs surface. Default is the canonical tabs pattern bound to @entity.items / @entity.activeTab. Layer 3 variants override this with their own tree (segmented-pill bar, vertical sidebar rail, etc.) while inheriting the same trait, state machine, emits, and listens.",
@@ -182,12 +200,12 @@
                 },
                 {
                   "id": "details",
-                  "icon": "list",
-                  "label": "Details"
+                  "label": "Details",
+                  "icon": "list"
                 },
                 {
-                  "label": "Settings",
                   "icon": "settings",
+                  "label": "Settings",
                   "id": "settings"
                 }
               ],
@@ -197,14 +215,9 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "label": {
-                    "name": "label",
+                  "badge": {
+                    "name": "badge",
                     "type": "string",
-                    "required": true
-                  },
-                  "content": {
-                    "name": "content",
-                    "type": "trait",
                     "required": false
                   },
                   "icon": {
@@ -212,15 +225,20 @@
                     "type": "string",
                     "required": false
                   },
+                  "content": {
+                    "name": "content",
+                    "type": "trait",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
                   "id": {
                     "name": "id",
                     "type": "string",
                     "required": true
-                  },
-                  "badge": {
-                    "name": "badge",
-                    "type": "string",
-                    "required": false
                   }
                 }
               }
@@ -234,18 +252,6 @@
               "values": [
                 "horizontal",
                 "vertical"
-              ]
-            },
-            "variant": {
-              "type": "string",
-              "default": "default",
-              "label": "Tab style",
-              "description": "Visual style of the tab strip",
-              "tier": "presentation",
-              "values": [
-                "default",
-                "pills",
-                "underline"
               ]
             },
             "defaultTab": {

@@ -88,6 +88,61 @@
           "StoredFileLoadFailed"
         ],
         "listenedEvents": [],
+        "events": [
+          {
+            "name": "OPEN_FILE",
+            "direction": "emit",
+            "description": "Indicates a file has been selected for viewing.",
+            "synonyms": "select, choose, activate",
+            "tier": "essential"
+          },
+          {
+            "name": "CLOSE_VIEW",
+            "direction": "emit",
+            "description": "Signals the view has been closed or dismissed.",
+            "synonyms": "dismiss, hide, close",
+            "tier": "essential"
+          },
+          {
+            "name": "DOWNLOAD_FILE",
+            "direction": "emit",
+            "description": "Initiates a file download process.",
+            "synonyms": "export, save, retrieve",
+            "tier": "essential"
+          },
+          {
+            "name": "ARCHIVE_FILE",
+            "direction": "emit",
+            "description": "Signals a file is being moved to archive storage.",
+            "synonyms": "archive, move to archive, delete permanently",
+            "tier": "customization"
+          },
+          {
+            "name": "REORDER",
+            "direction": "emit",
+            "description": "Indicates the order of items in the tree has changed.",
+            "synonyms": "sort, rearrange, move, change order",
+            "tier": "customization"
+          },
+          {
+            "name": "StoredFileLoaded",
+            "direction": "emit",
+            "description": "Indicates a file has been successfully retrieved and is ready.",
+            "synonyms": "loaded, fetched, retrieved, ready",
+            "tier": "essential"
+          },
+          {
+            "name": "StoredFileLoadFailed",
+            "direction": "emit",
+            "description": "Indicates a failure to load a stored file.",
+            "synonyms": "error, failed, problem, unsuccessful",
+            "tier": "internal"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
         "overridableConfigKeys": [
           {
             "key": "detailActions",
@@ -99,9 +154,9 @@
                 "label": "Download"
               },
               {
+                "variant": "danger",
                 "label": "Archive",
-                "event": "ARCHIVE_FILE",
-                "variant": "danger"
+                "event": "ARCHIVE_FILE"
               }
             ],
             "label": "Detail actions",
@@ -109,9 +164,9 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "variant": {
-                  "name": "variant",
-                  "required": false,
+                "label": {
+                  "name": "label",
+                  "required": true,
                   "type": "string"
                 },
                 "icon": {
@@ -124,9 +179,9 @@
                   "required": true,
                   "type": "string"
                 },
-                "label": {
-                  "name": "label",
-                  "required": true,
+                "variant": {
+                  "name": "variant",
+                  "required": false,
                   "type": "string"
                 }
               },
@@ -138,23 +193,23 @@
             "type": "[FieldSpec]",
             "default": [
               {
-                "label": "Name",
                 "name": "name",
+                "label": "Name",
                 "variant": "caption"
               },
               {
+                "label": "Folder",
                 "variant": "caption",
-                "name": "folder",
-                "label": "Folder"
+                "name": "folder"
               },
               {
-                "variant": "badge",
                 "name": "mimeType",
+                "variant": "badge",
                 "label": "Type"
               },
               {
-                "variant": "caption",
                 "label": "Size",
+                "variant": "caption",
                 "name": "sizeBytes"
               },
               {
@@ -168,6 +223,21 @@
             "tier": "presentation",
             "items": {
               "properties": {
+                "header": {
+                  "name": "header",
+                  "required": false,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
                 "label": {
                   "name": "label",
                   "required": false,
@@ -178,28 +248,13 @@
                   "required": false,
                   "type": "string"
                 },
-                "header": {
-                  "name": "header",
-                  "required": false,
-                  "type": "string"
-                },
-                "key": {
-                  "name": "key",
-                  "required": false,
-                  "type": "string"
-                },
                 "format": {
                   "name": "format",
                   "required": false,
                   "type": "string"
                 },
-                "name": {
-                  "name": "name",
-                  "required": true,
-                  "type": "string"
-                },
-                "variant": {
-                  "name": "variant",
+                "key": {
+                  "name": "key",
                   "required": false,
                   "type": "string"
                 }
@@ -227,8 +282,8 @@
               },
               {
                 "label": "Archive",
-                "variant": "danger",
-                "event": "ARCHIVE_FILE"
+                "event": "ARCHIVE_FILE",
+                "variant": "danger"
               }
             ],
             "label": "Row actions",
@@ -236,13 +291,13 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "label": {
-                  "name": "label",
-                  "required": true,
+                "icon": {
+                  "name": "icon",
+                  "required": false,
                   "type": "string"
                 },
-                "event": {
-                  "name": "event",
+                "label": {
+                  "name": "label",
                   "required": true,
                   "type": "string"
                 },
@@ -251,9 +306,9 @@
                   "required": false,
                   "type": "string"
                 },
-                "icon": {
-                  "name": "icon",
-                  "required": false,
+                "event": {
+                  "name": "event",
+                  "required": true,
                   "type": "string"
                 }
               },
@@ -296,55 +351,55 @@
             "type": "[TreeNode]",
             "default": [
               {
-                "name": "Contracts",
+                "type": "dir",
                 "children": [
                   {
-                    "name": "Active.pdf",
+                    "path": "Active.pdf",
                     "type": "file",
-                    "path": "Active.pdf"
+                    "name": "Active.pdf"
                   },
                   {
+                    "path": "Archived.pdf",
                     "type": "file",
-                    "name": "Archived.pdf",
-                    "path": "Archived.pdf"
+                    "name": "Archived.pdf"
                   }
                 ],
-                "path": "Contracts",
-                "type": "dir"
+                "name": "Contracts",
+                "path": "Contracts"
               },
               {
-                "type": "dir",
                 "name": "Policies",
-                "path": "Policies",
                 "children": [
                   {
+                    "name": "HR.docx",
                     "path": "Policies/HR.docx",
-                    "type": "file",
-                    "name": "HR.docx"
+                    "type": "file"
                   },
                   {
-                    "type": "file",
+                    "name": "Security.md",
                     "path": "Policies/Security.md",
-                    "name": "Security.md"
+                    "type": "file"
                   }
-                ]
+                ],
+                "type": "dir",
+                "path": "Policies"
               },
               {
-                "name": "Templates",
-                "type": "dir",
-                "path": "Templates",
                 "children": [
                   {
-                    "type": "file",
+                    "name": "Invoice.docx",
                     "path": "Templates/Invoice.docx",
-                    "name": "Invoice.docx"
+                    "type": "file"
                   },
                   {
-                    "type": "file",
+                    "name": "NDA.pdf",
                     "path": "Templates/NDA.pdf",
-                    "name": "NDA.pdf"
+                    "type": "file"
                   }
-                ]
+                ],
+                "name": "Templates",
+                "path": "Templates",
+                "type": "dir"
               }
             ],
             "label": "Folder tree",
@@ -352,14 +407,6 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "children": {
-                  "name": "children",
-                  "required": false,
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                },
                 "type": {
                   "name": "type",
                   "required": true,
@@ -369,6 +416,14 @@
                   "name": "path",
                   "required": true,
                   "type": "string"
+                },
+                "children": {
+                  "name": "children",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
                 },
                 "name": {
                   "name": "name",

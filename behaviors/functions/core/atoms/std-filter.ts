@@ -49,7 +49,7 @@ export interface StdFilterFilterPayload {
 export interface StdFilterConfig {
   /** Default: `"toolbar"` */
   filterBarLook?: 'toolbar' | 'chips' | 'pills' | 'popover-trigger' | 'inline-column-header';
-  /** Default: `[{"field":"status","label":"Status","filterType":"select","options":["active","inactive","pending"]}]` */
+  /** Default: `[{"options":["active","inactive","pending"],"field":"status","label":"Status","filterType":"select"}]` */
   filters?: EntityRow[];
   /** Default: `"FILTER"` */
   event?: string;

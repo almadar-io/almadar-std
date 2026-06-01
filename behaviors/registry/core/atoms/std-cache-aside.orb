@@ -67,7 +67,9 @@
           "emits": [
             {
               "event": "CacheEntryLoaded",
-              "description": "Fired when CacheEntry finishes loading; payload.data holds the entries",
+              "description": "Indicates a cache entry has been successfully retrieved.",
+              "synonyms": "loaded, retrieved, fetched",
+              "tier": "essential",
               "scope": "internal",
               "payloadSchema": [
                 {
@@ -78,7 +80,9 @@
             },
             {
               "event": "CacheEntryLoadFailed",
-              "description": "Fired when CacheEntry fails to load",
+              "description": "Indicates a failure to load a cache entry.",
+              "synonyms": "error, failure, miss, not found",
+              "tier": "internal",
               "scope": "internal",
               "payloadSchema": [
                 {
@@ -93,7 +97,9 @@
             },
             {
               "event": "CacheEntryUpdated",
-              "description": "Fired when persist update succeeds",
+              "description": "Signals that a cached entry's data has been modified.",
+              "synonyms": "modified, refreshed, changed, updated",
+              "tier": "customization",
               "scope": "internal",
               "payloadSchema": [
                 {
@@ -104,7 +110,9 @@
             },
             {
               "event": "CacheEntryUpdateFailed",
-              "description": "Fired when persist update fails",
+              "description": "Indicates a failure to update a cached entry.",
+              "synonyms": "error, failure, problem, unsuccessful",
+              "tier": "internal",
               "scope": "internal",
               "payloadSchema": [
                 {
@@ -149,6 +157,9 @@
               {
                 "key": "CacheEntryLoaded",
                 "name": "CacheEntry loaded",
+                "description": "Indicates a cache entry has been successfully retrieved.",
+                "synonyms": "loaded, retrieved, fetched",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "data",
@@ -159,6 +170,9 @@
               {
                 "key": "CacheEntryLoadFailed",
                 "name": "CacheEntry load failed",
+                "description": "Indicates a failure to load a cache entry.",
+                "synonyms": "error, failure, miss, not found",
+                "tier": "internal",
                 "payloadSchema": [
                   {
                     "name": "error",
@@ -177,6 +191,9 @@
               {
                 "key": "CACHED",
                 "name": "Cached",
+                "description": "Data retrieved successfully from the cache.",
+                "synonyms": "hit, found, retrieved",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "data",
@@ -191,6 +208,9 @@
               {
                 "key": "CacheEntryUpdated",
                 "name": "CacheEntry updated",
+                "description": "Signals that a cached entry's data has been modified.",
+                "synonyms": "modified, refreshed, changed, updated",
+                "tier": "customization",
                 "payloadSchema": [
                   {
                     "name": "id",
@@ -201,6 +221,9 @@
               {
                 "key": "CacheEntryUpdateFailed",
                 "name": "CacheEntry update failed",
+                "description": "Indicates a failure to update a cached entry.",
+                "synonyms": "error, failure, problem, unsuccessful",
+                "tier": "internal",
                 "payloadSchema": [
                   {
                     "name": "error",
@@ -223,16 +246,16 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
                           "gap": "md",
                           "direction": "horizontal",
-                          "type": "stack",
-                          "justify": "between",
                           "children": [
                             {
-                              "gap": "md",
                               "direction": "horizontal",
+                              "gap": "md",
                               "children": [
                                 {
                                   "name": "database",
@@ -247,27 +270,27 @@
                               "type": "stack"
                             },
                             {
-                              "icon": "download",
                               "label": "Fetch",
-                              "type": "button",
                               "action": "FETCH",
-                              "variant": "primary"
+                              "type": "button",
+                              "variant": "primary",
+                              "icon": "download"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "justify": "between"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "title": "Cache is empty",
                           "icon": "inbox",
-                          "type": "empty-state",
                           "look": "@config.emptyLook",
                           "description": "Fetch data to populate the cache.",
-                          "title": "Cache is empty"
+                          "type": "empty-state"
                         }
                       ],
-                      "type": "stack",
-                      "direction": "vertical",
                       "gap": "lg"
                     }
                   ]
@@ -292,22 +315,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
+                      "align": "center",
+                      "gap": "md",
                       "className": "py-12",
+                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
                           "content": "Fetching cache…",
-                          "variant": "caption",
-                          "color": "muted"
+                          "color": "muted",
+                          "type": "typography",
+                          "variant": "caption"
                         }
-                      ],
-                      "gap": "md",
-                      "align": "center"
+                      ]
                     }
                   ]
                 ]
@@ -321,75 +344,80 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "type": "stack",
+                      "gap": "lg",
                       "children": [
                         {
-                          "justify": "between",
-                          "direction": "horizontal",
-                          "gap": "md",
                           "type": "stack",
+                          "gap": "md",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "direction": "horizontal",
                               "gap": "md",
-                              "type": "stack",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "database"
+                                  "name": "database",
+                                  "type": "icon"
                                 },
                                 {
+                                  "variant": "h2",
                                   "type": "typography",
-                                  "content": "Cache (hot)",
-                                  "variant": "h2"
-                                }
-                              ]
-                            },
-                            {
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "status-dot",
-                                  "status": "online",
-                                  "pulse": false,
-                                  "label": "Cached"
-                                },
-                                {
-                                  "label": "Invalidate",
-                                  "action": "INVALIDATE",
-                                  "type": "button",
-                                  "variant": "ghost",
-                                  "icon": "trash"
+                                  "content": "Cache (hot)"
                                 }
                               ],
-                              "type": "stack",
+                              "direction": "horizontal",
+                              "type": "stack"
+                            },
+                            {
                               "gap": "sm",
-                              "direction": "horizontal"
+                              "type": "stack",
+                              "align": "center",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "label": "Cached",
+                                  "type": "status-dot",
+                                  "pulse": false,
+                                  "status": "online"
+                                },
+                                {
+                                  "icon": "trash",
+                                  "label": "Invalidate",
+                                  "action": "INVALIDATE",
+                                  "variant": "ghost",
+                                  "type": "button"
+                                }
+                              ]
                             }
-                          ]
+                          ],
+                          "justify": "between"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
+                          "fields": [],
                           "renderItem": [
                             "fn",
                             "item",
                             {
+                              "direction": "vertical",
+                              "gap": "sm",
                               "type": "stack",
                               "children": [
                                 {
-                                  "justify": "between",
                                   "align": "center",
                                   "direction": "horizontal",
+                                  "type": "stack",
                                   "children": [
                                     {
                                       "align": "center",
+                                      "gap": "sm",
                                       "children": [
                                         {
-                                          "type": "icon",
-                                          "name": "database"
+                                          "name": "database",
+                                          "type": "icon"
                                         },
                                         {
                                           "type": "typography",
@@ -397,34 +425,29 @@
                                           "variant": "h4"
                                         }
                                       ],
-                                      "gap": "sm",
                                       "type": "stack",
                                       "direction": "horizontal"
                                     },
                                     {
-                                      "label": "@item.description",
-                                      "type": "badge"
+                                      "type": "badge",
+                                      "label": "@item.description"
                                     }
                                   ],
-                                  "type": "stack"
+                                  "justify": "between"
                                 },
                                 {
                                   "content": "@item.status",
                                   "type": "typography",
                                   "variant": "caption"
                                 }
-                              ],
-                              "direction": "vertical",
-                              "gap": "sm"
+                              ]
                             }
                           ],
-                          "look": "@config.tableLook",
-                          "fields": [],
-                          "entity": "@payload.data"
+                          "entity": "@payload.data",
+                          "type": "data-grid",
+                          "look": "@config.tableLook"
                         }
-                      ],
-                      "direction": "vertical",
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]
@@ -438,36 +461,36 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "className": "py-12",
                       "type": "stack",
                       "gap": "md",
-                      "direction": "vertical",
+                      "align": "center",
                       "children": [
                         {
-                          "type": "icon",
                           "color": "destructive",
+                          "type": "icon",
                           "name": "alert-triangle"
                         },
                         {
                           "variant": "h3",
-                          "type": "typography",
-                          "content": "Failed to load"
+                          "content": "Failed to load",
+                          "type": "typography"
                         },
                         {
-                          "type": "typography",
-                          "variant": "body",
                           "color": "muted",
-                          "content": "@payload.error"
+                          "variant": "body",
+                          "content": "@payload.error",
+                          "type": "typography"
                         },
                         {
+                          "action": "FETCH",
+                          "variant": "primary",
                           "icon": "rotate-ccw",
                           "label": "Retry",
-                          "action": "FETCH",
-                          "type": "button",
-                          "variant": "primary"
+                          "type": "button"
                         }
-                      ],
-                      "align": "center",
-                      "className": "py-12"
+                      ]
                     }
                   ]
                 ]
@@ -481,32 +504,31 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "lg",
                       "direction": "vertical",
+                      "gap": "lg",
                       "children": [
                         {
-                          "gap": "md",
-                          "justify": "between",
-                          "type": "stack",
                           "children": [
                             {
+                              "type": "stack",
+                              "gap": "md",
+                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "name": "database",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "database"
                                 },
                                 {
-                                  "variant": "h2",
+                                  "content": "Cache (stale)",
                                   "type": "typography",
-                                  "content": "Cache (stale)"
+                                  "variant": "h2"
                                 }
-                              ],
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md"
+                              ]
                             },
                             {
+                              "gap": "sm",
+                              "align": "center",
+                              "type": "stack",
                               "children": [
                                 {
                                   "type": "status-dot",
@@ -515,30 +537,31 @@
                                   "label": "Stale"
                                 },
                                 {
-                                  "action": "REFRESH",
+                                  "type": "button",
+                                  "icon": "refresh-cw",
                                   "label": "Refresh",
                                   "variant": "primary",
-                                  "icon": "refresh-cw",
-                                  "type": "button"
+                                  "action": "REFRESH"
                                 }
                               ],
-                              "gap": "sm",
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "align": "center"
+                              "direction": "horizontal"
                             }
                           ],
-                          "direction": "horizontal"
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "between"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "message": "Cache data is stale. Refresh to get the latest data.",
                           "type": "alert",
-                          "variant": "warning"
+                          "variant": "warning",
+                          "message": "Cache data is stale. Refresh to get the latest data."
                         }
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -613,8 +636,8 @@
                     "CacheEntry",
                     {
                       "emit": {
-                        "failure": "CacheEntryLoadFailed",
-                        "success": "CacheEntryLoaded"
+                        "success": "CacheEntryLoaded",
+                        "failure": "CacheEntryLoadFailed"
                       }
                     }
                   ],
@@ -636,11 +659,11 @@
                     "render-ui",
                     "main",
                     {
-                      "title": "Cache is empty",
                       "description": "Fetch data to populate the cache.",
-                      "look": "@config.emptyLook",
+                      "type": "empty-state",
                       "icon": "inbox",
-                      "type": "empty-state"
+                      "title": "Cache is empty",
+                      "look": "@config.emptyLook"
                     }
                   ]
                 ]
@@ -655,8 +678,8 @@
                     "CacheEntry",
                     {
                       "emit": {
-                        "success": "CacheEntryLoaded",
-                        "failure": "CacheEntryLoadFailed"
+                        "failure": "CacheEntryLoadFailed",
+                        "success": "CacheEntryLoaded"
                       }
                     }
                   ],
@@ -672,20 +695,39 @@
             ]
           },
           "config": {
+            "evictionPolicy": {
+              "type": "string",
+              "default": "lru",
+              "label": "Eviction policy",
+              "description": "How entries are evicted when the cache fills: least-recently-used, least-frequently-used, first-in-first-out, or TTL-only (never evict early).",
+              "synonyms": "cache replacement, eviction strategy",
+              "tier": "domain",
+              "values": [
+                "lru",
+                "lfu",
+                "fifo",
+                "ttl-only"
+              ]
+            },
+            "emptyLook": {
+              "type": "string",
+              "default": "icon-only",
+              "label": "Empty-state look",
+              "description": "Layer 2 visual treatment for the empty-state placeholder.",
+              "tier": "presentation",
+              "values": [
+                "illustrated",
+                "icon-only",
+                "text-only",
+                "mascot"
+              ]
+            },
             "staleWhileRevalidate": {
               "type": "boolean",
               "default": true,
               "label": "Serve stale while revalidating",
               "description": "When true, serve stale entries to consumers while a background refresh fetches fresh data. Reduces latency at the cost of brief staleness.",
               "synonyms": "SWR, stale serving",
-              "tier": "domain"
-            },
-            "ttlSeconds": {
-              "type": "number",
-              "default": 300.0,
-              "label": "TTL (seconds)",
-              "description": "Cache entry time-to-live before it goes stale. Default 5 minutes. Shorter = fresher/real-time data; longer = stable/long-lived caching.",
-              "synonyms": "expiration, time to live, cache duration, freshness, real-time (short) vs long-lived (long)",
               "tier": "domain"
             },
             "maxCacheSize": {
@@ -710,32 +752,13 @@
                 "card-rows"
               ]
             },
-            "emptyLook": {
-              "type": "string",
-              "default": "icon-only",
-              "label": "Empty-state look",
-              "description": "Layer 2 visual treatment for the empty-state placeholder.",
-              "tier": "presentation",
-              "values": [
-                "illustrated",
-                "icon-only",
-                "text-only",
-                "mascot"
-              ]
-            },
-            "evictionPolicy": {
-              "type": "string",
-              "default": "lru",
-              "label": "Eviction policy",
-              "description": "How entries are evicted when the cache fills: least-recently-used, least-frequently-used, first-in-first-out, or TTL-only (never evict early).",
-              "synonyms": "cache replacement, eviction strategy",
-              "tier": "domain",
-              "values": [
-                "lru",
-                "lfu",
-                "fifo",
-                "ttl-only"
-              ]
+            "ttlSeconds": {
+              "type": "number",
+              "default": 300.0,
+              "label": "TTL (seconds)",
+              "description": "Cache entry time-to-live before it goes stale. Default 5 minutes. Shorter = fresher/real-time data; longer = stable/long-lived caching.",
+              "synonyms": "expiration, time to live, cache duration, freshness, real-time (short) vs long-lived (long)",
+              "tier": "domain"
             }
           },
           "scope": "collection"

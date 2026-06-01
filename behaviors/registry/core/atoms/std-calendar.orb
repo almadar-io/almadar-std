@@ -87,7 +87,9 @@
           "emits": [
             {
               "event": "CalendarEventLoaded",
-              "description": "Fired when CalendarEvent finishes loading; payload.data holds the events",
+              "description": "Indicates that calendar events have been successfully retrieved.",
+              "synonyms": "loaded, fetched, retrieved, populated",
+              "tier": "essential",
               "scope": "internal",
               "payloadSchema": [
                 {
@@ -98,7 +100,9 @@
             },
             {
               "event": "CalendarEventLoadFailed",
-              "description": "Fired when CalendarEvent fails to load",
+              "description": "Indicates a failure to load calendar events.",
+              "synonyms": "error, failed, problem, loading issue",
+              "tier": "internal",
               "scope": "internal",
               "payloadSchema": [
                 {
@@ -133,6 +137,9 @@
               {
                 "key": "CalendarEventLoaded",
                 "name": "CalendarEvent loaded",
+                "description": "Indicates that calendar events have been successfully retrieved.",
+                "synonyms": "loaded, fetched, retrieved, populated",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "data",
@@ -143,6 +150,9 @@
               {
                 "key": "CalendarEventLoadFailed",
                 "name": "CalendarEvent load failed",
+                "description": "Indicates a failure to load calendar events.",
+                "synonyms": "error, failed, problem, loading issue",
+                "tier": "internal",
                 "payloadSchema": [
                   {
                     "name": "error",
@@ -157,6 +167,9 @@
               {
                 "key": "SELECT_DAY",
                 "name": "Select Day",
+                "description": "A day has been chosen within the calendar view.",
+                "synonyms": "choose, pick, set, highlight",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "value",
@@ -168,6 +181,9 @@
               {
                 "key": "SELECT_SLOT",
                 "name": "Select Slot",
+                "description": "A time slot has been chosen for an event.",
+                "synonyms": "choose, pick, schedule, book",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "time",
@@ -188,8 +204,8 @@
                     "CalendarEvent",
                     {
                       "emit": {
-                        "failure": "CalendarEventLoadFailed",
-                        "success": "CalendarEventLoaded"
+                        "success": "CalendarEventLoaded",
+                        "failure": "CalendarEventLoadFailed"
                       }
                     }
                   ],
@@ -198,21 +214,21 @@
                     "main",
                     {
                       "align": "center",
-                      "type": "stack",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Loading calendar…",
                           "type": "typography",
-                          "color": "muted",
-                          "variant": "caption"
+                          "variant": "caption",
+                          "content": "Loading calendar…",
+                          "color": "muted"
                         }
                       ],
                       "direction": "vertical",
-                      "gap": "md",
-                      "className": "py-12"
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -239,35 +255,35 @@
                     "main",
                     {
                       "align": "center",
-                      "gap": "md",
-                      "direction": "vertical",
                       "className": "py-12",
                       "children": [
                         {
-                          "type": "icon",
+                          "name": "alert-triangle",
                           "color": "destructive",
-                          "name": "alert-triangle"
+                          "type": "icon"
                         },
                         {
                           "content": "Failed to load",
-                          "type": "typography",
-                          "variant": "h3"
+                          "variant": "h3",
+                          "type": "typography"
                         },
                         {
-                          "variant": "body",
+                          "color": "muted",
                           "content": "@payload.error",
                           "type": "typography",
-                          "color": "muted"
+                          "variant": "body"
                         },
                         {
+                          "type": "button",
                           "label": "Retry",
                           "action": "INIT",
                           "variant": "primary",
-                          "type": "button",
                           "icon": "rotate-ccw"
                         }
                       ],
-                      "type": "stack"
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -292,8 +308,8 @@
                     "CalendarEvent",
                     {
                       "emit": {
-                        "success": "CalendarEventLoaded",
-                        "failure": "CalendarEventLoadFailed"
+                        "failure": "CalendarEventLoadFailed",
+                        "success": "CalendarEventLoaded"
                       },
                       "filter": [
                         "time/isAfter",
@@ -372,8 +388,8 @@
                     "CalendarEvent",
                     {
                       "emit": {
-                        "failure": "CalendarEventLoadFailed",
-                        "success": "CalendarEventLoaded"
+                        "success": "CalendarEventLoaded",
+                        "failure": "CalendarEventLoadFailed"
                       }
                     }
                   ],
@@ -389,32 +405,43 @@
             ]
           },
           "config": {
+            "badgeBinding": {
+              "type": "string",
+              "default": "@item.status",
+              "label": "Badge binding",
+              "description": "Per-row binding for the event status/badge slot.",
+              "tier": "presentation"
+            },
+            "descriptionBinding": {
+              "type": "string",
+              "default": "@item.description",
+              "label": "Description binding",
+              "description": "Per-row binding for the event description slot.",
+              "tier": "presentation"
+            },
             "bodyContent": {
               "type": "render-ui",
               "default": {
-                "gap": "lg",
-                "direction": "vertical",
+                "type": "stack",
                 "children": [
                   {
-                    "type": "stack",
-                    "align": "center",
                     "children": [
                       {
-                        "direction": "horizontal",
-                        "gap": "sm",
                         "align": "center",
-                        "type": "stack",
                         "children": [
                           {
-                            "type": "icon",
-                            "name": "calendar"
+                            "name": "calendar",
+                            "type": "icon"
                           },
                           {
                             "type": "typography",
-                            "variant": "h2",
-                            "content": "CalendarEvents Calendar"
+                            "content": "CalendarEvents Calendar",
+                            "variant": "h2"
                           }
-                        ]
+                        ],
+                        "gap": "sm",
+                        "type": "stack",
+                        "direction": "horizontal"
                       },
                       {
                         "onSelect": "SELECT_DAY",
@@ -424,7 +451,9 @@
                     ],
                     "gap": "md",
                     "justify": "between",
-                    "direction": "horizontal"
+                    "direction": "horizontal",
+                    "type": "stack",
+                    "align": "center"
                   },
                   {
                     "type": "divider"
@@ -441,68 +470,48 @@
                     "variant": "h4"
                   },
                   {
+                    "look": "@config.tableLook",
+                    "entity": "@payload.data",
                     "fields": [
                       {
                         "name": "name",
-                        "label": "Event",
                         "icon": "calendar",
+                        "label": "Event",
                         "variant": "h4"
                       },
                       {
-                        "label": "Time",
                         "variant": "badge",
-                        "name": "time"
+                        "name": "time",
+                        "label": "Time"
                       },
                       {
-                        "label": "Date",
-                        "variant": "caption",
+                        "format": "date",
                         "name": "date",
-                        "format": "date"
+                        "variant": "caption",
+                        "label": "Date"
                       },
                       {
-                        "label": "Status",
                         "name": "status",
+                        "label": "Status",
                         "variant": "badge"
                       }
                     ],
                     "itemActions": [
                       {
-                        "label": "View",
                         "event": "SELECT_DAY",
-                        "icon": "eye"
+                        "icon": "eye",
+                        "label": "View"
                       }
                     ],
-                    "look": "@config.tableLook",
-                    "type": "data-list",
-                    "entity": "@payload.data"
+                    "type": "data-list"
                   }
                 ],
-                "type": "stack"
+                "gap": "lg",
+                "direction": "vertical"
               },
               "label": "Body content tree",
               "description": "Render-ui SExpr rendered after events load. Default is the month-grid + upcoming-events list. Layer 3 variants override this with their own tree (agenda list, week timeline, etc.) to deliver entirely different calendar UX while inheriting the same trait, state machine, emits, and listens.",
               "tier": "internal"
-            },
-            "timeBinding": {
-              "type": "string",
-              "default": "@item.time",
-              "label": "Time binding",
-              "description": "Per-row binding for the event time slot.",
-              "tier": "presentation"
-            },
-            "titleBinding": {
-              "type": "string",
-              "default": "@item.name",
-              "label": "Title binding",
-              "description": "Per-row binding for the event title slot.",
-              "tier": "presentation"
-            },
-            "descriptionBinding": {
-              "type": "string",
-              "default": "@item.description",
-              "label": "Description binding",
-              "description": "Per-row binding for the event description slot.",
-              "tier": "presentation"
             },
             "tableLook": {
               "type": "string",
@@ -518,11 +527,18 @@
                 "card-rows"
               ]
             },
-            "badgeBinding": {
+            "timeBinding": {
               "type": "string",
-              "default": "@item.status",
-              "label": "Badge binding",
-              "description": "Per-row binding for the event status/badge slot.",
+              "default": "@item.time",
+              "label": "Time binding",
+              "description": "Per-row binding for the event time slot.",
+              "tier": "presentation"
+            },
+            "titleBinding": {
+              "type": "string",
+              "default": "@item.name",
+              "label": "Title binding",
+              "description": "Per-row binding for the event title slot.",
               "tier": "presentation"
             }
           },

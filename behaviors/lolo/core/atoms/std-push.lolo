@@ -60,15 +60,36 @@ orbital PushSubscriberOrbital {
     ;; consumers: any trait that needs live push feed (e.g. std-push-activity-log)
     emits {
       PUSH_RECEIVED -> external { message : string }
+        @description "Data has been successfully received and processed."
+        @synonyms "received, updated, ingested"
+        @tier "essential"
       PUSH_DISCONNECTED -> external { reason : string }
+        @description "Indicates the push connection has been lost."
+        @synonyms "disconnected, lost, dropped, offline"
+        @tier "internal"
       PushSubscriberLoadFailed
+        @description "Indicates failure to load a subscriber."
+        @synonyms "error, failure, failed, problem"
+        @tier "internal"
       PushSubscriberLoaded
+        @description "Signals successful initialization of a data subscription."
+        @synonyms "initialized, ready, connected"
+        @tier "essential"
     }
     listens {
       PUSH_RECEIVED { message : string }
+        @description "Indicates a push notification has been successfully received."
+        @synonyms "received, updated, new"
+        @tier "essential"
       PUSH_DISCONNECTED { reason : string }
+        @description "Indicates a disconnection from the push notification service."
+        @synonyms "disconnected, offline, lost connection"
+        @tier "internal"
     
       PushSubscriberLoadFailed { error : string, code : string }
+        @description "Indicates a failure to load a subscriber."
+        @synonyms "error, failure, problem, unsuccessful"
+        @tier "internal"
     }
   }
 

@@ -117,6 +117,68 @@
           "EventLogSaveFailed"
         ],
         "listenedEvents": [],
+        "events": [
+          {
+            "name": "APPLY_FILTER",
+            "direction": "emit",
+            "description": "Signals a filter has been applied to the event log.",
+            "synonyms": "filter, refine, narrow, update",
+            "tier": "customization"
+          },
+          {
+            "name": "OPEN_BACKFILL",
+            "direction": "emit",
+            "description": "Initiates a backfill operation to retrieve historical events.",
+            "synonyms": "refresh, retrieve, load history",
+            "tier": "advanced"
+          },
+          {
+            "name": "SAVE_BACKFILL",
+            "direction": "emit",
+            "description": "Indicates successful completion of backfill data saving.",
+            "synonyms": "saved, persisted, committed",
+            "tier": "customization"
+          },
+          {
+            "name": "CANCEL_BACKFILL",
+            "direction": "emit",
+            "description": "Aborts the backfill process.",
+            "synonyms": "abort, stop, dismiss, undo",
+            "tier": "customization"
+          },
+          {
+            "name": "EventLogLoaded",
+            "direction": "emit",
+            "description": "Signals the event log has finished loading.",
+            "synonyms": "loaded, ready, initialized",
+            "tier": "essential"
+          },
+          {
+            "name": "EventLogLoadFailed",
+            "direction": "emit",
+            "description": "Indicates that loading the event log failed.",
+            "synonyms": "error, failure, failed, problem",
+            "tier": "internal"
+          },
+          {
+            "name": "EventLogSaved",
+            "direction": "emit",
+            "description": "Indicates a new event has been successfully logged.",
+            "synonyms": "saved, added, created, recorded",
+            "tier": "essential"
+          },
+          {
+            "name": "EventLogSaveFailed",
+            "direction": "emit",
+            "description": "Indicates that saving an event failed.",
+            "synonyms": "error, failure, failed, problem",
+            "tier": "internal"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
         "overridableConfigKeys": [
           {
             "key": "cardLook",
@@ -156,28 +218,28 @@
             "type": "[KindOption]",
             "default": [
               {
-                "status": "active",
                 "label": "Created",
+                "status": "active",
                 "key": "created",
                 "icon": "plus-circle"
               },
               {
-                "status": "pending",
                 "label": "Updated",
                 "icon": "edit-3",
-                "key": "updated"
+                "key": "updated",
+                "status": "pending"
               },
               {
-                "status": "complete",
-                "key": "approved",
                 "label": "Approved",
-                "icon": "check-circle"
+                "status": "complete",
+                "icon": "check-circle",
+                "key": "approved"
               },
               {
-                "icon": "x-circle",
                 "label": "Rejected",
+                "status": "error",
                 "key": "rejected",
-                "status": "error"
+                "icon": "x-circle"
               }
             ],
             "label": "Event kinds",
@@ -185,6 +247,21 @@
             "tier": "presentation",
             "items": {
               "properties": {
+                "key": {
+                  "name": "key",
+                  "required": true,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
                 "status": {
                   "name": "status",
                   "required": false,
@@ -195,21 +272,6 @@
                     "pending",
                     "error"
                   ]
-                },
-                "key": {
-                  "name": "key",
-                  "required": true,
-                  "type": "string"
-                },
-                "label": {
-                  "name": "label",
-                  "required": true,
-                  "type": "string"
-                },
-                "icon": {
-                  "name": "icon",
-                  "required": false,
-                  "type": "string"
                 }
               },
               "type": "object"

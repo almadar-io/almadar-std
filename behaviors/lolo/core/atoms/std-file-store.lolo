@@ -119,21 +119,63 @@ orbital StoredFileOrbital {
     }
     emits {
       OPEN_FILE     { id : string!, row : StoredFile }
+        @description "Indicates a file has been selected for viewing."
+        @synonyms "select, choose, activate"
+        @tier "essential"
       CLOSE_VIEW    { }
+        @description "Signals the view has been closed or dismissed."
+        @synonyms "dismiss, hide, close"
+        @tier "essential"
       DOWNLOAD_FILE { id : string! }
+        @description "Initiates a file download process."
+        @synonyms "export, save, retrieve"
+        @tier "essential"
       ARCHIVE_FILE  { id : string! }
+        @description "Signals a file is being moved to archive storage."
+        @synonyms "archive, move to archive, delete permanently"
+        @tier "customization"
       REORDER       { id : string!, row : StoredFile }
+        @description "Indicates the order of items in the tree has changed."
+        @synonyms "sort, rearrange, move, change order"
+        @tier "customization"
       StoredFileLoaded     { data : [StoredFile] }
+        @description "Indicates a file has been successfully retrieved and is ready."
+        @synonyms "loaded, fetched, retrieved, ready"
+        @tier "essential"
       StoredFileLoadFailed { error : string, code : string }
+        @description "Indicates a failure to load a stored file."
+        @synonyms "error, failed, problem, unsuccessful"
+        @tier "internal"
     }
     listens {
       OPEN_FILE     { id : string!, row : StoredFile }
+        @description "A file has been selected for viewing or processing."
+        @synonyms "select, choose, activate, open"
+        @tier "essential"
       CLOSE_VIEW    { }
+        @description "Indicates the view/window should be closed or dismissed."
+        @synonyms "dismiss, hide, close, exit"
+        @tier "essential"
       DOWNLOAD_FILE { id : string! }
+        @description "Initiates a file download process."
+        @synonyms "export, retrieve, save"
+        @tier "essential"
       ARCHIVE_FILE  { id : string! }
+        @description "Signals a request to archive or delete the selected file."
+        @synonyms "delete, remove, trash, discard"
+        @tier "customization"
       REORDER       { id : string!, row : StoredFile }
+        @description "Indicates a change in the order of items within the tree."
+        @synonyms "sort, rearrange, move, sequence"
+        @tier "customization"
       StoredFileLoaded     { data : [StoredFile] }
+        @description "Indicates a file has been successfully retrieved and is ready for display."
+        @synonyms "loaded, fetched, retrieved, ready"
+        @tier "essential"
       StoredFileLoadFailed { error : string, code : string }
+        @description "Indicates a failure to load a file from storage."
+        @synonyms "error, failure, load failed, problem"
+        @tier "internal"
     }
   }
   page "/files" as StoredFilePage -> StoredFileStore

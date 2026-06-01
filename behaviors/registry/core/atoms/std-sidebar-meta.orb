@@ -101,6 +101,9 @@
           "emits": [
             {
               "event": "SidebarRecordLoaded",
+              "description": "Signals successful retrieval of data for the sidebar.",
+              "synonyms": "loaded, fetched, received, updated",
+              "tier": "essential",
               "payloadSchema": [
                 {
                   "name": "data",
@@ -110,6 +113,9 @@
             },
             {
               "event": "SidebarRecordLoadFailed",
+              "description": "Indicates failure to load the sidebar record.",
+              "synonyms": "error, failed, problem, unsuccessful",
+              "tier": "internal",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -140,6 +146,9 @@
               {
                 "key": "SidebarRecordLoaded",
                 "name": "SidebarRecord loaded",
+                "description": "Signals successful retrieval of data for the sidebar.",
+                "synonyms": "loaded, fetched, received, updated",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "data",
@@ -150,6 +159,9 @@
               {
                 "key": "SidebarRecordLoadFailed",
                 "name": "SidebarRecord load failed",
+                "description": "Indicates failure to load the sidebar record.",
+                "synonyms": "error, failed, problem, unsuccessful",
+                "tier": "internal",
                 "payloadSchema": [
                   {
                     "name": "error",
@@ -172,19 +184,19 @@
                     "fetch",
                     "SidebarRecord",
                     {
-                      "limit": 1.0,
                       "emit": {
-                        "failure": "SidebarRecordLoadFailed",
-                        "success": "SidebarRecordLoaded"
-                      }
+                        "success": "SidebarRecordLoaded",
+                        "failure": "SidebarRecordLoadFailed"
+                      },
+                      "limit": 1.0
                     }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "loading-state",
-                      "title": "Loading…"
+                      "title": "Loading…",
+                      "type": "loading-state"
                     }
                   ]
                 ]
@@ -318,71 +330,73 @@
                     "render-ui",
                     "main",
                     {
+                      "padding": "md",
                       "children": [
                         {
+                          "gap": "md",
                           "direction": "vertical",
                           "children": [
                             {
-                              "gap": "xs",
-                              "direction": "vertical",
-                              "type": "stack",
                               "children": [
                                 {
-                                  "type": "typography",
+                                  "color": "muted",
+                                  "content": "@entity.id",
                                   "variant": "caption",
-                                  "color": "muted",
-                                  "content": "@entity.id"
-                                },
-                                {
-                                  "type": "typography",
-                                  "weight": "semibold",
-                                  "variant": "h4",
-                                  "content": "@entity.title"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "gap": "sm",
-                              "direction": "horizontal",
-                              "type": "stack",
-                              "align": "center",
-                              "justify": "between",
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "color": "muted",
-                                  "variant": "overline",
-                                  "content": "Status"
-                                },
-                                {
-                                  "type": "badge",
-                                  "label": "@entity.status",
-                                  "size": "sm",
-                                  "variant": "default"
-                                }
-                              ]
-                            },
-                            {
-                              "direction": "horizontal",
-                              "align": "center",
-                              "type": "stack",
-                              "justify": "between",
-                              "gap": "sm",
-                              "children": [
-                                {
-                                  "color": "muted",
-                                  "variant": "overline",
-                                  "content": "Priority",
                                   "type": "typography"
                                 },
                                 {
-                                  "variant": "neutral",
+                                  "weight": "semibold",
+                                  "content": "@entity.title",
+                                  "variant": "h4",
+                                  "type": "typography"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "type": "stack",
+                              "gap": "xs"
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "justify": "between",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "content": "Status",
+                                  "type": "typography",
+                                  "color": "muted",
+                                  "variant": "overline"
+                                },
+                                {
+                                  "size": "sm",
+                                  "variant": "default",
+                                  "type": "badge",
+                                  "label": "@entity.status"
+                                }
+                              ]
+                            },
+                            {
+                              "direction": "horizontal",
+                              "align": "center",
+                              "justify": "between",
+                              "type": "stack",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "overline",
+                                  "content": "Priority",
+                                  "color": "muted"
+                                },
+                                {
+                                  "size": "sm",
                                   "label": "@entity.priority",
                                   "type": "badge",
-                                  "size": "sm"
+                                  "variant": "neutral"
                                 }
                               ]
                             },
@@ -390,162 +404,160 @@
                               "type": "divider"
                             },
                             {
-                              "type": "stack",
                               "direction": "vertical",
+                              "type": "stack",
                               "children": [
                                 {
                                   "variant": "overline",
-                                  "type": "typography",
                                   "color": "muted",
+                                  "type": "typography",
                                   "content": "Assignee"
                                 },
                                 {
                                   "align": "center",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "type": "stack",
                                   "children": [
                                     {
-                                      "size": "xs",
                                       "name": "@entity.assignee",
+                                      "size": "xs",
                                       "type": "avatar"
                                     },
                                     {
-                                      "type": "typography",
+                                      "content": "@entity.assignee",
                                       "variant": "body",
-                                      "content": "@entity.assignee"
+                                      "type": "typography"
                                     }
-                                  ]
+                                  ],
+                                  "direction": "horizontal",
+                                  "type": "stack",
+                                  "gap": "sm"
                                 }
                               ],
                               "gap": "xs"
                             },
                             {
+                              "type": "stack",
                               "direction": "vertical",
                               "children": [
                                 {
-                                  "type": "typography",
-                                  "color": "muted",
                                   "variant": "overline",
-                                  "content": "Reporter"
+                                  "content": "Reporter",
+                                  "color": "muted",
+                                  "type": "typography"
                                 },
                                 {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "align": "center",
                                   "gap": "sm",
                                   "children": [
                                     {
-                                      "name": "@entity.reporter",
                                       "type": "avatar",
-                                      "size": "xs"
+                                      "size": "xs",
+                                      "name": "@entity.reporter"
                                     },
                                     {
                                       "variant": "body",
                                       "content": "@entity.reporter",
                                       "type": "typography"
                                     }
-                                  ]
+                                  ],
+                                  "direction": "horizontal",
+                                  "align": "center",
+                                  "type": "stack"
                                 }
                               ],
-                              "type": "stack",
                               "gap": "xs"
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "align": "center",
+                              "direction": "horizontal",
                               "justify": "between",
-                              "gap": "sm",
                               "children": [
                                 {
-                                  "variant": "overline",
                                   "content": "Milestone",
                                   "type": "typography",
+                                  "variant": "overline",
                                   "color": "muted"
                                 },
                                 {
-                                  "content": "@entity.milestone",
                                   "variant": "body",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "content": "@entity.milestone"
                                 }
                               ],
-                              "type": "stack",
-                              "direction": "horizontal"
+                              "align": "center",
+                              "gap": "sm",
+                              "type": "stack"
                             },
                             {
-                              "gap": "xs",
-                              "direction": "vertical",
-                              "type": "stack",
                               "children": [
                                 {
                                   "variant": "overline",
-                                  "type": "typography",
                                   "color": "muted",
-                                  "content": "Labels"
+                                  "content": "Labels",
+                                  "type": "typography"
                                 },
                                 {
-                                  "variant": "neutral",
                                   "size": "sm",
+                                  "label": "@entity.labels",
                                   "type": "badge",
-                                  "label": "@entity.labels"
+                                  "variant": "neutral"
                                 }
-                              ]
+                              ],
+                              "gap": "xs",
+                              "direction": "vertical",
+                              "type": "stack"
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "gap": "sm",
-                              "type": "stack",
                               "direction": "horizontal",
+                              "align": "center",
                               "justify": "between",
                               "children": [
                                 {
                                   "type": "typography",
-                                  "variant": "overline",
                                   "color": "muted",
-                                  "content": "Created"
+                                  "content": "Created",
+                                  "variant": "overline"
                                 },
                                 {
-                                  "variant": "caption",
                                   "type": "typography",
-                                  "content": "@entity.createdAt",
-                                  "color": "muted"
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "content": "@entity.createdAt"
                                 }
                               ],
-                              "align": "center"
+                              "gap": "sm",
+                              "type": "stack"
                             },
                             {
-                              "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack",
                               "align": "center",
                               "children": [
                                 {
+                                  "type": "typography",
                                   "variant": "overline",
                                   "color": "muted",
-                                  "content": "Updated",
-                                  "type": "typography"
+                                  "content": "Updated"
                                 },
                                 {
-                                  "type": "typography",
-                                  "content": "@entity.updatedAt",
                                   "color": "muted",
-                                  "variant": "caption"
+                                  "variant": "caption",
+                                  "type": "typography",
+                                  "content": "@entity.updatedAt"
                                 }
                               ],
-                              "justify": "between"
+                              "justify": "between",
+                              "direction": "horizontal",
+                              "type": "stack"
                             }
                           ],
-                          "type": "stack",
-                          "gap": "md"
+                          "type": "stack"
                         }
                       ],
                       "look": "flat-bordered",
-                      "type": "card",
-                      "padding": "md"
+                      "type": "card"
                     }
                   ]
                 ]
@@ -564,8 +576,8 @@
                     "render-ui",
                     "main",
                     {
-                      "title": "Failed to load sidebar",
                       "message": "@entity.errorMessage",
+                      "title": "Failed to load sidebar",
                       "type": "error-state"
                     }
                   ]

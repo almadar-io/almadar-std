@@ -85,6 +85,51 @@
           "FormEntrySaveFailed"
         ],
         "listenedEvents": [],
+        "events": [
+          {
+            "name": "FormEntryLoaded",
+            "direction": "emit",
+            "description": "Signals successful loading of form entry data.",
+            "synonyms": "loaded, initialized, populated",
+            "tier": "essential"
+          },
+          {
+            "name": "FormEntryLoadFailed",
+            "direction": "emit",
+            "description": "Indicates failure to load form entry data.",
+            "synonyms": "load error, data fetch failed, failed to retrieve",
+            "tier": "internal"
+          },
+          {
+            "name": "FormEntrySaved",
+            "direction": "emit",
+            "description": "Signals successful saving of form entry data.",
+            "synonyms": "saved, persisted, submitted, confirmed",
+            "tier": "essential"
+          },
+          {
+            "name": "FormEntrySaveFailed",
+            "direction": "emit",
+            "description": "Indicates a failure to save form entry data.",
+            "synonyms": "error, failure, rejected, invalid",
+            "tier": "essential"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "SUBMIT",
+            "direction": "listen",
+            "description": "Indicates the form has been submitted for processing.",
+            "synonyms": "submit, send, post",
+            "tier": "essential"
+          },
+          {
+            "name": "RESET",
+            "direction": "listen"
+          }
+        ],
         "overridableConfigKeys": [
           {
             "key": "fieldValidation",
@@ -95,13 +140,13 @@
             "tier": "domain",
             "items": {
               "properties": {
-                "rule": {
-                  "name": "rule",
+                "message": {
+                  "name": "message",
                   "required": false,
                   "type": "string"
                 },
-                "message": {
-                  "name": "message",
+                "rule": {
+                  "name": "rule",
                   "required": false,
                   "type": "string"
                 },
@@ -123,18 +168,18 @@
                 "label": "Name"
               },
               {
-                "label": "Description",
-                "name": "description"
+                "name": "description",
+                "label": "Description"
               },
               {
+                "label": "Status",
+                "type": "enum",
                 "values": [
                   "active",
                   "inactive",
                   "pending"
                 ],
-                "name": "status",
-                "label": "Status",
-                "type": "enum"
+                "name": "status"
               },
               {
                 "name": "notes",
@@ -143,8 +188,8 @@
               },
               {
                 "name": "age",
-                "label": "Age",
-                "type": "number"
+                "type": "number",
+                "label": "Age"
               },
               {
                 "type": "boolean",
@@ -152,14 +197,14 @@
                 "label": "Is Active"
               },
               {
-                "name": "birthDate",
+                "label": "Birth Date",
                 "type": "date",
-                "label": "Birth Date"
+                "name": "birthDate"
               },
               {
-                "type": "enum",
                 "name": "priority",
                 "label": "Priority",
+                "type": "enum",
                 "values": [
                   "low",
                   "medium",
@@ -168,9 +213,9 @@
                 ]
               },
               {
+                "type": "relation",
                 "label": "Category ID",
                 "name": "categoryId",
-                "type": "relation",
                 "relation": {
                   "entity": "FormEntry",
                   "cardinality": "one"
@@ -182,14 +227,19 @@
             "tier": "presentation",
             "items": {
               "properties": {
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                },
                 "header": {
                   "name": "header",
                   "required": false,
                   "type": "string"
                 },
-                "label": {
-                  "name": "label",
-                  "required": false,
+                "name": {
+                  "name": "name",
+                  "required": true,
                   "type": "string"
                 },
                 "icon": {
@@ -202,19 +252,14 @@
                   "required": false,
                   "type": "string"
                 },
-                "variant": {
-                  "name": "variant",
+                "label": {
+                  "name": "label",
                   "required": false,
                   "type": "string"
                 },
                 "key": {
                   "name": "key",
                   "required": false,
-                  "type": "string"
-                },
-                "name": {
-                  "name": "name",
-                  "required": true,
                   "type": "string"
                 }
               },

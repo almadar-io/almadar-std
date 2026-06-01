@@ -46,14 +46,14 @@ export interface StdTabsTabChangedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdTabsConfig {
-  /** Default: `{"orientation":"@config.orientation","variant":"@config.variant","tabChangeEvent":"TAB_CHANGED","items":"@entity.items","activeTab":"@entity.activeTab","type":"tabs"}` */
+  /** Default: `"default"` */
+  variant?: 'default' | 'pills' | 'underline';
+  /** Default: `{"type":"tabs","items":"@entity.items","activeTab":"@entity.activeTab","orientation":"@config.orientation","variant":"@config.variant","tabChangeEvent":"TAB_CHANGED"}` */
   bodyContent?: unknown;
-  /** Default: `[{"id":"overview","label":"Overview","icon":"info"},{"id":"details","icon":"list","label":"Details"},{"label":"Settings","icon":"settings","id":"settings"}]` */
+  /** Default: `[{"id":"overview","label":"Overview","icon":"info"},{"id":"details","label":"Details","icon":"list"},{"icon":"settings","label":"Settings","id":"settings"}]` */
   tabs?: EntityRow[];
   /** Default: `"horizontal"` */
   orientation?: 'horizontal' | 'vertical';
-  /** Default: `"default"` */
-  variant?: 'default' | 'pills' | 'underline';
   /** Default: `"overview"` */
   defaultTab?: string;
 }

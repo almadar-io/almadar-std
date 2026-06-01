@@ -166,7 +166,13 @@ orbital BrowseItemOrbital {
     }
 emits {
       BrowseItemLoaded
+        @description "Signals that a browse item has been successfully loaded."
+        @synonyms "loaded, received, populated"
+        @tier "essential"
       BrowseItemLoadFailed
+        @description "Indicates a failure to load a browse item."
+        @synonyms "error, failed, problem, unsuccessful"
+        @tier "internal"
       ;; Generic CRUD item-action events fired when a consumer-supplied
       ;; `itemActions[]` button is clicked in the data-grid. Declared here
       ;; so any consumer that wires VIEW / EDIT / DELETE actions doesn't
@@ -174,15 +180,36 @@ emits {
       ;; (ADD_TO_CART, FAVORITE, etc.) still need to be declared by the
       ;; consumer or wired via call-site emits override.
       VIEW   -> external { id : string!, row : BrowseItem }
+        @description "Signals a grid view has been displayed or updated."
+        @synonyms "display, show, update, render"
+        @tier "essential"
       EDIT   -> external { id : string!, row : BrowseItem }
+        @description "Signals a request to edit the selected item."
+        @synonyms "modify, update, change"
+        @tier "essential"
       DELETE -> external { id : string!, row : BrowseItem }
+        @description "Signals a request to remove an item from the dataset."
+        @synonyms "remove, discard, delete, purge"
+        @tier "customization"
     }
 
         listens {
       REFETCH_QUERY { searchTerm : string! }
+        @description "Triggers a data refresh based on the current query."
+        @synonyms "refresh, reload, update, re-query"
+        @tier "essential"
       REFETCH_FILTER { field : string!, value : string! }
+        @description "Triggers a data refresh based on current filter criteria."
+        @synonyms "refresh, filter, update, reload"
+        @tier "essential"
       REFETCH_PAGE { page : number! }
+        @description "Triggers a data grid page refresh."
+        @synonyms "reload, refresh, update, paginate"
+        @tier "essential"
       BrowseItemLoadFailed { error : string, code : string }
+        @description "Indicates a failure to load a browse item."
+        @synonyms "error, failure, problem, unsuccessful"
+        @tier "internal"
     }
   }
   page "/browseitems" as BrowseItemPage -> BrowseItemBrowse

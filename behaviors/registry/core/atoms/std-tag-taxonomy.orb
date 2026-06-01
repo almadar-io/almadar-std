@@ -61,6 +61,9 @@
           "emits": [
             {
               "event": "SELECT_TAG",
+              "description": "Signals a tag has been chosen for navigation.",
+              "synonyms": "choose, pick, activate, navigate",
+              "tier": "essential",
               "payloadSchema": [
                 {
                   "name": "tagId",
@@ -71,6 +74,9 @@
             },
             {
               "event": "TagLoaded",
+              "description": "Signals that the tag data has been successfully retrieved.",
+              "synonyms": "loaded, fetched, received, ready",
+              "tier": "essential",
               "payloadSchema": [
                 {
                   "name": "data",
@@ -80,6 +86,9 @@
             },
             {
               "event": "TagLoadFailed",
+              "description": "Indicates failure to load tag data.",
+              "synonyms": "error, failed, problem, issue",
+              "tier": "internal",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -93,6 +102,9 @@
             },
             {
               "event": "TagSelected",
+              "description": "Signals a tag has been chosen for further exploration.",
+              "synonyms": "chosen, picked, activated, highlighted",
+              "tier": "essential",
               "payloadSchema": [
                 {
                   "name": "tagId",
@@ -126,6 +138,9 @@
               {
                 "key": "TagLoaded",
                 "name": "Tag loaded",
+                "description": "Signals that the tag data has been successfully retrieved.",
+                "synonyms": "loaded, fetched, received, ready",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "data",
@@ -136,6 +151,9 @@
               {
                 "key": "TagLoadFailed",
                 "name": "Tag load failed",
+                "description": "Indicates failure to load tag data.",
+                "synonyms": "error, failed, problem, issue",
+                "tier": "internal",
                 "payloadSchema": [
                   {
                     "name": "error",
@@ -150,6 +168,9 @@
               {
                 "key": "SELECT_TAG",
                 "name": "Select Tag",
+                "description": "Signals a tag has been chosen for navigation.",
+                "synonyms": "choose, pick, activate, navigate",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "tagId",
@@ -161,6 +182,9 @@
               {
                 "key": "TagSelected",
                 "name": "Tag selected",
+                "description": "Signals a tag has been chosen for further exploration.",
+                "synonyms": "chosen, picked, activated, highlighted",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "tagId",
@@ -181,8 +205,8 @@
                     "Tag",
                     {
                       "emit": {
-                        "failure": "TagLoadFailed",
-                        "success": "TagLoaded"
+                        "success": "TagLoaded",
+                        "failure": "TagLoadFailed"
                       }
                     }
                   ],
@@ -190,22 +214,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "type": "stack",
                       "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
+                          "content": "Loading categories…",
                           "color": "muted",
                           "type": "typography",
-                          "content": "Loading categories…"
+                          "variant": "caption"
                         }
                       ],
-                      "className": "py-12",
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -220,89 +244,89 @@
                     "main",
                     {
                       "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md",
                       "children": [
                         {
                           "type": "typography",
-                          "content": "@config.title",
-                          "variant": "h3"
+                          "variant": "h3",
+                          "content": "@config.title"
                         },
                         {
-                          "type": "data-grid",
-                          "minCardWidth": 180.0,
-                          "fields": [],
-                          "entity": "@payload.data",
-                          "gap": "sm",
                           "renderItem": [
                             "fn",
                             "tag",
                             {
-                              "look": "flat-bordered",
-                              "type": "card",
+                              "padding": "sm",
+                              "className": "cursor-pointer hover:shadow-md transition-shadow",
                               "children": [
                                 {
-                                  "type": "stack",
                                   "gap": "xs",
                                   "direction": "vertical",
                                   "children": [
                                     {
+                                      "justify": "between",
                                       "children": [
                                         {
                                           "align": "center",
-                                          "direction": "horizontal",
                                           "className": "min-w-0",
-                                          "type": "stack",
                                           "children": [
                                             {
-                                              "size": "sm",
+                                              "name": "tag",
                                               "type": "icon",
-                                              "name": "tag"
+                                              "size": "sm"
                                             },
                                             {
-                                              "type": "typography",
-                                              "variant": "body",
-                                              "content": "@tag.name",
                                               "weight": "medium",
-                                              "className": "truncate"
+                                              "className": "truncate",
+                                              "type": "typography",
+                                              "content": "@tag.name",
+                                              "variant": "body"
                                             }
                                           ],
-                                          "gap": "sm"
+                                          "direction": "horizontal",
+                                          "gap": "sm",
+                                          "type": "stack"
                                         },
                                         {
-                                          "label": "@tag.count",
                                           "variant": "neutral",
                                           "type": "badge",
-                                          "size": "sm"
+                                          "size": "sm",
+                                          "label": "@tag.count"
                                         }
                                       ],
-                                      "justify": "between",
-                                      "direction": "horizontal",
-                                      "type": "stack",
+                                      "gap": "sm",
                                       "align": "center",
-                                      "gap": "sm"
+                                      "type": "stack",
+                                      "direction": "horizontal"
                                     },
                                     {
-                                      "variant": "ghost",
-                                      "action": "SELECT_TAG",
                                       "actionPayload": {
                                         "tagId": "@tag.id"
                                       },
                                       "icon": "chevron-right",
                                       "size": "sm",
+                                      "variant": "ghost",
+                                      "action": "SELECT_TAG",
+                                      "label": "Open",
                                       "type": "button",
-                                      "className": "w-full justify-center",
-                                      "label": "Open"
+                                      "className": "w-full justify-center"
                                     }
-                                  ]
+                                  ],
+                                  "type": "stack"
                                 }
                               ],
-                              "padding": "sm",
-                              "className": "cursor-pointer hover:shadow-md transition-shadow"
+                              "type": "card",
+                              "look": "flat-bordered"
                             }
-                          ]
+                          ],
+                          "minCardWidth": 180.0,
+                          "fields": [],
+                          "type": "data-grid",
+                          "gap": "sm",
+                          "entity": "@payload.data"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -317,8 +341,8 @@
                     "main",
                     {
                       "variant": "error",
-                      "message": "@payload.error",
-                      "type": "alert"
+                      "type": "alert",
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -345,8 +369,8 @@
                     "Tag",
                     {
                       "emit": {
-                        "failure": "TagLoadFailed",
-                        "success": "TagLoaded"
+                        "success": "TagLoaded",
+                        "failure": "TagLoadFailed"
                       }
                     }
                   ],
@@ -354,22 +378,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
-                      "gap": "md",
                       "direction": "vertical",
-                      "align": "center",
                       "type": "stack",
+                      "gap": "md",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Loading children…",
+                          "color": "muted",
                           "type": "typography",
-                          "variant": "caption",
-                          "color": "muted"
+                          "content": "Loading children…",
+                          "variant": "caption"
                         }
-                      ]
+                      ],
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -383,90 +407,90 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
                       "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "typography",
+                          "content": "@config.title",
                           "variant": "h3",
-                          "content": "@config.title"
+                          "type": "typography"
                         },
                         {
                           "gap": "sm",
+                          "minCardWidth": 180.0,
+                          "entity": "@payload.data",
+                          "type": "data-grid",
+                          "fields": [],
                           "renderItem": [
                             "fn",
                             "tag",
                             {
-                              "className": "cursor-pointer hover:shadow-md transition-shadow",
                               "type": "card",
-                              "padding": "sm",
                               "look": "flat-bordered",
                               "children": [
                                 {
-                                  "gap": "xs",
-                                  "direction": "vertical",
-                                  "type": "stack",
                                   "children": [
                                     {
+                                      "align": "center",
                                       "gap": "sm",
+                                      "justify": "between",
                                       "children": [
                                         {
                                           "direction": "horizontal",
-                                          "className": "min-w-0",
+                                          "gap": "sm",
                                           "type": "stack",
+                                          "align": "center",
                                           "children": [
                                             {
-                                              "name": "tag",
                                               "type": "icon",
+                                              "name": "tag",
                                               "size": "sm"
                                             },
                                             {
-                                              "type": "typography",
-                                              "content": "@tag.name",
                                               "weight": "medium",
+                                              "content": "@tag.name",
+                                              "type": "typography",
                                               "variant": "body",
                                               "className": "truncate"
                                             }
                                           ],
-                                          "gap": "sm",
-                                          "align": "center"
+                                          "className": "min-w-0"
                                         },
                                         {
-                                          "variant": "neutral",
+                                          "label": "@tag.count",
                                           "size": "sm",
-                                          "type": "badge",
-                                          "label": "@tag.count"
+                                          "variant": "neutral",
+                                          "type": "badge"
                                         }
                                       ],
                                       "type": "stack",
-                                      "direction": "horizontal",
-                                      "justify": "between",
-                                      "align": "center"
+                                      "direction": "horizontal"
                                     },
                                     {
-                                      "label": "Open",
                                       "variant": "ghost",
-                                      "className": "w-full justify-center",
-                                      "icon": "chevron-right",
+                                      "label": "Open",
+                                      "action": "SELECT_TAG",
+                                      "type": "button",
                                       "actionPayload": {
                                         "tagId": "@tag.id"
                                       },
-                                      "action": "SELECT_TAG",
-                                      "size": "sm",
-                                      "type": "button"
+                                      "icon": "chevron-right",
+                                      "className": "w-full justify-center",
+                                      "size": "sm"
                                     }
-                                  ]
+                                  ],
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "xs"
                                 }
-                              ]
+                              ],
+                              "padding": "sm",
+                              "className": "cursor-pointer hover:shadow-md transition-shadow"
                             }
-                          ],
-                          "minCardWidth": 180.0,
-                          "fields": [],
-                          "entity": "@payload.data",
-                          "type": "data-grid"
+                          ]
                         }
-                      ]
+                      ],
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -480,9 +504,9 @@
                     "render-ui",
                     "main",
                     {
+                      "variant": "error",
                       "message": "@payload.error",
-                      "type": "alert",
-                      "variant": "error"
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -506,22 +530,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "className": "py-12",
                       "align": "center",
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
+                          "content": "Loading categories…",
                           "color": "muted",
-                          "variant": "caption",
-                          "content": "Loading categories…"
+                          "type": "typography",
+                          "variant": "caption"
                         }
-                      ],
-                      "direction": "vertical",
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -566,90 +590,90 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "type": "stack",
                       "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "typography",
                           "variant": "h3",
-                          "content": "@config.title"
+                          "content": "@config.title",
+                          "type": "typography"
                         },
                         {
+                          "fields": [],
                           "entity": "@payload.data",
+                          "type": "data-grid",
+                          "minCardWidth": 180.0,
+                          "gap": "sm",
                           "renderItem": [
                             "fn",
                             "tag",
                             {
                               "type": "card",
+                              "className": "cursor-pointer hover:shadow-md transition-shadow",
                               "children": [
                                 {
-                                  "type": "stack",
                                   "direction": "vertical",
                                   "gap": "xs",
                                   "children": [
                                     {
+                                      "align": "center",
+                                      "type": "stack",
                                       "direction": "horizontal",
                                       "gap": "sm",
-                                      "align": "center",
-                                      "justify": "between",
-                                      "type": "stack",
                                       "children": [
                                         {
-                                          "className": "min-w-0",
-                                          "gap": "sm",
-                                          "direction": "horizontal",
-                                          "type": "stack",
                                           "align": "center",
                                           "children": [
                                             {
-                                              "size": "sm",
+                                              "name": "tag",
                                               "type": "icon",
-                                              "name": "tag"
+                                              "size": "sm"
                                             },
                                             {
-                                              "weight": "medium",
-                                              "content": "@tag.name",
-                                              "className": "truncate",
                                               "variant": "body",
+                                              "className": "truncate",
+                                              "content": "@tag.name",
+                                              "weight": "medium",
                                               "type": "typography"
                                             }
-                                          ]
+                                          ],
+                                          "type": "stack",
+                                          "direction": "horizontal",
+                                          "gap": "sm",
+                                          "className": "min-w-0"
                                         },
                                         {
-                                          "type": "badge",
-                                          "size": "sm",
                                           "variant": "neutral",
-                                          "label": "@tag.count"
+                                          "label": "@tag.count",
+                                          "size": "sm",
+                                          "type": "badge"
                                         }
-                                      ]
+                                      ],
+                                      "justify": "between"
                                     },
                                     {
+                                      "label": "Open",
                                       "variant": "ghost",
+                                      "className": "w-full justify-center",
                                       "size": "sm",
-                                      "icon": "chevron-right",
+                                      "action": "SELECT_TAG",
                                       "actionPayload": {
                                         "tagId": "@tag.id"
                                       },
-                                      "label": "Open",
-                                      "className": "w-full justify-center",
-                                      "type": "button",
-                                      "action": "SELECT_TAG"
+                                      "icon": "chevron-right",
+                                      "type": "button"
                                     }
-                                  ]
+                                  ],
+                                  "type": "stack"
                                 }
                               ],
-                              "className": "cursor-pointer hover:shadow-md transition-shadow",
                               "look": "flat-bordered",
                               "padding": "sm"
                             }
-                          ],
-                          "type": "data-grid",
-                          "gap": "sm",
-                          "fields": [],
-                          "minCardWidth": 180.0
+                          ]
                         }
-                      ]
+                      ],
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -663,9 +687,9 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
                       "type": "alert",
-                      "message": "@payload.error"
+                      "message": "@payload.error",
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -680,8 +704,8 @@
                     "Tag",
                     {
                       "emit": {
-                        "failure": "TagLoadFailed",
-                        "success": "TagLoaded"
+                        "success": "TagLoaded",
+                        "failure": "TagLoadFailed"
                       }
                     }
                   ],
@@ -689,22 +713,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
-                      "align": "center",
+                      "gap": "md",
                       "className": "py-12",
+                      "align": "center",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
                           "variant": "caption",
                           "type": "typography",
+                          "color": "muted",
                           "content": "Loading categories…"
                         }
-                      ],
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -712,6 +736,13 @@
             ]
           },
           "config": {
+            "allowEdit": {
+              "type": "boolean",
+              "default": false,
+              "label": "Allow editing",
+              "description": "Show inline controls to create or rename tags",
+              "tier": "domain"
+            },
             "tableLook": {
               "type": "string",
               "default": "dense",
@@ -725,13 +756,6 @@
                 "borderless",
                 "card-rows"
               ]
-            },
-            "allowEdit": {
-              "type": "boolean",
-              "default": false,
-              "label": "Allow editing",
-              "description": "Show inline controls to create or rename tags",
-              "tier": "domain"
             },
             "title": {
               "type": "string",

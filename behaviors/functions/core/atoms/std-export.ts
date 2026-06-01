@@ -47,16 +47,16 @@ export interface StdExportExportRequestedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdExportConfig {
-  /** Default: `"Export"` */
-  buttonLabel?: string;
-  /** Default: `[{"label":"CSV","id":"csv","format":"csv"},{"id":"xlsx","label":"XLSX","format":"xlsx"},{"format":"pdf","label":"PDF","id":"pdf"}]` */
-  formats?: EntityRow[];
   /** Default: `""` */
   tileId?: string;
-  /** Default: `"EXPORT_REQUESTED"` */
-  event?: string;
+  /** Default: `"Export"` */
+  buttonLabel?: string;
   /** Default: `"dense"` */
   tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
+  /** Default: `[{"label":"CSV","format":"csv","id":"csv"},{"format":"xlsx","label":"XLSX","id":"xlsx"},{"id":"pdf","format":"pdf","label":"PDF"}]` */
+  formats?: EntityRow[];
+  /** Default: `"EXPORT_REQUESTED"` */
+  event?: string;
 }
 
 /**

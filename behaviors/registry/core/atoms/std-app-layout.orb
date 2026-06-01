@@ -29,6 +29,9 @@
           "emits": [
             {
               "event": "SEARCH",
+              "description": "Indicates a search query has been submitted.",
+              "synonyms": "query, find, lookup",
+              "tier": "essential",
               "scope": "external",
               "payloadSchema": [
                 {
@@ -39,6 +42,9 @@
             },
             {
               "event": "NOTIFY_CLICK",
+              "description": "A user interacted with a notification.",
+              "synonyms": "click, tap, select",
+              "tier": "essential",
               "scope": "external",
               "payloadSchema": [
                 {
@@ -49,6 +55,9 @@
             },
             {
               "event": "AppLayoutStateLoaded",
+              "description": "Signals the layout has finished loading and is ready.",
+              "synonyms": "ready, initialized, loaded",
+              "tier": "essential",
               "scope": "internal",
               "payloadSchema": [
                 {
@@ -59,6 +68,9 @@
             },
             {
               "event": "AppLayoutStateLoadFailed",
+              "description": "Indicates failure to load the layout state.",
+              "synonyms": "error, failure, load failed",
+              "tier": "internal",
               "scope": "internal",
               "payloadSchema": [
                 {
@@ -87,6 +99,9 @@
               {
                 "key": "AppLayoutStateLoaded",
                 "name": "App layout state loaded",
+                "description": "Signals the layout has finished loading and is ready.",
+                "synonyms": "ready, initialized, loaded",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "data",
@@ -97,6 +112,9 @@
               {
                 "key": "AppLayoutStateLoadFailed",
                 "name": "App layout state load failed",
+                "description": "Indicates failure to load the layout state.",
+                "synonyms": "error, failure, load failed",
+                "tier": "internal",
                 "payloadSchema": [
                   {
                     "name": "error",
@@ -110,11 +128,17 @@
               },
               {
                 "key": "SEARCH",
-                "name": "Search"
+                "name": "Search",
+                "description": "Indicates a search query has been submitted.",
+                "synonyms": "query, find, lookup",
+                "tier": "essential"
               },
               {
                 "key": "NOTIFY_CLICK",
-                "name": "Notify Click"
+                "name": "Notify Click",
+                "description": "A user interacted with a notification.",
+                "synonyms": "click, tap, select",
+                "tier": "essential"
               }
             ],
             "transitions": [
@@ -137,25 +161,25 @@
                     "render-ui",
                     "main",
                     {
-                      "searchEvent": "@config.searchEvent",
-                      "type": "@config.layoutPattern",
-                      "appName": "@config.appName",
-                      "layoutMode": "@config.layoutMode",
-                      "notificationClickEvent": "@config.notificationClickEvent",
-                      "navItems": "@config.navItems",
                       "children": [
                         {
-                          "direction": "vertical",
                           "gap": "lg",
+                          "className": "max-w-5xl mx-auto w-full",
+                          "direction": "vertical",
+                          "type": "stack",
                           "children": [
                             "@config.contentTrait"
-                          ],
-                          "className": "max-w-5xl mx-auto w-full",
-                          "type": "stack"
+                          ]
                         }
                       ],
-                      "topBarActions": "@config.topBarActions",
-                      "notifications": "@config.notifications"
+                      "layoutMode": "@config.layoutMode",
+                      "searchEvent": "@config.searchEvent",
+                      "notifications": "@config.notifications",
+                      "navItems": "@config.navItems",
+                      "notificationClickEvent": "@config.notificationClickEvent",
+                      "appName": "@config.appName",
+                      "type": "@config.layoutPattern",
+                      "topBarActions": "@config.topBarActions"
                     }
                   ]
                 ]
@@ -183,32 +207,44 @@
             ]
           },
           "config": {
-            "contentTrait": {
-              "type": "trait",
-              "label": "Content trait",
-              "description": "Trait rendered inside the app layout content area",
-              "tier": "internal"
-            },
-            "layoutPattern": {
-              "type": "pattern",
-              "default": "dashboard-layout",
-              "label": "Layout pattern",
-              "description": "UI pattern used to render the application chrome",
-              "tier": "internal"
-            },
-            "notificationClickEvent": {
-              "type": "string",
-              "default": "NOTIFY_CLICK",
-              "label": "Notification click event",
-              "description": "Event emitted when the user picks a notification",
-              "tier": "internal"
-            },
             "appName": {
               "type": "string",
               "default": "App",
               "label": "App name",
               "description": "Product name shown in the chrome header",
               "tier": "presentation"
+            },
+            "topBarActions": {
+              "type": "[ItemAction]",
+              "default": [],
+              "label": "Top-bar actions",
+              "description": "Icon buttons shown on the right side of the top bar",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": true
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
             },
             "detailSlot": {
               "type": "slot",
@@ -226,59 +262,20 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
                   "href": {
                     "name": "href",
                     "type": "string",
                     "required": true
                   },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
                   "badge": {
                     "name": "badge",
                     "type": "string",
                     "required": false
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "searchEvent": {
-              "type": "string",
-              "default": "SEARCH",
-              "label": "Search event",
-              "description": "Event emitted when the user runs a global search",
-              "tier": "internal"
-            },
-            "topBarActions": {
-              "type": "[ItemAction]",
-              "default": [],
-              "label": "Top-bar actions",
-              "description": "Icon buttons shown on the right side of the top bar",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": true
                   },
                   "label": {
                     "name": "label",
@@ -301,6 +298,33 @@
                 "minimal"
               ]
             },
+            "searchEvent": {
+              "type": "string",
+              "default": "SEARCH",
+              "label": "Search event",
+              "description": "Event emitted when the user runs a global search",
+              "tier": "internal"
+            },
+            "contentTrait": {
+              "type": "trait",
+              "label": "Content trait",
+              "description": "Trait rendered inside the app layout content area",
+              "tier": "internal"
+            },
+            "notificationClickEvent": {
+              "type": "string",
+              "default": "NOTIFY_CLICK",
+              "label": "Notification click event",
+              "description": "Event emitted when the user picks a notification",
+              "tier": "internal"
+            },
+            "layoutPattern": {
+              "type": "pattern",
+              "default": "dashboard-layout",
+              "label": "Layout pattern",
+              "description": "UI pattern used to render the application chrome",
+              "tier": "internal"
+            },
             "notifications": {
               "type": "[NotificationSpec]",
               "default": [],
@@ -310,11 +334,6 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "message": {
-                    "name": "message",
-                    "type": "string",
-                    "required": false
-                  },
                   "id": {
                     "name": "id",
                     "type": "string",
@@ -322,6 +341,11 @@
                   },
                   "variant": {
                     "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
+                  "message": {
+                    "name": "message",
                     "type": "string",
                     "required": false
                   }

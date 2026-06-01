@@ -70,6 +70,11 @@
             "items": {
               "type": "object",
               "properties": {
+                "description": {
+                  "name": "description",
+                  "type": "string",
+                  "required": false
+                },
                 "id": {
                   "name": "id",
                   "type": "string",
@@ -79,11 +84,6 @@
                   "name": "title",
                   "type": "string",
                   "required": true
-                },
-                "description": {
-                  "name": "description",
-                  "type": "string",
-                  "required": false
                 }
               }
             },
@@ -194,6 +194,9 @@
           "emits": [
             {
               "event": "ADVANCE",
+              "description": "Signals progression to the next step in the wizard.",
+              "synonyms": "next, proceed, continue",
+              "tier": "essential",
               "payloadSchema": [
                 {
                   "name": "data",
@@ -202,10 +205,16 @@
               ]
             },
             {
-              "event": "RETREAT"
+              "event": "RETREAT",
+              "description": "Aborts the wizard process, discarding any unsaved data.",
+              "synonyms": "cancel, abort, quit, exit, undo",
+              "tier": "essential"
             },
             {
               "event": "CANCEL",
+              "description": "Indicates the user has abandoned the data collection process.",
+              "synonyms": "close, dismiss, abort",
+              "tier": "essential",
               "payloadSchema": [
                 {
                   "name": "reason",
@@ -214,10 +223,16 @@
               ]
             },
             {
-              "event": "RESTART"
+              "event": "RESTART",
+              "description": "Initiates a reset of the wizard's state and data.",
+              "synonyms": "reset, refresh, reinitialize",
+              "tier": "customization"
             },
             {
               "event": "WizardLoaded",
+              "description": "Signals the wizard has finished loading and is ready.",
+              "synonyms": "ready, initialized, available",
+              "tier": "essential",
               "payloadSchema": [
                 {
                   "name": "data",
@@ -227,6 +242,9 @@
             },
             {
               "event": "WizardLoadFailed",
+              "description": "Indicates the wizard failed to load initial data.",
+              "synonyms": "load error, initialization failure",
+              "tier": "internal",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -240,6 +258,9 @@
             },
             {
               "event": "WizardSaved",
+              "description": "Indicates successful data submission within the wizard.",
+              "synonyms": "saved, submitted, confirmed",
+              "tier": "essential",
               "payloadSchema": [
                 {
                   "name": "row",
@@ -249,6 +270,9 @@
             },
             {
               "event": "WizardSaveFailed",
+              "description": "Indicates a failure to save wizard data.",
+              "synonyms": "error, failed, save error",
+              "tier": "internal",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -288,6 +312,9 @@
               {
                 "key": "WizardLoaded",
                 "name": "Wizard loaded",
+                "description": "Signals the wizard has finished loading and is ready.",
+                "synonyms": "ready, initialized, available",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "data",
@@ -298,6 +325,9 @@
               {
                 "key": "WizardLoadFailed",
                 "name": "Wizard load failed",
+                "description": "Indicates the wizard failed to load initial data.",
+                "synonyms": "load error, initialization failure",
+                "tier": "internal",
                 "payloadSchema": [
                   {
                     "name": "error",
@@ -312,6 +342,9 @@
               {
                 "key": "WizardSaved",
                 "name": "Wizard saved",
+                "description": "Indicates successful data submission within the wizard.",
+                "synonyms": "saved, submitted, confirmed",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "row",
@@ -322,6 +355,9 @@
               {
                 "key": "WizardSaveFailed",
                 "name": "Wizard save failed",
+                "description": "Indicates a failure to save wizard data.",
+                "synonyms": "error, failed, save error",
+                "tier": "internal",
                 "payloadSchema": [
                   {
                     "name": "error",
@@ -336,6 +372,9 @@
               {
                 "key": "ADVANCE",
                 "name": "Advance",
+                "description": "Signals progression to the next step in the wizard.",
+                "synonyms": "next, proceed, continue",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "data",
@@ -345,11 +384,17 @@
               },
               {
                 "key": "RETREAT",
-                "name": "Retreat"
+                "name": "Retreat",
+                "description": "Aborts the wizard process, discarding any unsaved data.",
+                "synonyms": "cancel, abort, quit, exit, undo",
+                "tier": "essential"
               },
               {
                 "key": "CANCEL",
                 "name": "Cancel",
+                "description": "Indicates the user has abandoned the data collection process.",
+                "synonyms": "close, dismiss, abort",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "reason",
@@ -359,7 +404,10 @@
               },
               {
                 "key": "RESTART",
-                "name": "Restart"
+                "name": "Restart",
+                "description": "Initiates a reset of the wizard's state and data.",
+                "synonyms": "reset, refresh, reinitialize",
+                "tier": "customization"
               }
             ],
             "transitions": [
@@ -373,8 +421,8 @@
                     "WizardView",
                     {
                       "emit": {
-                        "success": "WizardLoaded",
-                        "failure": "WizardLoadFailed"
+                        "failure": "WizardLoadFailed",
+                        "success": "WizardLoaded"
                       }
                     }
                   ],
@@ -382,8 +430,8 @@
                     "render-ui",
                     "main",
                     {
-                      "title": "Loading wizard…",
-                      "type": "loading-state"
+                      "type": "loading-state",
+                      "title": "Loading wizard…"
                     }
                   ]
                 ]
@@ -416,12 +464,6 @@
                         "fn",
                         "step",
                         {
-                          "description": [
-                            "object/get",
-                            "@step",
-                            "description",
-                            ""
-                          ],
                           "id": [
                             "object/get",
                             "@step",
@@ -431,6 +473,12 @@
                             "object/get",
                             "@step",
                             "label"
+                          ],
+                          "description": [
+                            "object/get",
+                            "@step",
+                            "description",
+                            ""
                           ]
                         }
                       ]
@@ -546,51 +594,53 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "gap": "sm",
+                          "type": "stack",
                           "align": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "list-checks"
+                              "name": "list-checks",
+                              "type": "icon"
                             },
                             {
-                              "type": "typography",
                               "content": "@config.title",
+                              "type": "typography",
                               "variant": "h3"
                             }
                           ],
-                          "type": "stack"
+                          "gap": "sm",
+                          "direction": "horizontal"
                         },
                         {
-                          "currentStep": "@entity.currentStepIndex",
                           "steps": "@entity.wizardSteps",
-                          "type": "wizard-progress",
-                          "allowNavigation": false
+                          "allowNavigation": false,
+                          "currentStep": "@entity.currentStepIndex",
+                          "type": "wizard-progress"
                         },
                         {
-                          "type": "card",
                           "children": [
                             {
                               "type": "stack",
-                              "direction": "vertical",
                               "gap": "md",
+                              "direction": "vertical",
                               "children": [
                                 {
-                                  "gap": "sm",
                                   "type": "stack",
                                   "align": "center",
                                   "children": [
                                     {
-                                      "type": "icon",
+                                      "size": "lg",
                                       "name": "@entity.currentStepIcon",
-                                      "size": "lg"
+                                      "type": "icon"
                                     },
                                     {
-                                      "direction": "vertical",
+                                      "gap": "xs",
                                       "type": "stack",
+                                      "direction": "vertical",
                                       "children": [
                                         {
                                           "type": "typography",
@@ -598,69 +648,67 @@
                                           "content": "@entity.currentStepLabel"
                                         },
                                         {
-                                          "color": "muted",
                                           "content": "@entity.currentStepDescription",
                                           "variant": "body",
-                                          "type": "typography"
+                                          "type": "typography",
+                                          "color": "muted"
                                         }
-                                      ],
-                                      "gap": "xs"
+                                      ]
                                     }
                                   ],
+                                  "gap": "sm",
                                   "direction": "horizontal"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "submitEvent": "ADVANCE",
                                   "showCancel": false,
-                                  "type": "form-section",
-                                  "cancelEvent": "CANCEL",
-                                  "showSubmit": false,
+                                  "submitEvent": "ADVANCE",
                                   "entity": "@entity",
+                                  "cancelEvent": "CANCEL",
                                   "fields": "@entity.currentFields",
-                                  "mode": "edit"
+                                  "type": "form-section",
+                                  "mode": "edit",
+                                  "showSubmit": false
                                 }
                               ]
                             }
                           ],
+                          "type": "card",
                           "look": "@config.cardLook"
                         },
                         {
-                          "gap": "sm",
+                          "align": "center",
                           "children": [
                             {
-                              "icon": "chevron-left",
                               "variant": "ghost",
-                              "label": "Back",
                               "type": "button",
+                              "label": "Back",
                               "action": "RETREAT",
+                              "icon": "chevron-left",
                               "disabled": "@entity.isFirstStep"
                             },
                             {
-                              "label": "Cancel wizard",
-                              "variant": "ghost",
-                              "icon": "x",
                               "type": "button",
-                              "action": "CANCEL"
+                              "label": "Cancel wizard",
+                              "action": "CANCEL",
+                              "icon": "x",
+                              "variant": "ghost"
                             },
                             {
-                              "label": "@entity.primaryActionLabel",
-                              "icon": "@entity.primaryActionIcon",
-                              "type": "button",
                               "action": "ADVANCE",
-                              "variant": "primary"
+                              "label": "@entity.primaryActionLabel",
+                              "variant": "primary",
+                              "type": "button",
+                              "icon": "@entity.primaryActionIcon"
                             }
                           ],
                           "type": "stack",
                           "direction": "horizontal",
-                          "align": "center"
+                          "gap": "sm"
                         }
-                      ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]
@@ -696,8 +744,8 @@
                     "WizardView",
                     {
                       "emit": {
-                        "failure": "WizardLoadFailed",
-                        "success": "WizardLoaded"
+                        "success": "WizardLoaded",
+                        "failure": "WizardLoadFailed"
                       }
                     }
                   ],
@@ -726,8 +774,8 @@
                     "main",
                     {
                       "message": "@entity.errorMessage",
-                      "title": "Save failed",
-                      "type": "error-state"
+                      "type": "error-state",
+                      "title": "Save failed"
                     }
                   ]
                 ]
@@ -867,44 +915,50 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "gap": "lg",
                       "children": [
                         {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center",
+                          "gap": "sm",
                           "children": [
                             {
                               "name": "list-checks",
                               "type": "icon"
                             },
                             {
-                              "type": "typography",
+                              "variant": "h3",
                               "content": "@config.title",
-                              "variant": "h3"
+                              "type": "typography"
                             }
-                          ],
-                          "type": "stack",
-                          "gap": "sm",
-                          "direction": "horizontal",
-                          "align": "center"
+                          ]
                         },
                         {
-                          "steps": "@entity.wizardSteps",
-                          "type": "wizard-progress",
                           "currentStep": "@entity.currentStepIndex",
-                          "allowNavigation": false
+                          "steps": "@entity.wizardSteps",
+                          "allowNavigation": false,
+                          "type": "wizard-progress"
                         },
                         {
                           "children": [
                             {
+                              "direction": "vertical",
+                              "type": "stack",
+                              "gap": "md",
                               "children": [
                                 {
-                                  "type": "stack",
                                   "align": "center",
                                   "children": [
                                     {
+                                      "name": "@entity.currentStepIcon",
                                       "size": "lg",
-                                      "type": "icon",
-                                      "name": "@entity.currentStepIcon"
+                                      "type": "icon"
                                     },
                                     {
+                                      "direction": "vertical",
+                                      "type": "stack",
                                       "children": [
                                         {
                                           "variant": "h2",
@@ -913,75 +967,69 @@
                                         },
                                         {
                                           "variant": "body",
-                                          "color": "muted",
                                           "content": "@entity.currentStepDescription",
-                                          "type": "typography"
+                                          "type": "typography",
+                                          "color": "muted"
                                         }
                                       ],
-                                      "direction": "vertical",
-                                      "type": "stack",
                                       "gap": "xs"
                                     }
                                   ],
-                                  "gap": "sm",
-                                  "direction": "horizontal"
+                                  "direction": "horizontal",
+                                  "type": "stack",
+                                  "gap": "sm"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "showSubmit": false,
-                                  "entity": "@entity",
+                                  "type": "form-section",
                                   "cancelEvent": "CANCEL",
-                                  "submitEvent": "ADVANCE",
-                                  "fields": "@entity.currentFields",
-                                  "showCancel": false,
+                                  "entity": "@entity",
                                   "mode": "edit",
-                                  "type": "form-section"
+                                  "submitEvent": "ADVANCE",
+                                  "showSubmit": false,
+                                  "fields": "@entity.currentFields",
+                                  "showCancel": false
                                 }
-                              ],
-                              "gap": "md",
-                              "type": "stack",
-                              "direction": "vertical"
+                              ]
                             }
                           ],
-                          "type": "card",
-                          "look": "@config.cardLook"
+                          "look": "@config.cardLook",
+                          "type": "card"
                         },
                         {
-                          "type": "stack",
                           "direction": "horizontal",
+                          "gap": "sm",
                           "align": "center",
                           "children": [
                             {
-                              "variant": "ghost",
                               "action": "RETREAT",
-                              "disabled": "@entity.isFirstStep",
-                              "label": "Back",
+                              "type": "button",
+                              "variant": "ghost",
                               "icon": "chevron-left",
-                              "type": "button"
+                              "disabled": "@entity.isFirstStep",
+                              "label": "Back"
                             },
                             {
-                              "type": "button",
                               "action": "CANCEL",
-                              "icon": "x",
                               "label": "Cancel wizard",
+                              "icon": "x",
+                              "type": "button",
                               "variant": "ghost"
                             },
                             {
-                              "type": "button",
-                              "variant": "primary",
                               "label": "@entity.primaryActionLabel",
+                              "action": "ADVANCE",
+                              "variant": "primary",
                               "icon": "@entity.primaryActionIcon",
-                              "action": "ADVANCE"
+                              "type": "button"
                             }
                           ],
-                          "gap": "sm"
+                          "type": "stack"
                         }
                       ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1013,43 +1061,43 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "lg",
                       "align": "center",
-                      "direction": "vertical",
                       "children": [
                         {
-                          "name": "check-circle",
+                          "type": "icon",
                           "size": "lg",
-                          "type": "icon"
+                          "name": "check-circle"
                         },
                         {
-                          "type": "typography",
                           "content": "Complete",
                           "variant": "h2",
+                          "type": "typography",
                           "align": "center"
                         },
                         {
-                          "content": "@entity.completionMessage",
-                          "variant": "body",
-                          "type": "typography",
                           "align": "center",
+                          "content": "@entity.completionMessage",
+                          "type": "typography",
+                          "variant": "body",
                           "color": "muted"
                         },
                         {
-                          "currentStep": "@entity.totalSteps",
-                          "steps": "@entity.wizardSteps",
                           "type": "wizard-progress",
-                          "allowNavigation": false
+                          "allowNavigation": false,
+                          "currentStep": "@entity.totalSteps",
+                          "steps": "@entity.wizardSteps"
                         },
                         {
                           "label": "Start a new wizard",
-                          "variant": "secondary",
                           "type": "button",
+                          "variant": "secondary",
                           "action": "RESTART",
                           "icon": "rotate-ccw"
                         }
-                      ]
+                      ],
+                      "gap": "lg",
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1185,121 +1233,121 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
-                      "gap": "lg",
                       "children": [
                         {
                           "gap": "sm",
-                          "direction": "horizontal",
                           "align": "center",
+                          "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "name": "list-checks",
                               "type": "icon"
                             },
                             {
-                              "content": "@config.title",
                               "variant": "h3",
-                              "type": "typography"
+                              "type": "typography",
+                              "content": "@config.title"
                             }
-                          ],
-                          "type": "stack"
+                          ]
                         },
                         {
-                          "currentStep": "@entity.currentStepIndex",
-                          "steps": "@entity.wizardSteps",
                           "type": "wizard-progress",
-                          "allowNavigation": false
+                          "allowNavigation": false,
+                          "steps": "@entity.wizardSteps",
+                          "currentStep": "@entity.currentStepIndex"
                         },
                         {
-                          "type": "card",
+                          "look": "@config.cardLook",
                           "children": [
                             {
-                              "gap": "md",
                               "direction": "vertical",
-                              "type": "stack",
+                              "gap": "md",
                               "children": [
                                 {
-                                  "align": "center",
+                                  "direction": "horizontal",
+                                  "gap": "sm",
                                   "children": [
                                     {
-                                      "name": "@entity.currentStepIcon",
+                                      "type": "icon",
                                       "size": "lg",
-                                      "type": "icon"
+                                      "name": "@entity.currentStepIcon"
                                     },
                                     {
                                       "type": "stack",
                                       "gap": "xs",
-                                      "direction": "vertical",
                                       "children": [
                                         {
-                                          "variant": "h2",
                                           "type": "typography",
-                                          "content": "@entity.currentStepLabel"
+                                          "content": "@entity.currentStepLabel",
+                                          "variant": "h2"
                                         },
                                         {
                                           "type": "typography",
-                                          "variant": "body",
+                                          "content": "@entity.currentStepDescription",
                                           "color": "muted",
-                                          "content": "@entity.currentStepDescription"
+                                          "variant": "body"
                                         }
-                                      ]
+                                      ],
+                                      "direction": "vertical"
                                     }
                                   ],
                                   "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm"
+                                  "align": "center"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "cancelEvent": "CANCEL",
-                                  "fields": "@entity.currentFields",
-                                  "mode": "edit",
-                                  "showSubmit": false,
                                   "entity": "@entity",
-                                  "submitEvent": "ADVANCE",
+                                  "showSubmit": false,
+                                  "mode": "edit",
+                                  "fields": "@entity.currentFields",
                                   "type": "form-section",
+                                  "submitEvent": "ADVANCE",
+                                  "cancelEvent": "CANCEL",
                                   "showCancel": false
                                 }
-                              ]
+                              ],
+                              "type": "stack"
                             }
                           ],
-                          "look": "@config.cardLook"
+                          "type": "card"
                         },
                         {
-                          "align": "center",
-                          "gap": "sm",
                           "children": [
                             {
-                              "variant": "ghost",
-                              "type": "button",
-                              "disabled": "@entity.isFirstStep",
-                              "label": "Back",
                               "action": "RETREAT",
-                              "icon": "chevron-left"
+                              "variant": "ghost",
+                              "disabled": "@entity.isFirstStep",
+                              "icon": "chevron-left",
+                              "label": "Back",
+                              "type": "button"
                             },
                             {
                               "icon": "x",
-                              "label": "Cancel wizard",
-                              "variant": "ghost",
                               "type": "button",
-                              "action": "CANCEL"
+                              "label": "Cancel wizard",
+                              "action": "CANCEL",
+                              "variant": "ghost"
                             },
                             {
                               "icon": "@entity.primaryActionIcon",
-                              "label": "@entity.primaryActionLabel",
                               "variant": "primary",
+                              "label": "@entity.primaryActionLabel",
                               "action": "ADVANCE",
                               "type": "button"
                             }
                           ],
+                          "align": "center",
                           "type": "stack",
-                          "direction": "horizontal"
+                          "direction": "horizontal",
+                          "gap": "sm"
                         }
-                      ]
+                      ],
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1318,36 +1366,36 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
                       "gap": "lg",
+                      "align": "center",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "name": "x-circle",
                           "size": "lg",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "x-circle"
                         },
                         {
-                          "variant": "h2",
-                          "align": "center",
                           "content": "Cancelled",
-                          "type": "typography"
+                          "type": "typography",
+                          "variant": "h2",
+                          "align": "center"
                         },
                         {
                           "variant": "body",
+                          "color": "muted",
                           "content": "The wizard was cancelled. No data was submitted.",
                           "align": "center",
-                          "color": "muted",
                           "type": "typography"
                         },
                         {
-                          "type": "button",
+                          "action": "RESTART",
                           "icon": "rotate-ccw",
+                          "type": "button",
                           "label": "Start a new wizard",
-                          "variant": "secondary",
-                          "action": "RESTART"
+                          "variant": "secondary"
                         }
                       ],
-                      "direction": "vertical",
                       "type": "stack"
                     }
                   ]
@@ -1382,8 +1430,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "loading-state",
-                      "title": "Restarting…"
+                      "title": "Restarting…",
+                      "type": "loading-state"
                     }
                   ]
                 ]
@@ -1417,8 +1465,8 @@
                     "render-ui",
                     "main",
                     {
-                      "title": "Restarting…",
-                      "type": "loading-state"
+                      "type": "loading-state",
+                      "title": "Restarting…"
                     }
                   ]
                 ]
@@ -1432,8 +1480,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "loading-state",
-                      "title": "Retrying…"
+                      "title": "Retrying…",
+                      "type": "loading-state"
                     }
                   ]
                 ]
@@ -1468,29 +1516,29 @@
               "type": "[StepSpec]",
               "default": [
                 {
-                  "label": "Details",
-                  "description": "Basic information",
                   "fields": [
                     "title",
                     "description"
                   ],
                   "key": "details",
+                  "label": "Details",
+                  "description": "Basic information",
                   "icon": "file-text"
                 },
                 {
-                  "label": "Options",
-                  "description": "Configure preferences",
-                  "key": "options",
-                  "icon": "settings",
                   "fields": [
                     "category",
                     "priority"
-                  ]
+                  ],
+                  "description": "Configure preferences",
+                  "icon": "settings",
+                  "key": "options",
+                  "label": "Options"
                 },
                 {
-                  "label": "Review",
                   "description": "Confirm and submit",
                   "key": "review",
+                  "label": "Review",
                   "icon": "check-circle",
                   "fields": [
                     "notes"
@@ -1503,23 +1551,18 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "allowedRoles": {
-                    "name": "allowedRoles",
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "fields": {
+                    "name": "fields",
                     "type": "array",
                     "required": false,
                     "items": {
                       "type": "string"
                     }
-                  },
-                  "description": {
-                    "name": "description",
-                    "type": "string",
-                    "required": false
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
                   },
                   "label": {
                     "name": "label",
@@ -1531,8 +1574,13 @@
                     "type": "string",
                     "required": false
                   },
-                  "fields": {
-                    "name": "fields",
+                  "description": {
+                    "name": "description",
+                    "type": "string",
+                    "required": false
+                  },
+                  "allowedRoles": {
+                    "name": "allowedRoles",
                     "type": "array",
                     "required": false,
                     "items": {

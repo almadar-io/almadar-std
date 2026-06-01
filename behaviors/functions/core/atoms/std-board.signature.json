@@ -107,93 +107,181 @@
           "BoardItemsSaveFailed"
         ],
         "listenedEvents": [],
+        "events": [
+          {
+            "name": "OPEN_CARD",
+            "direction": "emit",
+            "description": "Indicates a card within the board has been selected.",
+            "synonyms": "select, choose, activate, display",
+            "tier": "essential"
+          },
+          {
+            "name": "CLOSE_CARD",
+            "direction": "emit",
+            "description": "Signals a card is being dismissed or closed.",
+            "synonyms": "dismiss, hide, close, remove",
+            "tier": "essential"
+          },
+          {
+            "name": "ADD_CARD",
+            "direction": "emit",
+            "description": "Signals a new card is being added to the board.",
+            "synonyms": "create, new, append",
+            "tier": "essential"
+          },
+          {
+            "name": "CANCEL_ADD",
+            "direction": "emit",
+            "description": "Aborts an in-progress addition operation.",
+            "synonyms": "discard, undo, reset",
+            "tier": "customization"
+          },
+          {
+            "name": "SAVE_CARD",
+            "direction": "emit",
+            "description": "Signals that a card's data has been successfully saved.",
+            "synonyms": "persist, update, store",
+            "tier": "essential"
+          },
+          {
+            "name": "MOVE_CARD",
+            "direction": "emit",
+            "description": "Signals a card has been repositioned within a column.",
+            "synonyms": "reorder, drag, reposition",
+            "tier": "customization"
+          },
+          {
+            "name": "REORDER_CARD",
+            "direction": "emit",
+            "description": "Signals a change in the order of cards within a column.",
+            "synonyms": "rearrange, sort, shuffle, reposition",
+            "tier": "customization"
+          },
+          {
+            "name": "DELETE_CARD",
+            "direction": "emit",
+            "description": "Signals removal of a card from the board.",
+            "synonyms": "remove, delete, discard",
+            "tier": "customization"
+          },
+          {
+            "name": "BoardItemsLoaded",
+            "direction": "emit",
+            "description": "Signals that board items have been successfully loaded.",
+            "synonyms": "loaded, fetched, retrieved, populated",
+            "tier": "essential"
+          },
+          {
+            "name": "BoardItemsLoadFailed",
+            "direction": "emit",
+            "description": "Indicates a failure to load board items.",
+            "synonyms": "error, failed, problem, loading failure",
+            "tier": "internal"
+          },
+          {
+            "name": "BoardItemsSaved",
+            "direction": "emit",
+            "description": "Signals that board items have been successfully saved.",
+            "synonyms": "saved, persisted, updated",
+            "tier": "essential"
+          },
+          {
+            "name": "BoardItemsSaveFailed",
+            "direction": "emit",
+            "description": "Indicates a failure to save board items.",
+            "synonyms": "error, failed, save error",
+            "tier": "internal"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "REORDER_POSITION",
+            "direction": "listen",
+            "description": "Indicates a change in the order of items within a column.",
+            "synonyms": "sort, rearrange, reposition",
+            "tier": "customization"
+          }
+        ],
         "overridableConfigKeys": [
           {
             "key": "bodyContent",
             "type": "render-ui",
             "default": {
               "direction": "vertical",
-              "gap": "md",
-              "type": "stack",
               "children": [
                 {
-                  "gap": "sm",
-                  "align": "center",
-                  "type": "stack",
                   "direction": "horizontal",
+                  "align": "center",
                   "children": [
                     {
                       "type": "icon",
                       "name": "kanban-square"
                     },
                     {
-                      "type": "typography",
                       "variant": "h3",
+                      "type": "typography",
                       "content": "@config.title"
                     }
-                  ]
+                  ],
+                  "gap": "sm",
+                  "type": "stack"
                 },
                 {
                   "type": "divider"
                 },
                 {
-                  "gap": "md",
-                  "type": "data-grid",
-                  "cols": "@config.gridCols",
+                  "entity": "@entity.boards",
                   "fields": [],
+                  "cols": "@config.gridCols",
                   "renderItem": [
                     "fn",
                     "col",
                     {
                       "look": "@config.cardLook",
-                      "type": "card",
                       "children": [
                         {
+                          "direction": "vertical",
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "stack",
-                              "align": "center",
                               "children": [
                                 {
                                   "name": "@col.icon",
                                   "type": "icon"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "@col.label",
-                                  "variant": "h4"
+                                  "variant": "h4",
+                                  "type": "typography"
                                 },
                                 {
-                                  "variant": "@col.variant",
+                                  "label": "@col.count",
                                   "type": "badge",
-                                  "label": "@col.count"
+                                  "variant": "@col.variant"
                                 }
                               ],
-                              "gap": "xs",
-                              "direction": "horizontal"
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "align": "center",
+                              "gap": "xs"
                             },
                             {
-                              "type": "data-list",
-                              "entity": "@col.items",
-                              "dropEvent": "MOVE_CARD",
-                              "dragGroup": "@col.key",
-                              "gap": "sm",
-                              "positionEvent": "REORDER_POSITION",
                               "sortable": true,
+                              "gap": "sm",
                               "accepts": "*",
+                              "positionEvent": "REORDER_POSITION",
                               "renderItem": [
                                 "fn",
                                 "item",
                                 {
                                   "children": [
                                     {
-                                      "type": "stack",
-                                      "direction": "vertical",
-                                      "gap": "xs",
                                       "children": [
                                         {
-                                          "content": "@config.cardTitleBinding",
                                           "type": "typography",
+                                          "content": "@config.cardTitleBinding",
                                           "variant": "h4"
                                         },
                                         {
@@ -203,53 +291,62 @@
                                           "variant": "caption"
                                         },
                                         {
-                                          "type": "stack",
+                                          "direction": "horizontal",
                                           "gap": "xs",
                                           "align": "center",
                                           "children": [
                                             {
                                               "action": "OPEN_CARD",
-                                              "type": "button",
-                                              "icon": "arrow-right",
-                                              "variant": "ghost",
-                                              "label": "Open",
                                               "actionPayload": {
-                                                "id": "@config.cardIdBinding",
-                                                "row": "@item"
-                                              }
+                                                "row": "@item",
+                                                "id": "@config.cardIdBinding"
+                                              },
+                                              "icon": "arrow-right",
+                                              "type": "button",
+                                              "label": "Open",
+                                              "variant": "ghost"
                                             }
                                           ],
-                                          "direction": "horizontal"
+                                          "type": "stack"
                                         }
-                                      ]
+                                      ],
+                                      "type": "stack",
+                                      "gap": "xs",
+                                      "direction": "vertical"
                                     }
                                   ],
-                                  "type": "card",
-                                  "look": "@config.cardLook"
+                                  "look": "@config.cardLook",
+                                  "type": "card"
                                 }
                               ],
+                              "type": "data-list",
+                              "dragGroup": "@col.key",
                               "fields": [],
-                              "reorderEvent": "REORDER_CARD"
+                              "entity": "@col.items",
+                              "reorderEvent": "REORDER_CARD",
+                              "dropEvent": "MOVE_CARD"
                             }
                           ],
-                          "gap": "sm",
-                          "type": "stack",
-                          "direction": "vertical"
+                          "gap": "sm"
                         }
-                      ]
+                      ],
+                      "type": "card"
                     }
                   ],
-                  "entity": "@entity.boards",
-                  "dndRoot": true
+                  "gap": "md",
+                  "dndRoot": true,
+                  "type": "data-grid"
                 },
                 {
-                  "action": "ADD_CARD",
                   "type": "floating-action-button",
                   "icon": "plus",
-                  "variant": "primary",
-                  "label": "Add item"
+                  "action": "ADD_CARD",
+                  "label": "Add item",
+                  "variant": "primary"
                 }
-              ]
+              ],
+              "type": "stack",
+              "gap": "md"
             },
             "label": "Body content tree",
             "description": "Render-ui SExpr rendered after the board loads. Default is the canonical column data-grid with nested per-column data-lists. Layer 3 variants override this with their own tree (swim-lanes, timeline-roadmap, etc.) while inheriting the same trait, state machine, emits, and listens.",
@@ -309,16 +406,16 @@
             "type": "[ColumnSpec]",
             "default": [
               {
-                "label": "To Do",
-                "icon": "circle",
                 "variant": "default",
-                "key": "todo"
+                "key": "todo",
+                "label": "To Do",
+                "icon": "circle"
               },
               {
-                "key": "doing",
+                "label": "In Progress",
                 "icon": "circle-dot",
-                "variant": "primary",
-                "label": "In Progress"
+                "key": "doing",
+                "variant": "primary"
               },
               {
                 "label": "Done",
@@ -332,23 +429,23 @@
             "tier": "domain",
             "items": {
               "properties": {
-                "icon": {
-                  "name": "icon",
-                  "required": false,
-                  "type": "string"
-                },
-                "label": {
-                  "name": "label",
-                  "required": true,
-                  "type": "string"
-                },
                 "variant": {
                   "name": "variant",
                   "required": false,
                   "type": "string"
                 },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
                 "key": {
                   "name": "key",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
                   "required": true,
                   "type": "string"
                 }

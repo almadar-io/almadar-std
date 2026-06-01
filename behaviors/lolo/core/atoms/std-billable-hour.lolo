@@ -83,19 +83,55 @@ orbital BillableHourOrbital {
     }
     emits {
       OPEN_HOURS      { id : string!, row : BillableHour }
+        @description "Signals the display of the hours list."
+        @synonyms "show, display, list"
+        @tier "essential"
       CLOSE_VIEW      { }
+        @description "Indicates the detail view has been dismissed."
+        @synonyms "dismiss, close, hide"
+        @tier "essential"
       INVOICE_HOURS   { id : string! }
+        @description "Signals that billable hours have been invoiced."
+        @synonyms "invoice, charge, bill"
+        @tier "customization"
       WRITE_OFF_HOURS { id : string! }
+        @description "Indicates billable hours have been written off."
+        @synonyms "deduct, remove, cancel"
+        @tier "customization"
       BillableHourLoaded     { data : [BillableHour] }
+        @description "Signals that a billable hour data set has been successfully retrieved."
+        @synonyms "loaded, fetched, retrieved, populated"
+        @tier "essential"
       BillableHourLoadFailed { error : string, code : string }
+        @description "Indicates a failure to load billable hour data."
+        @synonyms "error, failed, problem, unsuccessful"
+        @tier "internal"
     }
     listens {
       OPEN_HOURS      { id : string!, row : BillableHour }
+        @description "Indicates a request to display the hours list."
+        @synonyms "show, display, list"
+        @tier "essential"
       CLOSE_VIEW      { }
+        @description "Dismisses the current view or detail panel."
+        @synonyms "close, dismiss, hide, cancel"
+        @tier "essential"
       INVOICE_HOURS   { id : string! }
+        @description "Hours are marked as ready for invoicing."
+        @synonyms "invoice, bill, submit"
+        @tier "essential"
       WRITE_OFF_HOURS { id : string! }
+        @description "Hours have been marked as non-billable."
+        @synonyms "deduct, remove, expense, adjust"
+        @tier "customization"
       BillableHourLoaded     { data : [BillableHour] }
+        @description "Indicates that billable hour data has been successfully retrieved."
+        @synonyms "loaded, fetched, received, populated"
+        @tier "essential"
       BillableHourLoadFailed { error : string, code : string }
+        @description "Indicates failure to load billable hour data."
+        @synonyms "error, failed, problem, unsuccessful"
+        @tier "internal"
     }
   }
   page "/timesheet" as BillableHourPage -> BillableHourTimesheet

@@ -96,6 +96,9 @@
           "emits": [
             {
               "event": "SEND_REQUEST",
+              "description": "Signals a request has been sent for signature.",
+              "synonyms": "dispatch, submit, transmit",
+              "tier": "essential",
               "payloadSchema": [
                 {
                   "name": "id",
@@ -106,6 +109,9 @@
             },
             {
               "event": "REVOKE_REQUEST",
+              "description": "Indicates a signature request has been cancelled.",
+              "synonyms": "cancel, void, retract",
+              "tier": "customization",
               "payloadSchema": [
                 {
                   "name": "id",
@@ -116,6 +122,9 @@
             },
             {
               "event": "ESignRequestLoaded",
+              "description": "Signals that the request list has been successfully populated.",
+              "synonyms": "loaded, refreshed, populated, initialized",
+              "tier": "essential",
               "payloadSchema": [
                 {
                   "name": "data",
@@ -125,6 +134,9 @@
             },
             {
               "event": "ESignRequestLoadFailed",
+              "description": "Indicates a failure to load e-signature request data.",
+              "synonyms": "error, failure, load error",
+              "tier": "internal",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -158,6 +170,9 @@
               {
                 "key": "ESignRequestLoaded",
                 "name": "ESignRequest loaded",
+                "description": "Signals that the request list has been successfully populated.",
+                "synonyms": "loaded, refreshed, populated, initialized",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "data",
@@ -168,6 +183,9 @@
               {
                 "key": "ESignRequestLoadFailed",
                 "name": "ESignRequest load failed",
+                "description": "Indicates a failure to load e-signature request data.",
+                "synonyms": "error, failure, load error",
+                "tier": "internal",
                 "payloadSchema": [
                   {
                     "name": "error",
@@ -182,6 +200,9 @@
               {
                 "key": "SEND_REQUEST",
                 "name": "Send Request",
+                "description": "Signals a request has been sent for signature.",
+                "synonyms": "dispatch, submit, transmit",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "id",
@@ -193,6 +214,9 @@
               {
                 "key": "REVOKE_REQUEST",
                 "name": "Revoke Request",
+                "description": "Indicates a signature request has been cancelled.",
+                "synonyms": "cancel, void, retract",
+                "tier": "customization",
                 "payloadSchema": [
                   {
                     "name": "id",
@@ -238,6 +262,7 @@
                     "main",
                     {
                       "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
                           "variant": "h3",
@@ -245,51 +270,50 @@
                           "content": "@config.title"
                         },
                         {
+                          "type": "data-grid",
                           "itemActions": [
                             {
                               "label": "Send",
-                              "variant": "primary",
-                              "event": "SEND_REQUEST"
+                              "event": "SEND_REQUEST",
+                              "variant": "primary"
                             },
                             {
-                              "event": "REVOKE_REQUEST",
+                              "variant": "danger",
                               "label": "Revoke",
-                              "variant": "danger"
+                              "event": "REVOKE_REQUEST"
                             }
                           ],
                           "look": "@config.tableLook",
+                          "entity": "@payload.data",
                           "fields": [
                             {
+                              "name": "documentName",
                               "label": "Document",
-                              "variant": "h4",
-                              "name": "documentName"
+                              "variant": "h4"
                             },
                             {
-                              "name": "recipientName",
                               "label": "Recipient",
-                              "variant": "body"
+                              "variant": "body",
+                              "name": "recipientName"
                             },
                             {
-                              "label": "Email",
                               "name": "recipientEmail",
+                              "label": "Email",
                               "variant": "caption"
                             },
                             {
-                              "name": "status",
                               "variant": "badge",
-                              "label": "Status"
+                              "label": "Status",
+                              "name": "status"
                             },
                             {
+                              "variant": "caption",
                               "name": "sentAt",
-                              "label": "Sent",
-                              "variant": "caption"
+                              "label": "Sent"
                             }
-                          ],
-                          "entity": "@payload.data",
-                          "type": "data-grid"
+                          ]
                         }
                       ],
-                      "gap": "md",
                       "direction": "vertical"
                     }
                   ]
@@ -305,9 +329,9 @@
                     "main",
                     {
                       "type": "alert",
-                      "message": "@payload.error",
+                      "variant": "error",
                       "title": "Failed to load signature requests",
-                      "variant": "error"
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -356,8 +380,8 @@
                     "ESignRequest",
                     {
                       "emit": {
-                        "success": "ESignRequestLoaded",
-                        "failure": "ESignRequestLoadFailed"
+                        "failure": "ESignRequestLoadFailed",
+                        "success": "ESignRequestLoaded"
                       }
                     }
                   ],
@@ -365,8 +389,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "md"
+                      "size": "md",
+                      "type": "spinner"
                     }
                   ]
                 ]
@@ -374,13 +398,6 @@
             ]
           },
           "config": {
-            "title": {
-              "type": "string",
-              "default": "Signature Requests",
-              "label": "Section title",
-              "description": "Heading shown above the signature-request list",
-              "tier": "presentation"
-            },
             "tableLook": {
               "type": "string",
               "default": "dense",
@@ -394,6 +411,13 @@
                 "borderless",
                 "card-rows"
               ]
+            },
+            "title": {
+              "type": "string",
+              "default": "Signature Requests",
+              "label": "Section title",
+              "description": "Heading shown above the signature-request list",
+              "tier": "presentation"
             }
           },
           "scope": "collection"

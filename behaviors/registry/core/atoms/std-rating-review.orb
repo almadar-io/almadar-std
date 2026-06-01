@@ -21,14 +21,19 @@
             "items": {
               "type": "object",
               "properties": {
+                "createdAt": {
+                  "name": "createdAt",
+                  "type": "string",
+                  "required": false
+                },
                 "avatarIcon": {
                   "name": "avatarIcon",
                   "type": "string",
                   "required": false
                 },
-                "helpful": {
-                  "name": "helpful",
-                  "type": "number",
+                "comment": {
+                  "name": "comment",
+                  "type": "string",
                   "required": false
                 },
                 "rating": {
@@ -46,14 +51,9 @@
                   "type": "string",
                   "required": false
                 },
-                "createdAt": {
-                  "name": "createdAt",
-                  "type": "string",
-                  "required": false
-                },
-                "comment": {
-                  "name": "comment",
-                  "type": "string",
+                "helpful": {
+                  "name": "helpful",
+                  "type": "number",
                   "required": false
                 }
               }
@@ -68,16 +68,6 @@
             "items": {
               "type": "object",
               "properties": {
-                "avatarIcon": {
-                  "name": "avatarIcon",
-                  "type": "string",
-                  "required": false
-                },
-                "rating": {
-                  "name": "rating",
-                  "type": "number",
-                  "required": false
-                },
                 "helpful": {
                   "name": "helpful",
                   "type": "number",
@@ -88,18 +78,28 @@
                   "type": "string",
                   "required": true
                 },
+                "rating": {
+                  "name": "rating",
+                  "type": "number",
+                  "required": false
+                },
                 "authorName": {
                   "name": "authorName",
                   "type": "string",
                   "required": false
                 },
-                "createdAt": {
-                  "name": "createdAt",
+                "comment": {
+                  "name": "comment",
                   "type": "string",
                   "required": false
                 },
-                "comment": {
-                  "name": "comment",
+                "avatarIcon": {
+                  "name": "avatarIcon",
+                  "type": "string",
+                  "required": false
+                },
+                "createdAt": {
+                  "name": "createdAt",
                   "type": "string",
                   "required": false
                 }
@@ -186,10 +186,16 @@
           "linkedEntity": "ReviewView",
           "emits": [
             {
-              "event": "WRITE_REVIEW"
+              "event": "WRITE_REVIEW",
+              "description": "Initiates the review composition flow.",
+              "synonyms": "compose, create, add",
+              "tier": "essential"
             },
             {
               "event": "RATE_DRAFT",
+              "description": "Signals a draft rating has been created or modified.",
+              "synonyms": "draft, update, modify, change",
+              "tier": "customization",
               "payloadSchema": [
                 {
                   "name": "rating",
@@ -199,6 +205,9 @@
             },
             {
               "event": "SUBMIT_REVIEW",
+              "description": "Signals a review has been successfully submitted.",
+              "synonyms": "saved, posted, sent",
+              "tier": "essential",
               "payloadSchema": [
                 {
                   "name": "data",
@@ -207,10 +216,16 @@
               ]
             },
             {
-              "event": "CANCEL_REVIEW"
+              "event": "CANCEL_REVIEW",
+              "description": "Aborts the review composition process.",
+              "synonyms": "discard, abandon, close, revert",
+              "tier": "customization"
             },
             {
               "event": "CHANGE_SORT",
+              "description": "Signals a change in the review sorting criteria.",
+              "synonyms": "sort, order, filter",
+              "tier": "customization",
               "payloadSchema": [
                 {
                   "name": "tabId",
@@ -220,6 +235,9 @@
             },
             {
               "event": "MARK_HELPFUL",
+              "description": "Indicates a review has been marked as helpful.",
+              "synonyms": "helpful, useful, thumbs up, agree",
+              "tier": "customization",
               "payloadSchema": [
                 {
                   "name": "id",
@@ -228,10 +246,16 @@
               ]
             },
             {
-              "event": "RESTART"
+              "event": "RESTART",
+              "description": "Triggers a full refresh of the review data and UI.",
+              "synonyms": "refresh, reload, reset",
+              "tier": "internal"
             },
             {
               "event": "ReviewsLoaded",
+              "description": "Signals that the reviews data has been successfully retrieved.",
+              "synonyms": "loaded, fetched, ready, available",
+              "tier": "essential",
               "payloadSchema": [
                 {
                   "name": "data",
@@ -241,6 +265,9 @@
             },
             {
               "event": "ReviewsLoadFailed",
+              "description": "Indicates that loading reviews was unsuccessful.",
+              "synonyms": "failed, error, problem, unsuccessful",
+              "tier": "internal",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -254,6 +281,9 @@
             },
             {
               "event": "ReviewSaved",
+              "description": "Indicates a review has been successfully saved.",
+              "synonyms": "saved, persisted, updated",
+              "tier": "essential",
               "payloadSchema": [
                 {
                   "name": "row",
@@ -263,6 +293,9 @@
             },
             {
               "event": "ReviewSaveFailed",
+              "description": "Indicates a review save operation failed.",
+              "synonyms": "failed, error, unsuccessful",
+              "tier": "internal",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -305,6 +338,9 @@
               {
                 "key": "ReviewsLoaded",
                 "name": "Reviews loaded",
+                "description": "Signals that the reviews data has been successfully retrieved.",
+                "synonyms": "loaded, fetched, ready, available",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "data",
@@ -315,6 +351,9 @@
               {
                 "key": "ReviewsLoadFailed",
                 "name": "Reviews load failed",
+                "description": "Indicates that loading reviews was unsuccessful.",
+                "synonyms": "failed, error, problem, unsuccessful",
+                "tier": "internal",
                 "payloadSchema": [
                   {
                     "name": "error",
@@ -329,6 +368,9 @@
               {
                 "key": "ReviewSaved",
                 "name": "Review saved",
+                "description": "Indicates a review has been successfully saved.",
+                "synonyms": "saved, persisted, updated",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "row",
@@ -339,6 +381,9 @@
               {
                 "key": "ReviewSaveFailed",
                 "name": "Review save failed",
+                "description": "Indicates a review save operation failed.",
+                "synonyms": "failed, error, unsuccessful",
+                "tier": "internal",
                 "payloadSchema": [
                   {
                     "name": "error",
@@ -352,11 +397,17 @@
               },
               {
                 "key": "WRITE_REVIEW",
-                "name": "Write Review"
+                "name": "Write Review",
+                "description": "Initiates the review composition flow.",
+                "synonyms": "compose, create, add",
+                "tier": "essential"
               },
               {
                 "key": "CHANGE_SORT",
                 "name": "Change Sort",
+                "description": "Signals a change in the review sorting criteria.",
+                "synonyms": "sort, order, filter",
+                "tier": "customization",
                 "payloadSchema": [
                   {
                     "name": "tabId",
@@ -367,6 +418,9 @@
               {
                 "key": "MARK_HELPFUL",
                 "name": "Mark Helpful",
+                "description": "Indicates a review has been marked as helpful.",
+                "synonyms": "helpful, useful, thumbs up, agree",
+                "tier": "customization",
                 "payloadSchema": [
                   {
                     "name": "id",
@@ -377,6 +431,9 @@
               {
                 "key": "RATE_DRAFT",
                 "name": "Rate Draft",
+                "description": "Signals a draft rating has been created or modified.",
+                "synonyms": "draft, update, modify, change",
+                "tier": "customization",
                 "payloadSchema": [
                   {
                     "name": "rating",
@@ -387,6 +444,9 @@
               {
                 "key": "SUBMIT_REVIEW",
                 "name": "Submit Review",
+                "description": "Signals a review has been successfully submitted.",
+                "synonyms": "saved, posted, sent",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "data",
@@ -396,11 +456,17 @@
               },
               {
                 "key": "CANCEL_REVIEW",
-                "name": "Cancel Review"
+                "name": "Cancel Review",
+                "description": "Aborts the review composition process.",
+                "synonyms": "discard, abandon, close, revert",
+                "tier": "customization"
               },
               {
                 "key": "RESTART",
-                "name": "Restart"
+                "name": "Restart",
+                "description": "Triggers a full refresh of the review data and UI.",
+                "synonyms": "refresh, reload, reset",
+                "tier": "internal"
               }
             ],
             "transitions": [
@@ -444,23 +510,23 @@
                         "fn",
                         "row",
                         {
+                          "createdAt": [
+                            "object/get",
+                            "@row",
+                            "createdAt",
+                            ""
+                          ],
                           "helpful": [
                             "object/get",
                             "@row",
                             "helpful",
                             0.0
                           ],
-                          "avatarIcon": [
+                          "authorName": [
                             "object/get",
                             "@row",
-                            "avatarIcon",
-                            "user"
-                          ],
-                          "id": [
-                            "object/get",
-                            "@row",
-                            "id",
-                            ""
+                            "authorName",
+                            "Guest"
                           ],
                           "comment": [
                             "object/get",
@@ -474,17 +540,17 @@
                             "rating",
                             5.0
                           ],
-                          "authorName": [
+                          "id": [
                             "object/get",
                             "@row",
-                            "authorName",
-                            "Guest"
-                          ],
-                          "createdAt": [
-                            "object/get",
-                            "@row",
-                            "createdAt",
+                            "id",
                             ""
+                          ],
+                          "avatarIcon": [
+                            "object/get",
+                            "@row",
+                            "avatarIcon",
+                            "user"
                           ]
                         }
                       ]
@@ -534,17 +600,17 @@
                         "fn",
                         "bar",
                         {
-                          "percentage": [
-                            "object/get",
-                            "@bar",
-                            "percentage",
-                            0.0
-                          ],
                           "label": [
                             "object/get",
                             "@bar",
                             "label",
                             ""
+                          ],
+                          "percentage": [
+                            "object/get",
+                            "@bar",
+                            "percentage",
+                            0.0
                           ]
                         }
                       ]
@@ -554,46 +620,31 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "children": [
                         {
                           "direction": "horizontal",
+                          "type": "stack",
+                          "align": "center",
                           "justify": "between",
                           "gap": "md",
                           "children": [
                             {
-                              "type": "stack",
                               "direction": "vertical",
-                              "gap": "xs",
                               "children": [
                                 {
                                   "direction": "horizontal",
-                                  "type": "stack",
                                   "gap": "sm",
                                   "align": "center",
                                   "children": [
                                     {
-                                      "type": "icon",
-                                      "name": "star"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": "Reviews"
-                                    },
-                                    {
-                                      "color": "muted",
-                                      "content": "·",
-                                      "type": "typography"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "content": "@entity.averageRating",
-                                      "variant": "h3"
-                                    },
-                                    {
                                       "name": "star",
-                                      "color": "warning",
                                       "type": "icon"
+                                    },
+                                    {
+                                      "variant": "h3",
+                                      "type": "typography",
+                                      "content": "Reviews"
                                     },
                                     {
                                       "color": "muted",
@@ -601,127 +652,153 @@
                                       "content": "·"
                                     },
                                     {
-                                      "variant": "h4",
-                                      "content": "@entity.totalReviews",
+                                      "content": "@entity.averageRating",
+                                      "variant": "h3",
+                                      "type": "typography"
+                                    },
+                                    {
+                                      "name": "star",
+                                      "type": "icon",
+                                      "color": "warning"
+                                    },
+                                    {
+                                      "content": "·",
                                       "color": "muted",
                                       "type": "typography"
                                     },
                                     {
                                       "variant": "h4",
-                                      "type": "typography",
                                       "color": "muted",
-                                      "content": "reviews"
+                                      "content": "@entity.totalReviews",
+                                      "type": "typography"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "reviews",
+                                      "variant": "h4",
+                                      "color": "muted"
                                     }
-                                  ]
+                                  ],
+                                  "type": "stack"
                                 },
                                 {
-                                  "type": "typography",
-                                  "color": "muted",
                                   "content": "@config.subjectTitle",
-                                  "variant": "caption"
+                                  "variant": "caption",
+                                  "type": "typography",
+                                  "color": "muted"
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "gap": "xs"
                             },
                             {
-                              "variant": "primary",
-                              "action": "WRITE_REVIEW",
-                              "icon": "edit",
                               "type": "button",
-                              "label": "@config.writeLabel"
+                              "action": "WRITE_REVIEW",
+                              "label": "@config.writeLabel",
+                              "icon": "edit",
+                              "variant": "primary"
                             }
-                          ],
-                          "type": "stack",
-                          "align": "center"
+                          ]
                         },
                         {
+                          "type": "card",
+                          "look": "@config.cardLook",
                           "children": [
                             {
-                              "gap": "sm",
-                              "direction": "vertical",
+                              "type": "stack",
                               "children": [
                                 {
+                                  "type": "typography",
                                   "content": "Rating distribution",
-                                  "variant": "h4",
-                                  "type": "typography"
+                                  "variant": "h4"
                                 },
                                 {
-                                  "type": "data-list",
-                                  "entity": "@entity.starDistribution",
-                                  "gap": "sm",
-                                  "fields": [],
                                   "renderItem": [
                                     "fn",
                                     "bar",
                                     {
-                                      "type": "stack",
-                                      "align": "center",
                                       "children": [
                                         {
-                                          "content": "@bar.label",
+                                          "variant": "caption",
                                           "type": "typography",
-                                          "variant": "caption"
+                                          "content": "@bar.label"
                                         },
                                         {
-                                          "value": "@bar.percentage",
-                                          "variant": "primary",
                                           "type": "progress-bar",
-                                          "max": 100.0
+                                          "value": "@bar.percentage",
+                                          "max": 100.0,
+                                          "variant": "primary"
                                         },
                                         {
                                           "content": "@bar.percentage",
+                                          "variant": "caption",
                                           "color": "muted",
-                                          "type": "typography",
-                                          "variant": "caption"
+                                          "type": "typography"
                                         },
                                         {
+                                          "color": "muted",
                                           "content": "%",
-                                          "type": "typography",
                                           "variant": "caption",
-                                          "color": "muted"
+                                          "type": "typography"
                                         }
                                       ],
+                                      "gap": "md",
                                       "direction": "horizontal",
-                                      "gap": "md"
+                                      "align": "center",
+                                      "type": "stack"
                                     }
-                                  ]
+                                  ],
+                                  "type": "data-list",
+                                  "gap": "sm",
+                                  "fields": [],
+                                  "entity": "@entity.starDistribution"
                                 }
                               ],
-                              "type": "stack"
+                              "gap": "sm",
+                              "direction": "vertical"
                             }
-                          ],
-                          "look": "@config.cardLook",
-                          "type": "card"
+                          ]
                         },
                         {
                           "type": "tabs",
-                          "tabChangeEvent": "CHANGE_SORT",
                           "tabs": "@config.sortOptions",
+                          "tabChangeEvent": "CHANGE_SORT",
                           "activeTab": "@entity.currentSort"
                         },
                         {
+                          "entity": "@entity.reviews",
+                          "gap": "md",
+                          "type": "data-list",
+                          "fields": [],
                           "renderItem": [
                             "fn",
                             "review",
                             {
+                              "type": "card",
+                              "look": "@config.cardLook",
                               "children": [
                                 {
+                                  "gap": "sm",
+                                  "type": "stack",
                                   "children": [
                                     {
-                                      "align": "center",
+                                      "type": "stack",
+                                      "direction": "horizontal",
+                                      "gap": "sm",
                                       "children": [
                                         {
                                           "type": "icon",
                                           "name": "@review.avatarIcon"
                                         },
                                         {
-                                          "content": "@review.authorName",
                                           "type": "typography",
+                                          "content": "@review.authorName",
                                           "weight": "bold"
                                         },
                                         {
+                                          "content": "·",
                                           "color": "muted",
-                                          "type": "typography",
-                                          "content": "·"
+                                          "type": "typography"
                                         },
                                         {
                                           "type": "icon",
@@ -729,25 +806,23 @@
                                           "color": "warning"
                                         },
                                         {
+                                          "weight": "bold",
                                           "type": "typography",
-                                          "content": "@review.rating",
-                                          "weight": "bold"
-                                        },
-                                        {
-                                          "type": "typography",
-                                          "content": "·",
-                                          "color": "muted"
+                                          "content": "@review.rating"
                                         },
                                         {
                                           "color": "muted",
-                                          "variant": "caption",
                                           "type": "typography",
-                                          "content": "@review.createdAt"
+                                          "content": "·"
+                                        },
+                                        {
+                                          "variant": "caption",
+                                          "content": "@review.createdAt",
+                                          "type": "typography",
+                                          "color": "muted"
                                         }
                                       ],
-                                      "gap": "sm",
-                                      "direction": "horizontal",
-                                      "type": "stack"
+                                      "align": "center"
                                     },
                                     {
                                       "type": "typography",
@@ -755,48 +830,39 @@
                                       "variant": "body"
                                     },
                                     {
+                                      "gap": "sm",
+                                      "align": "center",
+                                      "direction": "horizontal",
+                                      "type": "stack",
                                       "children": [
                                         {
+                                          "action": "MARK_HELPFUL",
+                                          "label": "Helpful",
                                           "actionPayload": {
                                             "id": "@review.id"
                                           },
-                                          "variant": "ghost",
                                           "icon": "thumbs-up",
                                           "type": "button",
-                                          "action": "MARK_HELPFUL",
-                                          "label": "Helpful"
+                                          "variant": "ghost"
                                         },
                                         {
-                                          "type": "typography",
-                                          "variant": "caption",
                                           "content": "@review.helpful",
+                                          "variant": "caption",
+                                          "type": "typography",
                                           "color": "muted"
                                         }
-                                      ],
-                                      "gap": "sm",
-                                      "align": "center",
-                                      "type": "stack",
-                                      "direction": "horizontal"
+                                      ]
                                     }
                                   ],
-                                  "gap": "sm",
-                                  "direction": "vertical",
-                                  "type": "stack"
+                                  "direction": "vertical"
                                 }
-                              ],
-                              "type": "card",
-                              "look": "@config.cardLook"
+                              ]
                             }
-                          ],
-                          "entity": "@entity.reviews",
-                          "type": "data-list",
-                          "fields": [],
-                          "gap": "md"
+                          ]
                         }
                       ],
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "type": "stack"
+                      "type": "stack",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -862,8 +928,8 @@
                     "main",
                     {
                       "type": "error-state",
-                      "title": "Failed to submit",
-                      "message": "@entity.errorMessage"
+                      "message": "@entity.errorMessage",
+                      "title": "Failed to submit"
                     }
                   ]
                 ]
@@ -887,79 +953,79 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "type": "stack",
-                      "gap": "md",
                       "children": [
                         {
                           "gap": "sm",
-                          "align": "center",
                           "direction": "horizontal",
+                          "align": "center",
+                          "type": "stack",
                           "children": [
                             {
+                              "icon": "arrow-left",
                               "variant": "ghost",
-                              "type": "button",
                               "label": "Back",
-                              "action": "CANCEL_REVIEW",
-                              "icon": "arrow-left"
+                              "type": "button",
+                              "action": "CANCEL_REVIEW"
                             },
                             {
-                              "name": "edit",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "edit"
                             },
                             {
-                              "content": "Write a review",
                               "type": "typography",
+                              "content": "Write a review",
                               "variant": "h3"
                             }
-                          ],
-                          "type": "stack"
+                          ]
                         },
                         {
                           "look": "@config.cardLook",
+                          "type": "card",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "vertical",
-                              "gap": "md",
                               "children": [
                                 {
-                                  "type": "typography",
                                   "variant": "caption",
+                                  "type": "typography",
                                   "content": "@config.subjectTitle",
                                   "color": "muted"
                                 },
                                 {
-                                  "type": "typography",
                                   "variant": "h4",
-                                  "content": "How would you rate it?"
+                                  "content": "How would you rate it?",
+                                  "type": "typography"
                                 },
                                 {
-                                  "type": "star-rating",
                                   "max": 5.0,
+                                  "type": "star-rating",
                                   "value": "@entity.draftRating",
                                   "action": "RATE_DRAFT"
                                 },
                                 {
                                   "variant": "h4",
-                                  "type": "typography",
-                                  "content": "Share more details (optional)"
+                                  "content": "Share more details (optional)",
+                                  "type": "typography"
                                 },
                                 {
-                                  "type": "form-section",
-                                  "mode": "edit",
-                                  "entity": "@entity",
-                                  "submitEvent": "SUBMIT_REVIEW",
-                                  "submitLabel": "@config.submitLabel",
                                   "cancelEvent": "CANCEL_REVIEW",
-                                  "fields": "@config.reviewFields"
+                                  "submitLabel": "@config.submitLabel",
+                                  "fields": "@config.reviewFields",
+                                  "type": "form-section",
+                                  "entity": "@entity",
+                                  "mode": "edit",
+                                  "submitEvent": "SUBMIT_REVIEW"
                                 }
-                              ]
+                              ],
+                              "gap": "md",
+                              "direction": "vertical",
+                              "type": "stack"
                             }
-                          ],
-                          "type": "card"
+                          ]
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -993,38 +1059,32 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "direction": "vertical",
-                      "type": "stack",
                       "children": [
                         {
-                          "justify": "between",
-                          "type": "stack",
                           "direction": "horizontal",
                           "children": [
                             {
-                              "gap": "xs",
+                              "type": "stack",
                               "direction": "vertical",
                               "children": [
                                 {
                                   "gap": "sm",
                                   "type": "stack",
                                   "align": "center",
-                                  "direction": "horizontal",
                                   "children": [
                                     {
                                       "type": "icon",
                                       "name": "star"
                                     },
                                     {
-                                      "type": "typography",
                                       "content": "Reviews",
-                                      "variant": "h3"
+                                      "variant": "h3",
+                                      "type": "typography"
                                     },
                                     {
-                                      "type": "typography",
                                       "content": "·",
-                                      "color": "muted"
+                                      "color": "muted",
+                                      "type": "typography"
                                     },
                                     {
                                       "type": "typography",
@@ -1033,53 +1093,58 @@
                                     },
                                     {
                                       "color": "warning",
-                                      "name": "star",
-                                      "type": "icon"
+                                      "type": "icon",
+                                      "name": "star"
                                     },
                                     {
-                                      "color": "muted",
+                                      "content": "·",
                                       "type": "typography",
-                                      "content": "·"
+                                      "color": "muted"
                                     },
                                     {
-                                      "color": "muted",
                                       "type": "typography",
+                                      "content": "@entity.totalReviews",
                                       "variant": "h4",
-                                      "content": "@entity.totalReviews"
+                                      "color": "muted"
                                     },
                                     {
                                       "content": "reviews",
-                                      "type": "typography",
                                       "color": "muted",
-                                      "variant": "h4"
+                                      "variant": "h4",
+                                      "type": "typography"
                                     }
-                                  ]
+                                  ],
+                                  "direction": "horizontal"
                                 },
                                 {
                                   "color": "muted",
-                                  "variant": "caption",
                                   "type": "typography",
-                                  "content": "@config.subjectTitle"
+                                  "content": "@config.subjectTitle",
+                                  "variant": "caption"
                                 }
                               ],
-                              "type": "stack"
+                              "gap": "xs"
                             },
                             {
-                              "action": "WRITE_REVIEW",
-                              "label": "@config.writeLabel",
-                              "icon": "edit",
+                              "type": "button",
                               "variant": "primary",
-                              "type": "button"
+                              "icon": "edit",
+                              "action": "WRITE_REVIEW",
+                              "label": "@config.writeLabel"
                             }
                           ],
                           "gap": "md",
+                          "justify": "between",
+                          "type": "stack",
                           "align": "center"
                         },
                         {
                           "type": "card",
                           "children": [
                             {
+                              "gap": "sm",
                               "direction": "vertical",
+                              "type": "stack",
                               "children": [
                                 {
                                   "type": "typography",
@@ -1089,59 +1154,58 @@
                                 {
                                   "type": "data-list",
                                   "gap": "sm",
-                                  "fields": [],
                                   "entity": "@entity.starDistribution",
+                                  "fields": [],
                                   "renderItem": [
                                     "fn",
                                     "bar",
                                     {
-                                      "align": "center",
-                                      "type": "stack",
                                       "direction": "horizontal",
+                                      "type": "stack",
+                                      "align": "center",
                                       "gap": "md",
                                       "children": [
                                         {
-                                          "content": "@bar.label",
                                           "type": "typography",
+                                          "content": "@bar.label",
                                           "variant": "caption"
                                         },
                                         {
                                           "value": "@bar.percentage",
+                                          "type": "progress-bar",
                                           "variant": "primary",
-                                          "max": 100.0,
-                                          "type": "progress-bar"
+                                          "max": 100.0
                                         },
                                         {
-                                          "color": "muted",
                                           "type": "typography",
-                                          "content": "@bar.percentage",
-                                          "variant": "caption"
+                                          "variant": "caption",
+                                          "color": "muted",
+                                          "content": "@bar.percentage"
                                         },
                                         {
-                                          "color": "muted",
                                           "type": "typography",
+                                          "variant": "caption",
                                           "content": "%",
-                                          "variant": "caption"
+                                          "color": "muted"
                                         }
                                       ]
                                     }
                                   ]
                                 }
-                              ],
-                              "type": "stack",
-                              "gap": "sm"
+                              ]
                             }
                           ],
                           "look": "@config.cardLook"
                         },
                         {
-                          "activeTab": "@entity.currentSort",
+                          "type": "tabs",
                           "tabs": "@config.sortOptions",
                           "tabChangeEvent": "CHANGE_SORT",
-                          "type": "tabs"
+                          "activeTab": "@entity.currentSort"
                         },
                         {
-                          "type": "data-list",
+                          "gap": "md",
+                          "fields": [],
                           "renderItem": [
                             "fn",
                             "review",
@@ -1150,20 +1214,21 @@
                               "look": "@config.cardLook",
                               "children": [
                                 {
-                                  "gap": "sm",
+                                  "type": "stack",
+                                  "direction": "vertical",
                                   "children": [
                                     {
+                                      "type": "stack",
                                       "direction": "horizontal",
-                                      "align": "center",
                                       "children": [
                                         {
                                           "type": "icon",
                                           "name": "@review.avatarIcon"
                                         },
                                         {
-                                          "weight": "bold",
+                                          "type": "typography",
                                           "content": "@review.authorName",
-                                          "type": "typography"
+                                          "weight": "bold"
                                         },
                                         {
                                           "content": "·",
@@ -1171,71 +1236,72 @@
                                           "type": "typography"
                                         },
                                         {
-                                          "type": "icon",
                                           "color": "warning",
+                                          "type": "icon",
                                           "name": "star"
                                         },
                                         {
+                                          "content": "@review.rating",
                                           "type": "typography",
-                                          "weight": "bold",
-                                          "content": "@review.rating"
+                                          "weight": "bold"
                                         },
                                         {
-                                          "color": "muted",
+                                          "type": "typography",
                                           "content": "·",
-                                          "type": "typography"
+                                          "color": "muted"
                                         },
                                         {
                                           "variant": "caption",
                                           "type": "typography",
-                                          "color": "muted",
-                                          "content": "@review.createdAt"
+                                          "content": "@review.createdAt",
+                                          "color": "muted"
                                         }
                                       ],
-                                      "type": "stack",
+                                      "align": "center",
                                       "gap": "sm"
                                     },
                                     {
-                                      "content": "@review.comment",
                                       "variant": "body",
-                                      "type": "typography"
+                                      "type": "typography",
+                                      "content": "@review.comment"
                                     },
                                     {
-                                      "direction": "horizontal",
-                                      "align": "center",
                                       "type": "stack",
-                                      "gap": "sm",
+                                      "align": "center",
                                       "children": [
                                         {
-                                          "variant": "ghost",
                                           "type": "button",
                                           "action": "MARK_HELPFUL",
                                           "actionPayload": {
                                             "id": "@review.id"
                                           },
                                           "label": "Helpful",
+                                          "variant": "ghost",
                                           "icon": "thumbs-up"
                                         },
                                         {
-                                          "color": "muted",
-                                          "content": "@review.helpful",
                                           "type": "typography",
-                                          "variant": "caption"
+                                          "color": "muted",
+                                          "variant": "caption",
+                                          "content": "@review.helpful"
                                         }
-                                      ]
+                                      ],
+                                      "gap": "sm",
+                                      "direction": "horizontal"
                                     }
                                   ],
-                                  "direction": "vertical",
-                                  "type": "stack"
+                                  "gap": "sm"
                                 }
                               ]
                             }
                           ],
-                          "gap": "md",
-                          "fields": [],
+                          "type": "data-list",
                           "entity": "@entity.reviews"
                         }
-                      ]
+                      ],
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1269,25 +1335,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "lg",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
                           "gap": "md",
                           "align": "center",
+                          "direction": "horizontal",
                           "justify": "between",
+                          "type": "stack",
                           "children": [
                             {
-                              "direction": "vertical",
+                              "gap": "xs",
                               "type": "stack",
                               "children": [
                                 {
                                   "gap": "sm",
-                                  "align": "center",
                                   "direction": "horizontal",
+                                  "align": "center",
                                   "children": [
                                     {
                                       "type": "icon",
@@ -1295,40 +1358,40 @@
                                     },
                                     {
                                       "type": "typography",
-                                      "content": "Reviews",
+                                      "variant": "h3",
+                                      "content": "Reviews"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "color": "muted",
+                                      "content": "·"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "@entity.averageRating",
                                       "variant": "h3"
                                     },
                                     {
-                                      "type": "typography",
-                                      "content": "·",
-                                      "color": "muted"
-                                    },
-                                    {
-                                      "content": "@entity.averageRating",
-                                      "variant": "h3",
-                                      "type": "typography"
-                                    },
-                                    {
-                                      "color": "warning",
                                       "name": "star",
+                                      "color": "warning",
                                       "type": "icon"
                                     },
                                     {
-                                      "color": "muted",
                                       "content": "·",
+                                      "color": "muted",
                                       "type": "typography"
                                     },
                                     {
+                                      "type": "typography",
                                       "variant": "h4",
                                       "content": "@entity.totalReviews",
-                                      "color": "muted",
-                                      "type": "typography"
+                                      "color": "muted"
                                     },
                                     {
-                                      "color": "muted",
                                       "variant": "h4",
-                                      "type": "typography",
-                                      "content": "reviews"
+                                      "color": "muted",
+                                      "content": "reviews",
+                                      "type": "typography"
                                     }
                                   ],
                                   "type": "stack"
@@ -1340,42 +1403,36 @@
                                   "color": "muted"
                                 }
                               ],
-                              "gap": "xs"
+                              "direction": "vertical"
                             },
                             {
+                              "icon": "edit",
                               "variant": "primary",
-                              "type": "button",
                               "label": "@config.writeLabel",
-                              "action": "WRITE_REVIEW",
-                              "icon": "edit"
+                              "type": "button",
+                              "action": "WRITE_REVIEW"
                             }
                           ]
                         },
                         {
-                          "type": "card",
-                          "look": "@config.cardLook",
                           "children": [
                             {
                               "direction": "vertical",
                               "gap": "sm",
-                              "type": "stack",
                               "children": [
                                 {
+                                  "type": "typography",
                                   "variant": "h4",
-                                  "content": "Rating distribution",
-                                  "type": "typography"
+                                  "content": "Rating distribution"
                                 },
                                 {
-                                  "gap": "sm",
-                                  "type": "data-list",
-                                  "entity": "@entity.starDistribution",
-                                  "fields": [],
                                   "renderItem": [
                                     "fn",
                                     "bar",
                                     {
-                                      "direction": "horizontal",
                                       "gap": "md",
+                                      "align": "center",
+                                      "type": "stack",
                                       "children": [
                                         {
                                           "variant": "caption",
@@ -1383,16 +1440,16 @@
                                           "content": "@bar.label"
                                         },
                                         {
-                                          "value": "@bar.percentage",
-                                          "max": 100.0,
                                           "type": "progress-bar",
-                                          "variant": "primary"
+                                          "value": "@bar.percentage",
+                                          "variant": "primary",
+                                          "max": 100.0
                                         },
                                         {
                                           "variant": "caption",
                                           "color": "muted",
-                                          "content": "@bar.percentage",
-                                          "type": "typography"
+                                          "type": "typography",
+                                          "content": "@bar.percentage"
                                         },
                                         {
                                           "variant": "caption",
@@ -1401,117 +1458,126 @@
                                           "type": "typography"
                                         }
                                       ],
-                                      "type": "stack",
-                                      "align": "center"
+                                      "direction": "horizontal"
                                     }
-                                  ]
+                                  ],
+                                  "entity": "@entity.starDistribution",
+                                  "gap": "sm",
+                                  "type": "data-list",
+                                  "fields": []
                                 }
-                              ]
+                              ],
+                              "type": "stack"
                             }
-                          ]
+                          ],
+                          "type": "card",
+                          "look": "@config.cardLook"
                         },
                         {
-                          "activeTab": "@entity.currentSort",
-                          "tabs": "@config.sortOptions",
+                          "type": "tabs",
                           "tabChangeEvent": "CHANGE_SORT",
-                          "type": "tabs"
+                          "tabs": "@config.sortOptions",
+                          "activeTab": "@entity.currentSort"
                         },
                         {
                           "gap": "md",
-                          "entity": "@entity.reviews",
+                          "fields": [],
                           "renderItem": [
                             "fn",
                             "review",
                             {
+                              "type": "card",
                               "children": [
                                 {
-                                  "type": "stack",
-                                  "gap": "sm",
-                                  "direction": "vertical",
                                   "children": [
                                     {
+                                      "gap": "sm",
                                       "children": [
                                         {
                                           "type": "icon",
                                           "name": "@review.avatarIcon"
                                         },
                                         {
-                                          "type": "typography",
                                           "weight": "bold",
-                                          "content": "@review.authorName"
+                                          "content": "@review.authorName",
+                                          "type": "typography"
                                         },
                                         {
+                                          "content": "·",
                                           "color": "muted",
-                                          "type": "typography",
-                                          "content": "·"
+                                          "type": "typography"
                                         },
                                         {
                                           "type": "icon",
-                                          "color": "warning",
-                                          "name": "star"
+                                          "name": "star",
+                                          "color": "warning"
                                         },
                                         {
+                                          "type": "typography",
                                           "content": "@review.rating",
-                                          "weight": "bold",
+                                          "weight": "bold"
+                                        },
+                                        {
+                                          "color": "muted",
+                                          "content": "·",
                                           "type": "typography"
                                         },
                                         {
                                           "type": "typography",
-                                          "content": "·",
-                                          "color": "muted"
-                                        },
-                                        {
-                                          "content": "@review.createdAt",
-                                          "variant": "caption",
                                           "color": "muted",
-                                          "type": "typography"
+                                          "content": "@review.createdAt",
+                                          "variant": "caption"
                                         }
                                       ],
-                                      "gap": "sm",
                                       "direction": "horizontal",
                                       "type": "stack",
                                       "align": "center"
                                     },
                                     {
-                                      "variant": "body",
                                       "type": "typography",
-                                      "content": "@review.comment"
+                                      "content": "@review.comment",
+                                      "variant": "body"
                                     },
                                     {
+                                      "direction": "horizontal",
+                                      "gap": "sm",
+                                      "type": "stack",
                                       "children": [
                                         {
+                                          "variant": "ghost",
+                                          "icon": "thumbs-up",
                                           "actionPayload": {
                                             "id": "@review.id"
                                           },
-                                          "icon": "thumbs-up",
-                                          "variant": "ghost",
                                           "type": "button",
                                           "label": "Helpful",
                                           "action": "MARK_HELPFUL"
                                         },
                                         {
                                           "type": "typography",
-                                          "color": "muted",
                                           "variant": "caption",
-                                          "content": "@review.helpful"
+                                          "content": "@review.helpful",
+                                          "color": "muted"
                                         }
                                       ],
-                                      "align": "center",
-                                      "direction": "horizontal",
-                                      "gap": "sm",
-                                      "type": "stack"
+                                      "align": "center"
                                     }
-                                  ]
+                                  ],
+                                  "type": "stack",
+                                  "gap": "sm",
+                                  "direction": "vertical"
                                 }
                               ],
-                              "type": "card",
                               "look": "@config.cardLook"
                             }
                           ],
-                          "type": "data-list",
-                          "fields": []
+                          "entity": "@entity.reviews",
+                          "type": "data-list"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1545,47 +1611,31 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "type": "stack",
                       "children": [
                         {
+                          "gap": "md",
+                          "type": "stack",
                           "align": "center",
                           "justify": "between",
-                          "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "direction": "vertical",
                               "type": "stack",
+                              "direction": "vertical",
+                              "gap": "xs",
                               "children": [
                                 {
-                                  "type": "stack",
-                                  "gap": "sm",
                                   "direction": "horizontal",
+                                  "align": "center",
                                   "children": [
                                     {
                                       "type": "icon",
                                       "name": "star"
                                     },
                                     {
+                                      "content": "Reviews",
                                       "type": "typography",
-                                      "variant": "h3",
-                                      "content": "Reviews"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "content": "·",
-                                      "color": "muted"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": "@entity.averageRating"
-                                    },
-                                    {
-                                      "name": "star",
-                                      "color": "warning",
-                                      "type": "icon"
+                                      "variant": "h3"
                                     },
                                     {
                                       "color": "muted",
@@ -1593,55 +1643,68 @@
                                       "content": "·"
                                     },
                                     {
-                                      "variant": "h4",
-                                      "type": "typography",
-                                      "color": "muted",
-                                      "content": "@entity.totalReviews"
+                                      "content": "@entity.averageRating",
+                                      "variant": "h3",
+                                      "type": "typography"
+                                    },
+                                    {
+                                      "name": "star",
+                                      "type": "icon",
+                                      "color": "warning"
                                     },
                                     {
                                       "color": "muted",
-                                      "variant": "h4",
+                                      "content": "·",
+                                      "type": "typography"
+                                    },
+                                    {
                                       "type": "typography",
-                                      "content": "reviews"
+                                      "variant": "h4",
+                                      "content": "@entity.totalReviews",
+                                      "color": "muted"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h4",
+                                      "content": "reviews",
+                                      "color": "muted"
                                     }
                                   ],
-                                  "align": "center"
+                                  "type": "stack",
+                                  "gap": "sm"
                                 },
                                 {
+                                  "variant": "caption",
                                   "content": "@config.subjectTitle",
-                                  "type": "typography",
                                   "color": "muted",
-                                  "variant": "caption"
+                                  "type": "typography"
                                 }
-                              ],
-                              "gap": "xs"
+                              ]
                             },
                             {
-                              "label": "@config.writeLabel",
-                              "variant": "primary",
-                              "action": "WRITE_REVIEW",
+                              "icon": "edit",
                               "type": "button",
-                              "icon": "edit"
+                              "label": "@config.writeLabel",
+                              "action": "WRITE_REVIEW",
+                              "variant": "primary"
                             }
-                          ],
-                          "direction": "horizontal",
-                          "gap": "md"
+                          ]
                         },
                         {
-                          "type": "card",
                           "children": [
                             {
+                              "type": "stack",
+                              "gap": "sm",
                               "direction": "vertical",
                               "children": [
                                 {
+                                  "variant": "h4",
                                   "type": "typography",
-                                  "content": "Rating distribution",
-                                  "variant": "h4"
+                                  "content": "Rating distribution"
                                 },
                                 {
-                                  "gap": "sm",
-                                  "fields": [],
                                   "entity": "@entity.starDistribution",
+                                  "gap": "sm",
                                   "type": "data-list",
                                   "renderItem": [
                                     "fn",
@@ -1649,65 +1712,67 @@
                                     {
                                       "children": [
                                         {
-                                          "type": "typography",
                                           "content": "@bar.label",
-                                          "variant": "caption"
+                                          "variant": "caption",
+                                          "type": "typography"
                                         },
                                         {
                                           "type": "progress-bar",
                                           "max": 100.0,
-                                          "value": "@bar.percentage",
-                                          "variant": "primary"
+                                          "variant": "primary",
+                                          "value": "@bar.percentage"
                                         },
                                         {
                                           "type": "typography",
-                                          "content": "@bar.percentage",
                                           "variant": "caption",
+                                          "content": "@bar.percentage",
                                           "color": "muted"
                                         },
                                         {
-                                          "color": "muted",
+                                          "variant": "caption",
                                           "type": "typography",
-                                          "content": "%",
-                                          "variant": "caption"
+                                          "color": "muted",
+                                          "content": "%"
                                         }
                                       ],
-                                      "align": "center",
-                                      "direction": "horizontal",
+                                      "gap": "md",
                                       "type": "stack",
-                                      "gap": "md"
+                                      "direction": "horizontal",
+                                      "align": "center"
                                     }
-                                  ]
+                                  ],
+                                  "fields": []
                                 }
-                              ],
-                              "type": "stack",
-                              "gap": "sm"
+                              ]
                             }
                           ],
-                          "look": "@config.cardLook"
+                          "look": "@config.cardLook",
+                          "type": "card"
                         },
                         {
                           "tabs": "@config.sortOptions",
+                          "activeTab": "@entity.currentSort",
                           "tabChangeEvent": "CHANGE_SORT",
-                          "type": "tabs",
-                          "activeTab": "@entity.currentSort"
+                          "type": "tabs"
                         },
                         {
-                          "type": "data-list",
-                          "fields": [],
+                          "entity": "@entity.reviews",
                           "renderItem": [
                             "fn",
                             "review",
                             {
+                              "look": "@config.cardLook",
                               "children": [
                                 {
                                   "direction": "vertical",
                                   "type": "stack",
+                                  "gap": "sm",
                                   "children": [
                                     {
                                       "type": "stack",
                                       "direction": "horizontal",
                                       "align": "center",
+                                      "gap": "sm",
                                       "children": [
                                         {
                                           "name": "@review.avatarIcon",
@@ -1719,19 +1784,19 @@
                                           "type": "typography"
                                         },
                                         {
-                                          "color": "muted",
+                                          "content": "·",
                                           "type": "typography",
-                                          "content": "·"
+                                          "color": "muted"
                                         },
                                         {
+                                          "type": "icon",
                                           "name": "star",
-                                          "color": "warning",
-                                          "type": "icon"
+                                          "color": "warning"
                                         },
                                         {
-                                          "type": "typography",
                                           "content": "@review.rating",
-                                          "weight": "bold"
+                                          "weight": "bold",
+                                          "type": "typography"
                                         },
                                         {
                                           "type": "typography",
@@ -1739,27 +1804,28 @@
                                           "color": "muted"
                                         },
                                         {
-                                          "variant": "caption",
-                                          "content": "@review.createdAt",
                                           "type": "typography",
-                                          "color": "muted"
+                                          "content": "@review.createdAt",
+                                          "color": "muted",
+                                          "variant": "caption"
                                         }
-                                      ],
-                                      "gap": "sm"
+                                      ]
                                     },
                                     {
-                                      "content": "@review.comment",
                                       "variant": "body",
-                                      "type": "typography"
+                                      "type": "typography",
+                                      "content": "@review.comment"
                                     },
                                     {
+                                      "align": "center",
+                                      "gap": "sm",
                                       "direction": "horizontal",
                                       "type": "stack",
                                       "children": [
                                         {
-                                          "variant": "ghost",
-                                          "label": "Helpful",
                                           "type": "button",
+                                          "label": "Helpful",
+                                          "variant": "ghost",
                                           "action": "MARK_HELPFUL",
                                           "actionPayload": {
                                             "id": "@review.id"
@@ -1767,27 +1833,27 @@
                                           "icon": "thumbs-up"
                                         },
                                         {
-                                          "type": "typography",
                                           "variant": "caption",
+                                          "type": "typography",
                                           "color": "muted",
                                           "content": "@review.helpful"
                                         }
-                                      ],
-                                      "align": "center",
-                                      "gap": "sm"
+                                      ]
                                     }
-                                  ],
-                                  "gap": "sm"
+                                  ]
                                 }
                               ],
-                              "look": "@config.cardLook",
                               "type": "card"
                             }
                           ],
+                          "fields": [],
                           "gap": "md",
-                          "entity": "@entity.reviews"
+                          "type": "data-list"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -1801,8 +1867,8 @@
                     "render-ui",
                     "main",
                     {
-                      "title": "Recording…",
-                      "type": "loading-state"
+                      "type": "loading-state",
+                      "title": "Recording…"
                     }
                   ]
                 ]
@@ -1823,17 +1889,17 @@
                     {
                       "children": [
                         {
-                          "direction": "horizontal",
                           "align": "center",
-                          "gap": "sm",
                           "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
                           "children": [
                             {
-                              "label": "Back",
+                              "type": "button",
                               "variant": "ghost",
+                              "label": "Back",
                               "action": "CANCEL_REVIEW",
-                              "icon": "arrow-left",
-                              "type": "button"
+                              "icon": "arrow-left"
                             },
                             {
                               "type": "icon",
@@ -1841,8 +1907,8 @@
                             },
                             {
                               "type": "typography",
-                              "content": "Write a review",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "content": "Write a review"
                             }
                           ]
                         },
@@ -1851,49 +1917,49 @@
                             {
                               "children": [
                                 {
-                                  "variant": "caption",
+                                  "content": "@config.subjectTitle",
                                   "color": "muted",
-                                  "type": "typography",
-                                  "content": "@config.subjectTitle"
+                                  "variant": "caption",
+                                  "type": "typography"
                                 },
                                 {
-                                  "type": "typography",
                                   "variant": "h4",
+                                  "type": "typography",
                                   "content": "How would you rate it?"
                                 },
                                 {
-                                  "action": "RATE_DRAFT",
+                                  "max": 5.0,
                                   "type": "star-rating",
                                   "value": "@entity.draftRating",
-                                  "max": 5.0
+                                  "action": "RATE_DRAFT"
                                 },
                                 {
                                   "content": "Share more details (optional)",
-                                  "type": "typography",
-                                  "variant": "h4"
+                                  "variant": "h4",
+                                  "type": "typography"
                                 },
                                 {
-                                  "fields": "@config.reviewFields",
-                                  "submitEvent": "SUBMIT_REVIEW",
-                                  "entity": "@entity",
+                                  "mode": "edit",
                                   "type": "form-section",
+                                  "entity": "@entity",
+                                  "submitEvent": "SUBMIT_REVIEW",
                                   "cancelEvent": "CANCEL_REVIEW",
                                   "submitLabel": "@config.submitLabel",
-                                  "mode": "edit"
+                                  "fields": "@config.reviewFields"
                                 }
                               ],
-                              "type": "stack",
                               "direction": "vertical",
-                              "gap": "md"
+                              "gap": "md",
+                              "type": "stack"
                             }
                           ],
-                          "type": "card",
-                          "look": "@config.cardLook"
+                          "look": "@config.cardLook",
+                          "type": "card"
                         }
                       ],
+                      "gap": "md",
                       "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1908,13 +1974,13 @@
                     "create",
                     "ReviewView",
                     {
-                      "rating": "@entity.draftRating",
-                      "comment": "@entity.draftComment"
+                      "comment": "@entity.draftComment",
+                      "rating": "@entity.draftRating"
                     },
                     {
                       "emit": {
-                        "success": "ReviewSaved",
-                        "failure": "ReviewSaveFailed"
+                        "failure": "ReviewSaveFailed",
+                        "success": "ReviewSaved"
                       }
                     }
                   ],
@@ -1922,22 +1988,22 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "gap": "md",
                       "align": "center",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "icon",
-                          "size": "lg",
-                          "name": "send"
+                          "name": "send",
+                          "size": "lg"
                         },
                         {
-                          "variant": "h3",
                           "type": "typography",
-                          "content": "Submitting your review…"
+                          "content": "Submitting your review…",
+                          "variant": "h3"
                         }
-                      ],
-                      "type": "stack",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -1976,6 +2042,9 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "icon",
@@ -1984,29 +2053,26 @@
                         },
                         {
                           "content": "Thanks for your review!",
-                          "align": "center",
+                          "variant": "h2",
                           "type": "typography",
-                          "variant": "h2"
+                          "align": "center"
                         },
                         {
+                          "color": "muted",
+                          "type": "typography",
                           "content": "It will appear on the page shortly.",
                           "align": "center",
-                          "type": "typography",
-                          "color": "muted",
                           "variant": "body"
                         },
                         {
-                          "variant": "primary",
-                          "type": "button",
+                          "icon": "arrow-left",
                           "label": "Back to reviews",
-                          "action": "RESTART",
-                          "icon": "arrow-left"
+                          "type": "button",
+                          "variant": "primary",
+                          "action": "RESTART"
                         }
                       ],
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "type": "stack",
-                      "align": "center"
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -2042,8 +2108,8 @@
                     "ReviewView",
                     {
                       "emit": {
-                        "failure": "ReviewsLoadFailed",
-                        "success": "ReviewsLoaded"
+                        "success": "ReviewsLoaded",
+                        "failure": "ReviewsLoadFailed"
                       }
                     }
                   ],
@@ -2051,8 +2117,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "loading-state",
-                      "title": "Refreshing reviews…"
+                      "title": "Refreshing reviews…",
+                      "type": "loading-state"
                     }
                   ]
                 ]
@@ -2067,8 +2133,8 @@
                     "ReviewView",
                     {
                       "emit": {
-                        "failure": "ReviewsLoadFailed",
-                        "success": "ReviewsLoaded"
+                        "success": "ReviewsLoaded",
+                        "failure": "ReviewsLoadFailed"
                       }
                     }
                   ],
@@ -2076,8 +2142,8 @@
                     "render-ui",
                     "main",
                     {
-                      "title": "Retrying…",
-                      "type": "loading-state"
+                      "type": "loading-state",
+                      "title": "Retrying…"
                     }
                   ]
                 ]
@@ -2085,6 +2151,13 @@
             ]
           },
           "config": {
+            "submitLabel": {
+              "type": "string",
+              "default": "Submit review",
+              "label": "Submit button",
+              "description": "Label on the primary submit-review button",
+              "tier": "presentation"
+            },
             "writeLabel": {
               "type": "string",
               "default": "Write a review",
@@ -2104,17 +2177,17 @@
               "default": [
                 {
                   "icon": "clock",
-                  "id": "recent",
-                  "label": "Most recent"
+                  "label": "Most recent",
+                  "id": "recent"
                 },
                 {
-                  "icon": "star",
                   "id": "highest",
-                  "label": "Top rated"
+                  "label": "Top rated",
+                  "icon": "star"
                 },
                 {
-                  "icon": "trending-down",
                   "id": "lowest",
+                  "icon": "trending-down",
                   "label": "Lowest"
                 }
               ],
@@ -2142,25 +2215,6 @@
                 }
               }
             },
-            "submitLabel": {
-              "type": "string",
-              "default": "Submit review",
-              "label": "Submit button",
-              "description": "Label on the primary submit-review button",
-              "tier": "presentation"
-            },
-            "reviewFields": {
-              "type": "[string]",
-              "default": [
-                "draftComment"
-              ],
-              "label": "Review form fields",
-              "description": "Inputs shown in the review compose form",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
-            },
             "cardLook": {
               "type": "string",
               "default": "elevated",
@@ -2177,13 +2231,6 @@
                 "tile-image-first"
               ]
             },
-            "subjectTitle": {
-              "type": "string",
-              "default": "Bali Sunset Villa · 3 nights",
-              "label": "Subject title",
-              "description": "Name of the item being reviewed (shown in the header)",
-              "tier": "presentation"
-            },
             "starDistribution": {
               "type": "[StarBucket]",
               "default": [
@@ -2196,16 +2243,16 @@
                   "label": "4 stars"
                 },
                 {
-                  "label": "3 stars",
-                  "percentage": 5.0
+                  "percentage": 5.0,
+                  "label": "3 stars"
                 },
                 {
-                  "percentage": 2.0,
-                  "label": "2 stars"
+                  "label": "2 stars",
+                  "percentage": 2.0
                 },
                 {
-                  "percentage": 1.0,
-                  "label": "1 star"
+                  "label": "1 star",
+                  "percentage": 1.0
                 }
               ],
               "label": "Star bars",
@@ -2226,6 +2273,25 @@
                   }
                 }
               }
+            },
+            "subjectTitle": {
+              "type": "string",
+              "default": "Bali Sunset Villa · 3 nights",
+              "label": "Subject title",
+              "description": "Name of the item being reviewed (shown in the header)",
+              "tier": "presentation"
+            },
+            "reviewFields": {
+              "type": "[string]",
+              "default": [
+                "draftComment"
+              ],
+              "label": "Review form fields",
+              "description": "Inputs shown in the review compose form",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
             }
           },
           "scope": "instance"
@@ -2237,6 +2303,9 @@
           "emits": [
             {
               "event": "RATE_DRAFT",
+              "description": "Signals a review draft has been created or updated.",
+              "synonyms": "draft, save, pending",
+              "tier": "customization",
               "payloadSchema": [
                 {
                   "name": "rating",
@@ -2246,6 +2315,9 @@
             },
             {
               "event": "SUBMIT_REVIEW",
+              "description": "Signals a review has been successfully submitted.",
+              "synonyms": "saved, posted, sent",
+              "tier": "essential",
               "payloadSchema": [
                 {
                   "name": "data",
@@ -2254,13 +2326,22 @@
               ]
             },
             {
-              "event": "CANCEL_REVIEW"
+              "event": "CANCEL_REVIEW",
+              "description": "Aborts the review composition process.",
+              "synonyms": "discard, abandon, close, revert",
+              "tier": "customization"
             },
             {
-              "event": "RESTART"
+              "event": "RESTART",
+              "description": "Triggers a refresh of the review data and UI.",
+              "synonyms": "refresh, reload, reset",
+              "tier": "internal"
             },
             {
               "event": "ReviewSaved",
+              "description": "Indicates a review has been successfully stored.",
+              "synonyms": "saved, persisted, updated",
+              "tier": "customization",
               "payloadSchema": [
                 {
                   "name": "row",
@@ -2270,6 +2351,9 @@
             },
             {
               "event": "ReviewSaveFailed",
+              "description": "Indicates a review save operation failed.",
+              "synonyms": "failed, error, unsuccessful",
+              "tier": "internal",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -2306,6 +2390,9 @@
               {
                 "key": "RATE_DRAFT",
                 "name": "Rate Draft",
+                "description": "Signals a review draft has been created or updated.",
+                "synonyms": "draft, save, pending",
+                "tier": "customization",
                 "payloadSchema": [
                   {
                     "name": "rating",
@@ -2316,6 +2403,9 @@
               {
                 "key": "SUBMIT_REVIEW",
                 "name": "Submit Review",
+                "description": "Signals a review has been successfully submitted.",
+                "synonyms": "saved, posted, sent",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "data",
@@ -2325,11 +2415,17 @@
               },
               {
                 "key": "CANCEL_REVIEW",
-                "name": "Cancel Review"
+                "name": "Cancel Review",
+                "description": "Aborts the review composition process.",
+                "synonyms": "discard, abandon, close, revert",
+                "tier": "customization"
               },
               {
                 "key": "ReviewSaved",
                 "name": "Review saved",
+                "description": "Indicates a review has been successfully stored.",
+                "synonyms": "saved, persisted, updated",
+                "tier": "customization",
                 "payloadSchema": [
                   {
                     "name": "row",
@@ -2340,6 +2436,9 @@
               {
                 "key": "ReviewSaveFailed",
                 "name": "Review save failed",
+                "description": "Indicates a review save operation failed.",
+                "synonyms": "failed, error, unsuccessful",
+                "tier": "internal",
                 "payloadSchema": [
                   {
                     "name": "error",
@@ -2353,7 +2452,10 @@
               },
               {
                 "key": "RESTART",
-                "name": "Restart"
+                "name": "Restart",
+                "description": "Triggers a refresh of the review data and UI.",
+                "synonyms": "refresh, reload, reset",
+                "tier": "internal"
               }
             ],
             "transitions": [
@@ -2376,39 +2478,39 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "card",
                       "look": "@config.cardLook",
                       "children": [
                         {
-                          "gap": "md",
                           "type": "stack",
-                          "direction": "vertical",
                           "children": [
                             {
                               "variant": "h3",
-                              "content": "@config.title",
-                              "type": "typography"
+                              "type": "typography",
+                              "content": "@config.title"
                             },
                             {
-                              "type": "star-rating",
                               "value": "@entity.draftRating",
-                              "action": "RATE_DRAFT",
-                              "max": "@config.maxStars"
+                              "type": "star-rating",
+                              "max": "@config.maxStars",
+                              "action": "RATE_DRAFT"
                             },
                             {
-                              "entity": "@entity",
+                              "type": "form-section",
                               "mode": "edit",
+                              "submitEvent": "SUBMIT_REVIEW",
                               "cancelEvent": "CANCEL_REVIEW",
+                              "entity": "@entity",
+                              "submitLabel": "@config.submitLabel",
                               "fields": [
                                 "draftComment"
-                              ],
-                              "type": "form-section",
-                              "submitEvent": "SUBMIT_REVIEW",
-                              "submitLabel": "@config.submitLabel"
+                              ]
                             }
-                          ]
+                          ],
+                          "direction": "vertical",
+                          "gap": "md"
                         }
-                      ],
-                      "type": "card"
+                      ]
                     }
                   ]
                 ]
@@ -2427,8 +2529,12 @@
                     "render-ui",
                     "main",
                     {
+                      "look": "@config.cardLook",
+                      "type": "card",
                       "children": [
                         {
+                          "type": "stack",
+                          "gap": "md",
                           "children": [
                             {
                               "type": "typography",
@@ -2436,30 +2542,26 @@
                               "variant": "h3"
                             },
                             {
-                              "action": "RATE_DRAFT",
                               "value": "@entity.draftRating",
                               "type": "star-rating",
-                              "max": "@config.maxStars"
+                              "max": "@config.maxStars",
+                              "action": "RATE_DRAFT"
                             },
                             {
-                              "entity": "@entity",
-                              "mode": "edit",
-                              "submitEvent": "SUBMIT_REVIEW",
                               "submitLabel": "@config.submitLabel",
-                              "type": "form-section",
+                              "cancelEvent": "CANCEL_REVIEW",
                               "fields": [
                                 "draftComment"
                               ],
-                              "cancelEvent": "CANCEL_REVIEW"
+                              "type": "form-section",
+                              "entity": "@entity",
+                              "submitEvent": "SUBMIT_REVIEW",
+                              "mode": "edit"
                             }
                           ],
-                          "direction": "vertical",
-                          "type": "stack",
-                          "gap": "md"
+                          "direction": "vertical"
                         }
-                      ],
-                      "look": "@config.cardLook",
-                      "type": "card"
+                      ]
                     }
                   ]
                 ]
@@ -2479,8 +2581,8 @@
                     },
                     {
                       "emit": {
-                        "failure": "ReviewSaveFailed",
-                        "success": "ReviewSaved"
+                        "success": "ReviewSaved",
+                        "failure": "ReviewSaveFailed"
                       }
                     }
                   ],
@@ -2488,22 +2590,22 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
                       "children": [
                         {
+                          "name": "send",
                           "size": "lg",
-                          "type": "icon",
-                          "name": "send"
+                          "type": "icon"
                         },
                         {
+                          "type": "typography",
                           "content": "Submitting…",
-                          "variant": "h3",
-                          "type": "typography"
+                          "variant": "h3"
                         }
                       ],
-                      "align": "center",
-                      "gap": "md",
                       "type": "stack",
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -2530,33 +2632,33 @@
                       "type": "card",
                       "children": [
                         {
-                          "type": "stack",
                           "gap": "md",
+                          "type": "stack",
+                          "direction": "vertical",
                           "children": [
                             {
-                              "variant": "h3",
                               "type": "typography",
+                              "variant": "h3",
                               "content": "@config.title"
                             },
                             {
                               "value": 0.0,
+                              "action": "RATE_DRAFT",
                               "type": "star-rating",
-                              "max": "@config.maxStars",
-                              "action": "RATE_DRAFT"
+                              "max": "@config.maxStars"
                             },
                             {
-                              "type": "form-section",
                               "submitLabel": "@config.submitLabel",
-                              "submitEvent": "SUBMIT_REVIEW",
+                              "entity": "@entity",
                               "cancelEvent": "CANCEL_REVIEW",
                               "mode": "edit",
                               "fields": [
                                 "draftComment"
                               ],
-                              "entity": "@entity"
+                              "submitEvent": "SUBMIT_REVIEW",
+                              "type": "form-section"
                             }
-                          ],
-                          "direction": "vertical"
+                          ]
                         }
                       ],
                       "look": "@config.cardLook"
@@ -2573,29 +2675,29 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "size": "lg",
                           "type": "icon",
-                          "name": "check-circle"
+                          "name": "check-circle",
+                          "size": "lg"
                         },
                         {
+                          "type": "typography",
                           "content": "Thanks for your review!",
-                          "variant": "h2",
-                          "type": "typography"
+                          "variant": "h2"
                         },
                         {
                           "variant": "primary",
                           "label": "Write another review",
-                          "action": "RESTART",
                           "icon": "plus",
+                          "action": "RESTART",
                           "type": "button"
                         }
                       ],
-                      "type": "stack",
+                      "align": "center",
                       "gap": "lg",
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -2615,8 +2717,8 @@
                     "main",
                     {
                       "title": "Submit failed",
-                      "message": "@entity.errorMessage",
-                      "type": "error-state"
+                      "type": "error-state",
+                      "message": "@entity.errorMessage"
                     }
                   ]
                 ]
@@ -2640,19 +2742,21 @@
                     "render-ui",
                     "main",
                     {
+                      "look": "@config.cardLook",
+                      "type": "card",
                       "children": [
                         {
                           "children": [
                             {
                               "content": "@config.title",
-                              "type": "typography",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "type": "typography"
                             },
                             {
                               "value": 0.0,
-                              "action": "RATE_DRAFT",
                               "max": "@config.maxStars",
-                              "type": "star-rating"
+                              "type": "star-rating",
+                              "action": "RATE_DRAFT"
                             },
                             {
                               "submitLabel": "@config.submitLabel",
@@ -2661,18 +2765,16 @@
                               ],
                               "mode": "edit",
                               "entity": "@entity",
+                              "cancelEvent": "CANCEL_REVIEW",
                               "type": "form-section",
-                              "submitEvent": "SUBMIT_REVIEW",
-                              "cancelEvent": "CANCEL_REVIEW"
+                              "submitEvent": "SUBMIT_REVIEW"
                             }
                           ],
-                          "type": "stack",
                           "direction": "vertical",
-                          "gap": "md"
+                          "gap": "md",
+                          "type": "stack"
                         }
-                      ],
-                      "look": "@config.cardLook",
-                      "type": "card"
+                      ]
                     }
                   ]
                 ]
@@ -2686,37 +2788,37 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "card",
                       "look": "@config.cardLook",
+                      "type": "card",
                       "children": [
                         {
-                          "direction": "vertical",
-                          "gap": "md",
                           "type": "stack",
                           "children": [
                             {
+                              "variant": "h3",
                               "type": "typography",
-                              "content": "@config.title",
-                              "variant": "h3"
+                              "content": "@config.title"
                             },
                             {
-                              "value": 0.0,
                               "action": "RATE_DRAFT",
-                              "type": "star-rating",
-                              "max": "@config.maxStars"
+                              "max": "@config.maxStars",
+                              "value": 0.0,
+                              "type": "star-rating"
                             },
                             {
-                              "type": "form-section",
-                              "submitEvent": "SUBMIT_REVIEW",
+                              "cancelEvent": "CANCEL_REVIEW",
+                              "submitLabel": "@config.submitLabel",
                               "fields": [
                                 "draftComment"
                               ],
-                              "mode": "edit",
-                              "cancelEvent": "CANCEL_REVIEW",
+                              "submitEvent": "SUBMIT_REVIEW",
+                              "type": "form-section",
                               "entity": "@entity",
-                              "submitLabel": "@config.submitLabel"
+                              "mode": "edit"
                             }
-                          ]
+                          ],
+                          "gap": "md",
+                          "direction": "vertical"
                         }
                       ]
                     }
@@ -2726,11 +2828,11 @@
             ]
           },
           "config": {
-            "submitLabel": {
+            "title": {
               "type": "string",
-              "default": "Submit review",
-              "label": "Submit button",
-              "description": "Label on the primary submit button",
+              "default": "Write a review",
+              "label": "Form title",
+              "description": "Heading shown above the review compose form",
               "tier": "presentation"
             },
             "maxStars": {
@@ -2740,6 +2842,20 @@
               "description": "Top of the rating scale (typically 5)",
               "tier": "domain"
             },
+            "cancelLabel": {
+              "type": "string",
+              "default": "Cancel",
+              "label": "Cancel button",
+              "description": "Label on the cancel button",
+              "tier": "presentation"
+            },
+            "submitLabel": {
+              "type": "string",
+              "default": "Submit review",
+              "label": "Submit button",
+              "description": "Label on the primary submit button",
+              "tier": "presentation"
+            },
             "allowComment": {
               "type": "boolean",
               "default": true,
@@ -2747,19 +2863,12 @@
               "description": "Show a free-text comment field below the stars",
               "tier": "presentation"
             },
-            "title": {
+            "submitEvent": {
               "type": "string",
-              "default": "Write a review",
-              "label": "Form title",
-              "description": "Heading shown above the review compose form",
-              "tier": "presentation"
-            },
-            "allowPhotos": {
-              "type": "boolean",
-              "default": false,
-              "label": "Allow photos",
-              "description": "Let the user attach photos to the review",
-              "tier": "presentation"
+              "default": "SUBMIT_REVIEW",
+              "label": "Submit event",
+              "description": "Event emitted when the user submits the form",
+              "tier": "internal"
             },
             "cardLook": {
               "type": "string",
@@ -2777,19 +2886,12 @@
                 "tile-image-first"
               ]
             },
-            "cancelLabel": {
-              "type": "string",
-              "default": "Cancel",
-              "label": "Cancel button",
-              "description": "Label on the cancel button",
+            "allowPhotos": {
+              "type": "boolean",
+              "default": false,
+              "label": "Allow photos",
+              "description": "Let the user attach photos to the review",
               "tier": "presentation"
-            },
-            "submitEvent": {
-              "type": "string",
-              "default": "SUBMIT_REVIEW",
-              "label": "Submit event",
-              "description": "Event emitted when the user submits the form",
-              "tier": "internal"
             }
           },
           "scope": "instance"

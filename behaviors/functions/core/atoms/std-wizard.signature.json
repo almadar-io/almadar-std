@@ -159,6 +159,68 @@
           "WizardSaveFailed"
         ],
         "listenedEvents": [],
+        "events": [
+          {
+            "name": "ADVANCE",
+            "direction": "emit",
+            "description": "Signals progression to the next step in the wizard.",
+            "synonyms": "next, proceed, continue",
+            "tier": "essential"
+          },
+          {
+            "name": "RETREAT",
+            "direction": "emit",
+            "description": "Aborts the wizard process, discarding any unsaved data.",
+            "synonyms": "cancel, abort, quit, exit, undo",
+            "tier": "essential"
+          },
+          {
+            "name": "CANCEL",
+            "direction": "emit",
+            "description": "Indicates the user has abandoned the data collection process.",
+            "synonyms": "close, dismiss, abort",
+            "tier": "essential"
+          },
+          {
+            "name": "RESTART",
+            "direction": "emit",
+            "description": "Initiates a reset of the wizard's state and data.",
+            "synonyms": "reset, refresh, reinitialize",
+            "tier": "customization"
+          },
+          {
+            "name": "WizardLoaded",
+            "direction": "emit",
+            "description": "Signals the wizard has finished loading and is ready.",
+            "synonyms": "ready, initialized, available",
+            "tier": "essential"
+          },
+          {
+            "name": "WizardLoadFailed",
+            "direction": "emit",
+            "description": "Indicates the wizard failed to load initial data.",
+            "synonyms": "load error, initialization failure",
+            "tier": "internal"
+          },
+          {
+            "name": "WizardSaved",
+            "direction": "emit",
+            "description": "Indicates successful data submission within the wizard.",
+            "synonyms": "saved, submitted, confirmed",
+            "tier": "essential"
+          },
+          {
+            "name": "WizardSaveFailed",
+            "direction": "emit",
+            "description": "Indicates a failure to save wizard data.",
+            "synonyms": "error, failed, save error",
+            "tier": "internal"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
         "overridableConfigKeys": [
           {
             "key": "cardLook",
@@ -182,29 +244,29 @@
             "type": "[StepSpec]",
             "default": [
               {
-                "label": "Details",
-                "description": "Basic information",
                 "fields": [
                   "title",
                   "description"
                 ],
                 "key": "details",
+                "label": "Details",
+                "description": "Basic information",
                 "icon": "file-text"
               },
               {
-                "label": "Options",
-                "description": "Configure preferences",
-                "key": "options",
-                "icon": "settings",
                 "fields": [
                   "category",
                   "priority"
-                ]
+                ],
+                "description": "Configure preferences",
+                "icon": "settings",
+                "key": "options",
+                "label": "Options"
               },
               {
-                "label": "Review",
                 "description": "Confirm and submit",
                 "key": "review",
+                "label": "Review",
                 "icon": "check-circle",
                 "fields": [
                   "notes"
@@ -216,23 +278,18 @@
             "tier": "domain",
             "items": {
               "properties": {
-                "allowedRoles": {
-                  "name": "allowedRoles",
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "fields": {
+                  "name": "fields",
                   "required": false,
                   "type": "array",
                   "items": {
                     "type": "string"
                   }
-                },
-                "description": {
-                  "name": "description",
-                  "required": false,
-                  "type": "string"
-                },
-                "icon": {
-                  "name": "icon",
-                  "required": false,
-                  "type": "string"
                 },
                 "label": {
                   "name": "label",
@@ -244,8 +301,13 @@
                   "required": false,
                   "type": "string"
                 },
-                "fields": {
-                  "name": "fields",
+                "description": {
+                  "name": "description",
+                  "required": false,
+                  "type": "string"
+                },
+                "allowedRoles": {
+                  "name": "allowedRoles",
                   "required": false,
                   "type": "array",
                   "items": {

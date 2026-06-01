@@ -168,29 +168,95 @@ orbital RatingReviewOrbital {
     }
     emits {
       WRITE_REVIEW       { }
+        @description "Initiates the review composition flow."
+        @synonyms "compose, create, add"
+        @tier "essential"
       RATE_DRAFT         { rating : number }
+        @description "Signals a draft rating has been created or modified."
+        @synonyms "draft, update, modify, change"
+        @tier "customization"
       SUBMIT_REVIEW      { data : object }
+        @description "Signals a review has been successfully submitted."
+        @synonyms "saved, posted, sent"
+        @tier "essential"
       CANCEL_REVIEW      { }
+        @description "Aborts the review composition process."
+        @synonyms "discard, abandon, close, revert"
+        @tier "customization"
       CHANGE_SORT        { tabId : string }
+        @description "Signals a change in the review sorting criteria."
+        @synonyms "sort, order, filter"
+        @tier "customization"
       MARK_HELPFUL       { id : string }
+        @description "Indicates a review has been marked as helpful."
+        @synonyms "helpful, useful, thumbs up, agree"
+        @tier "customization"
       RESTART            { }
+        @description "Triggers a full refresh of the review data and UI."
+        @synonyms "refresh, reload, reset"
+        @tier "internal"
       ReviewsLoaded      { data : [ObjectSpec] }
+        @description "Signals that the reviews data has been successfully retrieved."
+        @synonyms "loaded, fetched, ready, available"
+        @tier "essential"
       ReviewsLoadFailed  { error : string, code : string }
+        @description "Indicates that loading reviews was unsuccessful."
+        @synonyms "failed, error, problem, unsuccessful"
+        @tier "internal"
       ReviewSaved        { row : object }
+        @description "Indicates a review has been successfully saved."
+        @synonyms "saved, persisted, updated"
+        @tier "essential"
       ReviewSaveFailed   { error : string, code : string }
+        @description "Indicates a review save operation failed."
+        @synonyms "failed, error, unsuccessful"
+        @tier "internal"
     }
     listens {
       WRITE_REVIEW       { }
+        @description "Initiates the process of composing a new review."
+        @synonyms "compose, create, add, write"
+        @tier "essential"
       RATE_DRAFT         { rating : number }
+        @description "A draft rating has been created or updated."
+        @synonyms "draft, save, pending"
+        @tier "customization"
       SUBMIT_REVIEW      { data : object }
+        @description "Indicates a review has been successfully submitted."
+        @synonyms "saved, posted, sent"
+        @tier "essential"
       CANCEL_REVIEW      { }
+        @description "Aborts the review composition process."
+        @synonyms "discard, abandon, revert, close"
+        @tier "customization"
       CHANGE_SORT        { tabId : string }
+        @description "Indicates a change in the sorting order of reviews."
+        @synonyms "sort, order, filter"
+        @tier "customization"
       MARK_HELPFUL       { id : string }
+        @description "A review has been marked as helpful by a user."
+        @synonyms "helpful, useful, thumbs up, agree"
+        @tier "essential"
       RESTART            { }
+        @description "Triggers a refresh of the review data and UI."
+        @synonyms "refresh, reload, reset"
+        @tier "internal"
       ReviewsLoaded      { data : [ObjectSpec] }
+        @description "Indicates that the reviews data has been successfully retrieved."
+        @synonyms "loaded, fetched, received, populated"
+        @tier "essential"
       ReviewsLoadFailed  { error : string, code : string }
+        @description "Indicates that loading reviews was unsuccessful."
+        @synonyms "failure, error, problem, unsuccessful"
+        @tier "internal"
       ReviewSaved        { row : object }
+        @description "Indicates a review has been successfully stored."
+        @synonyms "saved, persisted, updated"
+        @tier "customization"
       ReviewSaveFailed   { error : string, code : string }
+        @description "Indicates a review save operation failed."
+        @synonyms "failed, error, unsuccessful"
+        @tier "internal"
     }
   }
   trait RatingReviewSubmit -> ReviewView [interaction, instance] {
@@ -264,19 +330,55 @@ orbital RatingReviewOrbital {
     }
     emits {
       RATE_DRAFT         { rating : number }
+        @description "Signals a review draft has been created or updated."
+        @synonyms "draft, save, pending"
+        @tier "customization"
       SUBMIT_REVIEW      { data : object }
+        @description "Signals a review has been successfully submitted."
+        @synonyms "saved, posted, sent"
+        @tier "essential"
       CANCEL_REVIEW      { }
+        @description "Aborts the review composition process."
+        @synonyms "discard, abandon, close, revert"
+        @tier "customization"
       RESTART            { }
+        @description "Triggers a refresh of the review data and UI."
+        @synonyms "refresh, reload, reset"
+        @tier "internal"
       ReviewSaved        { row : object }
+        @description "Indicates a review has been successfully stored."
+        @synonyms "saved, persisted, updated"
+        @tier "customization"
       ReviewSaveFailed   { error : string, code : string }
+        @description "Indicates a review save operation failed."
+        @synonyms "failed, error, unsuccessful"
+        @tier "internal"
     }
     listens {
       RATE_DRAFT         { rating : number }
+        @description "A draft rating has been created or updated."
+        @synonyms "draft, pending, incomplete"
+        @tier "customization"
       SUBMIT_REVIEW      { data : object }
+        @description "A review has been successfully submitted."
+        @synonyms "saved, posted, confirmed"
+        @tier "essential"
       CANCEL_REVIEW      { }
+        @description "Aborts the review composition process."
+        @synonyms "discard, abandon, revert, close"
+        @tier "customization"
       RESTART            { }
+        @description "Triggers a refresh of the review data and UI."
+        @synonyms "refresh, reload, reset"
+        @tier "internal"
       ReviewSaved        { row : object }
+        @description "Indicates a review has been successfully stored."
+        @synonyms "saved, persisted, updated"
+        @tier "customization"
       ReviewSaveFailed   { error : string, code : string }
+        @description "Indicates a review save operation was unsuccessful."
+        @synonyms "failed, error, unsuccessful"
+        @tier "internal"
     }
   }
   page "/reviews" as RatingReviewPage -> RatingReviewBoard

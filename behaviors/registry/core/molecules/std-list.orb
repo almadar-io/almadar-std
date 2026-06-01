@@ -75,7 +75,10 @@
           "linkedEntity": "ListItem",
           "emits": [
             {
-              "event": "CREATE"
+              "event": "CREATE",
+              "description": "Signals a new item has been successfully created.",
+              "synonyms": "added, new, added, insert",
+              "tier": "essential"
             },
             {
               "event": "EDIT",
@@ -107,7 +110,9 @@
             },
             {
               "event": "ListItemLoaded",
-              "description": "Fired when the ListItem collection finishes loading; payload.data holds the list",
+              "description": "Signals a list item has been successfully loaded.",
+              "synonyms": "loaded, fetched, retrieved",
+              "tier": "essential",
               "scope": "internal",
               "payloadSchema": [
                 {
@@ -118,7 +123,9 @@
             },
             {
               "event": "ListItemLoadFailed",
-              "description": "Fired when the ListItem collection fails to load",
+              "description": "Indicates a failure to load a list item.",
+              "synonyms": "error, failure, problem, unsuccessful",
+              "tier": "internal",
               "scope": "internal",
               "payloadSchema": [
                 {
@@ -179,6 +186,9 @@
               {
                 "key": "ListItemLoaded",
                 "name": "ListItem loaded",
+                "description": "Signals a list item has been successfully loaded.",
+                "synonyms": "loaded, fetched, retrieved",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "data",
@@ -189,6 +199,9 @@
               {
                 "key": "ListItemLoadFailed",
                 "name": "ListItem load failed",
+                "description": "Indicates a failure to load a list item.",
+                "synonyms": "error, failure, problem, unsuccessful",
+                "tier": "internal",
                 "payloadSchema": [
                   {
                     "name": "error",
@@ -203,7 +216,10 @@
               },
               {
                 "key": "CREATE",
-                "name": "Create"
+                "name": "Create",
+                "description": "Signals a new item has been successfully created.",
+                "synonyms": "added, new, added, insert",
+                "tier": "essential"
               },
               {
                 "key": "EDIT",
@@ -235,21 +251,21 @@
                     "main",
                     {
                       "type": "stack",
-                      "gap": "md",
+                      "direction": "vertical",
+                      "className": "py-12",
                       "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
-                          "type": "typography",
                           "content": "Loading list…",
-                          "color": "muted"
+                          "color": "muted",
+                          "variant": "caption",
+                          "type": "typography"
                         }
                       ],
-                      "direction": "vertical",
-                      "className": "py-12"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -263,30 +279,28 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "max-w-5xl mx-auto w-full",
-                      "gap": "lg",
-                      "direction": "vertical",
                       "children": [
                         {
-                          "justify": "between",
-                          "direction": "horizontal",
                           "type": "stack",
+                          "justify": "between",
+                          "gap": "md",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "direction": "horizontal",
-                              "gap": "md",
                               "type": "stack",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "list"
+                                  "name": "list",
+                                  "type": "icon"
                                 },
                                 {
+                                  "content": "ListItems",
                                   "variant": "h2",
-                                  "type": "typography",
-                                  "content": "ListItems"
+                                  "type": "typography"
                                 }
-                              ]
+                              ],
+                              "gap": "md",
+                              "direction": "horizontal"
                             },
                             {
                               "variant": "primary",
@@ -295,18 +309,19 @@
                               "label": "Create",
                               "icon": "plus"
                             }
-                          ],
-                          "gap": "md"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "entity": "@payload.data",
+                          "type": "data-grid",
                           "itemActions": [
                             {
+                              "label": "Edit",
                               "event": "EDIT",
-                              "variant": "ghost",
-                              "label": "Edit"
+                              "variant": "ghost"
                             },
                             {
                               "event": "DELETE",
@@ -314,28 +329,29 @@
                               "label": "Delete"
                             }
                           ],
-                          "type": "data-grid",
                           "fields": [
                             {
+                              "icon": "list",
                               "variant": "h4",
                               "name": "name",
-                              "label": "Name",
-                              "icon": "list"
+                              "label": "Name"
                             },
                             {
+                              "variant": "caption",
                               "name": "description",
-                              "label": "Description",
-                              "variant": "caption"
+                              "label": "Description"
                             },
                             {
                               "name": "status",
                               "label": "Status",
                               "variant": "badge"
                             }
-                          ],
-                          "entity": "@payload.data"
+                          ]
                         }
                       ],
+                      "gap": "lg",
+                      "className": "max-w-5xl mx-auto w-full",
+                      "direction": "vertical",
                       "type": "stack"
                     }
                   ]
@@ -351,10 +367,10 @@
                     "main",
                     {
                       "type": "stack",
-                      "className": "py-12",
-                      "direction": "vertical",
                       "gap": "md",
                       "align": "center",
+                      "direction": "vertical",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "icon",
@@ -363,21 +379,21 @@
                         },
                         {
                           "variant": "h3",
-                          "type": "typography",
-                          "content": "Failed to load list"
+                          "content": "Failed to load list",
+                          "type": "typography"
                         },
                         {
                           "variant": "body",
                           "type": "typography",
-                          "content": "@payload.error",
-                          "color": "muted"
+                          "color": "muted",
+                          "content": "@payload.error"
                         },
                         {
-                          "label": "Retry",
-                          "variant": "primary",
+                          "action": "INIT",
                           "type": "button",
                           "icon": "rotate-ccw",
-                          "action": "INIT"
+                          "variant": "primary",
+                          "label": "Retry"
                         }
                       ]
                     }
@@ -394,8 +410,8 @@
                     "ListItem",
                     {
                       "emit": {
-                        "failure": "ListItemLoadFailed",
-                        "success": "ListItemLoaded"
+                        "success": "ListItemLoaded",
+                        "failure": "ListItemLoadFailed"
                       }
                     }
                   ],
@@ -418,8 +434,8 @@
                     "ListItem",
                     {
                       "emit": {
-                        "success": "ListItemLoaded",
-                        "failure": "ListItemLoadFailed"
+                        "failure": "ListItemLoadFailed",
+                        "success": "ListItemLoaded"
                       }
                     }
                   ],
@@ -441,18 +457,18 @@
           "name": "ListItemCreate",
           "linkedEntity": "ListItem",
           "config": {
-            "title": "Create ListItem",
-            "mode": "create",
             "icon": "plus-circle",
+            "title": "Create ListItem",
             "fields": [
               "name",
               "description",
               "status"
-            ]
+            ],
+            "mode": "create"
           },
           "events": {
-            "SAVE": "LIST_ITEM_CREATED",
-            "OPEN": "CREATE"
+            "OPEN": "CREATE",
+            "SAVE": "LIST_ITEM_CREATED"
           },
           "listens": [
             {
@@ -470,18 +486,18 @@
           "name": "ListItemEdit",
           "linkedEntity": "ListItem",
           "config": {
+            "title": "Edit ListItem",
+            "icon": "edit",
+            "mode": "edit",
             "fields": [
               "name",
               "description",
               "status"
-            ],
-            "mode": "edit",
-            "icon": "edit",
-            "title": "Edit ListItem"
+            ]
           },
           "events": {
-            "SAVE": "LIST_ITEM_UPDATED",
-            "OPEN": "EDIT"
+            "OPEN": "EDIT",
+            "SAVE": "LIST_ITEM_UPDATED"
           },
           "listens": [
             {
@@ -499,14 +515,14 @@
           "name": "ListItemDelete",
           "linkedEntity": "ListItem",
           "config": {
-            "title": "Delete ListItem",
-            "confirmLabel": "Delete",
+            "icon": "alert-triangle",
             "alertMessage": "This action cannot be undone.",
-            "icon": "alert-triangle"
+            "title": "Delete ListItem",
+            "confirmLabel": "Delete"
           },
           "events": {
-            "REQUEST": "DELETE",
-            "CONFIRM": "CONFIRM_DELETE"
+            "CONFIRM": "CONFIRM_DELETE",
+            "REQUEST": "DELETE"
           },
           "listens": [
             {
@@ -526,6 +542,9 @@
           "emits": [
             {
               "event": "ITEM_CREATED",
+              "description": "Signals a new item has been added to the list.",
+              "synonyms": "added, new, appended",
+              "tier": "essential",
               "scope": "external",
               "payloadSchema": [
                 {
@@ -537,6 +556,9 @@
             },
             {
               "event": "ITEM_UPDATED",
+              "description": "Signals a change in an item's data.",
+              "synonyms": "modified, changed, refreshed",
+              "tier": "customization",
               "scope": "external",
               "payloadSchema": [
                 {
@@ -548,6 +570,9 @@
             },
             {
               "event": "ITEM_DELETED",
+              "description": "Signals that a list item has been removed.",
+              "synonyms": "removed, discarded, purged",
+              "tier": "essential",
               "scope": "external",
               "payloadSchema": [
                 {
@@ -599,6 +624,9 @@
               {
                 "key": "DO_CREATE",
                 "name": "Do Create",
+                "description": "Indicates a request to create a new item.",
+                "synonyms": "add, new, insert",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "data",
@@ -610,6 +638,9 @@
               {
                 "key": "DO_UPDATE",
                 "name": "Do Update",
+                "description": "Indicates a data item has been modified.",
+                "synonyms": "modified, changed, refreshed",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "data",
@@ -621,6 +652,9 @@
               {
                 "key": "DO_DELETE",
                 "name": "Do Delete",
+                "description": "Indicates a request to remove an item from the list.",
+                "synonyms": "remove, discard, erase",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "id",
@@ -631,15 +665,24 @@
               },
               {
                 "key": "ITEM_CREATED",
-                "name": "Item Created"
+                "name": "Item Created",
+                "description": "Signals a new item has been added to the list.",
+                "synonyms": "added, new, appended",
+                "tier": "essential"
               },
               {
                 "key": "ITEM_UPDATED",
-                "name": "Item Updated"
+                "name": "Item Updated",
+                "description": "Signals a change in an item's data.",
+                "synonyms": "modified, changed, refreshed",
+                "tier": "customization"
               },
               {
                 "key": "ITEM_DELETED",
-                "name": "Item Deleted"
+                "name": "Item Deleted",
+                "description": "Signals that a list item has been removed.",
+                "synonyms": "removed, discarded, purged",
+                "tier": "essential"
               }
             ],
             "transitions": [

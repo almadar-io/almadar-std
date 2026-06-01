@@ -91,21 +91,63 @@ orbital ApprovalGateOrbital {
     }
     emits {
       APPROVE          { id : string!, row : ApprovalRequest }
+        @description "Signals that an approval request has been approved."
+        @synonyms "accept, authorize, confirm, pass"
+        @tier "essential"
       DENY             { id : string!, row : ApprovalRequest }
+        @description "Signals that an approval request has been denied."
+        @synonyms "reject, decline"
+        @tier "essential"
       ApprovalGranted -> external { requestId : string }
+        @description "Signals that an approval process has been successfully completed."
+        @synonyms "approved, authorized, confirmed, validated"
+        @tier "essential"
       ApprovalDenied  -> external { requestId : string }
+        @description "Indicates an approval request has been denied."
+        @synonyms "rejected, declined"
+        @tier "essential"
       ApprovalRequestLoaded       { data : [ApprovalRequest] }
+        @description "Indicates an approval request has been successfully loaded."
+        @synonyms "loaded, fetched, retrieved"
+        @tier "internal"
       ApprovalRequestLoadFailed   { error : string, code : string }
+        @description "Indicates failure to load an approval request."
+        @synonyms "load error, failed load, request failure"
+        @tier "internal"
       ApprovalRequestReviewed     { row : ApprovalRequest }
+        @description "Signals that an approval request has been reviewed."
+        @synonyms "reviewed, processed, examined"
+        @tier "internal"
       ApprovalRequestReviewFailed { error : string, code : string }
+        @description "Indicates a failure to load or process an approval request for review."
+        @synonyms "load error, failed review, processing failure"
+        @tier "internal"
     }
     listens {
       APPROVE          { id : string!, row : ApprovalRequest }
+        @description "Indicates an approval action has been completed."
+        @synonyms "accept, authorize, confirm, validate"
+        @tier "essential"
       DENY             { id : string!, row : ApprovalRequest }
+        @description "Indicates an approval request has been rejected."
+        @synonyms "reject, decline, deny"
+        @tier "essential"
       ApprovalRequestLoaded       { data : [ApprovalRequest] }
+        @description "Indicates an approval request has been successfully retrieved."
+        @synonyms "loaded, fetched, retrieved"
+        @tier "internal"
       ApprovalRequestLoadFailed   { error : string, code : string }
+        @description "Indicates failure to load an approval request."
+        @synonyms "load error, failed load, request failure"
+        @tier "internal"
       ApprovalRequestReviewed     { row : ApprovalRequest }
+        @description "Indicates an approval request has been reviewed."
+        @synonyms "reviewed, checked, processed"
+        @tier "essential"
       ApprovalRequestReviewFailed { error : string, code : string }
+        @description "Indicates a failure to load or process an approval request."
+        @synonyms "error, failure, problem, issue"
+        @tier "internal"
     }
   }
   page "/approvals/queue" as ApprovalGateReviewPage -> ApprovalGateReview

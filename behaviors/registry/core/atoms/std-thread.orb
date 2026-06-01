@@ -103,6 +103,9 @@
           "emits": [
             {
               "event": "SELECT",
+              "description": "Indicates a post or reply has been chosen for interaction.",
+              "synonyms": "choose, highlight, focus, activate",
+              "tier": "essential",
               "scope": "external",
               "payloadSchema": [
                 {
@@ -118,6 +121,9 @@
             },
             {
               "event": "REPLY",
+              "description": "Indicates a new reply has been created and added to the thread.",
+              "synonyms": "add, post, respond, submit",
+              "tier": "essential",
               "payloadSchema": [
                 {
                   "name": "parentId",
@@ -135,6 +141,9 @@
             },
             {
               "event": "EDIT_REPLY",
+              "description": "Indicates a reply has been modified.",
+              "synonyms": "update, change, modify",
+              "tier": "customization",
               "payloadSchema": [
                 {
                   "name": "value",
@@ -145,6 +154,9 @@
             },
             {
               "event": "SUBMIT_REPLY",
+              "description": "Signals a new reply has been successfully submitted.",
+              "synonyms": "post, send, add, publish",
+              "tier": "essential",
               "payloadSchema": [
                 {
                   "name": "data",
@@ -154,10 +166,16 @@
               ]
             },
             {
-              "event": "CANCEL_REPLY"
+              "event": "CANCEL_REPLY",
+              "description": "Indicates a reply creation was aborted by the user.",
+              "synonyms": "abort, dismiss, undo, cancel",
+              "tier": "customization"
             },
             {
               "event": "ThreadPostLoaded",
+              "description": "Signals a thread post has been successfully retrieved.",
+              "synonyms": "loaded, fetched, retrieved",
+              "tier": "essential",
               "payloadSchema": [
                 {
                   "name": "data",
@@ -167,6 +185,9 @@
             },
             {
               "event": "ThreadPostLoadFailed",
+              "description": "Indicates a failure to load a thread post.",
+              "synonyms": "load error, fetch failed, retrieval failed",
+              "tier": "internal",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -180,6 +201,9 @@
             },
             {
               "event": "ThreadPostCreated",
+              "description": "A new post has been added to the thread.",
+              "synonyms": "new post, added, created",
+              "tier": "essential",
               "payloadSchema": [
                 {
                   "name": "row.id",
@@ -234,6 +258,9 @@
             },
             {
               "event": "ThreadPostCreateFailed",
+              "description": "Indicates a failure to create a new thread post.",
+              "synonyms": "error, failed, creation failed",
+              "tier": "internal",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -270,6 +297,9 @@
               {
                 "key": "ThreadPostLoaded",
                 "name": "ThreadPost loaded",
+                "description": "Signals a thread post has been successfully retrieved.",
+                "synonyms": "loaded, fetched, retrieved",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "data",
@@ -280,6 +310,9 @@
               {
                 "key": "ThreadPostLoadFailed",
                 "name": "ThreadPost load failed",
+                "description": "Indicates a failure to load a thread post.",
+                "synonyms": "load error, fetch failed, retrieval failed",
+                "tier": "internal",
                 "payloadSchema": [
                   {
                     "name": "error",
@@ -294,6 +327,9 @@
               {
                 "key": "REPLY",
                 "name": "Reply",
+                "description": "Indicates a new reply has been created and added to the thread.",
+                "synonyms": "add, post, respond, submit",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "parentId",
@@ -312,6 +348,9 @@
               {
                 "key": "ThreadPostCreated",
                 "name": "ThreadPost created",
+                "description": "A new post has been added to the thread.",
+                "synonyms": "new post, added, created",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "row",
@@ -322,6 +361,9 @@
               {
                 "key": "SELECT",
                 "name": "Select",
+                "description": "Indicates a post or reply has been chosen for interaction.",
+                "synonyms": "choose, highlight, focus, activate",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "id",
@@ -337,6 +379,9 @@
               {
                 "key": "EDIT_REPLY",
                 "name": "Edit Reply",
+                "description": "Indicates a reply has been modified.",
+                "synonyms": "update, change, modify",
+                "tier": "customization",
                 "payloadSchema": [
                   {
                     "name": "value",
@@ -348,6 +393,9 @@
               {
                 "key": "SUBMIT_REPLY",
                 "name": "Submit Reply",
+                "description": "Signals a new reply has been successfully submitted.",
+                "synonyms": "post, send, add, publish",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "data",
@@ -358,11 +406,17 @@
               },
               {
                 "key": "CANCEL_REPLY",
-                "name": "Cancel Reply"
+                "name": "Cancel Reply",
+                "description": "Indicates a reply creation was aborted by the user.",
+                "synonyms": "abort, dismiss, undo, cancel",
+                "tier": "customization"
               },
               {
                 "key": "ThreadPostCreateFailed",
                 "name": "ThreadPost create failed",
+                "description": "Indicates a failure to create a new thread post.",
+                "synonyms": "error, failed, creation failed",
+                "tier": "internal",
                 "payloadSchema": [
                   {
                     "name": "error",
@@ -398,8 +452,8 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]
@@ -441,13 +495,13 @@
                     "fetch",
                     "ThreadPost",
                     {
-                      "emit": {
-                        "success": "ThreadPostLoaded",
-                        "failure": "ThreadPostLoadFailed"
-                      },
                       "include": [
                         "replies"
-                      ]
+                      ],
+                      "emit": {
+                        "failure": "ThreadPostLoadFailed",
+                        "success": "ThreadPostLoaded"
+                      }
                     }
                   ],
                   [
@@ -494,24 +548,24 @@
                     "create",
                     "ThreadPost",
                     {
-                      "content": "@payload.content",
-                      "authorId": "me",
                       "parentId": [
                         "str/default",
                         "@payload.parentNodeId",
                         "@payload.parentId"
                       ],
+                      "authorName": "You",
                       "threadRootId": [
                         "str/default",
                         "@payload.parentNodeId",
                         "root"
                       ],
-                      "authorName": "You"
+                      "authorId": "me",
+                      "content": "@payload.content"
                     },
                     {
                       "emit": {
-                        "success": "ThreadPostCreated",
-                        "failure": "ThreadPostCreateFailed"
+                        "failure": "ThreadPostCreateFailed",
+                        "success": "ThreadPostCreated"
                       }
                     }
                   ]
@@ -546,11 +600,12 @@
                     {
                       "direction": "vertical",
                       "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
                           "content": "Write a reply",
-                          "variant": "h4",
-                          "type": "typography"
+                          "type": "typography",
+                          "variant": "h4"
                         },
                         {
                           "placeholder": "Your reply…",
@@ -558,27 +613,26 @@
                           "type": "textarea"
                         },
                         {
-                          "direction": "horizontal",
                           "gap": "sm",
-                          "type": "stack",
                           "children": [
                             {
-                              "type": "button",
-                              "label": "Submit",
+                              "variant": "primary",
                               "action": "SUBMIT_REPLY",
                               "icon": "send",
-                              "variant": "primary"
+                              "label": "Submit",
+                              "type": "button"
                             },
                             {
-                              "label": "Cancel",
                               "variant": "secondary",
+                              "action": "CANCEL_REPLY",
                               "type": "button",
-                              "action": "CANCEL_REPLY"
+                              "label": "Cancel"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal"
                         }
-                      ],
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -592,13 +646,13 @@
                     "fetch",
                     "ThreadPost",
                     {
-                      "include": [
-                        "replies"
-                      ],
                       "emit": {
                         "success": "ThreadPostLoaded",
                         "failure": "ThreadPostLoadFailed"
-                      }
+                      },
+                      "include": [
+                        "replies"
+                      ]
                     }
                   ]
                 ]
@@ -617,13 +671,13 @@
                     "fetch",
                     "ThreadPost",
                     {
+                      "emit": {
+                        "failure": "ThreadPostLoadFailed",
+                        "success": "ThreadPostLoaded"
+                      },
                       "include": [
                         "replies"
-                      ],
-                      "emit": {
-                        "success": "ThreadPostLoaded",
-                        "failure": "ThreadPostLoadFailed"
-                      }
+                      ]
                     }
                   ]
                 ]
@@ -699,8 +753,8 @@
                         "replies"
                       ],
                       "emit": {
-                        "success": "ThreadPostLoaded",
-                        "failure": "ThreadPostLoadFailed"
+                        "failure": "ThreadPostLoadFailed",
+                        "success": "ThreadPostLoaded"
                       }
                     }
                   ]
@@ -715,8 +769,8 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
                       "type": "alert",
+                      "variant": "error",
                       "message": "@payload.error"
                     }
                   ]
@@ -731,13 +785,13 @@
                     "fetch",
                     "ThreadPost",
                     {
-                      "emit": {
-                        "success": "ThreadPostLoaded",
-                        "failure": "ThreadPostLoadFailed"
-                      },
                       "include": [
                         "replies"
-                      ]
+                      ],
+                      "emit": {
+                        "failure": "ThreadPostLoadFailed",
+                        "success": "ThreadPostLoaded"
+                      }
                     }
                   ],
                   [
@@ -753,25 +807,18 @@
             ]
           },
           "config": {
+            "recipientName": {
+              "type": "string",
+              "default": "Conversation",
+              "label": "recipientName",
+              "description": "Header/recipient label for chat-style threads.",
+              "tier": "presentation"
+            },
             "emailPreviewBinding": {
               "type": "string",
               "default": "@item.preview",
               "label": "emailPreviewBinding",
               "description": "List-pane binding for the message preview text.",
-              "tier": "presentation"
-            },
-            "detailDateBinding": {
-              "type": "string",
-              "default": "@entity.focusedRow.createdAt",
-              "label": "detailDateBinding",
-              "description": "Detail-pane binding for the timestamp.",
-              "tier": "presentation"
-            },
-            "sectionTitle": {
-              "type": "string",
-              "default": "Discussion",
-              "label": "sectionTitle",
-              "description": "Section header for linear-comment threads.",
               "tier": "presentation"
             },
             "detailFromBinding": {
@@ -781,13 +828,6 @@
               "description": "Detail-pane binding for the From address.",
               "tier": "presentation"
             },
-            "detailToBinding": {
-              "type": "string",
-              "default": "@entity.focusedRow.toAddress",
-              "label": "detailToBinding",
-              "description": "Detail-pane binding for the To address.",
-              "tier": "presentation"
-            },
             "detailAuthorBinding": {
               "type": "string",
               "default": "@entity.focusedRow.authorName",
@@ -795,25 +835,46 @@
               "description": "Detail-pane binding for the focused message author.",
               "tier": "presentation"
             },
-            "recipientName": {
+            "emailAuthorBinding": {
               "type": "string",
-              "default": "Conversation",
-              "label": "recipientName",
-              "description": "Header/recipient label for chat-style threads.",
+              "default": "@item.authorName",
+              "label": "emailAuthorBinding",
+              "description": "List-pane binding for the message author.",
               "tier": "presentation"
             },
-            "emailSubjectBinding": {
+            "threadRootId": {
               "type": "string",
-              "default": "@item.subject",
-              "label": "emailSubjectBinding",
-              "description": "List-pane binding for the message subject.",
+              "default": "",
+              "label": "Root post id",
+              "description": "Top-level post whose descendants are loaded (blank = all roots)",
+              "tier": "domain"
+            },
+            "tableLook": {
+              "type": "string",
+              "default": "dense",
+              "label": "Table look",
+              "description": "Layer 2 visual treatment for the data table rendered by this atom.",
+              "tier": "presentation",
+              "values": [
+                "dense",
+                "spacious",
+                "striped",
+                "borderless",
+                "card-rows"
+              ]
+            },
+            "replyContentBinding": {
+              "type": "string",
+              "default": "@reply.content",
+              "label": "replyContentBinding",
+              "description": "Reply binding for the reply body.",
               "tier": "presentation"
             },
-            "detailContentBinding": {
+            "detailSubjectBinding": {
               "type": "string",
-              "default": "@entity.focusedRow.content",
-              "label": "detailContentBinding",
-              "description": "Detail-pane binding for the message body.",
+              "default": "@entity.focusedRow.subject",
+              "label": "detailSubjectBinding",
+              "description": "Detail-pane binding for the focused message subject.",
               "tier": "presentation"
             },
             "flat": {
@@ -823,11 +884,18 @@
               "description": "Render replies as a linear list instead of nested tree",
               "tier": "presentation"
             },
-            "emailAuthorBinding": {
+            "detailToBinding": {
               "type": "string",
-              "default": "@item.authorName",
-              "label": "emailAuthorBinding",
-              "description": "List-pane binding for the message author.",
+              "default": "@entity.focusedRow.toAddress",
+              "label": "detailToBinding",
+              "description": "Detail-pane binding for the To address.",
+              "tier": "presentation"
+            },
+            "detailContentBinding": {
+              "type": "string",
+              "default": "@entity.focusedRow.content",
+              "label": "detailContentBinding",
+              "description": "Detail-pane binding for the message body.",
               "tier": "presentation"
             },
             "replyAuthorBinding": {
@@ -851,84 +919,70 @@
               "description": "Reply binding for the reply From address.",
               "tier": "presentation"
             },
-            "replyContentBinding": {
+            "sectionTitle": {
               "type": "string",
-              "default": "@reply.content",
-              "label": "replyContentBinding",
-              "description": "Reply binding for the reply body.",
+              "default": "Discussion",
+              "label": "sectionTitle",
+              "description": "Section header for linear-comment threads.",
               "tier": "presentation"
             },
-            "detailSubjectBinding": {
+            "detailDateBinding": {
               "type": "string",
-              "default": "@entity.focusedRow.subject",
-              "label": "detailSubjectBinding",
-              "description": "Detail-pane binding for the focused message subject.",
+              "default": "@entity.focusedRow.createdAt",
+              "label": "detailDateBinding",
+              "description": "Detail-pane binding for the timestamp.",
               "tier": "presentation"
-            },
-            "threadRootId": {
-              "type": "string",
-              "default": "",
-              "label": "Root post id",
-              "description": "Top-level post whose descendants are loaded (blank = all roots)",
-              "tier": "domain"
             },
             "bodyContent": {
               "type": "render-ui",
               "default": {
-                "gap": "md",
                 "direction": "vertical",
                 "children": [
                   {
-                    "variant": "card",
-                    "gap": "sm",
                     "itemActions": [
                       {
-                        "label": "Reply",
                         "icon": "message-square",
+                        "label": "Reply",
                         "event": "REPLY"
                       }
                     ],
+                    "type": "data-list",
+                    "variant": "card",
                     "fields": [
                       {
                         "name": "authorName",
-                        "label": "Author",
-                        "variant": "h4"
+                        "variant": "h4",
+                        "label": "Author"
                       },
                       {
+                        "variant": "body",
                         "label": "",
-                        "name": "content",
-                        "variant": "body"
+                        "name": "content"
                       },
                       {
+                        "label": "Votes",
                         "name": "voteCount",
-                        "variant": "caption",
-                        "label": "Votes"
+                        "variant": "caption"
                       }
                     ],
-                    "look": "@config.tableLook",
-                    "type": "data-list",
-                    "entity": "@payload.data"
+                    "gap": "sm",
+                    "entity": "@payload.data",
+                    "look": "@config.tableLook"
                   }
                 ],
-                "type": "stack"
+                "type": "stack",
+                "gap": "md"
               },
               "label": "Body content tree",
               "description": "Render-ui SExpr rendered after thread posts load. Default is the canonical forum-style data-list. Layer 3 variants override this with their own tree (chat bubbles, email-threaded cards, linear comment stacks, etc.) to deliver entirely different thread UX while inheriting the same trait, state machine, emits, and listens.",
               "tier": "internal"
             },
-            "tableLook": {
+            "emailSubjectBinding": {
               "type": "string",
-              "default": "dense",
-              "label": "Table look",
-              "description": "Layer 2 visual treatment for the data table rendered by this atom.",
-              "tier": "presentation",
-              "values": [
-                "dense",
-                "spacious",
-                "striped",
-                "borderless",
-                "card-rows"
-              ]
+              "default": "@item.subject",
+              "label": "emailSubjectBinding",
+              "description": "List-pane binding for the message subject.",
+              "tier": "presentation"
             }
           },
           "scope": "collection"

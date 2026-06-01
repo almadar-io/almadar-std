@@ -112,44 +112,44 @@ export interface StdThreadThreadPostCreateFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdThreadConfig {
-  /** Default: `"@item.preview"` */
-  emailPreviewBinding?: string;
-  /** Default: `"@entity.focusedRow.createdAt"` */
-  detailDateBinding?: string;
-  /** Default: `"Discussion"` */
-  sectionTitle?: string;
-  /** Default: `"@entity.focusedRow.fromAddress"` */
-  detailFromBinding?: string;
-  /** Default: `"@entity.focusedRow.toAddress"` */
-  detailToBinding?: string;
-  /** Default: `"@entity.focusedRow.authorName"` */
-  detailAuthorBinding?: string;
   /** Default: `"Conversation"` */
   recipientName?: string;
-  /** Default: `"@item.subject"` */
-  emailSubjectBinding?: string;
-  /** Default: `"@entity.focusedRow.content"` */
-  detailContentBinding?: string;
-  /** Default: `false` */
-  flat?: boolean;
+  /** Default: `"@item.preview"` */
+  emailPreviewBinding?: string;
+  /** Default: `"@entity.focusedRow.fromAddress"` */
+  detailFromBinding?: string;
+  /** Default: `"@entity.focusedRow.authorName"` */
+  detailAuthorBinding?: string;
   /** Default: `"@item.authorName"` */
   emailAuthorBinding?: string;
+  /** Default: `""` */
+  threadRootId?: string;
+  /** Default: `"dense"` */
+  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
+  /** Default: `"@reply.content"` */
+  replyContentBinding?: string;
+  /** Default: `"@entity.focusedRow.subject"` */
+  detailSubjectBinding?: string;
+  /** Default: `false` */
+  flat?: boolean;
+  /** Default: `"@entity.focusedRow.toAddress"` */
+  detailToBinding?: string;
+  /** Default: `"@entity.focusedRow.content"` */
+  detailContentBinding?: string;
   /** Default: `"@reply.authorName"` */
   replyAuthorBinding?: string;
   /** Default: `"@reply.createdAt"` */
   replyDateBinding?: string;
   /** Default: `"@reply.fromAddress"` */
   replyFromBinding?: string;
-  /** Default: `"@reply.content"` */
-  replyContentBinding?: string;
-  /** Default: `"@entity.focusedRow.subject"` */
-  detailSubjectBinding?: string;
-  /** Default: `""` */
-  threadRootId?: string;
-  /** Default: `{"gap":"md","direction":"vertical","children":[{"variant":"card","gap":"sm","itemActions":[{"label":"Reply","icon":"message-square","event":"REPLY"}],"fields":[{"name":"authorName","label":"Author","variant":"h4"},{"label":"","name":"content","variant":"body"},{"name":"voteCount","variant":"caption","label":"Votes"}],"look":"@config.tableLook","type":"data-list","entity":"@payload.data"}],"type":"stack"}` */
+  /** Default: `"Discussion"` */
+  sectionTitle?: string;
+  /** Default: `"@entity.focusedRow.createdAt"` */
+  detailDateBinding?: string;
+  /** Default: `{"direction":"vertical","children":[{"itemActions":[{"icon":"message-square","label":"Reply","event":"REPLY"}],"type":"data-list","variant":"card","fields":[{"name":"authorName","variant":"h4","label":"Author"},{"variant":"body","label":"","name":"content"},{"label":"Votes","name":"voteCount","variant":"caption"}],"gap":"sm","entity":"@payload.data","look":"@config.tableLook"}],"type":"stack","gap":"md"}` */
   bodyContent?: unknown;
-  /** Default: `"dense"` */
-  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
+  /** Default: `"@item.subject"` */
+  emailSubjectBinding?: string;
 }
 
 /**

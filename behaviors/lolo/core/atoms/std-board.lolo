@@ -173,32 +173,107 @@ orbital BoardOrbital {
     }
     emits {
       OPEN_CARD              { id : string!, row : object! }
+        @description "Indicates a card within the board has been selected."
+        @synonyms "select, choose, activate, display"
+        @tier "essential"
       CLOSE_CARD             { }
+        @description "Signals a card is being dismissed or closed."
+        @synonyms "dismiss, hide, close, remove"
+        @tier "essential"
       ADD_CARD               { }
+        @description "Signals a new card is being added to the board."
+        @synonyms "create, new, append"
+        @tier "essential"
       CANCEL_ADD             { }
+        @description "Aborts an in-progress addition operation."
+        @synonyms "discard, undo, reset"
+        @tier "customization"
       SAVE_CARD              { data : object! }
+        @description "Signals that a card's data has been successfully saved."
+        @synonyms "persist, update, store"
+        @tier "essential"
       MOVE_CARD              { id : string!, sourceGroup : string, targetGroup : string!, newIndex : number }
+        @description "Signals a card has been repositioned within a column."
+        @synonyms "reorder, drag, reposition"
+        @tier "customization"
       REORDER_CARD           { id : string!, oldIndex : number, newIndex : number }
+        @description "Signals a change in the order of cards within a column."
+        @synonyms "rearrange, sort, shuffle, reposition"
+        @tier "customization"
       DELETE_CARD            { id : string! }
+        @description "Signals removal of a card from the board."
+        @synonyms "remove, delete, discard"
+        @tier "customization"
       BoardItemsLoaded       { data : [ObjectSpec] }
+        @description "Signals that board items have been successfully loaded."
+        @synonyms "loaded, fetched, retrieved, populated"
+        @tier "essential"
       BoardItemsLoadFailed   { error : string, code : string }
+        @description "Indicates a failure to load board items."
+        @synonyms "error, failed, problem, loading failure"
+        @tier "internal"
       BoardItemsSaved        { row : object }
+        @description "Signals that board items have been successfully saved."
+        @synonyms "saved, persisted, updated"
+        @tier "essential"
       BoardItemsSaveFailed   { error : string, code : string }
+        @description "Indicates a failure to save board items."
+        @synonyms "error, failed, save error"
+        @tier "internal"
     }
     listens {
       OPEN_CARD              { id : string!, row : object! }
+        @description "A card within the board has been selected or activated."
+        @synonyms "select, activate, view, show"
+        @tier "essential"
       CLOSE_CARD             { }
+        @description "Indicates a card has been dismissed or removed."
+        @synonyms "dismiss, remove, hide, close"
+        @tier "customization"
       ADD_CARD               { }
+        @description "Indicates a new card is being added to the board."
+        @synonyms "create, new, append"
+        @tier "essential"
       CANCEL_ADD             { }
+        @description "Aborts the addition or editing of a board item."
+        @synonyms "discard, undo, revert, dismiss"
+        @tier "essential"
       SAVE_CARD              { data : object! }
+        @description "Indicates a card's data has been successfully saved."
+        @synonyms "persist, update, store"
+        @tier "essential"
       MOVE_CARD              { id : string!, sourceGroup : string, targetGroup : string!, newIndex : number }
+        @description "Indicates a card has been repositioned within the board."
+        @synonyms "reorder, drag, shuffle"
+        @tier "customization"
       REORDER_CARD           { id : string!, oldIndex : number, newIndex : number }
+        @description "Indicates a card's position within a column has changed."
+        @synonyms "reposition, sort, rearrange"
+        @tier "customization"
       REORDER_POSITION       { id : string!, position : number! }
+        @description "Indicates a change in the order of items within a column."
+        @synonyms "sort, rearrange, reposition"
+        @tier "customization"
       DELETE_CARD            { id : string! }
+        @description "Indicates a board card has been removed."
+        @synonyms "remove, discard, delete"
+        @tier "customization"
       BoardItemsLoaded       { data : [ObjectSpec] }
+        @description "Data for the board columns has been successfully retrieved."
+        @synonyms "loaded, fetched, retrieved, populated"
+        @tier "essential"
       BoardItemsLoadFailed   { error : string, code : string }
+        @description "Indicates a failure to load board items."
+        @synonyms "error, failed, problem, loading issue"
+        @tier "internal"
       BoardItemsSaved        { row : object }
+        @description "Indicates board items have been successfully saved."
+        @synonyms "saved, updated, persisted"
+        @tier "customization"
       BoardItemsSaveFailed   { error : string, code : string }
+        @description "Indicates a failure to save board items."
+        @synonyms "error, failed, save error"
+        @tier "internal"
     }
   }
   page "/board" as BoardPage -> BoardItemBoard
