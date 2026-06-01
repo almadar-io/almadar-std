@@ -21,18 +21,8 @@
             "items": {
               "type": "object",
               "properties": {
-                "value": {
-                  "name": "value",
-                  "type": "string",
-                  "required": false
-                },
                 "id": {
                   "name": "id",
-                  "type": "string",
-                  "required": false
-                },
-                "icon": {
-                  "name": "icon",
                   "type": "string",
                   "required": false
                 },
@@ -40,24 +30,42 @@
                   "name": "label",
                   "type": "string",
                   "required": true
+                },
+                "icon": {
+                  "name": "icon",
+                  "type": "string",
+                  "required": false
+                },
+                "value": {
+                  "name": "value",
+                  "type": "string",
+                  "required": false
                 }
               }
-            }
+            },
+            "description": "The data returned after applying access control filters.",
+            "synonyms": "filtered items, processed data, results, output"
           },
           {
             "name": "inputCount",
             "type": "number",
-            "default": 0.0
+            "default": 0.0,
+            "description": "The number of records processed by the access control.",
+            "synonyms": "record count, item count, total records"
           },
           {
             "name": "outputCount",
             "type": "number",
-            "default": 0.0
+            "default": 0.0,
+            "description": "The number of records that passed the access control filter.",
+            "synonyms": "count, size, length"
           },
           {
             "name": "accessDenied",
             "type": "boolean",
-            "default": false
+            "default": false,
+            "description": "Indicates whether access is denied based on configured rules.",
+            "synonyms": "denied, restricted, unauthorized, access-denied"
           }
         ]
       },
@@ -220,8 +228,8 @@
                     "emit",
                     "RowsFiltered",
                     {
-                      "data": "@entity.filteredData",
-                      "filteredCount": "@entity.outputCount"
+                      "filteredCount": "@entity.outputCount",
+                      "data": "@entity.filteredData"
                     }
                   ]
                 ]
@@ -236,14 +244,6 @@
               "description": "Row field holding the owning user id (blank disables owner filter)",
               "tier": "domain"
             },
-            "enabled": {
-              "type": "boolean",
-              "default": false,
-              "label": "Enabled",
-              "description": "Whether this access rule is active for the host orbital. Off by default; turn on to enforce.",
-              "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, only owner can edit, owner-only, private to owner, only see your own, restrict to role, role-based visibility, permission gate, admin-only access, hide from other users, only show mine, ownership scoping",
-              "tier": "domain"
-            },
             "visibleRoles": {
               "type": "[string]",
               "default": [],
@@ -253,6 +253,14 @@
               "items": {
                 "type": "string"
               }
+            },
+            "enabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Enabled",
+              "description": "Whether this access rule is active for the host orbital. Off by default; turn on to enforce.",
+              "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, only owner can edit, owner-only, private to owner, only see your own, restrict to role, role-based visibility, permission gate, admin-only access, hide from other users, only show mine, ownership scoping",
+              "tier": "domain"
             }
           },
           "scope": "instance"

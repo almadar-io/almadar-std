@@ -11,17 +11,23 @@
           {
             "name": "name",
             "type": "string",
-            "required": true
+            "required": true,
+            "description": "The item's identifier or title.",
+            "synonyms": "title, label, itemName"
           },
           {
             "name": "description",
             "type": "string",
-            "required": false
+            "required": false,
+            "description": "A textual explanation or summary of the item.",
+            "synonyms": "summary, details, notes, explanation"
           },
           {
             "name": "status",
             "type": "string",
-            "required": false
+            "required": false,
+            "description": "Indicates the current operational state of the item.",
+            "synonyms": "state, condition, flag"
           }
         ],
         "persistence": "runtime"
@@ -59,20 +65,20 @@
             "key": "bodyContent",
             "type": "render-ui",
             "default": {
+              "type": "stack",
               "direction": "vertical",
               "children": [
                 {
-                  "pageSize": "@config.displayPageSize",
                   "imageField": "@config.imageField",
-                  "cols": "@config.cols",
-                  "fields": "@config.fields",
-                  "type": "data-grid",
                   "entity": "@payload.data",
+                  "fields": "@config.fields",
                   "itemActions": "@config.itemActions",
-                  "gap": "@config.gap"
+                  "gap": "@config.gap",
+                  "pageSize": "@config.displayPageSize",
+                  "type": "data-grid",
+                  "cols": "@config.cols"
                 }
-              ],
-              "type": "stack"
+              ]
             },
             "label": "Body content tree",
             "description": "Render-ui SExpr rendered after rows load. Default is the canonical data-grid call wrapped in a stack. Layer 3 variants override this with their own tree (composing data-list/data-grid/entity-table + custom renderItem lambdas + filter-group, kbd, card, etc.) to deliver entirely different browse UX while inheriting the same trait, state machine, emits, and listens.",
@@ -99,24 +105,24 @@
             "type": "[ColumnSpec]",
             "default": [
               {
-                "align": "left",
-                "header": "Name",
                 "weight": "medium",
+                "key": "name",
                 "field": "name",
-                "key": "name"
+                "header": "Name",
+                "align": "left"
               },
               {
                 "align": "left",
-                "header": "Detail",
                 "key": "description",
+                "header": "Detail",
                 "field": "description"
               },
               {
                 "key": "status",
                 "format": "badge",
-                "header": "Status",
+                "align": "center",
                 "field": "status",
-                "align": "center"
+                "header": "Status"
               }
             ],
             "label": "Table columns",
@@ -124,23 +130,8 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "weight": {
-                  "name": "weight",
-                  "required": false,
-                  "type": "string"
-                },
-                "header": {
-                  "name": "header",
-                  "required": false,
-                  "type": "string"
-                },
-                "format": {
-                  "name": "format",
-                  "required": false,
-                  "type": "string"
-                },
-                "width": {
-                  "name": "width",
+                "className": {
+                  "name": "className",
                   "required": false,
                   "type": "string"
                 },
@@ -149,8 +140,18 @@
                   "required": false,
                   "type": "string"
                 },
-                "className": {
-                  "name": "className",
+                "header": {
+                  "name": "header",
+                  "required": false,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "weight": {
+                  "name": "weight",
                   "required": false,
                   "type": "string"
                 },
@@ -159,14 +160,19 @@
                   "required": false,
                   "type": "string"
                 },
+                "width": {
+                  "name": "width",
+                  "required": false,
+                  "type": "string"
+                },
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string"
+                },
                 "key": {
                   "name": "key",
                   "required": true,
-                  "type": "string"
-                },
-                "icon": {
-                  "name": "icon",
-                  "required": false,
                   "type": "string"
                 }
               },
@@ -194,18 +200,18 @@
             "type": "[FieldSpec]",
             "default": [
               {
-                "label": "Name",
                 "variant": "h4",
+                "label": "Name",
                 "name": "name"
               },
               {
-                "variant": "caption",
                 "name": "description",
-                "label": "Description"
+                "label": "Description",
+                "variant": "caption"
               },
               {
-                "label": "Status",
                 "variant": "badge",
+                "label": "Status",
                 "name": "status"
               }
             ],
@@ -214,9 +220,24 @@
             "tier": "presentation",
             "items": {
               "properties": {
+                "key": {
+                  "name": "key",
+                  "required": false,
+                  "type": "string"
+                },
+                "header": {
+                  "name": "header",
+                  "required": false,
+                  "type": "string"
+                },
                 "name": {
                   "name": "name",
                   "required": true,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
                   "type": "string"
                 },
                 "label": {
@@ -229,23 +250,8 @@
                   "required": false,
                   "type": "string"
                 },
-                "icon": {
-                  "name": "icon",
-                  "required": false,
-                  "type": "string"
-                },
-                "key": {
-                  "name": "key",
-                  "required": false,
-                  "type": "string"
-                },
                 "format": {
                   "name": "format",
-                  "required": false,
-                  "type": "string"
-                },
-                "header": {
-                  "name": "header",
                   "required": false,
                   "type": "string"
                 }
@@ -262,6 +268,11 @@
             "tier": "presentation",
             "items": {
               "properties": {
+                "field": {
+                  "name": "field",
+                  "required": true,
+                  "type": "string"
+                },
                 "options": {
                   "name": "options",
                   "required": false,
@@ -269,11 +280,6 @@
                   "items": {
                     "type": "string"
                   }
-                },
-                "field": {
-                  "name": "field",
-                  "required": true,
-                  "type": "string"
                 },
                 "label": {
                   "name": "label",

@@ -76,17 +76,17 @@ export interface StdReminderSchedulerReminderRunFailedPayload {
  */
 export interface StdReminderSchedulerConfig {
   /** Default: `""` */
-  template?: string;
+  dateField?: string;
   /** Default: `[]` */
   offsetsHours?: number[];
-  /** Default: `""` */
-  targetEntity?: string;
   /** Default: `"info"` */
   severity?: string;
+  /** Default: `""` */
+  template?: string;
   /** Default: `60` */
   windowToleranceMinutes?: number;
   /** Default: `""` */
-  dateField?: string;
+  targetEntity?: string;
 }
 
 /**

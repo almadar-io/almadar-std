@@ -4,14 +4,14 @@ app std-agent-chat-thread "1.0.0"
 orbital AgentChatThreadOrbital {
   entity AgentChatThread [persistent: agentchatthreads] {
     id          : string!
-    name        : string
-    description : string
-    status      : "active" | "inactive" | "pending" | "sent" = "active"
+    name        : string @description "A user-friendly identifier for the chat thread." @synonyms "title, label, identifier"
+    description : string @description "A brief explanation of the thread's subject or purpose." @synonyms "summary, explanation, details"
+    status      : "active" | "inactive" | "pending" | "sent" @description "Indicates the current operational state of the thread." @synonyms "state, condition, mode" = "active"
     createdAt   : string
-    role        : "user" | "assistant" | "system" | "tool" = "user"
-    content     : string = ""
-    timestamp   : string = ""
-    toolName    : string = ""
+    role        : "user" | "assistant" | "system" | "tool" @description "Indicates the actor responsible for the message." @synonyms "actor, speaker, sender, originator" = "user"
+    content     : string @description "The textual message or response within the thread." @synonyms "message, text, body" = ""
+    timestamp   : string @description "The date and time when the event occurred." @synonyms "date, time, when" = ""
+    toolName    : string @description "The name of the tool used to generate this message." @synonyms "tool, application, source" = ""
   }
 
   type AgentChatThreadLoaded       = Event { data : [AgentChatThread] }       "Fired when the chat thread finishes loading; payload.data holds the messages"

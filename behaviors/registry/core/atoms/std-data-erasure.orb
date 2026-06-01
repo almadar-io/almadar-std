@@ -18,12 +18,16 @@
           {
             "name": "subjectId",
             "type": "string",
-            "default": ""
+            "default": "",
+            "description": "Unique identifier for the data subject.",
+            "synonyms": "data subject ID, identifier, user ID"
           },
           {
             "name": "targetEntity",
             "type": "string",
-            "default": ""
+            "default": "",
+            "description": "The entity or system affected by the erasure request.",
+            "synonyms": "affected entity, target system, destination"
           },
           {
             "name": "status",
@@ -34,32 +38,44 @@
               "grace",
               "executed",
               "cancelled"
-            ]
+            ],
+            "description": "Current state of the erasure request.",
+            "synonyms": "state, lifecycle, condition"
           },
           {
             "name": "requestedAt",
             "type": "number",
-            "default": 0.0
+            "default": 0.0,
+            "description": "Timestamp indicating when the erasure request was initially submitted.",
+            "synonyms": "submission time, creation time, request date"
           },
           {
             "name": "executesAt",
             "type": "number",
-            "default": 0.0
+            "default": 0.0,
+            "description": "Timestamp indicating when the erasure process completed.",
+            "synonyms": "completion time, finish time, end time"
           },
           {
             "name": "executedAt",
             "type": "number",
-            "default": 0.0
+            "default": 0.0,
+            "description": "Timestamp indicating when the erasure process completed.",
+            "synonyms": "completion time, finish time, end time"
           },
           {
             "name": "cancelledAt",
             "type": "number",
-            "default": 0.0
+            "default": 0.0,
+            "description": "Timestamp when the erasure request was cancelled.",
+            "synonyms": "cancellation time, cancelled timestamp, cancel date"
           },
           {
             "name": "notes",
             "type": "string",
-            "default": ""
+            "default": "",
+            "description": "Free-form text providing additional information or context.",
+            "synonyms": "comment, remark, description, details"
           }
         ]
       },
@@ -292,8 +308,8 @@
                     "ErasureRequest",
                     {
                       "emit": {
-                        "success": "ErasureLoaded",
-                        "failure": "ErasureLoadFailed"
+                        "failure": "ErasureLoadFailed",
+                        "success": "ErasureLoaded"
                       }
                     }
                   ],
@@ -301,22 +317,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "align": "center",
-                      "className": "py-12",
-                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "content": "Loading erasure requests…",
                           "type": "typography",
                           "color": "muted",
-                          "content": "Loading erasure requests…",
                           "variant": "caption"
                         }
                       ],
-                      "direction": "vertical"
+                      "gap": "md",
+                      "className": "py-12",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -330,15 +346,16 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
                       "children": [
                         {
-                          "type": "stack",
-                          "align": "center",
+                          "gap": "sm",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "trash-2"
+                              "name": "trash-2",
+                              "type": "icon"
                             },
                             {
                               "variant": "h3",
@@ -346,16 +363,25 @@
                               "content": "Erasure requests"
                             }
                           ],
-                          "gap": "sm",
-                          "direction": "horizontal"
+                          "type": "stack",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
+                          "itemActions": [
+                            {
+                              "variant": "secondary",
+                              "label": "Cancel",
+                              "event": "CANCEL_ERASURE",
+                              "icon": "x"
+                            }
+                          ],
                           "look": "@config.tableLook",
-                          "gap": "sm",
+                          "cols": 1.0,
+                          "entity": "@payload.data",
+                          "type": "data-grid",
                           "fields": [
                             {
                               "variant": "caption",
@@ -363,30 +389,20 @@
                               "label": "Subject"
                             },
                             {
-                              "name": "status",
                               "variant": "badge",
+                              "name": "status",
                               "label": "Status"
                             },
                             {
+                              "name": "executesAt",
                               "label": "Executes",
-                              "variant": "caption",
-                              "name": "executesAt"
+                              "variant": "caption"
                             }
                           ],
-                          "cols": 1.0,
-                          "itemActions": [
-                            {
-                              "variant": "secondary",
-                              "event": "CANCEL_ERASURE",
-                              "label": "Cancel",
-                              "icon": "x"
-                            }
-                          ],
-                          "entity": "@payload.data"
+                          "gap": "sm"
                         }
                       ],
-                      "direction": "vertical",
-                      "gap": "md"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -401,8 +417,8 @@
                     "main",
                     {
                       "message": "@payload.error",
-                      "type": "alert",
-                      "variant": "error"
+                      "variant": "error",
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -429,8 +445,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "success": "ErasureSaved",
-                        "failure": "ErasureSaveFailed"
+                        "failure": "ErasureSaveFailed",
+                        "success": "ErasureSaved"
                       }
                     }
                   ]
@@ -446,8 +462,8 @@
                     "ErasureRequest",
                     {
                       "emit": {
-                        "success": "ErasureLoaded",
-                        "failure": "ErasureLoadFailed"
+                        "failure": "ErasureLoadFailed",
+                        "success": "ErasureLoaded"
                       }
                     }
                   ]
@@ -462,9 +478,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
                       "variant": "error",
-                      "message": "@payload.error"
+                      "message": "@payload.error",
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -479,8 +495,8 @@
                     "ErasureRequest",
                     {
                       "emit": {
-                        "success": "ErasureLoaded",
-                        "failure": "ErasureLoadFailed"
+                        "failure": "ErasureLoadFailed",
+                        "success": "ErasureLoaded"
                       }
                     }
                   ],
@@ -508,21 +524,6 @@
                 "delete"
               ]
             },
-            "enabled": {
-              "type": "boolean",
-              "default": false,
-              "label": "Enabled",
-              "description": "Whether the data-erasure workflow is active for the host orbital. Off by default; turn on to handle GDPR right-to-be-forgotten requests.",
-              "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, gdpr, erasure, right to be forgotten, data deletion, scheduled deletion, retention purge, account deletion, anonymize user data, scrub PII, delete user data",
-              "tier": "domain"
-            },
-            "gracePeriodDays": {
-              "type": "number",
-              "default": 30.0,
-              "label": "Grace period (days)",
-              "description": "Days between request and execution. Customer can CANCEL during this window. Default 30 days matches typical GDPR practice.",
-              "tier": "domain"
-            },
             "piiFields": {
               "type": "[string]",
               "default": [],
@@ -532,13 +533,6 @@
               "items": {
                 "type": "string"
               }
-            },
-            "targetEntity": {
-              "type": "string",
-              "default": "",
-              "label": "Target entity",
-              "description": "Entity name whose records erasure requests apply to (e.g. 'CustomerAccount').",
-              "tier": "domain"
             },
             "tableLook": {
               "type": "string",
@@ -553,6 +547,28 @@
                 "borderless",
                 "card-rows"
               ]
+            },
+            "enabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Enabled",
+              "description": "Whether the data-erasure workflow is active for the host orbital. Off by default; turn on to handle GDPR right-to-be-forgotten requests.",
+              "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, gdpr, erasure, right to be forgotten, data deletion, scheduled deletion, retention purge, account deletion, anonymize user data, scrub PII, delete user data",
+              "tier": "domain"
+            },
+            "targetEntity": {
+              "type": "string",
+              "default": "",
+              "label": "Target entity",
+              "description": "Entity name whose records erasure requests apply to (e.g. 'CustomerAccount').",
+              "tier": "domain"
+            },
+            "gracePeriodDays": {
+              "type": "number",
+              "default": 30.0,
+              "label": "Grace period (days)",
+              "description": "Days between request and execution. Customer can CANCEL during this window. Default 30 days matches typical GDPR practice.",
+              "tier": "domain"
             }
           },
           "scope": "collection"

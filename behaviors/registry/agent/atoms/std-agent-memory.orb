@@ -17,11 +17,15 @@
           },
           {
             "name": "name",
-            "type": "string"
+            "type": "string",
+            "description": "A human-readable identifier for the memory.",
+            "synonyms": "label, identifier, title"
           },
           {
             "name": "description",
-            "type": "string"
+            "type": "string",
+            "description": "A textual explanation of the memory's purpose or contents.",
+            "synonyms": "details, notes, explanation, summary"
           },
           {
             "name": "status",
@@ -31,7 +35,9 @@
               "active",
               "inactive",
               "pending"
-            ]
+            ],
+            "description": "Current operational state of the component.",
+            "synonyms": "state, condition, operational_status"
           },
           {
             "name": "createdAt",
@@ -40,22 +46,30 @@
           {
             "name": "content",
             "type": "string",
-            "default": ""
+            "default": "",
+            "description": "The data stored within the memory.",
+            "synonyms": "data, value, payload"
           },
           {
             "name": "category",
             "type": "string",
-            "default": "general"
+            "default": "general",
+            "description": "Classification or type of the memory data.",
+            "synonyms": "type, kind, class"
           },
           {
             "name": "strength",
             "type": "number",
-            "default": 1.0
+            "default": 1.0,
+            "description": "A numerical value representing the intensity or magnitude.",
+            "synonyms": "value, magnitude, level, intensity"
           },
           {
             "name": "pinned",
             "type": "boolean",
-            "default": false
+            "default": false,
+            "description": "Indicates whether the item is marked as important.",
+            "synonyms": "flagged, marked, important"
           },
           {
             "name": "scope",
@@ -65,12 +79,16 @@
               "session",
               "persistent",
               "shared"
-            ]
+            ],
+            "description": "Indicates the data's lifecycle and accessibility.",
+            "synonyms": "lifetime, access, persistence"
           },
           {
             "name": "lastAccessedAt",
             "type": "string",
-            "default": ""
+            "default": "",
+            "description": "Timestamp of the last access to the data.",
+            "synonyms": "accessed, last modified, updated"
           }
         ]
       },
@@ -453,17 +471,17 @@
                     {
                       "type": "stack",
                       "gap": "md",
-                      "className": "py-12",
                       "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
-                          "type": "typography",
                           "color": "muted",
-                          "content": "Loading memories…"
+                          "type": "typography",
+                          "content": "Loading memories…",
+                          "variant": "caption"
                         }
                       ],
                       "direction": "vertical"
@@ -481,21 +499,13 @@
                     "main",
                     {
                       "className": "max-w-5xl mx-auto w-full",
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
                       "children": [
                         {
-                          "justify": "between",
-                          "type": "stack",
-                          "gap": "md",
                           "align": "center",
-                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "stack",
                               "gap": "sm",
-                              "align": "center",
                               "direction": "horizontal",
                               "children": [
                                 {
@@ -503,85 +513,93 @@
                                   "type": "icon"
                                 },
                                 {
+                                  "variant": "h2",
                                   "type": "typography",
-                                  "content": "AgentMemory Manager",
-                                  "variant": "h2"
+                                  "content": "AgentMemory Manager"
                                 }
-                              ]
+                              ],
+                              "align": "center"
                             },
                             {
-                              "direction": "horizontal",
+                              "type": "stack",
                               "gap": "sm",
                               "children": [
                                 {
-                                  "action": "MEMORIZE",
                                   "icon": "plus",
-                                  "type": "button",
+                                  "action": "MEMORIZE",
+                                  "variant": "primary",
                                   "label": "Memorize",
-                                  "variant": "primary"
+                                  "type": "button"
                                 },
                                 {
-                                  "variant": "secondary",
                                   "type": "button",
-                                  "icon": "search",
+                                  "label": "Recall",
                                   "action": "RECALL",
-                                  "label": "Recall"
+                                  "variant": "secondary",
+                                  "icon": "search"
                                 },
                                 {
-                                  "type": "button",
                                   "action": "DECAY",
+                                  "type": "button",
                                   "variant": "ghost",
-                                  "label": "Decay All",
-                                  "icon": "clock"
+                                  "icon": "clock",
+                                  "label": "Decay All"
                                 }
                               ],
-                              "type": "stack"
+                              "direction": "horizontal"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "type": "stack",
+                          "justify": "between"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "data-grid",
+                          "entity": "@payload.data",
                           "itemActions": [
                             {
                               "variant": "ghost",
-                              "event": "PIN",
-                              "label": "Pin"
+                              "label": "Pin",
+                              "event": "PIN"
                             },
                             {
-                              "variant": "ghost",
+                              "label": "Reinforce",
                               "event": "REINFORCE",
-                              "label": "Reinforce"
+                              "variant": "ghost"
                             },
                             {
-                              "variant": "danger",
                               "event": "FORGET",
+                              "variant": "danger",
                               "label": "Forget"
                             }
                           ],
-                          "type": "data-grid",
-                          "entity": "@payload.data",
                           "fields": [
                             {
-                              "name": "content",
+                              "variant": "h4",
                               "icon": "brain",
-                              "label": "Content",
-                              "variant": "h4"
+                              "name": "content",
+                              "label": "Content"
                             },
                             {
                               "variant": "badge",
-                              "label": "Category",
-                              "name": "category"
+                              "name": "category",
+                              "label": "Category"
                             },
                             {
-                              "label": "Strength",
+                              "name": "strength",
                               "variant": "caption",
-                              "name": "strength"
+                              "label": "Strength"
                             }
                           ]
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -595,35 +613,35 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "icon",
+                          "name": "alert-triangle",
                           "color": "destructive",
-                          "name": "alert-triangle"
+                          "type": "icon"
                         },
                         {
+                          "content": "Failed to load memories",
                           "type": "typography",
-                          "variant": "h3",
-                          "content": "Failed to load memories"
+                          "variant": "h3"
                         },
                         {
-                          "content": "@payload.error",
                           "type": "typography",
                           "variant": "body",
-                          "color": "muted"
+                          "color": "muted",
+                          "content": "@payload.error"
                         },
                         {
-                          "icon": "rotate-ccw",
-                          "action": "INIT",
                           "variant": "primary",
+                          "type": "button",
+                          "action": "INIT",
                           "label": "Retry",
-                          "type": "button"
+                          "icon": "rotate-ccw"
                         }
                       ],
                       "gap": "md",
-                      "className": "py-12",
                       "type": "stack",
+                      "className": "py-12",
+                      "direction": "vertical",
                       "align": "center"
                     }
                   ]
@@ -663,8 +681,8 @@
                     "AgentMemory",
                     {
                       "emit": {
-                        "success": "AgentMemoryLoaded",
-                        "failure": "AgentMemoryLoadFailed"
+                        "failure": "AgentMemoryLoadFailed",
+                        "success": "AgentMemoryLoaded"
                       }
                     }
                   ],
@@ -857,8 +875,8 @@
                     "AgentMemory",
                     {
                       "emit": {
-                        "success": "AgentMemoryLoaded",
-                        "failure": "AgentMemoryLoadFailed"
+                        "failure": "AgentMemoryLoadFailed",
+                        "success": "AgentMemoryLoaded"
                       }
                     }
                   ]
@@ -873,19 +891,22 @@
                     "render-ui",
                     "modal",
                     {
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
                           "gap": "sm",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "plus-circle"
+                              "name": "plus-circle",
+                              "type": "icon"
                             },
                             {
-                              "type": "typography",
                               "content": "Memorize",
+                              "type": "typography",
                               "variant": "h3"
                             }
                           ]
@@ -894,20 +915,17 @@
                           "type": "divider"
                         },
                         {
-                          "type": "form-section",
-                          "mode": "create",
+                          "submitEvent": "SAVE",
                           "cancelEvent": "CLOSE",
+                          "type": "form-section",
                           "fields": [
                             "content",
                             "category",
                             "scope"
                           ],
-                          "submitEvent": "SAVE"
+                          "mode": "create"
                         }
-                      ],
-                      "gap": "md",
-                      "direction": "vertical",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -948,8 +966,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "failure": "AgentMemorySaveFailed",
-                        "success": "AgentMemorySaved"
+                        "success": "AgentMemorySaved",
+                        "failure": "AgentMemorySaveFailed"
                       }
                     }
                   ],
@@ -1292,8 +1310,8 @@
                     "AgentMemory",
                     {
                       "emit": {
-                        "failure": "AgentMemoryLoadFailed",
-                        "success": "AgentMemoryLoaded"
+                        "success": "AgentMemoryLoaded",
+                        "failure": "AgentMemoryLoadFailed"
                       }
                     }
                   ],
@@ -1303,8 +1321,8 @@
                     {
                       "icon": "brain",
                       "description": "Memory is ready",
-                      "title": "Memory",
-                      "type": "empty-state"
+                      "type": "empty-state",
+                      "title": "Memory"
                     }
                   ]
                 ]
@@ -1367,8 +1385,8 @@
                     "AgentMemory",
                     {
                       "emit": {
-                        "success": "AgentMemoryLoaded",
-                        "failure": "AgentMemoryLoadFailed"
+                        "failure": "AgentMemoryLoadFailed",
+                        "success": "AgentMemoryLoaded"
                       }
                     }
                   ]

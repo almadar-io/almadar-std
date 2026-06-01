@@ -15,11 +15,15 @@
           },
           {
             "name": "name",
-            "type": "string"
+            "type": "string",
+            "description": "The identifier or title for the form entry.",
+            "synonyms": "title, label, identifier"
           },
           {
             "name": "description",
-            "type": "string"
+            "type": "string",
+            "description": "A textual explanation or details about the entry.",
+            "synonyms": "details, explanation, notes, summary"
           },
           {
             "name": "status",
@@ -29,7 +33,9 @@
               "active",
               "inactive",
               "pending"
-            ]
+            ],
+            "description": "Indicates the current operational state of the entry.",
+            "synonyms": "state, condition, mode"
           },
           {
             "name": "createdAt",
@@ -38,22 +44,30 @@
           {
             "name": "notes",
             "type": "string",
-            "default": ""
+            "default": "",
+            "description": "Free-text comments or additional information.",
+            "synonyms": "comment, remark, details, memo"
           },
           {
             "name": "age",
             "type": "number",
-            "default": 0.0
+            "default": 0.0,
+            "description": "Numerical value representing a person's age.",
+            "synonyms": "years, age, period"
           },
           {
             "name": "isActive",
             "type": "boolean",
-            "default": false
+            "default": false,
+            "description": "Indicates whether the entry is currently active.",
+            "synonyms": "active, enabled, status"
           },
           {
             "name": "birthDate",
             "type": "datetime",
-            "default": ""
+            "default": "",
+            "description": "Date of birth.",
+            "synonyms": "dob, date of birth, birthday"
           },
           {
             "name": "priority",
@@ -64,12 +78,16 @@
               "medium",
               "high",
               "critical"
-            ]
+            ],
+            "description": "Indicates the level of importance or urgency.",
+            "synonyms": "level, importance, urgency"
           },
           {
             "name": "categoryId",
             "type": "string",
-            "default": ""
+            "default": "",
+            "description": "Identifies the related category record.",
+            "synonyms": "category, type, group"
           }
         ]
       },
@@ -316,37 +334,37 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "children": [
                         {
                           "gap": "sm",
                           "align": "center",
-                          "direction": "horizontal",
-                          "type": "stack",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "@config.icon"
+                              "name": "@config.icon",
+                              "type": "icon"
                             },
                             {
-                              "variant": "h2",
                               "type": "typography",
-                              "content": "@config.title"
+                              "content": "@config.title",
+                              "variant": "h2"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "fields": "@config.fields",
-                          "type": "form-section",
+                          "cancelEvent": "INIT",
                           "mode": "create",
                           "submitEvent": "SUBMIT",
-                          "cancelEvent": "INIT"
+                          "type": "form-section",
+                          "fields": "@config.fields"
                         }
                       ],
                       "direction": "vertical",
+                      "type": "stack",
                       "gap": "lg"
                     }
                   ]
@@ -380,9 +398,9 @@
                           "name": "check-circle"
                         },
                         {
+                          "content": "Form Submitted",
                           "variant": "h2",
-                          "type": "typography",
-                          "content": "Form Submitted"
+                          "type": "typography"
                         },
                         {
                           "variant": "success",
@@ -390,16 +408,16 @@
                           "message": "Your form has been submitted successfully."
                         },
                         {
-                          "type": "button",
                           "action": "RESET",
                           "icon": "plus",
-                          "label": "New Entry",
-                          "variant": "primary"
+                          "variant": "primary",
+                          "type": "button",
+                          "label": "New Entry"
                         }
                       ],
+                      "gap": "lg",
                       "direction": "vertical",
-                      "type": "stack",
-                      "gap": "lg"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -433,38 +451,38 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "children": [
                         {
-                          "gap": "sm",
-                          "type": "stack",
                           "direction": "horizontal",
-                          "align": "center",
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "@config.icon"
+                              "name": "@config.icon",
+                              "type": "icon"
                             },
                             {
+                              "type": "typography",
                               "content": "@config.title",
-                              "variant": "h2",
-                              "type": "typography"
+                              "variant": "h2"
                             }
-                          ]
+                          ],
+                          "align": "center",
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "mode": "create",
                           "type": "form-section",
-                          "cancelEvent": "INIT",
                           "submitEvent": "SUBMIT",
                           "fields": "@config.fields",
-                          "mode": "create"
+                          "cancelEvent": "INIT"
                         }
                       ],
                       "gap": "lg",
-                      "type": "stack",
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -479,53 +497,26 @@
               "description": "Heading shown above the form",
               "tier": "presentation"
             },
-            "fieldValidation": {
-              "type": "[ValidationSpec]",
-              "default": [],
-              "label": "Field validation",
-              "description": "Per-field rules (format, regex, length) shown inline on submit",
-              "tier": "domain",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "field": {
-                    "name": "field",
-                    "type": "string",
-                    "required": true
-                  },
-                  "message": {
-                    "name": "message",
-                    "type": "string",
-                    "required": false
-                  },
-                  "rule": {
-                    "name": "rule",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
             "fields": {
               "type": "[FieldSpec]",
               "default": [
                 {
-                  "label": "Name",
-                  "name": "name"
+                  "name": "name",
+                  "label": "Name"
                 },
                 {
                   "label": "Description",
                   "name": "description"
                 },
                 {
-                  "name": "status",
-                  "type": "enum",
                   "values": [
                     "active",
                     "inactive",
                     "pending"
                   ],
-                  "label": "Status"
+                  "name": "status",
+                  "label": "Status",
+                  "type": "enum"
                 },
                 {
                   "name": "notes",
@@ -533,38 +524,38 @@
                   "type": "textarea"
                 },
                 {
-                  "type": "number",
                   "name": "age",
-                  "label": "Age"
+                  "label": "Age",
+                  "type": "number"
                 },
                 {
-                  "name": "isActive",
                   "type": "boolean",
+                  "name": "isActive",
                   "label": "Is Active"
                 },
                 {
                   "name": "birthDate",
-                  "label": "Birth Date",
-                  "type": "date"
+                  "type": "date",
+                  "label": "Birth Date"
                 },
                 {
+                  "type": "enum",
+                  "name": "priority",
+                  "label": "Priority",
                   "values": [
                     "low",
                     "medium",
                     "high",
                     "critical"
-                  ],
-                  "type": "enum",
-                  "name": "priority",
-                  "label": "Priority"
+                  ]
                 },
                 {
                   "label": "Category ID",
                   "name": "categoryId",
                   "type": "relation",
                   "relation": {
-                    "cardinality": "one",
-                    "entity": "FormEntry"
+                    "entity": "FormEntry",
+                    "cardinality": "one"
                   }
                 }
               ],
@@ -574,6 +565,11 @@
               "items": {
                 "type": "object",
                 "properties": {
+                  "header": {
+                    "name": "header",
+                    "type": "string",
+                    "required": false
+                  },
                   "label": {
                     "name": "label",
                     "type": "string",
@@ -584,18 +580,13 @@
                     "type": "string",
                     "required": false
                   },
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
-                  },
-                  "variant": {
-                    "name": "variant",
+                  "format": {
+                    "name": "format",
                     "type": "string",
                     "required": false
                   },
-                  "format": {
-                    "name": "format",
+                  "variant": {
+                    "name": "variant",
                     "type": "string",
                     "required": false
                   },
@@ -604,10 +595,37 @@
                     "type": "string",
                     "required": false
                   },
-                  "header": {
-                    "name": "header",
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "fieldValidation": {
+              "type": "[ValidationSpec]",
+              "default": [],
+              "label": "Field validation",
+              "description": "Per-field rules (format, regex, length) shown inline on submit",
+              "tier": "domain",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "rule": {
+                    "name": "rule",
                     "type": "string",
                     "required": false
+                  },
+                  "message": {
+                    "name": "message",
+                    "type": "string",
+                    "required": false
+                  },
+                  "field": {
+                    "name": "field",
+                    "type": "string",
+                    "required": true
                   }
                 }
               }

@@ -23,11 +23,15 @@
           {
             "name": "name",
             "type": "string",
-            "required": true
+            "required": true,
+            "description": "The event's title or short identifier.",
+            "synonyms": "title, label, eventName"
           },
           {
             "name": "description",
-            "type": "string"
+            "type": "string",
+            "description": "A brief explanation of the event.",
+            "synonyms": "summary, details, notes"
           },
           {
             "name": "status",
@@ -37,7 +41,9 @@
               "active",
               "inactive",
               "pending"
-            ]
+            ],
+            "description": "Indicates the current operational state of the event.",
+            "synonyms": "state, condition, flag"
           },
           {
             "name": "createdAt",
@@ -52,17 +58,23 @@
           {
             "name": "time",
             "type": "string",
-            "default": ""
+            "default": "",
+            "description": "The time of the event.",
+            "synonyms": "start time, scheduled time, time slot"
           },
           {
             "name": "duration",
             "type": "number",
-            "default": 60.0
+            "default": 60.0,
+            "description": "The length of time the event lasts, in minutes.",
+            "synonyms": "length, time, span"
           },
           {
             "name": "dateGroup",
             "type": "string",
-            "default": ""
+            "default": "",
+            "description": "The date to which this event belongs.",
+            "synonyms": "day, date"
           },
           {
             "name": "selectedRange",
@@ -79,69 +91,71 @@
           "linkedEntity": "AgendaListEvent",
           "config": {
             "bodyContent": {
-              "className": "w-full p-card-md",
+              "gap": "lg",
               "type": "stack",
               "direction": "vertical",
-              "gap": "lg",
+              "className": "w-full p-card-md",
               "children": [
                 {
-                  "type": "stack",
-                  "direction": "horizontal",
-                  "justify": "between",
-                  "align": "center",
                   "gap": "md",
+                  "align": "center",
+                  "type": "stack",
+                  "justify": "between",
                   "children": [
                     {
-                      "direction": "horizontal",
                       "align": "center",
-                      "gap": "sm",
+                      "direction": "horizontal",
                       "type": "stack",
+                      "gap": "sm",
                       "children": [
                         {
-                          "name": "list",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "list"
                         },
                         {
-                          "content": "Agenda",
                           "variant": "h2",
-                          "type": "typography"
+                          "type": "typography",
+                          "content": "Agenda"
                         }
                       ]
                     },
                     {
-                      "type": "date-range-selector",
+                      "selected": "@entity.selectedRange",
                       "onSelect": "SELECT_DAY",
-                      "selected": "@entity.selectedRange"
+                      "type": "date-range-selector"
                     }
-                  ]
+                  ],
+                  "direction": "horizontal"
                 },
                 {
                   "type": "divider"
                 },
                 {
-                  "gap": "md",
-                  "variant": "default",
+                  "type": "data-list",
                   "fields": [],
+                  "groupBy": "date",
+                  "gap": "md",
                   "renderItem": [
                     "fn",
                     "item",
                     {
-                      "type": "card",
+                      "look": "flat-bordered",
                       "children": [
                         {
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "align": "start",
                           "children": [
                             {
-                              "direction": "vertical",
-                              "gap": "xs",
-                              "align": "center",
                               "type": "stack",
+                              "align": "center",
                               "className": "w-16 shrink-0",
                               "children": [
                                 {
-                                  "color": "muted",
                                   "type": "typography",
-                                  "content": "@config.timeBinding",
-                                  "variant": "overline"
+                                  "variant": "overline",
+                                  "color": "muted",
+                                  "content": "@config.timeBinding"
                                 },
                                 {
                                   "color": "muted",
@@ -149,63 +163,61 @@
                                   "size": "sm",
                                   "name": "clock"
                                 }
-                              ]
+                              ],
+                              "gap": "xs",
+                              "direction": "vertical"
                             },
                             {
                               "orientation": "vertical",
                               "type": "divider"
                             },
                             {
-                              "gap": "xs",
                               "type": "stack",
-                              "direction": "vertical",
                               "className": "flex-1 min-w-0",
+                              "direction": "vertical",
                               "children": [
                                 {
-                                  "children": [
-                                    {
-                                      "variant": "h4",
-                                      "type": "typography",
-                                      "content": "@config.titleBinding",
-                                      "weight": "medium",
-                                      "className": "truncate"
-                                    },
-                                    {
-                                      "type": "badge",
-                                      "variant": "default",
-                                      "label": "@config.badgeBinding",
-                                      "size": "sm"
-                                    }
-                                  ],
-                                  "align": "center",
-                                  "direction": "horizontal",
                                   "justify": "between",
                                   "type": "stack",
-                                  "gap": "sm"
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "content": "@config.titleBinding",
+                                      "className": "truncate",
+                                      "type": "typography",
+                                      "variant": "h4",
+                                      "weight": "medium"
+                                    },
+                                    {
+                                      "size": "sm",
+                                      "type": "badge",
+                                      "label": "@config.badgeBinding",
+                                      "variant": "default"
+                                    }
+                                  ]
                                 },
                                 {
+                                  "type": "typography",
+                                  "variant": "body2",
                                   "content": "@config.descriptionBinding",
                                   "color": "muted",
-                                  "type": "typography",
-                                  "className": "truncate",
-                                  "variant": "body2"
+                                  "className": "truncate"
                                 }
-                              ]
+                              ],
+                              "gap": "xs"
                             }
                           ],
-                          "gap": "md",
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "align": "start"
+                          "type": "stack"
                         }
                       ],
-                      "padding": "md",
-                      "look": "flat-bordered"
+                      "type": "card",
+                      "padding": "md"
                     }
                   ],
                   "entity": "@payload.data",
-                  "type": "data-list",
-                  "groupBy": "date"
+                  "variant": "default"
                 }
               ]
             }

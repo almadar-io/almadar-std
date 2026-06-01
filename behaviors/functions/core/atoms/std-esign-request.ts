@@ -68,10 +68,10 @@ export interface StdEsignRequestEsignrequestloadfailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdEsignRequestConfig {
-  /** Default: `"dense"` */
-  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
   /** Default: `"Signature Requests"` */
   title?: string;
+  /** Default: `"dense"` */
+  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
 }
 
 /**

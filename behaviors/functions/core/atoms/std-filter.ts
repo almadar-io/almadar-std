@@ -47,12 +47,12 @@ export interface StdFilterFilterPayload {
  * without modifying its state-machine topology.
  */
 export interface StdFilterConfig {
-  /** Default: `"FILTER"` */
-  event?: string;
   /** Default: `"toolbar"` */
   filterBarLook?: 'toolbar' | 'chips' | 'pills' | 'popover-trigger' | 'inline-column-header';
-  /** Default: `[{"options":["active","inactive","pending"],"filterType":"select","field":"status","label":"Status"}]` */
+  /** Default: `[{"field":"status","label":"Status","filterType":"select","options":["active","inactive","pending"]}]` */
   filters?: EntityRow[];
+  /** Default: `"FILTER"` */
+  event?: string;
 }
 
 /**

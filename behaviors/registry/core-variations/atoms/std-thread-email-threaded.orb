@@ -23,46 +23,64 @@
           },
           {
             "name": "parentId",
-            "type": "string"
+            "type": "string",
+            "description": "Identifier of the parent message in the thread.",
+            "synonyms": "parent, reference, source"
           },
           {
             "name": "threadRootId",
             "type": "string",
-            "required": true
+            "required": true,
+            "description": "Identifier of the top-level message in the thread.",
+            "synonyms": "root id, top id, original id"
           },
           {
             "name": "authorId",
             "type": "string",
-            "required": true
+            "required": true,
+            "description": "Unique identifier for the post's author.",
+            "synonyms": "author, user, creator"
           },
           {
             "name": "authorName",
             "type": "string",
-            "required": true
+            "required": true,
+            "description": "The name of the post's author.",
+            "synonyms": "author, creator, user"
           },
           {
             "name": "fromAddress",
             "type": "string",
-            "required": true
+            "required": true,
+            "description": "The email sender's address.",
+            "synonyms": "sender, originator, email"
           },
           {
             "name": "toAddress",
             "type": "string",
-            "required": true
+            "required": true,
+            "description": "Recipient(s) of the email message.",
+            "synonyms": "recipient, cc, to"
           },
           {
             "name": "subject",
             "type": "string",
-            "required": true
+            "required": true,
+            "description": "The title or heading of the message.",
+            "synonyms": "title, heading, topic"
           },
           {
             "name": "preview",
-            "type": "string"
+            "type": "string",
+            "description": "A short excerpt of the post's content.",
+            "synonyms": "snippet, excerpt, summary, abstract"
           },
           {
             "name": "content",
             "type": "string",
-            "required": true
+            "required": true,
+            "description": "The main text of the post's message.",
+            "synonyms": "body, message, text"
           },
           {
             "name": "createdAt",
@@ -71,12 +89,16 @@
           {
             "name": "voteCount",
             "type": "number",
-            "default": 0.0
+            "default": 0.0,
+            "description": "The number of votes or ratings associated with this item.",
+            "synonyms": "rating, score, likes, upvotes"
           },
           {
             "name": "replyCount",
             "type": "number",
-            "default": 0.0
+            "default": 0.0,
+            "description": "The number of replies to this post.",
+            "synonyms": "count, number of replies, response count"
           },
           {
             "name": "replies",
@@ -84,25 +106,17 @@
             "relation": {
               "entity": "EmailThreadedPost",
               "cardinality": "many"
-            }
+            },
+            "description": "Nested replies to this post, forming a threaded conversation.",
+            "synonyms": "replies, children, nested replies, descendants"
           },
           {
             "name": "focusedRow",
             "type": "object",
             "default": {},
             "properties": {
-              "subject": {
-                "name": "subject",
-                "type": "string",
-                "required": false
-              },
-              "createdAt": {
-                "name": "createdAt",
-                "type": "string",
-                "required": false
-              },
-              "id": {
-                "name": "id",
+              "authorName": {
+                "name": "authorName",
                 "type": "string",
                 "required": false
               },
@@ -111,8 +125,8 @@
                 "type": "string",
                 "required": false
               },
-              "authorName": {
-                "name": "authorName",
+              "toAddress": {
+                "name": "toAddress",
                 "type": "string",
                 "required": false
               },
@@ -125,8 +139,13 @@
                   "cardinality": "many"
                 }
               },
-              "toAddress": {
-                "name": "toAddress",
+              "id": {
+                "name": "id",
+                "type": "string",
+                "required": false
+              },
+              "createdAt": {
+                "name": "createdAt",
                 "type": "string",
                 "required": false
               },
@@ -134,8 +153,15 @@
                 "name": "content",
                 "type": "string",
                 "required": false
+              },
+              "subject": {
+                "name": "subject",
+                "type": "string",
+                "required": false
               }
-            }
+            },
+            "description": "The complete, rendered content of the currently selected message.",
+            "synonyms": "message, body, full text"
           }
         ]
       },
@@ -146,37 +172,41 @@
           "linkedEntity": "EmailThreadedPost",
           "config": {
             "bodyContent": {
-              "className": "w-full my-section min-h-[32rem] max-h-[80vh] border border-[var(--color-border)] rounded-lg overflow-hidden shadow-sm bg-[var(--color-surface)]",
               "children": [
                 {
+                  "gap": "none",
+                  "type": "stack",
                   "children": [
                     {
+                      "gap": "sm",
+                      "direction": "horizontal",
                       "align": "center",
                       "className": "p-card-md border-b border-[var(--color-border)] sticky top-0 bg-[var(--color-surface-subtle)] z-10",
-                      "direction": "horizontal",
-                      "type": "stack",
                       "children": [
                         {
-                          "name": "inbox",
                           "size": "sm",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "inbox"
                         },
                         {
+                          "variant": "label",
                           "content": "Inbox",
-                          "type": "typography",
                           "weight": "medium",
-                          "variant": "label"
+                          "type": "typography"
                         }
                       ],
-                      "gap": "sm"
+                      "type": "stack"
                     },
                     {
+                      "fields": [],
                       "itemClickEvent": "SELECT",
+                      "gap": "none",
+                      "type": "data-list",
                       "renderItem": [
                         "fn",
                         "item",
                         {
-                          "type": "stack",
+                          "className": "min-w-0 px-4 py-3",
                           "children": [
                             {
                               "size": "sm",
@@ -185,254 +215,257 @@
                               "type": "avatar"
                             },
                             {
-                              "type": "stack",
                               "direction": "vertical",
                               "className": "flex-1 min-w-0",
-                              "gap": "xs",
                               "children": [
                                 {
-                                  "align": "center",
-                                  "type": "stack",
-                                  "className": "min-w-0",
                                   "children": [
                                     {
-                                      "weight": "semibold",
-                                      "className": "flex-1 truncate",
-                                      "content": "@config.emailAuthorBinding",
+                                      "variant": "body2",
                                       "type": "typography",
-                                      "variant": "body2"
+                                      "content": "@config.emailAuthorBinding",
+                                      "weight": "semibold",
+                                      "className": "flex-1 truncate"
                                     },
                                     {
-                                      "size": "xs",
                                       "type": "icon",
-                                      "className": "shrink-0 text-[var(--color-text-muted)]",
-                                      "name": "chevron-right"
+                                      "name": "chevron-right",
+                                      "size": "xs",
+                                      "className": "shrink-0 text-[var(--color-text-muted)]"
                                     }
                                   ],
+                                  "gap": "sm",
                                   "direction": "horizontal",
-                                  "gap": "sm"
+                                  "type": "stack",
+                                  "className": "min-w-0",
+                                  "align": "center"
                                 },
                                 {
-                                  "variant": "body2",
                                   "content": "@config.emailSubjectBinding",
+                                  "variant": "body2",
                                   "type": "typography",
                                   "className": "truncate"
                                 },
                                 {
                                   "type": "typography",
-                                  "className": "truncate",
-                                  "color": "muted",
                                   "variant": "caption",
-                                  "content": "@config.emailPreviewBinding"
+                                  "color": "muted",
+                                  "content": "@config.emailPreviewBinding",
+                                  "className": "truncate"
                                 }
-                              ]
+                              ],
+                              "gap": "xs",
+                              "type": "stack"
                             }
                           ],
+                          "type": "stack",
                           "gap": "sm",
                           "direction": "horizontal",
-                          "className": "min-w-0 px-4 py-3",
                           "align": "start"
                         }
                       ],
-                      "type": "data-list",
                       "entity": "@payload.data",
-                      "gap": "none",
-                      "variant": "default",
-                      "fields": []
+                      "variant": "default"
                     }
                   ],
-                  "direction": "vertical",
-                  "type": "stack",
-                  "gap": "none",
-                  "className": "w-80 shrink-0 border-r border-[var(--color-border)] bg-[var(--color-surface-subtle)] overflow-y-auto"
+                  "className": "w-80 shrink-0 border-r border-[var(--color-border)] bg-[var(--color-surface-subtle)] overflow-y-auto",
+                  "direction": "vertical"
                 },
                 {
+                  "direction": "vertical",
+                  "className": "flex-1 min-w-0 p-card-lg overflow-y-auto",
+                  "type": "stack",
                   "children": [
                     {
+                      "direction": "vertical",
                       "type": "stack",
                       "gap": "md",
                       "className": "pb-4 border-b border-[var(--color-border)]",
                       "children": [
                         {
-                          "gap": "md",
-                          "type": "stack",
-                          "align": "start",
                           "justify": "between",
+                          "type": "stack",
                           "direction": "horizontal",
+                          "align": "start",
+                          "gap": "md",
                           "children": [
                             {
                               "type": "typography",
+                              "className": "flex-1 min-w-0",
                               "variant": "h3",
-                              "content": "@config.detailSubjectBinding",
-                              "className": "flex-1 min-w-0"
+                              "content": "@config.detailSubjectBinding"
                             },
                             {
+                              "type": "stack",
                               "align": "center",
+                              "gap": "sm",
                               "children": [
                                 {
-                                  "icon": "corner-up-left",
+                                  "variant": "secondary",
+                                  "size": "sm",
+                                  "type": "button",
+                                  "action": "REPLY",
                                   "actionPayload": {
                                     "parentId": "@entity.focusedRow.id"
                                   },
-                                  "variant": "secondary",
-                                  "label": "Reply",
-                                  "size": "sm",
-                                  "type": "button",
-                                  "action": "REPLY"
+                                  "icon": "corner-up-left",
+                                  "label": "Reply"
                                 },
                                 {
                                   "variant": "ghost",
-                                  "label": "Forward",
-                                  "action": "REPLY",
-                                  "type": "button",
                                   "icon": "corner-up-right",
-                                  "size": "sm"
+                                  "type": "button",
+                                  "size": "sm",
+                                  "label": "Forward",
+                                  "action": "REPLY"
                                 }
                               ],
                               "className": "shrink-0",
-                              "gap": "sm",
-                              "type": "stack",
                               "direction": "horizontal"
                             }
                           ]
                         },
                         {
+                          "direction": "horizontal",
+                          "gap": "md",
                           "type": "stack",
+                          "align": "center",
                           "children": [
                             {
-                              "name": "@config.detailAuthorBinding",
                               "type": "avatar",
-                              "size": "md",
-                              "className": "shrink-0"
+                              "name": "@config.detailAuthorBinding",
+                              "className": "shrink-0",
+                              "size": "md"
                             },
                             {
                               "direction": "vertical",
-                              "className": "flex-1 min-w-0",
                               "gap": "none",
-                              "type": "stack",
                               "children": [
                                 {
-                                  "type": "stack",
                                   "gap": "xs",
-                                  "direction": "horizontal",
                                   "align": "center",
                                   "children": [
                                     {
-                                      "color": "muted",
+                                      "variant": "caption",
+                                      "type": "typography",
                                       "className": "w-10 shrink-0",
-                                      "variant": "caption",
-                                      "content": "From",
-                                      "type": "typography"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "weight": "medium",
-                                      "content": "@config.detailFromBinding",
-                                      "className": "truncate",
-                                      "variant": "body2"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "align": "center",
-                                  "children": [
-                                    {
                                       "color": "muted",
-                                      "variant": "caption",
-                                      "content": "To",
-                                      "type": "typography",
-                                      "className": "w-10 shrink-0"
+                                      "content": "From"
                                     },
                                     {
-                                      "variant": "body2",
-                                      "type": "typography",
                                       "className": "truncate",
-                                      "content": "@config.detailToBinding"
+                                      "content": "@config.detailFromBinding",
+                                      "weight": "medium",
+                                      "variant": "body2",
+                                      "type": "typography"
                                     }
                                   ],
                                   "direction": "horizontal",
+                                  "type": "stack"
+                                },
+                                {
+                                  "gap": "xs",
+                                  "children": [
+                                    {
+                                      "content": "To",
+                                      "type": "typography",
+                                      "className": "w-10 shrink-0",
+                                      "variant": "caption",
+                                      "color": "muted"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "@config.detailToBinding",
+                                      "variant": "body2",
+                                      "className": "truncate"
+                                    }
+                                  ],
                                   "type": "stack",
-                                  "gap": "xs"
+                                  "direction": "horizontal",
+                                  "align": "center"
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "className": "flex-1 min-w-0"
                             },
                             {
-                              "type": "typography",
-                              "content": "@config.detailDateBinding",
+                              "className": "shrink-0",
                               "variant": "caption",
                               "color": "muted",
-                              "className": "shrink-0"
+                              "type": "typography",
+                              "content": "@config.detailDateBinding"
                             }
-                          ],
-                          "direction": "horizontal",
-                          "align": "center",
-                          "gap": "md"
-                        }
-                      ],
-                      "direction": "vertical"
-                    },
-                    {
-                      "look": "flat-bordered",
-                      "padding": "lg",
-                      "type": "card",
-                      "children": {
-                        "variant": "body",
-                        "type": "typography",
-                        "content": "@config.detailContentBinding",
-                        "className": "leading-relaxed whitespace-pre-wrap"
-                      }
-                    },
-                    {
-                      "direction": "horizontal",
-                      "type": "stack",
-                      "gap": "sm",
-                      "align": "center",
-                      "children": [
-                        {
-                          "type": "icon",
-                          "name": "corner-down-right",
-                          "size": "xs"
-                        },
-                        {
-                          "variant": "label",
-                          "type": "typography",
-                          "color": "muted",
-                          "content": "Quoted replies"
+                          ]
                         }
                       ]
                     },
                     {
+                      "type": "card",
+                      "look": "flat-bordered",
+                      "padding": "lg",
+                      "children": {
+                        "content": "@config.detailContentBinding",
+                        "type": "typography",
+                        "variant": "body",
+                        "className": "leading-relaxed whitespace-pre-wrap"
+                      }
+                    },
+                    {
+                      "children": [
+                        {
+                          "size": "xs",
+                          "name": "corner-down-right",
+                          "type": "icon"
+                        },
+                        {
+                          "variant": "label",
+                          "color": "muted",
+                          "type": "typography",
+                          "content": "Quoted replies"
+                        }
+                      ],
+                      "gap": "sm",
+                      "direction": "horizontal",
+                      "type": "stack",
+                      "align": "center"
+                    },
+                    {
+                      "variant": "default",
+                      "gap": "sm",
+                      "type": "data-list",
                       "renderItem": [
                         "fn",
                         "reply",
                         {
-                          "type": "card",
+                          "look": "flat-bordered",
                           "className": "border-l-4 border-l-[var(--color-primary)] ml-card-md",
+                          "type": "card",
                           "children": {
+                            "gap": "sm",
                             "direction": "vertical",
                             "children": [
                               {
-                                "direction": "horizontal",
-                                "gap": "sm",
                                 "align": "center",
                                 "type": "stack",
+                                "direction": "horizontal",
+                                "gap": "sm",
                                 "children": [
                                   {
-                                    "size": "xs",
                                     "name": "@config.replyAuthorBinding",
+                                    "size": "xs",
                                     "type": "avatar"
                                   },
                                   {
+                                    "weight": "medium",
                                     "variant": "body2",
                                     "type": "typography",
-                                    "content": "@config.replyAuthorBinding",
-                                    "weight": "medium"
+                                    "content": "@config.replyAuthorBinding"
                                   },
                                   {
+                                    "type": "typography",
                                     "content": "@config.replyFromBinding",
                                     "color": "muted",
-                                    "variant": "caption",
-                                    "type": "typography"
+                                    "variant": "caption"
                                   },
                                   {
                                     "color": "muted",
@@ -454,30 +487,23 @@
                                 "variant": "body"
                               }
                             ],
-                            "gap": "sm",
                             "type": "stack"
                           },
-                          "look": "flat-bordered",
                           "padding": "md"
                         }
                       ],
-                      "gap": "sm",
-                      "variant": "default",
-                      "entity": "@entity.focusedRow.replies",
                       "fields": [],
-                      "type": "data-list"
+                      "entity": "@entity.focusedRow.replies"
                     }
                   ],
-                  "direction": "vertical",
-                  "className": "flex-1 min-w-0 p-card-lg overflow-y-auto",
-                  "gap": "lg",
-                  "type": "stack"
+                  "gap": "lg"
                 }
               ],
               "type": "stack",
-              "gap": "none",
               "direction": "horizontal",
-              "align": "stretch"
+              "align": "stretch",
+              "className": "w-full my-section min-h-[32rem] max-h-[80vh] border border-[var(--color-border)] rounded-lg overflow-hidden shadow-sm bg-[var(--color-surface)]",
+              "gap": "none"
             }
           }
         }

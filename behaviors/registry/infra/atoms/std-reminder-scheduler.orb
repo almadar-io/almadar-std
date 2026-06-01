@@ -18,22 +18,30 @@
           {
             "name": "targetEntity",
             "type": "string",
-            "default": ""
+            "default": "",
+            "description": "The entity to which the reminder applies.",
+            "synonyms": "subject, referenced entity, related object"
           },
           {
             "name": "recordCount",
             "type": "number",
-            "default": 0.0
+            "default": 0.0,
+            "description": "The number of records processed during this run.",
+            "synonyms": "count, total, size"
           },
           {
             "name": "ranAt",
             "type": "number",
-            "default": 0.0
+            "default": 0.0,
+            "description": "Timestamp indicating when the process was executed.",
+            "synonyms": "execution time, timestamp, run time"
           },
           {
             "name": "errors",
             "type": "string",
-            "default": ""
+            "default": "",
+            "description": "Records any errors encountered during processing.",
+            "synonyms": "error, problem, fault"
           }
         ]
       },
@@ -193,8 +201,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "failure": "ReminderRunFailed",
-                        "success": "ReminderRunLogged"
+                        "success": "ReminderRunLogged",
+                        "failure": "ReminderRunFailed"
                       }
                     }
                   ]
@@ -227,8 +235,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "success": "ReminderRunLogged",
-                        "failure": "ReminderRunFailed"
+                        "failure": "ReminderRunFailed",
+                        "success": "ReminderRunLogged"
                       }
                     }
                   ]
@@ -256,8 +264,8 @@
                   "ReminderRunLog",
                   {
                     "emit": {
-                      "success": "ScanRecordsLoaded",
-                      "failure": "ScanFailed"
+                      "failure": "ScanFailed",
+                      "success": "ScanRecordsLoaded"
                     }
                   }
                 ]
@@ -265,13 +273,13 @@
             }
           ],
           "config": {
-            "template": {
+            "dateField": {
               "type": "string",
               "default": "",
-              "label": "Message template",
-              "description": "Message body passed to the notifier.",
-              "synonyms": "message text, reminder body, notification copy, alert message, what to say",
-              "tier": "presentation"
+              "label": "Deadline field",
+              "description": "Field on the target entity holding the deadline timestamp (e.g. 'dueAt', 'startsAt').",
+              "synonyms": "due date field, timestamp field, cutoff field, expiry field, when it's due",
+              "tier": "domain"
             },
             "offsetsHours": {
               "type": "[number]",
@@ -284,14 +292,6 @@
                 "type": "number"
               }
             },
-            "targetEntity": {
-              "type": "string",
-              "default": "",
-              "label": "Target entity",
-              "description": "Entity to scan for upcoming deadlines (e.g. 'ClassSession', 'CourtDeadlineRecord').",
-              "synonyms": "entity to monitor, entity to watch, record type, object type",
-              "tier": "domain"
-            },
             "severity": {
               "type": "string",
               "default": "info",
@@ -299,6 +299,14 @@
               "description": "Severity passed to the notifier when emit lands: info / warning / error.",
               "synonyms": "urgency level, priority, importance, alert level, how urgent",
               "tier": "domain"
+            },
+            "template": {
+              "type": "string",
+              "default": "",
+              "label": "Message template",
+              "description": "Message body passed to the notifier.",
+              "synonyms": "message text, reminder body, notification copy, alert message, what to say",
+              "tier": "presentation"
             },
             "windowToleranceMinutes": {
               "type": "number",
@@ -308,12 +316,12 @@
               "synonyms": "fuzzy match window, tolerance, slack, buffer, grace period, how close counts",
               "tier": "domain"
             },
-            "dateField": {
+            "targetEntity": {
               "type": "string",
               "default": "",
-              "label": "Deadline field",
-              "description": "Field on the target entity holding the deadline timestamp (e.g. 'dueAt', 'startsAt').",
-              "synonyms": "due date field, timestamp field, cutoff field, expiry field, when it's due",
+              "label": "Target entity",
+              "description": "Entity to scan for upcoming deadlines (e.g. 'ClassSession', 'CourtDeadlineRecord').",
+              "synonyms": "entity to monitor, entity to watch, record type, object type",
               "tier": "domain"
             }
           },

@@ -15,11 +15,15 @@
           },
           {
             "name": "name",
-            "type": "string"
+            "type": "string",
+            "description": "A user-facing identifier for the confirmation action.",
+            "synonyms": "label, title, identifier"
           },
           {
             "name": "description",
-            "type": "string"
+            "type": "string",
+            "description": "A detailed explanation of the action being confirmed.",
+            "synonyms": "details, explanation, notes, information"
           },
           {
             "name": "status",
@@ -29,7 +33,9 @@
               "active",
               "inactive",
               "pending"
-            ]
+            ],
+            "description": "Indicates the current operational state of the action.",
+            "synonyms": "state, condition, enabled"
           },
           {
             "name": "createdAt",
@@ -38,7 +44,9 @@
           {
             "name": "pendingId",
             "type": "string",
-            "default": ""
+            "default": "",
+            "description": "Unique identifier for the pending confirmation request.",
+            "synonyms": "requestId, referenceId, confirmationId"
           }
         ]
       },
@@ -198,25 +206,25 @@
                     "render-ui",
                     "modal",
                     {
-                      "gap": "md",
                       "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
+                          "direction": "horizontal",
+                          "align": "center",
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "@config.icon"
+                              "name": "@config.icon",
+                              "type": "icon"
                             },
                             {
-                              "content": "@config.title",
                               "variant": "h3",
-                              "type": "typography"
+                              "type": "typography",
+                              "content": "@config.title"
                             }
                           ],
-                          "gap": "sm",
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "align": "center"
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
@@ -227,42 +235,42 @@
                           "message": "@config.alertMessage"
                         },
                         {
-                          "variant": "h4",
                           "type": "typography",
+                          "variant": "h4",
                           "content": "@entity.name"
                         },
                         {
-                          "color": "muted",
-                          "content": "@entity.pendingId",
                           "type": "typography",
-                          "variant": "caption"
+                          "color": "muted",
+                          "variant": "caption",
+                          "content": "@entity.pendingId"
                         },
                         {
+                          "type": "stack",
+                          "direction": "horizontal",
                           "gap": "sm",
                           "children": [
                             {
-                              "type": "button",
                               "label": "Cancel",
                               "action": "CANCEL",
-                              "variant": "ghost"
+                              "variant": "ghost",
+                              "type": "button"
                             },
                             {
-                              "icon": "check",
-                              "type": "button",
-                              "label": "@config.confirmLabel",
+                              "variant": "danger",
                               "actionPayload": {
                                 "id": "@payload.id"
                               },
-                              "action": "CONFIRM",
-                              "variant": "danger"
+                              "icon": "check",
+                              "label": "@config.confirmLabel",
+                              "type": "button",
+                              "action": "CONFIRM"
                             }
                           ],
-                          "justify": "end",
-                          "direction": "horizontal",
-                          "type": "stack"
+                          "justify": "end"
                         }
                       ],
-                      "direction": "vertical"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -306,18 +314,18 @@
             ]
           },
           "config": {
-            "title": {
-              "type": "string",
-              "default": "Confirm Action",
-              "label": "Modal title",
-              "description": "Heading shown at the top of the confirmation modal",
-              "tier": "presentation"
-            },
             "alertMessage": {
               "type": "string",
               "default": "Are you sure?",
               "label": "Alert message",
               "description": "Body text explaining what the user is confirming",
+              "tier": "presentation"
+            },
+            "icon": {
+              "type": "string",
+              "default": "alert-triangle",
+              "label": "Icon",
+              "description": "Icon name displayed in the confirmation modal header",
               "tier": "presentation"
             },
             "confirmLabel": {
@@ -327,11 +335,11 @@
               "description": "Label on the primary confirm action button",
               "tier": "presentation"
             },
-            "icon": {
+            "title": {
               "type": "string",
-              "default": "alert-triangle",
-              "label": "Icon",
-              "description": "Icon name displayed in the confirmation modal header",
+              "default": "Confirm Action",
+              "label": "Modal title",
+              "description": "Heading shown at the top of the confirmation modal",
               "tier": "presentation"
             }
           },

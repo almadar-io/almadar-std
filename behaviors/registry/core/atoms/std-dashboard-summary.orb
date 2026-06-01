@@ -18,17 +18,23 @@
             "name": "title",
             "type": "string",
             "required": true,
-            "default": "Performance overview"
+            "default": "Performance overview",
+            "description": "A brief, descriptive name for the record.",
+            "synonyms": "label, heading, name"
           },
           {
             "name": "subtitle",
             "type": "string",
-            "default": ""
+            "default": "",
+            "description": "A short descriptive text appearing below the main title.",
+            "synonyms": "caption, secondary title, description"
           },
           {
             "name": "period",
             "type": "string",
-            "default": "Last 30 days"
+            "default": "Last 30 days",
+            "description": "The time period or interval the data represents.",
+            "synonyms": "date range, timeframe, interval, duration"
           },
           {
             "name": "tiles",
@@ -37,18 +43,13 @@
             "items": {
               "type": "object",
               "properties": {
-                "value": {
-                  "name": "value",
-                  "type": "string",
-                  "required": true
-                },
                 "icon": {
                   "name": "icon",
                   "type": "string",
                   "required": false
                 },
-                "label": {
-                  "name": "label",
+                "value": {
+                  "name": "value",
                   "type": "string",
                   "required": true
                 },
@@ -56,9 +57,16 @@
                   "name": "trend",
                   "type": "number",
                   "required": false
+                },
+                "label": {
+                  "name": "label",
+                  "type": "string",
+                  "required": true
                 }
               }
-            }
+            },
+            "description": "A collection of KPI tile configurations.",
+            "synonyms": "tileset, tile data, KPI definitions"
           },
           {
             "name": "statuses",
@@ -67,6 +75,11 @@
             "items": {
               "type": "object",
               "properties": {
+                "label": {
+                  "name": "label",
+                  "type": "string",
+                  "required": true
+                },
                 "tone": {
                   "name": "tone",
                   "type": "string",
@@ -80,24 +93,25 @@
                     "info",
                     "neutral"
                   ]
-                },
-                "label": {
-                  "name": "label",
-                  "type": "string",
-                  "required": true
                 }
               }
-            }
+            },
+            "description": "Represents the current operational status.",
+            "synonyms": "state, condition, level"
           },
           {
             "name": "chartTitle",
             "type": "string",
-            "default": "Performance"
+            "default": "Performance",
+            "description": "The title displayed for the chart.",
+            "synonyms": "heading, label, name"
           },
           {
             "name": "chartSubtitle",
             "type": "string",
-            "default": ""
+            "default": "",
+            "description": "A brief descriptive text accompanying the chart title.",
+            "synonyms": "subtitle, description, caption"
           },
           {
             "name": "chartData",
@@ -117,17 +131,23 @@
                   "required": true
                 }
               }
-            }
+            },
+            "description": "Data points for a chart visualization.",
+            "synonyms": "data, values, measurements, readings"
           },
           {
             "name": "filterEvent",
             "type": "string",
-            "default": "OPEN_FILTER"
+            "default": "OPEN_FILTER",
+            "description": "Event triggering data filtering or refresh.",
+            "synonyms": "event, trigger, update"
           },
           {
             "name": "errorMessage",
             "type": "string",
-            "default": ""
+            "default": "",
+            "description": "A textual description of an error condition.",
+            "synonyms": "error, error message, problem, issue"
           }
         ]
       },
@@ -231,8 +251,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "loading-state",
-                      "title": "Loading dashboard…"
+                      "title": "Loading dashboard…",
+                      "type": "loading-state"
                     }
                   ]
                 ]
@@ -354,194 +374,194 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "gap": "md",
                       "children": [
                         {
+                          "align": "center",
+                          "type": "stack",
                           "gap": "md",
                           "justify": "between",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "direction": "vertical",
+                              "gap": "xs",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "weight": "semibold",
-                                  "type": "typography",
                                   "variant": "h3",
-                                  "content": "@entity.title"
+                                  "content": "@entity.title",
+                                  "type": "typography",
+                                  "weight": "semibold"
                                 },
                                 {
                                   "color": "muted",
+                                  "content": "@entity.period",
                                   "type": "typography",
-                                  "variant": "caption",
-                                  "content": "@entity.period"
+                                  "variant": "caption"
                                 }
                               ],
-                              "type": "stack",
-                              "gap": "xs"
+                              "direction": "vertical"
                             },
                             {
                               "icon": "filter",
                               "type": "button",
-                              "action": "@entity.filterEvent",
-                              "label": "Filter",
                               "size": "sm",
+                              "label": "Filter",
+                              "action": "@entity.filterEvent",
                               "variant": "ghost"
                             }
-                          ],
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "align": "center"
+                          ]
                         },
                         {
-                          "type": "simple-grid",
                           "gap": "md",
                           "cols": 4.0,
                           "children": [
                             {
+                              "entity": "@entity.tiles",
+                              "type": "data-list",
                               "renderItem": [
                                 "fn",
                                 "tile",
                                 {
                                   "look": "elevated",
+                                  "type": "card",
                                   "children": [
                                     {
+                                      "gap": "xs",
+                                      "type": "stack",
                                       "direction": "vertical",
                                       "children": [
                                         {
-                                          "gap": "xs",
-                                          "align": "center",
+                                          "direction": "horizontal",
                                           "children": [
                                             {
                                               "type": "typography",
-                                              "content": "@tile.label",
-                                              "weight": "semibold",
                                               "variant": "overline",
-                                              "color": "muted"
+                                              "color": "muted",
+                                              "weight": "semibold",
+                                              "content": "@tile.label"
                                             },
                                             {
-                                              "color": "muted",
-                                              "name": "@tile.icon",
+                                              "size": "sm",
                                               "type": "icon",
-                                              "size": "sm"
+                                              "name": "@tile.icon",
+                                              "color": "muted"
                                             }
                                           ],
+                                          "gap": "xs",
+                                          "align": "center",
                                           "type": "stack",
-                                          "justify": "between",
-                                          "direction": "horizontal"
+                                          "justify": "between"
                                         },
                                         {
-                                          "content": "@tile.value",
-                                          "type": "typography",
                                           "weight": "semibold",
-                                          "variant": "h2"
+                                          "type": "typography",
+                                          "variant": "h2",
+                                          "content": "@tile.value"
                                         },
                                         {
                                           "type": "trend-indicator",
-                                          "size": "sm",
                                           "value": "@tile.trend",
+                                          "size": "sm",
                                           "showValue": true
                                         }
-                                      ],
-                                      "gap": "xs",
-                                      "type": "stack"
+                                      ]
                                     }
                                   ],
-                                  "padding": "md",
-                                  "type": "card"
+                                  "padding": "md"
                                 }
                               ],
                               "fields": [],
-                              "entity": "@entity.tiles",
-                              "gap": "md",
-                              "type": "data-list"
+                              "gap": "md"
                             }
-                          ]
+                          ],
+                          "type": "simple-grid"
                         },
                         {
                           "children": [
                             {
+                              "type": "data-list",
                               "renderItem": [
                                 "fn",
                                 "pill",
                                 {
-                                  "variant": "@pill.tone",
-                                  "label": "@pill.label",
                                   "type": "badge",
-                                  "size": "sm"
+                                  "variant": "@pill.tone",
+                                  "size": "sm",
+                                  "label": "@pill.label"
                                 }
                               ],
-                              "type": "data-list",
-                              "fields": [],
                               "gap": "sm",
+                              "fields": [],
                               "entity": "@entity.statuses"
                             }
                           ],
+                          "direction": "horizontal",
                           "align": "center",
                           "gap": "sm",
-                          "type": "stack",
-                          "direction": "horizontal"
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "look": "elevated",
                           "children": [
                             {
                               "gap": "md",
+                              "direction": "vertical",
                               "type": "stack",
                               "children": [
                                 {
+                                  "gap": "sm",
                                   "children": [
                                     {
                                       "type": "stack",
-                                      "direction": "vertical",
-                                      "gap": "xs",
                                       "children": [
                                         {
-                                          "variant": "h4",
-                                          "content": "@entity.chartTitle",
                                           "type": "typography",
-                                          "weight": "semibold"
+                                          "content": "@entity.chartTitle",
+                                          "weight": "semibold",
+                                          "variant": "h4"
                                         },
                                         {
                                           "variant": "caption",
-                                          "type": "typography",
                                           "color": "muted",
-                                          "content": "@entity.chartSubtitle"
+                                          "content": "@entity.chartSubtitle",
+                                          "type": "typography"
                                         }
-                                      ]
+                                      ],
+                                      "gap": "xs",
+                                      "direction": "vertical"
                                     },
                                     {
+                                      "variant": "default",
                                       "size": "sm",
                                       "type": "badge",
-                                      "variant": "default",
                                       "label": "@entity.period"
                                     }
                                   ],
                                   "align": "center",
-                                  "gap": "sm",
                                   "direction": "horizontal",
                                   "justify": "between",
                                   "type": "stack"
                                 },
                                 {
-                                  "chartType": "line",
-                                  "data": "@entity.chartData",
+                                  "showLegend": false,
                                   "height": 280.0,
+                                  "chartType": "line",
                                   "type": "chart",
-                                  "showLegend": false
+                                  "data": "@entity.chartData"
                                 }
-                              ],
-                              "direction": "vertical"
+                              ]
                             }
                           ],
-                          "padding": "lg",
-                          "type": "card"
+                          "look": "elevated",
+                          "type": "card",
+                          "padding": "lg"
                         }
                       ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "md"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -581,8 +601,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "loading-state",
-                      "title": "Retrying…"
+                      "title": "Retrying…",
+                      "type": "loading-state"
                     }
                   ]
                 ]

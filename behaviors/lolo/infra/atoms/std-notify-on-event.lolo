@@ -6,12 +6,12 @@ type QuietHoursSpec = { start : string, end : string }
 orbital NotifyOnEventOrbital {
   entity NotificationRecord [persistent: notifications] {
     id         : string!
-    recipient  : string  = ""
-    channel    : string  = "in-app"
-    message    : string  = ""
-    severity   : string  = "info"
-    dispatched : boolean = false
-    recordedAt : number  = 0
+    recipient  : string  @description "The identifier of the entity receiving the notification." @synonyms "user, target, receiver, destination" = ""
+    channel    : string  @description "The delivery method for the notification (e.g., email, SMS, in-app)." @synonyms "delivery, medium, type" = "in-app"
+    message    : string  @description "The content of the notification message." @synonyms "text, content, body" = ""
+    severity   : string  @description "Indicates the importance or urgency level of the notification." @synonyms "priority, level, importance" = "info"
+    dispatched : boolean @description "Indicates whether the notification has been successfully sent." @synonyms "sent, delivered, status" = false
+    recordedAt : number  @description "Timestamp indicating when the notification record was created." @synonyms "creation time, timestamp, date, when" = 0
   }
 
   type EventOccurred         = Event { data : object }                                                                  "Rename via traitOverrides.events to the upstream event (e.g. ContactSaved). The atom listens on this sentinel and dispatches a notification."

@@ -11,47 +11,65 @@
           {
             "name": "parentId",
             "type": "string",
-            "required": false
+            "required": false,
+            "description": "Identifier of the parent ThreadPost in a nested thread.",
+            "synonyms": "parent, ancestor, source"
           },
           {
             "name": "threadRootId",
             "type": "string",
-            "required": true
+            "required": true,
+            "description": "Identifier of the top-level thread this post belongs to.",
+            "synonyms": "rootId, topLevelId, parentThreadId"
           },
           {
             "name": "authorId",
             "type": "string",
-            "required": true
+            "required": true,
+            "description": "Unique identifier for the post's author.",
+            "synonyms": "user id, creator id, author"
           },
           {
             "name": "authorName",
             "type": "string",
-            "required": true
+            "required": true,
+            "description": "The name of the post's author.",
+            "synonyms": "author, username, poster"
           },
           {
             "name": "content",
             "type": "string",
-            "required": true
+            "required": true,
+            "description": "The main text content of the post.",
+            "synonyms": "text, message, body"
           },
           {
             "name": "voteCount",
             "type": "number",
-            "required": false
+            "required": false,
+            "description": "The number of votes associated with this item.",
+            "synonyms": "votes, rating, score"
           },
           {
             "name": "replyCount",
             "type": "number",
-            "required": false
+            "required": false,
+            "description": "The number of replies to this post.",
+            "synonyms": "count, number of replies, child posts"
           },
           {
             "name": "replies",
             "type": "relation",
-            "required": false
+            "required": false,
+            "description": "A list of child ThreadPost entities.",
+            "synonyms": "children, descendants, sub-posts"
           },
           {
             "name": "focusedRow",
             "type": "object",
-            "required": false
+            "required": false,
+            "description": "The currently selected or active row within the thread.",
+            "synonyms": "selection, active, current"
           }
         ],
         "persistence": "persistent"
@@ -77,42 +95,42 @@
             "key": "bodyContent",
             "type": "render-ui",
             "default": {
-              "type": "stack",
               "gap": "md",
               "direction": "vertical",
               "children": [
                 {
-                  "type": "data-list",
-                  "gap": "sm",
-                  "entity": "@payload.data",
-                  "fields": [
-                    {
-                      "name": "authorName",
-                      "variant": "h4",
-                      "label": "Author"
-                    },
-                    {
-                      "label": "",
-                      "variant": "body",
-                      "name": "content"
-                    },
-                    {
-                      "name": "voteCount",
-                      "label": "Votes",
-                      "variant": "caption"
-                    }
-                  ],
                   "variant": "card",
+                  "gap": "sm",
                   "itemActions": [
                     {
-                      "icon": "message-square",
                       "label": "Reply",
+                      "icon": "message-square",
                       "event": "REPLY"
                     }
                   ],
-                  "look": "@config.tableLook"
+                  "fields": [
+                    {
+                      "name": "authorName",
+                      "label": "Author",
+                      "variant": "h4"
+                    },
+                    {
+                      "label": "",
+                      "name": "content",
+                      "variant": "body"
+                    },
+                    {
+                      "name": "voteCount",
+                      "variant": "caption",
+                      "label": "Votes"
+                    }
+                  ],
+                  "look": "@config.tableLook",
+                  "type": "data-list",
+                  "entity": "@payload.data"
                 }
-              ]
+              ],
+              "type": "stack"
             },
             "label": "Body content tree",
             "description": "Render-ui SExpr rendered after thread posts load. Default is the canonical forum-style data-list. Layer 3 variants override this with their own tree (chat bubbles, email-threaded cards, linear comment stacks, etc.) to deliver entirely different thread UX while inheriting the same trait, state machine, emits, and listens.",

@@ -4,12 +4,12 @@ app std-branching-logic "1.0.0"
 orbital BranchingLogicOrbital {
   entity BranchingRule [persistent: branchingrules] {
     id               : string!
-    surveyId         : string!
-    sourceQuestionId : string!
-    operator         : "equals" | "not-equals" | "contains" | "in" = "equals"
-    value            : string
-    targetQuestionId : string!
-    priority         : number = 0
+    surveyId         : string! @description "Unique identifier for the survey this rule applies to." @synonyms "survey, questionnaire, form"
+    sourceQuestionId : string! @description "The ID of the question triggering the branching logic." @synonyms "trigger, source, question_id"
+    operator         : "equals" | "not-equals" | "contains" | "in" @description "Specifies the comparison method used in the rule." @synonyms "comparison, method, type" = "equals"
+    value            : string @description "The data being compared against a condition." @synonyms "data, content, expression"
+    targetQuestionId : string! @description "The ID of the question to navigate to based on the rule." @synonyms "destination, nextQuestion, target"
+    priority         : number @description "Specifies the order in which rules are evaluated." @synonyms "order, sequence, precedence" = 0
   }
 
   type BranchingRuleLoaded     = Event { data : [BranchingRule] }            "Fired when the branching-rule collection finishes loading"

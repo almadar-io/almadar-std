@@ -76,13 +76,13 @@ export interface StdLifecycleLifecycleRunFailedPayload {
  */
 export interface StdLifecycleConfig {
   /** Default: `false` */
-  enabled?: boolean;
-  /** Default: `""` */
-  targetEntity?: string;
+  dryRun?: boolean;
   /** Default: `[]` */
   rules?: EntityRow[];
   /** Default: `false` */
-  dryRun?: boolean;
+  enabled?: boolean;
+  /** Default: `""` */
+  targetEntity?: string;
 }
 
 /**

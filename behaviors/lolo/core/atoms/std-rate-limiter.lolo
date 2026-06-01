@@ -4,13 +4,13 @@ app std-rate-limiter "1.0.0"
 orbital RateBucketOrbital {
   entity RateBucket [runtime] {
     id : string
-    name : string
-    description : string
-    status : "active" | "inactive" | "pending" = "active"
+    name : string @description "A user-defined identifier for the rate limiting bucket." @synonyms "label, identifier, alias"
+    description : string @description "A textual explanation of the rate bucket's purpose." @synonyms "explanation, details, notes"
+    status : "active" | "inactive" | "pending" @description "Current operational state of the rate limiting bucket." @synonyms "state, condition, operationalStatus" = "active"
     createdAt : string
-    count : number = 0
-    window : number = 0
-    limiterStatus : string = "open"
+    count : number @description "The current value of a counter." @synonyms "value, amount, total" = 0
+    window : number @description "The duration of the rate limiting window, in seconds." @synonyms "duration, time, interval, period" = 0
+    limiterStatus : string @description "Current operational state of the rate limiter." @synonyms "state, condition, mode" = "open"
   }
   trait RateBucketRateLimiter -> RateBucket [interaction, collection, rate-limit] {
     config {

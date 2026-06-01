@@ -9,15 +9,15 @@ orbital SignatureSessionOrbital {
 
   entity SignatureSession [persistent: signaturesessions] {
     id             : string!
-    documentId     : string!
-    documentName   : string = ""
-    recipientName  : string!
-    recipientEmail : string!
-    requesterName  : string = ""
-    status         : "draft" | "sent" | "viewed" | "signed" | "declined" = "draft"
-    sentAt         : string = ""
-    signedAt       : string = ""
-    pendingId      : string = ""
+    documentId     : string! @description "Unique identifier for the associated document." @synonyms "fileID, docID, documentReference"
+    documentName   : string @description "The name of the document associated with the signature request." @synonyms "filename, document, file" = ""
+    recipientName  : string! @description "The name of the recipient for the signature request." @synonyms "recipient, name, user"
+    recipientEmail : string! @description "The email address of the recipient." @synonyms "email, address, contact"
+    requesterName  : string @description "The name of the user initiating the signature request." @synonyms "initiator, sender, originator" = ""
+    status         : "draft" | "sent" | "viewed" | "signed" | "declined" @description "Current state of the signature request." @synonyms "state, condition, stage" = "draft"
+    sentAt         : string @description "Timestamp indicating when the request was sent." @synonyms "sent date, submission time, dispatched" = ""
+    signedAt       : string @description "The date and time the signature was applied." @synonyms "signed date, completion date, signature time" = ""
+    pendingId      : string @description "Unique identifier for a pending action or task." @synonyms "taskId, pendingKey, referenceId" = ""
   }
 
   type SignatureSessionLoaded     = Event { data : [SignatureSession] }            "Fired when the SignatureSession collection finishes loading"

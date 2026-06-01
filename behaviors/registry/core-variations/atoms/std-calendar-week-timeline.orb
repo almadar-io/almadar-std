@@ -23,11 +23,15 @@
           {
             "name": "name",
             "type": "string",
-            "required": true
+            "required": true,
+            "description": "A user-friendly identifier for the event.",
+            "synonyms": "title, label, eventName"
           },
           {
             "name": "description",
-            "type": "string"
+            "type": "string",
+            "description": "A textual explanation of the event.",
+            "synonyms": "details, notes, explanation, summary"
           },
           {
             "name": "status",
@@ -37,7 +41,9 @@
               "active",
               "inactive",
               "pending"
-            ]
+            ],
+            "description": "Indicates the current operational state of the event.",
+            "synonyms": "state, condition, flag"
           },
           {
             "name": "createdAt",
@@ -52,17 +58,23 @@
           {
             "name": "time",
             "type": "string",
-            "default": ""
+            "default": "",
+            "description": "The time of day the event occurs.",
+            "synonyms": "hour, start time, scheduled time"
           },
           {
             "name": "duration",
             "type": "number",
-            "default": 60.0
+            "default": 60.0,
+            "description": "The length of time for the event, typically in minutes.",
+            "synonyms": "length, time, span"
           },
           {
             "name": "weekday",
             "type": "string",
-            "default": ""
+            "default": "",
+            "description": "The day of the week this event occurs on.",
+            "synonyms": "day, dayOfWeek"
           },
           {
             "name": "selectedRange",
@@ -79,51 +91,51 @@
           "linkedEntity": "WeekTimelineEvent",
           "config": {
             "bodyContent": {
-              "gap": "md",
-              "type": "stack",
+              "direction": "vertical",
               "children": [
                 {
-                  "type": "stack",
-                  "gap": "md",
-                  "direction": "horizontal",
-                  "justify": "between",
                   "align": "center",
+                  "gap": "md",
+                  "type": "stack",
+                  "justify": "between",
                   "children": [
                     {
-                      "direction": "horizontal",
-                      "gap": "sm",
-                      "align": "center",
                       "type": "stack",
+                      "align": "center",
+                      "gap": "sm",
                       "children": [
                         {
                           "type": "icon",
                           "name": "calendar"
                         },
                         {
+                          "variant": "h2",
                           "type": "typography",
-                          "content": "Week",
-                          "variant": "h2"
+                          "content": "Week"
                         }
-                      ]
+                      ],
+                      "direction": "horizontal"
                     },
                     {
-                      "type": "date-range-selector",
                       "selected": "@entity.selectedRange",
-                      "onSelect": "SELECT_DAY"
+                      "onSelect": "SELECT_DAY",
+                      "type": "date-range-selector"
                     }
-                  ]
+                  ],
+                  "direction": "horizontal"
                 },
                 {
                   "type": "divider"
                 },
                 {
-                  "events": "@payload.data",
-                  "type": "calendar-grid",
                   "dayWindow": 7.0,
-                  "className": "w-full"
+                  "type": "calendar-grid",
+                  "className": "w-full",
+                  "events": "@payload.data"
                 }
               ],
-              "direction": "vertical"
+              "gap": "md",
+              "type": "stack"
             }
           }
         }

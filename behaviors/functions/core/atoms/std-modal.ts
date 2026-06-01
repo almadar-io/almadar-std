@@ -65,14 +65,14 @@ export interface StdModalConfig {
   title?: string;
   /** Default: `"modal"` */
   detailSlot?: unknown;
-  /** Default: `"layout-panel-top"` */
-  icon?: string;
-  /** Default: `"create"` */
-  mode?: string;
   /** Default: `"stack"` */
   detailPattern?: unknown;
   /** Default: `[]` */
   fields?: string[];
+  /** Default: `"create"` */
+  mode?: string;
+  /** Default: `"layout-panel-top"` */
+  icon?: string;
 }
 
 /**

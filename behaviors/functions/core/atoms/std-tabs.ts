@@ -46,14 +46,14 @@ export interface StdTabsTabChangedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdTabsConfig {
-  /** Default: `"default"` */
-  variant?: 'default' | 'pills' | 'underline';
+  /** Default: `{"orientation":"@config.orientation","variant":"@config.variant","tabChangeEvent":"TAB_CHANGED","items":"@entity.items","activeTab":"@entity.activeTab","type":"tabs"}` */
+  bodyContent?: unknown;
   /** Default: `[{"id":"overview","label":"Overview","icon":"info"},{"id":"details","icon":"list","label":"Details"},{"label":"Settings","icon":"settings","id":"settings"}]` */
   tabs?: EntityRow[];
   /** Default: `"horizontal"` */
   orientation?: 'horizontal' | 'vertical';
-  /** Default: `{"tabChangeEvent":"TAB_CHANGED","activeTab":"@entity.activeTab","items":"@entity.items","type":"tabs","orientation":"@config.orientation","variant":"@config.variant"}` */
-  bodyContent?: unknown;
+  /** Default: `"default"` */
+  variant?: 'default' | 'pills' | 'underline';
   /** Default: `"overview"` */
   defaultTab?: string;
 }

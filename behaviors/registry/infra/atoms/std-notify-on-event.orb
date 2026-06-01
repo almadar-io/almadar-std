@@ -18,32 +18,44 @@
           {
             "name": "recipient",
             "type": "string",
-            "default": ""
+            "default": "",
+            "description": "The identifier of the entity receiving the notification.",
+            "synonyms": "user, target, receiver, destination"
           },
           {
             "name": "channel",
             "type": "string",
-            "default": "in-app"
+            "default": "in-app",
+            "description": "The delivery method for the notification (e.g., email, SMS, in-app).",
+            "synonyms": "delivery, medium, type"
           },
           {
             "name": "message",
             "type": "string",
-            "default": ""
+            "default": "",
+            "description": "The content of the notification message.",
+            "synonyms": "text, content, body"
           },
           {
             "name": "severity",
             "type": "string",
-            "default": "info"
+            "default": "info",
+            "description": "Indicates the importance or urgency level of the notification.",
+            "synonyms": "priority, level, importance"
           },
           {
             "name": "dispatched",
             "type": "boolean",
-            "default": false
+            "default": false,
+            "description": "Indicates whether the notification has been successfully sent.",
+            "synonyms": "sent, delivered, status"
           },
           {
             "name": "recordedAt",
             "type": "number",
-            "default": 0.0
+            "default": 0.0,
+            "description": "Timestamp indicating when the notification record was created.",
+            "synonyms": "creation time, timestamp, date, when"
           }
         ]
       },
@@ -210,12 +222,12 @@
                         "create",
                         "NotificationRecord",
                         {
-                          "recipient": "@entity.recipient",
                           "channel": "@config.notifyChannel",
-                          "dispatched": false,
                           "severity": "@config.severity",
+                          "dispatched": false,
                           "recordedAt": 0.0,
-                          "message": "@config.template"
+                          "message": "@config.template",
+                          "recipient": "@entity.recipient"
                         }
                       ]
                     ]
@@ -224,10 +236,10 @@
                     "emit",
                     "NotificationDispatched",
                     {
+                      "severity": "@config.severity",
                       "message": "@config.template",
-                      "recipient": "@entity.recipient",
                       "channel": "@config.notifyChannel",
-                      "severity": "@config.severity"
+                      "recipient": "@entity.recipient"
                     }
                   ]
                 ]
@@ -243,16 +255,13 @@
               "synonyms": "notification text, message body, alert text",
               "tier": "presentation"
             },
-            "listensFor": {
-              "type": "[string]",
-              "default": [],
-              "label": "Trigger events",
-              "description": "Event names that should fire a notification. Set this to the upstream event name (e.g. OrderPlaced, CheckoutCompleted) so this atom listens for events from the orbital that emits them. The orbital owning this trait reacts whenever the named event fires anywhere in the schema.",
-              "synonyms": "subscribe to event, listen for event, react to event, watch for, wire upstream event, observe event from another orbital, cross-orbital subscription, on-event trigger",
-              "tier": "domain",
-              "items": {
-                "type": "string"
-              }
+            "notifyChannel": {
+              "type": "string",
+              "default": "in-app",
+              "label": "Channel",
+              "description": "Delivery channel: in-app, email, or sms",
+              "synonyms": "delivery method, notification channel, send via, dispatch through",
+              "tier": "domain"
             },
             "severity": {
               "type": "string",
@@ -268,25 +277,6 @@
               "label": "Frequency cap (per week)",
               "description": "Max sends per (channel, recipient) per rolling 7-day window. 0 = uncapped. WIRING DEFERRED: needs stateful history query (gap — docs/Almadar_Std_Factories.md).",
               "tier": "domain"
-            },
-            "notifyChannel": {
-              "type": "string",
-              "default": "in-app",
-              "label": "Channel",
-              "description": "Delivery channel: in-app, email, or sms",
-              "synonyms": "delivery method, notification channel, send via, dispatch through",
-              "tier": "domain"
-            },
-            "suppressionList": {
-              "type": "[string]",
-              "default": [],
-              "label": "Suppression list",
-              "description": "Recipient ids/addresses to skip (e.g. unsubscribed users). Suppression check runs before dispatch.",
-              "synonyms": "block list, unsubscribed, opt-out list",
-              "tier": "domain",
-              "items": {
-                "type": "string"
-              }
             },
             "quietHours": {
               "type": "QuietHoursSpec",
@@ -308,6 +298,28 @@
                   "type": "string",
                   "required": false
                 }
+              }
+            },
+            "listensFor": {
+              "type": "[string]",
+              "default": [],
+              "label": "Trigger events",
+              "description": "Event names that should fire a notification. Set this to the upstream event name (e.g. OrderPlaced, CheckoutCompleted) so this atom listens for events from the orbital that emits them. The orbital owning this trait reacts whenever the named event fires anywhere in the schema.",
+              "synonyms": "subscribe to event, listen for event, react to event, watch for, wire upstream event, observe event from another orbital, cross-orbital subscription, on-event trigger",
+              "tier": "domain",
+              "items": {
+                "type": "string"
+              }
+            },
+            "suppressionList": {
+              "type": "[string]",
+              "default": [],
+              "label": "Suppression list",
+              "description": "Recipient ids/addresses to skip (e.g. unsubscribed users). Suppression check runs before dispatch.",
+              "synonyms": "block list, unsubscribed, opt-out list",
+              "tier": "domain",
+              "items": {
+                "type": "string"
               }
             },
             "recipients": {

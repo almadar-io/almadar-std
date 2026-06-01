@@ -41,14 +41,14 @@ export type StdStatsEventKey = 'INIT' | 'ITEMS_LOADED';
 export interface StdStatsConfig {
   /** Default: `"data-grid"` */
   viewPattern?: unknown;
-  /** Default: `{"type":"@config.viewPattern","entity":"@entity.cards","fields":[],"renderItem":["fn","card",{"variant":"@card.variant","trendPolarity":"@card.trendPolarity","max":"@card.max","icon":"@card.icon","type":"stat-display","target":"@card.target","trendFormat":"@card.trendFormat","look":"@config.statLook","trend":"@card.trend","sparklineData":"@card.sparklineData","value":"@card.value","prefix":"@card.prefix","label":"@card.label","format":"@card.format","suffix":"@card.suffix","clickEvent":"@card.clickEvent"}]}` */
-  bodyContent?: unknown;
+  /** Default: `[{"format":"number","icon":"list","label":"Total Items","variant":"primary","aggregation":"count"},{"label":"Active","aggregation":"count","icon":"check-circle","variant":"success","format":"number"},{"label":"Avg Value","aggregation":"avg","variant":"info","format":"number","field":"value","icon":"trending-up"}]` */
+  metrics?: EntityRow[];
   /** Default: `"elevated"` */
   statLook?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
-  /** Default: `[{"label":"Total Items","icon":"list","aggregation":"count","format":"number","variant":"primary"},{"aggregation":"count","format":"number","icon":"check-circle","label":"Active","variant":"success"},{"label":"Avg Value","aggregation":"avg","variant":"info","field":"value","icon":"trending-up","format":"number"}]` */
-  metrics?: EntityRow[];
   /** Default: `"Summary"` */
   title?: string;
+  /** Default: `{"entity":"@entity.cards","renderItem":["fn","card",{"clickEvent":"@card.clickEvent","value":"@card.value","format":"@card.format","suffix":"@card.suffix","trendFormat":"@card.trendFormat","max":"@card.max","label":"@card.label","target":"@card.target","trend":"@card.trend","trendPolarity":"@card.trendPolarity","icon":"@card.icon","prefix":"@card.prefix","type":"stat-display","sparklineData":"@card.sparklineData","variant":"@card.variant","look":"@config.statLook"}],"fields":[],"type":"@config.viewPattern"}` */
+  bodyContent?: unknown;
 }
 
 /**

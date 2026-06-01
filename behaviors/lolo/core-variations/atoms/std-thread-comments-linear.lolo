@@ -6,16 +6,16 @@ orbital CommentsLinearOrbital {
 
   entity CommentsLinearPost [persistent: commentslinearposts] {
     id            : string!
-    parentId      : string
-    threadRootId  : string!
-    authorId      : string!
-    authorName    : string!
-    content       : string!
+    parentId      : string @description "Identifier of the comment this comment replies to." @synonyms "parent, replyTo, source"
+    threadRootId  : string! @description "Identifier of the top-level comment in the thread." @synonyms "rootId, topLevelId, originId"
+    authorId      : string! @description "Unique identifier for the comment's author." @synonyms "user identifier, author reference, contributor ID"
+    authorName    : string! @description "The name of the comment's author." @synonyms "author, user, contributor"
+    content       : string! @description "The text of the comment or post." @synonyms "text, body, message, postContent"
     createdAt     : string
-    voteCount     : number = 0
-    replyCount    : number = 0
-    replies       : [CommentsLinearPost]
-    focusedRow    : object = {}
+    voteCount     : number @description "The number of votes or ratings associated with the comment." @synonyms "rating, score, likes, upvotes" = 0
+    replyCount    : number @description "The number of replies to this comment." @synonyms "child comments, responses, sub-comments" = 0
+    replies       : [CommentsLinearPost] @description "A list of child comments in the thread." @synonyms "replies, children, descendants"
+    focusedRow    : object @description "The currently selected comment within the comment thread." @synonyms "selected, active, highlighted" = {}
   }
 
   trait CommentsLinear = Thread.traits.ThreadPostBrowse -> CommentsLinearPost {

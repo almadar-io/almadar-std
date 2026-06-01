@@ -83,7 +83,9 @@ export interface StdEventLogEventLogSaveFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdEventLogConfig {
-  /** Default: `[{"icon":"plus-circle","key":"created","label":"Created","status":"active"},{"label":"Updated","icon":"edit-3","key":"updated","status":"pending"},{"icon":"check-circle","key":"approved","label":"Approved","status":"complete"},{"icon":"x-circle","status":"error","key":"rejected","label":"Rejected"}]` */
+  /** Default: `["backfillTitle","backfillDescription","backfillKind","backfillDate"]` */
+  formFields?: string[];
+  /** Default: `[{"status":"active","label":"Created","key":"created","icon":"plus-circle"},{"status":"pending","label":"Updated","icon":"edit-3","key":"updated"},{"status":"complete","key":"approved","label":"Approved","icon":"check-circle"},{"icon":"x-circle","label":"Rejected","key":"rejected","status":"error"}]` */
   kindOptions?: EntityRow[];
   /** Default: `"elevated"` */
   cardLook?: 'elevated' | 'flat-bordered' | 'borderless-divider' | 'ticket' | 'invoice' | 'chip' | 'tile-image-first';
@@ -91,8 +93,6 @@ export interface StdEventLogConfig {
   timelineLook?: 'vertical-compact' | 'vertical-spacious' | 'horizontal' | 'swimlane';
   /** Default: `"Activity"` */
   title?: string;
-  /** Default: `["backfillTitle","backfillDescription","backfillKind","backfillDate"]` */
-  formFields?: string[];
 }
 
 /**

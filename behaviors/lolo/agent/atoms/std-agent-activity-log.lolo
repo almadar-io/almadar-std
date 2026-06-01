@@ -4,15 +4,15 @@ app std-agent-activity-log "1.0.0"
 orbital AgentActivityLogOrbital {
   entity AgentActivityLog [persistent: agentactivitylogs] {
     id          : string!
-    name        : string
-    description : string
-    status      : "active" | "inactive" | "pending" = "active"
+    name        : string @description "A short identifier or label for the activity." @synonyms "label, identifier, title"
+    description : string @description "A textual explanation of the activity." @synonyms "explanation, note, summary, remarks"
+    status      : "active" | "inactive" | "pending" @description "Current operational state of the activity." @synonyms "state, condition, operational_status" = "active"
     createdAt   : string
-    action      : string = ""
-    detail      : string = ""
-    timestamp   : string = ""
-    duration    : number = 0
-    icon        : string = "circle"
+    action      : string @description "The event or operation that occurred." @synonyms "event, operation, type, task" = ""
+    detail      : string @description "Provides additional information about the activity." @synonyms "notes, specifics, particulars, details" = ""
+    timestamp   : string @description "The date and time when the event occurred." @synonyms "date, time, when" = ""
+    duration    : number @description "The length of time an activity took to complete." @synonyms "time, length, elapsed" = 0
+    icon        : string @description "A visual representation, often a symbol or image." @synonyms "image, symbol, graphic, representation" = "circle"
   }
 
   type AgentActivityLogLoaded       = Event { data : [AgentActivityLog] }      "Fired when the AgentActivityLog collection finishes loading; payload.data holds the list"

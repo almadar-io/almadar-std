@@ -4,16 +4,16 @@ app std-agent-provider "1.0.0"
 orbital AgentProviderOrbital {
   entity AgentProvider [persistent: agentproviders] {
     id : string
-    name : string
-    description : string
-    status : "active" | "inactive" | "pending" = "active"
+    name : string @description "A human-readable identifier for the agent provider." @synonyms "label, identifier, designation"
+    description : string @description "A textual explanation of the agent provider's function." @synonyms "explanation, details, notes"
+    status : "active" | "inactive" | "pending" @description "Indicates the operational state of the agent provider." @synonyms "state, condition, operationalStatus" = "active"
     createdAt : string
-    currentProvider : string = "anthropic"
-    currentModel : string = "claude-sonnet-4-20250514"
-    fallbackProvider : string = "openai"
-    requestCount : number = 0
-    message : string = ""
-    notificationType : "info" | "success" | "warning" | "error" = "info"
+    currentProvider : string @description "The currently active provider implementation." @synonyms "implementation, active, provider" = "anthropic"
+    currentModel : string @description "The currently active model identifier." @synonyms "model, identifier, selection" = "claude-sonnet-4-20250514"
+    fallbackProvider : string @description "An alternative provider to use when the primary fails." @synonyms "alternate, backup, secondary" = "openai"
+    requestCount : number @description "The number of times a request has been made." @synonyms "count, requests, usage" = 0
+    message : string @description "A textual message associated with the agent provider." @synonyms "text, content, details, note" = ""
+    notificationType : "info" | "success" | "warning" | "error" @description "Specifies the type of notification." @synonyms "type, category, level" = "info"
   }
 
   type AgentProviderLoaded     = Event AgentProvider                  "Fired when AgentProvider finishes loading"

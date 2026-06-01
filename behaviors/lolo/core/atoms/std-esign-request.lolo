@@ -4,15 +4,15 @@ app std-esign-request "1.1.0"
 orbital ESignRequestOrbital {
   entity ESignRequest [persistent: esignrequests] {
     id : string!
-    documentId : string!
-    documentName : string = ""
-    recipientName : string!
-    recipientEmail : string!
-    status : "draft" | "sent" | "viewed" | "signed" | "declined" | "expired" = "draft"
-    sentAt : string = ""
-    signedAt : string = ""
-    expiresAt : string = ""
-    notes : string = ""
+    documentId : string! @description "Unique identifier for the associated document." @synonyms "document reference, file ID"
+    documentName : string @description "The name of the document being requested for signature." @synonyms "filename, document title, file name" = ""
+    recipientName : string! @description "The name of the recipient for the e-signature request." @synonyms "recipient, name, user"
+    recipientEmail : string! @description "The email address of the recipient." @synonyms "email, address, contact"
+    status : "draft" | "sent" | "viewed" | "signed" | "declined" | "expired" @description "The current stage of the request lifecycle." @synonyms "state, condition, phase" = "draft"
+    sentAt : string @description "Timestamp indicating when the request was sent." @synonyms "sent date, send time, dispatched at" = ""
+    signedAt : string @description "Timestamp indicating when the request was signed." @synonyms "signed date, signature date, completion date" = ""
+    expiresAt : string @description "The date and time when the request is no longer valid." @synonyms "expiration, expiry, due date" = ""
+    notes : string @description "Free-text comments or additional information." @synonyms "comment, remark, description, details" = ""
   }
   type ESignRequestLoaded = Event { data : [ESignRequest] }
   type ESignRequestLoadFailed = Event { error : string, code : string }

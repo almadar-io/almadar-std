@@ -27,52 +27,8 @@
             "items": {
               "type": "object",
               "properties": {
-                "clickEvent": {
-                  "name": "clickEvent",
-                  "type": "string",
-                  "required": false
-                },
                 "trend": {
                   "name": "trend",
-                  "type": "number",
-                  "required": false
-                },
-                "label": {
-                  "name": "label",
-                  "type": "string",
-                  "required": true
-                },
-                "prefix": {
-                  "name": "prefix",
-                  "type": "string",
-                  "required": false
-                },
-                "max": {
-                  "name": "max",
-                  "type": "number",
-                  "required": false
-                },
-                "trendPolarity": {
-                  "name": "trendPolarity",
-                  "type": "string",
-                  "required": false,
-                  "values": [
-                    "higher-is-better",
-                    "lower-is-better"
-                  ]
-                },
-                "format": {
-                  "name": "format",
-                  "type": "string",
-                  "required": false,
-                  "values": [
-                    "number",
-                    "currency",
-                    "percent"
-                  ]
-                },
-                "target": {
-                  "name": "target",
                   "type": "number",
                   "required": false
                 },
@@ -84,6 +40,11 @@
                     "absolute",
                     "percent"
                   ]
+                },
+                "icon": {
+                  "name": "icon",
+                  "type": "string",
+                  "required": false
                 },
                 "variant": {
                   "name": "variant",
@@ -98,19 +59,58 @@
                     "info"
                   ]
                 },
+                "clickEvent": {
+                  "name": "clickEvent",
+                  "type": "string",
+                  "required": false
+                },
                 "value": {
                   "name": "value",
                   "type": "number",
                   "required": false
+                },
+                "prefix": {
+                  "name": "prefix",
+                  "type": "string",
+                  "required": false
+                },
+                "format": {
+                  "name": "format",
+                  "type": "string",
+                  "required": false,
+                  "values": [
+                    "number",
+                    "currency",
+                    "percent"
+                  ]
+                },
+                "label": {
+                  "name": "label",
+                  "type": "string",
+                  "required": true
                 },
                 "suffix": {
                   "name": "suffix",
                   "type": "string",
                   "required": false
                 },
-                "icon": {
-                  "name": "icon",
+                "trendPolarity": {
+                  "name": "trendPolarity",
                   "type": "string",
+                  "required": false,
+                  "values": [
+                    "higher-is-better",
+                    "lower-is-better"
+                  ]
+                },
+                "max": {
+                  "name": "max",
+                  "type": "number",
+                  "required": false
+                },
+                "target": {
+                  "name": "target",
+                  "type": "number",
                   "required": false
                 },
                 "sparklineData": {
@@ -122,7 +122,9 @@
                   }
                 }
               }
-            }
+            },
+            "description": "An array of statistical cards displayed within the tile.",
+            "synonyms": "items, data, elements"
           }
         ]
       },
@@ -133,56 +135,56 @@
           "linkedEntity": "KpiTileStats",
           "config": {
             "bodyContent": {
-              "minCardWidth": 220.0,
-              "entity": "@entity.cards",
+              "className": "w-full",
               "gap": "lg",
+              "type": "data-grid",
               "fields": [],
               "renderItem": [
                 "fn",
                 "card",
                 {
                   "type": "stack",
+                  "gap": "sm",
+                  "direction": "vertical",
                   "className": "rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-card-lg shadow-elevation-sm hover:shadow-elevation-md transition-shadow",
                   "children": [
                     {
-                      "type": "stack",
-                      "gap": "xs",
-                      "align": "center",
-                      "justify": "between",
                       "children": [
                         {
-                          "className": "uppercase tracking-wide",
-                          "type": "typography",
+                          "color": "muted",
                           "content": "@card.label",
                           "variant": "caption",
-                          "color": "muted",
-                          "weight": "medium"
+                          "type": "typography",
+                          "weight": "medium",
+                          "className": "uppercase tracking-wide"
                         },
                         {
                           "type": "icon",
+                          "size": "sm",
                           "name": "@card.icon",
-                          "color": "muted",
-                          "size": "sm"
+                          "color": "muted"
                         }
                       ],
+                      "justify": "between",
+                      "gap": "xs",
+                      "type": "stack",
+                      "align": "center",
                       "direction": "horizontal"
                     },
                     {
                       "type": "stack",
-                      "gap": "xs",
                       "align": "baseline",
-                      "direction": "horizontal",
                       "children": [
                         {
                           "content": "@card.prefix",
-                          "color": "muted",
                           "type": "typography",
-                          "variant": "caption"
+                          "variant": "caption",
+                          "color": "muted"
                         },
                         {
                           "className": "text-4xl font-bold tracking-tight",
-                          "type": "animated-counter",
-                          "value": "@card.value"
+                          "value": "@card.value",
+                          "type": "animated-counter"
                         },
                         {
                           "variant": "caption",
@@ -190,42 +192,47 @@
                           "type": "typography",
                           "content": "@card.suffix"
                         }
-                      ]
+                      ],
+                      "direction": "horizontal",
+                      "gap": "xs"
                     },
                     {
                       "type": "stack",
                       "direction": "horizontal",
+                      "align": "center",
+                      "gap": "sm",
                       "children": [
                         {
-                          "size": "sm",
-                          "value": "@card.trend",
                           "showValue": true,
+                          "value": "@card.trend",
+                          "size": "sm",
                           "type": "trend-indicator"
                         },
                         {
                           "height": 24.0,
-                          "type": "sparkline",
                           "className": "flex-1",
                           "color": "auto",
                           "fill": true,
-                          "data": "@card.sparklineData"
+                          "data": "@card.sparklineData",
+                          "type": "sparkline"
                         }
-                      ],
-                      "gap": "sm",
-                      "align": "center"
+                      ]
                     }
-                  ],
-                  "gap": "sm",
-                  "direction": "vertical"
+                  ]
                 }
               ],
-              "className": "w-full",
-              "type": "data-grid"
+              "entity": "@entity.cards",
+              "minCardWidth": 220.0
             },
             "metrics": [
               {
-                "variant": "success",
+                "trendPolarity": "higher-is-better",
                 "prefix": "$",
+                "format": "currency",
+                "value": 72400.0,
+                "variant": "success",
+                "label": "Revenue",
+                "icon": "dollar-sign",
                 "sparklineData": [
                   42000.0,
                   45000.0,
@@ -240,15 +247,12 @@
                   67800.0,
                   72400.0
                 ],
-                "value": 72400.0,
-                "format": "currency",
-                "label": "Revenue",
-                "trendPolarity": "higher-is-better",
-                "trendFormat": "percent",
                 "trend": 12.4,
-                "icon": "dollar-sign"
+                "trendFormat": "percent"
               },
               {
+                "trendFormat": "percent",
+                "label": "Active Users",
                 "sparklineData": [
                   2800.0,
                   2950.0,
@@ -259,25 +263,20 @@
                   3180.0,
                   3240.0
                 ],
-                "trendPolarity": "higher-is-better",
-                "label": "Active Users",
                 "icon": "users",
-                "trendFormat": "percent",
-                "variant": "primary",
-                "format": "number",
                 "trend": 8.1,
-                "value": 3240.0
+                "format": "number",
+                "value": 3240.0,
+                "trendPolarity": "higher-is-better",
+                "variant": "primary"
               },
               {
+                "format": "percent",
                 "suffix": "%",
                 "icon": "trending-up",
-                "value": 4.7,
-                "trend": -1.2,
                 "variant": "info",
-                "label": "Conversion",
-                "format": "percent",
-                "trendPolarity": "higher-is-better",
-                "trendFormat": "percent",
+                "trend": -1.2,
+                "value": 4.7,
                 "sparklineData": [
                   5.2,
                   5.0,
@@ -287,14 +286,20 @@
                   4.7,
                   4.5,
                   4.7
-                ]
+                ],
+                "trendPolarity": "higher-is-better",
+                "label": "Conversion",
+                "trendFormat": "percent"
               },
               {
+                "icon": "trending-down",
+                "label": "Churn",
+                "value": 1.9,
+                "trendFormat": "percent",
                 "suffix": "%",
                 "trend": -0.4,
-                "label": "Churn",
-                "format": "percent",
-                "trendFormat": "percent",
+                "trendPolarity": "lower-is-better",
+                "variant": "warning",
                 "sparklineData": [
                   2.3,
                   2.1,
@@ -305,10 +310,7 @@
                   1.8,
                   1.9
                 ],
-                "icon": "trending-down",
-                "value": 1.9,
-                "variant": "warning",
-                "trendPolarity": "lower-is-better"
+                "format": "percent"
               }
             ]
           }

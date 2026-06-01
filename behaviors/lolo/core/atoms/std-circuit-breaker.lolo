@@ -4,13 +4,13 @@ app std-circuit-breaker "1.0.0"
 orbital ServiceNodeOrbital {
   entity ServiceNode [runtime] {
     id : string
-    name : string
-    description : string
-    status : "active" | "inactive" | "pending" = "active"
+    name : string @description "A user-defined identifier for the circuit breaker." @synonyms "identifier, label, designation"
+    description : string @description "A textual explanation of the service node's function." @synonyms "explanation, details, notes, information"
+    status : "active" | "inactive" | "pending" @description "Current operational state of the component." @synonyms "state, condition, operationalStatus" = "active"
     createdAt : string
-    failureCount : number = 0
-    successCount : number = 0
-    threshold : number = 5
+    failureCount : number @description "The number of times the circuit breaker has failed." @synonyms "error count, failures, error occurrences" = 0
+    successCount : number @description "Number of successful operations." @synonyms "successes, hits, completions" = 0
+    threshold : number @description "Maximum value before triggering an action." @synonyms "limit, cap, boundary" = 5
   }
 
   type ServiceNodeLoaded     = Event ServiceNode                  "Fired when ServiceNode finishes loading"

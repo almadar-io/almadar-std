@@ -138,10 +138,10 @@ export interface StdRichEditorDocumentSaveFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdRichEditorConfig {
-  /** Default: `"elevated"` */
-  statLook?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
   /** Default: `"Documents"` */
   title?: string;
+  /** Default: `"elevated"` */
+  statLook?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
   /** Default: `"dense"` */
   tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
 }

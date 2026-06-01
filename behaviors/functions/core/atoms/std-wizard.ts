@@ -83,11 +83,11 @@ export interface StdWizardWizardSaveFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdWizardConfig {
-  /** Default: `"elevated"` */
-  cardLook?: 'elevated' | 'flat-bordered' | 'borderless-divider' | 'ticket' | 'invoice' | 'chip' | 'tile-image-first';
   /** Default: `"Wizard"` */
   title?: string;
-  /** Default: `[{"icon":"file-text","description":"Basic information","key":"details","label":"Details","fields":["title","description"]},{"description":"Configure preferences","icon":"settings","label":"Options","fields":["category","priority"],"key":"options"},{"fields":["notes"],"icon":"check-circle","label":"Review","description":"Confirm and submit","key":"review"}]` */
+  /** Default: `"elevated"` */
+  cardLook?: 'elevated' | 'flat-bordered' | 'borderless-divider' | 'ticket' | 'invoice' | 'chip' | 'tile-image-first';
+  /** Default: `[{"label":"Details","description":"Basic information","fields":["title","description"],"key":"details","icon":"file-text"},{"label":"Options","description":"Configure preferences","key":"options","icon":"settings","fields":["category","priority"]},{"label":"Review","description":"Confirm and submit","key":"review","icon":"check-circle","fields":["notes"]}]` */
   steps?: EntityRow[];
 }
 

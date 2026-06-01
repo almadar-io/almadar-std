@@ -17,17 +17,23 @@
           {
             "name": "parentId",
             "type": "string",
-            "default": ""
+            "default": "",
+            "description": "Identifier of the parent entity.",
+            "synonyms": "parent, source, origin"
           },
           {
             "name": "parentEntity",
             "type": "string",
-            "default": ""
+            "default": "",
+            "description": "Identifies the entity related to the cascade operation.",
+            "synonyms": "related entity, source entity, parent"
           },
           {
             "name": "rowCount",
             "type": "number",
-            "default": 0.0
+            "default": 0.0,
+            "description": "The number of rows affected by the cascade operation.",
+            "synonyms": "count, size, quantity"
           }
         ]
       },
@@ -227,8 +233,8 @@
                     "emit",
                     "CascadeCompleted",
                     {
-                      "parentId": "@entity.parentId",
-                      "deletedCount": "@entity.rowCount"
+                      "deletedCount": "@entity.rowCount",
+                      "parentId": "@entity.parentId"
                     }
                   ]
                 ]
@@ -236,13 +242,6 @@
             ]
           },
           "config": {
-            "parentEntity": {
-              "type": "string",
-              "default": "",
-              "label": "Parent entity",
-              "description": "Entity whose deletion triggers the cascade",
-              "tier": "domain"
-            },
             "enabled": {
               "type": "boolean",
               "default": false,
@@ -251,11 +250,11 @@
               "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, cascade delete, delete children, on delete cascade, cascade on delete, remove related, soft delete cascade, dependent deletes, integrity cascade",
               "tier": "domain"
             },
-            "foreignKeyField": {
+            "parentEntity": {
               "type": "string",
               "default": "",
-              "label": "Foreign-key field",
-              "description": "Field on dependent rows that holds the parent's id",
+              "label": "Parent entity",
+              "description": "Entity whose deletion triggers the cascade",
               "tier": "domain"
             },
             "dependentEntities": {
@@ -267,6 +266,13 @@
               "items": {
                 "type": "string"
               }
+            },
+            "foreignKeyField": {
+              "type": "string",
+              "default": "",
+              "label": "Foreign-key field",
+              "description": "Field on dependent rows that holds the parent's id",
+              "tier": "domain"
             }
           },
           "scope": "instance"

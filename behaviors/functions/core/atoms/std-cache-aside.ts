@@ -71,16 +71,16 @@ export interface StdCacheAsideCacheEntryUpdateFailedPayload {
 export interface StdCacheAsideConfig {
   /** Default: `true` */
   staleWhileRevalidate?: boolean;
-  /** Default: `"lru"` */
-  evictionPolicy?: 'lru' | 'lfu' | 'fifo' | 'ttl-only';
-  /** Default: `1000` */
-  maxCacheSize?: number;
-  /** Default: `"icon-only"` */
-  emptyLook?: 'illustrated' | 'icon-only' | 'text-only' | 'mascot';
-  /** Default: `"dense"` */
-  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
   /** Default: `300` */
   ttlSeconds?: number;
+  /** Default: `1000` */
+  maxCacheSize?: number;
+  /** Default: `"dense"` */
+  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
+  /** Default: `"icon-only"` */
+  emptyLook?: 'illustrated' | 'icon-only' | 'text-only' | 'mascot';
+  /** Default: `"lru"` */
+  evictionPolicy?: 'lru' | 'lfu' | 'fifo' | 'ttl-only';
 }
 
 /**

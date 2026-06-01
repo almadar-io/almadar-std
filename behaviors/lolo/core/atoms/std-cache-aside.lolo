@@ -4,12 +4,12 @@ app std-cache-aside "1.0.0"
 orbital CacheEntryOrbital {
   entity CacheEntry [runtime] {
     id          : string!
-    name        : string!
-    description : string
-    status      : "active" | "inactive" | "pending" = "active"
+    name        : string! @description "A user-defined identifier for the cache entry." @synonyms "key, identifier, alias"
+    description : string @description "A human-readable explanation of the entry's content." @synonyms "explanation, details, notes, summary"
+    status      : "active" | "inactive" | "pending" @description "Current operational state of the entry." @synonyms "state, condition, operationalStatus" = "active"
     createdAt   : string
-    hitCount    : number = 0
-    cacheAge    : number = 0
+    hitCount    : number @description "The number of times this entry has been retrieved." @synonyms "count, occurrences, retrievals" = 0
+    cacheAge    : number @description "Duration since the cache entry was last updated." @synonyms "age, duration, expiry" = 0
   }
 
   type CacheEntryLoaded        = Event { data : [CacheEntry] }           "Fired when CacheEntry finishes loading; payload.data holds the entries"

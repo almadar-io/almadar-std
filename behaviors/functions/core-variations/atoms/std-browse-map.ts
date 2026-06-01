@@ -31,8 +31,8 @@ const ALIAS = 'BrowseMap';
  * without modifying its state-machine topology.
  */
 export interface StdBrowseMapConfig {
-  fields?: TraitConfig;
   bodyContent?: unknown;
+  fields?: TraitConfig;
 }
 
 /**

@@ -4,14 +4,14 @@ app std-agent-search "1.0.0"
 orbital AgentSearchOrbital {
   entity AgentSearch [persistent: agentsearchs] {
     id          : string!
-    name        : string
-    description : string
-    status      : "active" | "inactive" | "pending" = "active"
+    name        : string @description "The identifier or title for the agent." @synonyms "title, label, identifier"
+    description : string @description "A textual explanation of the search." @synonyms "summary, details, explanation"
+    status      : "active" | "inactive" | "pending" @description "Indicates the current operational state of the search." @synonyms "state, condition, operationalStatus" = "active"
     createdAt   : string
-    query       : string = ""
-    results     : [string] = []
-    language    : string = ""
-    resultCount : number = 0
+    query       : string @description "The search term or criteria used for the request." @synonyms "term, searchString, criteria, keyword" = ""
+    results     : [string] @description "The data returned as a result of the search." @synonyms "output, data, response" = []
+    language    : string @description "The language used for the search query." @synonyms "locale, languageCode, languageTag" = ""
+    resultCount : number @description "The total number of results found." @synonyms "count, total, size" = 0
   }
 
   type AgentSearchLoaded     = Event { data : [AgentSearch] }        "Fired when AgentSearch finishes loading; payload.data holds the list"

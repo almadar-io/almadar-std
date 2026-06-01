@@ -18,20 +18,28 @@
           {
             "name": "name",
             "type": "string",
-            "required": true
+            "required": true,
+            "description": "A user-defined label for the saved search.",
+            "synonyms": "title, label, search name"
           },
           {
             "name": "query",
-            "type": "string"
+            "type": "string",
+            "description": "The text of the search query.",
+            "synonyms": "search, expression, criteria"
           },
           {
             "name": "filters",
-            "type": "object"
+            "type": "object",
+            "description": "Criteria used to define the search.",
+            "synonyms": "criteria, conditions, constraints"
           },
           {
             "name": "alertEnabled",
             "type": "boolean",
-            "default": false
+            "default": false,
+            "description": "Indicates whether alerts are enabled for this saved search.",
+            "synonyms": "enabled, active, notification status"
           },
           {
             "name": "alertFrequency",
@@ -41,15 +49,21 @@
               "instant",
               "daily",
               "weekly"
-            ]
+            ],
+            "description": "How often alerts are triggered.",
+            "synonyms": "frequency, interval, recurrence"
           },
           {
             "name": "userId",
-            "type": "string"
+            "type": "string",
+            "description": "Identifier of the user who created the saved search.",
+            "synonyms": "creator, owner, user_id"
           },
           {
             "name": "lastNotifiedAt",
-            "type": "string"
+            "type": "string",
+            "description": "Timestamp of the last notification sent.",
+            "synonyms": "last_notification, notified_at, last_alert"
           },
           {
             "name": "createdAt",
@@ -346,8 +360,8 @@
                     "SavedSearch",
                     {
                       "emit": {
-                        "failure": "SavedSearchLoadFailed",
-                        "success": "SavedSearchLoaded"
+                        "success": "SavedSearchLoaded",
+                        "failure": "SavedSearchLoadFailed"
                       }
                     }
                   ],
@@ -355,22 +369,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
+                      "direction": "vertical",
                       "gap": "md",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
-                          "type": "typography",
                           "color": "muted",
-                          "content": "Loading saved searches…"
+                          "variant": "caption",
+                          "content": "Loading saved searches…",
+                          "type": "typography"
                         }
                       ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "align": "center"
+                      "align": "center",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -384,16 +398,15 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "direction": "vertical",
                       "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
-                          "gap": "sm",
+                          "type": "stack",
                           "children": [
                             {
-                              "name": "bookmark",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "bookmark"
                             },
                             {
                               "variant": "h3",
@@ -401,62 +414,63 @@
                               "content": "@config.title"
                             }
                           ],
-                          "direction": "horizontal",
-                          "type": "stack"
+                          "gap": "sm",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "type": "data-grid",
-                          "entity": "@payload.data",
-                          "itemActions": [
+                          "look": "@config.tableLook",
+                          "cols": 1.0,
+                          "fields": [
                             {
-                              "label": "Toggle alert",
-                              "icon": "bell",
-                              "variant": "secondary",
-                              "event": "TOGGLE_ALERT"
+                              "label": "Name",
+                              "variant": "h4",
+                              "name": "name"
                             },
                             {
-                              "label": "Edit",
+                              "label": "Query",
+                              "variant": "caption",
+                              "name": "query"
+                            },
+                            {
+                              "variant": "badge",
+                              "name": "alertFrequency",
+                              "label": "Frequency"
+                            },
+                            {
+                              "name": "alertEnabled",
+                              "label": "Alerts",
+                              "variant": "badge"
+                            }
+                          ],
+                          "gap": "sm",
+                          "itemActions": [
+                            {
                               "variant": "secondary",
+                              "label": "Toggle alert",
+                              "event": "TOGGLE_ALERT",
+                              "icon": "bell"
+                            },
+                            {
+                              "variant": "secondary",
+                              "label": "Edit",
                               "event": "EDIT",
                               "icon": "pencil"
                             },
                             {
                               "label": "Delete",
-                              "icon": "trash-2",
+                              "event": "DELETE",
                               "variant": "danger",
-                              "event": "DELETE"
+                              "icon": "trash-2"
                             }
                           ],
-                          "look": "@config.tableLook",
-                          "gap": "sm",
-                          "fields": [
-                            {
-                              "variant": "h4",
-                              "label": "Name",
-                              "name": "name"
-                            },
-                            {
-                              "name": "query",
-                              "label": "Query",
-                              "variant": "caption"
-                            },
-                            {
-                              "label": "Frequency",
-                              "variant": "badge",
-                              "name": "alertFrequency"
-                            },
-                            {
-                              "name": "alertEnabled",
-                              "variant": "badge",
-                              "label": "Alerts"
-                            }
-                          ],
-                          "cols": 1.0
+                          "entity": "@payload.data"
                         }
-                      ]
+                      ],
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -470,9 +484,9 @@
                     "render-ui",
                     "main",
                     {
+                      "message": "@payload.error",
                       "variant": "error",
-                      "type": "alert",
-                      "message": "@payload.error"
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -499,8 +513,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "failure": "SavedSearchLoadFailed",
-                        "success": "SavedSearchUpdated"
+                        "success": "SavedSearchUpdated",
+                        "failure": "SavedSearchLoadFailed"
                       }
                     }
                   ]
@@ -544,54 +558,54 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
+                      "type": "stack",
                       "gap": "md",
                       "children": [
                         {
+                          "gap": "sm",
+                          "direction": "horizontal",
                           "type": "stack",
                           "children": [
                             {
-                              "name": "pencil",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "pencil"
                             },
                             {
-                              "type": "typography",
                               "content": "Edit saved search",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "type": "typography"
                             }
-                          ],
-                          "direction": "horizontal",
-                          "gap": "sm"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "action": "RENAME",
                           "placeholder": "Name",
                           "type": "input",
-                          "action": "RENAME",
                           "value": "@entity.name"
                         },
                         {
                           "type": "select",
-                          "placeholder": "Alert frequency",
-                          "action": "CHANGE_FREQUENCY",
                           "value": "@entity.alertFrequency",
+                          "placeholder": "Alert frequency",
                           "options": [
                             {
-                              "label": "Instant",
-                              "value": "instant"
+                              "value": "instant",
+                              "label": "Instant"
                             },
                             {
                               "label": "Daily",
                               "value": "daily"
                             },
                             {
-                              "label": "Weekly",
-                              "value": "weekly"
+                              "value": "weekly",
+                              "label": "Weekly"
                             }
-                          ]
+                          ],
+                          "action": "CHANGE_FREQUENCY"
                         },
                         {
                           "checked": "@entity.alertEnabled",
@@ -599,25 +613,25 @@
                           "type": "switch"
                         },
                         {
-                          "direction": "horizontal",
+                          "gap": "sm",
                           "children": [
                             {
-                              "type": "button",
-                              "label": "Save",
-                              "action": "SAVE",
                               "variant": "primary",
-                              "icon": "check"
+                              "icon": "check",
+                              "label": "Save",
+                              "type": "button",
+                              "action": "SAVE"
                             },
                             {
                               "icon": "x",
-                              "type": "button",
-                              "action": "CANCEL",
+                              "variant": "secondary",
                               "label": "Cancel",
-                              "variant": "secondary"
+                              "type": "button",
+                              "action": "CANCEL"
                             }
                           ],
                           "type": "stack",
-                          "gap": "sm"
+                          "direction": "horizontal"
                         }
                       ]
                     }
@@ -634,8 +648,8 @@
                     "SavedSearch",
                     {
                       "emit": {
-                        "failure": "SavedSearchLoadFailed",
-                        "success": "SavedSearchLoaded"
+                        "success": "SavedSearchLoaded",
+                        "failure": "SavedSearchLoadFailed"
                       }
                     }
                   ]
@@ -694,8 +708,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "success": "SavedSearchUpdated",
-                        "failure": "SavedSearchLoadFailed"
+                        "failure": "SavedSearchLoadFailed",
+                        "success": "SavedSearchUpdated"
                       }
                     }
                   ]
@@ -711,8 +725,8 @@
                     "SavedSearch",
                     {
                       "emit": {
-                        "success": "SavedSearchLoaded",
-                        "failure": "SavedSearchLoadFailed"
+                        "failure": "SavedSearchLoadFailed",
+                        "success": "SavedSearchLoaded"
                       }
                     }
                   ]
@@ -737,8 +751,8 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]
@@ -746,6 +760,13 @@
             ]
           },
           "config": {
+            "title": {
+              "type": "string",
+              "default": "Saved Searches",
+              "label": "Section title",
+              "description": "Heading shown above the saved-search list",
+              "tier": "presentation"
+            },
             "tableLook": {
               "type": "string",
               "default": "dense",
@@ -759,13 +780,6 @@
                 "borderless",
                 "card-rows"
               ]
-            },
-            "title": {
-              "type": "string",
-              "default": "Saved Searches",
-              "label": "Section title",
-              "description": "Heading shown above the saved-search list",
-              "tier": "presentation"
             }
           },
           "scope": "collection"
