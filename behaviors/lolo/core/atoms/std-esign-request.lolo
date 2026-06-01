@@ -53,15 +53,39 @@ orbital ESignRequestOrbital {
     }
     emits {
       SEND_REQUEST { id : string! }
+        @description "Signals a request has been sent for signature."
+        @synonyms "dispatch, submit, transmit"
+        @tier "essential"
       REVOKE_REQUEST { id : string! }
+        @description "Indicates a signature request has been cancelled."
+        @synonyms "cancel, void, retract"
+        @tier "customization"
       ESignRequestLoaded { data : [ESignRequest] }
+        @description "Signals that the request list has been successfully populated."
+        @synonyms "loaded, refreshed, populated, initialized"
+        @tier "essential"
       ESignRequestLoadFailed { error : string, code : string }
+        @description "Indicates a failure to load e-signature request data."
+        @synonyms "error, failure, load error"
+        @tier "internal"
     }
     listens {
       SEND_REQUEST { id : string! }
+        @description "A request has been sent for signature."
+        @synonyms "submitted, dispatched, transmitted"
+        @tier "essential"
       REVOKE_REQUEST { id : string! }
+        @description "A request is cancelled or withdrawn."
+        @synonyms "cancel, withdraw, void, remove"
+        @tier "customization"
       ESignRequestLoaded { data : [ESignRequest] }
+        @description "Indicates the request list has been populated."
+        @synonyms "loaded, refreshed, initialized"
+        @tier "essential"
       ESignRequestLoadFailed { error : string, code : string }
+        @description "Indicates a failure to load e-signature requests."
+        @synonyms "error, failure, problem, issue"
+        @tier "internal"
     }
   }
   page "/esign" as ESignRequestPage -> ESignRequestSigning

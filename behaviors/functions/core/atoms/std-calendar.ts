@@ -54,18 +54,18 @@ export interface StdCalendarCalendarEventLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdCalendarConfig {
-  /** Default: `{"gap":"lg","direction":"vertical","children":[{"type":"stack","align":"center","children":[{"direction":"horizontal","gap":"sm","align":"center","type":"stack","children":[{"type":"icon","name":"calendar"},{"type":"typography","variant":"h2","content":"CalendarEvents Calendar"}]},{"onSelect":"SELECT_DAY","type":"date-range-selector","selected":"@entity.selectedRange"}],"gap":"md","justify":"between","direction":"horizontal"},{"type":"divider"},{"type":"calendar-grid"},{"type":"divider"},{"content":"Upcoming Events","type":"typography","variant":"h4"},{"fields":[{"name":"name","label":"Event","icon":"calendar","variant":"h4"},{"label":"Time","variant":"badge","name":"time"},{"label":"Date","variant":"caption","name":"date","format":"date"},{"label":"Status","name":"status","variant":"badge"}],"itemActions":[{"label":"View","event":"SELECT_DAY","icon":"eye"}],"look":"@config.tableLook","type":"data-list","entity":"@payload.data"}],"type":"stack"}` */
+  /** Default: `"@item.status"` */
+  badgeBinding?: string;
+  /** Default: `"@item.description"` */
+  descriptionBinding?: string;
+  /** Default: `{"type":"stack","children":[{"children":[{"align":"center","children":[{"name":"calendar","type":"icon"},{"type":"typography","content":"CalendarEvents Calendar","variant":"h2"}],"gap":"sm","type":"stack","direction":"horizontal"},{"onSelect":"SELECT_DAY","type":"date-range-selector","selected":"@entity.selectedRange"}],"gap":"md","justify":"between","direction":"horizontal","type":"stack","align":"center"},{"type":"divider"},{"type":"calendar-grid"},{"type":"divider"},{"content":"Upcoming Events","type":"typography","variant":"h4"},{"look":"@config.tableLook","entity":"@payload.data","fields":[{"name":"name","icon":"calendar","label":"Event","variant":"h4"},{"variant":"badge","name":"time","label":"Time"},{"format":"date","name":"date","variant":"caption","label":"Date"},{"name":"status","label":"Status","variant":"badge"}],"itemActions":[{"event":"SELECT_DAY","icon":"eye","label":"View"}],"type":"data-list"}],"gap":"lg","direction":"vertical"}` */
   bodyContent?: unknown;
+  /** Default: `"dense"` */
+  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
   /** Default: `"@item.time"` */
   timeBinding?: string;
   /** Default: `"@item.name"` */
   titleBinding?: string;
-  /** Default: `"@item.description"` */
-  descriptionBinding?: string;
-  /** Default: `"dense"` */
-  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
-  /** Default: `"@item.status"` */
-  badgeBinding?: string;
 }
 
 /**

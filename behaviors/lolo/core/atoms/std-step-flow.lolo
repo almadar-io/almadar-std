@@ -221,23 +221,71 @@ orbital StepFlowOrbital {
     }
     emits {
       ADVANCE                { id : string, stepKey : string }
+        @description "Signals progression to the next step in the sequence."
+        @synonyms "next, proceed, continue, move forward"
+        @tier "essential"
       BACK                   { id : string }
+        @description "Indicates a request to navigate to the previous step."
+        @synonyms "previous, undo, return"
+        @tier "essential"
       REJECT                 { id : string, reason : string }
+        @description "Indicates the user or system rejected the current step."
+        @synonyms "cancel, decline, dismiss"
+        @tier "essential"
       ESCALATE               { id : string, reason : string }
+        @description "Signals a request to elevate the process to a higher authority."
+        @synonyms "defer, transfer, handoff"
+        @tier "customization"
       RESTART                { id : string }
+        @description "Initiates a reset of the current workflow process."
+        @synonyms "reset, refresh, restart, reinitialize"
+        @tier "internal"
       StepItemsLoaded        { data : [ObjectSpec] }
+        @description "Signals that the step items have been successfully loaded."
+        @synonyms "loaded, fetched, retrieved, populated"
+        @tier "internal"
       StepItemsLoadFailed    { error : string, code : string }
+        @description "Indicates failure to load step configuration items."
+        @synonyms "load error, failed fetch, data problem"
+        @tier "internal"
     }
     listens {
       ADVANCE                { id : string, stepKey : string }
+        @description "User confirms proceeding to the next step in the flow."
+        @synonyms "proceed, next, continue, move forward"
+        @tier "essential"
       BACK                   { id : string }
+        @description "Navigates to the previous step in the sequence."
+        @synonyms "previous, undo, return"
+        @tier "essential"
       REJECT                 { id : string, reason : string }
+        @description "Indicates a user or system rejected the current step."
+        @synonyms "cancel, decline, dismiss"
+        @tier "essential"
       ESCALATE               { id : string, reason : string }
+        @description "Signals a request to elevate the process to a higher authority."
+        @synonyms "defer, transfer, handoff"
+        @tier "customization"
       RESTART                { id : string }
+        @description "Resets the step flow to the beginning."
+        @synonyms "reset, refresh, start-over"
+        @tier "customization"
       StepItemsLoaded        { data : [ObjectSpec] }
+        @description "Indicates that the data for the step items has been successfully loaded."
+        @synonyms "loaded, data ready, initialized"
+        @tier "essential"
       StepItemsLoadFailed    { error : string, code : string }
+        @description "Indicates failure to load step configuration data."
+        @synonyms "load error, failed fetch, data problem"
+        @tier "internal"
       StepItemsSaved         { row : object }
+        @description "Data for the current step has been successfully saved."
+        @synonyms "update, persist, store, commit"
+        @tier "customization"
       StepItemsSaveFailed    { error : string, code : string }
+        @description "Indicates a failure to save step item data."
+        @synonyms "save error, data failed, persistence error"
+        @tier "internal"
     }
   }
   page "/step-flow" as StepFlowPage -> StepFlowReview

@@ -112,10 +112,16 @@
           "linkedEntity": "SignatureSession",
           "emits": [
             {
-              "event": "CREATE"
+              "event": "CREATE",
+              "description": "Indicates a new signature request has been initiated.",
+              "synonyms": "new, initiate, start, begin",
+              "tier": "essential"
             },
             {
               "event": "RESEND_REQUEST",
+              "description": "Indicates a signature request has been resent.",
+              "synonyms": "resend, retransmit, repeat",
+              "tier": "customization",
               "payloadSchema": [
                 {
                   "name": "id",
@@ -170,6 +176,9 @@
             },
             {
               "event": "REQUEST_DELETE",
+              "description": "Signals a signature request has been removed.",
+              "synonyms": "remove, purge, discard",
+              "tier": "customization",
               "payloadSchema": [
                 {
                   "name": "id",
@@ -224,7 +233,9 @@
             },
             {
               "event": "SignatureSessionLoaded",
-              "description": "Fired when the SignatureSession collection finishes loading",
+              "description": "Signals that a signature session has been successfully loaded.",
+              "synonyms": "loaded, initialized, ready",
+              "tier": "essential",
               "scope": "internal",
               "payloadSchema": [
                 {
@@ -235,7 +246,9 @@
             },
             {
               "event": "SignatureSessionLoadFailed",
-              "description": "Fired when the SignatureSession collection fails to load",
+              "description": "Indicates failure to load a signature session.",
+              "synonyms": "error, failure, problem, unsuccessful",
+              "tier": "internal",
               "scope": "internal",
               "payloadSchema": [
                 {
@@ -296,6 +309,9 @@
               {
                 "key": "SignatureSessionLoaded",
                 "name": "SignatureSession loaded",
+                "description": "Signals that a signature session has been successfully loaded.",
+                "synonyms": "loaded, initialized, ready",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "data",
@@ -306,6 +322,9 @@
               {
                 "key": "SignatureSessionLoadFailed",
                 "name": "SignatureSession load failed",
+                "description": "Indicates failure to load a signature session.",
+                "synonyms": "error, failure, problem, unsuccessful",
+                "tier": "internal",
                 "payloadSchema": [
                   {
                     "name": "error",
@@ -319,15 +338,24 @@
               },
               {
                 "key": "CREATE",
-                "name": "Create"
+                "name": "Create",
+                "description": "Indicates a new signature request has been initiated.",
+                "synonyms": "new, initiate, start, begin",
+                "tier": "essential"
               },
               {
                 "key": "RESEND_REQUEST",
-                "name": "Resend Request"
+                "name": "Resend Request",
+                "description": "Indicates a signature request has been resent.",
+                "synonyms": "resend, retransmit, repeat",
+                "tier": "customization"
               },
               {
                 "key": "REQUEST_DELETE",
-                "name": "Request Delete"
+                "name": "Request Delete",
+                "description": "Signals a signature request has been removed.",
+                "synonyms": "remove, purge, discard",
+                "tier": "customization"
               }
             ],
             "transitions": [
@@ -341,8 +369,8 @@
                     "SignatureSession",
                     {
                       "emit": {
-                        "success": "SignatureSessionLoaded",
-                        "failure": "SignatureSessionLoadFailed"
+                        "failure": "SignatureSessionLoadFailed",
+                        "success": "SignatureSessionLoaded"
                       }
                     }
                   ],
@@ -350,22 +378,22 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "direction": "vertical",
                       "gap": "md",
-                      "className": "py-12",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "type": "typography",
+                          "variant": "caption",
                           "color": "muted",
-                          "content": "Loading signature requests…",
-                          "variant": "caption"
+                          "content": "Loading signature requests…"
                         }
                       ],
-                      "align": "center",
-                      "type": "stack",
-                      "direction": "vertical"
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -379,31 +407,27 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
                       "gap": "lg",
+                      "type": "stack",
                       "children": [
                         {
-                          "justify": "between",
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
                           "children": [
                             {
+                              "type": "stack",
                               "gap": "md",
+                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "name": "file-signature",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "file-signature"
                                 },
                                 {
                                   "type": "typography",
                                   "content": "Signature Requests",
                                   "variant": "h2"
                                 }
-                              ],
-                              "type": "stack",
-                              "direction": "horizontal"
+                              ]
                             },
                             {
                               "type": "button",
@@ -412,56 +436,60 @@
                               "icon": "plus",
                               "label": "New Signature Request"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "justify": "between",
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "itemActions": [
-                            {
-                              "label": "Resend",
-                              "event": "RESEND_REQUEST",
-                              "variant": "primary"
-                            },
-                            {
-                              "event": "REQUEST_DELETE",
-                              "label": "Cancel",
-                              "variant": "danger"
-                            }
-                          ],
-                          "entity": "@payload.data",
                           "type": "data-grid",
                           "fields": [
                             {
-                              "label": "Document",
-                              "name": "documentName",
                               "icon": "file-text",
-                              "variant": "h4"
+                              "variant": "h4",
+                              "name": "documentName",
+                              "label": "Document"
                             },
                             {
-                              "label": "Recipient",
                               "variant": "body",
+                              "label": "Recipient",
                               "name": "recipientName"
                             },
                             {
                               "label": "Email",
-                              "variant": "caption",
-                              "name": "recipientEmail"
+                              "name": "recipientEmail",
+                              "variant": "caption"
                             },
                             {
-                              "name": "status",
                               "label": "Status",
+                              "name": "status",
                               "variant": "badge"
                             },
                             {
-                              "variant": "caption",
                               "name": "sentAt",
+                              "variant": "caption",
                               "label": "Sent"
                             }
-                          ]
+                          ],
+                          "itemActions": [
+                            {
+                              "event": "RESEND_REQUEST",
+                              "variant": "primary",
+                              "label": "Resend"
+                            },
+                            {
+                              "label": "Cancel",
+                              "variant": "danger",
+                              "event": "REQUEST_DELETE"
+                            }
+                          ],
+                          "entity": "@payload.data"
                         }
-                      ]
+                      ],
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -477,33 +505,33 @@
                     {
                       "children": [
                         {
-                          "name": "alert-triangle",
                           "color": "destructive",
+                          "name": "alert-triangle",
                           "type": "icon"
                         },
                         {
-                          "type": "typography",
                           "variant": "h3",
-                          "content": "Failed to load signature requests"
+                          "content": "Failed to load signature requests",
+                          "type": "typography"
                         },
                         {
-                          "content": "@payload.error",
-                          "type": "typography",
                           "variant": "body",
+                          "type": "typography",
+                          "content": "@payload.error",
                           "color": "muted"
                         },
                         {
-                          "label": "Retry",
-                          "variant": "primary",
                           "type": "button",
                           "action": "INIT",
-                          "icon": "rotate-ccw"
+                          "icon": "rotate-ccw",
+                          "variant": "primary",
+                          "label": "Retry"
                         }
                       ],
+                      "gap": "md",
                       "type": "stack",
                       "direction": "vertical",
                       "align": "center",
-                      "gap": "md",
                       "className": "py-12"
                     }
                   ]
@@ -574,8 +602,8 @@
               "recipientEmail",
               "requesterName"
             ],
-            "mode": "create",
-            "icon": "file-signature"
+            "icon": "file-signature",
+            "mode": "create"
           },
           "events": {
             "OPEN": "CREATE"
@@ -596,10 +624,10 @@
           "name": "SignatureSessionDelete",
           "linkedEntity": "SignatureSession",
           "config": {
-            "icon": "alert-triangle",
-            "title": "Cancel Signature Request",
             "alertMessage": "Are you sure you want to cancel this signature request?",
-            "confirmLabel": "Cancel Request"
+            "title": "Cancel Signature Request",
+            "confirmLabel": "Cancel Request",
+            "icon": "alert-triangle"
           },
           "events": {
             "CONFIRM": "CONFIRM_DELETE",
@@ -623,6 +651,9 @@
           "emits": [
             {
               "event": "SESSION_CREATED",
+              "description": "A new signature session has been initialized.",
+              "synonyms": "start, begin, initialize",
+              "tier": "essential",
               "scope": "external",
               "payloadSchema": [
                 {
@@ -633,6 +664,9 @@
             },
             {
               "event": "SESSION_RESENT",
+              "description": "Indicates a signature request has been resent.",
+              "synonyms": "resend, retransmit, send again",
+              "tier": "customization",
               "scope": "external",
               "payloadSchema": [
                 {
@@ -643,6 +677,9 @@
             },
             {
               "event": "SESSION_DELETED",
+              "description": "Indicates a signature session has been removed or invalidated.",
+              "synonyms": "removed, cleared, expired, terminated",
+              "tier": "internal",
               "scope": "external",
               "payloadSchema": [
                 {
@@ -693,6 +730,9 @@
               {
                 "key": "DO_CREATE",
                 "name": "Do Create",
+                "description": "Initiates the creation of a new signature request.",
+                "synonyms": "new, add, generate, start",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "data",
@@ -704,6 +744,9 @@
               {
                 "key": "DO_RESEND",
                 "name": "Do Resend",
+                "description": "A request to resend a signature request.",
+                "synonyms": "retry, repeat, send again",
+                "tier": "customization",
                 "payloadSchema": [
                   {
                     "name": "id",
@@ -714,6 +757,9 @@
               {
                 "key": "DO_DELETE",
                 "name": "Do Delete",
+                "description": "A request to remove an item from the current view.",
+                "synonyms": "remove, discard, clear, erase",
+                "tier": "customization",
                 "payloadSchema": [
                   {
                     "name": "id",
@@ -723,15 +769,24 @@
               },
               {
                 "key": "SESSION_CREATED",
-                "name": "Session Created"
+                "name": "Session Created",
+                "description": "A new signature session has been initialized.",
+                "synonyms": "start, begin, initialize",
+                "tier": "essential"
               },
               {
                 "key": "SESSION_RESENT",
-                "name": "Session Resent"
+                "name": "Session Resent",
+                "description": "Indicates a signature request has been resent.",
+                "synonyms": "resend, retransmit, send again",
+                "tier": "customization"
               },
               {
                 "key": "SESSION_DELETED",
-                "name": "Session Deleted"
+                "name": "Session Deleted",
+                "description": "Indicates a signature session has been removed or invalidated.",
+                "synonyms": "removed, cleared, expired, terminated",
+                "tier": "internal"
               }
             ],
             "transitions": [

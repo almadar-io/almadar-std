@@ -67,6 +67,40 @@
           "CalendarEventLoadFailed"
         ],
         "listenedEvents": [],
+        "events": [
+          {
+            "name": "CalendarEventLoaded",
+            "direction": "emit",
+            "description": "Indicates that calendar events have been successfully retrieved.",
+            "synonyms": "loaded, fetched, retrieved, populated",
+            "tier": "essential"
+          },
+          {
+            "name": "CalendarEventLoadFailed",
+            "direction": "emit",
+            "description": "Indicates a failure to load calendar events.",
+            "synonyms": "error, failed, problem, loading issue",
+            "tier": "internal"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "SELECT_DAY",
+            "direction": "listen",
+            "description": "A day has been chosen within the calendar view.",
+            "synonyms": "choose, pick, set, highlight",
+            "tier": "essential"
+          },
+          {
+            "name": "SELECT_SLOT",
+            "direction": "listen",
+            "description": "A time slot has been chosen for an event.",
+            "synonyms": "choose, pick, schedule, book",
+            "tier": "essential"
+          }
+        ],
         "overridableConfigKeys": [
           {
             "key": "badgeBinding",
@@ -80,29 +114,26 @@
             "key": "bodyContent",
             "type": "render-ui",
             "default": {
-              "gap": "lg",
-              "direction": "vertical",
+              "type": "stack",
               "children": [
                 {
-                  "type": "stack",
-                  "align": "center",
                   "children": [
                     {
-                      "direction": "horizontal",
-                      "gap": "sm",
                       "align": "center",
-                      "type": "stack",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "calendar"
+                          "name": "calendar",
+                          "type": "icon"
                         },
                         {
                           "type": "typography",
-                          "variant": "h2",
-                          "content": "CalendarEvents Calendar"
+                          "content": "CalendarEvents Calendar",
+                          "variant": "h2"
                         }
-                      ]
+                      ],
+                      "gap": "sm",
+                      "type": "stack",
+                      "direction": "horizontal"
                     },
                     {
                       "onSelect": "SELECT_DAY",
@@ -112,7 +143,9 @@
                   ],
                   "gap": "md",
                   "justify": "between",
-                  "direction": "horizontal"
+                  "direction": "horizontal",
+                  "type": "stack",
+                  "align": "center"
                 },
                 {
                   "type": "divider"
@@ -129,43 +162,44 @@
                   "variant": "h4"
                 },
                 {
+                  "look": "@config.tableLook",
+                  "entity": "@payload.data",
                   "fields": [
                     {
                       "name": "name",
-                      "label": "Event",
                       "icon": "calendar",
+                      "label": "Event",
                       "variant": "h4"
                     },
                     {
-                      "label": "Time",
                       "variant": "badge",
-                      "name": "time"
+                      "name": "time",
+                      "label": "Time"
                     },
                     {
-                      "label": "Date",
-                      "variant": "caption",
+                      "format": "date",
                       "name": "date",
-                      "format": "date"
+                      "variant": "caption",
+                      "label": "Date"
                     },
                     {
-                      "label": "Status",
                       "name": "status",
+                      "label": "Status",
                       "variant": "badge"
                     }
                   ],
                   "itemActions": [
                     {
-                      "label": "View",
                       "event": "SELECT_DAY",
-                      "icon": "eye"
+                      "icon": "eye",
+                      "label": "View"
                     }
                   ],
-                  "look": "@config.tableLook",
-                  "type": "data-list",
-                  "entity": "@payload.data"
+                  "type": "data-list"
                 }
               ],
-              "type": "stack"
+              "gap": "lg",
+              "direction": "vertical"
             },
             "label": "Body content tree",
             "description": "Render-ui SExpr rendered after events load. Default is the month-grid + upcoming-events list. Layer 3 variants override this with their own tree (agenda list, week timeline, etc.) to deliver entirely different calendar UX while inheriting the same trait, state machine, emits, and listens.",

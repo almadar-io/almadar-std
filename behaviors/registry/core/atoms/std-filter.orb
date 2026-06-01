@@ -36,6 +36,9 @@
           "emits": [
             {
               "event": "FILTER",
+              "description": "Signals a filter has been applied or changed.",
+              "synonyms": "apply, update, change, refine",
+              "tier": "essential",
               "payloadSchema": [
                 {
                   "name": "field",
@@ -65,6 +68,9 @@
               {
                 "key": "FILTER",
                 "name": "Filter",
+                "description": "Signals a filter has been applied or changed.",
+                "synonyms": "apply, update, change, refine",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "field",
@@ -80,7 +86,10 @@
               },
               {
                 "key": "CLEAR_FILTERS",
-                "name": "Clear Filters"
+                "name": "Clear Filters",
+                "description": "Resets the filter selection to its initial state.",
+                "synonyms": "reset, clear, remove, undo",
+                "tier": "essential"
               }
             ],
             "transitions": [
@@ -99,8 +108,8 @@
                     "main",
                     {
                       "look": "@config.filterBarLook",
-                      "entity": "FilterTarget",
                       "type": "filter-group",
+                      "entity": "FilterTarget",
                       "filters": "@config.filters"
                     }
                   ]
@@ -125,10 +134,10 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "filter-group",
-                      "filters": "@config.filters",
+                      "entity": "FilterTarget",
                       "look": "@config.filterBarLook",
-                      "entity": "FilterTarget"
+                      "type": "filter-group",
+                      "filters": "@config.filters"
                     }
                   ]
                 ]
@@ -160,10 +169,10 @@
                     "render-ui",
                     "main",
                     {
-                      "entity": "FilterTarget",
-                      "look": "@config.filterBarLook",
                       "filters": "@config.filters",
-                      "type": "filter-group"
+                      "type": "filter-group",
+                      "look": "@config.filterBarLook",
+                      "entity": "FilterTarget"
                     }
                   ]
                 ]
@@ -189,14 +198,14 @@
               "type": "[FilterSpec]",
               "default": [
                 {
-                  "field": "status",
-                  "label": "Status",
-                  "filterType": "select",
                   "options": [
                     "active",
                     "inactive",
                     "pending"
-                  ]
+                  ],
+                  "field": "status",
+                  "label": "Status",
+                  "filterType": "select"
                 }
               ],
               "label": "Filter controls",
@@ -205,16 +214,6 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "field": {
-                    "name": "field",
-                    "type": "string",
-                    "required": true
-                  },
                   "options": {
                     "name": "options",
                     "type": "array",
@@ -222,6 +221,16 @@
                     "items": {
                       "type": "string"
                     }
+                  },
+                  "field": {
+                    "name": "field",
+                    "type": "string",
+                    "required": true
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
                   },
                   "filterType": {
                     "name": "filterType",

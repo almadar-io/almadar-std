@@ -136,23 +136,71 @@ orbital EventLogOrbital {
     }
     emits {
       APPLY_FILTER           { tabId : string }
+        @description "Signals a filter has been applied to the event log."
+        @synonyms "filter, refine, narrow, update"
+        @tier "customization"
       OPEN_BACKFILL          { }
+        @description "Initiates a backfill operation to retrieve historical events."
+        @synonyms "refresh, retrieve, load history"
+        @tier "advanced"
       SAVE_BACKFILL          { data : object }
+        @description "Indicates successful completion of backfill data saving."
+        @synonyms "saved, persisted, committed"
+        @tier "customization"
       CANCEL_BACKFILL        { }
+        @description "Aborts the backfill process."
+        @synonyms "abort, stop, dismiss, undo"
+        @tier "customization"
       EventLogLoaded         { data : [ObjectSpec] }
+        @description "Signals the event log has finished loading."
+        @synonyms "loaded, ready, initialized"
+        @tier "essential"
       EventLogLoadFailed     { error : string, code : string }
+        @description "Indicates that loading the event log failed."
+        @synonyms "error, failure, failed, problem"
+        @tier "internal"
       EventLogSaved          { row : object }
+        @description "Indicates a new event has been successfully logged."
+        @synonyms "saved, added, created, recorded"
+        @tier "essential"
       EventLogSaveFailed     { error : string, code : string }
+        @description "Indicates that saving an event failed."
+        @synonyms "error, failure, failed, problem"
+        @tier "internal"
     }
     listens {
       APPLY_FILTER           { tabId : string }
+        @description "Signals a filter has been applied to the event feed."
+        @synonyms "filter, refine, change view"
+        @tier "customization"
       OPEN_BACKFILL          { }
+        @description "Initiates a backfill operation to retrieve historical events."
+        @synonyms "fetch history, retrieve data, load past"
+        @tier "advanced"
       SAVE_BACKFILL          { data : object }
+        @description "Indicates a backfill operation has been successfully saved."
+        @synonyms "saved, persisted, completed"
+        @tier "customization"
       CANCEL_BACKFILL        { }
+        @description "Aborts an in-progress backfill operation."
+        @synonyms "abort, stop, dismiss, undo"
+        @tier "customization"
       EventLogLoaded         { data : [ObjectSpec] }
+        @description "Signals the event log has finished loading."
+        @synonyms "loaded, ready, initialized"
+        @tier "essential"
       EventLogLoadFailed     { error : string, code : string }
+        @description "Indicates the event log failed to load."
+        @synonyms "error, failure, failed, loading error"
+        @tier "internal"
       EventLogSaved          { row : object }
+        @description "Indicates a new event has been successfully recorded."
+        @synonyms "saved, added, created, persisted"
+        @tier "essential"
       EventLogSaveFailed     { error : string, code : string }
+        @description "Indicates an attempt to save an event failed."
+        @synonyms "error, failure, save failed"
+        @tier "internal"
     }
   }
   page "/event-log" as EventLogPage -> EventLogTimeline

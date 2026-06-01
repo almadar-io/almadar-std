@@ -66,15 +66,36 @@ orbital ConfirmActionOrbital {
 
     emits {
       CONFIRM { id : string }
+        @description "Indicates the user has approved the action."
+        @synonyms "approve, accept, ok"
+        @tier "essential"
       CANCEL
+        @description "Indicates the action was cancelled by the user."
+        @synonyms "dismiss, reject, undo"
+        @tier "essential"
       ConfirmActionLoadFailed
+        @description "Indicates failure to load the confirmation action."
+        @synonyms "error, failure, failed, problem"
+        @tier "internal"
       ConfirmActionLoaded
+        @description "Indicates the confirmation action has been successfully loaded."
+        @synonyms "loaded, ready, initialized"
+        @tier "internal"
     }
     listens {
       REQUEST { id : string!, row : ConfirmAction }
+        @description "A request for confirmation before proceeding."
+        @synonyms "prompt, ask, verify"
+        @tier "essential"
       CLOSE
+        @description "Indicates the user dismissed the confirmation."
+        @synonyms "dismiss, decline, reject"
+        @tier "essential"
 
       ConfirmActionLoadFailed { error : string, code : string }
+        @description "Indicates that loading the confirmation action failed."
+        @synonyms "error, failure, problem, unsuccessful"
+        @tier "internal"
     }
   }
   page "/confirmactions/confirm" as ConfirmActionConfirmPage -> ConfirmActionConfirmation

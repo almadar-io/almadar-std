@@ -62,14 +62,14 @@ export interface StdCircuitBreakerServiceNodeLoadFailedPayload {
 export interface StdCircuitBreakerConfig {
   /** Default: `1` */
   halfOpenRequests?: number;
-  /** Default: `"elevated"` */
-  statLook?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
-  /** Default: `30` */
-  cooldownSeconds?: number;
   /** Default: `"reject"` */
   fallbackBehavior?: 'reject' | 'cached-response' | 'queue' | 'static-default';
+  /** Default: `"elevated"` */
+  statLook?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
   /** Default: `5` */
   failureThreshold?: number;
+  /** Default: `30` */
+  cooldownSeconds?: number;
 }
 
 /**

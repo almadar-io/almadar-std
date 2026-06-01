@@ -93,13 +93,28 @@ orbital CalendarEventOrbital {
     }
 emits {
       CalendarEventLoaded
+        @description "Indicates that calendar events have been successfully retrieved."
+        @synonyms "loaded, fetched, retrieved, populated"
+        @tier "essential"
       CalendarEventLoadFailed
+        @description "Indicates a failure to load calendar events."
+        @synonyms "error, failed, problem, loading issue"
+        @tier "internal"
     }
 
         listens {
       SELECT_DAY  { value : string! }
+        @description "A day has been chosen within the calendar view."
+        @synonyms "choose, pick, set, highlight"
+        @tier "essential"
       SELECT_SLOT { time : string! }
+        @description "A time slot has been chosen for an event."
+        @synonyms "choose, pick, schedule, book"
+        @tier "essential"
       CalendarEventLoadFailed { error : string, code : string }
+        @description "Indicates a failure to load calendar events."
+        @synonyms "error, failure, problem, failed"
+        @tier "internal"
     }
   }
   page "/calendarevents/calendar" as CalendarEventCalendarPage -> CalendarEventCalendar

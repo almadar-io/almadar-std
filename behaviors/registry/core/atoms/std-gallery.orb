@@ -69,6 +69,9 @@
           "emits": [
             {
               "event": "VIEW",
+              "description": "Signals an item has been selected for viewing.",
+              "synonyms": "select, choose, display",
+              "tier": "essential",
               "scope": "external",
               "payloadSchema": [
                 {
@@ -105,10 +108,16 @@
               ]
             },
             {
-              "event": "CLOSE"
+              "event": "CLOSE",
+              "description": "Indicates the gallery has been closed.",
+              "synonyms": "dismiss, hide, cancel",
+              "tier": "essential"
             },
             {
               "event": "GalleryItemLoaded",
+              "description": "Indicates a GalleryItem has finished loading.",
+              "synonyms": "loaded, ready, available",
+              "tier": "internal",
               "payloadSchema": [
                 {
                   "name": "data",
@@ -118,6 +127,9 @@
             },
             {
               "event": "GalleryItemLoadFailed",
+              "description": "Indicates a GalleryItem failed to load.",
+              "synonyms": "error, failure, problem, load error",
+              "tier": "internal",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -154,6 +166,9 @@
               {
                 "key": "GalleryItemLoaded",
                 "name": "GalleryItem loaded",
+                "description": "Indicates a GalleryItem has finished loading.",
+                "synonyms": "loaded, ready, available",
+                "tier": "internal",
                 "payloadSchema": [
                   {
                     "name": "data",
@@ -164,6 +179,9 @@
               {
                 "key": "GalleryItemLoadFailed",
                 "name": "GalleryItem load failed",
+                "description": "Indicates a GalleryItem failed to load.",
+                "synonyms": "error, failure, problem, load error",
+                "tier": "internal",
                 "payloadSchema": [
                   {
                     "name": "error",
@@ -178,6 +196,9 @@
               {
                 "key": "VIEW",
                 "name": "View",
+                "description": "Signals an item has been selected for viewing.",
+                "synonyms": "select, choose, display",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "id",
@@ -192,7 +213,10 @@
               },
               {
                 "key": "CLOSE",
-                "name": "Close"
+                "name": "Close",
+                "description": "Indicates the gallery has been closed.",
+                "synonyms": "dismiss, hide, cancel",
+                "tier": "essential"
               }
             ],
             "transitions": [
@@ -206,8 +230,8 @@
                     "GalleryItem",
                     {
                       "emit": {
-                        "failure": "GalleryItemLoadFailed",
-                        "success": "GalleryItemLoaded"
+                        "success": "GalleryItemLoaded",
+                        "failure": "GalleryItemLoadFailed"
                       }
                     }
                   ],
@@ -215,20 +239,20 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "className": "py-12",
                       "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "variant": "caption",
+                          "color": "muted",
                           "content": "Loading gallery…",
-                          "color": "muted"
+                          "type": "typography",
+                          "variant": "caption"
                         }
                       ],
+                      "direction": "vertical",
                       "gap": "md",
                       "type": "stack"
                     }
@@ -245,21 +269,20 @@
                     "main",
                     {
                       "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "type": "stack",
                           "align": "center",
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "type": "stack",
                           "children": [
                             {
                               "type": "icon",
                               "name": "image"
                             },
                             {
-                              "content": "@config.title",
                               "variant": "h3",
+                              "content": "@config.title",
                               "type": "typography"
                             }
                           ]
@@ -272,7 +295,8 @@
                           "type": "media-gallery"
                         }
                       ],
-                      "gap": "md"
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -287,8 +311,8 @@
                     "main",
                     {
                       "type": "alert",
-                      "variant": "error",
-                      "message": "@payload.error"
+                      "message": "@payload.error",
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -322,18 +346,18 @@
                     "render-ui",
                     "modal",
                     {
-                      "type": "lightbox",
                       "showCounter": true,
+                      "isOpen": true,
+                      "type": "lightbox",
+                      "currentIndex": 0.0,
                       "images": [
                         {
-                          "caption": "@entity.name",
                           "src": "@entity.imageUrl",
-                          "alt": "@entity.name"
+                          "alt": "@entity.name",
+                          "caption": "@entity.name"
                         }
                       ],
-                      "closeAction": "CLOSE",
-                      "isOpen": true,
-                      "currentIndex": 0.0
+                      "closeAction": "CLOSE"
                     }
                   ]
                 ]
@@ -362,22 +386,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "direction": "vertical",
                       "type": "stack",
-                      "className": "py-12",
+                      "align": "center",
+                      "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "variant": "caption",
                           "color": "muted",
                           "content": "Loading gallery…",
-                          "variant": "caption",
                           "type": "typography"
                         }
                       ],
-                      "gap": "md"
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -392,8 +416,8 @@
                     "GalleryItem",
                     {
                       "emit": {
-                        "failure": "GalleryItemLoadFailed",
-                        "success": "GalleryItemLoaded"
+                        "success": "GalleryItemLoaded",
+                        "failure": "GalleryItemLoadFailed"
                       }
                     }
                   ],
@@ -401,8 +425,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "sm"
+                      "size": "sm",
+                      "type": "spinner"
                     }
                   ]
                 ]

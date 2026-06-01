@@ -73,6 +73,9 @@
           "emits": [
             {
               "event": "GEO_SEARCH",
+              "description": "Indicates a search request with location parameters.",
+              "synonyms": "search, locate, find, query",
+              "tier": "essential",
               "payloadSchema": [
                 {
                   "name": "searchTerm",
@@ -112,6 +115,9 @@
               {
                 "key": "GEO_SEARCH",
                 "name": "Geo Search",
+                "description": "Indicates a search request with location parameters.",
+                "synonyms": "search, locate, find, query",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "searchTerm",
@@ -149,30 +155,30 @@
                       "children": [
                         {
                           "event": "@config.event",
-                          "type": "search-input",
-                          "placeholder": "@config.placeholder"
+                          "placeholder": "@config.placeholder",
+                          "type": "search-input"
                         },
                         {
-                          "zoom": 12.0,
-                          "type": "map-view",
+                          "centerLat": "@entity.centerLat",
                           "height": "240px",
+                          "type": "map-view",
                           "markers": [],
-                          "centerLng": "@entity.centerLng",
-                          "centerLat": "@entity.centerLat"
+                          "zoom": 12.0,
+                          "centerLng": "@entity.centerLng"
                         },
                         {
-                          "max": 100.0,
-                          "value": "@entity.radiusKm",
+                          "action": "GEO_SEARCH",
                           "showTooltip": true,
                           "min": 1.0,
+                          "type": "range-slider",
+                          "max": 100.0,
                           "step": 1.0,
-                          "action": "GEO_SEARCH",
-                          "type": "range-slider"
+                          "value": "@entity.radiusKm"
                         }
                       ],
-                      "gap": "md",
                       "type": "stack",
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -206,33 +212,33 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
                       "children": [
                         {
-                          "type": "search-input",
+                          "placeholder": "@config.placeholder",
                           "event": "@config.event",
-                          "placeholder": "@config.placeholder"
+                          "type": "search-input"
                         },
                         {
+                          "zoom": 12.0,
                           "centerLng": "@entity.centerLng",
                           "markers": [],
-                          "zoom": 12.0,
-                          "height": "240px",
+                          "type": "map-view",
                           "centerLat": "@entity.centerLat",
-                          "type": "map-view"
+                          "height": "240px"
                         },
                         {
+                          "min": 1.0,
                           "max": 100.0,
+                          "type": "range-slider",
                           "step": 1.0,
                           "showTooltip": true,
-                          "action": "GEO_SEARCH",
-                          "type": "range-slider",
-                          "min": 1.0,
-                          "value": "@entity.radiusKm"
+                          "value": "@entity.radiusKm",
+                          "action": "GEO_SEARCH"
                         }
                       ],
-                      "direction": "vertical",
                       "type": "stack",
-                      "gap": "md"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -240,19 +246,19 @@
             ]
           },
           "config": {
-            "defaultRadiusKm": {
-              "type": "number",
-              "default": 10.0,
-              "label": "Default radius (km)",
-              "description": "Initial search radius around the chosen center",
-              "tier": "presentation"
-            },
             "event": {
               "type": "string",
               "default": "GEO_SEARCH",
               "label": "Search event",
               "description": "Event emitted when the user runs a geo search",
               "tier": "internal"
+            },
+            "defaultRadiusKm": {
+              "type": "number",
+              "default": 10.0,
+              "label": "Default radius (km)",
+              "description": "Initial search radius around the chosen center",
+              "tier": "presentation"
             },
             "placeholder": {
               "type": "string",

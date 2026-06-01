@@ -74,17 +74,47 @@ orbital DataErasureOrbital {
     }
     emits {
       CANCEL_ERASURE           { id : string!, row : ErasureRequest }
+        @description "Signals a request cancellation during its processing lifecycle."
+        @synonyms "abort, revoke, undo, terminate"
+        @tier "essential"
       ErasureLoaded            { data : [ErasureRequest] }
+        @description "Indicates that erasure request data has been successfully loaded."
+        @synonyms "loaded, fetched, retrieved"
+        @tier "essential"
       ErasureLoadFailed        { error : string, code : string }
+        @description "Indicates failure to load erasure request data."
+        @synonyms "load error, failed load, data error"
+        @tier "internal"
       ErasureSaved             { row : ErasureRequest }
+        @description "Indicates a new erasure request has been successfully saved."
+        @synonyms "created, added, persisted"
+        @tier "essential"
       ErasureSaveFailed        { error : string, code : string }
+        @description "Indicates that saving the erasure request failed."
+        @synonyms "failed, error, unsuccessful"
+        @tier "internal"
     }
     listens {
       CANCEL_ERASURE           { id : string!, row : ErasureRequest }
+        @description "Indicates a request cancellation during the erasure process."
+        @synonyms "revoke, abort, undo, stop"
+        @tier "essential"
       ErasureLoaded            { data : [ErasureRequest] }
+        @description "Data erasure request successfully loaded."
+        @synonyms "loaded, retrieved, fetched"
+        @tier "essential"
       ErasureLoadFailed        { error : string, code : string }
+        @description "Indicates a failure to load erasure request data."
+        @synonyms "load error, failed load, data error"
+        @tier "internal"
       ErasureSaved             { row : ErasureRequest }
+        @description "A new erasure request has been successfully saved."
+        @synonyms "created, added, persisted"
+        @tier "essential"
       ErasureSaveFailed        { error : string, code : string }
+        @description "Indicates that saving the erasure request failed."
+        @synonyms "failure, error, rejected, invalid"
+        @tier "customization"
     }
   }
   page "/erasure/queue" as ErasureWorkflowPage -> ErasureWorkflow

@@ -72,6 +72,9 @@
           "emits": [
             {
               "event": "OPEN_RULE",
+              "description": "Signals a rule detail view should be opened.",
+              "synonyms": "show, display, reveal, open",
+              "tier": "customization",
               "payloadSchema": [
                 {
                   "name": "id",
@@ -113,10 +116,16 @@
               ]
             },
             {
-              "event": "CLOSE_VIEW"
+              "event": "CLOSE_VIEW",
+              "description": "Indicates the detail view has been closed.",
+              "synonyms": "dismiss, hide, close",
+              "tier": "customization"
             },
             {
               "event": "DELETE_RULE",
+              "description": "Signals a branching rule has been removed.",
+              "synonyms": "remove, discard, delete",
+              "tier": "customization",
               "payloadSchema": [
                 {
                   "name": "id",
@@ -127,6 +136,9 @@
             },
             {
               "event": "BranchingRuleLoaded",
+              "description": "Indicates a branching rule has been successfully retrieved.",
+              "synonyms": "loaded, fetched, retrieved",
+              "tier": "internal",
               "payloadSchema": [
                 {
                   "name": "data",
@@ -136,6 +148,9 @@
             },
             {
               "event": "BranchingRuleLoadFailed",
+              "description": "Indicates a failure to load a branching rule.",
+              "synonyms": "error, failure, problem, unsuccessful",
+              "tier": "internal",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -172,6 +187,9 @@
               {
                 "key": "BranchingRuleLoaded",
                 "name": "BranchingRule loaded",
+                "description": "Indicates a branching rule has been successfully retrieved.",
+                "synonyms": "loaded, fetched, retrieved",
+                "tier": "internal",
                 "payloadSchema": [
                   {
                     "name": "data",
@@ -182,6 +200,9 @@
               {
                 "key": "BranchingRuleLoadFailed",
                 "name": "BranchingRule load failed",
+                "description": "Indicates a failure to load a branching rule.",
+                "synonyms": "error, failure, problem, unsuccessful",
+                "tier": "internal",
                 "payloadSchema": [
                   {
                     "name": "error",
@@ -196,6 +217,9 @@
               {
                 "key": "OPEN_RULE",
                 "name": "Open Rule",
+                "description": "Signals a rule detail view should be opened.",
+                "synonyms": "show, display, reveal, open",
+                "tier": "customization",
                 "payloadSchema": [
                   {
                     "name": "id",
@@ -211,6 +235,9 @@
               {
                 "key": "DELETE_RULE",
                 "name": "Delete Rule",
+                "description": "Signals a branching rule has been removed.",
+                "synonyms": "remove, discard, delete",
+                "tier": "customization",
                 "payloadSchema": [
                   {
                     "name": "id",
@@ -221,7 +248,10 @@
               },
               {
                 "key": "CLOSE_VIEW",
-                "name": "Close View"
+                "name": "Close View",
+                "description": "Indicates the detail view has been closed.",
+                "synonyms": "dismiss, hide, close",
+                "tier": "customization"
               }
             ],
             "transitions": [
@@ -244,20 +274,20 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "align": "center",
+                      "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
-                          "content": "Loading branching rules…",
                           "type": "typography",
-                          "variant": "caption"
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "Loading branching rules…"
                         }
                       ],
-                      "type": "stack",
                       "className": "py-12",
                       "direction": "vertical"
                     }
@@ -273,11 +303,11 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
+                      "gap": "md",
                       "children": [
                         {
-                          "gap": "sm",
                           "direction": "horizontal",
+                          "gap": "sm",
                           "type": "stack",
                           "align": "center",
                           "children": [
@@ -287,99 +317,99 @@
                             },
                             {
                               "type": "typography",
-                              "variant": "h3",
-                              "content": "@config.title"
+                              "content": "@config.title",
+                              "variant": "h3"
                             }
                           ]
                         },
                         {
-                          "type": "simple-grid",
-                          "cols": 4.0,
                           "children": [
                             {
                               "type": "stat-display",
                               "look": "@config.statLook",
                               "label": "Total rules",
-                              "icon": "git-branch",
-                              "value": "@payload.data.length"
+                              "value": "@payload.data.length",
+                              "icon": "git-branch"
                             },
                             {
+                              "value": "8",
                               "type": "stat-display",
+                              "look": "@config.statLook",
                               "label": "Active surveys",
-                              "look": "@config.statLook",
-                              "icon": "clipboard-list",
-                              "value": "8"
+                              "icon": "clipboard-list"
                             },
                             {
+                              "label": "Skip jumps",
                               "type": "stat-display",
-                              "value": "42",
                               "look": "@config.statLook",
-                              "icon": "skip-forward",
-                              "label": "Skip jumps"
+                              "value": "42",
+                              "icon": "skip-forward"
                             },
                             {
-                              "label": "Priority avg",
                               "icon": "trending-up",
-                              "look": "@config.statLook",
                               "value": "3",
-                              "type": "stat-display"
+                              "label": "Priority avg",
+                              "type": "stat-display",
+                              "look": "@config.statLook"
                             }
-                          ]
+                          ],
+                          "type": "simple-grid",
+                          "cols": 4.0
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "look": "@config.tableLook",
                           "fields": [
                             {
+                              "variant": "caption",
                               "name": "sourceQuestionId",
-                              "label": "If question",
+                              "label": "If question"
+                            },
+                            {
+                              "label": "Op",
+                              "name": "operator",
+                              "variant": "badge"
+                            },
+                            {
+                              "name": "value",
+                              "label": "Value",
                               "variant": "caption"
                             },
                             {
-                              "name": "operator",
-                              "variant": "badge",
-                              "label": "Op"
-                            },
-                            {
                               "variant": "caption",
-                              "name": "value",
-                              "label": "Value"
-                            },
-                            {
                               "label": "Jump to",
-                              "variant": "caption",
                               "name": "targetQuestionId"
                             },
                             {
-                              "variant": "badge",
                               "label": "Priority",
+                              "variant": "badge",
                               "name": "priority"
                             }
                           ],
-                          "cols": 1.0,
-                          "gap": "sm",
+                          "type": "data-grid",
                           "itemActions": [
                             {
-                              "variant": "primary",
                               "label": "Open",
+                              "variant": "primary",
                               "event": "OPEN_RULE",
                               "icon": "arrow-right"
                             },
                             {
-                              "variant": "danger",
                               "icon": "trash-2",
-                              "label": "Delete",
-                              "event": "DELETE_RULE"
+                              "event": "DELETE_RULE",
+                              "variant": "danger",
+                              "label": "Delete"
                             }
                           ],
+                          "cols": 1.0,
                           "entity": "@payload.data",
-                          "type": "data-grid",
-                          "look": "@config.tableLook"
+                          "gap": "sm"
                         }
                       ],
-                      "type": "stack",
-                      "gap": "md"
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -444,23 +474,20 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "gap": "md",
                       "direction": "vertical",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "type": "stack",
                           "children": [
                             {
-                              "variant": "ghost",
                               "type": "button",
-                              "action": "CLOSE_VIEW",
-                              "label": "Back"
+                              "label": "Back",
+                              "variant": "ghost",
+                              "action": "CLOSE_VIEW"
                             },
                             {
-                              "type": "icon",
-                              "name": "git-branch"
+                              "name": "git-branch",
+                              "type": "icon"
                             },
                             {
                               "content": "@entity.sourceQuestionId",
@@ -468,47 +495,51 @@
                               "variant": "h3"
                             },
                             {
-                              "variant": "default",
                               "type": "badge",
-                              "label": "@entity.operator"
+                              "label": "@entity.operator",
+                              "variant": "default"
                             }
                           ],
+                          "gap": "sm",
+                          "type": "stack",
                           "align": "center",
-                          "gap": "sm"
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "gap": "sm",
                           "type": "stack",
+                          "gap": "sm",
                           "direction": "vertical",
                           "children": [
                             {
+                              "type": "stack",
+                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "variant": "caption",
-                                  "type": "typography",
                                   "content": "Survey",
-                                  "color": "muted"
+                                  "color": "muted",
+                                  "type": "typography",
+                                  "variant": "caption"
                                 },
                                 {
-                                  "variant": "body",
                                   "content": "@entity.surveyId",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "variant": "body"
                                 }
                               ],
-                              "direction": "horizontal",
-                              "type": "stack",
                               "gap": "md"
                             },
                             {
+                              "type": "stack",
+                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "variant": "caption",
-                                  "content": "Value",
                                   "type": "typography",
-                                  "color": "muted"
+                                  "color": "muted",
+                                  "variant": "caption",
+                                  "content": "Value"
                                 },
                                 {
                                   "content": "@entity.value",
@@ -516,9 +547,7 @@
                                   "variant": "body"
                                 }
                               ],
-                              "type": "stack",
-                              "gap": "md",
-                              "direction": "horizontal"
+                              "gap": "md"
                             }
                           ]
                         },
@@ -526,50 +555,51 @@
                           "type": "divider"
                         },
                         {
+                          "type": "simple-grid",
+                          "cols": 3.0,
                           "children": [
                             {
-                              "icon": "help-circle",
-                              "label": "Source",
-                              "look": "@config.statLook",
                               "type": "stat-display",
-                              "value": "@entity.sourceQuestionId"
+                              "value": "@entity.sourceQuestionId",
+                              "label": "Source",
+                              "icon": "help-circle",
+                              "look": "@config.statLook"
                             },
                             {
+                              "value": "@entity.targetQuestionId",
+                              "type": "stat-display",
                               "look": "@config.statLook",
                               "icon": "arrow-right-circle",
-                              "label": "Target",
-                              "type": "stat-display",
-                              "value": "@entity.targetQuestionId"
+                              "label": "Target"
                             },
                             {
                               "label": "Priority",
-                              "look": "@config.statLook",
-                              "type": "stat-display",
                               "value": "@entity.priority",
-                              "icon": "trending-up"
+                              "icon": "trending-up",
+                              "look": "@config.statLook",
+                              "type": "stat-display"
                             }
-                          ],
-                          "type": "simple-grid",
-                          "cols": 3.0
+                          ]
                         },
                         {
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "button",
+                              "label": "Delete",
                               "variant": "danger",
+                              "type": "button",
+                              "action": "DELETE_RULE",
                               "actionPayload": {
                                 "id": "@entity.id"
-                              },
-                              "label": "Delete",
-                              "action": "DELETE_RULE"
+                              }
                             }
                           ],
                           "align": "center",
                           "type": "stack",
-                          "direction": "horizontal",
                           "gap": "sm"
                         }
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -589,8 +619,8 @@
                     "BranchingRule",
                     {
                       "emit": {
-                        "success": "BranchingRuleLoaded",
-                        "failure": "BranchingRuleLoadFailed"
+                        "failure": "BranchingRuleLoadFailed",
+                        "success": "BranchingRuleLoaded"
                       }
                     }
                   ],
@@ -599,21 +629,21 @@
                     "main",
                     {
                       "className": "py-12",
+                      "gap": "md",
                       "align": "center",
-                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "variant": "caption",
                           "color": "muted",
                           "content": "Deleting rule…",
-                          "type": "typography",
-                          "variant": "caption"
+                          "type": "typography"
                         }
                       ],
                       "type": "stack",
-                      "gap": "md"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -628,8 +658,8 @@
                     "BranchingRule",
                     {
                       "emit": {
-                        "success": "BranchingRuleLoaded",
-                        "failure": "BranchingRuleLoadFailed"
+                        "failure": "BranchingRuleLoadFailed",
+                        "success": "BranchingRuleLoaded"
                       }
                     }
                   ],
@@ -637,22 +667,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "align": "center",
+                      "gap": "md",
                       "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
-                          "content": "Loading branching rules…",
+                          "type": "typography",
                           "color": "muted",
-                          "type": "typography"
+                          "content": "Loading branching rules…",
+                          "variant": "caption"
                         }
                       ],
-                      "gap": "md"
+                      "type": "stack",
+                      "direction": "vertical",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -681,22 +711,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "align": "center",
                       "direction": "vertical",
-                      "gap": "md",
+                      "type": "stack",
                       "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
                           "variant": "caption",
-                          "content": "Deleting rule…",
-                          "color": "muted"
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "Deleting rule…"
                         }
-                      ]
+                      ],
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -729,20 +759,6 @@
             ]
           },
           "config": {
-            "statLook": {
-              "type": "string",
-              "default": "elevated",
-              "label": "Stat display look",
-              "description": "Layer 2 visual treatment for stat / KPI cards.",
-              "tier": "presentation",
-              "values": [
-                "elevated",
-                "flat",
-                "progress-backed",
-                "gauge",
-                "sparkline"
-              ]
-            },
             "title": {
               "type": "string",
               "default": "Branching Rules",
@@ -762,6 +778,20 @@
                 "striped",
                 "borderless",
                 "card-rows"
+              ]
+            },
+            "statLook": {
+              "type": "string",
+              "default": "elevated",
+              "label": "Stat display look",
+              "description": "Layer 2 visual treatment for stat / KPI cards.",
+              "tier": "presentation",
+              "values": [
+                "elevated",
+                "flat",
+                "progress-backed",
+                "gauge",
+                "sparkline"
               ]
             }
           },

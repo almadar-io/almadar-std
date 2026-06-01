@@ -104,7 +104,9 @@
           "emits": [
             {
               "event": "FormEntryLoaded",
-              "description": "Fired when FormEntry finishes loading",
+              "description": "Signals successful loading of form entry data.",
+              "synonyms": "loaded, initialized, populated",
+              "tier": "essential",
               "scope": "internal",
               "payloadSchema": [
                 {
@@ -155,7 +157,9 @@
             },
             {
               "event": "FormEntryLoadFailed",
-              "description": "Fired when FormEntry fails to load",
+              "description": "Indicates failure to load form entry data.",
+              "synonyms": "load error, data fetch failed, failed to retrieve",
+              "tier": "internal",
               "scope": "internal",
               "payloadSchema": [
                 {
@@ -166,6 +170,9 @@
             },
             {
               "event": "FormEntrySaved",
+              "description": "Signals successful saving of form entry data.",
+              "synonyms": "saved, persisted, submitted, confirmed",
+              "tier": "essential",
               "scope": "internal",
               "payloadSchema": [
                 {
@@ -176,6 +183,9 @@
             },
             {
               "event": "FormEntrySaveFailed",
+              "description": "Indicates a failure to save form entry data.",
+              "synonyms": "error, failure, rejected, invalid",
+              "tier": "essential",
               "scope": "internal",
               "payloadSchema": [
                 {
@@ -207,6 +217,9 @@
               {
                 "key": "SUBMIT",
                 "name": "Submit",
+                "description": "Indicates the form has been submitted for processing.",
+                "synonyms": "submit, send, post",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "data",
@@ -222,6 +235,9 @@
               {
                 "key": "FormEntryLoaded",
                 "name": "FormEntry loaded",
+                "description": "Signals successful loading of form entry data.",
+                "synonyms": "loaded, initialized, populated",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "id",
@@ -272,6 +288,9 @@
               {
                 "key": "FormEntryLoadFailed",
                 "name": "FormEntry load failed",
+                "description": "Indicates failure to load form entry data.",
+                "synonyms": "load error, data fetch failed, failed to retrieve",
+                "tier": "internal",
                 "payloadSchema": [
                   {
                     "name": "message",
@@ -282,6 +301,9 @@
               {
                 "key": "FormEntrySaved",
                 "name": "FormEntry saved",
+                "description": "Signals successful saving of form entry data.",
+                "synonyms": "saved, persisted, submitted, confirmed",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "id",
@@ -292,6 +314,9 @@
               {
                 "key": "FormEntrySaveFailed",
                 "name": "FormEntry save failed",
+                "description": "Indicates a failure to save form entry data.",
+                "synonyms": "error, failure, rejected, invalid",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "error",
@@ -334,9 +359,12 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "children": [
                         {
                           "gap": "sm",
+                          "type": "stack",
+                          "direction": "horizontal",
                           "align": "center",
                           "children": [
                             {
@@ -344,28 +372,25 @@
                               "type": "icon"
                             },
                             {
+                              "variant": "h2",
                               "type": "typography",
-                              "content": "@config.title",
-                              "variant": "h2"
+                              "content": "@config.title"
                             }
-                          ],
-                          "type": "stack",
-                          "direction": "horizontal"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "cancelEvent": "INIT",
-                          "mode": "create",
-                          "submitEvent": "SUBMIT",
+                          "fields": "@config.fields",
                           "type": "form-section",
-                          "fields": "@config.fields"
+                          "mode": "create",
+                          "submitEvent": "SUBMIT"
                         }
                       ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "lg"
+                      "gap": "lg",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -382,8 +407,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "failure": "FormEntrySaveFailed",
-                        "success": "FormEntrySaved"
+                        "success": "FormEntrySaved",
+                        "failure": "FormEntrySaveFailed"
                       }
                     }
                   ],
@@ -391,11 +416,14 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "gap": "lg",
                       "align": "center",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "check-circle"
+                          "name": "check-circle",
+                          "type": "icon"
                         },
                         {
                           "content": "Form Submitted",
@@ -408,16 +436,13 @@
                           "message": "Your form has been submitted successfully."
                         },
                         {
-                          "action": "RESET",
+                          "type": "button",
                           "icon": "plus",
                           "variant": "primary",
-                          "type": "button",
+                          "action": "RESET",
                           "label": "New Entry"
                         }
-                      ],
-                      "gap": "lg",
-                      "direction": "vertical",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -432,8 +457,8 @@
                     "FormEntry",
                     {
                       "emit": {
-                        "success": "FormEntryLoaded",
-                        "failure": "FormEntryLoadFailed"
+                        "failure": "FormEntryLoadFailed",
+                        "success": "FormEntryLoaded"
                       }
                     }
                   ],
@@ -442,8 +467,8 @@
                     "FormEntry",
                     {
                       "emit": {
-                        "success": "FormEntryLoaded",
-                        "failure": "FormEntryLoadFailed"
+                        "failure": "FormEntryLoadFailed",
+                        "success": "FormEntryLoaded"
                       }
                     }
                   ],
@@ -451,38 +476,38 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
+                      "type": "stack",
                       "direction": "vertical",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "type": "stack",
                           "children": [
                             {
                               "name": "@config.icon",
                               "type": "icon"
                             },
                             {
+                              "variant": "h2",
                               "type": "typography",
-                              "content": "@config.title",
-                              "variant": "h2"
+                              "content": "@config.title"
                             }
                           ],
+                          "direction": "horizontal",
                           "align": "center",
+                          "type": "stack",
                           "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "mode": "create",
-                          "type": "form-section",
-                          "submitEvent": "SUBMIT",
                           "fields": "@config.fields",
+                          "submitEvent": "SUBMIT",
+                          "type": "form-section",
+                          "mode": "create",
                           "cancelEvent": "INIT"
                         }
-                      ],
-                      "gap": "lg",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -497,6 +522,40 @@
               "description": "Heading shown above the form",
               "tier": "presentation"
             },
+            "icon": {
+              "type": "string",
+              "default": "file-text",
+              "label": "Header icon",
+              "description": "Icon shown beside the form title",
+              "tier": "presentation"
+            },
+            "fieldValidation": {
+              "type": "[ValidationSpec]",
+              "default": [],
+              "label": "Field validation",
+              "description": "Per-field rules (format, regex, length) shown inline on submit",
+              "tier": "domain",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "message": {
+                    "name": "message",
+                    "type": "string",
+                    "required": false
+                  },
+                  "rule": {
+                    "name": "rule",
+                    "type": "string",
+                    "required": false
+                  },
+                  "field": {
+                    "name": "field",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
             "fields": {
               "type": "[FieldSpec]",
               "default": [
@@ -505,18 +564,18 @@
                   "label": "Name"
                 },
                 {
-                  "label": "Description",
-                  "name": "description"
+                  "name": "description",
+                  "label": "Description"
                 },
                 {
+                  "label": "Status",
+                  "type": "enum",
                   "values": [
                     "active",
                     "inactive",
                     "pending"
                   ],
-                  "name": "status",
-                  "label": "Status",
-                  "type": "enum"
+                  "name": "status"
                 },
                 {
                   "name": "notes",
@@ -525,8 +584,8 @@
                 },
                 {
                   "name": "age",
-                  "label": "Age",
-                  "type": "number"
+                  "type": "number",
+                  "label": "Age"
                 },
                 {
                   "type": "boolean",
@@ -534,14 +593,14 @@
                   "label": "Is Active"
                 },
                 {
-                  "name": "birthDate",
+                  "label": "Birth Date",
                   "type": "date",
-                  "label": "Birth Date"
+                  "name": "birthDate"
                 },
                 {
-                  "type": "enum",
                   "name": "priority",
                   "label": "Priority",
+                  "type": "enum",
                   "values": [
                     "low",
                     "medium",
@@ -550,9 +609,9 @@
                   ]
                 },
                 {
+                  "type": "relation",
                   "label": "Category ID",
                   "name": "categoryId",
-                  "type": "relation",
                   "relation": {
                     "entity": "FormEntry",
                     "cardinality": "one"
@@ -565,15 +624,20 @@
               "items": {
                 "type": "object",
                 "properties": {
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
                   "header": {
                     "name": "header",
                     "type": "string",
                     "required": false
                   },
-                  "label": {
-                    "name": "label",
+                  "name": {
+                    "name": "name",
                     "type": "string",
-                    "required": false
+                    "required": true
                   },
                   "icon": {
                     "name": "icon",
@@ -585,8 +649,8 @@
                     "type": "string",
                     "required": false
                   },
-                  "variant": {
-                    "name": "variant",
+                  "label": {
+                    "name": "label",
                     "type": "string",
                     "required": false
                   },
@@ -594,48 +658,9 @@
                     "name": "key",
                     "type": "string",
                     "required": false
-                  },
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
                   }
                 }
               }
-            },
-            "fieldValidation": {
-              "type": "[ValidationSpec]",
-              "default": [],
-              "label": "Field validation",
-              "description": "Per-field rules (format, regex, length) shown inline on submit",
-              "tier": "domain",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "rule": {
-                    "name": "rule",
-                    "type": "string",
-                    "required": false
-                  },
-                  "message": {
-                    "name": "message",
-                    "type": "string",
-                    "required": false
-                  },
-                  "field": {
-                    "name": "field",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            },
-            "icon": {
-              "type": "string",
-              "default": "file-text",
-              "label": "Header icon",
-              "description": "Icon shown beside the form title",
-              "tier": "presentation"
             }
           },
           "scope": "instance"

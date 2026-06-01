@@ -66,10 +66,16 @@
           "linkedEntity": "HeroPromo",
           "emits": [
             {
-              "event": "PRIMARY_CTA"
+              "event": "PRIMARY_CTA",
+              "description": "Signals that the primary call to action has been triggered.",
+              "synonyms": "click, activate, submit, trigger",
+              "tier": "essential"
             },
             {
               "event": "HeroPromoLoaded",
+              "description": "Signals successful loading of the hero promotion data.",
+              "synonyms": "loaded, fetched, received, ready",
+              "tier": "essential",
               "payloadSchema": [
                 {
                   "name": "data",
@@ -79,6 +85,9 @@
             },
             {
               "event": "HeroPromoLoadFailed",
+              "description": "Indicates failure to load the hero promotion data.",
+              "synonyms": "error, failed, load error",
+              "tier": "internal",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -112,6 +121,9 @@
               {
                 "key": "HeroPromoLoaded",
                 "name": "HeroPromo loaded",
+                "description": "Signals successful loading of the hero promotion data.",
+                "synonyms": "loaded, fetched, received, ready",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "data",
@@ -122,6 +134,9 @@
               {
                 "key": "HeroPromoLoadFailed",
                 "name": "HeroPromo load failed",
+                "description": "Indicates failure to load the hero promotion data.",
+                "synonyms": "error, failed, load error",
+                "tier": "internal",
                 "payloadSchema": [
                   {
                     "name": "error",
@@ -135,7 +150,10 @@
               },
               {
                 "key": "PRIMARY_CTA",
-                "name": "Primary Cta"
+                "name": "Primary Cta",
+                "description": "Signals that the primary call to action has been triggered.",
+                "synonyms": "click, activate, submit, trigger",
+                "tier": "essential"
               }
             ],
             "transitions": [
@@ -148,11 +166,11 @@
                     "fetch",
                     "HeroPromo",
                     {
+                      "limit": 1.0,
                       "emit": {
                         "success": "HeroPromoLoaded",
                         "failure": "HeroPromoLoadFailed"
-                      },
-                      "limit": 1.0
+                      }
                     }
                   ],
                   [
@@ -234,44 +252,44 @@
                     "render-ui",
                     "main",
                     {
+                      "look": "elevated",
+                      "padding": "lg",
                       "children": [
                         {
-                          "gap": "lg",
+                          "type": "stack",
                           "direction": "vertical",
-                          "align": "center",
+                          "gap": "lg",
                           "children": [
                             {
-                              "size": "sm",
-                              "type": "badge",
+                              "variant": "neutral",
                               "label": "@entity.eyebrow",
-                              "variant": "neutral"
+                              "size": "sm",
+                              "type": "badge"
                             },
                             {
                               "type": "typography",
-                              "weight": "bold",
+                              "content": "@entity.headline",
                               "variant": "h1",
-                              "content": "@entity.headline"
+                              "weight": "bold"
                             },
                             {
-                              "content": "@entity.lead",
-                              "color": "muted",
                               "type": "typography",
+                              "color": "muted",
+                              "content": "@entity.lead",
                               "variant": "body"
                             },
                             {
-                              "size": "lg",
-                              "label": "@entity.ctaLabel",
                               "type": "button",
+                              "label": "@entity.ctaLabel",
                               "variant": "primary",
-                              "action": "@entity.ctaEvent"
+                              "action": "@entity.ctaEvent",
+                              "size": "lg"
                             }
                           ],
-                          "type": "stack"
+                          "align": "center"
                         }
                       ],
-                      "padding": "lg",
-                      "type": "card",
-                      "look": "elevated"
+                      "type": "card"
                     }
                   ]
                 ]
@@ -290,9 +308,9 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "@entity.errorMessage",
                       "type": "error-state",
-                      "title": "Failed to load hero"
+                      "title": "Failed to load hero",
+                      "message": "@entity.errorMessage"
                     }
                   ]
                 ]

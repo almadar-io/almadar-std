@@ -71,11 +71,20 @@ orbital ServiceNodeOrbital {
     }
 emits {
       ServiceNodeLoaded
+        @description "Signals successful loading of a service node."
+        @synonyms "loaded, initialized, ready"
+        @tier "internal"
       ServiceNodeLoadFailed
+        @description "Indicates a node failed to load, potentially disrupting service."
+        @synonyms "failure, error, unavailable, outage"
+        @tier "internal"
     }
 
         listens {
       ServiceNodeLoadFailed { message : string }
+        @description "Indicates a node failed to load, potentially impacting service availability."
+        @synonyms "failure, error, unavailable, outage"
+        @tier "internal"
     }
   }
   page "/servicenodes" as ServiceNodePage -> ServiceNodeCircuitBreaker

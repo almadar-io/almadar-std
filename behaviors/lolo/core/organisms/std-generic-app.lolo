@@ -65,12 +65,21 @@ orbital ContactOrbital {
     }
     emits {
       CREATE -> external { source : string }
+        @description "Signals the creation of a new record."
+        @synonyms "new, add, initialize, generate"
+        @tier "essential"
     }
     listens {
       ContactAppLayout.CONTACT_SEARCH -> CONTACT_SEARCH
       ContactAppLayout.CONTACT_NOTIFICATIONS_OPEN -> CONTACT_NOTIFICATIONS_OPEN
       CONTACT_SEARCH { value : string }
+        @description "Triggers a search for contacts."
+        @synonyms "find, query, lookup, search"
+        @tier "essential"
       CONTACT_NOTIFICATIONS_OPEN { id : string }
+        @description "Indicates new contact notifications are available."
+        @synonyms "alerts, updates, reminders, news"
+        @tier "customization"
     }
   }
 
@@ -117,8 +126,17 @@ orbital ContactOrbital {
     listens {
       ContactCatalog.CREATE -> CREATE
       CREATE { id : string, row : Contact }
+        @description "A new record is being created."
+        @synonyms "new, add, initialize, generate"
+        @tier "essential"
       SAVE { data : object! }
+        @description "Data persistence or storage has been successfully completed."
+        @synonyms "persist, store, commit, update"
+        @tier "essential"
       ModalRecordLoadFailed { error : string, code : string }
+        @description "Indicates a failure to load a record into a modal window."
+        @synonyms "load error, failed load, data fetch failure"
+        @tier "internal"
     }
   }
 
@@ -128,8 +146,17 @@ orbital ContactOrbital {
     listens {
       ContactBrowseList.EDIT -> EDIT
       EDIT { id : string, row : Contact }
+        @description "Indicates a record is being modified."
+        @synonyms "update, change, modify"
+        @tier "essential"
       SAVE { data : object! }
+        @description "Data persistence triggered by user action."
+        @synonyms "persist, store, commit, update"
+        @tier "essential"
       ModalRecordLoadFailed { error : string, code : string }
+        @description "Indicates a failure to load a record into a modal window."
+        @synonyms "load error, failed load, data retrieval failure"
+        @tier "internal"
     }
   }
 
@@ -139,8 +166,17 @@ orbital ContactOrbital {
     listens {
       ContactBrowseList.VIEW -> VIEW
       VIEW { id : string, row : Contact }
+        @description "Indicates a record has been displayed or is visible."
+        @synonyms "display, show, present"
+        @tier "essential"
       SAVE { data : object! }
+        @description "A record has been persisted or updated."
+        @synonyms "persist, update, store, commit"
+        @tier "essential"
       ModalRecordLoadFailed { error : string, code : string }
+        @description "Indicates a failure to load a record into a modal window."
+        @synonyms "load error, failed load, data retrieval failure"
+        @tier "internal"
     }
   }
 
@@ -150,7 +186,13 @@ orbital ContactOrbital {
     listens {
       ContactBrowseList.DELETE -> DELETE
       DELETE { id : string, row : Contact }
+        @description "Indicates a record has been removed."
+        @synonyms "remove, discard, erase"
+        @tier "essential"
       ConfirmActionLoadFailed { error : string, code : string }
+        @description "Indicates a failure to load requested data."
+        @synonyms "error, failure, failed, problem"
+        @tier "internal"
     }
   }
 
@@ -167,13 +209,31 @@ orbital ContactOrbital {
     }
     emits {
       CONTACT_CREATED -> external { id : string }
+        @description "Signals the creation of a new contact record."
+        @synonyms "new contact, add contact, contact added"
+        @tier "essential"
       CONTACT_UPDATED -> external { id : string }
+        @description "Signals that a contact's details have been modified."
+        @synonyms "modified, changed, refreshed"
+        @tier "essential"
       CONTACT_DELETED -> external { id : string }
+        @description "Signals a contact record has been removed."
+        @synonyms "removed, purged, archived"
+        @tier "essential"
     }
     listens {
       DO_CREATE { data : object! }
+        @description "Initiates the creation of a new record."
+        @synonyms "new, add, generate, initiate"
+        @tier "essential"
       DO_UPDATE { data : object! }
+        @description "Indicates data has been modified and needs to be refreshed."
+        @synonyms "refresh, reload, update, sync"
+        @tier "essential"
       DO_DELETE { id : string }
+        @description "Initiates the removal of a record."
+        @synonyms "remove, discard, purge"
+        @tier "essential"
       ContactCreate.SAVE          -> DO_CREATE
       ContactEdit.SAVE            -> DO_UPDATE
       ContactDelete.CONFIRM_DELETE -> DO_DELETE
@@ -246,12 +306,21 @@ orbital ItemOrbital {
     }
     emits {
       CREATE -> external { source : string }
+        @description "Signals the creation of a new record."
+        @synonyms "new, add, generate, initialize"
+        @tier "essential"
     }
     listens {
       ItemAppLayout.ITEM_SEARCH -> ITEM_SEARCH
       ItemAppLayout.ITEM_NOTIFICATIONS_OPEN -> ITEM_NOTIFICATIONS_OPEN
       ITEM_SEARCH { value : string }
+        @description "A search query for items has been submitted."
+        @synonyms "query, find, lookup, browse"
+        @tier "essential"
       ITEM_NOTIFICATIONS_OPEN { id : string }
+        @description "Indicates new notifications are available for items."
+        @synonyms "alerts, notification, updates, new"
+        @tier "customization"
     }
   }
 
@@ -299,8 +368,17 @@ orbital ItemOrbital {
     listens {
       ItemCatalog.CREATE -> CREATE
       CREATE { id : string, row : Item }
+        @description "A new record is being created."
+        @synonyms "add, new, initialize, generate"
+        @tier "essential"
       SAVE { data : object! }
+        @description "Data has been persisted or synchronized."
+        @synonyms "persist, store, update, commit"
+        @tier "essential"
       ModalRecordLoadFailed { error : string, code : string }
+        @description "Indicates a failure to load a record into a modal window."
+        @synonyms "load error, failed load, data fetch failure"
+        @tier "internal"
     }
   }
 
@@ -310,8 +388,17 @@ orbital ItemOrbital {
     listens {
       ItemBrowseList.EDIT -> EDIT
       EDIT { id : string, row : Item }
+        @description "Indicates a record is being modified."
+        @synonyms "update, change, modify"
+        @tier "essential"
       SAVE { data : object! }
+        @description "Data has been persisted or synchronized."
+        @synonyms "persist, store, update, synchronize"
+        @tier "essential"
       ModalRecordLoadFailed { error : string, code : string }
+        @description "Indicates failure to load a record into a modal window."
+        @synonyms "load error, failed load, data fetch failure"
+        @tier "internal"
     }
   }
 
@@ -321,8 +408,17 @@ orbital ItemOrbital {
     listens {
       ItemBrowseList.VIEW -> VIEW
       VIEW { id : string, row : Item }
+        @description "Indicates a record has been displayed or is visible."
+        @synonyms "display, show, present"
+        @tier "essential"
       SAVE { data : object! }
+        @description "Data has been persisted or synchronized."
+        @synonyms "persist, store, update, synchronize"
+        @tier "essential"
       ModalRecordLoadFailed { error : string, code : string }
+        @description "Indicates a failure to load a record into a modal window."
+        @synonyms "load error, failed load, data retrieval failure"
+        @tier "internal"
     }
   }
 
@@ -332,7 +428,13 @@ orbital ItemOrbital {
     listens {
       ItemBrowseList.DELETE -> DELETE
       DELETE { id : string, row : Item }
+        @description "Indicates a record has been removed."
+        @synonyms "remove, discard, erase"
+        @tier "essential"
       ConfirmActionLoadFailed { error : string, code : string }
+        @description "Indicates a failure during data loading for an action."
+        @synonyms "error, failure, failed, problem"
+        @tier "internal"
     }
   }
 
@@ -349,13 +451,31 @@ orbital ItemOrbital {
     }
     emits {
       ITEM_CREATED -> external { id : string }
+        @description "Signals a new item has been created."
+        @synonyms "added, new, added, instantiate"
+        @tier "essential"
       ITEM_UPDATED -> external { id : string }
+        @description "Signals that an item's data has been modified and persisted."
+        @synonyms "modified, changed, refreshed, updated"
+        @tier "essential"
       ITEM_DELETED -> external { id : string }
+        @description "Signals that an item has been removed."
+        @synonyms "removed, purged, discarded"
+        @tier "essential"
     }
     listens {
       DO_CREATE { data : object! }
+        @description "Initiates the creation of a new record."
+        @synonyms "new, add, generate, initialize"
+        @tier "essential"
       DO_UPDATE { data : object! }
+        @description "Signals that data has been modified and should be refreshed."
+        @synonyms "refresh, changed, modified, updated"
+        @tier "essential"
       DO_DELETE { id : string }
+        @description "Initiates the removal of a record."
+        @synonyms "remove, discard, erase"
+        @tier "essential"
       ItemCreate.SAVE         -> DO_CREATE
       ItemEdit.SAVE           -> DO_UPDATE
       ItemDelete.CONFIRM_DELETE -> DO_DELETE
@@ -420,7 +540,13 @@ orbital ActivityOrbital {
       ActivityAppLayout.ACTIVITY_SEARCH -> ACTIVITY_SEARCH
       ActivityAppLayout.ACTIVITY_NOTIFICATIONS_OPEN -> ACTIVITY_NOTIFICATIONS_OPEN
       ACTIVITY_SEARCH { value : string }
+        @description "Triggers a search operation for activity records."
+        @synonyms "find, query, lookup, browse"
+        @tier "essential"
       ACTIVITY_NOTIFICATIONS_OPEN { id : string }
+        @description "Indicates new activity notifications are available."
+        @synonyms "notify, alert, update, new"
+        @tier "customization"
     }
   }
 
@@ -454,8 +580,17 @@ orbital ActivityOrbital {
     listens {
       ActivityBrowseList.VIEW -> VIEW
       VIEW { id : string, row : Activity }
+        @description "Indicates a record has been displayed or is visible."
+        @synonyms "display, show, present, render"
+        @tier "essential"
       SAVE { data : object! }
+        @description "Data persistence triggered by user action."
+        @synonyms "persist, store, commit"
+        @tier "essential"
       ModalRecordLoadFailed { error : string, code : string }
+        @description "Indicates a failure to load a record into a modal window."
+        @synonyms "load error, failed load, data error"
+        @tier "internal"
     }
   }
 
@@ -465,8 +600,17 @@ orbital ActivityOrbital {
     listens {
       ActivityBrowseList.EDIT -> EDIT
       EDIT { id : string, row : Activity }
+        @description "Indicates a record is being modified."
+        @synonyms "modify, change, update"
+        @tier "essential"
       SAVE { data : object! }
+        @description "Data has been persisted or synchronized."
+        @synonyms "persist, store, update, synchronize"
+        @tier "essential"
       ModalRecordLoadFailed { error : string, code : string }
+        @description "Indicates a failure to load a record into a modal window."
+        @synonyms "load error, failed load, data error"
+        @tier "internal"
     }
   }
 
@@ -476,7 +620,13 @@ orbital ActivityOrbital {
     listens {
       ActivityBrowseList.DELETE -> DELETE
       DELETE { id : string, row : Activity }
+        @description "Indicates a record has been removed."
+        @synonyms "remove, discard, purge"
+        @tier "essential"
       ConfirmActionLoadFailed { error : string, code : string }
+        @description "Indicates a failure to load requested data."
+        @synonyms "error, failure, failed, problem"
+        @tier "internal"
     }
   }
 
@@ -491,12 +641,27 @@ orbital ActivityOrbital {
     }
     emits {
       ACTIVITY_CREATED -> external { id : string }
+        @description "Signals a new activity has been created."
+        @synonyms "new, added, generated"
+        @tier "essential"
       ACTIVITY_UPDATED -> external { id : string }
+        @description "Signals that an activity has been modified and saved."
+        @synonyms "modified, changed, updated, refreshed"
+        @tier "essential"
       ACTIVITY_DELETED -> external { id : string }
+        @description "Signals that an activity record has been removed."
+        @synonyms "removed, purged, discarded"
+        @tier "essential"
     }
     listens {
       DO_UPDATE { data : object! }
+        @description "Indicates data has been modified and should be synchronized."
+        @synonyms "refresh, sync, change, modify"
+        @tier "essential"
       DO_DELETE { id : string }
+        @description "Initiates the removal of a record."
+        @synonyms "remove, discard, erase"
+        @tier "essential"
       ActivityEdit.SAVE             -> DO_UPDATE
       ActivityDelete.CONFIRM_DELETE -> DO_DELETE
     }
@@ -565,12 +730,21 @@ orbital TaskOrbital {
     }
     emits {
       CREATE -> external { source : string }
+        @description "Indicates a new record has been created."
+        @synonyms "new, add, generate, instantiate"
+        @tier "essential"
     }
     listens {
       TaskAppLayout.TASK_SEARCH -> TASK_SEARCH
       TaskAppLayout.TASK_NOTIFICATIONS_OPEN -> TASK_NOTIFICATIONS_OPEN
       TASK_SEARCH { value : string }
+        @description "Triggers a search operation for tasks."
+        @synonyms "find, query, lookup, search"
+        @tier "essential"
       TASK_NOTIFICATIONS_OPEN { id : string }
+        @description "Indicates new task notifications are available."
+        @synonyms "alert, notify, update, reminder"
+        @tier "customization"
     }
   }
 
@@ -617,8 +791,17 @@ orbital TaskOrbital {
     listens {
       TaskCatalog.CREATE -> CREATE
       CREATE { id : string, row : Task }
+        @description "A new record is being created."
+        @synonyms "add, new, initialize, generate"
+        @tier "essential"
       SAVE { data : object! }
+        @description "Data persistence triggered by user action."
+        @synonyms "persist, store, update, commit"
+        @tier "essential"
       ModalRecordLoadFailed { error : string, code : string }
+        @description "Indicates a failure to load a record into a modal window."
+        @synonyms "load error, failed load, data retrieval failure"
+        @tier "internal"
     }
   }
 
@@ -628,8 +811,17 @@ orbital TaskOrbital {
     listens {
       TaskBrowseList.EDIT -> EDIT
       EDIT { id : string, row : Task }
+        @description "Indicates a record is being modified."
+        @synonyms "update, change, modify"
+        @tier "essential"
       SAVE { data : object! }
+        @description "Data changes have been persisted."
+        @synonyms "persist, store, commit, update"
+        @tier "essential"
       ModalRecordLoadFailed { error : string, code : string }
+        @description "Indicates that loading a record failed."
+        @synonyms "error, failure, problem, unsuccessful"
+        @tier "internal"
     }
   }
 
@@ -639,8 +831,17 @@ orbital TaskOrbital {
     listens {
       TaskBrowseList.VIEW -> VIEW
       VIEW { id : string, row : Task }
+        @description "Indicates a record or item is being displayed."
+        @synonyms "display, show, present, render"
+        @tier "essential"
       SAVE { data : object! }
+        @description "Data persistence triggered by user action."
+        @synonyms "persist, store, commit, update"
+        @tier "essential"
       ModalRecordLoadFailed { error : string, code : string }
+        @description "Indicates a failure to load a record for display."
+        @synonyms "error, failed, problem, unsuccessful"
+        @tier "internal"
     }
   }
 
@@ -650,7 +851,13 @@ orbital TaskOrbital {
     listens {
       TaskBrowseList.DELETE -> DELETE
       DELETE { id : string, row : Task }
+        @description "Indicates a record is being removed."
+        @synonyms "remove, discard, erase"
+        @tier "essential"
       ConfirmActionLoadFailed { error : string, code : string }
+        @description "Indicates a failure to load requested data."
+        @synonyms "error, failure, failed, problem"
+        @tier "internal"
     }
   }
 
@@ -667,13 +874,31 @@ orbital TaskOrbital {
     }
     emits {
       TASK_CREATED -> external { id : string }
+        @description "A new task has been created."
+        @synonyms "new task, task added, task initiation"
+        @tier "essential"
       TASK_UPDATED -> external { id : string }
+        @description "Signals a task has been modified."
+        @synonyms "modified, changed, altered"
+        @tier "essential"
       TASK_DELETED -> external { id : string }
+        @description "Signals that a task has been removed."
+        @synonyms "removed, purged, archived"
+        @tier "essential"
     }
     listens {
       DO_CREATE { data : object! }
+        @description "Initiates the creation of a new record."
+        @synonyms "new, add, generate, initiate"
+        @tier "essential"
       DO_UPDATE { data : object! }
+        @description "Indicates data has been modified and should be refreshed."
+        @synonyms "refresh, reload, update, sync"
+        @tier "essential"
       DO_DELETE { id : string }
+        @description "Initiates the removal of a record."
+        @synonyms "remove, discard, erase"
+        @tier "essential"
       TaskCreate.SAVE         -> DO_CREATE
       TaskEdit.SAVE           -> DO_UPDATE
       TaskDelete.CONFIRM_DELETE -> DO_DELETE
@@ -743,12 +968,21 @@ orbital CalendarOrbital {
     }
     emits {
       CREATE -> external { source : string }
+        @description "Signals a new record has been created."
+        @synonyms "new, add, initialize, generate"
+        @tier "essential"
     }
     listens {
       CalendarAppLayout.CAL_SEARCH -> CAL_SEARCH
       CalendarAppLayout.CAL_NOTIFICATIONS_OPEN -> CAL_NOTIFICATIONS_OPEN
       CAL_SEARCH { value : string }
+        @description "Triggers a search operation for calendar entries."
+        @synonyms "find, query, lookup, browse"
+        @tier "essential"
       CAL_NOTIFICATIONS_OPEN { id : string }
+        @description "Indicates new calendar notifications are available."
+        @synonyms "alert, notify, reminder"
+        @tier "essential"
     }
   }
 
@@ -793,8 +1027,17 @@ orbital CalendarOrbital {
     listens {
       CalendarCatalog.CREATE -> CREATE
       CREATE { id : string, row : ScheduledEvent }
+        @description "A new record is being created."
+        @synonyms "new, add, insert, generate"
+        @tier "essential"
       SAVE { data : object! }
+        @description "Data persistence triggered by user action."
+        @synonyms "persist, store, commit, update"
+        @tier "essential"
       ModalRecordLoadFailed { error : string, code : string }
+        @description "Indicates a failure to load a record into a modal window."
+        @synonyms "load error, failed load, data fetch failed"
+        @tier "internal"
     }
   }
 
@@ -804,8 +1047,17 @@ orbital CalendarOrbital {
     listens {
       CalendarBrowseList.EDIT -> EDIT
       EDIT { id : string, row : ScheduledEvent }
+        @description "Indicates a record is being modified."
+        @synonyms "update, change, modify"
+        @tier "essential"
       SAVE { data : object! }
+        @description "Data persistence or synchronization has completed."
+        @synonyms "persist, store, update, synchronize"
+        @tier "essential"
       ModalRecordLoadFailed { error : string, code : string }
+        @description "Indicates a failure to load a record into a modal window."
+        @synonyms "load error, failed load, data fetch failure"
+        @tier "internal"
     }
   }
 
@@ -815,7 +1067,13 @@ orbital CalendarOrbital {
     listens {
       CalendarBrowseList.DELETE -> DELETE
       DELETE { id : string, row : ScheduledEvent }
+        @description "Indicates a record has been removed."
+        @synonyms "remove, discard, erase"
+        @tier "essential"
       ConfirmActionLoadFailed { error : string, code : string }
+        @description "Indicates a failure to load requested data."
+        @synonyms "error, failed, problem, unsuccessful"
+        @tier "internal"
     }
   }
 
@@ -832,13 +1090,31 @@ orbital CalendarOrbital {
     }
     emits {
       CAL_CREATED -> external { id : string }
+        @description "A new calendar entry has been created."
+        @synonyms "new, added, scheduled"
+        @tier "essential"
       CAL_UPDATED -> external { id : string }
+        @description "Signals a change or update to calendar data."
+        @synonyms "modified, changed, refreshed"
+        @tier "essential"
       CAL_DELETED -> external { id : string }
+        @description "Signals that a calendar item has been removed."
+        @synonyms "removed, purged, discarded"
+        @tier "essential"
     }
     listens {
       DO_CREATE { data : object! }
+        @description "Initiates the creation of a new record."
+        @synonyms "new, add, generate, initiate"
+        @tier "essential"
       DO_UPDATE { data : object! }
+        @description "Indicates a record has been modified and changes are pending."
+        @synonyms "modified, changed, altered, updated"
+        @tier "customization"
       DO_DELETE { id : string }
+        @description "Initiates the removal of a record."
+        @synonyms "remove, discard, purge"
+        @tier "essential"
       CalendarCreate.SAVE         -> DO_CREATE
       CalendarEdit.SAVE           -> DO_UPDATE
       CalendarDelete.CONFIRM_DELETE -> DO_DELETE
@@ -908,7 +1184,13 @@ orbital WidgetOrbital {
       WidgetAppLayout.WIDGET_SEARCH -> WIDGET_SEARCH
       WidgetAppLayout.WIDGET_NOTIFICATIONS_OPEN -> WIDGET_NOTIFICATIONS_OPEN
       WIDGET_SEARCH { value : string }
+        @description "Triggers a search for widgets based on a query."
+        @synonyms "find, query, lookup, browse"
+        @tier "essential"
       WIDGET_NOTIFICATIONS_OPEN { id : string }
+        @description "Indicates new notifications are available for widgets."
+        @synonyms "notify, alert, update, message"
+        @tier "customization"
     }
   }
 
@@ -970,8 +1252,17 @@ orbital WidgetOrbital {
     listens {
       WidgetBrowseList.VIEW -> VIEW
       VIEW { id : string, row : Widget }
+        @description "Indicates a record or item is being displayed."
+        @synonyms "display, show, present, render"
+        @tier "essential"
       SAVE { data : object! }
+        @description "Data has been persisted or synchronized."
+        @synonyms "persist, store, update, synchronize"
+        @tier "essential"
       ModalRecordLoadFailed { error : string, code : string }
+        @description "Indicates a failure to load a record into a modal window."
+        @synonyms "load error, failed load, loading problem"
+        @tier "internal"
     }
   }
 
@@ -981,8 +1272,17 @@ orbital WidgetOrbital {
     listens {
       WidgetBrowseList.EDIT -> EDIT
       EDIT { id : string, row : Widget }
+        @description "Indicates a record is being modified."
+        @synonyms "modify, change, update"
+        @tier "essential"
       SAVE { data : object! }
+        @description "Data has been persisted or synchronized."
+        @synonyms "persist, store, update, synchronize"
+        @tier "essential"
       ModalRecordLoadFailed { error : string, code : string }
+        @description "Indicates a failure to load a record into a modal window."
+        @synonyms "load error, failed load, data error"
+        @tier "internal"
     }
   }
 
@@ -992,7 +1292,13 @@ orbital WidgetOrbital {
     listens {
       WidgetBrowseList.DELETE -> DELETE
       DELETE { id : string, row : Widget }
+        @description "Indicates a record has been removed."
+        @synonyms "remove, discard, erase"
+        @tier "essential"
       ConfirmActionLoadFailed { error : string, code : string }
+        @description "Indicates a failure to load an action or related data."
+        @synonyms "error, failure, failed, problem"
+        @tier "internal"
     }
   }
 
@@ -1007,12 +1313,27 @@ orbital WidgetOrbital {
     }
     emits {
       WIDGET_CREATED -> external { id : string }
+        @description "A new widget has been generated or added."
+        @synonyms "new, added, generated, created"
+        @tier "essential"
       WIDGET_UPDATED -> external { id : string }
+        @description "Signals a widget's data or appearance has been modified."
+        @synonyms "refresh, change, update"
+        @tier "customization"
       WIDGET_DELETED -> external { id : string }
+        @description "Signals a widget has been removed."
+        @synonyms "removed, discarded, purged"
+        @tier "customization"
     }
     listens {
       DO_UPDATE { data : object! }
+        @description "Indicates data has been modified and needs to be refreshed."
+        @synonyms "refresh, reload, update, sync"
+        @tier "essential"
       DO_DELETE { id : string }
+        @description "Initiates the removal of a record."
+        @synonyms "remove, discard, erase"
+        @tier "essential"
       WidgetEdit.SAVE             -> DO_UPDATE
       WidgetDelete.CONFIRM_DELETE -> DO_DELETE
     }
@@ -1079,12 +1400,21 @@ orbital FeedOrbital {
     }
     emits {
       CREATE -> external { source : string }
+        @description "Signals the creation of a new record."
+        @synonyms "new, add, generate, initialize"
+        @tier "essential"
     }
     listens {
       FeedAppLayout.FEED_SEARCH -> FEED_SEARCH
       FeedAppLayout.FEED_NOTIFICATIONS_OPEN -> FEED_NOTIFICATIONS_OPEN
       FEED_SEARCH { value : string }
+        @description "Triggers a search operation within a feed."
+        @synonyms "query, find, lookup"
+        @tier "essential"
       FEED_NOTIFICATIONS_OPEN { id : string }
+        @description "Indicates new feed notifications are available."
+        @synonyms "notify, alert, update, message"
+        @tier "customization"
     }
   }
 
@@ -1127,8 +1457,17 @@ orbital FeedOrbital {
     listens {
       FeedCatalog.CREATE -> CREATE
       CREATE { id : string, row : FeedPost }
+        @description "A new record is being created."
+        @synonyms "add, new, initiate, generate"
+        @tier "essential"
       SAVE { data : object! }
+        @description "Data has been persisted or synchronized."
+        @synonyms "persist, store, synchronize, update"
+        @tier "essential"
       ModalRecordLoadFailed { error : string, code : string }
+        @description "Indicates a failure to load a record into a modal window."
+        @synonyms "load error, failed load, record load failure"
+        @tier "internal"
     }
   }
 
@@ -1138,8 +1477,17 @@ orbital FeedOrbital {
     listens {
       FeedBrowseList.EDIT -> EDIT
       EDIT { id : string, row : FeedPost }
+        @description "Indicates a record is being modified."
+        @synonyms "update, change, modify"
+        @tier "essential"
       SAVE { data : object! }
+        @description "Data has been persisted or synchronized."
+        @synonyms "persist, store, update, synchronize"
+        @tier "essential"
       ModalRecordLoadFailed { error : string, code : string }
+        @description "Indicates failure to load a record into a modal window."
+        @synonyms "load error, failed load, data error"
+        @tier "internal"
     }
   }
 
@@ -1149,7 +1497,13 @@ orbital FeedOrbital {
     listens {
       FeedBrowseList.DELETE -> DELETE
       DELETE { id : string, row : FeedPost }
+        @description "Indicates a record is being removed."
+        @synonyms "remove, erase, discard"
+        @tier "essential"
       ConfirmActionLoadFailed { error : string, code : string }
+        @description "Indicates a failure to load requested data."
+        @synonyms "error, failure, failed, problem"
+        @tier "internal"
     }
   }
 
@@ -1166,13 +1520,31 @@ orbital FeedOrbital {
     }
     emits {
       FEED_CREATED -> external { id : string }
+        @description "A new feed item has been created."
+        @synonyms "posted, published, added"
+        @tier "essential"
       FEED_UPDATED -> external { id : string }
+        @description "Signals that the feed data has been refreshed or modified."
+        @synonyms "refresh, update, new, changed"
+        @tier "customization"
       FEED_DELETED -> external { id : string }
+        @description "Signals a feed item has been removed."
+        @synonyms "removed, purged, archived"
+        @tier "customization"
     }
     listens {
       DO_CREATE { data : object! }
+        @description "Initiates the creation of a new record."
+        @synonyms "new, add, generate, initialize"
+        @tier "essential"
       DO_UPDATE { data : object! }
+        @description "Indicates data has been modified and requires synchronization."
+        @synonyms "refresh, sync, changed, modified"
+        @tier "essential"
       DO_DELETE { id : string }
+        @description "Initiates the removal of a record."
+        @synonyms "remove, discard, erase"
+        @tier "essential"
       FeedCreate.SAVE         -> DO_CREATE
       FeedEdit.SAVE           -> DO_UPDATE
       FeedDelete.CONFIRM_DELETE -> DO_DELETE
@@ -1241,12 +1613,21 @@ orbital NoteOrbital {
     }
     emits {
       CREATE -> external { source : string }
+        @description "Signals the creation of a new record."
+        @synonyms "new, add, generate, initialize"
+        @tier "essential"
     }
     listens {
       NoteAppLayout.NOTE_SEARCH -> NOTE_SEARCH
       NoteAppLayout.NOTE_NOTIFICATIONS_OPEN -> NOTE_NOTIFICATIONS_OPEN
       NOTE_SEARCH { value : string }
+        @description "Triggers a search operation for notes."
+        @synonyms "find, query, lookup"
+        @tier "essential"
       NOTE_NOTIFICATIONS_OPEN { id : string }
+        @description "Indicates new notifications are available for notes."
+        @synonyms "new, alert, update, notify"
+        @tier "customization"
     }
   }
 
@@ -1284,8 +1665,17 @@ orbital NoteOrbital {
     listens {
       NoteCatalog.CREATE -> CREATE
       CREATE { id : string, row : Note }
+        @description "A new record is being created."
+        @synonyms "new, add, insert, generate"
+        @tier "essential"
       SAVE { data : object! }
+        @description "Indicates data persistence or storage has been completed."
+        @synonyms "persist, store, commit, update"
+        @tier "essential"
       ModalRecordLoadFailed { error : string, code : string }
+        @description "Indicates a failure to load a record into a modal window."
+        @synonyms "load error, failure, problem, unsuccessful"
+        @tier "internal"
     }
   }
 
@@ -1295,8 +1685,17 @@ orbital NoteOrbital {
     listens {
       NoteBrowseList.EDIT -> EDIT
       EDIT { id : string, row : Note }
+        @description "Indicates a record is being modified."
+        @synonyms "update, change, modify"
+        @tier "essential"
       SAVE { data : object! }
+        @description "Data persistence triggered by user action."
+        @synonyms "persist, store, commit, update"
+        @tier "essential"
       ModalRecordLoadFailed { error : string, code : string }
+        @description "Indicates failure to load a record into a modal window."
+        @synonyms "load error, failure, problem"
+        @tier "internal"
     }
   }
 
@@ -1306,8 +1705,17 @@ orbital NoteOrbital {
     listens {
       NoteBrowseList.VIEW -> VIEW
       VIEW { id : string, row : Note }
+        @description "Indicates a record has been displayed or is visible."
+        @synonyms "display, show, present, render"
+        @tier "essential"
       SAVE { data : object! }
+        @description "Data has been persisted or synchronized."
+        @synonyms "persist, store, update, synchronize"
+        @tier "essential"
       ModalRecordLoadFailed { error : string, code : string }
+        @description "Indicates failure to load a record into a modal window."
+        @synonyms "load error, failed load, loading problem"
+        @tier "internal"
     }
   }
 
@@ -1317,7 +1725,13 @@ orbital NoteOrbital {
     listens {
       NoteBrowseList.DELETE -> DELETE
       DELETE { id : string, row : Note }
+        @description "Indicates a record has been removed."
+        @synonyms "remove, discard, erase"
+        @tier "essential"
       ConfirmActionLoadFailed { error : string, code : string }
+        @description "Indicates a failure to load requested data."
+        @synonyms "error, failure, failed, problem"
+        @tier "internal"
     }
   }
 
@@ -1334,13 +1748,31 @@ orbital NoteOrbital {
     }
     emits {
       NOTE_CREATED -> external { id : string }
+        @description "A new note has been created."
+        @synonyms "new, added, recorded"
+        @tier "essential"
       NOTE_UPDATED -> external { id : string }
+        @description "Signals that a note has been modified and saved."
+        @synonyms "modified, changed, updated"
+        @tier "essential"
       NOTE_DELETED -> external { id : string }
+        @description "Signals a note has been removed."
+        @synonyms "removed, purged, discarded"
+        @tier "essential"
     }
     listens {
       DO_CREATE { data : object! }
+        @description "Initiates the creation of a new record."
+        @synonyms "new, add, generate, initiate"
+        @tier "essential"
       DO_UPDATE { data : object! }
+        @description "Indicates a record has been modified and changes are pending."
+        @synonyms "modified, changed, altered, updated"
+        @tier "customization"
       DO_DELETE { id : string }
+        @description "Initiates the removal of a record."
+        @synonyms "remove, discard, erase"
+        @tier "essential"
       NoteCreate.SAVE         -> DO_CREATE
       NoteEdit.SAVE           -> DO_UPDATE
       NoteDelete.CONFIRM_DELETE -> DO_DELETE

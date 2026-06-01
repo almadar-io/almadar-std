@@ -90,47 +90,116 @@
           "ThreadPostCreateFailed"
         ],
         "listenedEvents": [],
+        "events": [
+          {
+            "name": "SELECT",
+            "direction": "emit",
+            "description": "Indicates a post or reply has been chosen for interaction.",
+            "synonyms": "choose, highlight, focus, activate",
+            "tier": "essential"
+          },
+          {
+            "name": "REPLY",
+            "direction": "emit",
+            "description": "Indicates a new reply has been created and added to the thread.",
+            "synonyms": "add, post, respond, submit",
+            "tier": "essential"
+          },
+          {
+            "name": "EDIT_REPLY",
+            "direction": "emit",
+            "description": "Indicates a reply has been modified.",
+            "synonyms": "update, change, modify",
+            "tier": "customization"
+          },
+          {
+            "name": "SUBMIT_REPLY",
+            "direction": "emit",
+            "description": "Signals a new reply has been successfully submitted.",
+            "synonyms": "post, send, add, publish",
+            "tier": "essential"
+          },
+          {
+            "name": "CANCEL_REPLY",
+            "direction": "emit",
+            "description": "Indicates a reply creation was aborted by the user.",
+            "synonyms": "abort, dismiss, undo, cancel",
+            "tier": "customization"
+          },
+          {
+            "name": "ThreadPostLoaded",
+            "direction": "emit",
+            "description": "Signals a thread post has been successfully retrieved.",
+            "synonyms": "loaded, fetched, retrieved",
+            "tier": "essential"
+          },
+          {
+            "name": "ThreadPostLoadFailed",
+            "direction": "emit",
+            "description": "Indicates a failure to load a thread post.",
+            "synonyms": "load error, fetch failed, retrieval failed",
+            "tier": "internal"
+          },
+          {
+            "name": "ThreadPostCreated",
+            "direction": "emit",
+            "description": "A new post has been added to the thread.",
+            "synonyms": "new post, added, created",
+            "tier": "essential"
+          },
+          {
+            "name": "ThreadPostCreateFailed",
+            "direction": "emit",
+            "description": "Indicates a failure to create a new thread post.",
+            "synonyms": "error, failed, creation failed",
+            "tier": "internal"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
         "overridableConfigKeys": [
           {
             "key": "bodyContent",
             "type": "render-ui",
             "default": {
-              "gap": "md",
               "direction": "vertical",
               "children": [
                 {
-                  "variant": "card",
-                  "gap": "sm",
                   "itemActions": [
                     {
-                      "label": "Reply",
                       "icon": "message-square",
+                      "label": "Reply",
                       "event": "REPLY"
                     }
                   ],
+                  "type": "data-list",
+                  "variant": "card",
                   "fields": [
                     {
                       "name": "authorName",
-                      "label": "Author",
-                      "variant": "h4"
+                      "variant": "h4",
+                      "label": "Author"
                     },
                     {
+                      "variant": "body",
                       "label": "",
-                      "name": "content",
-                      "variant": "body"
+                      "name": "content"
                     },
                     {
+                      "label": "Votes",
                       "name": "voteCount",
-                      "variant": "caption",
-                      "label": "Votes"
+                      "variant": "caption"
                     }
                   ],
-                  "look": "@config.tableLook",
-                  "type": "data-list",
-                  "entity": "@payload.data"
+                  "gap": "sm",
+                  "entity": "@payload.data",
+                  "look": "@config.tableLook"
                 }
               ],
-              "type": "stack"
+              "type": "stack",
+              "gap": "md"
             },
             "label": "Body content tree",
             "description": "Render-ui SExpr rendered after thread posts load. Default is the canonical forum-style data-list. Layer 3 variants override this with their own tree (chat bubbles, email-threaded cards, linear comment stacks, etc.) to deliver entirely different thread UX while inheriting the same trait, state machine, emits, and listens.",

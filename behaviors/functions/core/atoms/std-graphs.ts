@@ -39,44 +39,44 @@ export type StdGraphsEventKey = 'INIT' | 'ITEMS_LOADED';
  * without modifying its state-machine topology.
  */
 export interface StdGraphsConfig {
-  /** Default: `"none"` */
-  sortField?: 'value' | 'label' | 'none';
-  /** Default: `"Distribution"` */
-  title?: string;
-  /** Default: `""` */
-  valueField?: string;
-  /** Default: `false` */
-  showValues?: boolean;
-  /** Default: `280` */
-  height?: number;
-  /** Default: `[]` */
-  series?: EntityRow[];
-  /** Default: `"month"` */
-  period?: 'day' | 'week' | 'month' | 'quarter' | 'year';
-  /** Default: `""` */
-  drillEvent?: string;
-  /** Default: `false` */
-  timeAxis?: boolean;
-  /** Default: `"date"` */
-  timeField?: string;
-  /** Default: `0` */
-  limit?: number;
   /** Default: `"bar"` */
   chartType?: 'bar' | 'line' | 'pie' | 'area' | 'donut' | 'histogram' | 'scatter';
-  /** Default: `"chart"` */
-  viewPattern?: unknown;
-  /** Default: `"Counts per category"` */
-  subtitle?: string;
-  /** Default: `"status"` */
-  categoryField?: string;
-  /** Default: `"desc"` */
-  sortDir?: 'asc' | 'desc';
-  /** Default: `true` */
-  showLegend?: boolean;
   /** Default: `"none"` */
   stack?: 'none' | 'stack' | 'normalize';
+  /** Default: `"desc"` */
+  sortDir?: 'asc' | 'desc';
+  /** Default: `""` */
+  drillEvent?: string;
+  /** Default: `"month"` */
+  period?: 'day' | 'week' | 'month' | 'quarter' | 'year';
+  /** Default: `"status"` */
+  categoryField?: string;
+  /** Default: `"Distribution"` */
+  title?: string;
+  /** Default: `0` */
+  limit?: number;
+  /** Default: `280` */
+  height?: number;
+  /** Default: `""` */
+  valueField?: string;
   /** Default: `"count"` */
   aggregation?: 'count' | 'sum' | 'avg' | 'min' | 'max';
+  /** Default: `"none"` */
+  sortField?: 'value' | 'label' | 'none';
+  /** Default: `"chart"` */
+  viewPattern?: unknown;
+  /** Default: `true` */
+  showLegend?: boolean;
+  /** Default: `"date"` */
+  timeField?: string;
+  /** Default: `"Counts per category"` */
+  subtitle?: string;
+  /** Default: `false` */
+  showValues?: boolean;
+  /** Default: `[]` */
+  series?: EntityRow[];
+  /** Default: `false` */
+  timeAxis?: boolean;
 }
 
 /**

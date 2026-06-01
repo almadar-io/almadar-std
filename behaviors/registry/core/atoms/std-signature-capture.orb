@@ -65,6 +65,9 @@
           "emits": [
             {
               "event": "CHANGE",
+              "description": "Indicates a change in the signature drawing.",
+              "synonyms": "update, modify, alter",
+              "tier": "customization",
               "payloadSchema": [
                 {
                   "name": "dataUrl",
@@ -75,6 +78,9 @@
             },
             {
               "event": "SUBMIT",
+              "description": "Signals the signature capture process is complete.",
+              "synonyms": "done, finalized, confirmed, saved",
+              "tier": "essential",
               "payloadSchema": [
                 {
                   "name": "data",
@@ -84,10 +90,16 @@
               ]
             },
             {
-              "event": "CLEAR"
+              "event": "CLEAR",
+              "description": "Signals the signature pad has been cleared.",
+              "synonyms": "reset, erase, remove",
+              "tier": "essential"
             },
             {
               "event": "SignatureLoaded",
+              "description": "Indicates the signature pad is ready for use.",
+              "synonyms": "ready, initialized, available",
+              "tier": "essential",
               "payloadSchema": [
                 {
                   "name": "data",
@@ -97,6 +109,9 @@
             },
             {
               "event": "SignatureLoadFailed",
+              "description": "Indicates the signature data could not be loaded.",
+              "synonyms": "load error, failed load, data error",
+              "tier": "internal",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -110,6 +125,9 @@
             },
             {
               "event": "SignatureSubmitted",
+              "description": "Indicates a signature has been successfully captured and submitted.",
+              "synonyms": "signed, finalized, completed",
+              "tier": "essential",
               "payloadSchema": [
                 {
                   "name": "row.id",
@@ -148,6 +166,9 @@
             },
             {
               "event": "SignatureSubmitFailed",
+              "description": "Indicates signature submission failed.",
+              "synonyms": "error, failure, rejected",
+              "tier": "internal",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -184,6 +205,9 @@
               {
                 "key": "SignatureLoaded",
                 "name": "Signature loaded",
+                "description": "Indicates the signature pad is ready for use.",
+                "synonyms": "ready, initialized, available",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "data",
@@ -194,6 +218,9 @@
               {
                 "key": "SignatureLoadFailed",
                 "name": "Signature load failed",
+                "description": "Indicates the signature data could not be loaded.",
+                "synonyms": "load error, failed load, data error",
+                "tier": "internal",
                 "payloadSchema": [
                   {
                     "name": "error",
@@ -208,6 +235,9 @@
               {
                 "key": "CHANGE",
                 "name": "Change",
+                "description": "Indicates a change in the signature drawing.",
+                "synonyms": "update, modify, alter",
+                "tier": "customization",
                 "payloadSchema": [
                   {
                     "name": "dataUrl",
@@ -218,11 +248,17 @@
               },
               {
                 "key": "CLEAR",
-                "name": "Clear"
+                "name": "Clear",
+                "description": "Signals the signature pad has been cleared.",
+                "synonyms": "reset, erase, remove",
+                "tier": "essential"
               },
               {
                 "key": "SUBMIT",
                 "name": "Submit",
+                "description": "Signals the signature capture process is complete.",
+                "synonyms": "done, finalized, confirmed, saved",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "data",
@@ -234,6 +270,9 @@
               {
                 "key": "SignatureSubmitted",
                 "name": "Signature submitted",
+                "description": "Indicates a signature has been successfully captured and submitted.",
+                "synonyms": "signed, finalized, completed",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "row",
@@ -244,6 +283,9 @@
               {
                 "key": "SignatureSubmitFailed",
                 "name": "Signature submit failed",
+                "description": "Indicates signature submission failed.",
+                "synonyms": "error, failure, rejected",
+                "tier": "internal",
                 "payloadSchema": [
                   {
                     "name": "error",
@@ -267,8 +309,8 @@
                     "Signature",
                     {
                       "emit": {
-                        "success": "SignatureLoaded",
-                        "failure": "SignatureLoadFailed"
+                        "failure": "SignatureLoadFailed",
+                        "success": "SignatureLoaded"
                       }
                     }
                   ],
@@ -276,22 +318,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
-                      "align": "center",
+                      "gap": "md",
                       "direction": "vertical",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
                           "variant": "caption",
                           "content": "Loading…",
-                          "color": "muted"
+                          "color": "muted",
+                          "type": "typography"
                         }
                       ],
-                      "type": "stack",
-                      "gap": "md"
+                      "align": "center",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -305,6 +347,7 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "children": [
                         {
                           "content": "@config.title",
@@ -312,39 +355,38 @@
                           "type": "typography"
                         },
                         {
-                          "color": "muted",
+                          "variant": "caption",
                           "type": "typography",
                           "content": "@config.instructions",
-                          "variant": "caption"
+                          "color": "muted"
                         },
                         {
-                          "type": "signature-pad",
+                          "value": "@entity.signatureDataUrl",
                           "onChange": "CHANGE",
-                          "value": "@entity.signatureDataUrl"
+                          "type": "signature-pad"
                         },
                         {
-                          "gap": "sm",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "variant": "secondary",
                               "icon": "trash",
+                              "action": "CLEAR",
                               "label": "Clear",
                               "type": "button",
-                              "action": "CLEAR"
+                              "variant": "secondary"
                             },
                             {
-                              "label": "Submit",
                               "variant": "primary",
-                              "icon": "send",
+                              "label": "Submit",
                               "action": "SUBMIT",
-                              "type": "button"
+                              "type": "button",
+                              "icon": "send"
                             }
                           ],
-                          "direction": "horizontal",
+                          "gap": "sm",
                           "type": "stack"
                         }
                       ],
-                      "type": "stack",
                       "direction": "vertical",
                       "gap": "md"
                     }
@@ -361,6 +403,7 @@
                     "main",
                     {
                       "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "typography",
@@ -368,39 +411,38 @@
                           "content": "@config.title"
                         },
                         {
-                          "type": "typography",
                           "variant": "caption",
                           "color": "muted",
+                          "type": "typography",
                           "content": "@config.instructions"
                         },
                         {
-                          "onChange": "CHANGE",
                           "value": "@entity.signatureDataUrl",
-                          "type": "signature-pad"
+                          "type": "signature-pad",
+                          "onChange": "CHANGE"
                         },
                         {
-                          "direction": "horizontal",
+                          "type": "stack",
                           "gap": "sm",
                           "children": [
                             {
-                              "icon": "trash",
                               "label": "Clear",
-                              "variant": "secondary",
+                              "icon": "trash",
+                              "type": "button",
                               "action": "CLEAR",
-                              "type": "button"
+                              "variant": "secondary"
                             },
                             {
-                              "type": "button",
-                              "label": "Submit",
-                              "icon": "send",
                               "action": "SUBMIT",
-                              "variant": "primary"
+                              "icon": "send",
+                              "variant": "primary",
+                              "type": "button",
+                              "label": "Submit"
                             }
                           ],
-                          "type": "stack"
+                          "direction": "horizontal"
                         }
                       ],
-                      "gap": "md",
                       "direction": "vertical"
                     }
                   ]
@@ -432,13 +474,13 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
                       "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
-                          "content": "@config.title",
+                          "variant": "h3",
                           "type": "typography",
-                          "variant": "h3"
+                          "content": "@config.title"
                         },
                         {
                           "color": "muted",
@@ -452,28 +494,28 @@
                           "value": "@entity.signatureDataUrl"
                         },
                         {
+                          "type": "stack",
                           "gap": "sm",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "icon": "trash",
+                              "variant": "secondary",
+                              "type": "button",
                               "action": "CLEAR",
                               "label": "Clear",
-                              "variant": "secondary",
-                              "type": "button"
+                              "icon": "trash"
                             },
                             {
-                              "action": "SUBMIT",
+                              "type": "button",
                               "variant": "primary",
+                              "action": "SUBMIT",
                               "icon": "send",
-                              "label": "Submit",
-                              "type": "button"
+                              "label": "Submit"
                             }
-                          ],
-                          "direction": "horizontal",
-                          "type": "stack"
+                          ]
                         }
                       ],
-                      "gap": "md"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -490,8 +532,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "success": "SignatureSubmitted",
-                        "failure": "SignatureSubmitFailed"
+                        "failure": "SignatureSubmitFailed",
+                        "success": "SignatureSubmitted"
                       }
                     }
                   ],
@@ -499,6 +541,8 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
+                      "gap": "md",
                       "type": "stack",
                       "className": "py-12",
                       "children": [
@@ -506,15 +550,13 @@
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
-                          "content": "Submitting your signature…",
                           "color": "muted",
-                          "type": "typography"
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Submitting your signature…"
                         }
                       ],
-                      "direction": "vertical",
-                      "align": "center",
-                      "gap": "md"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -530,21 +572,21 @@
                     {
                       "className": "py-12",
                       "type": "stack",
-                      "align": "center",
                       "direction": "vertical",
+                      "gap": "md",
                       "children": [
                         {
-                          "color": "success",
                           "type": "icon",
+                          "color": "success",
                           "name": "check-circle"
                         },
                         {
-                          "type": "typography",
+                          "variant": "h3",
                           "content": "Signature recorded. Thank you.",
-                          "variant": "h3"
+                          "type": "typography"
                         }
                       ],
-                      "gap": "md"
+                      "align": "center"
                     }
                   ]
                 ]
@@ -559,8 +601,8 @@
                     "main",
                     {
                       "type": "alert",
-                      "message": "@payload.error",
-                      "variant": "error"
+                      "variant": "error",
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -579,48 +621,48 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "typography",
-                          "content": "@config.title",
-                          "variant": "h3"
+                          "variant": "h3",
+                          "content": "@config.title"
                         },
                         {
                           "content": "@config.instructions",
-                          "type": "typography",
+                          "variant": "caption",
                           "color": "muted",
-                          "variant": "caption"
+                          "type": "typography"
                         },
                         {
                           "type": "signature-pad",
-                          "onChange": "CHANGE",
-                          "value": "@entity.signatureDataUrl"
+                          "value": "@entity.signatureDataUrl",
+                          "onChange": "CHANGE"
                         },
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "children": [
                             {
-                              "action": "CLEAR",
-                              "variant": "secondary",
                               "label": "Clear",
+                              "action": "CLEAR",
                               "type": "button",
-                              "icon": "trash"
+                              "icon": "trash",
+                              "variant": "secondary"
                             },
                             {
-                              "label": "Submit",
-                              "variant": "primary",
-                              "type": "button",
                               "action": "SUBMIT",
-                              "icon": "send"
+                              "label": "Submit",
+                              "type": "button",
+                              "icon": "send",
+                              "variant": "primary"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "type": "stack",
+                          "direction": "horizontal"
                         }
-                      ],
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -628,18 +670,18 @@
             ]
           },
           "config": {
-            "title": {
-              "type": "string",
-              "default": "Sign here",
-              "label": "Pad title",
-              "description": "Heading shown above the signature pad",
-              "tier": "presentation"
-            },
             "instructions": {
               "type": "string",
               "default": "Use your finger or stylus to sign below",
               "label": "Instructions",
               "description": "Helper text shown to the signer above the pad",
+              "tier": "presentation"
+            },
+            "title": {
+              "type": "string",
+              "default": "Sign here",
+              "label": "Pad title",
+              "description": "Heading shown above the signature pad",
               "tier": "presentation"
             }
           },

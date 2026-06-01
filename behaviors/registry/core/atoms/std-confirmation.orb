@@ -66,6 +66,9 @@
           "emits": [
             {
               "event": "CONFIRM",
+              "description": "Indicates the user has approved the action.",
+              "synonyms": "approve, accept, ok",
+              "tier": "essential",
               "payloadSchema": [
                 {
                   "name": "id",
@@ -74,10 +77,16 @@
               ]
             },
             {
-              "event": "CANCEL"
+              "event": "CANCEL",
+              "description": "Indicates the action was cancelled by the user.",
+              "synonyms": "dismiss, reject, undo",
+              "tier": "essential"
             },
             {
               "event": "ConfirmActionLoadFailed",
+              "description": "Indicates failure to load the confirmation action.",
+              "synonyms": "error, failure, failed, problem",
+              "tier": "internal",
               "scope": "internal",
               "payloadSchema": [
                 {
@@ -92,6 +101,9 @@
             },
             {
               "event": "ConfirmActionLoaded",
+              "description": "Indicates the confirmation action has been successfully loaded.",
+              "synonyms": "loaded, ready, initialized",
+              "tier": "internal",
               "scope": "internal",
               "payloadSchema": [
                 {
@@ -119,6 +131,9 @@
               {
                 "key": "REQUEST",
                 "name": "Request",
+                "description": "A request for confirmation before proceeding.",
+                "synonyms": "prompt, ask, verify",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "id",
@@ -133,19 +148,31 @@
               },
               {
                 "key": "CONFIRM",
-                "name": "Confirm"
+                "name": "Confirm",
+                "description": "Indicates the user has approved the action.",
+                "synonyms": "approve, accept, ok",
+                "tier": "essential"
               },
               {
                 "key": "CANCEL",
-                "name": "Cancel"
+                "name": "Cancel",
+                "description": "Indicates the action was cancelled by the user.",
+                "synonyms": "dismiss, reject, undo",
+                "tier": "essential"
               },
               {
                 "key": "CLOSE",
-                "name": "Close"
+                "name": "Close",
+                "description": "Indicates the user dismissed the confirmation.",
+                "synonyms": "dismiss, decline, reject",
+                "tier": "essential"
               },
               {
                 "key": "ConfirmActionLoadFailed",
                 "name": "ConfirmAction load failed",
+                "description": "Indicates failure to load the confirmation action.",
+                "synonyms": "error, failure, failed, problem",
+                "tier": "internal",
                 "payloadSchema": [
                   {
                     "name": "error",
@@ -160,6 +187,9 @@
               {
                 "key": "ConfirmActionLoaded",
                 "name": "ConfirmAction loaded",
+                "description": "Indicates the confirmation action has been successfully loaded.",
+                "synonyms": "loaded, ready, initialized",
+                "tier": "internal",
                 "payloadSchema": [
                   {
                     "name": "data",
@@ -207,11 +237,11 @@
                     "modal",
                     {
                       "type": "stack",
-                      "direction": "vertical",
+                      "gap": "md",
                       "children": [
                         {
-                          "direction": "horizontal",
                           "align": "center",
+                          "direction": "horizontal",
                           "type": "stack",
                           "children": [
                             {
@@ -219,9 +249,9 @@
                               "type": "icon"
                             },
                             {
-                              "variant": "h3",
                               "type": "typography",
-                              "content": "@config.title"
+                              "content": "@config.title",
+                              "variant": "h3"
                             }
                           ],
                           "gap": "sm"
@@ -230,47 +260,47 @@
                           "type": "divider"
                         },
                         {
+                          "message": "@config.alertMessage",
                           "type": "alert",
-                          "variant": "error",
-                          "message": "@config.alertMessage"
+                          "variant": "error"
                         },
                         {
-                          "type": "typography",
                           "variant": "h4",
+                          "type": "typography",
                           "content": "@entity.name"
                         },
                         {
-                          "type": "typography",
-                          "color": "muted",
+                          "content": "@entity.pendingId",
                           "variant": "caption",
-                          "content": "@entity.pendingId"
+                          "type": "typography",
+                          "color": "muted"
                         },
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "children": [
                             {
-                              "label": "Cancel",
+                              "type": "button",
                               "action": "CANCEL",
                               "variant": "ghost",
-                              "type": "button"
+                              "label": "Cancel"
                             },
                             {
+                              "action": "CONFIRM",
+                              "icon": "check",
                               "variant": "danger",
+                              "type": "button",
                               "actionPayload": {
                                 "id": "@payload.id"
                               },
-                              "icon": "check",
-                              "label": "@config.confirmLabel",
-                              "type": "button",
-                              "action": "CONFIRM"
+                              "label": "@config.confirmLabel"
                             }
                           ],
-                          "justify": "end"
+                          "direction": "horizontal",
+                          "justify": "end",
+                          "gap": "sm",
+                          "type": "stack"
                         }
                       ],
-                      "gap": "md"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -314,6 +344,13 @@
             ]
           },
           "config": {
+            "confirmLabel": {
+              "type": "string",
+              "default": "Confirm",
+              "label": "Confirm button",
+              "description": "Label on the primary confirm action button",
+              "tier": "presentation"
+            },
             "alertMessage": {
               "type": "string",
               "default": "Are you sure?",
@@ -326,13 +363,6 @@
               "default": "alert-triangle",
               "label": "Icon",
               "description": "Icon name displayed in the confirmation modal header",
-              "tier": "presentation"
-            },
-            "confirmLabel": {
-              "type": "string",
-              "default": "Confirm",
-              "label": "Confirm button",
-              "description": "Label on the primary confirm action button",
               "tier": "presentation"
             },
             "title": {

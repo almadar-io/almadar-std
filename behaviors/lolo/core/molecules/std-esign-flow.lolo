@@ -46,13 +46,31 @@ orbital SignatureSessionOrbital {
     }
     emits {
       CREATE
+        @description "Indicates a new signature request has been initiated."
+        @synonyms "new, initiate, start, begin"
+        @tier "essential"
       RESEND_REQUEST { id : string!, row : SignatureSession }
+        @description "Indicates a signature request has been resent."
+        @synonyms "resend, retransmit, repeat"
+        @tier "customization"
       REQUEST_DELETE { id : string!, row : SignatureSession }
+        @description "Signals a signature request has been removed."
+        @synonyms "remove, purge, discard"
+        @tier "customization"
       SignatureSessionLoaded
+        @description "Signals that a signature session has been successfully loaded."
+        @synonyms "loaded, initialized, ready"
+        @tier "essential"
       SignatureSessionLoadFailed
+        @description "Indicates failure to load a signature session."
+        @synonyms "error, failure, problem, unsuccessful"
+        @tier "internal"
     }
     listens {
       SignatureSessionLoadFailed { error : string, code : string }
+        @description "Indicates failure to load a signature session."
+        @synonyms "error, failure, problem, unsuccessful"
+        @tier "internal"
       SignatureSessionPersistor.SESSION_CREATED -> INIT
       SignatureSessionPersistor.SESSION_RESENT  -> INIT
       SignatureSessionPersistor.SESSION_DELETED -> INIT
@@ -73,8 +91,17 @@ orbital SignatureSessionOrbital {
     listens {
       SignatureSessionBrowse.CREATE -> CREATE
       CREATE { id : string, row : SignatureSession }
+        @description "A new signature request is being initiated."
+        @synonyms "new, start, begin, initiate"
+        @tier "essential"
       SAVE { data : object! }
+        @description "Data has been persisted; update the UI accordingly."
+        @synonyms "persist, store, update, commit"
+        @tier "essential"
       ModalRecordLoadFailed { error : string, code : string }
+        @description "Indicates a failure to load record data for a modal."
+        @synonyms "error, failure, problem, unsuccessful"
+        @tier "internal"
     }
   }
 
@@ -92,7 +119,13 @@ orbital SignatureSessionOrbital {
     listens {
       SignatureSessionBrowse.REQUEST_DELETE -> DELETE
       DELETE { id : string, row : SignatureSession }
+        @description "A request to remove a signature request from the list."
+        @synonyms "remove, dismiss, discard"
+        @tier "customization"
       ConfirmActionLoadFailed { error : string, code : string }
+        @description "Indicates a failure to load data needed for an action."
+        @synonyms "error, failure, problem, unsuccessful"
+        @tier "internal"
     }
   }
 
@@ -109,13 +142,31 @@ orbital SignatureSessionOrbital {
     }
     emits {
       SESSION_CREATED -> external { id : string }
+        @description "A new signature session has been initialized."
+        @synonyms "start, begin, initialize"
+        @tier "essential"
       SESSION_RESENT  -> external { id : string }
+        @description "Indicates a signature request has been resent."
+        @synonyms "resend, retransmit, send again"
+        @tier "customization"
       SESSION_DELETED -> external { id : string }
+        @description "Indicates a signature session has been removed or invalidated."
+        @synonyms "removed, cleared, expired, terminated"
+        @tier "internal"
     }
     listens {
       DO_CREATE { data : object! }
+        @description "Initiates the creation of a new signature request."
+        @synonyms "new, add, generate, start"
+        @tier "essential"
       DO_RESEND { id : string }
+        @description "A request to resend a signature request."
+        @synonyms "retry, repeat, send again"
+        @tier "customization"
       DO_DELETE { id : string }
+        @description "A request to remove an item from the current view."
+        @synonyms "remove, discard, clear, erase"
+        @tier "customization"
       SignatureSessionCreate.SAVE                  -> DO_CREATE
       SignatureSessionBrowse.RESEND_REQUEST        -> DO_RESEND
       SignatureSessionDelete.CONFIRM_DELETE        -> DO_DELETE

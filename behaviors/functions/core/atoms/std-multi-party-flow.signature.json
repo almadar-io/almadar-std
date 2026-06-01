@@ -140,6 +140,96 @@
           "FlowLoadFailed"
         ],
         "listenedEvents": [],
+        "events": [
+          {
+            "name": "PARTY_CONFIRM",
+            "direction": "emit",
+            "description": "Signals a party's acceptance or agreement within the flow.",
+            "synonyms": "accept, acknowledge, confirm, approve",
+            "tier": "essential"
+          },
+          {
+            "name": "OPEN_DISPUTE",
+            "direction": "emit",
+            "description": "Signals the dispute process has been initiated.",
+            "synonyms": "dispute, challenge, contest",
+            "tier": "essential"
+          },
+          {
+            "name": "CANCEL_TRANSACTION",
+            "direction": "emit",
+            "description": "Indicates a transaction cancellation request has been initiated.",
+            "synonyms": "terminate, end, void, revoke",
+            "tier": "essential"
+          },
+          {
+            "name": "SUBMIT_DISPUTE",
+            "direction": "emit",
+            "description": "Signals a dispute submission request.",
+            "synonyms": "dispute, challenge, contest",
+            "tier": "essential"
+          },
+          {
+            "name": "SUBMIT_CANCEL",
+            "direction": "emit",
+            "description": "Signals a cancellation request has been submitted.",
+            "synonyms": "request cancel, initiate cancellation, submit termination",
+            "tier": "essential"
+          },
+          {
+            "name": "CANCEL_REASON",
+            "direction": "emit",
+            "description": "Indicates a reason was provided for transaction cancellation.",
+            "synonyms": "reason, explanation, justification",
+            "tier": "customization"
+          },
+          {
+            "name": "RELEASE",
+            "direction": "emit",
+            "description": "Transaction funds are distributed to the intended recipients.",
+            "synonyms": "complete, finalize, distribute, payout",
+            "tier": "essential"
+          },
+          {
+            "name": "RESTART",
+            "direction": "emit",
+            "description": "Initiates a reset of the current transaction flow.",
+            "synonyms": "reset, refresh, reinitialize",
+            "tier": "customization"
+          },
+          {
+            "name": "FlowLoaded",
+            "direction": "emit",
+            "description": "Signals successful loading of the transaction flow data.",
+            "synonyms": "loaded, initialized, ready",
+            "tier": "essential"
+          },
+          {
+            "name": "FlowLoadFailed",
+            "direction": "emit",
+            "description": "Indicates that loading the flow data failed.",
+            "synonyms": "failure, error, problem, unsuccessful",
+            "tier": "internal"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "FlowSaved",
+            "direction": "listen",
+            "description": "Indicates the flow data has been successfully saved.",
+            "synonyms": "saved, updated, persisted",
+            "tier": "customization"
+          },
+          {
+            "name": "FlowSaveFailed",
+            "direction": "listen",
+            "description": "Indicates a failure to save the current flow state.",
+            "synonyms": "failed, error, unsuccessful, save error",
+            "tier": "internal"
+          }
+        ],
         "overridableConfigKeys": [
           {
             "key": "cancelIcon",
@@ -195,26 +285,26 @@
             "type": "[PartySpec]",
             "default": [
               {
-                "actionDescription": "Authorize $28,500 to be held in escrow until delivery is confirmed.",
-                "actionLabel": "Confirm payment",
+                "description": "Funds the transaction and confirms receipt of the vehicle.",
                 "icon": "user",
+                "id": "buyer",
                 "actor": "Alice Chen",
-                "actionIcon": "credit-card",
+                "actionLabel": "Confirm payment",
+                "actionDescription": "Authorize $28,500 to be held in escrow until delivery is confirmed.",
                 "stepLabel": "Step 1 of 2",
                 "title": "Buyer",
-                "id": "buyer",
-                "description": "Funds the transaction and confirms receipt of the vehicle."
+                "actionIcon": "credit-card"
               },
               {
-                "stepLabel": "Step 2 of 2",
-                "id": "seller",
-                "description": "Ships the vehicle and uploads delivery proof.",
-                "actionIcon": "package",
-                "actionDescription": "Mark the vehicle as shipped. Funds will release after the buyer confirms receipt.",
-                "icon": "user-check",
                 "actionLabel": "Confirm shipment",
-                "actor": "Bob's Auto Sales LLC",
-                "title": "Seller"
+                "actionDescription": "Mark the vehicle as shipped. Funds will release after the buyer confirms receipt.",
+                "description": "Ships the vehicle and uploads delivery proof.",
+                "title": "Seller",
+                "actionIcon": "package",
+                "stepLabel": "Step 2 of 2",
+                "icon": "user-check",
+                "id": "seller",
+                "actor": "Bob's Auto Sales LLC"
               }
             ],
             "label": "Parties",
@@ -222,18 +312,8 @@
             "tier": "domain",
             "items": {
               "properties": {
-                "icon": {
-                  "name": "icon",
-                  "required": false,
-                  "type": "string"
-                },
                 "stepLabel": {
                   "name": "stepLabel",
-                  "required": false,
-                  "type": "string"
-                },
-                "actionDescription": {
-                  "name": "actionDescription",
                   "required": false,
                   "type": "string"
                 },
@@ -242,8 +322,38 @@
                   "required": false,
                   "type": "string"
                 },
+                "title": {
+                  "name": "title",
+                  "required": false,
+                  "type": "string"
+                },
+                "actor": {
+                  "name": "actor",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
                 "key": {
                   "name": "key",
+                  "required": false,
+                  "type": "string"
+                },
+                "description": {
+                  "name": "description",
+                  "required": false,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
                   "required": false,
                   "type": "string"
                 },
@@ -257,33 +367,13 @@
                   "required": false,
                   "type": "string"
                 },
-                "actor": {
-                  "name": "actor",
-                  "required": false,
-                  "type": "string"
-                },
-                "title": {
-                  "name": "title",
-                  "required": false,
-                  "type": "string"
-                },
-                "description": {
-                  "name": "description",
-                  "required": false,
-                  "type": "string"
-                },
                 "id": {
                   "name": "id",
                   "required": false,
                   "type": "string"
                 },
-                "name": {
-                  "name": "name",
-                  "required": false,
-                  "type": "string"
-                },
-                "label": {
-                  "name": "label",
+                "actionDescription": {
+                  "name": "actionDescription",
                   "required": false,
                   "type": "string"
                 }

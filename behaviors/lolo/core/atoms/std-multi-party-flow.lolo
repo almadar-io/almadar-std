@@ -260,29 +260,95 @@ orbital MultiPartyFlowOrbital {
     }
     emits {
       PARTY_CONFIRM          { partyKey : string }
+        @description "Signals a party's acceptance or agreement within the flow."
+        @synonyms "accept, acknowledge, confirm, approve"
+        @tier "essential"
       OPEN_DISPUTE           { }
+        @description "Signals the dispute process has been initiated."
+        @synonyms "dispute, challenge, contest"
+        @tier "essential"
       CANCEL_TRANSACTION     { }
+        @description "Indicates a transaction cancellation request has been initiated."
+        @synonyms "terminate, end, void, revoke"
+        @tier "essential"
       SUBMIT_DISPUTE         { data : object }
+        @description "Signals a dispute submission request."
+        @synonyms "dispute, challenge, contest"
+        @tier "essential"
       SUBMIT_CANCEL          { data : object }
+        @description "Signals a cancellation request has been submitted."
+        @synonyms "request cancel, initiate cancellation, submit termination"
+        @tier "essential"
       CANCEL_REASON          { }
+        @description "Indicates a reason was provided for transaction cancellation."
+        @synonyms "reason, explanation, justification"
+        @tier "customization"
       RELEASE                { }
+        @description "Transaction funds are distributed to the intended recipients."
+        @synonyms "complete, finalize, distribute, payout"
+        @tier "essential"
       RESTART                { }
+        @description "Initiates a reset of the current transaction flow."
+        @synonyms "reset, refresh, reinitialize"
+        @tier "customization"
       FlowLoaded             { data : [ObjectSpec] }
+        @description "Signals successful loading of the transaction flow data."
+        @synonyms "loaded, initialized, ready"
+        @tier "essential"
       FlowLoadFailed         { error : string, code : string }
+        @description "Indicates that loading the flow data failed."
+        @synonyms "failure, error, problem, unsuccessful"
+        @tier "internal"
     }
     listens {
       PARTY_CONFIRM          { partyKey : string }
+        @description "A party acknowledges and accepts their role in the transaction."
+        @synonyms "accept, acknowledge, confirm, agree"
+        @tier "essential"
       OPEN_DISPUTE           { }
+        @description "A dispute process has been initiated."
+        @synonyms "dispute, challenge, contest"
+        @tier "essential"
       CANCEL_TRANSACTION     { }
+        @description "Indicates a request to cancel the transaction."
+        @synonyms "terminate, abort, revoke"
+        @tier "essential"
       SUBMIT_DISPUTE         { data : object }
+        @description "A dispute has been submitted for review."
+        @synonyms "dispute, claim, challenge, contest"
+        @tier "essential"
       SUBMIT_CANCEL          { data : object }
+        @description "Indicates a cancellation request has been received."
+        @synonyms "cancel, terminate, end"
+        @tier "essential"
       CANCEL_REASON          { }
+        @description "Indicates a reason was provided for transaction cancellation."
+        @synonyms "reason, explanation, justification"
+        @tier "customization"
       RELEASE                { }
+        @description "Transaction completion and funds disbursement."
+        @synonyms "complete, finish, finalize, payout"
+        @tier "essential"
       RESTART                { }
+        @description "Initiates a reset of the current flow state."
+        @synonyms "reset, refresh, retry"
+        @tier "customization"
       FlowLoaded             { data : [ObjectSpec] }
+        @description "Indicates the transaction flow data has been successfully loaded."
+        @synonyms "loaded, initialized, ready"
+        @tier "essential"
       FlowLoadFailed         { error : string, code : string }
+        @description "Indicates that loading the transaction flow encountered an error."
+        @synonyms "failure, error, problem, unsuccessful"
+        @tier "internal"
       FlowSaved              { row : object }
+        @description "Indicates the flow data has been successfully saved."
+        @synonyms "saved, updated, persisted"
+        @tier "customization"
       FlowSaveFailed         { error : string, code : string }
+        @description "Indicates a failure to save the current flow state."
+        @synonyms "failed, error, unsuccessful, save error"
+        @tier "internal"
     }
   }
   page "/multi-party-flow" as MultiPartyFlowPage -> MultiPartyTransaction

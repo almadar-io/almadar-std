@@ -61,21 +61,63 @@ orbital SignatureCaptureOrbital {
     }
     emits {
       CHANGE { dataUrl : string! }
+        @description "Indicates a change in the signature drawing."
+        @synonyms "update, modify, alter"
+        @tier "customization"
       SUBMIT { data : object! }
+        @description "Signals the signature capture process is complete."
+        @synonyms "done, finalized, confirmed, saved"
+        @tier "essential"
       CLEAR
+        @description "Signals the signature pad has been cleared."
+        @synonyms "reset, erase, remove"
+        @tier "essential"
       SignatureLoaded { data : [Signature] }
+        @description "Indicates the signature pad is ready for use."
+        @synonyms "ready, initialized, available"
+        @tier "essential"
       SignatureLoadFailed { error : string, code : string }
+        @description "Indicates the signature data could not be loaded."
+        @synonyms "load error, failed load, data error"
+        @tier "internal"
       SignatureSubmitted { row : Signature }
+        @description "Indicates a signature has been successfully captured and submitted."
+        @synonyms "signed, finalized, completed"
+        @tier "essential"
       SignatureSubmitFailed { error : string, code : string }
+        @description "Indicates signature submission failed."
+        @synonyms "error, failure, rejected"
+        @tier "internal"
     }
     listens {
       CHANGE { dataUrl : string! }
+        @description "Indicates a change in the signature drawing area."
+        @synonyms "update, modify, redraw"
+        @tier "essential"
       SUBMIT { data : object! }
+        @description "Indicates the signature capture process is complete."
+        @synonyms "done, finalized, confirmed, saved"
+        @tier "essential"
       CLEAR
+        @description "Indicates the signature area has been cleared."
+        @synonyms "reset, erase, delete"
+        @tier "essential"
       SignatureLoaded { data : [Signature] }
+        @description "Indicates the signature data has been successfully retrieved."
+        @synonyms "loaded, fetched, retrieved, initialized"
+        @tier "internal"
       SignatureLoadFailed { error : string, code : string }
+        @description "Indicates the signature data could not be loaded."
+        @synonyms "error, failure, problem, unsuccessful"
+        @tier "internal"
       SignatureSubmitted { row : Signature }
+        @description "Indicates a signature has been successfully submitted."
+        @synonyms "saved, finalized, confirmed"
+        @tier "essential"
       SignatureSubmitFailed { error : string, code : string }
+        @description "Indicates signature submission failed; retry or review."
+        @synonyms "error, failure, rejected, invalid"
+        @tier "internal"
     }
   }
   page "/signatures/capture" as SignatureCapturePage -> SignatureCapture

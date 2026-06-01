@@ -109,23 +109,89 @@
           "StepItemsLoadFailed"
         ],
         "listenedEvents": [],
+        "events": [
+          {
+            "name": "ADVANCE",
+            "direction": "emit",
+            "description": "Signals progression to the next step in the sequence.",
+            "synonyms": "next, proceed, continue, move forward",
+            "tier": "essential"
+          },
+          {
+            "name": "BACK",
+            "direction": "emit",
+            "description": "Indicates a request to navigate to the previous step.",
+            "synonyms": "previous, undo, return",
+            "tier": "essential"
+          },
+          {
+            "name": "REJECT",
+            "direction": "emit",
+            "description": "Indicates the user or system rejected the current step.",
+            "synonyms": "cancel, decline, dismiss",
+            "tier": "essential"
+          },
+          {
+            "name": "ESCALATE",
+            "direction": "emit",
+            "description": "Signals a request to elevate the process to a higher authority.",
+            "synonyms": "defer, transfer, handoff",
+            "tier": "customization"
+          },
+          {
+            "name": "RESTART",
+            "direction": "emit",
+            "description": "Initiates a reset of the current workflow process.",
+            "synonyms": "reset, refresh, restart, reinitialize",
+            "tier": "internal"
+          },
+          {
+            "name": "StepItemsLoaded",
+            "direction": "emit",
+            "description": "Signals that the step items have been successfully loaded.",
+            "synonyms": "loaded, fetched, retrieved, populated",
+            "tier": "internal"
+          },
+          {
+            "name": "StepItemsLoadFailed",
+            "direction": "emit",
+            "description": "Indicates failure to load step configuration items.",
+            "synonyms": "load error, failed fetch, data problem",
+            "tier": "internal"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "StepItemsSaved",
+            "direction": "listen",
+            "description": "Data for the current step has been successfully saved.",
+            "synonyms": "update, persist, store, commit",
+            "tier": "customization"
+          },
+          {
+            "name": "StepItemsSaveFailed",
+            "direction": "listen",
+            "description": "Indicates a failure to save step item data.",
+            "synonyms": "save error, data failed, persistence error",
+            "tier": "internal"
+          }
+        ],
         "overridableConfigKeys": [
           {
             "key": "bodyContent",
             "type": "render-ui",
             "default": {
-              "direction": "vertical",
-              "type": "stack",
               "gap": "lg",
+              "type": "stack",
+              "direction": "vertical",
               "children": [
                 {
-                  "gap": "sm",
-                  "direction": "horizontal",
-                  "align": "center",
                   "children": [
                     {
-                      "name": "shield-check",
-                      "type": "icon"
+                      "type": "icon",
+                      "name": "shield-check"
                     },
                     {
                       "variant": "h3",
@@ -133,12 +199,15 @@
                       "type": "typography"
                     }
                   ],
-                  "type": "stack"
+                  "gap": "sm",
+                  "type": "stack",
+                  "align": "center",
+                  "direction": "horizontal"
                 },
                 {
                   "type": "wizard-progress",
-                  "currentStep": "@entity.currentStepIndex",
                   "allowNavigation": false,
+                  "currentStep": "@entity.currentStepIndex",
                   "steps": "@entity.wizardSteps"
                 },
                 {
@@ -146,24 +215,24 @@
                   "type": "card",
                   "children": [
                     {
-                      "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
                           "type": "stack",
+                          "align": "center",
+                          "gap": "sm",
                           "children": [
                             {
                               "type": "icon",
-                              "name": "@entity.currentStepIcon",
-                              "size": "lg"
+                              "size": "lg",
+                              "name": "@entity.currentStepIcon"
                             },
                             {
                               "direction": "vertical",
                               "gap": "xs",
                               "children": [
                                 {
-                                  "type": "typography",
                                   "variant": "h2",
+                                  "type": "typography",
                                   "content": "@entity.currentStepLabel"
                                 },
                                 {
@@ -176,61 +245,61 @@
                               "type": "stack"
                             }
                           ],
-                          "gap": "sm",
-                          "align": "center",
                           "direction": "horizontal"
                         }
                       ],
-                      "gap": "md"
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 },
                 {
                   "direction": "horizontal",
-                  "align": "center",
                   "children": [
                     {
+                      "label": "Back",
+                      "action": "BACK",
                       "disabled": "@entity.isFirstStep",
                       "actionPayload": {
                         "id": "@entity.id"
                       },
-                      "icon": "chevron-left",
-                      "action": "BACK",
                       "variant": "ghost",
                       "type": "button",
-                      "label": "Back"
+                      "icon": "chevron-left"
                     },
                     {
-                      "icon": "x",
-                      "type": "button",
                       "label": "Reject",
+                      "type": "button",
                       "action": "REJECT",
-                      "variant": "ghost",
-                      "actionPayload": {
-                        "id": "@entity.id"
-                      }
-                    },
-                    {
-                      "type": "button",
-                      "variant": "ghost",
-                      "label": "Escalate",
-                      "action": "ESCALATE",
-                      "icon": "alert-triangle",
-                      "actionPayload": {
-                        "id": "@entity.id"
-                      }
-                    },
-                    {
-                      "type": "button",
                       "actionPayload": {
                         "id": "@entity.id"
                       },
-                      "action": "ADVANCE",
-                      "variant": "primary",
+                      "icon": "x",
+                      "variant": "ghost"
+                    },
+                    {
+                      "actionPayload": {
+                        "id": "@entity.id"
+                      },
+                      "variant": "ghost",
+                      "label": "Escalate",
+                      "type": "button",
+                      "action": "ESCALATE",
+                      "icon": "alert-triangle"
+                    },
+                    {
                       "icon": "@entity.primaryActionIcon",
-                      "label": "@entity.primaryActionLabel"
+                      "label": "@entity.primaryActionLabel",
+                      "actionPayload": {
+                        "id": "@entity.id"
+                      },
+                      "variant": "primary",
+                      "action": "ADVANCE",
+                      "type": "button"
                     }
                   ],
+                  "align": "center",
                   "type": "stack",
                   "gap": "sm"
                 }
@@ -263,21 +332,21 @@
             "default": [
               {
                 "description": "Initial review by direct manager",
-                "icon": "user",
+                "key": "manager",
                 "label": "Manager Review",
-                "key": "manager"
+                "icon": "user"
               },
               {
-                "label": "Director Approval",
                 "key": "director",
                 "description": "Department director sign-off",
+                "label": "Director Approval",
                 "icon": "users"
               },
               {
-                "label": "Executive Sign-off",
+                "description": "Final executive approval",
                 "key": "executive",
-                "icon": "shield",
-                "description": "Final executive approval"
+                "label": "Executive Sign-off",
+                "icon": "shield"
               }
             ],
             "label": "Steps",
@@ -290,18 +359,13 @@
                   "required": true,
                   "type": "string"
                 },
-                "key": {
-                  "name": "key",
-                  "required": false,
-                  "type": "string"
-                },
-                "description": {
-                  "name": "description",
-                  "required": false,
-                  "type": "string"
-                },
                 "icon": {
                   "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "key": {
+                  "name": "key",
                   "required": false,
                   "type": "string"
                 },
@@ -312,6 +376,11 @@
                   "items": {
                     "type": "string"
                   }
+                },
+                "description": {
+                  "name": "description",
+                  "required": false,
+                  "type": "string"
                 }
               },
               "type": "object"

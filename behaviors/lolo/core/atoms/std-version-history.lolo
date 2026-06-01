@@ -93,23 +93,71 @@ orbital RevisionOrbital {
     }
     emits {
       OPEN_REVISION { id : string!, row : Revision }
+        @description "Signals a revision has been selected for viewing."
+        @synonyms "select, choose, display"
+        @tier "essential"
       CLOSE_VIEW    { }
+        @description "Indicates the view has been closed or dismissed."
+        @synonyms "dismiss, hide, close"
+        @tier "essential"
       COMPARE       { id : string!, beforeId : string!, afterId : string!, revisions : [Revision] }
+        @description "Signals a request to compare two versions."
+        @synonyms "compare, diff, contrast"
+        @tier "customization"
       ROLLBACK      { id : string! }
+        @description "Indicates a revision has been successfully reverted."
+        @synonyms "reverted, undone, restored"
+        @tier "essential"
       RevisionLoaded         { data : [Revision] }
+        @description "Signals a revision has been successfully retrieved and is ready."
+        @synonyms "loaded, fetched, retrieved, available"
+        @tier "essential"
       RevisionLoadFailed     { error : string, code : string }
+        @description "Indicates a failure to load revision data."
+        @synonyms "error, fail, problem, unsuccessful"
+        @tier "internal"
       RevisionRolledBack     { row : Revision }
+        @description "Indicates a revision has been successfully restored to a previous state."
+        @synonyms "restored, reverted, undone"
+        @tier "customization"
       RevisionRollbackFailed { error : string, code : string }
+        @description "Indicates that a revision rollback operation was unsuccessful."
+        @synonyms "rollback failed, revert error, undo failure"
+        @tier "internal"
     }
     listens {
       OPEN_REVISION { id : string!, row : Revision }
+        @description "A revision has been selected for viewing."
+        @synonyms "select, choose, load"
+        @tier "essential"
       CLOSE_VIEW    { }
+        @description "Indicates the revision history view has been closed."
+        @synonyms "dismiss, hide, cancel"
+        @tier "essential"
       COMPARE       { id : string!, beforeId : string!, afterId : string!, revisions : [Revision] }
+        @description "Indicates a request to compare two versions."
+        @synonyms "diff, compare, contrast"
+        @tier "customization"
       ROLLBACK      { id : string! }
+        @description "A revision has been successfully reverted to a previous state."
+        @synonyms "reverted, undone, restored"
+        @tier "essential"
       RevisionLoaded         { data : [Revision] }
+        @description "Indicates a revision has been successfully retrieved and is ready."
+        @synonyms "loaded, fetched, retrieved, available"
+        @tier "essential"
       RevisionLoadFailed     { error : string, code : string }
+        @description "Indicates a failure to retrieve revision data."
+        @synonyms "error, failure, problem, fetch failed"
+        @tier "internal"
       RevisionRolledBack     { row : Revision }
+        @description "Indicates a revision has been successfully reverted."
+        @synonyms "reverted, undone, restored"
+        @tier "internal"
       RevisionRollbackFailed { error : string, code : string }
+        @description "Indicates that a revision rollback operation has failed."
+        @synonyms "rollback error, revert failure, undo failed"
+        @tier "internal"
     }
   }
   page "/revisions/manage" as RevisionManagePage -> RevisionManage

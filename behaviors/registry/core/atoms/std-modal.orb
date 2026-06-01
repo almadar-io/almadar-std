@@ -56,6 +56,9 @@
           "emits": [
             {
               "event": "SAVE",
+              "description": "Indicates a successful data save operation.",
+              "synonyms": "submit, persist, confirm",
+              "tier": "essential",
               "payloadSchema": [
                 {
                   "name": "data",
@@ -65,10 +68,16 @@
               ]
             },
             {
-              "event": "CLOSE"
+              "event": "CLOSE",
+              "description": "Indicates the modal window is being closed.",
+              "synonyms": "dismiss, hide, cancel",
+              "tier": "essential"
             },
             {
               "event": "ModalRecordLoadFailed",
+              "description": "Indicates a failure to load the record data.",
+              "synonyms": "error, failure, problem, unsuccessful",
+              "tier": "internal",
               "scope": "internal",
               "payloadSchema": [
                 {
@@ -83,6 +92,9 @@
             },
             {
               "event": "ModalRecordLoaded",
+              "description": "Signals that the modal's data has been successfully loaded.",
+              "synonyms": "loaded, data ready, populated",
+              "tier": "essential",
               "scope": "internal",
               "payloadSchema": [
                 {
@@ -110,6 +122,9 @@
               {
                 "key": "OPEN",
                 "name": "Open",
+                "description": "A request to display the modal window.",
+                "synonyms": "show, display, present, reveal",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "id",
@@ -123,11 +138,17 @@
               },
               {
                 "key": "CLOSE",
-                "name": "Close"
+                "name": "Close",
+                "description": "Indicates the modal window is being closed.",
+                "synonyms": "dismiss, hide, cancel",
+                "tier": "essential"
               },
               {
                 "key": "SAVE",
                 "name": "Save",
+                "description": "Indicates a successful data save operation.",
+                "synonyms": "submit, persist, confirm",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "data",
@@ -139,6 +160,9 @@
               {
                 "key": "ModalRecordLoadFailed",
                 "name": "ModalRecord load failed",
+                "description": "Indicates a failure to load the record data.",
+                "synonyms": "error, failure, problem, unsuccessful",
+                "tier": "internal",
                 "payloadSchema": [
                   {
                     "name": "error",
@@ -153,6 +177,9 @@
               {
                 "key": "ModalRecordLoaded",
                 "name": "ModalRecord loaded",
+                "description": "Signals that the modal's data has been successfully loaded.",
+                "synonyms": "loaded, data ready, populated",
+                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "data",
@@ -206,18 +233,18 @@
                       "direction": "vertical",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "type": "stack",
                           "gap": "sm",
+                          "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "name": "@config.icon",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "@config.icon"
                             },
                             {
+                              "variant": "h3",
                               "type": "typography",
-                              "content": "@config.title",
-                              "variant": "h3"
+                              "content": "@config.title"
                             }
                           ]
                         },
@@ -225,12 +252,12 @@
                           "type": "divider"
                         },
                         {
-                          "entity": "@payload.row",
-                          "submitEvent": "SAVE",
-                          "cancelEvent": "CLOSE",
                           "mode": "@config.mode",
-                          "type": "form-section",
-                          "fields": "@config.fields"
+                          "submitEvent": "SAVE",
+                          "fields": "@config.fields",
+                          "entity": "@payload.row",
+                          "cancelEvent": "CLOSE",
+                          "type": "form-section"
                         }
                       ],
                       "gap": "md"
@@ -270,20 +297,6 @@
             ]
           },
           "config": {
-            "title": {
-              "type": "string",
-              "default": "Details",
-              "label": "Modal title",
-              "description": "Heading at the top of the modal",
-              "tier": "presentation"
-            },
-            "detailSlot": {
-              "type": "slot",
-              "default": "modal",
-              "label": "Render slot",
-              "description": "UI slot the modal renders into",
-              "tier": "internal"
-            },
             "detailPattern": {
               "type": "pattern",
               "default": "stack",
@@ -291,15 +304,12 @@
               "description": "Pattern used to arrange the form body",
               "tier": "internal"
             },
-            "fields": {
-              "type": "[string]",
-              "default": [],
-              "label": "Form fields",
-              "description": "Entity fields displayed as inputs in the modal form",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
+            "detailSlot": {
+              "type": "slot",
+              "default": "modal",
+              "label": "Render slot",
+              "description": "UI slot the modal renders into",
+              "tier": "internal"
             },
             "mode": {
               "type": "string",
@@ -314,6 +324,23 @@
               "label": "Icon",
               "description": "Icon shown in the modal header",
               "tier": "presentation"
+            },
+            "title": {
+              "type": "string",
+              "default": "Details",
+              "label": "Modal title",
+              "description": "Heading at the top of the modal",
+              "tier": "presentation"
+            },
+            "fields": {
+              "type": "[string]",
+              "default": [],
+              "label": "Form fields",
+              "description": "Entity fields displayed as inputs in the modal form",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
             }
           },
           "scope": "instance"
