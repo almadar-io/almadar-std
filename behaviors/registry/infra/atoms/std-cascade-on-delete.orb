@@ -192,8 +192,8 @@
                     "CascadeLog",
                     {
                       "emit": {
-                        "success": "CascadeRowsFetched",
-                        "failure": "CascadeFailed"
+                        "failure": "CascadeFailed",
+                        "success": "CascadeRowsFetched"
                       },
                       "filter": [
                         "=",
@@ -225,16 +225,16 @@
                     "emit",
                     "CascadeRowsLoaded",
                     {
-                      "parentId": "@entity.parentId",
-                      "data": "@payload.data"
+                      "data": "@payload.data",
+                      "parentId": "@entity.parentId"
                     }
                   ],
                   [
                     "emit",
                     "CascadeCompleted",
                     {
-                      "parentId": "@entity.parentId",
-                      "deletedCount": "@entity.rowCount"
+                      "deletedCount": "@entity.rowCount",
+                      "parentId": "@entity.parentId"
                     }
                   ]
                 ]
@@ -242,36 +242,36 @@
             ]
           },
           "config": {
-            "enabled": {
-              "type": "boolean",
-              "default": false,
-              "label": "Enabled",
-              "description": "Whether the cascade-on-delete gate is active for the host orbital. Off by default; turn on to cascade-delete dependent rows when the parent is deleted.",
-              "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, cascade delete, delete children, on delete cascade, cascade on delete, remove related, soft delete cascade, dependent deletes, integrity cascade",
-              "tier": "infra"
+            "dependentEntities": {
+              "type": "[string]",
+              "default": [],
+              "label": "Dependent entities",
+              "description": "Entity names that hold rows pointing to the parent",
+              "tier": "internal",
+              "items": {
+                "type": "string"
+              }
             },
             "parentEntity": {
               "type": "string",
               "default": "",
               "label": "Parent entity",
               "description": "Entity whose deletion triggers the cascade",
-              "tier": "infra"
-            },
-            "dependentEntities": {
-              "type": "[string]",
-              "default": [],
-              "label": "Dependent entities",
-              "description": "Entity names that hold rows pointing to the parent",
-              "tier": "infra",
-              "items": {
-                "type": "string"
-              }
+              "tier": "internal"
             },
             "foreignKeyField": {
               "type": "string",
               "default": "",
               "label": "Foreign-key field",
               "description": "Field on dependent rows that holds the parent's id",
+              "tier": "internal"
+            },
+            "enabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Delete related records too",
+              "description": "When a record is deleted, also delete the records that belong to it. Off by default.",
+              "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, cascade delete, delete children, on delete cascade, cascade on delete, remove related, soft delete cascade, dependent deletes, integrity cascade",
               "tier": "infra"
             }
           },

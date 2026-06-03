@@ -1,5 +1,5 @@
 {
-  "generatedFromStdVersion": "16.18.1",
+  "generatedFromStdVersion": "16.19.0",
   "signatures": [
     {
       "organism": "std-agent-activity-log",
@@ -30964,8 +30964,8 @@
               "key": "enabled",
               "type": "boolean",
               "default": false,
-              "label": "Enabled",
-              "description": "Whether the approval gate is active for the host orbital. Off by default; turn on to require sign-off.",
+              "label": "Require approval",
+              "description": "Require sign-off before a record is finalized. Off by default.",
               "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, approval, needs approval, sign-off, signed off, review before, gatekeeper, editor approval, publishing approval, draft approval, content review, requires approval, manager approval, supervisor approval, admin approval, before going live",
               "tier": "policy"
             },
@@ -31017,7 +31017,7 @@
               "default": "",
               "label": "Value field",
               "description": "Payload field name to compare against threshold (e.g. 'amount' on a RefundRequested event). v1.0 declarative only.",
-              "tier": "policy"
+              "tier": "internal"
             }
           ],
           "capabilities": [
@@ -31287,8 +31287,8 @@
                       "enabled": {
                         "type": "boolean",
                         "default": false,
-                        "description": "Whether the approval gate is active for the host orbital. Off by default; turn on to require sign-off.",
-                        "x-label": "Enabled",
+                        "description": "Require sign-off before a record is finalized. Off by default.",
+                        "x-label": "Require approval",
                         "x-synonyms": "enable, turn on, enforce, require, activate, apply, switch on, approval, needs approval, sign-off, signed off, review before, gatekeeper, editor approval, publishing approval, draft approval, content review, requires approval, manager approval, supervisor approval, admin approval, before going live",
                         "x-tier": "policy"
                       },
@@ -31335,7 +31335,7 @@
                         "default": "",
                         "description": "Payload field name to compare against threshold (e.g. 'amount' on a RefundRequested event). v1.0 declarative only.",
                         "x-label": "Value field",
-                        "x-tier": "policy"
+                        "x-tier": "internal"
                       }
                     }
                   },
@@ -31550,8 +31550,8 @@
               "key": "captureBeforeAfter",
               "type": "boolean",
               "default": false,
-              "label": "Capture before/after snapshots",
-              "description": "When true, persist `before` and `after` object snapshots from @payload.data on each audit row. Default off to keep audit rows small.",
+              "label": "Keep before/after snapshots",
+              "description": "Store a full before-and-after snapshot of each change. More detail, but a larger audit log.",
               "tier": "policy"
             },
             {
@@ -31560,7 +31560,7 @@
               "default": "",
               "label": "Entity to audit",
               "description": "Type name of the entity whose mutations get logged",
-              "tier": "policy"
+              "tier": "internal"
             },
             {
               "key": "captureEventTypes",
@@ -31568,7 +31568,7 @@
               "default": [],
               "label": "Event-kind filter",
               "description": "When set, only @payload.data.kind values in this list are audited. Empty list = capture every event. Requires the upstream event to include a `kind` field on its payload.",
-              "tier": "policy",
+              "tier": "internal",
               "items": {
                 "type": "string"
               }
@@ -31577,8 +31577,8 @@
               "key": "enabled",
               "type": "boolean",
               "default": false,
-              "label": "Enabled",
-              "description": "Whether the audit trail is active for the host orbital. Off by default; turn on to record mutations.",
+              "label": "Track every change",
+              "description": "Keep an audit trail of every change to records — who changed what, and when. Off by default.",
               "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, audit, audit trail, log changes, track changes, who edited what, mutation log, change history, edit history, modification log, accountability log, record changes, log every edit, compliance log",
               "tier": "policy"
             },
@@ -31588,7 +31588,7 @@
               "default": [],
               "label": "Skip fields",
               "description": "Entity fields to omit from the audit payload (declarative; before/after still capture all fields in v1.1 — field exclusion lands when captureBeforeAfter wiring filters per-field).",
-              "tier": "policy",
+              "tier": "internal",
               "items": {
                 "type": "string"
               }
@@ -31597,8 +31597,8 @@
               "key": "retentionDays",
               "type": "number",
               "default": 2555,
-              "label": "Retention (days)",
-              "description": "Days to keep audit rows. Default 2555 (7 years) for typical compliance regimes. WIRING DEFERRED: retention enforcement requires composing `std-lifecycle` against AuditEntry with a delete rule (gap — docs/Almadar_Std_Factories.md).",
+              "label": "How long to keep the audit log",
+              "description": "Number of days to retain audit entries. Default is about 7 years, typical for compliance.",
               "tier": "policy"
             }
           ],
@@ -31851,8 +31851,8 @@
                       "captureBeforeAfter": {
                         "type": "boolean",
                         "default": false,
-                        "description": "When true, persist `before` and `after` object snapshots from @payload.data on each audit row. Default off to keep audit rows small.",
-                        "x-label": "Capture before/after snapshots",
+                        "description": "Store a full before-and-after snapshot of each change. More detail, but a larger audit log.",
+                        "x-label": "Keep before/after snapshots",
                         "x-tier": "policy"
                       },
                       "captureEntity": {
@@ -31860,7 +31860,7 @@
                         "default": "",
                         "description": "Type name of the entity whose mutations get logged",
                         "x-label": "Entity to audit",
-                        "x-tier": "policy"
+                        "x-tier": "internal"
                       },
                       "captureEventTypes": {
                         "type": "array",
@@ -31870,13 +31870,13 @@
                         "default": [],
                         "description": "When set, only @payload.data.kind values in this list are audited. Empty list = capture every event. Requires the upstream event to include a `kind` field on its payload.",
                         "x-label": "Event-kind filter",
-                        "x-tier": "policy"
+                        "x-tier": "internal"
                       },
                       "enabled": {
                         "type": "boolean",
                         "default": false,
-                        "description": "Whether the audit trail is active for the host orbital. Off by default; turn on to record mutations.",
-                        "x-label": "Enabled",
+                        "description": "Keep an audit trail of every change to records — who changed what, and when. Off by default.",
+                        "x-label": "Track every change",
                         "x-synonyms": "enable, turn on, enforce, require, activate, apply, switch on, audit, audit trail, log changes, track changes, who edited what, mutation log, change history, edit history, modification log, accountability log, record changes, log every edit, compliance log",
                         "x-tier": "policy"
                       },
@@ -31888,13 +31888,13 @@
                         "default": [],
                         "description": "Entity fields to omit from the audit payload (declarative; before/after still capture all fields in v1.1 — field exclusion lands when captureBeforeAfter wiring filters per-field).",
                         "x-label": "Skip fields",
-                        "x-tier": "policy"
+                        "x-tier": "internal"
                       },
                       "retentionDays": {
                         "type": "number",
                         "default": 2555,
-                        "description": "Days to keep audit rows. Default 2555 (7 years) for typical compliance regimes. WIRING DEFERRED: retention enforcement requires composing `std-lifecycle` against AuditEntry with a delete rule (gap — docs/Almadar_Std_Factories.md).",
-                        "x-label": "Retention (days)",
+                        "description": "Number of days to retain audit entries. Default is about 7 years, typical for compliance.",
+                        "x-label": "How long to keep the audit log",
                         "x-tier": "policy"
                       }
                     }
@@ -41381,7 +41381,7 @@
               "default": [],
               "label": "Dependent entities",
               "description": "Entity names that hold rows pointing to the parent",
-              "tier": "infra",
+              "tier": "internal",
               "items": {
                 "type": "string"
               }
@@ -41390,8 +41390,8 @@
               "key": "enabled",
               "type": "boolean",
               "default": false,
-              "label": "Enabled",
-              "description": "Whether the cascade-on-delete gate is active for the host orbital. Off by default; turn on to cascade-delete dependent rows when the parent is deleted.",
+              "label": "Delete related records too",
+              "description": "When a record is deleted, also delete the records that belong to it. Off by default.",
               "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, cascade delete, delete children, on delete cascade, cascade on delete, remove related, soft delete cascade, dependent deletes, integrity cascade",
               "tier": "infra"
             },
@@ -41401,7 +41401,7 @@
               "default": "",
               "label": "Foreign-key field",
               "description": "Field on dependent rows that holds the parent's id",
-              "tier": "infra"
+              "tier": "internal"
             },
             {
               "key": "parentEntity",
@@ -41409,7 +41409,7 @@
               "default": "",
               "label": "Parent entity",
               "description": "Entity whose deletion triggers the cascade",
-              "tier": "infra"
+              "tier": "internal"
             }
           ],
           "capabilities": [
@@ -41655,13 +41655,13 @@
                         "default": [],
                         "description": "Entity names that hold rows pointing to the parent",
                         "x-label": "Dependent entities",
-                        "x-tier": "infra"
+                        "x-tier": "internal"
                       },
                       "enabled": {
                         "type": "boolean",
                         "default": false,
-                        "description": "Whether the cascade-on-delete gate is active for the host orbital. Off by default; turn on to cascade-delete dependent rows when the parent is deleted.",
-                        "x-label": "Enabled",
+                        "description": "When a record is deleted, also delete the records that belong to it. Off by default.",
+                        "x-label": "Delete related records too",
                         "x-synonyms": "enable, turn on, enforce, require, activate, apply, switch on, cascade delete, delete children, on delete cascade, cascade on delete, remove related, soft delete cascade, dependent deletes, integrity cascade",
                         "x-tier": "infra"
                       },
@@ -41670,14 +41670,14 @@
                         "default": "",
                         "description": "Field on dependent rows that holds the parent's id",
                         "x-label": "Foreign-key field",
-                        "x-tier": "infra"
+                        "x-tier": "internal"
                       },
                       "parentEntity": {
                         "type": "string",
                         "default": "",
                         "description": "Entity whose deletion triggers the cascade",
                         "x-label": "Parent entity",
-                        "x-tier": "infra"
+                        "x-tier": "internal"
                       }
                     }
                   },
@@ -42988,7 +42988,7 @@
               "label": "Junction entity",
               "description": "Persistent entity used as the join table",
               "synonyms": "join table, link table, bridge table, junction table, mapping table",
-              "tier": "infra"
+              "tier": "internal"
             },
             {
               "key": "leftEntity",
@@ -42997,7 +42997,7 @@
               "label": "Left entity",
               "description": "Entity type on the left side of the N:M relationship",
               "synonyms": "left side, source entity, from entity, parent entity",
-              "tier": "infra"
+              "tier": "internal"
             },
             {
               "key": "leftIdField",
@@ -43006,7 +43006,7 @@
               "label": "Left FK field",
               "description": "Junction column holding the left entity's id",
               "synonyms": "left foreign key, left FK, source key, parent key",
-              "tier": "infra"
+              "tier": "internal"
             },
             {
               "key": "rightEntity",
@@ -43015,7 +43015,7 @@
               "label": "Right entity",
               "description": "Entity type on the right side of the N:M relationship",
               "synonyms": "right side, target entity, to entity, child entity, related entity",
-              "tier": "infra"
+              "tier": "internal"
             },
             {
               "key": "rightIdField",
@@ -43024,7 +43024,7 @@
               "label": "Right FK field",
               "description": "Junction column holding the right entity's id",
               "synonyms": "right foreign key, right FK, target key, child key",
-              "tier": "infra"
+              "tier": "internal"
             }
           ],
           "capabilities": []
@@ -43267,7 +43267,7 @@
                         "description": "Persistent entity used as the join table",
                         "x-label": "Junction entity",
                         "x-synonyms": "join table, link table, bridge table, junction table, mapping table",
-                        "x-tier": "infra"
+                        "x-tier": "internal"
                       },
                       "leftEntity": {
                         "type": "string",
@@ -43275,7 +43275,7 @@
                         "description": "Entity type on the left side of the N:M relationship",
                         "x-label": "Left entity",
                         "x-synonyms": "left side, source entity, from entity, parent entity",
-                        "x-tier": "infra"
+                        "x-tier": "internal"
                       },
                       "leftIdField": {
                         "type": "string",
@@ -43283,7 +43283,7 @@
                         "description": "Junction column holding the left entity's id",
                         "x-label": "Left FK field",
                         "x-synonyms": "left foreign key, left FK, source key, parent key",
-                        "x-tier": "infra"
+                        "x-tier": "internal"
                       },
                       "rightEntity": {
                         "type": "string",
@@ -43291,7 +43291,7 @@
                         "description": "Entity type on the right side of the N:M relationship",
                         "x-label": "Right entity",
                         "x-synonyms": "right side, target entity, to entity, child entity, related entity",
-                        "x-tier": "infra"
+                        "x-tier": "internal"
                       },
                       "rightIdField": {
                         "type": "string",
@@ -43299,7 +43299,7 @@
                         "description": "Junction column holding the right entity's id",
                         "x-label": "Right FK field",
                         "x-synonyms": "right foreign key, right FK, target key, child key",
-                        "x-tier": "infra"
+                        "x-tier": "internal"
                       }
                     }
                   },
@@ -47959,8 +47959,8 @@
               "key": "enabled",
               "type": "boolean",
               "default": false,
-              "label": "Enabled",
-              "description": "Whether the data-erasure workflow is active for the host orbital. Off by default; turn on to handle GDPR right-to-be-forgotten requests.",
+              "label": "Allow data erasure (GDPR)",
+              "description": "Let people request that their data be permanently removed. Off by default.",
               "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, gdpr, erasure, right to be forgotten, data deletion, scheduled deletion, retention purge, account deletion, anonymize user data, scrub PII, delete user data",
               "tier": "policy"
             },
@@ -48004,7 +48004,7 @@
               "default": "",
               "label": "Target entity",
               "description": "Entity name whose records erasure requests apply to (e.g. 'CustomerAccount').",
-              "tier": "policy"
+              "tier": "internal"
             }
           ],
           "capabilities": [
@@ -48258,8 +48258,8 @@
                       "enabled": {
                         "type": "boolean",
                         "default": false,
-                        "description": "Whether the data-erasure workflow is active for the host orbital. Off by default; turn on to handle GDPR right-to-be-forgotten requests.",
-                        "x-label": "Enabled",
+                        "description": "Let people request that their data be permanently removed. Off by default.",
+                        "x-label": "Allow data erasure (GDPR)",
                         "x-synonyms": "enable, turn on, enforce, require, activate, apply, switch on, gdpr, erasure, right to be forgotten, data deletion, scheduled deletion, retention purge, account deletion, anonymize user data, scrub PII, delete user data",
                         "x-tier": "policy"
                       },
@@ -48299,7 +48299,7 @@
                         "default": "",
                         "description": "Entity name whose records erasure requests apply to (e.g. 'CustomerAccount').",
                         "x-label": "Target entity",
-                        "x-tier": "policy"
+                        "x-tier": "internal"
                       }
                     }
                   },
@@ -57096,44 +57096,44 @@
               "type": "[NavItem]",
               "default": [
                 {
+                  "href": "/contacts",
                   "icon": "users",
-                  "label": "Contacts",
-                  "href": "/contacts"
+                  "label": "Contacts"
                 },
                 {
-                  "label": "Items",
                   "href": "/items",
+                  "label": "Items",
                   "icon": "package"
                 },
                 {
                   "icon": "activity",
-                  "label": "Activities",
-                  "href": "/activities"
+                  "href": "/activities",
+                  "label": "Activities"
                 },
                 {
+                  "href": "/tasks",
                   "label": "Tasks",
-                  "icon": "check-square",
-                  "href": "/tasks"
+                  "icon": "check-square"
                 },
                 {
+                  "href": "/calendar",
                   "label": "Calendar",
-                  "icon": "calendar",
-                  "href": "/calendar"
+                  "icon": "calendar"
                 },
                 {
                   "label": "Dashboard",
-                  "icon": "layout-dashboard",
-                  "href": "/widgets"
+                  "href": "/widgets",
+                  "icon": "layout-dashboard"
                 },
                 {
-                  "icon": "rss",
+                  "href": "/feed",
                   "label": "Feed",
-                  "href": "/feed"
+                  "icon": "rss"
                 },
                 {
-                  "icon": "file-text",
+                  "label": "Notes",
                   "href": "/notes",
-                  "label": "Notes"
+                  "icon": "file-text"
                 }
               ],
               "items": {
@@ -57454,17 +57454,17 @@
                   "name": "type"
                 },
                 {
-                  "name": "actor",
-                  "variant": "caption"
+                  "variant": "caption",
+                  "name": "actor"
                 },
                 {
                   "format": "date",
-                  "name": "timestamp",
-                  "variant": "caption"
+                  "variant": "caption",
+                  "name": "timestamp"
                 },
                 {
-                  "variant": "badge",
-                  "name": "status"
+                  "name": "status",
+                  "variant": "badge"
                 }
               ],
               "items": {
@@ -57571,19 +57571,19 @@
               "type": "[ItemAction]",
               "default": [
                 {
+                  "event": "VIEW",
                   "variant": "ghost",
-                  "label": "View",
-                  "event": "VIEW"
+                  "label": "View"
                 },
                 {
-                  "label": "Edit",
                   "event": "EDIT",
+                  "label": "Edit",
                   "variant": "ghost"
                 },
                 {
-                  "variant": "danger",
                   "event": "DELETE",
-                  "label": "Delete"
+                  "label": "Delete",
+                  "variant": "danger"
                 }
               ],
               "items": {
@@ -58231,44 +58231,44 @@
                         },
                         "default": [
                           {
+                            "href": "/contacts",
                             "icon": "users",
-                            "label": "Contacts",
-                            "href": "/contacts"
+                            "label": "Contacts"
                           },
                           {
-                            "label": "Items",
                             "href": "/items",
+                            "label": "Items",
                             "icon": "package"
                           },
                           {
                             "icon": "activity",
-                            "label": "Activities",
-                            "href": "/activities"
+                            "href": "/activities",
+                            "label": "Activities"
                           },
                           {
+                            "href": "/tasks",
                             "label": "Tasks",
-                            "icon": "check-square",
-                            "href": "/tasks"
+                            "icon": "check-square"
                           },
                           {
+                            "href": "/calendar",
                             "label": "Calendar",
-                            "icon": "calendar",
-                            "href": "/calendar"
+                            "icon": "calendar"
                           },
                           {
                             "label": "Dashboard",
-                            "icon": "layout-dashboard",
-                            "href": "/widgets"
+                            "href": "/widgets",
+                            "icon": "layout-dashboard"
                           },
                           {
-                            "icon": "rss",
+                            "href": "/feed",
                             "label": "Feed",
-                            "href": "/feed"
+                            "icon": "rss"
                           },
                           {
-                            "icon": "file-text",
+                            "label": "Notes",
                             "href": "/notes",
-                            "label": "Notes"
+                            "icon": "file-text"
                           }
                         ],
                         "description": "Top-level nav entries on the left rail",
@@ -58486,17 +58486,17 @@
                             "name": "type"
                           },
                           {
-                            "name": "actor",
-                            "variant": "caption"
+                            "variant": "caption",
+                            "name": "actor"
                           },
                           {
                             "format": "date",
-                            "name": "timestamp",
-                            "variant": "caption"
+                            "variant": "caption",
+                            "name": "timestamp"
                           },
                           {
-                            "variant": "badge",
-                            "name": "status"
+                            "name": "status",
+                            "variant": "badge"
                           }
                         ],
                         "description": "Each column maps to one field on the BrowseItem entity",
@@ -58541,19 +58541,19 @@
                         },
                         "default": [
                           {
+                            "event": "VIEW",
                             "variant": "ghost",
-                            "label": "View",
-                            "event": "VIEW"
+                            "label": "View"
                           },
                           {
-                            "label": "Edit",
                             "event": "EDIT",
+                            "label": "Edit",
                             "variant": "ghost"
                           },
                           {
-                            "variant": "danger",
                             "event": "DELETE",
-                            "label": "Delete"
+                            "label": "Delete",
+                            "variant": "danger"
                           }
                         ],
                         "description": "Buttons users can click on each row",
@@ -59194,14 +59194,14 @@
               "type": "[NavItem]",
               "default": [
                 {
-                  "icon": "users",
                   "href": "/contacts",
-                  "label": "Contacts"
+                  "label": "Contacts",
+                  "icon": "users"
                 },
                 {
-                  "label": "Items",
+                  "icon": "package",
                   "href": "/items",
-                  "icon": "package"
+                  "label": "Items"
                 },
                 {
                   "icon": "activity",
@@ -59214,18 +59214,18 @@
                   "label": "Tasks"
                 },
                 {
-                  "icon": "calendar",
                   "label": "Calendar",
+                  "icon": "calendar",
                   "href": "/calendar"
                 },
                 {
                   "href": "/widgets",
-                  "icon": "layout-dashboard",
-                  "label": "Dashboard"
+                  "label": "Dashboard",
+                  "icon": "layout-dashboard"
                 },
                 {
-                  "icon": "rss",
                   "label": "Feed",
+                  "icon": "rss",
                   "href": "/feed"
                 },
                 {
@@ -59728,27 +59728,27 @@
               "type": "[FieldSpec]",
               "default": [
                 {
-                  "variant": "h4",
+                  "name": "title",
                   "icon": "calendar",
-                  "name": "title"
+                  "variant": "h4"
                 },
                 {
+                  "variant": "caption",
                   "name": "startTime",
-                  "format": "date",
-                  "variant": "caption"
+                  "format": "date"
                 },
                 {
-                  "format": "date",
                   "name": "endTime",
-                  "variant": "caption"
+                  "variant": "caption",
+                  "format": "date"
                 },
                 {
                   "variant": "body",
                   "name": "location"
                 },
                 {
-                  "variant": "caption",
-                  "name": "attendees"
+                  "name": "attendees",
+                  "variant": "caption"
                 }
               ],
               "items": {
@@ -59856,18 +59856,18 @@
               "default": [
                 {
                   "label": "View",
-                  "variant": "ghost",
-                  "event": "VIEW"
-                },
-                {
-                  "label": "Edit",
-                  "event": "EDIT",
+                  "event": "VIEW",
                   "variant": "ghost"
                 },
                 {
-                  "variant": "danger",
+                  "event": "EDIT",
+                  "label": "Edit",
+                  "variant": "ghost"
+                },
+                {
+                  "event": "DELETE",
                   "label": "Delete",
-                  "event": "DELETE"
+                  "variant": "danger"
                 }
               ],
               "items": {
@@ -60525,14 +60525,14 @@
                         },
                         "default": [
                           {
-                            "icon": "users",
                             "href": "/contacts",
-                            "label": "Contacts"
+                            "label": "Contacts",
+                            "icon": "users"
                           },
                           {
-                            "label": "Items",
+                            "icon": "package",
                             "href": "/items",
-                            "icon": "package"
+                            "label": "Items"
                           },
                           {
                             "icon": "activity",
@@ -60545,18 +60545,18 @@
                             "label": "Tasks"
                           },
                           {
-                            "icon": "calendar",
                             "label": "Calendar",
+                            "icon": "calendar",
                             "href": "/calendar"
                           },
                           {
                             "href": "/widgets",
-                            "icon": "layout-dashboard",
-                            "label": "Dashboard"
+                            "label": "Dashboard",
+                            "icon": "layout-dashboard"
                           },
                           {
-                            "icon": "rss",
                             "label": "Feed",
+                            "icon": "rss",
                             "href": "/feed"
                           },
                           {
@@ -60985,27 +60985,27 @@
                         },
                         "default": [
                           {
-                            "variant": "h4",
+                            "name": "title",
                             "icon": "calendar",
-                            "name": "title"
+                            "variant": "h4"
                           },
                           {
+                            "variant": "caption",
                             "name": "startTime",
-                            "format": "date",
-                            "variant": "caption"
+                            "format": "date"
                           },
                           {
-                            "format": "date",
                             "name": "endTime",
-                            "variant": "caption"
+                            "variant": "caption",
+                            "format": "date"
                           },
                           {
                             "variant": "body",
                             "name": "location"
                           },
                           {
-                            "variant": "caption",
-                            "name": "attendees"
+                            "name": "attendees",
+                            "variant": "caption"
                           }
                         ],
                         "description": "Each column maps to one field on the BrowseItem entity",
@@ -61051,18 +61051,18 @@
                         "default": [
                           {
                             "label": "View",
-                            "variant": "ghost",
-                            "event": "VIEW"
-                          },
-                          {
-                            "label": "Edit",
-                            "event": "EDIT",
+                            "event": "VIEW",
                             "variant": "ghost"
                           },
                           {
-                            "variant": "danger",
+                            "event": "EDIT",
+                            "label": "Edit",
+                            "variant": "ghost"
+                          },
+                          {
+                            "event": "DELETE",
                             "label": "Delete",
-                            "event": "DELETE"
+                            "variant": "danger"
                           }
                         ],
                         "description": "Buttons users can click on each row",
@@ -61703,18 +61703,18 @@
               "type": "[NavItem]",
               "default": [
                 {
-                  "href": "/contacts",
                   "icon": "users",
-                  "label": "Contacts"
+                  "label": "Contacts",
+                  "href": "/contacts"
                 },
                 {
-                  "icon": "package",
                   "href": "/items",
+                  "icon": "package",
                   "label": "Items"
                 },
                 {
-                  "label": "Activities",
                   "href": "/activities",
+                  "label": "Activities",
                   "icon": "activity"
                 },
                 {
@@ -61724,8 +61724,8 @@
                 },
                 {
                   "icon": "calendar",
-                  "label": "Calendar",
-                  "href": "/calendar"
+                  "href": "/calendar",
+                  "label": "Calendar"
                 },
                 {
                   "icon": "layout-dashboard",
@@ -61738,9 +61738,9 @@
                   "href": "/feed"
                 },
                 {
-                  "icon": "file-text",
+                  "href": "/notes",
                   "label": "Notes",
-                  "href": "/notes"
+                  "icon": "file-text"
                 }
               ],
               "items": {
@@ -61955,9 +61955,9 @@
               "type": "[FilterSpec]",
               "default": [
                 {
-                  "filterType": "select",
                   "options": [],
                   "label": "Company",
+                  "filterType": "select",
                   "field": "company"
                 }
               ],
@@ -62163,25 +62163,25 @@
               "type": "[FieldSpec]",
               "default": [
                 {
+                  "icon": "user",
                   "variant": "h3",
-                  "name": "name",
-                  "icon": "user"
+                  "name": "name"
                 },
                 {
-                  "name": "email",
-                  "variant": "body"
+                  "variant": "body",
+                  "name": "email"
                 },
                 {
                   "name": "phone",
                   "variant": "caption"
                 },
                 {
-                  "variant": "badge",
-                  "name": "company"
+                  "name": "company",
+                  "variant": "badge"
                 },
                 {
-                  "variant": "caption",
-                  "name": "role"
+                  "name": "role",
+                  "variant": "caption"
                 }
               ],
               "items": {
@@ -62298,8 +62298,8 @@
                   "label": "Edit"
                 },
                 {
-                  "event": "DELETE",
                   "label": "Delete",
+                  "event": "DELETE",
                   "variant": "danger"
                 }
               ],
@@ -63034,18 +63034,18 @@
                         },
                         "default": [
                           {
-                            "href": "/contacts",
                             "icon": "users",
-                            "label": "Contacts"
+                            "label": "Contacts",
+                            "href": "/contacts"
                           },
                           {
-                            "icon": "package",
                             "href": "/items",
+                            "icon": "package",
                             "label": "Items"
                           },
                           {
-                            "label": "Activities",
                             "href": "/activities",
+                            "label": "Activities",
                             "icon": "activity"
                           },
                           {
@@ -63055,8 +63055,8 @@
                           },
                           {
                             "icon": "calendar",
-                            "label": "Calendar",
-                            "href": "/calendar"
+                            "href": "/calendar",
+                            "label": "Calendar"
                           },
                           {
                             "icon": "layout-dashboard",
@@ -63069,9 +63069,9 @@
                             "href": "/feed"
                           },
                           {
-                            "icon": "file-text",
+                            "href": "/notes",
                             "label": "Notes",
-                            "href": "/notes"
+                            "icon": "file-text"
                           }
                         ],
                         "description": "Top-level nav entries on the left rail",
@@ -63282,9 +63282,9 @@
                         },
                         "default": [
                           {
-                            "filterType": "select",
                             "options": [],
                             "label": "Company",
+                            "filterType": "select",
                             "field": "company"
                           }
                         ],
@@ -63456,25 +63456,25 @@
                         },
                         "default": [
                           {
+                            "icon": "user",
                             "variant": "h3",
-                            "name": "name",
-                            "icon": "user"
+                            "name": "name"
                           },
                           {
-                            "name": "email",
-                            "variant": "body"
+                            "variant": "body",
+                            "name": "email"
                           },
                           {
                             "name": "phone",
                             "variant": "caption"
                           },
                           {
-                            "variant": "badge",
-                            "name": "company"
+                            "name": "company",
+                            "variant": "badge"
                           },
                           {
-                            "variant": "caption",
-                            "name": "role"
+                            "name": "role",
+                            "variant": "caption"
                           }
                         ],
                         "description": "Each column maps to one field on the BrowseItem entity",
@@ -63529,8 +63529,8 @@
                             "label": "Edit"
                           },
                           {
-                            "event": "DELETE",
                             "label": "Delete",
+                            "event": "DELETE",
                             "variant": "danger"
                           }
                         ],
@@ -64283,14 +64283,14 @@
               "type": "[NavItem]",
               "default": [
                 {
-                  "label": "Contacts",
+                  "icon": "users",
                   "href": "/contacts",
-                  "icon": "users"
+                  "label": "Contacts"
                 },
                 {
-                  "icon": "package",
+                  "href": "/items",
                   "label": "Items",
-                  "href": "/items"
+                  "icon": "package"
                 },
                 {
                   "icon": "activity",
@@ -64298,8 +64298,8 @@
                   "href": "/activities"
                 },
                 {
-                  "href": "/tasks",
                   "icon": "check-square",
+                  "href": "/tasks",
                   "label": "Tasks"
                 },
                 {
@@ -64308,19 +64308,19 @@
                   "href": "/calendar"
                 },
                 {
+                  "icon": "layout-dashboard",
                   "label": "Dashboard",
-                  "href": "/widgets",
-                  "icon": "layout-dashboard"
+                  "href": "/widgets"
                 },
                 {
-                  "label": "Feed",
+                  "icon": "rss",
                   "href": "/feed",
-                  "icon": "rss"
+                  "label": "Feed"
                 },
                 {
+                  "label": "Notes",
                   "href": "/notes",
-                  "icon": "file-text",
-                  "label": "Notes"
+                  "icon": "file-text"
                 }
               ],
               "items": {
@@ -64669,8 +64669,8 @@
               "default": [
                 {
                   "variant": "h3",
-                  "name": "title",
-                  "icon": "rss"
+                  "icon": "rss",
+                  "name": "title"
                 },
                 {
                   "variant": "body",
@@ -64682,8 +64682,8 @@
                 },
                 {
                   "format": "date",
-                  "name": "postedAt",
-                  "variant": "caption"
+                  "variant": "caption",
+                  "name": "postedAt"
                 },
                 {
                   "variant": "badge",
@@ -64794,8 +64794,8 @@
               "type": "[ItemAction]",
               "default": [
                 {
-                  "label": "View",
                   "event": "VIEW",
+                  "label": "View",
                   "variant": "ghost"
                 },
                 {
@@ -64805,8 +64805,8 @@
                 },
                 {
                   "variant": "danger",
-                  "event": "DELETE",
-                  "label": "Delete"
+                  "label": "Delete",
+                  "event": "DELETE"
                 }
               ],
               "items": {
@@ -65462,14 +65462,14 @@
                         },
                         "default": [
                           {
-                            "label": "Contacts",
+                            "icon": "users",
                             "href": "/contacts",
-                            "icon": "users"
+                            "label": "Contacts"
                           },
                           {
-                            "icon": "package",
+                            "href": "/items",
                             "label": "Items",
-                            "href": "/items"
+                            "icon": "package"
                           },
                           {
                             "icon": "activity",
@@ -65477,8 +65477,8 @@
                             "href": "/activities"
                           },
                           {
-                            "href": "/tasks",
                             "icon": "check-square",
+                            "href": "/tasks",
                             "label": "Tasks"
                           },
                           {
@@ -65487,19 +65487,19 @@
                             "href": "/calendar"
                           },
                           {
+                            "icon": "layout-dashboard",
                             "label": "Dashboard",
-                            "href": "/widgets",
-                            "icon": "layout-dashboard"
+                            "href": "/widgets"
                           },
                           {
-                            "label": "Feed",
+                            "icon": "rss",
                             "href": "/feed",
-                            "icon": "rss"
+                            "label": "Feed"
                           },
                           {
+                            "label": "Notes",
                             "href": "/notes",
-                            "icon": "file-text",
-                            "label": "Notes"
+                            "icon": "file-text"
                           }
                         ],
                         "description": "Top-level nav entries on the left rail",
@@ -65785,8 +65785,8 @@
                         "default": [
                           {
                             "variant": "h3",
-                            "name": "title",
-                            "icon": "rss"
+                            "icon": "rss",
+                            "name": "title"
                           },
                           {
                             "variant": "body",
@@ -65798,8 +65798,8 @@
                           },
                           {
                             "format": "date",
-                            "name": "postedAt",
-                            "variant": "caption"
+                            "variant": "caption",
+                            "name": "postedAt"
                           },
                           {
                             "variant": "badge",
@@ -65848,8 +65848,8 @@
                         },
                         "default": [
                           {
-                            "label": "View",
                             "event": "VIEW",
+                            "label": "View",
                             "variant": "ghost"
                           },
                           {
@@ -65859,8 +65859,8 @@
                           },
                           {
                             "variant": "danger",
-                            "event": "DELETE",
-                            "label": "Delete"
+                            "label": "Delete",
+                            "event": "DELETE"
                           }
                         ],
                         "description": "Buttons users can click on each row",
@@ -66525,8 +66525,8 @@
                 },
                 {
                   "href": "/widgets",
-                  "label": "Dashboard",
-                  "icon": "layout-dashboard"
+                  "icon": "layout-dashboard",
+                  "label": "Dashboard"
                 },
                 {
                   "icon": "rss",
@@ -66534,9 +66534,9 @@
                   "label": "Feed"
                 },
                 {
-                  "label": "Notes",
                   "href": "/notes",
-                  "icon": "file-text"
+                  "icon": "file-text",
+                  "label": "Notes"
                 }
               ],
               "items": {
@@ -66751,9 +66751,9 @@
               "type": "[FilterSpec]",
               "default": [
                 {
-                  "options": [],
                   "field": "category",
                   "label": "Category",
+                  "options": [],
                   "filterType": "select"
                 }
               ],
@@ -66959,30 +66959,30 @@
               "type": "[FieldSpec]",
               "default": [
                 {
-                  "variant": "h3",
                   "name": "name",
+                  "variant": "h3",
                   "icon": "package"
                 },
                 {
-                  "name": "description",
-                  "variant": "body"
+                  "variant": "body",
+                  "name": "description"
                 },
                 {
-                  "name": "sku",
-                  "variant": "caption"
+                  "variant": "caption",
+                  "name": "sku"
                 },
                 {
-                  "name": "price",
                   "variant": "badge",
-                  "format": "currency"
+                  "format": "currency",
+                  "name": "price"
                 },
                 {
-                  "name": "quantity",
-                  "variant": "badge"
+                  "variant": "badge",
+                  "name": "quantity"
                 },
                 {
-                  "name": "category",
-                  "variant": "caption"
+                  "variant": "caption",
+                  "name": "category"
                 }
               ],
               "items": {
@@ -67094,13 +67094,13 @@
                   "label": "View"
                 },
                 {
+                  "variant": "ghost",
                   "event": "EDIT",
-                  "label": "Edit",
-                  "variant": "ghost"
+                  "label": "Edit"
                 },
                 {
-                  "variant": "danger",
                   "label": "Delete",
+                  "variant": "danger",
                   "event": "DELETE"
                 }
               ],
@@ -67570,8 +67570,8 @@
               "key": "enabled",
               "type": "boolean",
               "default": false,
-              "label": "Enabled",
-              "description": "Whether the approval gate is active for the host orbital. Off by default; turn on to require sign-off.",
+              "label": "Require approval",
+              "description": "Require sign-off before a record is finalized. Off by default.",
               "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, approval, needs approval, sign-off, signed off, review before, gatekeeper, editor approval, publishing approval, draft approval, content review, requires approval, manager approval, supervisor approval, admin approval, before going live",
               "tier": "policy"
             },
@@ -67623,7 +67623,7 @@
               "default": "",
               "label": "Value field",
               "description": "Payload field name to compare against threshold (e.g. 'amount' on a RefundRequested event). v1.0 declarative only.",
-              "tier": "policy"
+              "tier": "internal"
             }
           ],
           "capabilities": [],
@@ -67658,8 +67658,8 @@
               "key": "enabled",
               "type": "boolean",
               "default": false,
-              "label": "Enabled",
-              "description": "Whether the data-erasure workflow is active for the host orbital. Off by default; turn on to handle GDPR right-to-be-forgotten requests.",
+              "label": "Allow data erasure (GDPR)",
+              "description": "Let people request that their data be permanently removed. Off by default.",
               "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, gdpr, erasure, right to be forgotten, data deletion, scheduled deletion, retention purge, account deletion, anonymize user data, scrub PII, delete user data",
               "tier": "policy"
             },
@@ -67703,7 +67703,7 @@
               "default": "Item",
               "label": "Target entity",
               "description": "Entity name whose records erasure requests apply to (e.g. 'CustomerAccount').",
-              "tier": "policy"
+              "tier": "internal"
             }
           ],
           "capabilities": [],
@@ -67726,8 +67726,8 @@
               "key": "enabled",
               "type": "boolean",
               "default": false,
-              "label": "Enabled",
-              "description": "Whether the moderation queue is active for the host orbital. Off by default; turn on to surface flagged content for review.",
+              "label": "Enable moderation queue",
+              "description": "Send submissions to a review queue before they go live. Off by default.",
               "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, moderation, moderation queue, content review queue, flag for review, content moderation, review flagged content, abuse review, spam queue, report queue",
               "tier": "policy"
             },
@@ -68077,8 +68077,8 @@
                           },
                           {
                             "href": "/widgets",
-                            "label": "Dashboard",
-                            "icon": "layout-dashboard"
+                            "icon": "layout-dashboard",
+                            "label": "Dashboard"
                           },
                           {
                             "icon": "rss",
@@ -68086,9 +68086,9 @@
                             "label": "Feed"
                           },
                           {
-                            "label": "Notes",
                             "href": "/notes",
-                            "icon": "file-text"
+                            "icon": "file-text",
+                            "label": "Notes"
                           }
                         ],
                         "description": "Top-level nav entries on the left rail",
@@ -68299,9 +68299,9 @@
                         },
                         "default": [
                           {
-                            "options": [],
                             "field": "category",
                             "label": "Category",
+                            "options": [],
                             "filterType": "select"
                           }
                         ],
@@ -68473,30 +68473,30 @@
                         },
                         "default": [
                           {
-                            "variant": "h3",
                             "name": "name",
+                            "variant": "h3",
                             "icon": "package"
                           },
                           {
-                            "name": "description",
-                            "variant": "body"
+                            "variant": "body",
+                            "name": "description"
                           },
                           {
-                            "name": "sku",
-                            "variant": "caption"
+                            "variant": "caption",
+                            "name": "sku"
                           },
                           {
-                            "name": "price",
                             "variant": "badge",
-                            "format": "currency"
+                            "format": "currency",
+                            "name": "price"
                           },
                           {
-                            "name": "quantity",
-                            "variant": "badge"
+                            "variant": "badge",
+                            "name": "quantity"
                           },
                           {
-                            "name": "category",
-                            "variant": "caption"
+                            "variant": "caption",
+                            "name": "category"
                           }
                         ],
                         "description": "Each column maps to one field on the BrowseItem entity",
@@ -68546,13 +68546,13 @@
                             "label": "View"
                           },
                           {
+                            "variant": "ghost",
                             "event": "EDIT",
-                            "label": "Edit",
-                            "variant": "ghost"
+                            "label": "Edit"
                           },
                           {
-                            "variant": "danger",
                             "label": "Delete",
+                            "variant": "danger",
                             "event": "DELETE"
                           }
                         ],
@@ -69150,8 +69150,8 @@
                       "enabled": {
                         "type": "boolean",
                         "default": false,
-                        "description": "Whether the approval gate is active for the host orbital. Off by default; turn on to require sign-off.",
-                        "x-label": "Enabled",
+                        "description": "Require sign-off before a record is finalized. Off by default.",
+                        "x-label": "Require approval",
                         "x-synonyms": "enable, turn on, enforce, require, activate, apply, switch on, approval, needs approval, sign-off, signed off, review before, gatekeeper, editor approval, publishing approval, draft approval, content review, requires approval, manager approval, supervisor approval, admin approval, before going live",
                         "x-tier": "policy"
                       },
@@ -69198,7 +69198,7 @@
                         "default": "",
                         "description": "Payload field name to compare against threshold (e.g. 'amount' on a RefundRequested event). v1.0 declarative only.",
                         "x-label": "Value field",
-                        "x-tier": "policy"
+                        "x-tier": "internal"
                       }
                     }
                   },
@@ -69280,8 +69280,8 @@
                       "enabled": {
                         "type": "boolean",
                         "default": false,
-                        "description": "Whether the data-erasure workflow is active for the host orbital. Off by default; turn on to handle GDPR right-to-be-forgotten requests.",
-                        "x-label": "Enabled",
+                        "description": "Let people request that their data be permanently removed. Off by default.",
+                        "x-label": "Allow data erasure (GDPR)",
                         "x-synonyms": "enable, turn on, enforce, require, activate, apply, switch on, gdpr, erasure, right to be forgotten, data deletion, scheduled deletion, retention purge, account deletion, anonymize user data, scrub PII, delete user data",
                         "x-tier": "policy"
                       },
@@ -69321,7 +69321,7 @@
                         "default": "Item",
                         "description": "Entity name whose records erasure requests apply to (e.g. 'CustomerAccount').",
                         "x-label": "Target entity",
-                        "x-tier": "policy"
+                        "x-tier": "internal"
                       }
                     }
                   },
@@ -69395,8 +69395,8 @@
                       "enabled": {
                         "type": "boolean",
                         "default": false,
-                        "description": "Whether the moderation queue is active for the host orbital. Off by default; turn on to surface flagged content for review.",
-                        "x-label": "Enabled",
+                        "description": "Send submissions to a review queue before they go live. Off by default.",
+                        "x-label": "Enable moderation queue",
                         "x-synonyms": "enable, turn on, enforce, require, activate, apply, switch on, moderation, moderation queue, content review queue, flag for review, content moderation, review flagged content, abuse review, spam queue, report queue",
                         "x-tier": "policy"
                       },
@@ -69650,37 +69650,37 @@
                 },
                 {
                   "label": "Items",
-                  "icon": "package",
-                  "href": "/items"
+                  "href": "/items",
+                  "icon": "package"
                 },
                 {
-                  "icon": "activity",
+                  "href": "/activities",
                   "label": "Activities",
-                  "href": "/activities"
+                  "icon": "activity"
                 },
                 {
+                  "label": "Tasks",
                   "href": "/tasks",
-                  "icon": "check-square",
-                  "label": "Tasks"
+                  "icon": "check-square"
                 },
                 {
-                  "label": "Calendar",
+                  "href": "/calendar",
                   "icon": "calendar",
-                  "href": "/calendar"
+                  "label": "Calendar"
                 },
                 {
                   "label": "Dashboard",
-                  "href": "/widgets",
-                  "icon": "layout-dashboard"
+                  "icon": "layout-dashboard",
+                  "href": "/widgets"
                 },
                 {
                   "label": "Feed",
-                  "icon": "rss",
-                  "href": "/feed"
+                  "href": "/feed",
+                  "icon": "rss"
                 },
                 {
-                  "label": "Notes",
                   "href": "/notes",
+                  "label": "Notes",
                   "icon": "file-text"
                 }
               ],
@@ -70150,9 +70150,9 @@
               "type": "[ItemAction]",
               "default": [
                 {
+                  "event": "VIEW",
                   "label": "View",
-                  "variant": "ghost",
-                  "event": "VIEW"
+                  "variant": "ghost"
                 },
                 {
                   "variant": "ghost",
@@ -70161,8 +70161,8 @@
                 },
                 {
                   "event": "DELETE",
-                  "label": "Delete",
-                  "variant": "danger"
+                  "variant": "danger",
+                  "label": "Delete"
                 }
               ],
               "items": {
@@ -70898,37 +70898,37 @@
                           },
                           {
                             "label": "Items",
-                            "icon": "package",
-                            "href": "/items"
+                            "href": "/items",
+                            "icon": "package"
                           },
                           {
-                            "icon": "activity",
+                            "href": "/activities",
                             "label": "Activities",
-                            "href": "/activities"
+                            "icon": "activity"
                           },
                           {
+                            "label": "Tasks",
                             "href": "/tasks",
-                            "icon": "check-square",
-                            "label": "Tasks"
+                            "icon": "check-square"
                           },
                           {
-                            "label": "Calendar",
+                            "href": "/calendar",
                             "icon": "calendar",
-                            "href": "/calendar"
+                            "label": "Calendar"
                           },
                           {
                             "label": "Dashboard",
-                            "href": "/widgets",
-                            "icon": "layout-dashboard"
+                            "icon": "layout-dashboard",
+                            "href": "/widgets"
                           },
                           {
                             "label": "Feed",
-                            "icon": "rss",
-                            "href": "/feed"
+                            "href": "/feed",
+                            "icon": "rss"
                           },
                           {
-                            "label": "Notes",
                             "href": "/notes",
+                            "label": "Notes",
                             "icon": "file-text"
                           }
                         ],
@@ -71274,9 +71274,9 @@
                         },
                         "default": [
                           {
+                            "event": "VIEW",
                             "label": "View",
-                            "variant": "ghost",
-                            "event": "VIEW"
+                            "variant": "ghost"
                           },
                           {
                             "variant": "ghost",
@@ -71285,8 +71285,8 @@
                           },
                           {
                             "event": "DELETE",
-                            "label": "Delete",
-                            "variant": "danger"
+                            "variant": "danger",
+                            "label": "Delete"
                           }
                         ],
                         "description": "Buttons users can click on each row",
@@ -72042,44 +72042,44 @@
               "type": "[NavItem]",
               "default": [
                 {
-                  "label": "Contacts",
+                  "href": "/contacts",
                   "icon": "users",
-                  "href": "/contacts"
+                  "label": "Contacts"
                 },
                 {
                   "href": "/items",
-                  "icon": "package",
-                  "label": "Items"
+                  "label": "Items",
+                  "icon": "package"
                 },
                 {
-                  "icon": "activity",
+                  "href": "/activities",
                   "label": "Activities",
-                  "href": "/activities"
+                  "icon": "activity"
                 },
                 {
                   "icon": "check-square",
-                  "label": "Tasks",
-                  "href": "/tasks"
+                  "href": "/tasks",
+                  "label": "Tasks"
                 },
                 {
+                  "label": "Calendar",
                   "icon": "calendar",
-                  "href": "/calendar",
-                  "label": "Calendar"
+                  "href": "/calendar"
                 },
                 {
                   "href": "/widgets",
-                  "label": "Dashboard",
-                  "icon": "layout-dashboard"
+                  "icon": "layout-dashboard",
+                  "label": "Dashboard"
                 },
                 {
+                  "label": "Feed",
                   "icon": "rss",
-                  "href": "/feed",
-                  "label": "Feed"
+                  "href": "/feed"
                 },
                 {
-                  "label": "Notes",
                   "href": "/notes",
-                  "icon": "file-text"
+                  "icon": "file-text",
+                  "label": "Notes"
                 }
               ],
               "items": {
@@ -72457,21 +72457,21 @@
               "type": "[FieldSpec]",
               "default": [
                 {
+                  "name": "title",
                   "variant": "h4",
-                  "icon": "check-square",
-                  "name": "title"
+                  "icon": "check-square"
                 },
                 {
-                  "name": "description",
-                  "variant": "body"
+                  "variant": "body",
+                  "name": "description"
                 },
                 {
                   "name": "assignee",
                   "variant": "caption"
                 },
                 {
-                  "format": "date",
                   "variant": "caption",
+                  "format": "date",
                   "name": "dueDate"
                 },
                 {
@@ -72587,19 +72587,19 @@
               "type": "[ItemAction]",
               "default": [
                 {
-                  "variant": "ghost",
                   "label": "View",
+                  "variant": "ghost",
                   "event": "VIEW"
                 },
                 {
-                  "label": "Edit",
                   "event": "EDIT",
-                  "variant": "ghost"
+                  "variant": "ghost",
+                  "label": "Edit"
                 },
                 {
-                  "variant": "danger",
                   "event": "DELETE",
-                  "label": "Delete"
+                  "label": "Delete",
+                  "variant": "danger"
                 }
               ],
               "items": {
@@ -73331,44 +73331,44 @@
                         },
                         "default": [
                           {
-                            "label": "Contacts",
+                            "href": "/contacts",
                             "icon": "users",
-                            "href": "/contacts"
+                            "label": "Contacts"
                           },
                           {
                             "href": "/items",
-                            "icon": "package",
-                            "label": "Items"
+                            "label": "Items",
+                            "icon": "package"
                           },
                           {
-                            "icon": "activity",
+                            "href": "/activities",
                             "label": "Activities",
-                            "href": "/activities"
+                            "icon": "activity"
                           },
                           {
                             "icon": "check-square",
-                            "label": "Tasks",
-                            "href": "/tasks"
+                            "href": "/tasks",
+                            "label": "Tasks"
                           },
                           {
+                            "label": "Calendar",
                             "icon": "calendar",
-                            "href": "/calendar",
-                            "label": "Calendar"
+                            "href": "/calendar"
                           },
                           {
                             "href": "/widgets",
-                            "label": "Dashboard",
-                            "icon": "layout-dashboard"
+                            "icon": "layout-dashboard",
+                            "label": "Dashboard"
                           },
                           {
+                            "label": "Feed",
                             "icon": "rss",
-                            "href": "/feed",
-                            "label": "Feed"
+                            "href": "/feed"
                           },
                           {
-                            "label": "Notes",
                             "href": "/notes",
-                            "icon": "file-text"
+                            "icon": "file-text",
+                            "label": "Notes"
                           }
                         ],
                         "description": "Top-level nav entries on the left rail",
@@ -73682,21 +73682,21 @@
                         },
                         "default": [
                           {
+                            "name": "title",
                             "variant": "h4",
-                            "icon": "check-square",
-                            "name": "title"
+                            "icon": "check-square"
                           },
                           {
-                            "name": "description",
-                            "variant": "body"
+                            "variant": "body",
+                            "name": "description"
                           },
                           {
                             "name": "assignee",
                             "variant": "caption"
                           },
                           {
-                            "format": "date",
                             "variant": "caption",
+                            "format": "date",
                             "name": "dueDate"
                           },
                           {
@@ -73750,19 +73750,19 @@
                         },
                         "default": [
                           {
-                            "variant": "ghost",
                             "label": "View",
+                            "variant": "ghost",
                             "event": "VIEW"
                           },
                           {
-                            "label": "Edit",
                             "event": "EDIT",
-                            "variant": "ghost"
+                            "variant": "ghost",
+                            "label": "Edit"
                           },
                           {
-                            "variant": "danger",
                             "event": "DELETE",
-                            "label": "Delete"
+                            "label": "Delete",
+                            "variant": "danger"
                           }
                         ],
                         "description": "Buttons users can click on each row",
@@ -74519,38 +74519,38 @@
                   "href": "/contacts"
                 },
                 {
+                  "label": "Items",
                   "href": "/items",
-                  "icon": "package",
-                  "label": "Items"
+                  "icon": "package"
                 },
                 {
                   "label": "Activities",
-                  "icon": "activity",
-                  "href": "/activities"
+                  "href": "/activities",
+                  "icon": "activity"
                 },
                 {
+                  "label": "Tasks",
                   "href": "/tasks",
-                  "icon": "check-square",
-                  "label": "Tasks"
+                  "icon": "check-square"
                 },
                 {
                   "label": "Calendar",
-                  "icon": "calendar",
-                  "href": "/calendar"
+                  "href": "/calendar",
+                  "icon": "calendar"
                 },
                 {
+                  "href": "/widgets",
                   "label": "Dashboard",
-                  "icon": "layout-dashboard",
-                  "href": "/widgets"
+                  "icon": "layout-dashboard"
                 },
                 {
-                  "icon": "rss",
+                  "label": "Feed",
                   "href": "/feed",
-                  "label": "Feed"
+                  "icon": "rss"
                 },
                 {
-                  "label": "Notes",
                   "href": "/notes",
+                  "label": "Notes",
                   "icon": "file-text"
                 }
               ],
@@ -74745,17 +74745,17 @@
               "type": "[MetricSpec]",
               "default": [
                 {
-                  "icon": "layout-dashboard",
-                  "variant": "primary",
                   "aggregation": "count",
+                  "variant": "primary",
                   "format": "number",
-                  "label": "Widgets"
+                  "label": "Widgets",
+                  "icon": "layout-dashboard"
                 },
                 {
-                  "label": "Total Value",
-                  "icon": "trending-up",
                   "variant": "success",
+                  "label": "Total Value",
                   "field": "value",
+                  "icon": "trending-up",
                   "aggregation": "sum",
                   "format": "number"
                 }
@@ -75356,26 +75356,26 @@
               "type": "[FieldSpec]",
               "default": [
                 {
-                  "name": "title",
+                  "icon": "layout-dashboard",
                   "variant": "h4",
-                  "icon": "layout-dashboard"
+                  "name": "title"
                 },
                 {
                   "name": "type",
                   "variant": "badge"
                 },
                 {
-                  "variant": "caption",
-                  "name": "label"
+                  "name": "label",
+                  "variant": "caption"
                 },
                 {
-                  "format": "number",
                   "variant": "badge",
+                  "format": "number",
                   "name": "value"
                 },
                 {
-                  "name": "dataSource",
-                  "variant": "caption"
+                  "variant": "caption",
+                  "name": "dataSource"
                 }
               ],
               "items": {
@@ -75487,13 +75487,13 @@
                   "variant": "ghost"
                 },
                 {
-                  "event": "EDIT",
                   "variant": "ghost",
-                  "label": "Edit"
+                  "label": "Edit",
+                  "event": "EDIT"
                 },
                 {
-                  "variant": "danger",
                   "label": "Delete",
+                  "variant": "danger",
                   "event": "DELETE"
                 }
               ],
@@ -76148,38 +76148,38 @@
                             "href": "/contacts"
                           },
                           {
+                            "label": "Items",
                             "href": "/items",
-                            "icon": "package",
-                            "label": "Items"
+                            "icon": "package"
                           },
                           {
                             "label": "Activities",
-                            "icon": "activity",
-                            "href": "/activities"
+                            "href": "/activities",
+                            "icon": "activity"
                           },
                           {
+                            "label": "Tasks",
                             "href": "/tasks",
-                            "icon": "check-square",
-                            "label": "Tasks"
+                            "icon": "check-square"
                           },
                           {
                             "label": "Calendar",
-                            "icon": "calendar",
-                            "href": "/calendar"
+                            "href": "/calendar",
+                            "icon": "calendar"
                           },
                           {
+                            "href": "/widgets",
                             "label": "Dashboard",
-                            "icon": "layout-dashboard",
-                            "href": "/widgets"
+                            "icon": "layout-dashboard"
                           },
                           {
-                            "icon": "rss",
+                            "label": "Feed",
                             "href": "/feed",
-                            "label": "Feed"
+                            "icon": "rss"
                           },
                           {
-                            "label": "Notes",
                             "href": "/notes",
+                            "label": "Notes",
                             "icon": "file-text"
                           }
                         ],
@@ -76327,17 +76327,17 @@
                         },
                         "default": [
                           {
-                            "icon": "layout-dashboard",
-                            "variant": "primary",
                             "aggregation": "count",
+                            "variant": "primary",
                             "format": "number",
-                            "label": "Widgets"
+                            "label": "Widgets",
+                            "icon": "layout-dashboard"
                           },
                           {
-                            "label": "Total Value",
-                            "icon": "trending-up",
                             "variant": "success",
+                            "label": "Total Value",
                             "field": "value",
+                            "icon": "trending-up",
                             "aggregation": "sum",
                             "format": "number"
                           }
@@ -76803,26 +76803,26 @@
                         },
                         "default": [
                           {
-                            "name": "title",
+                            "icon": "layout-dashboard",
                             "variant": "h4",
-                            "icon": "layout-dashboard"
+                            "name": "title"
                           },
                           {
                             "name": "type",
                             "variant": "badge"
                           },
                           {
-                            "variant": "caption",
-                            "name": "label"
+                            "name": "label",
+                            "variant": "caption"
                           },
                           {
-                            "format": "number",
                             "variant": "badge",
+                            "format": "number",
                             "name": "value"
                           },
                           {
-                            "name": "dataSource",
-                            "variant": "caption"
+                            "variant": "caption",
+                            "name": "dataSource"
                           }
                         ],
                         "description": "Each column maps to one field on the BrowseItem entity",
@@ -76872,13 +76872,13 @@
                             "variant": "ghost"
                           },
                           {
-                            "event": "EDIT",
                             "variant": "ghost",
-                            "label": "Edit"
+                            "label": "Edit",
+                            "event": "EDIT"
                           },
                           {
-                            "variant": "danger",
                             "label": "Delete",
+                            "variant": "danger",
                             "event": "DELETE"
                           }
                         ],
@@ -82509,8 +82509,8 @@
               "key": "enabled",
               "type": "boolean",
               "default": false,
-              "label": "Enabled",
-              "description": "Whether the lifecycle scheduler is active for the host orbital. Off by default; turn on to enforce retention / status transitions.",
+              "label": "Auto-archive old records",
+              "description": "Automatically archive or change records based on their age. Off by default.",
               "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, retention, ttl, expire, archive after, sunset, lifecycle, age out, time-based status, scheduled transitions, expire old records, auto-archive",
               "tier": "infra"
             },
@@ -82537,15 +82537,15 @@
                     "name": "condition",
                     "required": false,
                     "properties": {
-                      "kind": {
-                        "name": "kind",
-                        "required": false,
-                        "type": "string"
-                      },
                       "value": {
                         "name": "value",
                         "required": false,
                         "type": "number"
+                      },
+                      "kind": {
+                        "name": "kind",
+                        "required": false,
+                        "type": "string"
                       },
                       "dateField": {
                         "name": "dateField",
@@ -82565,7 +82565,7 @@
               "default": "",
               "label": "Target entity",
               "description": "Entity name to scan (e.g. 'InvoiceRecord'). v1.1 will drive SET_STATUS transitions on this entity.",
-              "tier": "infra"
+              "tier": "internal"
             }
           ],
           "capabilities": []
@@ -82811,8 +82811,8 @@
                       "enabled": {
                         "type": "boolean",
                         "default": false,
-                        "description": "Whether the lifecycle scheduler is active for the host orbital. Off by default; turn on to enforce retention / status transitions.",
-                        "x-label": "Enabled",
+                        "description": "Automatically archive or change records based on their age. Off by default.",
+                        "x-label": "Auto-archive old records",
                         "x-synonyms": "enable, turn on, enforce, require, activate, apply, switch on, retention, ttl, expire, archive after, sunset, lifecycle, age out, time-based status, scheduled transitions, expire old records, auto-archive",
                         "x-tier": "infra"
                       },
@@ -82831,7 +82831,7 @@
                         "default": "",
                         "description": "Entity name to scan (e.g. 'InvoiceRecord'). v1.1 will drive SET_STATUS transitions on this entity.",
                         "x-label": "Target entity",
-                        "x-tier": "infra"
+                        "x-tier": "internal"
                       }
                     }
                   },
@@ -84160,8 +84160,8 @@
               "key": "enabled",
               "type": "boolean",
               "default": false,
-              "label": "Enabled",
-              "description": "Whether the moderation queue is active for the host orbital. Off by default; turn on to surface flagged content for review.",
+              "label": "Enable moderation queue",
+              "description": "Send submissions to a review queue before they go live. Off by default.",
               "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, moderation, moderation queue, content review queue, flag for review, content moderation, review flagged content, abuse review, spam queue, report queue",
               "tier": "policy"
             },
@@ -84437,8 +84437,8 @@
                       "enabled": {
                         "type": "boolean",
                         "default": false,
-                        "description": "Whether the moderation queue is active for the host orbital. Off by default; turn on to surface flagged content for review.",
-                        "x-label": "Enabled",
+                        "description": "Send submissions to a review queue before they go live. Off by default.",
+                        "x-label": "Enable moderation queue",
                         "x-synonyms": "enable, turn on, enforce, require, activate, apply, switch on, moderation, moderation queue, content review queue, flag for review, content moderation, review flagged content, abuse review, spam queue, report queue",
                         "x-tier": "policy"
                       },
@@ -86220,7 +86220,7 @@
               "label": "Trigger events",
               "description": "Event names that should fire a notification. Set this to the upstream event name (e.g. OrderPlaced, CheckoutCompleted) so this atom listens for events from the orbital that emits them. The orbital owning this trait reacts whenever the named event fires anywhere in the schema.",
               "synonyms": "subscribe to event, listen for event, react to event, watch for, wire upstream event, observe event from another orbital, cross-orbital subscription, on-event trigger",
-              "tier": "policy",
+              "tier": "internal",
               "items": {
                 "type": "string"
               }
@@ -86546,7 +86546,7 @@
                         "description": "Event names that should fire a notification. Set this to the upstream event name (e.g. OrderPlaced, CheckoutCompleted) so this atom listens for events from the orbital that emits them. The orbital owning this trait reacts whenever the named event fires anywhere in the schema.",
                         "x-label": "Trigger events",
                         "x-synonyms": "subscribe to event, listen for event, react to event, watch for, wire upstream event, observe event from another orbital, cross-orbital subscription, on-event trigger",
-                        "x-tier": "policy"
+                        "x-tier": "internal"
                       },
                       "notifyChannel": {
                         "type": "string",
@@ -90426,7 +90426,7 @@
               "label": "Deadline field",
               "description": "Field on the target entity holding the deadline timestamp (e.g. 'dueAt', 'startsAt').",
               "synonyms": "due date field, timestamp field, cutoff field, expiry field, when it's due",
-              "tier": "infra"
+              "tier": "internal"
             },
             {
               "key": "offsetsHours",
@@ -90456,7 +90456,7 @@
               "label": "Target entity",
               "description": "Entity to scan for upcoming deadlines (e.g. 'ClassSession', 'CourtDeadlineRecord').",
               "synonyms": "entity to monitor, entity to watch, record type, object type",
-              "tier": "infra"
+              "tier": "internal"
             },
             {
               "key": "template",
@@ -90474,7 +90474,7 @@
               "label": "Match tolerance (minutes)",
               "description": "How close to the offset a record must be to fire a reminder. Wider = more forgiving but more dupes.",
               "synonyms": "fuzzy match window, tolerance, slack, buffer, grace period, how close counts",
-              "tier": "infra"
+              "tier": "internal"
             }
           ],
           "capabilities": []
@@ -90716,7 +90716,7 @@
                         "description": "Field on the target entity holding the deadline timestamp (e.g. 'dueAt', 'startsAt').",
                         "x-label": "Deadline field",
                         "x-synonyms": "due date field, timestamp field, cutoff field, expiry field, when it's due",
-                        "x-tier": "infra"
+                        "x-tier": "internal"
                       },
                       "offsetsHours": {
                         "type": "array",
@@ -90743,7 +90743,7 @@
                         "description": "Entity to scan for upcoming deadlines (e.g. 'ClassSession', 'CourtDeadlineRecord').",
                         "x-label": "Target entity",
                         "x-synonyms": "entity to monitor, entity to watch, record type, object type",
-                        "x-tier": "infra"
+                        "x-tier": "internal"
                       },
                       "template": {
                         "type": "string",
@@ -90759,7 +90759,7 @@
                         "description": "How close to the offset a record must be to fire a reminder. Wider = more forgiving but more dupes.",
                         "x-label": "Match tolerance (minutes)",
                         "x-synonyms": "fuzzy match window, tolerance, slack, buffer, grace period, how close counts",
-                        "x-tier": "infra"
+                        "x-tier": "internal"
                       }
                     }
                   },
@@ -91542,8 +91542,8 @@
               "key": "enabled",
               "type": "boolean",
               "default": false,
-              "label": "Enabled",
-              "description": "Whether this access rule is active for the host orbital. Off by default; turn on to enforce.",
+              "label": "Restrict who sees records",
+              "description": "Only let people see records they own, or that match an allowed role. Off by default.",
               "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, only owner can edit, owner-only, private to owner, only see your own, restrict to role, role-based visibility, permission gate, admin-only access, hide from other users, only show mine, ownership scoping",
               "tier": "policy"
             },
@@ -91553,7 +91553,7 @@
               "default": "",
               "label": "Owner field",
               "description": "Row field holding the owning user id (blank disables owner filter)",
-              "tier": "policy"
+              "tier": "internal"
             },
             {
               "key": "visibleRoles",
@@ -91813,8 +91813,8 @@
                       "enabled": {
                         "type": "boolean",
                         "default": false,
-                        "description": "Whether this access rule is active for the host orbital. Off by default; turn on to enforce.",
-                        "x-label": "Enabled",
+                        "description": "Only let people see records they own, or that match an allowed role. Off by default.",
+                        "x-label": "Restrict who sees records",
                         "x-synonyms": "enable, turn on, enforce, require, activate, apply, switch on, only owner can edit, owner-only, private to owner, only see your own, restrict to role, role-based visibility, permission gate, admin-only access, hide from other users, only show mine, ownership scoping",
                         "x-tier": "policy"
                       },
@@ -91823,7 +91823,7 @@
                         "default": "",
                         "description": "Row field holding the owning user id (blank disables owner filter)",
                         "x-label": "Owner field",
-                        "x-tier": "policy"
+                        "x-tier": "internal"
                       },
                       "visibleRoles": {
                         "type": "array",

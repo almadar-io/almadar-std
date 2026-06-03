@@ -83,8 +83,8 @@
             "key": "captureBeforeAfter",
             "type": "boolean",
             "default": false,
-            "label": "Capture before/after snapshots",
-            "description": "When true, persist `before` and `after` object snapshots from @payload.data on each audit row. Default off to keep audit rows small.",
+            "label": "Keep before/after snapshots",
+            "description": "Store a full before-and-after snapshot of each change. More detail, but a larger audit log.",
             "tier": "policy"
           },
           {
@@ -93,7 +93,7 @@
             "default": "",
             "label": "Entity to audit",
             "description": "Type name of the entity whose mutations get logged",
-            "tier": "policy"
+            "tier": "internal"
           },
           {
             "key": "captureEventTypes",
@@ -101,7 +101,7 @@
             "default": [],
             "label": "Event-kind filter",
             "description": "When set, only @payload.data.kind values in this list are audited. Empty list = capture every event. Requires the upstream event to include a `kind` field on its payload.",
-            "tier": "policy",
+            "tier": "internal",
             "items": {
               "type": "string"
             }
@@ -110,8 +110,8 @@
             "key": "enabled",
             "type": "boolean",
             "default": false,
-            "label": "Enabled",
-            "description": "Whether the audit trail is active for the host orbital. Off by default; turn on to record mutations.",
+            "label": "Track every change",
+            "description": "Keep an audit trail of every change to records — who changed what, and when. Off by default.",
             "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, audit, audit trail, log changes, track changes, who edited what, mutation log, change history, edit history, modification log, accountability log, record changes, log every edit, compliance log",
             "tier": "policy"
           },
@@ -121,7 +121,7 @@
             "default": [],
             "label": "Skip fields",
             "description": "Entity fields to omit from the audit payload (declarative; before/after still capture all fields in v1.1 — field exclusion lands when captureBeforeAfter wiring filters per-field).",
-            "tier": "policy",
+            "tier": "internal",
             "items": {
               "type": "string"
             }
@@ -130,8 +130,8 @@
             "key": "retentionDays",
             "type": "number",
             "default": 2555,
-            "label": "Retention (days)",
-            "description": "Days to keep audit rows. Default 2555 (7 years) for typical compliance regimes. WIRING DEFERRED: retention enforcement requires composing `std-lifecycle` against AuditEntry with a delete rule (gap — docs/Almadar_Std_Factories.md).",
+            "label": "How long to keep the audit log",
+            "description": "Number of days to retain audit entries. Default is about 7 years, typical for compliance.",
             "tier": "policy"
           }
         ],

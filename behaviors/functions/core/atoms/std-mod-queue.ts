@@ -133,14 +133,14 @@ export interface StdModQueueModQueueItemReviewFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdModQueueConfig {
-  /** Default: `false` */
-  enabled?: boolean;
+  /** Default: `5` */
+  autoEscalateThreshold?: number;
   /** Default: `"Moderation Queue"` */
   title?: string;
   /** Default: `"dense"` */
   tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
-  /** Default: `5` */
-  autoEscalateThreshold?: number;
+  /** Default: `false` */
+  enabled?: boolean;
 }
 
 /**

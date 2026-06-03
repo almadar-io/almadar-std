@@ -70,14 +70,14 @@ export interface StdCascadeOnDeleteCascadeFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdCascadeOnDeleteConfig {
-  /** Default: `false` */
-  enabled?: boolean;
-  /** Default: `""` */
-  parentEntity?: string;
   /** Default: `[]` */
   dependentEntities?: string[];
   /** Default: `""` */
+  parentEntity?: string;
+  /** Default: `""` */
   foreignKeyField?: string;
+  /** Default: `false` */
+  enabled?: boolean;
 }
 
 /**
