@@ -30,7 +30,7 @@ const ALIAS = 'ModQueue';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdModQueueEventKey = 'APPROVE' | 'ESCALATE' | 'INIT' | 'ModQueueItemLoadFailed' | 'ModQueueItemLoaded' | 'ModQueueItemReviewFailed' | 'ModQueueItemReviewed' | 'REJECT';
+export type StdModQueueEventKey = 'APPROVE' | 'CLOSE' | 'ESCALATE' | 'INIT' | 'ModQueueItemLoadFailed' | 'ModQueueItemLoaded' | 'ModQueueItemReviewFailed' | 'ModQueueItemReviewed' | 'OPEN' | 'REJECT';
 
 /**
  * Payload shape for the `APPROVE` event.
@@ -133,14 +133,16 @@ export interface StdModQueueModQueueItemReviewFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdModQueueConfig {
+  /** Default: `false` */
+  enabled?: boolean;
   /** Default: `5` */
   autoEscalateThreshold?: number;
   /** Default: `"Moderation Queue"` */
   title?: string;
   /** Default: `"dense"` */
   tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
-  /** Default: `false` */
-  enabled?: boolean;
+  /** Default: `"modal"` */
+  reviewSlot?: unknown;
 }
 
 /**

@@ -248,6 +248,12 @@
               ]
             },
             {
+              "event": "CLOSE",
+              "description": "Dismisses the moderation queue overlay.",
+              "synonyms": "dismiss, hide, cancel, done",
+              "tier": "essential"
+            },
+            {
               "event": "ModQueueItemLoaded",
               "description": "A new moderation item is ready for review.",
               "synonyms": "loaded, fetched, available, ready",
@@ -342,8 +348,11 @@
           "stateMachine": {
             "states": [
               {
-                "name": "loading",
+                "name": "idle",
                 "isInitial": true
+              },
+              {
+                "name": "loading"
               },
               {
                 "name": "reviewing"
@@ -386,6 +395,20 @@
                     "type": "string"
                   }
                 ]
+              },
+              {
+                "key": "OPEN",
+                "name": "Open",
+                "description": "Summons the moderation queue (host nav/affordance requests it).",
+                "synonyms": "open, show, review, view queue, moderation queue",
+                "tier": "essential"
+              },
+              {
+                "key": "CLOSE",
+                "name": "Close",
+                "description": "Dismisses the moderation queue overlay.",
+                "synonyms": "dismiss, hide, cancel, done",
+                "tier": "essential"
               },
               {
                 "key": "APPROVE",
@@ -474,9 +497,36 @@
             ],
             "transitions": [
               {
-                "from": "loading",
-                "to": "loading",
+                "from": "idle",
+                "to": "idle",
                 "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "ModQueueItem",
+                    {
+                      "emit": {
+                        "failure": "ModQueueItemLoadFailed",
+                        "success": "ModQueueItemLoaded"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "ModQueueItemLoaded"
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "ModQueueItemLoadFailed"
+              },
+              {
+                "from": "idle",
+                "to": "loading",
+                "event": "OPEN",
                 "guard": "@config.enabled",
                 "effects": [
                   [
@@ -491,24 +541,24 @@
                   ],
                   [
                     "render-ui",
-                    "main",
+                    "@config.reviewSlot",
                     {
+                      "gap": "md",
+                      "type": "stack",
                       "direction": "vertical",
                       "align": "center",
-                      "type": "stack",
                       "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
                           "type": "typography",
+                          "variant": "caption",
                           "content": "Loading moderation queue…",
                           "color": "muted"
                         }
-                      ],
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -520,33 +570,71 @@
                 "effects": [
                   [
                     "render-ui",
-                    "main",
+                    "@config.reviewSlot",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
                       "children": [
                         {
+                          "type": "stack",
+                          "align": "center",
+                          "justify": "between",
                           "direction": "horizontal",
+                          "gap": "sm",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "shield-alert"
+                              "children": [
+                                {
+                                  "name": "shield-alert",
+                                  "type": "icon"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "h3",
+                                  "content": "@config.title"
+                                }
+                              ],
+                              "type": "stack",
+                              "gap": "sm",
+                              "direction": "horizontal",
+                              "align": "center"
                             },
                             {
-                              "content": "@config.title",
-                              "variant": "h3",
-                              "type": "typography"
+                              "label": "Close",
+                              "variant": "ghost",
+                              "icon": "x",
+                              "action": "CLOSE",
+                              "type": "button"
                             }
-                          ],
-                          "type": "stack",
-                          "gap": "sm"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "type": "data-grid",
+                          "look": "@config.tableLook",
                           "gap": "sm",
+                          "fields": [
+                            {
+                              "variant": "badge",
+                              "name": "targetType",
+                              "label": "Type"
+                            },
+                            {
+                              "variant": "caption",
+                              "name": "reason",
+                              "label": "Reason"
+                            },
+                            {
+                              "label": "Flags",
+                              "variant": "caption",
+                              "name": "flagCount"
+                            },
+                            {
+                              "label": "Status",
+                              "variant": "badge",
+                              "name": "status"
+                            }
+                          ],
                           "itemActions": [
                             {
                               "label": "Approve",
@@ -556,45 +644,24 @@
                             },
                             {
                               "event": "REJECT",
+                              "icon": "x",
                               "label": "Reject",
-                              "variant": "danger",
-                              "icon": "x"
+                              "variant": "danger"
                             },
                             {
-                              "icon": "alert-triangle",
                               "event": "ESCALATE",
+                              "icon": "alert-triangle",
                               "variant": "secondary",
                               "label": "Escalate"
                             }
                           ],
-                          "cols": 1.0,
-                          "look": "@config.tableLook",
-                          "fields": [
-                            {
-                              "label": "Type",
-                              "name": "targetType",
-                              "variant": "badge"
-                            },
-                            {
-                              "variant": "caption",
-                              "name": "reason",
-                              "label": "Reason"
-                            },
-                            {
-                              "name": "flagCount",
-                              "label": "Flags",
-                              "variant": "caption"
-                            },
-                            {
-                              "name": "status",
-                              "variant": "badge",
-                              "label": "Status"
-                            }
-                          ],
-                          "entity": "@payload.data"
+                          "entity": "@payload.data",
+                          "cols": 1.0
                         }
                       ],
-                      "type": "stack"
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -606,12 +673,24 @@
                 "effects": [
                   [
                     "render-ui",
-                    "main",
+                    "@config.reviewSlot",
                     {
+                      "type": "alert",
                       "variant": "error",
-                      "message": "@payload.error",
-                      "type": "alert"
+                      "message": "@payload.error"
                     }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "idle",
+                "event": "CLOSE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "@config.reviewSlot",
+                    null
                   ]
                 ]
               },
@@ -647,8 +726,8 @@
                     "update",
                     "ModQueueItem",
                     {
-                      "id": "@payload.row.id",
-                      "status": "rejected"
+                      "status": "rejected",
+                      "id": "@payload.row.id"
                     },
                     {
                       "emit": {
@@ -669,8 +748,8 @@
                     "update",
                     "ModQueueItem",
                     {
-                      "id": "@payload.row.id",
-                      "status": "escalated"
+                      "status": "escalated",
+                      "id": "@payload.row.id"
                     },
                     {
                       "emit": {
@@ -705,43 +784,75 @@
                 "effects": [
                   [
                     "render-ui",
-                    "main",
+                    "@config.reviewSlot",
                     {
+                      "type": "alert",
                       "variant": "error",
-                      "message": "@payload.error",
-                      "type": "alert"
+                      "message": "@payload.error"
                     }
+                  ]
+                ]
+              },
+              {
+                "from": "reviewing",
+                "to": "idle",
+                "event": "CLOSE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "@config.reviewSlot",
+                    null
                   ]
                 ]
               },
               {
                 "from": "error",
                 "to": "loading",
-                "event": "INIT",
+                "event": "OPEN",
                 "effects": [
                   [
                     "fetch",
                     "ModQueueItem",
                     {
                       "emit": {
-                        "success": "ModQueueItemLoaded",
-                        "failure": "ModQueueItemLoadFailed"
+                        "failure": "ModQueueItemLoadFailed",
+                        "success": "ModQueueItemLoaded"
                       }
                     }
                   ],
                   [
                     "render-ui",
-                    "main",
+                    "@config.reviewSlot",
                     {
                       "type": "spinner",
                       "size": "sm"
                     }
                   ]
                 ]
+              },
+              {
+                "from": "error",
+                "to": "idle",
+                "event": "CLOSE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "@config.reviewSlot",
+                    null
+                  ]
+                ]
               }
             ]
           },
           "config": {
+            "enabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Enable moderation queue",
+              "description": "Send submissions to a review queue before they go live. Off by default.",
+              "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, moderation, moderation queue, content review queue, flag for review, content moderation, review flagged content, abuse review, spam queue, report queue",
+              "tier": "policy"
+            },
             "autoEscalateThreshold": {
               "type": "number",
               "default": 5.0,
@@ -770,13 +881,12 @@
                 "card-rows"
               ]
             },
-            "enabled": {
-              "type": "boolean",
-              "default": false,
-              "label": "Enable moderation queue",
-              "description": "Send submissions to a review queue before they go live. Off by default.",
-              "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, moderation, moderation queue, content review queue, flag for review, content moderation, review flagged content, abuse review, spam queue, report queue",
-              "tier": "policy"
+            "reviewSlot": {
+              "type": "slot",
+              "default": "modal",
+              "label": "Review slot",
+              "description": "UI slot the moderation queue renders into. Defaults to the modal overlay so it never seizes the host's main content; summoned via OPEN, cleared via CLOSE.",
+              "tier": "internal"
             }
           },
           "scope": "collection"

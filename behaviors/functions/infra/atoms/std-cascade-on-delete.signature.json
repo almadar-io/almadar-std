@@ -12,44 +12,48 @@
             "name": "parentId",
             "type": "string",
             "required": false,
-            "description": "Identifier of the parent entity.",
+            "description": "Identifier of the deleted parent the cascade is clearing dependents for.",
             "synonyms": "parent, source, origin"
           },
           {
             "name": "parentEntity",
             "type": "string",
             "required": false,
-            "description": "Identifies the entity related to the cascade operation.",
+            "description": "Identifies the parent entity of the cascade.",
             "synonyms": "related entity, source entity, parent"
           },
           {
             "name": "rowCount",
             "type": "number",
             "required": false,
-            "description": "The number of rows affected by the cascade operation.",
+            "description": "The number of rows deleted by the cascade.",
             "synonyms": "count, size, quantity"
+          },
+          {
+            "name": "headId",
+            "type": "string",
+            "required": false,
+            "description": "Scratch: id of the dependent row the loop is currently deleting.",
+            "synonyms": "current id, cursor"
           }
         ],
-        "persistence": "runtime"
+        "persistence": "persistent"
       }
     ],
     "traits": [
       {
         "name": "CascadeOnDeleteGate",
         "emittedEvents": [
-          "CascadeRowsFetched",
-          "CascadeRowsLoaded",
+          "CascadeRowDeleted",
           "CascadeCompleted",
+          "DepsLoaded",
+          "CascadeStepped",
           "CascadeFailed"
         ],
         "listenedEvents": [],
         "events": [
           {
-            "name": "CascadeRowsFetched",
-            "direction": "emit"
-          },
-          {
-            "name": "CascadeRowsLoaded",
+            "name": "CascadeRowDeleted",
             "direction": "emit"
           },
           {
@@ -57,8 +61,20 @@
             "direction": "emit"
           },
           {
+            "name": "DepsLoaded",
+            "direction": "emit"
+          },
+          {
+            "name": "CascadeStepped",
+            "direction": "emit"
+          },
+          {
             "name": "CascadeFailed",
             "direction": "emit"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
           },
           {
             "name": "ParentDeleted",
@@ -67,15 +83,12 @@
         ],
         "overridableConfigKeys": [
           {
-            "key": "dependentEntities",
-            "type": "[string]",
-            "default": [],
-            "label": "Dependent entities",
-            "description": "Entity names that hold rows pointing to the parent",
-            "tier": "internal",
-            "items": {
-              "type": "string"
-            }
+            "key": "dependentEntity",
+            "type": "string",
+            "default": "CascadeLog",
+            "label": "Dependent entity",
+            "description": "Entity holding rows that point at the parent (compose one cascade trait per dependent type). Defaults to the atom's own log so the standalone validates; rebind per composition.",
+            "tier": "internal"
           },
           {
             "key": "enabled",
@@ -89,9 +102,9 @@
           {
             "key": "foreignKeyField",
             "type": "string",
-            "default": "",
+            "default": "parentId",
             "label": "Foreign-key field",
-            "description": "Field on dependent rows that holds the parent's id",
+            "description": "Field on dependent rows that holds the parent's id.",
             "tier": "internal"
           },
           {
@@ -99,7 +112,7 @@
             "type": "string",
             "default": "",
             "label": "Parent entity",
-            "description": "Entity whose deletion triggers the cascade",
+            "description": "Entity whose deletion triggers the cascade.",
             "tier": "internal"
           }
         ],
@@ -118,8 +131,9 @@
     "emittedEvents": [
       "CascadeCompleted",
       "CascadeFailed",
-      "CascadeRowsFetched",
-      "CascadeRowsLoaded"
+      "CascadeRowDeleted",
+      "CascadeStepped",
+      "DepsLoaded"
     ],
     "listenedEvents": []
   }

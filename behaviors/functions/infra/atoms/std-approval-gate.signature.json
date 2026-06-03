@@ -3,7 +3,7 @@
     "organism": "std-approval-gate",
     "orbital": "ApprovalGateOrbital",
     "tier": "atoms",
-    "factoryPath": "behaviors/functions/core/atoms/std-approval-gate.ts",
+    "factoryPath": "behaviors/functions/infra/atoms/std-approval-gate.ts",
     "entities": [
       {
         "name": "ApprovalRequest",
@@ -56,6 +56,13 @@
             "required": false,
             "description": "Free-form text providing additional context or details.",
             "synonyms": "comments, remarks, explanation, details"
+          },
+          {
+            "name": "payload",
+            "type": "object",
+            "required": false,
+            "description": "The held data of the gated action, replayed by the downstream listener when the request is granted.",
+            "synonyms": "request data, held payload, pending data, gated data"
           }
         ],
         "persistence": "persistent"
@@ -67,6 +74,7 @@
         "emittedEvents": [
           "APPROVE",
           "DENY",
+          "CLOSE",
           "ApprovalGranted",
           "ApprovalDenied",
           "ApprovalRequestLoaded",
@@ -91,9 +99,16 @@
             "tier": "essential"
           },
           {
+            "name": "CLOSE",
+            "direction": "emit",
+            "description": "Dismisses the review queue overlay.",
+            "synonyms": "dismiss, hide, cancel, done",
+            "tier": "essential"
+          },
+          {
             "name": "ApprovalGranted",
             "direction": "emit",
-            "description": "Signals that an approval process has been successfully completed.",
+            "description": "Signals that an approval process has been successfully completed; carries the held payload for the downstream listener to replay.",
             "synonyms": "approved, authorized, confirmed, validated",
             "tier": "essential"
           },
@@ -135,6 +150,13 @@
           {
             "name": "INIT",
             "direction": "listen"
+          },
+          {
+            "name": "OPEN",
+            "direction": "listen",
+            "description": "Summons the review queue (host nav/affordance requests it).",
+            "synonyms": "open, show, review, view queue, open approvals",
+            "tier": "essential"
           }
         ],
         "overridableConfigKeys": [
@@ -184,6 +206,14 @@
             "items": {
               "type": "string"
             }
+          },
+          {
+            "key": "reviewSlot",
+            "type": "slot",
+            "default": "modal",
+            "label": "Review slot",
+            "description": "UI slot the review queue renders into. Defaults to the modal overlay so the queue never seizes the host's main content; summoned via OPEN, cleared via CLOSE.",
+            "tier": "internal"
           },
           {
             "key": "tableLook",
@@ -245,6 +275,7 @@
       "ApprovalRequestLoaded",
       "ApprovalRequestReviewFailed",
       "ApprovalRequestReviewed",
+      "CLOSE",
       "DENY"
     ],
     "listenedEvents": []

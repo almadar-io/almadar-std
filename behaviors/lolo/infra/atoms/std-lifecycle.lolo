@@ -1,8 +1,5 @@
-app std-lifecycle "1.0.0"
-"std-lifecycle — declarative lifecycle-rule definitions for a target entity. Periodic tick logs scan attempts to LifecycleRunLog. v1.0 ships the config knobs + scan topology so the questionnaire surfaces rules + targetEntity + dryRun cleanly; auto-emit of SET_STATUS per matching record lands in v1.1 when loop-with-emit primitive exists (gap — docs/Almadar_Std_Factories.md)."
-
-type LifecycleCondition = { kind : string, value : number, dateField : string }
-type LifecycleRule      = { fromStatus : string, toStatus : string, condition : LifecycleCondition }
+app std-lifecycle "1.1.0"
+"std-lifecycle — age-based status lifecycle for a target entity. A periodic tick scans the target for records in `fromStatus` whose `dateField` is older than `ageDays`, and transitions each one to `toStatus` — every matching record, via a self-driving scan loop (process the head of a filtered fetch, persist the status, re-fetch until the set drains). Compose onto any orbital and bind `targetEntity` + the status/date knobs."
 
 orbital LifecycleOrbital {
   entity LifecycleRunLog [persistent: lifecycle_runs] {
@@ -11,63 +8,84 @@ orbital LifecycleOrbital {
     recordCount   : number  @description "The number of records processed." @synonyms "count, size, quantity" = 0
     ranAt         : number  @description "Timestamp indicating when the lifecycle run occurred." @synonyms "timestamp, execution time, run time" = 0
     errors        : string  @description "A textual description of any errors encountered." @synonyms "error message, problem, issue, fault" = ""
+    status        : string  @description "Lifecycle status (also lets the standalone default target validate)." @synonyms "state, stage" = ""
+    headId        : string  @description "Scratch: id of the record the scan loop is currently transitioning." @synonyms "current id, cursor" = ""
+    headStatus    : string  @description "Scratch: the status applied to the current record." @synonyms "new status, to status" = ""
   }
 
-  type ScanRecordsLoaded = Event { data : [object] }                         "Internal: target entity collection fetched by the scan tick."
-  type ScanFailed        = Event { error : string, code : string }           "Internal: scan fetch failed."
-  type LifecycleRunLogged = Event { row : LifecycleRunLog }                  "Re-emitted after a run log row persists."
-  type LifecycleRunFailed = Event { error : string, code : string }          "Emitted when persisting the run log fails."
+  type ScanRecordsLoaded     = Event { data : [object] }                       "Internal: target records matching the lifecycle filter."
+  type ScanFailed            = Event { error : string, code : string }         "Internal: scan fetch / persist failed."
+  type LifecycleStepped      = Event { id : string }                           "Internal: one record transitioned; drives the next loop pass."
+  type LifecycleTransitioned = Event { entityId : string, status : string }    "Re-emitted per record as it transitions; rename to wire downstream listeners."
 
   trait LifecycleScheduler -> LifecycleRunLog [lifecycle, instance] {
     config {
-      enabled             : boolean  = false
+      enabled       : boolean = false
         @label "Auto-archive old records"
-        @description "Automatically archive or change records based on their age. Off by default."
+        @description "Automatically change the status of records once they age past a threshold. Off by default."
         @synonyms "enable, turn on, enforce, require, activate, apply, switch on, retention, ttl, expire, archive after, sunset, lifecycle, age out, time-based status, scheduled transitions, expire old records, auto-archive"
         @tier "infra"
-      targetEntity        : string   = ""
+      targetEntity  : string  = "LifecycleRunLog"
         @label "Target entity"
-        @description "Entity name to scan (e.g. 'InvoiceRecord'). v1.1 will drive SET_STATUS transitions on this entity."
+        @description "Entity name to scan and transition (e.g. 'Task'). Defaults to the atom's own log so the standalone validates; rebind per composition."
         @tier "internal"
-      rules               : [LifecycleRule] = []
-        @label "Lifecycle rules"
-        @description "When a record's status is fromStatus and its dateField is older than condition.value days (kind='ageDays'), transition to toStatus. v1.0 declarative only — wiring lands in v1.1 (gap)."
+      fromStatus    : string  = ""
+        @label "From status"
+        @description "Only records currently in this status are eligible to transition."
         @tier "infra"
-      dryRun              : boolean = false
+      toStatus      : string  = ""
+        @label "To status"
+        @description "Status applied to a record once it ages past the threshold (e.g. 'archived')."
+        @tier "infra"
+      dateField     : string  = "ranAt"
+        @label "Age date field"
+        @description "Numeric (ms-epoch) entity field measured against the age threshold (e.g. 'createdAt')."
+        @tier "internal"
+      ageDays       : number  = 30
+        @label "Age threshold (days)"
+        @description "Records older than this many days transition fromStatus → toStatus."
+        @tier "infra"
+      dryRun        : boolean = false
         @label "Dry-run mode"
-        @description "When true, log scan results without emitting transitions."
+        @description "When true, surfaces the knobs but the scan does not persist transitions."
         @tier "infra"
     }
     initial: idle
     state idle {
-      ScanRecordsLoaded -> idle when @config.enabled
-        (set @entity.targetEntity @config.targetEntity)
-        (set @entity.recordCount (array/len @payload.data))
-        (set @entity.ranAt 0)
-        (persist create LifecycleRunLog @entity { emit: { success: "LifecycleRunLogged", failure: "LifecycleRunFailed" } })
+      INIT -> idle
+      ScanRecordsLoaded -> scanning when (and @config.enabled (> (array/len @payload.data) 0))
+        (set @entity.headId (object/get (array/first @payload.data) "id"))
+        (set @entity.headStatus @config.toStatus)
+        (emit LifecycleTransitioned { entityId: @entity.headId, status: @entity.headStatus })
+        (persist update @config.targetEntity { id: @entity.headId, status: @entity.headStatus } { emit: { success: "LifecycleStepped", failure: "ScanFailed" } })
+      ScanRecordsLoaded -> idle when (= (array/len @payload.data) 0)
       ScanFailed -> idle
-        (set @entity.targetEntity @config.targetEntity)
-        (set @entity.recordCount 0)
-        (set @entity.errors @payload.error)
-        (persist create LifecycleRunLog @entity { emit: { success: "LifecycleRunLogged", failure: "LifecycleRunFailed" } })
-      LifecycleRunLogged -> idle
-      LifecycleRunFailed -> idle
+    }
+    state scanning {
+      LifecycleStepped -> scanning
+        (fetch @config.targetEntity { filter: (and (= (object/get @entity "status") @config.fromStatus) (< (object/get @entity @config.dateField) (- @now (* @config.ageDays 86400000)))), emit: { success: "ScanRecordsLoaded", failure: "ScanFailed" } })
+      ScanRecordsLoaded -> scanning when (> (array/len @payload.data) 0)
+        (set @entity.headId (object/get (array/first @payload.data) "id"))
+        (set @entity.headStatus @config.toStatus)
+        (emit LifecycleTransitioned { entityId: @entity.headId, status: @entity.headStatus })
+        (persist update @config.targetEntity { id: @entity.headId, status: @entity.headStatus } { emit: { success: "LifecycleStepped", failure: "ScanFailed" } })
+      ScanRecordsLoaded -> idle when (= (array/len @payload.data) 0)
+      ScanFailed -> idle
     }
     ticks {
       scanCycle every 1 h
-        (fetch LifecycleRunLog { emit: { success: "ScanRecordsLoaded", failure: "ScanFailed" } })
+        (fetch @config.targetEntity { filter: (and (= (object/get @entity "status") @config.fromStatus) (< (object/get @entity @config.dateField) (- @now (* @config.ageDays 86400000)))), emit: { success: "ScanRecordsLoaded", failure: "ScanFailed" } })
     }
     emits {
+      LifecycleTransitioned -> external { entityId : string, status : string }
       ScanRecordsLoaded   { data : [object] }
       ScanFailed          { error : string, code : string }
-      LifecycleRunLogged  { row : LifecycleRunLog }
-      LifecycleRunFailed  { error : string, code : string }
+      LifecycleStepped    { id : string }
     }
     listens {
       ScanRecordsLoaded   { data : [object] }
       ScanFailed          { error : string, code : string }
-      LifecycleRunLogged  { row : LifecycleRunLog }
-      LifecycleRunFailed  { error : string, code : string }
+      LifecycleStepped    { id : string }
     }
   }
   page "/lifecycle/scheduler" as LifecycleSchedulerPage -> LifecycleScheduler

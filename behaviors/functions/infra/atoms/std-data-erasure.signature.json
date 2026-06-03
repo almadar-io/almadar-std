@@ -3,7 +3,7 @@
     "organism": "std-data-erasure",
     "orbital": "DataErasureOrbital",
     "tier": "atoms",
-    "factoryPath": "behaviors/functions/core/atoms/std-data-erasure.ts",
+    "factoryPath": "behaviors/functions/infra/atoms/std-data-erasure.ts",
     "entities": [
       {
         "name": "ErasureRequest",
@@ -73,10 +73,15 @@
         "name": "ErasureWorkflow",
         "emittedEvents": [
           "CANCEL_ERASURE",
+          "CLOSE",
           "ErasureLoaded",
           "ErasureLoadFailed",
           "ErasureSaved",
-          "ErasureSaveFailed"
+          "ErasureSaveFailed",
+          "ExecuteErasure",
+          "ExecScanLoaded",
+          "ExecScanFailed",
+          "ExecStepped"
         ],
         "listenedEvents": [],
         "events": [
@@ -85,6 +90,13 @@
             "direction": "emit",
             "description": "Signals a request cancellation during its processing lifecycle.",
             "synonyms": "abort, revoke, undo, terminate",
+            "tier": "essential"
+          },
+          {
+            "name": "CLOSE",
+            "direction": "emit",
+            "description": "Dismisses the erasure-requests overlay.",
+            "synonyms": "dismiss, hide, cancel, done",
             "tier": "essential"
           },
           {
@@ -116,8 +128,43 @@
             "tier": "internal"
           },
           {
+            "name": "ExecuteErasure",
+            "direction": "emit",
+            "description": "Instructs the target atom to perform the actual delete or PII scrub for a request whose grace period has elapsed.",
+            "synonyms": "execute, perform erasure, delete now, scrub, finalize erasure",
+            "tier": "essential"
+          },
+          {
+            "name": "ExecScanLoaded",
+            "direction": "emit",
+            "description": "Internal: grace requests due for execution.",
+            "synonyms": "scan loaded, due requests",
+            "tier": "internal"
+          },
+          {
+            "name": "ExecScanFailed",
+            "direction": "emit",
+            "description": "Internal: execution scan failed.",
+            "synonyms": "scan error, scan failed",
+            "tier": "internal"
+          },
+          {
+            "name": "ExecStepped",
+            "direction": "emit",
+            "description": "Internal: one request executed; advances the scan loop.",
+            "synonyms": "stepped, next",
+            "tier": "internal"
+          },
+          {
             "name": "INIT",
             "direction": "listen"
+          },
+          {
+            "name": "OPEN",
+            "direction": "listen",
+            "description": "Summons the erasure-requests queue (host nav/affordance requests it).",
+            "synonyms": "open, show, review, view queue, erasure requests",
+            "tier": "essential"
           }
         ],
         "overridableConfigKeys": [
@@ -162,6 +209,14 @@
             }
           },
           {
+            "key": "reviewSlot",
+            "type": "slot",
+            "default": "modal",
+            "label": "Review slot",
+            "description": "UI slot the erasure-requests queue renders into. Defaults to the modal overlay so it never seizes the host's main content; summoned via OPEN, cleared via CLOSE.",
+            "tier": "internal"
+          },
+          {
             "key": "tableLook",
             "type": "string",
             "default": "dense",
@@ -200,10 +255,15 @@
     ],
     "emittedEvents": [
       "CANCEL_ERASURE",
+      "CLOSE",
       "ErasureLoadFailed",
       "ErasureLoaded",
       "ErasureSaveFailed",
-      "ErasureSaved"
+      "ErasureSaved",
+      "ExecScanFailed",
+      "ExecScanLoaded",
+      "ExecStepped",
+      "ExecuteErasure"
     ],
     "listenedEvents": []
   }

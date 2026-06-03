@@ -38,16 +38,28 @@ orbital ModQueueItemOrbital {
         @label "Table look"
         @description "Layer 2 visual treatment for the data table rendered by this atom."
         @tier "presentation"
+      reviewSlot : slot = "modal"
+        @label "Review slot"
+        @description "UI slot the moderation queue renders into. Defaults to the modal overlay so it never seizes the host's main content; summoned via OPEN, cleared via CLOSE."
+        @tier "internal"
     }
-    initial: loading
-    state loading {
-      INIT -> loading when @config.enabled
+    initial: idle
+    state idle {
+      INIT -> idle
         (fetch ModQueueItem { emit: { success: "ModQueueItemLoaded", failure: "ModQueueItemLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading moderation queue…" }] })
+      ModQueueItemLoaded -> idle
+      ModQueueItemLoadFailed -> idle
+      OPEN -> loading when @config.enabled
+        (fetch ModQueueItem { emit: { success: "ModQueueItemLoaded", failure: "ModQueueItemLoadFailed" } })
+        (render-ui @config.reviewSlot { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading moderation queue…" }] })
+    }
+    state loading {
       ModQueueItemLoaded -> reviewing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "shield-alert" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-grid", look: "@config.tableLook", entity: "@payload.data", fields: [{ name: "targetType", label: "Type", variant: "badge" }, { name: "reason", label: "Reason", variant: "caption" }, { name: "flagCount", label: "Flags", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Approve", event: "APPROVE", variant: "primary", icon: "check" }, { label: "Reject", event: "REJECT", variant: "danger", icon: "x" }, { label: "Escalate", event: "ESCALATE", variant: "secondary", icon: "alert-triangle" }] }] })
+        (render-ui @config.reviewSlot { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "shield-alert" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "button", label: "Close", action: "CLOSE", variant: "ghost", icon: "x" }] }, { type: "divider" }, { type: "data-grid", look: "@config.tableLook", entity: "@payload.data", fields: [{ name: "targetType", label: "Type", variant: "badge" }, { name: "reason", label: "Reason", variant: "caption" }, { name: "flagCount", label: "Flags", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Approve", event: "APPROVE", variant: "primary", icon: "check" }, { label: "Reject", event: "REJECT", variant: "danger", icon: "x" }, { label: "Escalate", event: "ESCALATE", variant: "secondary", icon: "alert-triangle" }] }] })
       ModQueueItemLoadFailed -> error
-        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+        (render-ui @config.reviewSlot { type: "alert", variant: "error", message: "@payload.error" })
+      CLOSE -> idle
+        (render-ui @config.reviewSlot null)
     }
     state reviewing {
       APPROVE -> reviewing
@@ -59,12 +71,16 @@ orbital ModQueueItemOrbital {
       ModQueueItemReviewed -> loading
         (fetch ModQueueItem { emit: { success: "ModQueueItemLoaded", failure: "ModQueueItemLoadFailed" } })
       ModQueueItemReviewFailed -> reviewing
-        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+        (render-ui @config.reviewSlot { type: "alert", variant: "error", message: "@payload.error" })
+      CLOSE -> idle
+        (render-ui @config.reviewSlot null)
     }
     state error {
-      INIT -> loading
+      OPEN -> loading
         (fetch ModQueueItem { emit: { success: "ModQueueItemLoaded", failure: "ModQueueItemLoadFailed" } })
-        (render-ui main { type: "spinner", size: "sm" })
+        (render-ui @config.reviewSlot { type: "spinner", size: "sm" })
+      CLOSE -> idle
+        (render-ui @config.reviewSlot null)
     }
     emits {
       APPROVE  { id : string!, row : ModQueueItem }
@@ -79,6 +95,10 @@ orbital ModQueueItemOrbital {
         @description "Signals a flagged item requires further review."
         @synonyms "flag, defer, elevate"
         @tier "customization"
+      CLOSE
+        @description "Dismisses the moderation queue overlay."
+        @synonyms "dismiss, hide, cancel, done"
+        @tier "essential"
       ModQueueItemLoaded       { data : [ModQueueItem] }
         @description "A new moderation item is ready for review."
         @synonyms "loaded, fetched, available, ready"
@@ -97,6 +117,14 @@ orbital ModQueueItemOrbital {
         @tier "internal"
     }
     listens {
+      OPEN
+        @description "Summons the moderation queue (host nav/affordance requests it)."
+        @synonyms "open, show, review, view queue, moderation queue"
+        @tier "essential"
+      CLOSE
+        @description "Dismisses the moderation queue overlay."
+        @synonyms "dismiss, hide, cancel, done"
+        @tier "essential"
       APPROVE  { id : string!, row : ModQueueItem }
         @description "Signals that a moderation item has been approved."
         @synonyms "accept, confirm, pass"

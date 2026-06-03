@@ -30,7 +30,7 @@ const ALIAS = 'DataErasure';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdDataErasureEventKey = 'CANCEL_ERASURE' | 'ErasureLoadFailed' | 'ErasureLoaded' | 'ErasureSaveFailed' | 'ErasureSaved' | 'INIT';
+export type StdDataErasureEventKey = 'CANCEL_ERASURE' | 'CLOSE' | 'ErasureLoadFailed' | 'ErasureLoaded' | 'ErasureSaveFailed' | 'ErasureSaved' | 'ExecScanFailed' | 'ExecScanLoaded' | 'ExecStepped' | 'ExecuteErasure' | 'INIT' | 'OPEN';
 
 /**
  * Payload shape for the `CANCEL_ERASURE` event.
@@ -91,24 +91,57 @@ export interface StdDataErasureErasureSaveFailedPayload {
 }
 
 /**
+ * Payload shape for the `ExecuteErasure` event.
+ */
+export interface StdDataErasureExecuteErasurePayload {
+  requestId?: string;
+  targetEntity?: string;
+  subjectId?: string;
+}
+
+/**
+ * Payload shape for the `ExecScanLoaded` event.
+ */
+export interface StdDataErasureExecScanLoadedPayload {
+  data?: EntityRow[];
+}
+
+/**
+ * Payload shape for the `ExecScanFailed` event.
+ */
+export interface StdDataErasureExecScanFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `ExecStepped` event.
+ */
+export interface StdDataErasureExecSteppedPayload {
+  id?: string;
+}
+
+/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait
  * without modifying its state-machine topology.
  */
 export interface StdDataErasureConfig {
-  /** Default: `[]` */
-  piiFields?: string[];
-  /** Default: `30` */
-  gracePeriodDays?: number;
-  /** Default: `false` */
-  enabled?: boolean;
-  /** Default: `"anonymize"` */
-  anonymizeVsDelete?: 'anonymize' | 'delete';
   /** Default: `"dense"` */
   tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
+  /** Default: `"modal"` */
+  reviewSlot?: unknown;
+  /** Default: `"anonymize"` */
+  anonymizeVsDelete?: 'anonymize' | 'delete';
+  /** Default: `false` */
+  enabled?: boolean;
   /** Default: `""` */
   targetEntity?: string;
+  /** Default: `30` */
+  gracePeriodDays?: number;
+  /** Default: `[]` */
+  piiFields?: string[];
 }
 
 /**
