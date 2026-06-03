@@ -97,23 +97,24 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "ContactAppLayout",
           "config": {
-            "notificationClickEvent": "CONTACT_NOTIFICATIONS_OPEN",
-            "appName": "App",
+            "searchEvent": "CONTACT_SEARCH",
+            "notifications": [],
             "contentTrait": "@trait.ContactCatalog",
+            "appName": "App",
             "navItems": [
               {
-                "href": "/contacts",
                 "icon": "users",
-                "label": "Contacts"
+                "label": "Contacts",
+                "href": "/contacts"
               },
               {
-                "icon": "package",
                 "href": "/items",
+                "icon": "package",
                 "label": "Items"
               },
               {
-                "label": "Activities",
                 "href": "/activities",
+                "label": "Activities",
                 "icon": "activity"
               },
               {
@@ -123,8 +124,8 @@
               },
               {
                 "icon": "calendar",
-                "label": "Calendar",
-                "href": "/calendar"
+                "href": "/calendar",
+                "label": "Calendar"
               },
               {
                 "icon": "layout-dashboard",
@@ -137,17 +138,16 @@
                 "href": "/feed"
               },
               {
-                "icon": "file-text",
+                "href": "/notes",
                 "label": "Notes",
-                "href": "/notes"
+                "icon": "file-text"
               }
             ],
-            "searchEvent": "CONTACT_SEARCH",
-            "notifications": []
+            "notificationClickEvent": "CONTACT_NOTIFICATIONS_OPEN"
           },
           "events": {
-            "SEARCH": "CONTACT_SEARCH",
-            "NOTIFY_CLICK": "CONTACT_NOTIFICATIONS_OPEN"
+            "NOTIFY_CLICK": "CONTACT_NOTIFICATIONS_OPEN",
+            "SEARCH": "CONTACT_SEARCH"
           }
         },
         {
@@ -242,61 +242,61 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "gap": "md",
                           "children": [
                             {
-                              "type": "stack",
-                              "align": "center",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "users"
+                                  "name": "users",
+                                  "type": "icon"
                                 },
                                 {
-                                  "variant": "h2",
                                   "type": "typography",
+                                  "variant": "h2",
                                   "content": "Contacts"
                                 }
                               ],
+                              "type": "stack",
+                              "direction": "horizontal",
                               "gap": "sm",
-                              "direction": "horizontal"
+                              "align": "center"
                             },
                             {
-                              "label": "New Contact",
                               "variant": "primary",
+                              "label": "New Contact",
+                              "action": "CREATE",
                               "icon": "plus",
-                              "type": "button",
-                              "action": "CREATE"
+                              "type": "button"
                             }
                           ],
                           "direction": "horizontal",
                           "type": "stack",
-                          "align": "center",
-                          "justify": "between"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
                           "gap": "md",
-                          "children": [
-                            "@trait.ContactSearch",
-                            "@trait.ContactFilter"
-                          ],
-                          "direction": "horizontal",
-                          "type": "stack",
+                          "justify": "between",
                           "align": "center"
                         },
                         {
                           "type": "divider"
                         },
+                        {
+                          "align": "center",
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "children": [
+                            "@trait.ContactSearch",
+                            "@trait.ContactFilter"
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
                         "@trait.ContactBrowseList"
-                      ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]
@@ -315,7 +315,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
+                      "direction": "vertical",
+                      "className": "py-8",
                       "align": "center",
                       "children": [
                         {
@@ -323,20 +324,19 @@
                           "name": "bell"
                         },
                         {
-                          "content": "No notifications",
                           "type": "typography",
+                          "content": "No notifications",
                           "variant": "h3"
                         },
                         {
-                          "label": "Back",
-                          "variant": "ghost",
+                          "type": "button",
                           "action": "INIT",
-                          "type": "button"
+                          "variant": "ghost",
+                          "label": "Back"
                         }
                       ],
-                      "className": "py-8",
-                      "direction": "vertical",
-                      "gap": "md"
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -349,8 +349,8 @@
           "ref": "Search.traits.SearchResultSearch",
           "name": "ContactSearch",
           "config": {
-            "event": "CONTACT_SEARCH",
-            "placeholder": "Search contacts…"
+            "placeholder": "Search contacts…",
+            "event": "CONTACT_SEARCH"
           }
         },
         {
@@ -359,9 +359,9 @@
           "config": {
             "filters": [
               {
-                "filterType": "select",
                 "options": [],
                 "label": "Company",
+                "filterType": "select",
                 "field": "company"
               }
             ],
@@ -373,30 +373,31 @@
           "name": "ContactBrowseList",
           "linkedEntity": "Contact",
           "config": {
+            "gap": "sm",
+            "cols": 1.0,
             "fields": [
               {
+                "icon": "user",
                 "variant": "h3",
-                "name": "name",
-                "icon": "user"
+                "name": "name"
               },
               {
-                "name": "email",
-                "variant": "body"
+                "variant": "body",
+                "name": "email"
               },
               {
                 "name": "phone",
                 "variant": "caption"
               },
               {
-                "variant": "badge",
-                "name": "company"
+                "name": "company",
+                "variant": "badge"
               },
               {
-                "variant": "caption",
-                "name": "role"
+                "name": "role",
+                "variant": "caption"
               }
             ],
-            "gap": "sm",
             "itemActions": [
               {
                 "label": "View",
@@ -409,12 +410,11 @@
                 "label": "Edit"
               },
               {
-                "event": "DELETE",
                 "label": "Delete",
+                "event": "DELETE",
                 "variant": "danger"
               }
-            ],
-            "cols": 1.0
+            ]
           },
           "listens": [
             {
@@ -464,7 +464,7 @@
           "name": "ContactCreate",
           "linkedEntity": "Contact",
           "config": {
-            "mode": "create",
+            "icon": "plus-circle",
             "fields": [
               "name",
               "email",
@@ -474,7 +474,7 @@
               "notes"
             ],
             "title": "New Contact",
-            "icon": "plus-circle"
+            "mode": "create"
           },
           "events": {
             "OPEN": "CREATE"
@@ -496,6 +496,7 @@
           "linkedEntity": "Contact",
           "config": {
             "mode": "edit",
+            "title": "Edit Contact",
             "fields": [
               "name",
               "email",
@@ -504,8 +505,7 @@
               "role",
               "notes"
             ],
-            "icon": "edit",
-            "title": "Edit Contact"
+            "icon": "edit"
           },
           "events": {
             "OPEN": "EDIT"
@@ -526,7 +526,6 @@
           "name": "ContactView",
           "linkedEntity": "Contact",
           "config": {
-            "mode": "edit",
             "icon": "eye",
             "title": "View Contact",
             "fields": [
@@ -536,7 +535,8 @@
               "company",
               "role",
               "notes"
-            ]
+            ],
+            "mode": "edit"
           },
           "events": {
             "OPEN": "VIEW"
@@ -557,14 +557,14 @@
           "name": "ContactDelete",
           "linkedEntity": "Contact",
           "config": {
-            "alertMessage": "This action cannot be undone.",
-            "icon": "alert-triangle",
+            "title": "Delete Contact",
             "confirmLabel": "Delete",
-            "title": "Delete Contact"
+            "icon": "alert-triangle",
+            "alertMessage": "This action cannot be undone."
           },
           "events": {
-            "CONFIRM": "CONFIRM_DELETE",
-            "REQUEST": "DELETE"
+            "REQUEST": "DELETE",
+            "CONFIRM": "CONFIRM_DELETE"
           },
           "listens": [
             {
@@ -933,9 +933,11 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "ItemAppLayout",
           "config": {
-            "notificationClickEvent": "ITEM_NOTIFICATIONS_OPEN",
             "appName": "App",
             "contentTrait": "@trait.ItemCatalog",
+            "searchEvent": "ITEM_SEARCH",
+            "notificationClickEvent": "ITEM_NOTIFICATIONS_OPEN",
+            "notifications": [],
             "navItems": [
               {
                 "label": "Contacts",
@@ -964,8 +966,8 @@
               },
               {
                 "href": "/widgets",
-                "label": "Dashboard",
-                "icon": "layout-dashboard"
+                "icon": "layout-dashboard",
+                "label": "Dashboard"
               },
               {
                 "icon": "rss",
@@ -973,17 +975,15 @@
                 "label": "Feed"
               },
               {
-                "label": "Notes",
                 "href": "/notes",
-                "icon": "file-text"
+                "icon": "file-text",
+                "label": "Notes"
               }
-            ],
-            "searchEvent": "ITEM_SEARCH",
-            "notifications": []
+            ]
           },
           "events": {
-            "NOTIFY_CLICK": "ITEM_NOTIFICATIONS_OPEN",
-            "SEARCH": "ITEM_SEARCH"
+            "SEARCH": "ITEM_SEARCH",
+            "NOTIFY_CLICK": "ITEM_NOTIFICATIONS_OPEN"
           }
         },
         {
@@ -1078,41 +1078,42 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "gap": "lg",
+                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
-                          "gap": "md",
-                          "align": "center",
                           "type": "stack",
+                          "direction": "horizontal",
                           "justify": "between",
+                          "align": "center",
+                          "gap": "md",
                           "children": [
                             {
-                              "type": "stack",
                               "align": "center",
+                              "direction": "horizontal",
                               "gap": "sm",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "package"
+                                  "name": "package",
+                                  "type": "icon"
                                 },
                                 {
-                                  "type": "typography",
+                                  "variant": "h2",
                                   "content": "Items",
-                                  "variant": "h2"
+                                  "type": "typography"
                                 }
-                              ],
-                              "direction": "horizontal"
+                              ]
                             },
                             {
                               "action": "CREATE",
+                              "label": "New Item",
                               "type": "button",
                               "variant": "primary",
-                              "label": "New Item",
                               "icon": "plus"
                             }
-                          ],
-                          "direction": "horizontal"
+                          ]
                         },
                         {
                           "type": "divider"
@@ -1122,14 +1123,13 @@
                             "@trait.ItemSearch",
                             "@trait.ItemFilter"
                           ],
-                          "direction": "horizontal",
-                          "gap": "md",
+                          "align": "center",
                           "type": "stack",
-                          "align": "center"
+                          "gap": "md",
+                          "direction": "horizontal"
                         },
                         "@trait.ItemBrowseList"
-                      ],
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -1148,6 +1148,7 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
                       "children": [
                         {
                           "type": "icon",
@@ -1155,21 +1156,20 @@
                         },
                         {
                           "content": "No notifications",
-                          "type": "typography",
-                          "variant": "h3"
+                          "variant": "h3",
+                          "type": "typography"
                         },
                         {
-                          "variant": "ghost",
                           "label": "Back",
-                          "type": "button",
-                          "action": "INIT"
+                          "variant": "ghost",
+                          "action": "INIT",
+                          "type": "button"
                         }
                       ],
+                      "direction": "vertical",
                       "type": "stack",
-                      "gap": "md",
-                      "className": "py-8",
                       "align": "center",
-                      "direction": "vertical"
+                      "className": "py-8"
                     }
                   ]
                 ]
@@ -1190,15 +1190,15 @@
           "ref": "Filter.traits.FilterTargetFilter",
           "name": "ItemFilter",
           "config": {
-            "event": "ITEM_FILTER",
             "filters": [
               {
-                "options": [],
                 "field": "category",
                 "label": "Category",
+                "options": [],
                 "filterType": "select"
               }
-            ]
+            ],
+            "event": "ITEM_FILTER"
           }
         },
         {
@@ -1206,7 +1206,6 @@
           "name": "ItemBrowseList",
           "linkedEntity": "Item",
           "config": {
-            "gap": "sm",
             "itemActions": [
               {
                 "variant": "ghost",
@@ -1214,43 +1213,44 @@
                 "label": "View"
               },
               {
+                "variant": "ghost",
                 "event": "EDIT",
-                "label": "Edit",
-                "variant": "ghost"
+                "label": "Edit"
               },
               {
-                "variant": "danger",
                 "label": "Delete",
+                "variant": "danger",
                 "event": "DELETE"
               }
             ],
             "cols": 2.0,
+            "gap": "sm",
             "fields": [
               {
-                "variant": "h3",
                 "name": "name",
+                "variant": "h3",
                 "icon": "package"
               },
               {
-                "name": "description",
-                "variant": "body"
+                "variant": "body",
+                "name": "description"
               },
               {
-                "name": "sku",
-                "variant": "caption"
+                "variant": "caption",
+                "name": "sku"
               },
               {
-                "name": "price",
                 "variant": "badge",
-                "format": "currency"
+                "format": "currency",
+                "name": "price"
               },
               {
-                "name": "quantity",
-                "variant": "badge"
+                "variant": "badge",
+                "name": "quantity"
               },
               {
-                "name": "category",
-                "variant": "caption"
+                "variant": "caption",
+                "name": "category"
               }
             ]
           },
@@ -1302,9 +1302,8 @@
           "name": "ItemCreate",
           "linkedEntity": "Item",
           "config": {
-            "title": "New Item",
-            "icon": "plus-circle",
             "mode": "create",
+            "icon": "plus-circle",
             "fields": [
               "name",
               "description",
@@ -1312,7 +1311,8 @@
               "price",
               "quantity",
               "category"
-            ]
+            ],
+            "title": "New Item"
           },
           "events": {
             "OPEN": "CREATE"
@@ -1341,9 +1341,9 @@
               "quantity",
               "category"
             ],
-            "icon": "edit",
             "title": "Edit Item",
-            "mode": "edit"
+            "mode": "edit",
+            "icon": "edit"
           },
           "events": {
             "OPEN": "EDIT"
@@ -1364,9 +1364,6 @@
           "name": "ItemView",
           "linkedEntity": "Item",
           "config": {
-            "mode": "edit",
-            "icon": "eye",
-            "title": "View Item",
             "fields": [
               "name",
               "description",
@@ -1374,7 +1371,10 @@
               "price",
               "quantity",
               "category"
-            ]
+            ],
+            "title": "View Item",
+            "mode": "edit",
+            "icon": "eye"
           },
           "events": {
             "OPEN": "VIEW"
@@ -1395,10 +1395,10 @@
           "name": "ItemDelete",
           "linkedEntity": "Item",
           "config": {
-            "icon": "alert-triangle",
-            "alertMessage": "This action cannot be undone.",
             "confirmLabel": "Delete",
-            "title": "Delete Item"
+            "title": "Delete Item",
+            "alertMessage": "This action cannot be undone.",
+            "icon": "alert-triangle"
           },
           "events": {
             "REQUEST": "DELETE",
@@ -1766,53 +1766,53 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "ActivityAppLayout",
           "config": {
-            "searchEvent": "ACTIVITY_SEARCH",
-            "appName": "App",
-            "notificationClickEvent": "ACTIVITY_NOTIFICATIONS_OPEN",
             "contentTrait": "@trait.ActivityCatalog",
             "navItems": [
               {
+                "href": "/contacts",
                 "icon": "users",
-                "label": "Contacts",
-                "href": "/contacts"
+                "label": "Contacts"
               },
               {
-                "label": "Items",
                 "href": "/items",
+                "label": "Items",
                 "icon": "package"
               },
               {
                 "icon": "activity",
-                "label": "Activities",
-                "href": "/activities"
+                "href": "/activities",
+                "label": "Activities"
               },
               {
+                "href": "/tasks",
                 "label": "Tasks",
-                "icon": "check-square",
-                "href": "/tasks"
+                "icon": "check-square"
               },
               {
+                "href": "/calendar",
                 "label": "Calendar",
-                "icon": "calendar",
-                "href": "/calendar"
+                "icon": "calendar"
               },
               {
                 "label": "Dashboard",
-                "icon": "layout-dashboard",
-                "href": "/widgets"
+                "href": "/widgets",
+                "icon": "layout-dashboard"
               },
               {
-                "icon": "rss",
+                "href": "/feed",
                 "label": "Feed",
-                "href": "/feed"
+                "icon": "rss"
               },
               {
-                "icon": "file-text",
+                "label": "Notes",
                 "href": "/notes",
-                "label": "Notes"
+                "icon": "file-text"
               }
             ],
-            "notifications": []
+            "searchEvent": "ACTIVITY_SEARCH",
+            "notifications": [],
+            "notificationClickEvent": "ACTIVITY_NOTIFICATIONS_OPEN",
+            "appName": "App"
           },
           "events": {
             "SEARCH": "ACTIVITY_SEARCH",
@@ -1896,19 +1896,19 @@
                         {
                           "gap": "sm",
                           "align": "center",
+                          "direction": "horizontal",
+                          "type": "stack",
                           "children": [
                             {
                               "type": "icon",
                               "name": "activity"
                             },
                             {
-                              "variant": "h2",
                               "type": "typography",
-                              "content": "Activities"
+                              "content": "Activities",
+                              "variant": "h2"
                             }
-                          ],
-                          "direction": "horizontal",
-                          "type": "stack"
+                          ]
                         },
                         {
                           "type": "divider"
@@ -1933,11 +1933,10 @@
                     "render-ui",
                     "main",
                     {
+                      "className": "py-8",
                       "gap": "md",
                       "type": "stack",
                       "direction": "vertical",
-                      "align": "center",
-                      "className": "py-8",
                       "children": [
                         {
                           "name": "bell",
@@ -1949,12 +1948,13 @@
                           "type": "typography"
                         },
                         {
-                          "label": "Back",
                           "action": "INIT",
-                          "type": "button",
-                          "variant": "ghost"
+                          "variant": "ghost",
+                          "label": "Back",
+                          "type": "button"
                         }
-                      ]
+                      ],
+                      "align": "center"
                     }
                   ]
                 ]
@@ -1969,23 +1969,6 @@
           "linkedEntity": "Activity",
           "config": {
             "cols": 1.0,
-            "itemActions": [
-              {
-                "variant": "ghost",
-                "label": "View",
-                "event": "VIEW"
-              },
-              {
-                "label": "Edit",
-                "event": "EDIT",
-                "variant": "ghost"
-              },
-              {
-                "variant": "danger",
-                "event": "DELETE",
-                "label": "Delete"
-              }
-            ],
             "fields": [
               {
                 "icon": "activity",
@@ -1997,20 +1980,37 @@
                 "name": "type"
               },
               {
-                "name": "actor",
-                "variant": "caption"
+                "variant": "caption",
+                "name": "actor"
               },
               {
                 "format": "date",
-                "name": "timestamp",
-                "variant": "caption"
+                "variant": "caption",
+                "name": "timestamp"
               },
               {
-                "variant": "badge",
-                "name": "status"
+                "name": "status",
+                "variant": "badge"
               }
             ],
-            "gap": "sm"
+            "gap": "sm",
+            "itemActions": [
+              {
+                "event": "VIEW",
+                "variant": "ghost",
+                "label": "View"
+              },
+              {
+                "event": "EDIT",
+                "label": "Edit",
+                "variant": "ghost"
+              },
+              {
+                "event": "DELETE",
+                "label": "Delete",
+                "variant": "danger"
+              }
+            ]
           },
           "listens": [
             {
@@ -2044,9 +2044,7 @@
           "name": "ActivityView",
           "linkedEntity": "Activity",
           "config": {
-            "title": "View Activity",
             "icon": "eye",
-            "mode": "edit",
             "fields": [
               "title",
               "type",
@@ -2054,7 +2052,9 @@
               "timestamp",
               "status",
               "notes"
-            ]
+            ],
+            "mode": "edit",
+            "title": "View Activity"
           },
           "events": {
             "OPEN": "VIEW"
@@ -2075,9 +2075,9 @@
           "name": "ActivityEdit",
           "linkedEntity": "Activity",
           "config": {
-            "title": "Edit Activity",
             "icon": "edit",
             "mode": "edit",
+            "title": "Edit Activity",
             "fields": [
               "title",
               "type",
@@ -2106,14 +2106,14 @@
           "name": "ActivityDelete",
           "linkedEntity": "Activity",
           "config": {
-            "confirmLabel": "Delete",
-            "title": "Delete Activity",
             "icon": "alert-triangle",
-            "alertMessage": "This action cannot be undone."
+            "confirmLabel": "Delete",
+            "alertMessage": "This action cannot be undone.",
+            "title": "Delete Activity"
           },
           "events": {
-            "CONFIRM": "CONFIRM_DELETE",
-            "REQUEST": "DELETE"
+            "REQUEST": "DELETE",
+            "CONFIRM": "CONFIRM_DELETE"
           },
           "listens": [
             {
@@ -2427,57 +2427,57 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "TaskAppLayout",
           "config": {
-            "searchEvent": "TASK_SEARCH",
-            "contentTrait": "@trait.TaskCatalog",
             "notifications": [],
+            "notificationClickEvent": "TASK_NOTIFICATIONS_OPEN",
+            "contentTrait": "@trait.TaskCatalog",
+            "appName": "App",
             "navItems": [
               {
-                "label": "Contacts",
+                "href": "/contacts",
                 "icon": "users",
-                "href": "/contacts"
+                "label": "Contacts"
               },
               {
                 "href": "/items",
-                "icon": "package",
-                "label": "Items"
+                "label": "Items",
+                "icon": "package"
               },
               {
-                "icon": "activity",
+                "href": "/activities",
                 "label": "Activities",
-                "href": "/activities"
+                "icon": "activity"
               },
               {
                 "icon": "check-square",
-                "label": "Tasks",
-                "href": "/tasks"
+                "href": "/tasks",
+                "label": "Tasks"
               },
               {
+                "label": "Calendar",
                 "icon": "calendar",
-                "href": "/calendar",
-                "label": "Calendar"
+                "href": "/calendar"
               },
               {
                 "href": "/widgets",
-                "label": "Dashboard",
-                "icon": "layout-dashboard"
+                "icon": "layout-dashboard",
+                "label": "Dashboard"
               },
               {
+                "label": "Feed",
                 "icon": "rss",
-                "href": "/feed",
-                "label": "Feed"
+                "href": "/feed"
               },
               {
-                "label": "Notes",
                 "href": "/notes",
-                "icon": "file-text"
+                "icon": "file-text",
+                "label": "Notes"
               }
             ],
-            "notificationClickEvent": "TASK_NOTIFICATIONS_OPEN",
-            "appName": "App"
+            "searchEvent": "TASK_SEARCH"
           },
           "events": {
-            "SEARCH": "TASK_SEARCH",
-            "NOTIFY_CLICK": "TASK_NOTIFICATIONS_OPEN"
+            "NOTIFY_CLICK": "TASK_NOTIFICATIONS_OPEN",
+            "SEARCH": "TASK_SEARCH"
           }
         },
         {
@@ -2572,42 +2572,42 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "gap": "lg",
                       "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
-                          "direction": "horizontal",
                           "justify": "between",
                           "gap": "md",
                           "align": "center",
                           "children": [
                             {
-                              "gap": "sm",
                               "children": [
                                 {
                                   "type": "icon",
                                   "name": "check-square"
                                 },
                                 {
+                                  "variant": "h2",
                                   "type": "typography",
-                                  "content": "Tasks",
-                                  "variant": "h2"
+                                  "content": "Tasks"
                                 }
                               ],
+                              "type": "stack",
+                              "gap": "sm",
                               "align": "center",
-                              "direction": "horizontal",
-                              "type": "stack"
+                              "direction": "horizontal"
                             },
                             {
-                              "type": "button",
-                              "variant": "primary",
                               "label": "New Task",
                               "action": "CREATE",
-                              "icon": "plus"
+                              "type": "button",
+                              "icon": "plus",
+                              "variant": "primary"
                             }
                           ],
-                          "type": "stack"
+                          "type": "stack",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
@@ -2636,28 +2636,28 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "md",
                       "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack",
                       "align": "center",
+                      "className": "py-8",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "bell"
+                          "name": "bell",
+                          "type": "icon"
                         },
                         {
-                          "variant": "h3",
                           "content": "No notifications",
-                          "type": "typography"
+                          "type": "typography",
+                          "variant": "h3"
                         },
                         {
-                          "label": "Back",
+                          "variant": "ghost",
                           "type": "button",
-                          "action": "INIT",
-                          "variant": "ghost"
+                          "label": "Back",
+                          "action": "INIT"
                         }
-                      ],
-                      "className": "py-8"
+                      ]
                     }
                   ]
                 ]
@@ -2670,6 +2670,8 @@
           "ref": "Selection.traits.SelectableItemSelection",
           "name": "TaskSelection",
           "config": {
+            "event": "TASK_STATUS_SELECT",
+            "title": "Filter by status",
             "options": [
               {
                 "label": "To Do",
@@ -2683,9 +2685,7 @@
                 "label": "Done",
                 "value": "done"
               }
-            ],
-            "event": "TASK_STATUS_SELECT",
-            "title": "Filter by status"
+            ]
           }
         },
         {
@@ -2693,41 +2693,25 @@
           "name": "TaskBrowseList",
           "linkedEntity": "Task",
           "config": {
+            "gap": "sm",
             "cols": 1.0,
-            "itemActions": [
-              {
-                "variant": "ghost",
-                "label": "View",
-                "event": "VIEW"
-              },
-              {
-                "label": "Edit",
-                "event": "EDIT",
-                "variant": "ghost"
-              },
-              {
-                "variant": "danger",
-                "event": "DELETE",
-                "label": "Delete"
-              }
-            ],
             "fields": [
               {
+                "name": "title",
                 "variant": "h4",
-                "icon": "check-square",
-                "name": "title"
+                "icon": "check-square"
               },
               {
-                "name": "description",
-                "variant": "body"
+                "variant": "body",
+                "name": "description"
               },
               {
                 "name": "assignee",
                 "variant": "caption"
               },
               {
-                "format": "date",
                 "variant": "caption",
+                "format": "date",
                 "name": "dueDate"
               },
               {
@@ -2739,7 +2723,23 @@
                 "name": "status"
               }
             ],
-            "gap": "sm"
+            "itemActions": [
+              {
+                "label": "View",
+                "variant": "ghost",
+                "event": "VIEW"
+              },
+              {
+                "event": "EDIT",
+                "variant": "ghost",
+                "label": "Edit"
+              },
+              {
+                "event": "DELETE",
+                "label": "Delete",
+                "variant": "danger"
+              }
+            ]
           },
           "listens": [
             {
@@ -2773,9 +2773,6 @@
           "name": "TaskCreate",
           "linkedEntity": "Task",
           "config": {
-            "icon": "plus-circle",
-            "title": "New Task",
-            "mode": "create",
             "fields": [
               "title",
               "description",
@@ -2783,7 +2780,10 @@
               "dueDate",
               "priority",
               "status"
-            ]
+            ],
+            "title": "New Task",
+            "mode": "create",
+            "icon": "plus-circle"
           },
           "events": {
             "OPEN": "CREATE"
@@ -2805,6 +2805,7 @@
           "linkedEntity": "Task",
           "config": {
             "title": "Edit Task",
+            "icon": "edit",
             "mode": "edit",
             "fields": [
               "title",
@@ -2813,8 +2814,7 @@
               "dueDate",
               "priority",
               "status"
-            ],
-            "icon": "edit"
+            ]
           },
           "events": {
             "OPEN": "EDIT"
@@ -2835,6 +2835,7 @@
           "name": "TaskView",
           "linkedEntity": "Task",
           "config": {
+            "mode": "edit",
             "fields": [
               "title",
               "description",
@@ -2844,7 +2845,6 @@
               "status"
             ],
             "title": "View Task",
-            "mode": "edit",
             "icon": "eye"
           },
           "events": {
@@ -2866,9 +2866,9 @@
           "name": "TaskDelete",
           "linkedEntity": "Task",
           "config": {
+            "title": "Delete Task",
             "icon": "alert-triangle",
             "alertMessage": "This action cannot be undone.",
-            "title": "Delete Task",
             "confirmLabel": "Delete"
           },
           "events": {
@@ -3224,16 +3224,18 @@
           "name": "CalendarAppLayout",
           "config": {
             "notifications": [],
+            "appName": "App",
+            "notificationClickEvent": "CAL_NOTIFICATIONS_OPEN",
             "navItems": [
               {
-                "icon": "users",
                 "href": "/contacts",
-                "label": "Contacts"
+                "label": "Contacts",
+                "icon": "users"
               },
               {
-                "label": "Items",
+                "icon": "package",
                 "href": "/items",
-                "icon": "package"
+                "label": "Items"
               },
               {
                 "icon": "activity",
@@ -3246,18 +3248,18 @@
                 "label": "Tasks"
               },
               {
-                "icon": "calendar",
                 "label": "Calendar",
+                "icon": "calendar",
                 "href": "/calendar"
               },
               {
                 "href": "/widgets",
-                "icon": "layout-dashboard",
-                "label": "Dashboard"
+                "label": "Dashboard",
+                "icon": "layout-dashboard"
               },
               {
-                "icon": "rss",
                 "label": "Feed",
+                "icon": "rss",
                 "href": "/feed"
               },
               {
@@ -3266,9 +3268,7 @@
                 "icon": "file-text"
               }
             ],
-            "notificationClickEvent": "CAL_NOTIFICATIONS_OPEN",
             "contentTrait": "@trait.CalendarCatalog",
-            "appName": "App",
             "searchEvent": "CAL_SEARCH"
           },
           "events": {
@@ -3368,40 +3368,37 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "stack",
                           "align": "center",
+                          "type": "stack",
+                          "gap": "md",
                           "children": [
                             {
+                              "gap": "sm",
+                              "type": "stack",
                               "direction": "horizontal",
                               "children": [
                                 {
-                                  "name": "calendar",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "calendar"
                                 },
                                 {
-                                  "content": "Calendar",
+                                  "variant": "h2",
                                   "type": "typography",
-                                  "variant": "h2"
+                                  "content": "Calendar"
                                 }
                               ],
-                              "type": "stack",
-                              "align": "center",
-                              "gap": "sm"
+                              "align": "center"
                             },
                             {
-                              "action": "CREATE",
-                              "type": "button",
-                              "label": "New Event",
                               "variant": "primary",
+                              "label": "New Event",
+                              "type": "button",
+                              "action": "CREATE",
                               "icon": "plus"
                             }
                           ],
-                          "gap": "md",
                           "justify": "between",
                           "direction": "horizontal"
                         },
@@ -3413,7 +3410,10 @@
                           "type": "divider"
                         },
                         "@trait.CalendarBrowseList"
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -3432,28 +3432,28 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical",
-                      "className": "py-8",
                       "children": [
                         {
-                          "name": "bell",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "bell"
                         },
                         {
                           "type": "typography",
-                          "variant": "h3",
-                          "content": "No notifications"
+                          "content": "No notifications",
+                          "variant": "h3"
                         },
                         {
-                          "label": "Back",
-                          "type": "button",
                           "action": "INIT",
-                          "variant": "ghost"
+                          "label": "Back",
+                          "variant": "ghost",
+                          "type": "button"
                         }
-                      ]
+                      ],
+                      "className": "py-8",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -3466,8 +3466,8 @@
           "ref": "Calendar.traits.CalendarEventCalendar",
           "name": "CalendarView",
           "config": {
-            "title": "Schedule",
             "labelField": "title",
+            "title": "Schedule",
             "dateField": "startTime"
           },
           "listens": [
@@ -3486,50 +3486,50 @@
           "name": "CalendarBrowseList",
           "linkedEntity": "ScheduledEvent",
           "config": {
-            "cols": 1.0,
-            "gap": "sm",
             "fields": [
               {
-                "variant": "h4",
+                "name": "title",
                 "icon": "calendar",
-                "name": "title"
+                "variant": "h4"
               },
               {
+                "variant": "caption",
                 "name": "startTime",
-                "format": "date",
-                "variant": "caption"
+                "format": "date"
               },
               {
-                "format": "date",
                 "name": "endTime",
-                "variant": "caption"
+                "variant": "caption",
+                "format": "date"
               },
               {
                 "variant": "body",
                 "name": "location"
               },
               {
-                "variant": "caption",
-                "name": "attendees"
+                "name": "attendees",
+                "variant": "caption"
               }
             ],
             "itemActions": [
               {
                 "label": "View",
-                "variant": "ghost",
-                "event": "VIEW"
-              },
-              {
-                "label": "Edit",
-                "event": "EDIT",
+                "event": "VIEW",
                 "variant": "ghost"
               },
               {
-                "variant": "danger",
+                "event": "EDIT",
+                "label": "Edit",
+                "variant": "ghost"
+              },
+              {
+                "event": "DELETE",
                 "label": "Delete",
-                "event": "DELETE"
+                "variant": "danger"
               }
-            ]
+            ],
+            "gap": "sm",
+            "cols": 1.0
           },
           "listens": [
             {
@@ -3565,6 +3565,7 @@
           "config": {
             "title": "New Event",
             "mode": "create",
+            "icon": "plus-circle",
             "fields": [
               "title",
               "startTime",
@@ -3572,8 +3573,7 @@
               "location",
               "attendees",
               "description"
-            ],
-            "icon": "plus-circle"
+            ]
           },
           "events": {
             "OPEN": "CREATE"
@@ -3594,8 +3594,8 @@
           "name": "CalendarEdit",
           "linkedEntity": "ScheduledEvent",
           "config": {
-            "mode": "edit",
             "title": "Edit Event",
+            "mode": "edit",
             "icon": "edit",
             "fields": [
               "title",
@@ -3625,14 +3625,14 @@
           "name": "CalendarDelete",
           "linkedEntity": "ScheduledEvent",
           "config": {
-            "icon": "alert-triangle",
             "title": "Delete Event",
+            "alertMessage": "This action cannot be undone.",
             "confirmLabel": "Delete",
-            "alertMessage": "This action cannot be undone."
+            "icon": "alert-triangle"
           },
           "events": {
-            "REQUEST": "DELETE",
-            "CONFIRM": "CONFIRM_DELETE"
+            "CONFIRM": "CONFIRM_DELETE",
+            "REQUEST": "DELETE"
           },
           "listens": [
             {
@@ -3976,7 +3976,11 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "WidgetAppLayout",
           "config": {
+            "appName": "App",
+            "notifications": [],
             "contentTrait": "@trait.WidgetCatalog",
+            "searchEvent": "WIDGET_SEARCH",
+            "notificationClickEvent": "WIDGET_NOTIFICATIONS_OPEN",
             "navItems": [
               {
                 "icon": "users",
@@ -3984,45 +3988,41 @@
                 "href": "/contacts"
               },
               {
+                "label": "Items",
                 "href": "/items",
-                "icon": "package",
-                "label": "Items"
+                "icon": "package"
               },
               {
                 "label": "Activities",
-                "icon": "activity",
-                "href": "/activities"
+                "href": "/activities",
+                "icon": "activity"
               },
               {
+                "label": "Tasks",
                 "href": "/tasks",
-                "icon": "check-square",
-                "label": "Tasks"
+                "icon": "check-square"
               },
               {
                 "label": "Calendar",
-                "icon": "calendar",
-                "href": "/calendar"
+                "href": "/calendar",
+                "icon": "calendar"
               },
               {
+                "href": "/widgets",
                 "label": "Dashboard",
-                "icon": "layout-dashboard",
-                "href": "/widgets"
+                "icon": "layout-dashboard"
               },
               {
-                "icon": "rss",
+                "label": "Feed",
                 "href": "/feed",
-                "label": "Feed"
+                "icon": "rss"
               },
               {
-                "label": "Notes",
                 "href": "/notes",
+                "label": "Notes",
                 "icon": "file-text"
               }
-            ],
-            "searchEvent": "WIDGET_SEARCH",
-            "notifications": [],
-            "notificationClickEvent": "WIDGET_NOTIFICATIONS_OPEN",
-            "appName": "App"
+            ]
           },
           "events": {
             "NOTIFY_CLICK": "WIDGET_NOTIFICATIONS_OPEN",
@@ -4099,25 +4099,25 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
+                      "type": "stack",
                       "direction": "vertical",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
                           "align": "center",
+                          "type": "stack",
+                          "gap": "sm",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "name": "layout-dashboard",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "layout-dashboard"
                             },
                             {
-                              "content": "Dashboard",
                               "variant": "h2",
-                              "type": "typography"
+                              "type": "typography",
+                              "content": "Dashboard"
                             }
-                          ],
-                          "gap": "sm"
+                          ]
                         },
                         {
                           "type": "divider"
@@ -4129,7 +4129,7 @@
                         },
                         "@trait.WidgetBrowseList"
                       ],
-                      "type": "stack"
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -4148,15 +4148,14 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
+                      "gap": "md",
                       "className": "py-8",
                       "align": "center",
-                      "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "bell"
+                          "name": "bell",
+                          "type": "icon"
                         },
                         {
                           "type": "typography",
@@ -4164,12 +4163,13 @@
                           "content": "No notifications"
                         },
                         {
-                          "action": "INIT",
-                          "type": "button",
                           "variant": "ghost",
+                          "type": "button",
+                          "action": "INIT",
                           "label": "Back"
                         }
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -4185,17 +4185,17 @@
             "title": "Key Metrics",
             "metrics": [
               {
-                "icon": "layout-dashboard",
-                "variant": "primary",
                 "aggregation": "count",
+                "variant": "primary",
                 "format": "number",
-                "label": "Widgets"
+                "label": "Widgets",
+                "icon": "layout-dashboard"
               },
               {
-                "label": "Total Value",
-                "icon": "trending-up",
                 "variant": "success",
+                "label": "Total Value",
                 "field": "value",
+                "icon": "trending-up",
                 "aggregation": "sum",
                 "format": "number"
               }
@@ -4216,13 +4216,13 @@
           "ref": "Graphs.traits.GraphItemGraph",
           "name": "WidgetGraphs",
           "config": {
-            "chartType": "pie",
-            "categoryField": "type",
-            "aggregation": "count",
-            "height": 240.0,
-            "subtitle": "Distribution",
             "title": "Widgets by type",
-            "showLegend": true
+            "aggregation": "count",
+            "showLegend": true,
+            "categoryField": "type",
+            "chartType": "pie",
+            "height": 240.0,
+            "subtitle": "Distribution"
           },
           "listens": [
             {
@@ -4247,42 +4247,42 @@
                 "variant": "ghost"
               },
               {
-                "event": "EDIT",
                 "variant": "ghost",
-                "label": "Edit"
+                "label": "Edit",
+                "event": "EDIT"
               },
               {
-                "variant": "danger",
                 "label": "Delete",
+                "variant": "danger",
                 "event": "DELETE"
               }
             ],
-            "gap": "sm",
             "fields": [
               {
-                "name": "title",
+                "icon": "layout-dashboard",
                 "variant": "h4",
-                "icon": "layout-dashboard"
+                "name": "title"
               },
               {
                 "name": "type",
                 "variant": "badge"
               },
               {
-                "variant": "caption",
-                "name": "label"
+                "name": "label",
+                "variant": "caption"
               },
               {
-                "format": "number",
                 "variant": "badge",
+                "format": "number",
                 "name": "value"
               },
               {
-                "name": "dataSource",
-                "variant": "caption"
+                "variant": "caption",
+                "name": "dataSource"
               }
             ],
-            "cols": 2.0
+            "cols": 2.0,
+            "gap": "sm"
           },
           "listens": [
             {
@@ -4317,6 +4317,7 @@
           "linkedEntity": "Widget",
           "config": {
             "title": "View Widget",
+            "icon": "eye",
             "mode": "edit",
             "fields": [
               "title",
@@ -4325,8 +4326,7 @@
               "value",
               "dataSource",
               "refreshInterval"
-            ],
-            "icon": "eye"
+            ]
           },
           "events": {
             "OPEN": "VIEW"
@@ -4348,6 +4348,7 @@
           "linkedEntity": "Widget",
           "config": {
             "icon": "edit",
+            "title": "Edit Widget",
             "mode": "edit",
             "fields": [
               "title",
@@ -4356,8 +4357,7 @@
               "value",
               "dataSource",
               "refreshInterval"
-            ],
-            "title": "Edit Widget"
+            ]
           },
           "events": {
             "OPEN": "EDIT"
@@ -4378,10 +4378,10 @@
           "name": "WidgetDelete",
           "linkedEntity": "Widget",
           "config": {
+            "alertMessage": "This action cannot be undone.",
             "confirmLabel": "Delete",
             "icon": "alert-triangle",
-            "title": "Delete Widget",
-            "alertMessage": "This action cannot be undone."
+            "title": "Delete Widget"
           },
           "events": {
             "REQUEST": "DELETE",
@@ -4688,16 +4688,19 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "FeedAppLayout",
           "config": {
+            "notifications": [],
+            "appName": "App",
+            "searchEvent": "FEED_SEARCH",
             "navItems": [
               {
-                "label": "Contacts",
+                "icon": "users",
                 "href": "/contacts",
-                "icon": "users"
+                "label": "Contacts"
               },
               {
-                "icon": "package",
+                "href": "/items",
                 "label": "Items",
-                "href": "/items"
+                "icon": "package"
               },
               {
                 "icon": "activity",
@@ -4705,8 +4708,8 @@
                 "href": "/activities"
               },
               {
-                "href": "/tasks",
                 "icon": "check-square",
+                "href": "/tasks",
                 "label": "Tasks"
               },
               {
@@ -4715,30 +4718,27 @@
                 "href": "/calendar"
               },
               {
+                "icon": "layout-dashboard",
                 "label": "Dashboard",
-                "href": "/widgets",
-                "icon": "layout-dashboard"
+                "href": "/widgets"
               },
               {
-                "label": "Feed",
+                "icon": "rss",
                 "href": "/feed",
-                "icon": "rss"
+                "label": "Feed"
               },
               {
+                "label": "Notes",
                 "href": "/notes",
-                "icon": "file-text",
-                "label": "Notes"
+                "icon": "file-text"
               }
             ],
-            "searchEvent": "FEED_SEARCH",
-            "notificationClickEvent": "FEED_NOTIFICATIONS_OPEN",
             "contentTrait": "@trait.FeedCatalog",
-            "notifications": [],
-            "appName": "App"
+            "notificationClickEvent": "FEED_NOTIFICATIONS_OPEN"
           },
           "events": {
-            "SEARCH": "FEED_SEARCH",
-            "NOTIFY_CLICK": "FEED_NOTIFICATIONS_OPEN"
+            "NOTIFY_CLICK": "FEED_NOTIFICATIONS_OPEN",
+            "SEARCH": "FEED_SEARCH"
           }
         },
         {
@@ -4834,48 +4834,48 @@
                     "main",
                     {
                       "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
                       "children": [
                         {
+                          "justify": "between",
+                          "align": "center",
+                          "type": "stack",
                           "children": [
                             {
+                              "direction": "horizontal",
                               "type": "stack",
+                              "gap": "sm",
+                              "align": "center",
                               "children": [
                                 {
-                                  "name": "rss",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "rss"
                                 },
                                 {
                                   "type": "typography",
-                                  "variant": "h2",
-                                  "content": "Feed"
+                                  "content": "Feed",
+                                  "variant": "h2"
                                 }
-                              ],
-                              "gap": "sm",
-                              "direction": "horizontal",
-                              "align": "center"
+                              ]
                             },
                             {
-                              "type": "button",
-                              "icon": "plus",
                               "label": "New Post",
                               "action": "CREATE",
-                              "variant": "primary"
+                              "type": "button",
+                              "variant": "primary",
+                              "icon": "plus"
                             }
                           ],
-                          "justify": "between",
                           "direction": "horizontal",
-                          "gap": "md",
-                          "type": "stack",
-                          "align": "center"
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
                         },
                         "@trait.FeedBrowseList",
                         "@trait.FeedPagination"
-                      ],
-                      "gap": "lg",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -4895,26 +4895,26 @@
                     "main",
                     {
                       "align": "center",
-                      "className": "py-8",
                       "gap": "md",
-                      "type": "stack",
+                      "className": "py-8",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "bell"
+                          "name": "bell",
+                          "type": "icon"
                         },
                         {
-                          "type": "typography",
+                          "content": "No notifications",
                           "variant": "h3",
-                          "content": "No notifications"
+                          "type": "typography"
                         },
                         {
-                          "type": "button",
                           "label": "Back",
-                          "variant": "ghost",
-                          "action": "INIT"
+                          "action": "INIT",
+                          "type": "button",
+                          "variant": "ghost"
                         }
                       ],
+                      "type": "stack",
                       "direction": "vertical"
                     }
                   ]
@@ -4949,8 +4949,8 @@
             "fields": [
               {
                 "variant": "h3",
-                "name": "title",
-                "icon": "rss"
+                "icon": "rss",
+                "name": "title"
               },
               {
                 "variant": "body",
@@ -4962,20 +4962,19 @@
               },
               {
                 "format": "date",
-                "name": "postedAt",
-                "variant": "caption"
+                "variant": "caption",
+                "name": "postedAt"
               },
               {
                 "variant": "badge",
                 "name": "tags"
               }
             ],
-            "cols": 1.0,
             "gap": "sm",
             "itemActions": [
               {
-                "label": "View",
                 "event": "VIEW",
+                "label": "View",
                 "variant": "ghost"
               },
               {
@@ -4985,10 +4984,11 @@
               },
               {
                 "variant": "danger",
-                "event": "DELETE",
-                "label": "Delete"
+                "label": "Delete",
+                "event": "DELETE"
               }
-            ]
+            ],
+            "cols": 1.0
           },
           "listens": [
             {
@@ -5022,16 +5022,16 @@
           "name": "FeedCreate",
           "linkedEntity": "FeedPost",
           "config": {
-            "icon": "plus-circle",
             "mode": "create",
+            "title": "New Post",
+            "icon": "plus-circle",
             "fields": [
               "title",
               "body",
               "author",
               "postedAt",
               "tags"
-            ],
-            "title": "New Post"
+            ]
           },
           "events": {
             "OPEN": "CREATE"
@@ -5052,8 +5052,6 @@
           "name": "FeedEdit",
           "linkedEntity": "FeedPost",
           "config": {
-            "title": "Edit Post",
-            "mode": "edit",
             "fields": [
               "title",
               "body",
@@ -5061,7 +5059,9 @@
               "postedAt",
               "tags"
             ],
-            "icon": "edit"
+            "title": "Edit Post",
+            "icon": "edit",
+            "mode": "edit"
           },
           "events": {
             "OPEN": "EDIT"
@@ -5082,14 +5082,14 @@
           "name": "FeedDelete",
           "linkedEntity": "FeedPost",
           "config": {
-            "alertMessage": "This action cannot be undone.",
             "title": "Delete Post",
+            "alertMessage": "This action cannot be undone.",
             "confirmLabel": "Delete",
             "icon": "alert-triangle"
           },
           "events": {
-            "CONFIRM": "CONFIRM_DELETE",
-            "REQUEST": "DELETE"
+            "REQUEST": "DELETE",
+            "CONFIRM": "CONFIRM_DELETE"
           },
           "listens": [
             {
@@ -5425,6 +5425,8 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "NoteAppLayout",
           "config": {
+            "contentTrait": "@trait.NoteCatalog",
+            "notificationClickEvent": "NOTE_NOTIFICATIONS_OPEN",
             "navItems": [
               {
                 "icon": "users",
@@ -5433,49 +5435,47 @@
               },
               {
                 "label": "Items",
-                "icon": "package",
-                "href": "/items"
+                "href": "/items",
+                "icon": "package"
               },
               {
-                "icon": "activity",
+                "href": "/activities",
                 "label": "Activities",
-                "href": "/activities"
+                "icon": "activity"
               },
               {
+                "label": "Tasks",
                 "href": "/tasks",
-                "icon": "check-square",
-                "label": "Tasks"
+                "icon": "check-square"
               },
               {
-                "label": "Calendar",
+                "href": "/calendar",
                 "icon": "calendar",
-                "href": "/calendar"
+                "label": "Calendar"
               },
               {
                 "label": "Dashboard",
-                "href": "/widgets",
-                "icon": "layout-dashboard"
+                "icon": "layout-dashboard",
+                "href": "/widgets"
               },
               {
                 "label": "Feed",
-                "icon": "rss",
-                "href": "/feed"
+                "href": "/feed",
+                "icon": "rss"
               },
               {
-                "label": "Notes",
                 "href": "/notes",
+                "label": "Notes",
                 "icon": "file-text"
               }
             ],
-            "notifications": [],
-            "contentTrait": "@trait.NoteCatalog",
-            "notificationClickEvent": "NOTE_NOTIFICATIONS_OPEN",
+            "searchEvent": "NOTE_SEARCH",
             "appName": "App",
-            "searchEvent": "NOTE_SEARCH"
+            "notifications": []
           },
           "events": {
-            "NOTIFY_CLICK": "NOTE_NOTIFICATIONS_OPEN",
-            "SEARCH": "NOTE_SEARCH"
+            "SEARCH": "NOTE_SEARCH",
+            "NOTIFY_CLICK": "NOTE_NOTIFICATIONS_OPEN"
           }
         },
         {
@@ -5570,13 +5570,18 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
+                          "justify": "between",
+                          "align": "center",
+                          "direction": "horizontal",
+                          "gap": "md",
                           "children": [
                             {
+                              "gap": "sm",
+                              "type": "stack",
+                              "align": "center",
+                              "direction": "horizontal",
                               "children": [
                                 {
                                   "type": "icon",
@@ -5587,25 +5592,17 @@
                                   "type": "typography",
                                   "variant": "h2"
                                 }
-                              ],
-                              "gap": "sm",
-                              "direction": "horizontal",
-                              "type": "stack",
-                              "align": "center"
+                              ]
                             },
                             {
-                              "type": "button",
-                              "label": "New Note",
                               "icon": "plus",
+                              "label": "New Note",
                               "variant": "primary",
-                              "action": "CREATE"
+                              "action": "CREATE",
+                              "type": "button"
                             }
                           ],
-                          "gap": "md",
-                          "direction": "horizontal",
-                          "align": "center",
-                          "type": "stack",
-                          "justify": "between"
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
@@ -5615,7 +5612,10 @@
                           "type": "divider"
                         },
                         "@trait.NoteBrowseList"
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -5634,28 +5634,28 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack",
                       "children": [
                         {
-                          "name": "bell",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "bell"
                         },
                         {
-                          "variant": "h3",
+                          "type": "typography",
                           "content": "No notifications",
-                          "type": "typography"
+                          "variant": "h3"
                         },
                         {
                           "type": "button",
-                          "action": "INIT",
+                          "variant": "ghost",
                           "label": "Back",
-                          "variant": "ghost"
+                          "action": "INIT"
                         }
                       ],
-                      "direction": "vertical",
                       "className": "py-8",
-                      "type": "stack",
-                      "gap": "md"
+                      "align": "center"
                     }
                   ]
                 ]
@@ -5668,8 +5668,8 @@
           "ref": "Search.traits.SearchResultSearch",
           "name": "NoteSearch",
           "config": {
-            "placeholder": "Search notes…",
-            "event": "NOTE_SEARCH"
+            "event": "NOTE_SEARCH",
+            "placeholder": "Search notes…"
           }
         },
         {
@@ -5677,7 +5677,6 @@
           "name": "NoteBrowseList",
           "linkedEntity": "Note",
           "config": {
-            "cols": 1.0,
             "fields": [
               {
                 "icon": "file-text",
@@ -5698,12 +5697,11 @@
                 "name": "updatedAt"
               }
             ],
-            "gap": "sm",
             "itemActions": [
               {
+                "event": "VIEW",
                 "label": "View",
-                "variant": "ghost",
-                "event": "VIEW"
+                "variant": "ghost"
               },
               {
                 "variant": "ghost",
@@ -5712,10 +5710,12 @@
               },
               {
                 "event": "DELETE",
-                "label": "Delete",
-                "variant": "danger"
+                "variant": "danger",
+                "label": "Delete"
               }
-            ]
+            ],
+            "cols": 1.0,
+            "gap": "sm"
           },
           "listens": [
             {
@@ -5757,8 +5757,7 @@
           "name": "NoteCreate",
           "linkedEntity": "Note",
           "config": {
-            "icon": "plus-circle",
-            "mode": "create",
+            "title": "New Note",
             "fields": [
               "title",
               "body",
@@ -5766,7 +5765,8 @@
               "createdAt",
               "updatedAt"
             ],
-            "title": "New Note"
+            "mode": "create",
+            "icon": "plus-circle"
           },
           "events": {
             "OPEN": "CREATE"
@@ -5787,7 +5787,6 @@
           "name": "NoteEdit",
           "linkedEntity": "Note",
           "config": {
-            "icon": "edit",
             "mode": "edit",
             "fields": [
               "title",
@@ -5796,6 +5795,7 @@
               "createdAt",
               "updatedAt"
             ],
+            "icon": "edit",
             "title": "Edit Note"
           },
           "events": {
@@ -5817,6 +5817,7 @@
           "name": "NoteView",
           "linkedEntity": "Note",
           "config": {
+            "mode": "edit",
             "fields": [
               "title",
               "body",
@@ -5824,9 +5825,8 @@
               "createdAt",
               "updatedAt"
             ],
-            "mode": "edit",
-            "title": "View Note",
-            "icon": "eye"
+            "icon": "eye",
+            "title": "View Note"
           },
           "events": {
             "OPEN": "VIEW"
@@ -5847,9 +5847,9 @@
           "name": "NoteDelete",
           "linkedEntity": "Note",
           "config": {
-            "title": "Delete Note",
-            "alertMessage": "This action cannot be undone.",
             "confirmLabel": "Delete",
+            "alertMessage": "This action cannot be undone.",
+            "title": "Delete Note",
             "icon": "alert-triangle"
           },
           "events": {

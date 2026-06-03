@@ -50,21 +50,21 @@ export interface StdNotifyOnEventNotificationDispatchedPayload {
  */
 export interface StdNotifyOnEventConfig {
   /** Default: `[]` */
-  recipients?: string[];
+  suppressionList?: string[];
   /** Default: `[]` */
   listensFor?: string[];
-  /** Default: `"info"` */
-  severity?: string;
-  /** Default: `0` */
-  frequencyCapPerWeek?: number;
   /** Default: `""` */
   template?: string;
-  /** Default: `[]` */
-  suppressionList?: string[];
-  /** Default: `{"start":"","end":""}` */
-  quietHours?: EntityRow;
   /** Default: `"in-app"` */
   notifyChannel?: string;
+  /** Default: `0` */
+  frequencyCapPerWeek?: number;
+  /** Default: `[]` */
+  recipients?: string[];
+  /** Default: `{"start":"","end":""}` */
+  quietHours?: EntityRow;
+  /** Default: `"info"` */
+  severity?: string;
 }
 
 /**

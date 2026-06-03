@@ -446,8 +446,8 @@
                     "ApprovalRequest",
                     {
                       "emit": {
-                        "failure": "ApprovalRequestLoadFailed",
-                        "success": "ApprovalRequestLoaded"
+                        "success": "ApprovalRequestLoaded",
+                        "failure": "ApprovalRequestLoadFailed"
                       }
                     }
                   ],
@@ -456,21 +456,21 @@
                     "main",
                     {
                       "className": "py-12",
-                      "direction": "vertical",
                       "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
                       "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Loading approval queue…",
-                          "color": "muted",
                           "type": "typography",
+                          "color": "muted",
+                          "content": "Loading approval queue…",
                           "variant": "caption"
                         }
-                      ],
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -485,13 +485,15 @@
                     "main",
                     {
                       "type": "stack",
-                      "gap": "md",
                       "children": [
                         {
+                          "align": "center",
+                          "direction": "horizontal",
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "shield-check"
+                              "name": "shield-check",
+                              "type": "icon"
                             },
                             {
                               "variant": "h3",
@@ -499,53 +501,51 @@
                               "content": "Approval queue"
                             }
                           ],
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center"
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "type": "data-grid",
-                          "fields": [
+                          "entity": "@payload.data",
+                          "gap": "sm",
+                          "itemActions": [
                             {
-                              "name": "gatedEvent",
-                              "label": "Action",
-                              "variant": "badge"
+                              "label": "Approve",
+                              "event": "APPROVE",
+                              "icon": "check",
+                              "variant": "primary"
                             },
                             {
-                              "name": "requestedAt",
-                              "label": "Requested",
-                              "variant": "caption"
-                            },
-                            {
-                              "variant": "badge",
-                              "name": "status",
-                              "label": "Status"
+                              "label": "Deny",
+                              "event": "DENY",
+                              "variant": "danger",
+                              "icon": "x"
                             }
                           ],
                           "look": "@config.tableLook",
-                          "cols": 1.0,
-                          "itemActions": [
+                          "fields": [
                             {
-                              "variant": "primary",
-                              "icon": "check",
-                              "label": "Approve",
-                              "event": "APPROVE"
+                              "name": "gatedEvent",
+                              "variant": "badge",
+                              "label": "Action"
                             },
                             {
-                              "variant": "danger",
-                              "icon": "x",
-                              "event": "DENY",
-                              "label": "Deny"
+                              "label": "Requested",
+                              "variant": "caption",
+                              "name": "requestedAt"
+                            },
+                            {
+                              "label": "Status",
+                              "variant": "badge",
+                              "name": "status"
                             }
                           ],
-                          "entity": "@payload.data",
-                          "gap": "sm"
+                          "cols": 1.0
                         }
                       ],
+                      "gap": "md",
                       "direction": "vertical"
                     }
                   ]
@@ -659,8 +659,8 @@
                     "ApprovalRequest",
                     {
                       "emit": {
-                        "failure": "ApprovalRequestLoadFailed",
-                        "success": "ApprovalRequestLoaded"
+                        "success": "ApprovalRequestLoaded",
+                        "failure": "ApprovalRequestLoadFailed"
                       }
                     }
                   ]
@@ -675,9 +675,9 @@
                     "render-ui",
                     "main",
                     {
+                      "variant": "error",
                       "type": "alert",
-                      "message": "@payload.error",
-                      "variant": "error"
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -710,22 +710,27 @@
             ]
           },
           "config": {
-            "threshold": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Auto-approve threshold",
-              "description": "Below this value, requests should be auto-approved. v1.0 declarative only; wiring lands in v1.1 (gap).",
+            "valueField": {
+              "type": "string",
+              "default": "",
+              "label": "Value field",
+              "description": "Payload field name to compare against threshold (e.g. 'amount' on a RefundRequested event). v1.0 declarative only.",
+              "tier": "internal"
+            },
+            "enabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Require approval",
+              "description": "Require sign-off before a record is finalized. Off by default.",
+              "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, approval, needs approval, sign-off, signed off, review before, gatekeeper, editor approval, publishing approval, draft approval, content review, requires approval, manager approval, supervisor approval, admin approval, before going live",
               "tier": "policy"
             },
-            "escalationRoles": {
-              "type": "[string]",
-              "default": [],
-              "label": "Escalation roles",
-              "description": "Roles notified when a request escalates (compose sibling std-notify-on-event).",
-              "tier": "policy",
-              "items": {
-                "type": "string"
-              }
+            "escalationHours": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Escalation hours",
+              "description": "Hours a request can sit pending before escalating. v1.0 declarative only; per-row escalation needs loop-with-emit primitive (gap).",
+              "tier": "policy"
             },
             "approverRoles": {
               "type": "[string]",
@@ -744,6 +749,16 @@
               "description": "Skip the review queue when the gated event's value is below the threshold. v1.0 declarative only.",
               "tier": "policy"
             },
+            "escalationRoles": {
+              "type": "[string]",
+              "default": [],
+              "label": "Escalation roles",
+              "description": "Roles notified when a request escalates (compose sibling std-notify-on-event).",
+              "tier": "policy",
+              "items": {
+                "type": "string"
+              }
+            },
             "tableLook": {
               "type": "string",
               "default": "dense",
@@ -758,26 +773,11 @@
                 "card-rows"
               ]
             },
-            "enabled": {
-              "type": "boolean",
-              "default": false,
-              "label": "Enabled",
-              "description": "Whether the approval gate is active for the host orbital. Off by default; turn on to require sign-off.",
-              "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, approval, needs approval, sign-off, signed off, review before, gatekeeper, editor approval, publishing approval, draft approval, content review, requires approval, manager approval, supervisor approval, admin approval, before going live",
-              "tier": "policy"
-            },
-            "valueField": {
-              "type": "string",
-              "default": "",
-              "label": "Value field",
-              "description": "Payload field name to compare against threshold (e.g. 'amount' on a RefundRequested event). v1.0 declarative only.",
-              "tier": "policy"
-            },
-            "escalationHours": {
+            "threshold": {
               "type": "number",
               "default": 0.0,
-              "label": "Escalation hours",
-              "description": "Hours a request can sit pending before escalating. v1.0 declarative only; per-row escalation needs loop-with-emit primitive (gap).",
+              "label": "Auto-approve threshold",
+              "description": "Below this value, requests should be auto-approved. v1.0 declarative only; wiring lands in v1.1 (gap).",
               "tier": "policy"
             }
           },
