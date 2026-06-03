@@ -250,6 +250,9 @@ orbital ItemOrbital {
   uses Search       from "std/behaviors/std-search"
   uses Filter       from "std/behaviors/std-filter"
   uses Browse       from "std/behaviors/std-browse"
+  uses Approval     from "std/behaviors/std-approval-gate"
+  uses Erasure      from "std/behaviors/std-data-erasure"
+  uses ModQueue     from "std/behaviors/std-mod-queue"
 
   entity Item [persistent: items] {
     id : string!
@@ -480,6 +483,19 @@ orbital ItemOrbital {
       ItemEdit.SAVE           -> DO_UPDATE
       ItemDelete.CONFIRM_DELETE -> DO_DELETE
     }
+  }
+
+  ;; Governance policies — composed inactive (enabled:false). The studio
+  ;; questionnaire surfaces their enabled + sub-knobs (@tier "policy");
+  ;; flipping enabled:true injects the approval / erasure / moderation queue.
+  trait ItemApproval = Approval.traits.ApprovalGateReview {
+    config: { enabled: false }
+  }
+  trait ItemErasure = Erasure.traits.ErasureWorkflow {
+    config: { enabled: false, targetEntity: "Item" }
+  }
+  trait ItemModeration = ModQueue.traits.ModQueueItemReview {
+    config: { enabled: false }
   }
 
   page "/items" as ItemsPage -> ItemAppLayout, ItemCatalog, ItemSearch, ItemFilter, ItemBrowseList, ItemCreate, ItemEdit, ItemView, ItemDelete, ItemPersistor

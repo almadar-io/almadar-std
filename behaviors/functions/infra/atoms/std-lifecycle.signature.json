@@ -75,7 +75,7 @@
             "default": false,
             "label": "Dry-run mode",
             "description": "When true, log scan results without emitting transitions.",
-            "tier": "domain"
+            "tier": "infra"
           },
           {
             "key": "enabled",
@@ -84,7 +84,7 @@
             "label": "Enabled",
             "description": "Whether the lifecycle scheduler is active for the host orbital. Off by default; turn on to enforce retention / status transitions.",
             "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, retention, ttl, expire, archive after, sunset, lifecycle, age out, time-based status, scheduled transitions, expire old records, auto-archive",
-            "tier": "domain"
+            "tier": "infra"
           },
           {
             "key": "rules",
@@ -92,31 +92,9 @@
             "default": [],
             "label": "Lifecycle rules",
             "description": "When a record's status is fromStatus and its dateField is older than condition.value days (kind='ageDays'), transition to toStatus. v1.0 declarative only — wiring lands in v1.1 (gap).",
-            "tier": "domain",
+            "tier": "infra",
             "items": {
               "properties": {
-                "condition": {
-                  "name": "condition",
-                  "required": false,
-                  "properties": {
-                    "dateField": {
-                      "name": "dateField",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "kind": {
-                      "name": "kind",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "value": {
-                      "name": "value",
-                      "required": false,
-                      "type": "number"
-                    }
-                  },
-                  "type": "object"
-                },
                 "fromStatus": {
                   "name": "fromStatus",
                   "required": false,
@@ -126,6 +104,28 @@
                   "name": "toStatus",
                   "required": false,
                   "type": "string"
+                },
+                "condition": {
+                  "name": "condition",
+                  "required": false,
+                  "properties": {
+                    "kind": {
+                      "name": "kind",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "value": {
+                      "name": "value",
+                      "required": false,
+                      "type": "number"
+                    },
+                    "dateField": {
+                      "name": "dateField",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 }
               },
               "type": "object"
@@ -137,7 +137,7 @@
             "default": "",
             "label": "Target entity",
             "description": "Entity name to scan (e.g. 'InvoiceRecord'). v1.1 will drive SET_STATUS transitions on this entity.",
-            "tier": "domain"
+            "tier": "infra"
           }
         ],
         "capabilities": []

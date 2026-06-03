@@ -75,14 +75,14 @@ export interface StdLifecycleLifecycleRunFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdLifecycleConfig {
-  /** Default: `false` */
-  dryRun?: boolean;
-  /** Default: `[]` */
-  rules?: EntityRow[];
-  /** Default: `false` */
-  enabled?: boolean;
   /** Default: `""` */
   targetEntity?: string;
+  /** Default: `false` */
+  dryRun?: boolean;
+  /** Default: `false` */
+  enabled?: boolean;
+  /** Default: `[]` */
+  rules?: EntityRow[];
 }
 
 /**

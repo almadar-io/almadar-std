@@ -493,22 +493,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "align": "center",
-                      "type": "stack",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "type": "typography",
                           "variant": "caption",
-                          "color": "muted",
                           "content": "Loading moderation queue…",
-                          "type": "typography"
+                          "color": "muted"
                         }
                       ],
-                      "gap": "md"
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -522,13 +522,11 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "direction": "horizontal",
                           "type": "stack",
-                          "gap": "sm",
                           "children": [
                             {
                               "name": "shield-alert",
@@ -539,16 +537,35 @@
                               "content": "@config.title",
                               "variant": "h3"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "look": "@config.tableLook",
-                          "type": "data-grid",
-                          "gap": "sm",
-                          "cols": 1.0,
+                          "itemActions": [
+                            {
+                              "variant": "primary",
+                              "label": "Approve",
+                              "event": "APPROVE",
+                              "icon": "check"
+                            },
+                            {
+                              "label": "Reject",
+                              "variant": "danger",
+                              "icon": "x",
+                              "event": "REJECT"
+                            },
+                            {
+                              "icon": "alert-triangle",
+                              "variant": "secondary",
+                              "label": "Escalate",
+                              "event": "ESCALATE"
+                            }
+                          ],
+                          "entity": "@payload.data",
                           "fields": [
                             {
                               "variant": "badge",
@@ -561,40 +578,23 @@
                               "variant": "caption"
                             },
                             {
-                              "variant": "caption",
                               "name": "flagCount",
-                              "label": "Flags"
+                              "label": "Flags",
+                              "variant": "caption"
                             },
                             {
                               "variant": "badge",
-                              "label": "Status",
-                              "name": "status"
+                              "name": "status",
+                              "label": "Status"
                             }
                           ],
-                          "entity": "@payload.data",
-                          "itemActions": [
-                            {
-                              "label": "Approve",
-                              "event": "APPROVE",
-                              "variant": "primary",
-                              "icon": "check"
-                            },
-                            {
-                              "variant": "danger",
-                              "event": "REJECT",
-                              "icon": "x",
-                              "label": "Reject"
-                            },
-                            {
-                              "event": "ESCALATE",
-                              "icon": "alert-triangle",
-                              "label": "Escalate",
-                              "variant": "secondary"
-                            }
-                          ]
+                          "look": "@config.tableLook",
+                          "gap": "sm",
+                          "type": "data-grid",
+                          "cols": 1.0
                         }
                       ],
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -608,9 +608,9 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
+                      "type": "alert",
                       "message": "@payload.error",
-                      "type": "alert"
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -625,8 +625,8 @@
                     "update",
                     "ModQueueItem",
                     {
-                      "id": "@payload.row.id",
-                      "status": "approved"
+                      "status": "approved",
+                      "id": "@payload.row.id"
                     },
                     {
                       "emit": {
@@ -707,8 +707,8 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
                       "type": "alert",
+                      "variant": "error",
                       "message": "@payload.error"
                     }
                   ]
@@ -733,8 +733,8 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]
@@ -748,14 +748,7 @@
               "label": "Enabled",
               "description": "Whether the moderation queue is active for the host orbital. Off by default; turn on to surface flagged content for review.",
               "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, moderation, moderation queue, content review queue, flag for review, content moderation, review flagged content, abuse review, spam queue, report queue",
-              "tier": "domain"
-            },
-            "autoEscalateThreshold": {
-              "type": "number",
-              "default": 5.0,
-              "label": "Auto-escalate at",
-              "description": "Flag count after which an item is auto-escalated to senior review",
-              "tier": "domain"
+              "tier": "policy"
             },
             "title": {
               "type": "string",
@@ -777,6 +770,13 @@
                 "borderless",
                 "card-rows"
               ]
+            },
+            "autoEscalateThreshold": {
+              "type": "number",
+              "default": 5.0,
+              "label": "Auto-escalate at",
+              "description": "Flag count after which an item is auto-escalated to senior review",
+              "tier": "policy"
             }
           },
           "scope": "collection"

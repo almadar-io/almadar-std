@@ -22,12 +22,12 @@ orbital NotifyOnEventOrbital {
       listensFor    : [string] = []
         @label "Trigger events"
         @description "Event names that should fire a notification. Set this to the upstream event name (e.g. OrderPlaced, CheckoutCompleted) so this atom listens for events from the orbital that emits them. The orbital owning this trait reacts whenever the named event fires anywhere in the schema."
-        @tier "domain"
+        @tier "policy"
         @synonyms "subscribe to event, listen for event, react to event, watch for, wire upstream event, observe event from another orbital, cross-orbital subscription, on-event trigger"
       notifyChannel : string   = "in-app"
         @label "Channel"
         @description "Delivery channel: in-app, email, or sms"
-        @tier "domain"
+        @tier "policy"
         @synonyms "delivery method, notification channel, send via, dispatch through"
       template      : string   = ""
         @label "Message template"
@@ -37,26 +37,26 @@ orbital NotifyOnEventOrbital {
       severity      : string   = "info"
         @label "Severity"
         @description "info, success, warning, or error — controls styling"
-        @tier "domain"
+        @tier "policy"
         @synonyms "alert level, priority, urgency"
       recipients    : [string] = []
         @label "Recipients"
         @description "Recipient ids/addresses. v1.1 uses the first entry; multi-recipient fan-out lands in v1.2 (gap). When empty, falls back to the authenticated user."
-        @tier "domain"
+        @tier "policy"
         @synonyms "targets, addressees, notify to"
       suppressionList : [string] = []
         @label "Suppression list"
         @description "Recipient ids/addresses to skip (e.g. unsubscribed users). Suppression check runs before dispatch."
-        @tier "domain"
+        @tier "policy"
         @synonyms "block list, unsubscribed, opt-out list"
       quietHours    : QuietHoursSpec = { start: "", end: "" }
         @label "Quiet hours"
         @description "Local-time window during which dispatch is suppressed. Both start and end required to activate. WIRING DEFERRED: needs @now-aware time comparison primitive (gap — docs/Almadar_Std_Factories.md)."
-        @tier "domain"
+        @tier "policy"
       frequencyCapPerWeek : number = 0
         @label "Frequency cap (per week)"
         @description "Max sends per (channel, recipient) per rolling 7-day window. 0 = uncapped. WIRING DEFERRED: needs stateful history query (gap — docs/Almadar_Std_Factories.md)."
-        @tier "domain"
+        @tier "policy"
     }
     initial: idle
     state idle {
