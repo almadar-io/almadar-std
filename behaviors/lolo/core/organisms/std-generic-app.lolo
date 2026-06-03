@@ -253,6 +253,7 @@ orbital ItemOrbital {
   uses Approval     from "std/behaviors/std-approval-gate"
   uses Erasure      from "std/behaviors/std-data-erasure"
   uses ModQueue     from "std/behaviors/std-mod-queue"
+  uses Audit        from "std/behaviors/std-audit-capture"
 
   entity Item [persistent: items] {
     id : string!
@@ -263,6 +264,7 @@ orbital ItemOrbital {
     quantity : number @description "The number of items or units." @synonyms "count, amount, number, size" = 0
     category : string @description "Classification or type of the item." @synonyms "type, kind, classification" = ""
     pendingId : string @description "A unique identifier awaiting final assignment or processing." @synonyms "tempId, provisionalId, draftId" = ""
+    status : "active" | "pending" | "approved" @description "Approval/workflow state of the item." @synonyms "state, stage, condition, review status" = "active"
   }
 
   trait ItemAppLayout = AppShell.traits.AppLayout {
@@ -271,6 +273,7 @@ orbital ItemOrbital {
       appName: "App",
       navItems: [{ label: "Contacts", href: "/contacts", icon: "users" }, { label: "Items", href: "/items", icon: "package" }, { label: "Activities", href: "/activities", icon: "activity" }, { label: "Tasks", href: "/tasks", icon: "check-square" }, { label: "Calendar", href: "/calendar", icon: "calendar" }, { label: "Dashboard", href: "/widgets", icon: "layout-dashboard" }, { label: "Feed", href: "/feed", icon: "rss" }, { label: "Notes", href: "/notes", icon: "file-text" }],
       searchEvent: "ITEM_SEARCH",
+      topBarActions: [{ label: "Approvals", event: "OPEN_APPROVALS", variant: "ghost", icon: "shield-check" }],
       notifications: [],
       notificationClickEvent: "ITEM_NOTIFICATIONS_OPEN"
     }
@@ -346,7 +349,8 @@ orbital ItemOrbital {
         { name: "sku",         variant: "caption" },
         { name: "price",       variant: "badge",   format: "currency" },
         { name: "quantity",    variant: "badge" },
-        { name: "category",    variant: "caption" }
+        { name: "category",    variant: "caption" },
+        { name: "status",      variant: "badge" }
       ],
       itemActions: [
         { label: "View",   event: "VIEW",   variant: "ghost" },
@@ -442,15 +446,26 @@ orbital ItemOrbital {
   }
 
   trait ItemPersistor -> Item [lifecycle, instance] {
+    config {
+      requireApproval : boolean = false
+        @label "Require approval before new items go live"
+        @description "When on, a new item is held as a pending approval request until an approver grants it; only then is the item created. Off by default."
+        @synonyms "gate, sign-off, review before create, approval required, hold for review"
+        @tier "policy"
+    }
     initial: idle
     state idle {
       INIT -> idle
-      DO_CREATE -> idle
+      DO_CREATE -> idle when (not @config.requireApproval)
         (persist create Item @payload.data { emit: { success: "ITEM_CREATED" } })
+      DO_CREATE -> idle when @config.requireApproval
+        (persist create ApprovalRequest { gatedEvent: "ITEM_CREATE", status: "pending", payload: @payload.data })
       DO_UPDATE -> idle
         (persist update Item @payload.data { emit: { success: "ITEM_UPDATED" } })
       DO_DELETE -> idle
         (persist delete Item @payload.id { emit: { success: "ITEM_DELETED" } })
+      GRANTED -> idle
+        (persist create Item @payload.payload { emit: { success: "ITEM_CREATED" } })
     }
     emits {
       ITEM_CREATED -> external { id : string }
@@ -479,17 +494,24 @@ orbital ItemOrbital {
         @description "Initiates the removal of a record."
         @synonyms "remove, discard, erase"
         @tier "essential"
+      GRANTED { requestId : string, payload : object }
+        @description "An approver granted a held item request; replay the create from the carried payload."
+        @synonyms "approved, granted, authorized"
+        @tier "essential"
       ItemCreate.SAVE         -> DO_CREATE
       ItemEdit.SAVE           -> DO_UPDATE
       ItemDelete.CONFIRM_DELETE -> DO_DELETE
+      ItemApproval.ApprovalGranted -> GRANTED
     }
   }
 
-  ;; Governance policies — composed inactive (enabled:false). The studio
-  ;; questionnaire surfaces their enabled + sub-knobs (@tier "policy");
-  ;; flipping enabled:true injects the approval / erasure / moderation queue.
+  ;; Governance policies. The review queues render into the `modal` overlay and
+  ;; are SUMMONED via OPEN (never seize `main`): the layout's "Approvals" top-bar
+  ;; action emits OPEN_APPROVALS, which the approval trait's OPEN listens for
+  ;; (co-located key-match). The studio questionnaire toggles enabled (@tier "policy").
   trait ItemApproval = Approval.traits.ApprovalGateReview {
-    config: { enabled: false }
+    config: { enabled: true }
+    events { OPEN: OPEN_APPROVALS }
   }
   trait ItemErasure = Erasure.traits.ErasureWorkflow {
     config: { enabled: false, targetEntity: "Item" }
@@ -498,7 +520,16 @@ orbital ItemOrbital {
     config: { enabled: false }
   }
 
-  page "/items" as ItemsPage -> ItemAppLayout, ItemCatalog, ItemSearch, ItemFilter, ItemBrowseList, ItemCreate, ItemEdit, ItemView, ItemDelete, ItemPersistor
+  ;; Audit trail — a dotted-source listen subscribes the audit interceptor to the
+  ;; persistor's real ITEM_UPDATED mutation (a plain sentinel rename would be
+  ;; source:None and never subscribe). Persists an AuditEntry per change; renders
+  ;; nothing, so it is safe to mount on the page.
+  trait ItemAudit = Audit.traits.AuditCaptureListener {
+    config: { enabled: true, captureEntity: "Item", captureBeforeAfter: true }
+    listens { ItemPersistor.ITEM_UPDATED -> EntityMutated }
+  }
+
+  page "/items" as ItemsPage -> ItemAppLayout, ItemCatalog, ItemSearch, ItemFilter, ItemBrowseList, ItemCreate, ItemEdit, ItemView, ItemDelete, ItemPersistor, ItemApproval, ItemAudit
 }
 
 orbital ActivityOrbital {

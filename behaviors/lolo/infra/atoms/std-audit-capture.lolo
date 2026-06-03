@@ -1,4 +1,4 @@
-app std-audit-capture "1.1.0"
+app std-audit-capture "1.2.0"
 "std-audit-capture — event-interceptor audit log / audit trail. Use when a user voices that a record's changes must be tracked, logged, or auditable (audit trail, track changes, change history, who edited what, mutation log, record changes, log every edit, edit history, modification log, who did what when, accountability log). Listens for the generic `EntityMutated` sentinel (rename via traitOverrides.events to the real mutation event, e.g. ContactSaved) and persists an AuditEntry row capturing actor, action, entity type/id, before/after snapshots, and timestamp. `captureEventTypes` filters on @payload.data.kind (empty = capture all). Compose with `std-lifecycle` to apply retention. Composable via `extraTraits` to interpose audit logging behind any mutating trait."
 
 orbital AuditCaptureOrbital {
@@ -33,7 +33,7 @@ orbital AuditCaptureOrbital {
         @tier "internal"
       excludeFields     : [string] = []
         @label "Skip fields"
-        @description "Entity fields to omit from the audit payload (declarative; before/after still capture all fields in v1.1 — field exclusion lands when captureBeforeAfter wiring filters per-field)."
+        @description "Entity fields to omit from the before/after snapshots — e.g. passwords or other sensitive fields you do not want copied into the audit trail."
         @tier "internal"
       captureBeforeAfter : boolean = false
         @label "Keep before/after snapshots"
@@ -54,8 +54,8 @@ orbital AuditCaptureOrbital {
             (set @entity.action (object/get @payload.data "kind" "EntityMutated"))
             (set @entity.entityType @config.captureEntity)
             (set @entity.entityId (object/get @payload.data "id" ""))
-            (set @entity.before (if @config.captureBeforeAfter (object/get @payload.data "before" {}) {}))
-            (set @entity.after  (if @config.captureBeforeAfter (object/get @payload.data "after"  {}) {}))
+            (set @entity.before (if @config.captureBeforeAfter (object/omit (object/get @payload.data "before" {}) @config.excludeFields) {}))
+            (set @entity.after  (if @config.captureBeforeAfter (object/omit (object/get @payload.data "after"  {}) @config.excludeFields) {}))
             (set @entity.recordedAt 0)
             (persist create AuditEntry {
               actor:      "@user.id",

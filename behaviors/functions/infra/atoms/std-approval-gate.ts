@@ -30,7 +30,7 @@ const ALIAS = 'ApprovalGate';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdApprovalGateEventKey = 'APPROVE' | 'ApprovalDenied' | 'ApprovalGranted' | 'ApprovalRequestLoadFailed' | 'ApprovalRequestLoaded' | 'ApprovalRequestReviewFailed' | 'ApprovalRequestReviewed' | 'DENY' | 'INIT';
+export type StdApprovalGateEventKey = 'APPROVE' | 'ApprovalDenied' | 'ApprovalGranted' | 'ApprovalRequestLoadFailed' | 'ApprovalRequestLoaded' | 'ApprovalRequestReviewFailed' | 'ApprovalRequestReviewed' | 'CLOSE' | 'DENY' | 'INIT' | 'OPEN';
 
 /**
  * Payload shape for the `APPROVE` event.
@@ -46,6 +46,7 @@ export interface StdApprovalGateApprovePayload {
     decidedAt?: number;
     escalatedAt?: number;
     notes?: string;
+    payload?: EntityRow;
   };
 }
 
@@ -63,6 +64,7 @@ export interface StdApprovalGateDenyPayload {
     decidedAt?: number;
     escalatedAt?: number;
     notes?: string;
+    payload?: EntityRow;
   };
 }
 
@@ -71,6 +73,7 @@ export interface StdApprovalGateDenyPayload {
  */
 export interface StdApprovalGateApprovalGrantedPayload {
   requestId?: string;
+  payload?: EntityRow;
 }
 
 /**
@@ -108,6 +111,7 @@ export interface StdApprovalGateApprovalRequestReviewedPayload {
     decidedAt?: number;
     escalatedAt?: number;
     notes?: string;
+    payload?: EntityRow;
   };
 }
 
@@ -126,18 +130,20 @@ export interface StdApprovalGateApprovalRequestReviewFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdApprovalGateConfig {
-  /** Default: `""` */
-  valueField?: string;
   /** Default: `false` */
   enabled?: boolean;
-  /** Default: `0` */
-  escalationHours?: number;
-  /** Default: `[]` */
-  approverRoles?: string[];
-  /** Default: `true` */
-  autoApproveBelowThreshold?: boolean;
   /** Default: `[]` */
   escalationRoles?: string[];
+  /** Default: `"modal"` */
+  reviewSlot?: unknown;
+  /** Default: `true` */
+  autoApproveBelowThreshold?: boolean;
+  /** Default: `0` */
+  escalationHours?: number;
+  /** Default: `""` */
+  valueField?: string;
+  /** Default: `[]` */
+  approverRoles?: string[];
   /** Default: `"dense"` */
   tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
   /** Default: `0` */

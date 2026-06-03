@@ -11,13 +11,14 @@ orbital ApprovalGateOrbital {
     decidedAt    : number  @description "Timestamp indicating when a decision was made on the request." @synonyms "decision time, resolved at, completed at" = 0
     escalatedAt  : number  @description "Timestamp indicating when the request was escalated." @synonyms "escalation time, escalation timestamp, escalated time" = 0
     notes        : string  @description "Free-form text providing additional context or details." @synonyms "comments, remarks, explanation, details" = ""
+    payload      : object  @description "The held data of the gated action, replayed by the downstream listener when the request is granted." @synonyms "request data, held payload, pending data, gated data" = {}
   }
 
   type ApprovalRequestLoaded     = Event { data : [ApprovalRequest] }            "Fired when the approval queue collection finishes loading"
   type ApprovalRequestLoadFailed = Event { error : string, code : string }       "Fired when the approval queue fails to load"
   type ApprovalRequestReviewed   = Event { row : ApprovalRequest }               "Fired after a row's status persists (approve / deny)"
   type ApprovalRequestReviewFailed = Event { error : string, code : string }     "Fired when the persist fails"
-  type ApprovalGranted           = Event { requestId : string }                  "Re-emitted on approval; downstream listener fetches the ApprovalRequest by id and proceeds with the gated action."
+  type ApprovalGranted           = Event { requestId : string, payload : object } "Re-emitted on approval; carries the held payload so the downstream listener can replay the gated action without a lookup."
   type ApprovalDenied            = Event { requestId : string }                  "Emitted on denial; downstream listeners can log or notify."
 
   trait ApprovalGateReview -> @rebindable ApprovalRequest [interaction, collection, approval] {
@@ -55,16 +56,28 @@ orbital ApprovalGateOrbital {
         @label "Table look"
         @description "Layer 2 visual treatment for the data table rendered by this atom."
         @tier "presentation"
+      reviewSlot : slot = "modal"
+        @label "Review slot"
+        @description "UI slot the review queue renders into. Defaults to the modal overlay so the queue never seizes the host's main content; summoned via OPEN, cleared via CLOSE."
+        @tier "internal"
     }
-    initial: loading
-    state loading {
-      INIT -> loading when @config.enabled
+    initial: idle
+    state idle {
+      INIT -> idle
         (fetch ApprovalRequest { emit: { success: "ApprovalRequestLoaded", failure: "ApprovalRequestLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading approval queue…" }] })
+      ApprovalRequestLoaded -> idle
+      ApprovalRequestLoadFailed -> idle
+      OPEN -> loading when @config.enabled
+        (fetch ApprovalRequest { emit: { success: "ApprovalRequestLoaded", failure: "ApprovalRequestLoadFailed" } })
+        (render-ui @config.reviewSlot { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading approval queue…" }] })
+    }
+    state loading {
       ApprovalRequestLoaded -> reviewing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "shield-check" }, { type: "typography", content: "Approval queue", variant: "h3" }] }, { type: "divider" }, { type: "data-grid", look: "@config.tableLook", entity: "@payload.data", fields: [{ name: "gatedEvent", label: "Action", variant: "badge" }, { name: "requestedAt", label: "Requested", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Approve", event: "APPROVE", variant: "primary", icon: "check" }, { label: "Deny", event: "DENY", variant: "danger", icon: "x" }] }] })
+        (render-ui @config.reviewSlot { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "shield-check" }, { type: "typography", content: "Approval queue", variant: "h3" }] }, { type: "button", label: "Close", action: "CLOSE", variant: "ghost", icon: "x" }] }, { type: "divider" }, { type: "data-grid", look: "@config.tableLook", entity: "@payload.data", fields: [{ name: "gatedEvent", label: "Action", variant: "badge" }, { name: "requestedAt", label: "Requested", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Approve", event: "APPROVE", variant: "primary", icon: "check" }, { label: "Deny", event: "DENY", variant: "danger", icon: "x" }] }] })
       ApprovalRequestLoadFailed -> error
-        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+        (render-ui @config.reviewSlot { type: "alert", variant: "error", message: "@payload.error" })
+      CLOSE -> idle
+        (render-ui @config.reviewSlot null)
     }
     state reviewing {
       APPROVE -> reviewing
@@ -72,7 +85,7 @@ orbital ApprovalGateOrbital {
         (set @entity.status "approved")
         (set @entity.reviewer "@user.id")
         (persist update ApprovalRequest @entity { emit: { success: "ApprovalRequestReviewed", failure: "ApprovalRequestReviewFailed" } })
-        (emit ApprovalGranted { requestId: "@payload.id" })
+        (emit ApprovalGranted { requestId: "@payload.id", payload: "@payload.row.payload" })
       DENY -> reviewing
         (set @entity.id @payload.id)
         (set @entity.status "denied")
@@ -82,12 +95,16 @@ orbital ApprovalGateOrbital {
       ApprovalRequestReviewed -> loading
         (fetch ApprovalRequest { emit: { success: "ApprovalRequestLoaded", failure: "ApprovalRequestLoadFailed" } })
       ApprovalRequestReviewFailed -> reviewing
-        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+        (render-ui @config.reviewSlot { type: "alert", variant: "error", message: "@payload.error" })
+      CLOSE -> idle
+        (render-ui @config.reviewSlot null)
     }
     state error {
-      INIT -> loading
+      OPEN -> loading
         (fetch ApprovalRequest { emit: { success: "ApprovalRequestLoaded", failure: "ApprovalRequestLoadFailed" } })
-        (render-ui main { type: "spinner", size: "sm" })
+        (render-ui @config.reviewSlot { type: "spinner", size: "sm" })
+      CLOSE -> idle
+        (render-ui @config.reviewSlot null)
     }
     emits {
       APPROVE          { id : string!, row : ApprovalRequest }
@@ -98,8 +115,12 @@ orbital ApprovalGateOrbital {
         @description "Signals that an approval request has been denied."
         @synonyms "reject, decline"
         @tier "essential"
-      ApprovalGranted -> external { requestId : string }
-        @description "Signals that an approval process has been successfully completed."
+      CLOSE
+        @description "Dismisses the review queue overlay."
+        @synonyms "dismiss, hide, cancel, done"
+        @tier "essential"
+      ApprovalGranted -> external { requestId : string, payload : object }
+        @description "Signals that an approval process has been successfully completed; carries the held payload for the downstream listener to replay."
         @synonyms "approved, authorized, confirmed, validated"
         @tier "essential"
       ApprovalDenied  -> external { requestId : string }
@@ -124,6 +145,14 @@ orbital ApprovalGateOrbital {
         @tier "internal"
     }
     listens {
+      OPEN
+        @description "Summons the review queue (host nav/affordance requests it)."
+        @synonyms "open, show, review, view queue, open approvals"
+        @tier "essential"
+      CLOSE
+        @description "Dismisses the review queue overlay."
+        @synonyms "dismiss, hide, cancel, done"
+        @tier "essential"
       APPROVE          { id : string!, row : ApprovalRequest }
         @description "Indicates an approval action has been completed."
         @synonyms "accept, authorize, confirm, validate"

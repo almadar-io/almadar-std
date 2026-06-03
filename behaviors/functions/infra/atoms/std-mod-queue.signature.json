@@ -3,7 +3,7 @@
     "organism": "std-mod-queue",
     "orbital": "ModQueueItemOrbital",
     "tier": "atoms",
-    "factoryPath": "behaviors/functions/core/atoms/std-mod-queue.ts",
+    "factoryPath": "behaviors/functions/infra/atoms/std-mod-queue.ts",
     "entities": [
       {
         "name": "ModQueueItem",
@@ -75,6 +75,7 @@
           "APPROVE",
           "REJECT",
           "ESCALATE",
+          "CLOSE",
           "ModQueueItemLoaded",
           "ModQueueItemLoadFailed",
           "ModQueueItemReviewed",
@@ -102,6 +103,13 @@
             "description": "Signals a flagged item requires further review.",
             "synonyms": "flag, defer, elevate",
             "tier": "customization"
+          },
+          {
+            "name": "CLOSE",
+            "direction": "emit",
+            "description": "Dismisses the moderation queue overlay.",
+            "synonyms": "dismiss, hide, cancel, done",
+            "tier": "essential"
           },
           {
             "name": "ModQueueItemLoaded",
@@ -134,6 +142,13 @@
           {
             "name": "INIT",
             "direction": "listen"
+          },
+          {
+            "name": "OPEN",
+            "direction": "listen",
+            "description": "Summons the moderation queue (host nav/affordance requests it).",
+            "synonyms": "open, show, review, view queue, moderation queue",
+            "tier": "essential"
           }
         ],
         "overridableConfigKeys": [
@@ -153,6 +168,14 @@
             "description": "Send submissions to a review queue before they go live. Off by default.",
             "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, moderation, moderation queue, content review queue, flag for review, content moderation, review flagged content, abuse review, spam queue, report queue",
             "tier": "policy"
+          },
+          {
+            "key": "reviewSlot",
+            "type": "slot",
+            "default": "modal",
+            "label": "Review slot",
+            "description": "UI slot the moderation queue renders into. Defaults to the modal overlay so it never seizes the host's main content; summoned via OPEN, cleared via CLOSE.",
+            "tier": "internal"
           },
           {
             "key": "tableLook",
@@ -192,6 +215,7 @@
     ],
     "emittedEvents": [
       "APPROVE",
+      "CLOSE",
       "ESCALATE",
       "ModQueueItemLoadFailed",
       "ModQueueItemLoaded",

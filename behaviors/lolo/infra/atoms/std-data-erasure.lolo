@@ -18,6 +18,10 @@ orbital DataErasureOrbital {
   type ErasureLoadFailed = Event { error : string, code : string }          "Fired when the erasure queue fails to load."
   type ErasureSaved      = Event { row : ErasureRequest }                   "Fired after an ErasureRequest row persists."
   type ErasureSaveFailed = Event { error : string, code : string }          "Fired when an ErasureRequest persist fails."
+  type ExecScanLoaded    = Event { data : [ErasureRequest] }                "Internal: grace requests whose execution time has passed."
+  type ExecScanFailed    = Event { error : string, code : string }          "Internal: execution scan fetch / persist failed."
+  type ExecStepped       = Event { id : string }                            "Internal: one request executed; drives the next loop pass."
+  type ExecuteErasure    = Event { requestId : string, targetEntity : string, subjectId : string } "Per-request: the target atom performs the actual delete / PII scrub."
 
   trait ErasureWorkflow -> ErasureRequest [interaction, collection, erasure, compliance] {
     config {
@@ -46,16 +50,52 @@ orbital DataErasureOrbital {
         @label "Table look"
         @description "Layer 2 visual treatment for the data table rendered by this atom."
         @tier "presentation"
+      reviewSlot : slot = "modal"
+        @label "Review slot"
+        @description "UI slot the erasure-requests queue renders into. Defaults to the modal overlay so it never seizes the host's main content; summoned via OPEN, cleared via CLOSE."
+        @tier "internal"
     }
-    initial: loading
-    state loading {
-      INIT -> loading when @config.enabled
+    initial: idle
+    state idle {
+      INIT -> idle
         (fetch ErasureRequest { emit: { success: "ErasureLoaded", failure: "ErasureLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading erasure requests…" }] })
+      ErasureLoaded -> idle
+      ErasureLoadFailed -> idle
+      OPEN -> loading when @config.enabled
+        (fetch ErasureRequest { emit: { success: "ErasureLoaded", failure: "ErasureLoadFailed" } })
+        (render-ui @config.reviewSlot { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading erasure requests…" }] })
+      ExecScanLoaded -> execScanning when (and @config.enabled (> (array/len @payload.data) 0))
+        (set @entity.id (object/get (array/first @payload.data) "id"))
+        (set @entity.targetEntity (object/get (array/first @payload.data) "targetEntity"))
+        (set @entity.subjectId (object/get (array/first @payload.data) "subjectId"))
+        (emit ExecuteErasure { requestId: @entity.id, targetEntity: @entity.targetEntity, subjectId: @entity.subjectId })
+        (persist update ErasureRequest { id: @entity.id, status: "executed", executedAt: @now } { emit: { success: "ExecStepped", failure: "ExecScanFailed" } })
+      ExecScanLoaded -> idle when (= (array/len @payload.data) 0)
+      ExecScanFailed -> idle
+    }
+    state execScanning {
+      ExecStepped -> execScanning
+        (fetch ErasureRequest { filter: (and (= (object/get @entity "status") "grace") (< (object/get @entity "executesAt") @now)), emit: { success: "ExecScanLoaded", failure: "ExecScanFailed" } })
+      ExecScanLoaded -> execScanning when (> (array/len @payload.data) 0)
+        (set @entity.id (object/get (array/first @payload.data) "id"))
+        (set @entity.targetEntity (object/get (array/first @payload.data) "targetEntity"))
+        (set @entity.subjectId (object/get (array/first @payload.data) "subjectId"))
+        (emit ExecuteErasure { requestId: @entity.id, targetEntity: @entity.targetEntity, subjectId: @entity.subjectId })
+        (persist update ErasureRequest { id: @entity.id, status: "executed", executedAt: @now } { emit: { success: "ExecStepped", failure: "ExecScanFailed" } })
+      ExecScanLoaded -> idle when (= (array/len @payload.data) 0)
+      ExecScanFailed -> idle
+    }
+    ticks {
+      executionScan every 1 h
+        (fetch ErasureRequest { filter: (and (= (object/get @entity "status") "grace") (< (object/get @entity "executesAt") @now)), emit: { success: "ExecScanLoaded", failure: "ExecScanFailed" } })
+    }
+    state loading {
       ErasureLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "trash-2" }, { type: "typography", content: "Erasure requests", variant: "h3" }] }, { type: "divider" }, { type: "data-grid", look: "@config.tableLook", entity: "@payload.data", fields: [{ name: "subjectId", label: "Subject", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "executesAt", label: "Executes", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Cancel", event: "CANCEL_ERASURE", variant: "secondary", icon: "x" }] }] })
+        (render-ui @config.reviewSlot { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "trash-2" }, { type: "typography", content: "Erasure requests", variant: "h3" }] }, { type: "button", label: "Close", action: "CLOSE", variant: "ghost", icon: "x" }] }, { type: "divider" }, { type: "data-grid", look: "@config.tableLook", entity: "@payload.data", fields: [{ name: "subjectId", label: "Subject", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "executesAt", label: "Executes", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Cancel", event: "CANCEL_ERASURE", variant: "secondary", icon: "x" }] }] })
       ErasureLoadFailed -> error
-        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+        (render-ui @config.reviewSlot { type: "alert", variant: "error", message: "@payload.error" })
+      CLOSE -> idle
+        (render-ui @config.reviewSlot null)
     }
     state browsing {
       CANCEL_ERASURE -> loading
@@ -65,17 +105,25 @@ orbital DataErasureOrbital {
       ErasureSaved -> loading
         (fetch ErasureRequest { emit: { success: "ErasureLoaded", failure: "ErasureLoadFailed" } })
       ErasureSaveFailed -> browsing
-        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+        (render-ui @config.reviewSlot { type: "alert", variant: "error", message: "@payload.error" })
+      CLOSE -> idle
+        (render-ui @config.reviewSlot null)
     }
     state error {
-      INIT -> loading
+      OPEN -> loading
         (fetch ErasureRequest { emit: { success: "ErasureLoaded", failure: "ErasureLoadFailed" } })
-        (render-ui main { type: "spinner", size: "sm" })
+        (render-ui @config.reviewSlot { type: "spinner", size: "sm" })
+      CLOSE -> idle
+        (render-ui @config.reviewSlot null)
     }
     emits {
       CANCEL_ERASURE           { id : string!, row : ErasureRequest }
         @description "Signals a request cancellation during its processing lifecycle."
         @synonyms "abort, revoke, undo, terminate"
+        @tier "essential"
+      CLOSE
+        @description "Dismisses the erasure-requests overlay."
+        @synonyms "dismiss, hide, cancel, done"
         @tier "essential"
       ErasureLoaded            { data : [ErasureRequest] }
         @description "Indicates that erasure request data has been successfully loaded."
@@ -93,8 +141,44 @@ orbital DataErasureOrbital {
         @description "Indicates that saving the erasure request failed."
         @synonyms "failed, error, unsuccessful"
         @tier "internal"
+      ExecuteErasure -> external { requestId : string, targetEntity : string, subjectId : string }
+        @description "Instructs the target atom to perform the actual delete or PII scrub for a request whose grace period has elapsed."
+        @synonyms "execute, perform erasure, delete now, scrub, finalize erasure"
+        @tier "essential"
+      ExecScanLoaded           { data : [ErasureRequest] }
+        @description "Internal: grace requests due for execution."
+        @synonyms "scan loaded, due requests"
+        @tier "internal"
+      ExecScanFailed           { error : string, code : string }
+        @description "Internal: execution scan failed."
+        @synonyms "scan error, scan failed"
+        @tier "internal"
+      ExecStepped              { id : string }
+        @description "Internal: one request executed; advances the scan loop."
+        @synonyms "stepped, next"
+        @tier "internal"
     }
     listens {
+      ExecScanLoaded           { data : [ErasureRequest] }
+        @description "Internal: grace requests due for execution."
+        @synonyms "scan loaded, due requests"
+        @tier "internal"
+      ExecScanFailed           { error : string, code : string }
+        @description "Internal: execution scan failed."
+        @synonyms "scan error, scan failed"
+        @tier "internal"
+      ExecStepped              { id : string }
+        @description "Internal: one request executed; advances the scan loop."
+        @synonyms "stepped, next"
+        @tier "internal"
+      OPEN
+        @description "Summons the erasure-requests queue (host nav/affordance requests it)."
+        @synonyms "open, show, review, view queue, erasure requests"
+        @tier "essential"
+      CLOSE
+        @description "Dismisses the erasure-requests overlay."
+        @synonyms "dismiss, hide, cancel, done"
+        @tier "essential"
       CANCEL_ERASURE           { id : string!, row : ErasureRequest }
         @description "Indicates a request cancellation during the erasure process."
         @synonyms "revoke, abort, undo, stop"
