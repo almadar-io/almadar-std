@@ -17,14 +17,14 @@ describe('explodeBehaviorComposition', () => {
     });
   });
 
-  describe('molecule (std-cart)', () => {
+  describe('molecule (std-list)', () => {
     it('returns a non-empty TraitReference array', () => {
-      const refs = explodeBehaviorComposition('std-cart');
+      const refs = explodeBehaviorComposition('std-list');
       expect(refs.length).toBeGreaterThanOrEqual(1);
     });
 
     it('backfills `from` from uses: header when the ref uses an alias', () => {
-      const refs = explodeBehaviorComposition('std-cart');
+      const refs = explodeBehaviorComposition('std-list');
       for (const ref of refs) {
         if (/^[A-Z][a-zA-Z0-9]*\.traits\./.test(ref.ref)) {
           expect(ref.from, `ref ${ref.ref} should have from populated`).toBeDefined();
