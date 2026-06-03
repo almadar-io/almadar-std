@@ -263,23 +263,23 @@
                         "create",
                         "AuditEntry",
                         {
+                          "action": "@entity.action",
+                          "entityId": "@entity.entityId",
+                          "actor": "@user.id",
+                          "before": "@entity.before",
                           "entityType": "@config.captureEntity",
                           "after": "@entity.after",
-                          "action": "@entity.action",
-                          "recordedAt": 0.0,
-                          "before": "@entity.before",
-                          "actor": "@user.id",
-                          "entityId": "@entity.entityId"
+                          "recordedAt": 0.0
                         }
                       ],
                       [
                         "emit",
                         "AuditRecorded",
                         {
-                          "entityType": "@config.captureEntity",
+                          "actor": "@user.id",
                           "entityId": "@entity.entityId",
                           "recordedAt": 0.0,
-                          "actor": "@user.id",
+                          "entityType": "@config.captureEntity",
                           "action": "@entity.action"
                         }
                       ]
@@ -290,19 +290,44 @@
             ]
           },
           "config": {
+            "captureEventTypes": {
+              "type": "[string]",
+              "default": [],
+              "label": "Event-kind filter",
+              "description": "When set, only @payload.data.kind values in this list are audited. Empty list = capture every event. Requires the upstream event to include a `kind` field on its payload.",
+              "tier": "policy",
+              "items": {
+                "type": "string"
+              }
+            },
             "retentionDays": {
               "type": "number",
               "default": 2555.0,
               "label": "Retention (days)",
               "description": "Days to keep audit rows. Default 2555 (7 years) for typical compliance regimes. WIRING DEFERRED: retention enforcement requires composing `std-lifecycle` against AuditEntry with a delete rule (gap — docs/Almadar_Std_Factories.md).",
-              "tier": "domain"
+              "tier": "policy"
+            },
+            "captureEntity": {
+              "type": "string",
+              "default": "",
+              "label": "Entity to audit",
+              "description": "Type name of the entity whose mutations get logged",
+              "tier": "policy"
+            },
+            "enabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Enabled",
+              "description": "Whether the audit trail is active for the host orbital. Off by default; turn on to record mutations.",
+              "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, audit, audit trail, log changes, track changes, who edited what, mutation log, change history, edit history, modification log, accountability log, record changes, log every edit, compliance log",
+              "tier": "policy"
             },
             "excludeFields": {
               "type": "[string]",
               "default": [],
               "label": "Skip fields",
               "description": "Entity fields to omit from the audit payload (declarative; before/after still capture all fields in v1.1 — field exclusion lands when captureBeforeAfter wiring filters per-field).",
-              "tier": "domain",
+              "tier": "policy",
               "items": {
                 "type": "string"
               }
@@ -312,32 +337,7 @@
               "default": false,
               "label": "Capture before/after snapshots",
               "description": "When true, persist `before` and `after` object snapshots from @payload.data on each audit row. Default off to keep audit rows small.",
-              "tier": "domain"
-            },
-            "enabled": {
-              "type": "boolean",
-              "default": false,
-              "label": "Enabled",
-              "description": "Whether the audit trail is active for the host orbital. Off by default; turn on to record mutations.",
-              "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, audit, audit trail, log changes, track changes, who edited what, mutation log, change history, edit history, modification log, accountability log, record changes, log every edit, compliance log",
-              "tier": "domain"
-            },
-            "captureEntity": {
-              "type": "string",
-              "default": "",
-              "label": "Entity to audit",
-              "description": "Type name of the entity whose mutations get logged",
-              "tier": "domain"
-            },
-            "captureEventTypes": {
-              "type": "[string]",
-              "default": [],
-              "label": "Event-kind filter",
-              "description": "When set, only @payload.data.kind values in this list are audited. Empty list = capture every event. Requires the upstream event to include a `kind` field on its payload.",
-              "tier": "domain",
-              "items": {
-                "type": "string"
-              }
+              "tier": "policy"
             }
           },
           "scope": "instance"
