@@ -27,7 +27,7 @@ import type {
 const REGISTRY = path.resolve(__dirname, '..', 'behaviors', 'registry');
 const FUNCTIONS = path.resolve(__dirname, '..', 'behaviors', 'functions');
 const TIERS = ['atoms', 'molecules', 'organisms'] as const;
-const TOPICS = ['core', 'agent', 'game', 'service', 'app', 'probes', 'marketing'] as const;
+const TOPICS = ['core', 'agent', 'core-variations', 'infra'] as const;
 
 interface DiscoveredBehavior {
   topic: string;

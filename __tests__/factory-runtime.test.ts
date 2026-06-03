@@ -28,16 +28,16 @@ async function loadOrb(topic: string, tier: string, name: string): Promise<Orbit
 describe('factory-runtime', () => {
   describe('extractManifest', () => {
     it('emits one manifest per orbital with the canonical six paramFields + trait splits', async () => {
-      const orb = await loadOrb('app', 'organisms', 'std-embedded-dashboard');
+      const orb = await loadOrb('core', 'organisms', 'std-generic-app');
       const manifests = extractManifest(orb);
 
       expect(manifests.length).toBe(orb.orbitals.length);
-      const dash = manifests.find((m) => m.orbitalName === 'DashboardOrbital');
-      expect(dash).toBeDefined();
-      if (!dash) throw new Error('expected DashboardOrbital manifest');
+      const item = manifests.find((m) => m.orbitalName === 'ItemOrbital');
+      expect(item).toBeDefined();
+      if (!item) throw new Error('expected ItemOrbital manifest');
 
-      expect(dash.organism).toBe('std-embedded-dashboard');
-      expect(dash.paramFields.map((f) => f.name)).toEqual([
+      expect(item.organism).toBe('std-generic-app');
+      expect(item.paramFields.map((f) => f.name)).toEqual([
         'fields',
         'pagePath',
         'persistence',
@@ -47,9 +47,9 @@ describe('factory-runtime', () => {
       ]);
       // traitNames is the set of imported (ref:) traits — must be non-empty
       // for this organism, and must not contain any inline-only names.
-      expect(dash.traitNames.length).toBeGreaterThan(0);
-      for (const refName of dash.traitNames) {
-        expect(dash.inlineTraitNames).not.toContain(refName);
+      expect(item.traitNames.length).toBeGreaterThan(0);
+      for (const refName of item.traitNames) {
+        expect(item.inlineTraitNames).not.toContain(refName);
       }
     });
   });
@@ -97,9 +97,9 @@ describe('factory-runtime', () => {
 
   describe('applyParamsToWholeOrb', () => {
     it('applies the same params bag to every orbital with a matching manifest', async () => {
-      // std-embedded-dashboard is multi-orbital — broadest exercise for the
+      // std-generic-app is multi-orbital (8 orbitals) — broadest exercise for the
       // whole-orb path that the LLM-loop seam (`call_behavior`) takes.
-      const orb = await loadOrb('app', 'organisms', 'std-embedded-dashboard');
+      const orb = await loadOrb('core', 'organisms', 'std-generic-app');
       const manifests = extractManifest(orb);
       const built = applyParamsToWholeOrb(orb, manifests, {
         entityName: 'Metric',
