@@ -1,27 +1,32 @@
 app std-flag "2.0.0"
 "std-flag — user content-report form. A std-form-advanced variation bound to a Flag entity (reason + details): the form persists the report and emits FlagSubmitted for cross-trait moderation listeners. Stays importable so a consumer orbital gains the Flag entity + report form via `uses` alongside its own primary entity."
-
 orbital FlagOrbital {
   uses FormAdvanced from "std/behaviors/std-form-advanced"
 
   entity Flag [persistent: flags] {
-    id         : string!
-    targetId   : string @description "Unique identifier of the resource being flagged." @synonyms "reference, identifier, key" = ""
+    id : string!
+    targetId : string @description "Unique identifier of the resource being flagged." @synonyms "reference, identifier, key" = ""
     targetType : string @description "Specifies the type of the target being flagged." @synonyms "type, kind, category" = ""
     reportedBy : string @description "The user who submitted the report." @synonyms "reporter, submitter, user" = ""
-    reason     : "spam" | "abuse" | "off-topic" | "misinformation" | "nsfw" | "other" @description "The justification for flagging content." @synonyms "category, type, cause, rationale" = "spam"
-    notes      : string @description "Additional textual information or comments." @synonyms "comment, remark, details, explanation" = ""
-    createdAt  : string = ""
+    reason : "spam" | "abuse" | "off-topic" | "misinformation" | "nsfw" | "other" @description "The justification for flagging content." @synonyms "category, type, cause, rationale" = spam
+    notes : string @description "Additional textual information or comments." @synonyms "comment, remark, details, explanation" = ""
+    createdAt : string = ""
   }
 
   trait FlagReport = FormAdvanced.traits.FormEntryFormAdvanced -> Flag {
-    config: {
-      title: "Report content",
-      icon: "flag",
-      fields: [
-        { name: "reason", label: "Reason", type: "enum", values: ["spam", "abuse", "off-topic", "misinformation", "nsfw", "other"] },
-        { name: "notes",  label: "Details", type: "textarea" }
-      ]
+    config {
+      title: "Report content"
+      icon: flag
+      fields: [{
+        label: Reason
+        name: reason
+        type: enum
+        values: (spam abuse off-topic misinformation nsfw other)
+      }, {
+        label: Details
+        name: notes
+        type: textarea
+      }]
     }
   }
 

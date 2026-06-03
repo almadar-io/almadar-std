@@ -1,280 +1,594 @@
 app std-board "1.1.0"
 "std-board — generic N-column board primitive. `config.columns` is an array of column definitions ({ key, label, icon, variant }); the trait `array/map`s them on `BoardItemsLoaded` into `@entity.boards` where each board carries its filtered items + a count. The render is a `data-grid` over `@entity.boards` (one card per column) whose `renderItem` lambda nests a `data-list` over `@col.items` (the cards in that stage). N is config-driven — pass any number of columns; the outer `data-grid`'s `cols` is bound to `@config.gridCols` so the grid wraps if you exceed it. Topology = loading / viewing_board / viewing_card / adding / error — distinct from the cookie-cutter `loading/browsing/viewing_single/error` CRUD shape. App-level atoms (e.g. std-pipeline) compose std-board via `uses` and add a sibling persistor + extended source entity."
-
 type ObjectSpec = { id : string, label : string, value : string }
 type ColumnSpec = { key : string!, label : string!, icon : string, variant : string }
-
 orbital BoardOrbital {
-  type BoardItem = {
-    id          : string!
-    title       : string
-    description : string
-    stage       : string
-    notes       : string
-    position    : number
-  }
+    type BoardItem = { id : string!, title : string, description : string, stage : string, notes : string, position : number }
 
-  type BoardColumn = {
-    key     : string!
-    label   : string!
-    icon    : string
-    variant : "default" | "primary" | "success" | "warning" | "error" | "info"
-    count   : number
-    items   : [BoardItem]
-  }
+    type BoardColumn = { key : string!, label : string!, icon : string, variant : "default" | "primary" | "success" | "warning" | "error" | "info", count : number, items : [BoardItem] }
+
+    type BoardItemsLoaded = Event { data : [ObjectSpec] } "Fired when board items finish loading (from an upstream fetcher / persistor)"
+
+    type BoardItemsLoadFailed = Event { error : string, code : string } "Fired when the upstream fetch fails"
+
+    type BoardItemsSaved = Event { row : object } "Fired when a board item has been persisted"
+
+    type BoardItemsSaveFailed = Event { error : string, code : string } "Fired when a persist intent fails"
 
   entity BoardView [persistent: board_items] {
-    id                  : string!
-    title               : string! @description "The descriptive name of the board." @synonyms "name, heading, label"
-    description         : string @description "A textual explanation or summary of the board." @synonyms "summary, details, notes, explanation" = ""
-    stage               : "todo" | "doing" | "done" @description "The current status or lifecycle phase of the board." @synonyms "status, lifecycle, progress, state" = "todo"
-    notes               : string @description "Free-form text providing additional information." @synonyms "comments, remarks, details, annotations" = ""
-    position            : number @description "The sequential order of this item within a collection." @synonyms "order, sequence, index, rank" = 0
-    boards              : [BoardColumn] @intrinsic = []
-    currentId           : string @intrinsic = ""
-    currentTitle        : string @intrinsic = ""
-    currentDescription  : string @intrinsic = ""
-    currentStage        : string @intrinsic = ""
-    currentNotes        : string @intrinsic = ""
-    errorMessage        : string @intrinsic = ""
+    id : string!
+    title : string! @description "The descriptive name of the board." @synonyms "name, heading, label"
+    description : string @description "A textual explanation or summary of the board." @synonyms "summary, details, notes, explanation" = ""
+    stage : "todo" | "doing" | "done" @description "The current status or lifecycle phase of the board." @synonyms "status, lifecycle, progress, state" = todo
+    notes : string @description "Free-form text providing additional information." @synonyms "comments, remarks, details, annotations" = ""
+    position : number @description "The sequential order of this item within a collection." @synonyms "order, sequence, index, rank" = 0
+    boards : [BoardColumn] @intrinsic = []
+    currentId : string @intrinsic = ""
+    currentTitle : string @intrinsic = ""
+    currentDescription : string @intrinsic = ""
+    currentStage : string @intrinsic = ""
+    currentNotes : string @intrinsic = ""
+    errorMessage : string @intrinsic = ""
   }
 
-  type BoardItemsLoaded     = Event { data : [ObjectSpec] }                "Fired when board items finish loading (from an upstream fetcher / persistor)"
-  type BoardItemsLoadFailed = Event { error : string, code : string }  "Fired when the upstream fetch fails"
-  type BoardItemsSaved      = Event { row : object }                   "Fired when a board item has been persisted"
-  type BoardItemsSaveFailed = Event { error : string, code : string }  "Fired when a persist intent fails"
-
   trait BoardItemBoard -> @rebindable BoardView [interaction, instance] {
-    config {
-      title    : string   = "Board"
-        @label "Board title"
-        @description "Heading shown above the column board"
-        @tier "presentation"
-      columns  : [ColumnSpec] = [
-        { key: "todo",  label: "To Do",       icon: "circle",       variant: "default" },
-        { key: "doing", label: "In Progress", icon: "circle-dot",   variant: "primary" },
-        { key: "done",  label: "Done",        icon: "check-circle", variant: "success" }
-      ]
-        @label "Columns"
-        @description "Board columns; each row's stage maps to a column key"
-        @tier "domain"
-      gridCols : number   = 3
-        @label "Grid columns"
-        @description "Outer grid column count before the board wraps"
-        @tier "presentation"
-      formFields : [string] = ["title", "description", "stage", "notes"]
-        @label "New-card fields"
-        @description "Fields shown in the add-card form"
-        @tier "presentation"
-      cardLook : "elevated" | "flat-bordered" | "borderless-divider" | "ticket" | "invoice" | "chip" | "tile-image-first" = "elevated"
-        @label "Card look"
-        @description "Layer 2 visual treatment for cards rendered by this board."
-        @tier "presentation"
-      cardTitleBinding : string = "@item.title"
-        @label "Card title binding"
-        @description "Per-card binding for the title slot."
-        @tier "presentation"
-      cardDescriptionBinding : string = "@item.description"
-        @label "Card description binding"
-        @description "Per-card binding for the description slot."
-        @tier "presentation"
-      cardStageBinding : string = "@item.stage"
-        @label "Card stage binding"
-        @description "Per-card binding for the stage/status slot."
-        @tier "presentation"
-      cardIdBinding : string = "@item.id"
-        @label "Card id binding"
-        @description "Per-card binding for the id used in action payloads."
-        @tier "presentation"
-      groupByField : string = "stage"
-        @label "Group-by field"
-        @description "Entity field whose value matches a column key — items are filtered into columns by it. Default 'stage'; set to 'status' (or any field) for entities that track state under a different name."
-        @tier "presentation"
-      bodyContent : render-ui = { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "kanban-square" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-grid", entity: "@entity.boards", cols: "@config.gridCols", gap: "md", fields: [], dndRoot: true, renderItem: ["fn", "col", { type: "card", look: "@config.cardLook", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "xs", align: "center", children: [{ type: "icon", name: "@col.icon" }, { type: "typography", content: "@col.label", variant: "h4" }, { type: "badge", label: "@col.count", variant: "@col.variant" }] }, { type: "data-list", entity: "@col.items", gap: "sm", fields: [], dragGroup: "@col.key", accepts: "*", sortable: true, dropEvent: "MOVE_CARD", reorderEvent: "REORDER_CARD", positionEvent: "REORDER_POSITION", renderItem: ["fn", "item", { type: "card", look: "@config.cardLook", children: [{ type: "stack", direction: "vertical", gap: "xs", children: [{ type: "typography", content: "@config.cardTitleBinding", variant: "h4" }, { type: "typography", content: "@config.cardDescriptionBinding", variant: "caption", color: "muted" }, { type: "stack", direction: "horizontal", gap: "xs", align: "center", children: [{ type: "button", label: "Open", variant: "ghost", action: "OPEN_CARD", actionPayload: { id: "@config.cardIdBinding", row: "@item" }, icon: "arrow-right" }] }] }] }] }] }] }] }, { type: "floating-action-button", label: "Add item", action: "ADD_CARD", icon: "plus", variant: "primary" }] }
-        @label "Body content tree"
-        @description "Render-ui SExpr rendered after the board loads. Default is the canonical column data-grid with nested per-column data-lists. Layer 3 variants override this with their own tree (swim-lanes, timeline-roadmap, etc.) while inheriting the same trait, state machine, emits, and listens."
-        @tier "internal"
-    }
     initial: loading
+
     state loading {
       INIT -> loading
-        (fetch BoardView { emit: { success: "BoardItemsLoaded", failure: "BoardItemsLoadFailed" } })
-        (render-ui main { type: "loading-state", title: "Loading board…" })
+        (fetch BoardView {
+          emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
+        })
+        (render-ui main {
+          title: "Loading board…"
+          type: loading-state
+        })
       BoardItemsLoaded -> viewing_board
-        (set @entity.boards (array/map @config.columns ["fn", "col", {
-          key:     (object/get @col "key"),
-          label:   (object/get @col "label"),
-          icon:    (object/get @col "icon" "circle"),
-          variant: (object/get @col "variant" "default"),
-          count:   (array/len (array/filter @payload.data ["fn", "item", (= (object/get @item @config.groupByField) (object/get @col "key"))])),
-          items:   (array/sort (array/filter @payload.data ["fn", "item", (= (object/get @item @config.groupByField) (object/get @col "key"))]) "position")
-        }]))
+        (set @entity.boards (array/map @config.columns (fn col {
+          count: (array/len (array/filter ?data (fn item ["=", (object/get @item @config.groupByField), (object/get @col key)])))
+          icon: (object/get @col icon circle)
+          items: (array/sort (array/filter ?data (fn item ["=", (object/get @item @config.groupByField), (object/get @col key)])) position)
+          key: (object/get @col key)
+          label: (object/get @col label)
+          variant: (object/get @col variant default)
+        })))
         (render-ui main @config.bodyContent)
       BoardItemsLoadFailed -> error
-        (set @entity.errorMessage @payload.error)
-        (render-ui main { type: "error-state", title: "Failed to load board", message: "@entity.errorMessage" })
+        (set @entity.errorMessage ?error)
+        (render-ui main {
+          message: @entity.errorMessage
+          title: "Failed to load board"
+          type: error-state
+        })
       BoardItemsSaveFailed -> error
-        (set @entity.errorMessage @payload.error)
-        (render-ui main { type: "error-state", title: "Save failed", message: "@entity.errorMessage" })
+        (set @entity.errorMessage ?error)
+        (render-ui main {
+          message: @entity.errorMessage
+          title: "Save failed"
+          type: error-state
+        })
     }
+
     state viewing_board {
       OPEN_CARD -> viewing_card
-        (set @entity.currentId @payload.row.id)
-        (set @entity.currentTitle @payload.row.title)
-        (set @entity.currentDescription @payload.row.description)
-        (set @entity.currentStage @payload.row.stage)
-        (set @entity.currentNotes @payload.row.notes)
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_CARD", icon: "arrow-left" }, { type: "icon", name: "credit-card" }, { type: "typography", content: "@entity.currentTitle", variant: "h3" }, { type: "badge", label: "@entity.currentStage", variant: "primary" }] }, { type: "divider" }, { type: "card", look: "@config.cardLook", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", color: "muted", content: "Description" }, { type: "typography", variant: "body", content: "@entity.currentDescription" }, { type: "divider" }, { type: "typography", variant: "caption", color: "muted", content: "Notes" }, { type: "typography", variant: "body", content: "@entity.currentNotes" }] }] }, { type: "divider" }, { type: "typography", variant: "caption", color: "muted", content: "Move to stage:" }, { type: "data-list", entity: "@entity.boards", gap: "sm", variant: "default", fields: [], renderItem: ["fn", "col", { type: "button", label: "@col.label", variant: "secondary", action: "MOVE_CARD", actionPayload: { id: "@entity.currentId", targetGroup: "@col.key" }, icon: "@col.icon" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Delete", variant: "danger", action: "DELETE_CARD", actionPayload: { id: "@entity.currentId" }, icon: "trash-2" }] }] })
+        (set @entity.currentId ?row.id)
+        (set @entity.currentTitle ?row.title)
+        (set @entity.currentDescription ?row.description)
+        (set @entity.currentStage ?row.stage)
+        (set @entity.currentNotes ?row.notes)
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{
+              action: CLOSE_CARD
+              icon: arrow-left
+              label: Back
+              type: button
+              variant: ghost
+            }, { name: credit-card, type: icon }, {
+              content: @entity.currentTitle
+              type: typography
+              variant: h3
+            }, {
+              label: @entity.currentStage
+              type: badge
+              variant: primary
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            children: [{
+              children: [{
+                color: muted
+                content: Description
+                type: typography
+                variant: caption
+              }, {
+                content: @entity.currentDescription
+                type: typography
+                variant: body
+              }, { type: divider }, {
+                color: muted
+                content: Notes
+                type: typography
+                variant: caption
+              }, {
+                content: @entity.currentNotes
+                type: typography
+                variant: body
+              }]
+              direction: vertical
+              gap: sm
+              type: stack
+            }]
+            look: @config.cardLook
+            type: card
+          }, { type: divider }, {
+            color: muted
+            content: "Move to stage:"
+            type: typography
+            variant: caption
+          }, {
+            entity: @entity.boards
+            fields: []
+            gap: sm
+            renderItem: (fn col {
+              action: MOVE_CARD
+              actionPayload: { id: @entity.currentId, targetGroup: @col.key }
+              icon: @col.icon
+              label: @col.label
+              type: button
+              variant: secondary
+            })
+            type: data-list
+            variant: default
+          }, {
+            align: center
+            children: [{
+              action: DELETE_CARD
+              actionPayload: { id: @entity.currentId }
+              icon: trash-2
+              label: Delete
+              type: button
+              variant: danger
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
       ADD_CARD -> adding
         (set @entity.currentId "")
         (set @entity.currentTitle "")
         (set @entity.currentDescription "")
         (set @entity.currentStage "")
         (set @entity.currentNotes "")
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Cancel", variant: "ghost", action: "CANCEL_ADD", icon: "x" }, { type: "icon", name: "plus" }, { type: "typography", content: "New board item", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "@entity", mode: "create", submitEvent: "SAVE_CARD", cancelEvent: "CANCEL_ADD", fields: "@config.formFields" }] })
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{
+              action: CANCEL_ADD
+              icon: x
+              label: Cancel
+              type: button
+              variant: ghost
+            }, { name: plus, type: icon }, {
+              content: "New board item"
+              type: typography
+              variant: h3
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            cancelEvent: CANCEL_ADD
+            entity: @entity
+            fields: @config.formFields
+            mode: create
+            submitEvent: SAVE_CARD
+            type: form-section
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
       MOVE_CARD -> viewing_board
-        (persist update BoardView { id: @payload.id, stage: @payload.targetGroup } { emit: { success: "BoardItemsSaved", failure: "BoardItemsSaveFailed" } })
+        (persist update BoardView { id: ?id, stage: ?targetGroup } {
+          emit: { failure: BoardItemsSaveFailed, success: BoardItemsSaved }
+        })
       REORDER_CARD -> viewing_board
       REORDER_POSITION -> viewing_board
-        (persist update BoardView { id: @payload.id, position: @payload.position } { emit: { success: "BoardItemsSaved", failure: "BoardItemsSaveFailed" } })
+        (persist update BoardView { id: ?id, position: ?position } {
+          emit: { failure: BoardItemsSaveFailed, success: BoardItemsSaved }
+        })
       BoardItemsSaved -> viewing_board
-        (fetch BoardView { emit: { success: "BoardItemsLoaded", failure: "BoardItemsLoadFailed" } })
+        (fetch BoardView {
+          emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
+        })
       BoardItemsLoaded -> viewing_board
-        (set @entity.boards (array/map @config.columns ["fn", "col", {
-          key:     (object/get @col "key"),
-          label:   (object/get @col "label"),
-          icon:    (object/get @col "icon" "circle"),
-          variant: (object/get @col "variant" "default"),
-          count:   (array/len (array/filter @payload.data ["fn", "item", (= (object/get @item @config.groupByField) (object/get @col "key"))])),
-          items:   (array/sort (array/filter @payload.data ["fn", "item", (= (object/get @item @config.groupByField) (object/get @col "key"))]) "position")
-        }]))
+        (set @entity.boards (array/map @config.columns (fn col {
+          count: (array/len (array/filter ?data (fn item ["=", (object/get @item @config.groupByField), (object/get @col key)])))
+          icon: (object/get @col icon circle)
+          items: (array/sort (array/filter ?data (fn item ["=", (object/get @item @config.groupByField), (object/get @col key)])) position)
+          key: (object/get @col key)
+          label: (object/get @col label)
+          variant: (object/get @col variant default)
+        })))
     }
+
     state viewing_card {
       CLOSE_CARD -> loading
-        (fetch BoardView { emit: { success: "BoardItemsLoaded", failure: "BoardItemsLoadFailed" } })
-        (render-ui main { type: "loading-state", title: "Refreshing board…" })
+        (fetch BoardView {
+          emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
+        })
+        (render-ui main {
+          title: "Refreshing board…"
+          type: loading-state
+        })
       MOVE_CARD -> loading
-        (persist update BoardView { id: @payload.id, stage: @payload.targetGroup } { emit: { success: "BoardItemsSaved", failure: "BoardItemsSaveFailed" } })
-        (render-ui main { type: "loading-state", title: "Moving item…" })
+        (persist update BoardView { id: ?id, stage: ?targetGroup } {
+          emit: { failure: BoardItemsSaveFailed, success: BoardItemsSaved }
+        })
+        (render-ui main {
+          title: "Moving item…"
+          type: loading-state
+        })
       DELETE_CARD -> loading
-        (persist delete BoardView @payload.id { emit: { success: "BoardItemsSaved", failure: "BoardItemsSaveFailed" } })
-        (render-ui main { type: "loading-state", title: "Deleting item…" })
+        (persist delete BoardView ?id {
+          emit: { failure: BoardItemsSaveFailed, success: BoardItemsSaved }
+        })
+        (render-ui main {
+          title: "Deleting item…"
+          type: loading-state
+        })
     }
+
     state adding {
       SAVE_CARD -> loading
-        (persist create BoardView @payload.data { emit: { success: "BoardItemsSaved", failure: "BoardItemsSaveFailed" } })
-        (render-ui main { type: "loading-state", title: "Saving…" })
+        (persist create BoardView ?data {
+          emit: { failure: BoardItemsSaveFailed, success: BoardItemsSaved }
+        })
+        (render-ui main {
+          title: "Saving…"
+          type: loading-state
+        })
       CANCEL_ADD -> viewing_board
-        (render-ui main { type: "loading-state", title: "Cancelling…" })
+        (render-ui main {
+          title: "Cancelling…"
+          type: loading-state
+        })
     }
+
     state error {
       INIT -> loading
-        (render-ui main { type: "loading-state", title: "Retrying…" })
+        (render-ui main {
+          title: "Retrying…"
+          type: loading-state
+        })
     }
+
     emits {
-      OPEN_CARD              { id : string!, row : object! }
+      OPEN_CARD {
+        id : string!
+        row : object!
+      }
         @description "Indicates a card within the board has been selected."
         @synonyms "select, choose, activate, display"
         @tier "essential"
-      CLOSE_CARD             { }
+      CLOSE_CARD
         @description "Signals a card is being dismissed or closed."
         @synonyms "dismiss, hide, close, remove"
         @tier "essential"
-      ADD_CARD               { }
+      ADD_CARD
         @description "Signals a new card is being added to the board."
         @synonyms "create, new, append"
         @tier "essential"
-      CANCEL_ADD             { }
+      CANCEL_ADD
         @description "Aborts an in-progress addition operation."
         @synonyms "discard, undo, reset"
         @tier "customization"
-      SAVE_CARD              { data : object! }
+      SAVE_CARD {
+        data : object!
+      }
         @description "Signals that a card's data has been successfully saved."
         @synonyms "persist, update, store"
         @tier "essential"
-      MOVE_CARD              { id : string!, sourceGroup : string, targetGroup : string!, newIndex : number }
+      MOVE_CARD {
+        id : string!
+        sourceGroup : string
+        targetGroup : string!
+        newIndex : number
+      }
         @description "Signals a card has been repositioned within a column."
         @synonyms "reorder, drag, reposition"
         @tier "customization"
-      REORDER_CARD           { id : string!, oldIndex : number, newIndex : number }
+      REORDER_CARD {
+        id : string!
+        oldIndex : number
+        newIndex : number
+      }
         @description "Signals a change in the order of cards within a column."
         @synonyms "rearrange, sort, shuffle, reposition"
         @tier "customization"
-      DELETE_CARD            { id : string! }
+      DELETE_CARD {
+        id : string!
+      }
         @description "Signals removal of a card from the board."
         @synonyms "remove, delete, discard"
         @tier "customization"
-      BoardItemsLoaded       { data : [ObjectSpec] }
+      BoardItemsLoaded {
+        data : [ObjectSpec]
+      }
         @description "Signals that board items have been successfully loaded."
         @synonyms "loaded, fetched, retrieved, populated"
         @tier "essential"
-      BoardItemsLoadFailed   { error : string, code : string }
+      BoardItemsLoadFailed {
+        error : string
+        code : string
+      }
         @description "Indicates a failure to load board items."
         @synonyms "error, failed, problem, loading failure"
         @tier "internal"
-      BoardItemsSaved        { row : object }
+      BoardItemsSaved {
+        row : object
+      }
         @description "Signals that board items have been successfully saved."
         @synonyms "saved, persisted, updated"
         @tier "essential"
-      BoardItemsSaveFailed   { error : string, code : string }
+      BoardItemsSaveFailed {
+        error : string
+        code : string
+      }
         @description "Indicates a failure to save board items."
         @synonyms "error, failed, save error"
         @tier "internal"
     }
+
     listens {
-      OPEN_CARD              { id : string!, row : object! }
+      OPEN_CARD {
+        id : string!
+        row : object!
+      }
         @description "A card within the board has been selected or activated."
         @synonyms "select, activate, view, show"
         @tier "essential"
-      CLOSE_CARD             { }
+      CLOSE_CARD
         @description "Indicates a card has been dismissed or removed."
         @synonyms "dismiss, remove, hide, close"
         @tier "customization"
-      ADD_CARD               { }
+      ADD_CARD
         @description "Indicates a new card is being added to the board."
         @synonyms "create, new, append"
         @tier "essential"
-      CANCEL_ADD             { }
+      CANCEL_ADD
         @description "Aborts the addition or editing of a board item."
         @synonyms "discard, undo, revert, dismiss"
         @tier "essential"
-      SAVE_CARD              { data : object! }
+      SAVE_CARD {
+        data : object!
+      }
         @description "Indicates a card's data has been successfully saved."
         @synonyms "persist, update, store"
         @tier "essential"
-      MOVE_CARD              { id : string!, sourceGroup : string, targetGroup : string!, newIndex : number }
+      MOVE_CARD {
+        id : string!
+        sourceGroup : string
+        targetGroup : string!
+        newIndex : number
+      }
         @description "Indicates a card has been repositioned within the board."
         @synonyms "reorder, drag, shuffle"
         @tier "customization"
-      REORDER_CARD           { id : string!, oldIndex : number, newIndex : number }
+      REORDER_CARD {
+        id : string!
+        oldIndex : number
+        newIndex : number
+      }
         @description "Indicates a card's position within a column has changed."
         @synonyms "reposition, sort, rearrange"
         @tier "customization"
-      REORDER_POSITION       { id : string!, position : number! }
+      REORDER_POSITION {
+        id : string!
+        position : number!
+      }
         @description "Indicates a change in the order of items within a column."
         @synonyms "sort, rearrange, reposition"
         @tier "customization"
-      DELETE_CARD            { id : string! }
+      DELETE_CARD {
+        id : string!
+      }
         @description "Indicates a board card has been removed."
         @synonyms "remove, discard, delete"
         @tier "customization"
-      BoardItemsLoaded       { data : [ObjectSpec] }
+      BoardItemsLoaded {
+        data : [ObjectSpec]
+      }
         @description "Data for the board columns has been successfully retrieved."
         @synonyms "loaded, fetched, retrieved, populated"
         @tier "essential"
-      BoardItemsLoadFailed   { error : string, code : string }
+      BoardItemsLoadFailed {
+        error : string
+        code : string
+      }
         @description "Indicates a failure to load board items."
         @synonyms "error, failed, problem, loading issue"
         @tier "internal"
-      BoardItemsSaved        { row : object }
+      BoardItemsSaved {
+        row : object
+      }
         @description "Indicates board items have been successfully saved."
         @synonyms "saved, updated, persisted"
         @tier "customization"
-      BoardItemsSaveFailed   { error : string, code : string }
+      BoardItemsSaveFailed {
+        error : string
+        code : string
+      }
         @description "Indicates a failure to save board items."
         @synonyms "error, failed, save error"
         @tier "internal"
     }
+
+    config {
+      title : string = Board
+        @label "Board title"
+        @description "Heading shown above the column board"
+        @tier "presentation"
+      columns : [ColumnSpec] = [{
+        icon: circle
+        key: todo
+        label: "To Do"
+        variant: default
+      }, {
+        icon: circle-dot
+        key: doing
+        label: "In Progress"
+        variant: primary
+      }, {
+        icon: check-circle
+        key: done
+        label: Done
+        variant: success
+      }]
+        @label "Columns"
+        @description "Board columns; each row's stage maps to a column key"
+        @tier "domain"
+      gridCols : number = 3
+        @label "Grid columns"
+        @description "Outer grid column count before the board wraps"
+        @tier "presentation"
+      formFields : [string] = (title description stage notes)
+        @label "New-card fields"
+        @description "Fields shown in the add-card form"
+        @tier "presentation"
+      cardLook : "elevated" | "flat-bordered" | "borderless-divider" | "ticket" | "invoice" | "chip" | "tile-image-first" = elevated
+        @label "Card look"
+        @description "Layer 2 visual treatment for cards rendered by this board."
+        @tier "presentation"
+      cardTitleBinding : string = @item.title
+        @label "Card title binding"
+        @description "Per-card binding for the title slot."
+        @tier "presentation"
+      cardDescriptionBinding : string = @item.description
+        @label "Card description binding"
+        @description "Per-card binding for the description slot."
+        @tier "presentation"
+      cardStageBinding : string = @item.stage
+        @label "Card stage binding"
+        @description "Per-card binding for the stage/status slot."
+        @tier "presentation"
+      cardIdBinding : string = @item.id
+        @label "Card id binding"
+        @description "Per-card binding for the id used in action payloads."
+        @tier "presentation"
+      groupByField : string = stage
+        @label "Group-by field"
+        @description "Entity field whose value matches a column key — items are filtered into columns by it. Default 'stage'; set to 'status' (or any field) for entities that track state under a different name."
+        @tier "presentation"
+      bodyContent : render-ui = {
+        children: [{
+          align: center
+          children: [{ name: kanban-square, type: icon }, {
+            content: @config.title
+            type: typography
+            variant: h3
+          }]
+          direction: horizontal
+          gap: sm
+          type: stack
+        }, { type: divider }, {
+          cols: @config.gridCols
+          dndRoot: true
+          entity: @entity.boards
+          fields: []
+          gap: md
+          renderItem: (fn col {
+            children: [{
+              children: [{
+                align: center
+                children: [{ name: @col.icon, type: icon }, {
+                  content: @col.label
+                  type: typography
+                  variant: h4
+                }, {
+                  label: @col.count
+                  type: badge
+                  variant: @col.variant
+                }]
+                direction: horizontal
+                gap: xs
+                type: stack
+              }, {
+                accepts: "*"
+                dragGroup: @col.key
+                dropEvent: MOVE_CARD
+                entity: @col.items
+                fields: []
+                gap: sm
+                positionEvent: REORDER_POSITION
+                renderItem: (fn item {
+                  children: [{
+                    children: [{
+                      content: @config.cardTitleBinding
+                      type: typography
+                      variant: h4
+                    }, {
+                      color: muted
+                      content: @config.cardDescriptionBinding
+                      type: typography
+                      variant: caption
+                    }, {
+                      align: center
+                      children: [{
+                        action: OPEN_CARD
+                        actionPayload: { id: @config.cardIdBinding, row: @item }
+                        icon: arrow-right
+                        label: Open
+                        type: button
+                        variant: ghost
+                      }]
+                      direction: horizontal
+                      gap: xs
+                      type: stack
+                    }]
+                    direction: vertical
+                    gap: xs
+                    type: stack
+                  }]
+                  look: @config.cardLook
+                  type: card
+                })
+                reorderEvent: REORDER_CARD
+                sortable: true
+                type: data-list
+              }]
+              direction: vertical
+              gap: sm
+              type: stack
+            }]
+            look: @config.cardLook
+            type: card
+          })
+          type: data-grid
+        }, {
+          action: ADD_CARD
+          icon: plus
+          label: "Add item"
+          type: floating-action-button
+          variant: primary
+        }]
+        direction: vertical
+        gap: md
+        type: stack
+      }
+        @label "Body content tree"
+        @description "Render-ui SExpr rendered after the board loads. Default is the canonical column data-grid with nested per-column data-lists. Layer 3 variants override this with their own tree (swim-lanes, timeline-roadmap, etc.) while inheriting the same trait, state machine, emits, and listens."
+        @tier "internal"
+    }
   }
+
   page "/board" as BoardPage -> BoardItemBoard
 }

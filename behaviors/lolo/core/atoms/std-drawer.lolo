@@ -1,6 +1,5 @@
 app std-drawer "2.2.0"
 "std-drawer — drawer-slot atom. Renders ONLY to its `drawer` slot. The runtime's slot wrapper provides the backdrop + right-anchored panel + close-X chrome; the atom emits ONLY the panel body content. Host emits OPEN with payload {id, name, description} → renders body; CLOSE clears the slot. Stateless: state lives in the OPEN payload, not the entity, so the trait stays safe under consumer entity rebinds."
-
 orbital DrawerContentOrbital {
   entity DrawerContent [runtime] {
     id : string!
@@ -8,21 +7,54 @@ orbital DrawerContentOrbital {
 
   trait DrawerContentDrawer -> @rebindable DrawerContent [interaction, instance] {
     initial: closed
+
     state closed {
       INIT -> closed
       OPEN -> open
-        (render-ui drawer { type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", variant: "h4", content: "@payload.name" }, { type: "typography", variant: "body", color: "muted", content: "@payload.description" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
+        (render-ui drawer {
+          children: [{
+            content: ?name
+            type: typography
+            variant: h4
+          }, {
+            color: muted
+            content: ?description
+            type: typography
+            variant: body
+          }, {
+            children: [{
+              action: CLOSE
+              label: Close
+              type: button
+              variant: ghost
+            }]
+            direction: horizontal
+            gap: sm
+            justify: end
+            type: stack
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
     }
+
     state open {
       CLOSE -> closed
         (render-ui drawer null)
     }
+
     listens {
-      OPEN { id : string!, name : string, description : string }
+      OPEN {
+        id : string!
+        name : string
+        description : string
+      }
         @description "Drawer content is requested and should be rendered."
         @synonyms "show, display, load, reveal"
         @tier "essential"
     }
   }
+
   page "/drawercontents/drawer" as DrawerContentDrawerPage -> DrawerContentDrawer
 }

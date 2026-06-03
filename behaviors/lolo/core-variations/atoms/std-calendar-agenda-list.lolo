@@ -1,68 +1,116 @@
 app std-calendar-agenda-list "1.2.0"
 "Day-grouped agenda — events organized by date with overline day headers (Today, Tomorrow, Mon Jun 5) and a time marker per event. Inherits std-calendar's fetch + SELECT_DAY state machine; only bodyContent differs from std-calendar's month-grid and std-calendar-week-timeline's 7-col timeline. For appointment queues, class-roster schedules, court-deadline lists where users scan a vertical chronological flow grouped by day."
-
 orbital AgendaListCalendarOrbital {
   uses Calendar from "std/behaviors/std-calendar"
 
   entity AgendaListEvent [runtime] {
-    id          : string!
-    name        : string! @description "The event's title or short identifier." @synonyms "title, label, eventName"
+    id : string!
+    name : string! @description "The event's title or short identifier." @synonyms "title, label, eventName"
     description : string @description "A brief explanation of the event." @synonyms "summary, details, notes"
-    status      : "active" | "inactive" | "pending" @description "Indicates the current operational state of the event." @synonyms "state, condition, flag" = "active"
-    createdAt   : string
-    date        : datetime @intrinsic = ""
-    time        : string @description "The time of the event." @synonyms "start time, scheduled time, time slot" = ""
-    duration    : number @description "The length of time the event lasts, in minutes." @synonyms "length, time, span" = 60
-    dateGroup   : string @description "The date to which this event belongs." @synonyms "day, date" = ""
-    selectedRange : string @intrinsic = "month"
+    status : "active" | "inactive" | "pending" @description "Indicates the current operational state of the event." @synonyms "state, condition, flag" = active
+    createdAt : string
+    date : datetime @intrinsic = ""
+    time : string @description "The time of the event." @synonyms "start time, scheduled time, time slot" = ""
+    duration : number @description "The length of time the event lasts, in minutes." @synonyms "length, time, span" = 60
+    dateGroup : string @description "The date to which this event belongs." @synonyms "day, date" = ""
+    selectedRange : string @intrinsic = month
   }
 
   trait AgendaListCalendar = Calendar.traits.CalendarEventCalendar -> AgendaListEvent {
-    config: {
+    config {
       bodyContent: {
-        type: "stack",
-        direction: "vertical",
-        gap: "lg",
-        className: "w-full p-card-md",
-        children: [
-          { type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [
-            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
-              { type: "icon", name: "list" },
-              { type: "typography", content: "Agenda", variant: "h2" }
-            ]},
-            { type: "date-range-selector", onSelect: "SELECT_DAY", selected: "@entity.selectedRange" }
-          ]},
-          { type: "divider" },
-          { type: "data-list",
-            entity: "@payload.data",
-            groupBy: "date",
-            gap: "md",
-            variant: "default",
-            fields: [],
-            renderItem: ["fn", "item", {
-              type: "card",
-              look: "flat-bordered",
-              padding: "md",
-              children: [{
-                type: "stack", direction: "horizontal", gap: "md", align: "start",
-                children: [
-                  { type: "stack", direction: "vertical", gap: "xs", align: "center", className: "w-16 shrink-0", children: [
-                    { type: "typography", variant: "overline", color: "muted", content: "@config.timeBinding" },
-                    { type: "icon", name: "clock", size: "sm", color: "muted" }
-                  ]},
-                  { type: "divider", orientation: "vertical" },
-                  { type: "stack", direction: "vertical", gap: "xs", className: "flex-1 min-w-0", children: [
-                    { type: "stack", direction: "horizontal", gap: "sm", justify: "between", align: "center", children: [
-                      { type: "typography", variant: "h4", weight: "medium", content: "@config.titleBinding", className: "truncate" },
-                      { type: "badge", label: "@config.badgeBinding", variant: "default", size: "sm" }
-                    ]},
-                    { type: "typography", variant: "body2", color: "muted", content: "@config.descriptionBinding", className: "truncate" }
-                  ]}
-                ]
-              }]
+        children: [{
+          align: center
+          children: [{
+            align: center
+            children: [{ name: list, type: icon }, {
+              content: Agenda
+              type: typography
+              variant: h2
             }]
-          }
-        ]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, {
+            onSelect: SELECT_DAY
+            selected: @entity.selectedRange
+            type: date-range-selector
+          }]
+          direction: horizontal
+          gap: md
+          justify: between
+          type: stack
+        }, { type: divider }, {
+          entity: ?data
+          fields: []
+          gap: md
+          groupBy: date
+          renderItem: (fn item {
+            children: [{
+              align: start
+              children: [{
+                align: center
+                children: [{
+                  color: muted
+                  content: @config.timeBinding
+                  type: typography
+                  variant: overline
+                }, {
+                  color: muted
+                  name: clock
+                  size: sm
+                  type: icon
+                }]
+                className: "w-16 shrink-0"
+                direction: vertical
+                gap: xs
+                type: stack
+              }, { orientation: vertical, type: divider }, {
+                children: [{
+                  align: center
+                  children: [{
+                    className: truncate
+                    content: @config.titleBinding
+                    type: typography
+                    variant: h4
+                    weight: medium
+                  }, {
+                    label: @config.badgeBinding
+                    size: sm
+                    type: badge
+                    variant: default
+                  }]
+                  direction: horizontal
+                  gap: sm
+                  justify: between
+                  type: stack
+                }, {
+                  className: truncate
+                  color: muted
+                  content: @config.descriptionBinding
+                  type: typography
+                  variant: body2
+                }]
+                className: "flex-1 min-w-0"
+                direction: vertical
+                gap: xs
+                type: stack
+              }]
+              direction: horizontal
+              gap: md
+              type: stack
+            }]
+            look: flat-bordered
+            padding: md
+            type: card
+          })
+          type: data-list
+          variant: default
+        }]
+        className: "w-full p-card-md"
+        direction: vertical
+        gap: lg
+        type: stack
       }
     }
   }

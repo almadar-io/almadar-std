@@ -1,17 +1,23 @@
 app std-agent-learner "1.0.0"
 "std-agent-learner as a Function"
-
 orbital AgentLearnerOrbital {
   uses AgentCompletion from "std/behaviors/std-agent-completion"
+
   uses AgentMemory from "std/behaviors/std-agent-memory"
+
   uses AgentProvider from "std/behaviors/std-agent-provider"
+
   uses Browse from "std/behaviors/std-browse"
+
+    type AgentLearnerLoaded = Event AgentLearner "Fired when AgentLearner finishes loading"
+
+    type AgentLearnerLoadFailed = Event { message : string } "Fired when AgentLearner fails to load"
 
   entity AgentLearner [runtime] {
     id : string
     name : string @description "A human-readable identifier for the agent learner." @synonyms "label, identifier, alias"
     description : string @description "A textual explanation of the field's meaning." @synonyms "explanation, details, notes, information"
-    status : "active" | "inactive" | "pending" @description "Indicates the current operational state of the component." @synonyms "state, condition, operational_status" = "active"
+    status : "active" | "inactive" | "pending" @description "Indicates the current operational state of the component." @synonyms "state, condition, operational_status" = active
     createdAt : string
     outcome : string @description "The result or consequence of an action or process." @synonyms "result, consequence, effect, outcome, result" = ""
     category : string @description "Classification or type of the agent learner." @synonyms "type, class, kind" = ""
@@ -29,94 +35,523 @@ orbital AgentLearnerOrbital {
     pinned : boolean @description "Indicates whether the data is fixed or subject to change." @synonyms "locked, fixed, stable" = false
     prompt : string @description "The text input used to initiate a learning process." @synonyms "query, input, instruction, request" = ""
     response : string @description "The result returned by the agent learner." @synonyms "result, output, answer" = ""
-    model : string @description "The identifier for the model used." @synonyms "model_id, identifier, reference" = "claude-sonnet-4-20250514"
-    currentProvider : string @description "The currently active provider for processing." @synonyms "provider, source, handler" = "anthropic"
-    currentModel : string @description "The identifier of the currently active model." @synonyms "model, identifier, name" = "claude-sonnet-4-20250514"
-    fallbackProvider : string @description "An alternative provider to use if the primary fails." @synonyms "alternate provider, backup provider, secondary provider" = "anthropic"
+    model : string @description "The identifier for the model used." @synonyms "model_id, identifier, reference" = claude-sonnet-4-20250514
+    currentProvider : string @description "The currently active provider for processing." @synonyms "provider, source, handler" = anthropic
+    currentModel : string @description "The identifier of the currently active model." @synonyms "model, identifier, name" = claude-sonnet-4-20250514
+    fallbackProvider : string @description "An alternative provider to use if the primary fails." @synonyms "alternate provider, backup provider, secondary provider" = anthropic
     requestCount : number @description "The number of times a request has been made." @synonyms "count, requests, number of requests" = 0
     action : string @description "The specific operation performed." @synonyms "task, operation, verb, activity" = ""
     detail : string @description "A more detailed explanation or note." @synonyms "note, remark, specifics, particulars" = ""
     timestamp : string @description "The date and time when an event occurred." @synonyms "date, time, when" = ""
     duration : number @description "The length of time an operation took, typically in milliseconds." @synonyms "time, length, elapsed" = 0
-    icon : string @description "A visual representation, often a graphic, for identification." @synonyms "image, graphic, symbol, representation" = "circle"
+    icon : string @description "A visual representation, often a graphic, for identification." @synonyms "image, graphic, symbol, representation" = circle
   }
 
-  type AgentLearnerLoaded     = Event AgentLearner                  "Fired when AgentLearner finishes loading"
-  type AgentLearnerLoadFailed = Event { message : string } "Fired when AgentLearner fails to load"
   trait AgentLearnerLearner -> AgentLearner [interaction, collection] {
     initial: idle
+
     state idle {
       INIT -> idle
         (set @entity.provider (agent/provider))
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "graduation-cap"}, { type: "typography", content: "Outcome Learner", variant: "h2" }] }, { type: "divider" }, { type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "Successes", value: "@entity.totalSuccesses", icon: "check-circle" }, { type: "stat-display", label: "Failures", value: "@entity.totalFailures", icon: "x-circle" }, { type: "stat-display", label: "Current Provider", value: "@entity.provider", icon: "cpu" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Listening for task outcomes...", variant: "body" }, { type: "typography", content: "This module records TASK_SUCCEEDED and TASK_FAILED events automatically.", variant: "caption" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Last Outcome", variant: "caption" }, { type: "typography", content: "@entity.outcome", variant: "body" }, { type: "typography", content: "Impact Analysis", variant: "caption" }, { type: "typography", content: "@entity.impact", variant: "body" }] }] }] })
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: graduation-cap, type: icon }, {
+              content: "Outcome Learner"
+              type: typography
+              variant: h2
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            children: [{
+              icon: check-circle
+              label: Successes
+              type: stat-display
+              value: @entity.totalSuccesses
+            }, {
+              icon: x-circle
+              label: Failures
+              type: stat-display
+              value: @entity.totalFailures
+            }, {
+              icon: cpu
+              label: "Current Provider"
+              type: stat-display
+              value: @entity.provider
+            }]
+            cols: 3
+            type: simple-grid
+          }, { type: divider }, {
+            children: [{
+              children: [{
+                content: "Listening for task outcomes..."
+                type: typography
+                variant: body
+              }, {
+                content: "This module records TASK_SUCCEEDED and TASK_FAILED events automatically."
+                type: typography
+                variant: caption
+              }]
+              direction: vertical
+              gap: md
+              type: stack
+            }]
+            type: card
+          }, {
+            children: [{
+              children: [{
+                content: "Last Outcome"
+                type: typography
+                variant: caption
+              }, {
+                content: @entity.outcome
+                type: typography
+                variant: body
+              }, {
+                content: "Impact Analysis"
+                type: typography
+                variant: caption
+              }, {
+                content: @entity.impact
+                type: typography
+                variant: body
+              }]
+              direction: vertical
+              gap: sm
+              type: stack
+            }]
+            type: card
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
       TASK_SUCCEEDED -> recording
-        (set @entity.outcome @payload.outcome)
-        (set @entity.category @payload.category)
+        (set @entity.outcome ?outcome)
+        (set @entity.category ?category)
         (set @entity.isSuccess true)
         (set @entity.consecutiveFailures 0)
-        (set @entity.totalSuccesses (+ @entity.totalSuccesses 1))
+        (set @entity.totalSuccesses ["+", @entity.totalSuccesses, 1])
         (set @entity.status recording)
-        (agent/memorize (str/concat "Success: " @payload.outcome) @payload.category)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "save"}, { type: "typography", content: "Recording outcome...", variant: "h3" }, { type: "spinner"}, { type: "badge", label: "@entity.outcome" }] })
+        (agent/memorize (str/concat "Success: " ?outcome) ?category)
+        (render-ui main {
+          align: center
+          children: [{ name: save, type: icon }, {
+            content: "Recording outcome..."
+            type: typography
+            variant: h3
+          }, { type: spinner }, { label: @entity.outcome, type: badge }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
       TASK_FAILED -> recording
-        (set @entity.outcome @payload.outcome)
-        (set @entity.category @payload.category)
+        (set @entity.outcome ?outcome)
+        (set @entity.category ?category)
         (set @entity.isSuccess false)
-        (set @entity.consecutiveFailures (+ @entity.consecutiveFailures 1))
-        (set @entity.totalFailures (+ @entity.totalFailures 1))
+        (set @entity.consecutiveFailures ["+", @entity.consecutiveFailures, 1])
+        (set @entity.totalFailures ["+", @entity.totalFailures, 1])
         (set @entity.status recording)
-        (agent/memorize (str/concat "Failure: " @payload.outcome) @payload.category)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "save"}, { type: "typography", content: "Recording outcome...", variant: "h3" }, { type: "spinner"}, { type: "badge", label: "@entity.outcome" }] })
+        (agent/memorize (str/concat "Failure: " ?outcome) ?category)
+        (render-ui main {
+          align: center
+          children: [{ name: save, type: icon }, {
+            content: "Recording outcome..."
+            type: typography
+            variant: h3
+          }, { type: spinner }, { label: @entity.outcome, type: badge }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
       RESET -> idle
         (set @entity.provider (agent/provider))
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "graduation-cap"}, { type: "typography", content: "Outcome Learner", variant: "h2" }] }, { type: "divider" }, { type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "Successes", value: "@entity.totalSuccesses", icon: "check-circle" }, { type: "stat-display", label: "Failures", value: "@entity.totalFailures", icon: "x-circle" }, { type: "stat-display", label: "Current Provider", value: "@entity.provider", icon: "cpu" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Listening for task outcomes...", variant: "body" }, { type: "typography", content: "This module records TASK_SUCCEEDED and TASK_FAILED events automatically.", variant: "caption" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Last Outcome", variant: "caption" }, { type: "typography", content: "@entity.outcome", variant: "body" }, { type: "typography", content: "Impact Analysis", variant: "caption" }, { type: "typography", content: "@entity.impact", variant: "body" }] }] }] })
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: graduation-cap, type: icon }, {
+              content: "Outcome Learner"
+              type: typography
+              variant: h2
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            children: [{
+              icon: check-circle
+              label: Successes
+              type: stat-display
+              value: @entity.totalSuccesses
+            }, {
+              icon: x-circle
+              label: Failures
+              type: stat-display
+              value: @entity.totalFailures
+            }, {
+              icon: cpu
+              label: "Current Provider"
+              type: stat-display
+              value: @entity.provider
+            }]
+            cols: 3
+            type: simple-grid
+          }, { type: divider }, {
+            children: [{
+              children: [{
+                content: "Listening for task outcomes..."
+                type: typography
+                variant: body
+              }, {
+                content: "This module records TASK_SUCCEEDED and TASK_FAILED events automatically."
+                type: typography
+                variant: caption
+              }]
+              direction: vertical
+              gap: md
+              type: stack
+            }]
+            type: card
+          }, {
+            children: [{
+              children: [{
+                content: "Last Outcome"
+                type: typography
+                variant: caption
+              }, {
+                content: @entity.outcome
+                type: typography
+                variant: body
+              }, {
+                content: "Impact Analysis"
+                type: typography
+                variant: caption
+              }, {
+                content: @entity.impact
+                type: typography
+                variant: body
+              }]
+              direction: vertical
+              gap: sm
+              type: stack
+            }]
+            type: card
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
     }
+
     state recording {
       RECORDED -> analyzing
-        (set @entity.memoryId @payload.memoryId)
-        (if @entity.isSuccess (agent/reinforce @payload.memoryId) (agent/decay))
-        (if (>= @entity.consecutiveFailures 3) (agent/switch-provider anthropic) (log "No provider switch needed"))
+        (set @entity.memoryId ?memoryId)
+        (if @entity.isSuccess (agent/reinforce ?memoryId) (agent/decay))
+        (if [">=", @entity.consecutiveFailures, 3] (agent/switch-provider anthropic) (log "No provider switch needed"))
         (set @entity.status analyzing)
         (agent/generate (str/concat "Outcome: " @entity.outcome "\n" "Category: " @entity.category "\n" "Result: " (if @entity.isSuccess success failure) "\n" "Consecutive failures: " (str/concat @entity.consecutiveFailures) "\n\n" "Analyze the impact of this outcome. What should be learned? Keep it to 1-2 sentences."))
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "cpu"}, { type: "typography", content: "Analyzing impact...", variant: "h3" }, { type: "spinner"}, { type: "stack", direction: "horizontal", gap: "md", justify: "center", children: [{ type: "badge", label: "@entity.category" }, { type: "badge", label: "@entity.outcome" }] }] })
+        (render-ui main {
+          align: center
+          children: [{ name: cpu, type: icon }, {
+            content: "Analyzing impact..."
+            type: typography
+            variant: h3
+          }, { type: spinner }, {
+            children: [{ label: @entity.category, type: badge }, { label: @entity.outcome, type: badge }]
+            direction: horizontal
+            gap: md
+            justify: center
+            type: stack
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
       FAILED -> idle
-        (set @entity.error @payload.error)
+        (set @entity.error ?error)
         (set @entity.status idle)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "graduation-cap"}, { type: "typography", content: "Outcome Learner", variant: "h2" }] }, { type: "divider" }, { type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "Successes", value: "@entity.totalSuccesses", icon: "check-circle" }, { type: "stat-display", label: "Failures", value: "@entity.totalFailures", icon: "x-circle" }, { type: "stat-display", label: "Current Provider", value: "@entity.provider", icon: "cpu" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Listening for task outcomes...", variant: "body" }, { type: "typography", content: "This module records TASK_SUCCEEDED and TASK_FAILED events automatically.", variant: "caption" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Last Outcome", variant: "caption" }, { type: "typography", content: "@entity.outcome", variant: "body" }, { type: "typography", content: "Impact Analysis", variant: "caption" }, { type: "typography", content: "@entity.impact", variant: "body" }] }] }] })
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: graduation-cap, type: icon }, {
+              content: "Outcome Learner"
+              type: typography
+              variant: h2
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            children: [{
+              icon: check-circle
+              label: Successes
+              type: stat-display
+              value: @entity.totalSuccesses
+            }, {
+              icon: x-circle
+              label: Failures
+              type: stat-display
+              value: @entity.totalFailures
+            }, {
+              icon: cpu
+              label: "Current Provider"
+              type: stat-display
+              value: @entity.provider
+            }]
+            cols: 3
+            type: simple-grid
+          }, { type: divider }, {
+            children: [{
+              children: [{
+                content: "Listening for task outcomes..."
+                type: typography
+                variant: body
+              }, {
+                content: "This module records TASK_SUCCEEDED and TASK_FAILED events automatically."
+                type: typography
+                variant: caption
+              }]
+              direction: vertical
+              gap: md
+              type: stack
+            }]
+            type: card
+          }, {
+            children: [{
+              children: [{
+                content: "Last Outcome"
+                type: typography
+                variant: caption
+              }, {
+                content: @entity.outcome
+                type: typography
+                variant: body
+              }, {
+                content: "Impact Analysis"
+                type: typography
+                variant: caption
+              }, {
+                content: @entity.impact
+                type: typography
+                variant: body
+              }]
+              direction: vertical
+              gap: sm
+              type: stack
+            }]
+            type: card
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
     }
+
     state analyzing {
       ANALYSIS_DONE -> idle
-        (set @entity.impact @payload.impact)
+        (set @entity.impact ?impact)
         (set @entity.status idle)
         (set @entity.provider (agent/provider))
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "graduation-cap"}, { type: "typography", content: "Outcome Learner", variant: "h2" }] }, { type: "divider" }, { type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "Successes", value: "@entity.totalSuccesses", icon: "check-circle" }, { type: "stat-display", label: "Failures", value: "@entity.totalFailures", icon: "x-circle" }, { type: "stat-display", label: "Current Provider", value: "@entity.provider", icon: "cpu" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Listening for task outcomes...", variant: "body" }, { type: "typography", content: "This module records TASK_SUCCEEDED and TASK_FAILED events automatically.", variant: "caption" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Last Outcome", variant: "caption" }, { type: "typography", content: "@entity.outcome", variant: "body" }, { type: "typography", content: "Impact Analysis", variant: "caption" }, { type: "typography", content: "@entity.impact", variant: "body" }] }] }] })
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: graduation-cap, type: icon }, {
+              content: "Outcome Learner"
+              type: typography
+              variant: h2
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            children: [{
+              icon: check-circle
+              label: Successes
+              type: stat-display
+              value: @entity.totalSuccesses
+            }, {
+              icon: x-circle
+              label: Failures
+              type: stat-display
+              value: @entity.totalFailures
+            }, {
+              icon: cpu
+              label: "Current Provider"
+              type: stat-display
+              value: @entity.provider
+            }]
+            cols: 3
+            type: simple-grid
+          }, { type: divider }, {
+            children: [{
+              children: [{
+                content: "Listening for task outcomes..."
+                type: typography
+                variant: body
+              }, {
+                content: "This module records TASK_SUCCEEDED and TASK_FAILED events automatically."
+                type: typography
+                variant: caption
+              }]
+              direction: vertical
+              gap: md
+              type: stack
+            }]
+            type: card
+          }, {
+            children: [{
+              children: [{
+                content: "Last Outcome"
+                type: typography
+                variant: caption
+              }, {
+                content: @entity.outcome
+                type: typography
+                variant: body
+              }, {
+                content: "Impact Analysis"
+                type: typography
+                variant: caption
+              }, {
+                content: @entity.impact
+                type: typography
+                variant: body
+              }]
+              direction: vertical
+              gap: sm
+              type: stack
+            }]
+            type: card
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
       FAILED -> idle
-        (set @entity.error @payload.error)
+        (set @entity.error ?error)
         (set @entity.status idle)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "graduation-cap"}, { type: "typography", content: "Outcome Learner", variant: "h2" }] }, { type: "divider" }, { type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "Successes", value: "@entity.totalSuccesses", icon: "check-circle" }, { type: "stat-display", label: "Failures", value: "@entity.totalFailures", icon: "x-circle" }, { type: "stat-display", label: "Current Provider", value: "@entity.provider", icon: "cpu" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Listening for task outcomes...", variant: "body" }, { type: "typography", content: "This module records TASK_SUCCEEDED and TASK_FAILED events automatically.", variant: "caption" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Last Outcome", variant: "caption" }, { type: "typography", content: "@entity.outcome", variant: "body" }, { type: "typography", content: "Impact Analysis", variant: "caption" }, { type: "typography", content: "@entity.impact", variant: "body" }] }] }] })
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: graduation-cap, type: icon }, {
+              content: "Outcome Learner"
+              type: typography
+              variant: h2
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            children: [{
+              icon: check-circle
+              label: Successes
+              type: stat-display
+              value: @entity.totalSuccesses
+            }, {
+              icon: x-circle
+              label: Failures
+              type: stat-display
+              value: @entity.totalFailures
+            }, {
+              icon: cpu
+              label: "Current Provider"
+              type: stat-display
+              value: @entity.provider
+            }]
+            cols: 3
+            type: simple-grid
+          }, { type: divider }, {
+            children: [{
+              children: [{
+                content: "Listening for task outcomes..."
+                type: typography
+                variant: body
+              }, {
+                content: "This module records TASK_SUCCEEDED and TASK_FAILED events automatically."
+                type: typography
+                variant: caption
+              }]
+              direction: vertical
+              gap: md
+              type: stack
+            }]
+            type: card
+          }, {
+            children: [{
+              children: [{
+                content: "Last Outcome"
+                type: typography
+                variant: caption
+              }, {
+                content: @entity.outcome
+                type: typography
+                variant: body
+              }, {
+                content: "Impact Analysis"
+                type: typography
+                variant: caption
+              }, {
+                content: @entity.impact
+                type: typography
+                variant: body
+              }]
+              direction: vertical
+              gap: sm
+              type: stack
+            }]
+            type: card
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
     }
+
     emits {
-      TASK_SUCCEEDED -> external { outcome: string, category: string }
+      TASK_SUCCEEDED -> external {
+        outcome : string
+        category : string
+      }
     }
+
     listens {
       AgentLearnerLearner.TASK_SUCCEEDED -> TASK_SUCCEEDED
-      RECORDED { memoryId : string! }
-      ANALYSIS_DONE { impact : string! }
-      FAILED { error : string! }
-          TASK_SUCCEEDED { outcome : string, category : string }
-          TASK_FAILED { outcome : string, category : string }
+      RECORDED {
+        memoryId : string!
+      }
+      ANALYSIS_DONE {
+        impact : string!
+      }
+      FAILED {
+        error : string!
+      }
+      TASK_SUCCEEDED {
+        outcome : string
+        category : string
+      }
+      TASK_FAILED {
+        outcome : string
+        category : string
+      }
     }
   }
+
   trait LearnerRecordsBrowse = Browse.traits.BrowseItemBrowse -> AgentLearner {
   }
+
   trait LearnerMemoryLifecycle = AgentMemory.traits.AgentMemoryBrowse -> AgentLearner {
     emitsScope internal
   }
+
   trait LearnerCompletionFlow = AgentCompletion.traits.AgentCompletionModal -> AgentLearner {
     emitsScope internal
   }
+
   trait LearnerProviderManager = AgentProvider.traits.AgentProviderModal -> AgentLearner {
     emitsScope internal
   }
+
   page "/agentlearners" as AgentLearnerPage -> AgentLearnerLearner, LearnerRecordsBrowse, LearnerMemoryLifecycle, LearnerCompletionFlow, LearnerProviderManager
 }

@@ -1,145 +1,447 @@
 app std-agent-provider "1.0.0"
 "std-agent-provider as a Function"
-
 orbital AgentProviderOrbital {
+    type AgentProviderLoaded = Event AgentProvider "Fired when AgentProvider finishes loading"
+
+    type AgentProviderLoadFailed = Event { message : string } "Fired when AgentProvider fails to load"
+
+    type AgentProviderRowLoaded = Event { row : AgentProvider } "Fired on modal open with the pre-fill row"
+
+    type AgentProviderUpdated = Event { id : string }
+
+    type AgentProviderUpdateFailed = Event { error : string, code : string }
+
   entity AgentProvider [persistent: agentproviders] {
     id : string
     name : string @description "A human-readable identifier for the agent provider." @synonyms "label, identifier, designation"
     description : string @description "A textual explanation of the agent provider's function." @synonyms "explanation, details, notes"
-    status : "active" | "inactive" | "pending" @description "Indicates the operational state of the agent provider." @synonyms "state, condition, operationalStatus" = "active"
+    status : "active" | "inactive" | "pending" @description "Indicates the operational state of the agent provider." @synonyms "state, condition, operationalStatus" = active
     createdAt : string
-    currentProvider : string @description "The currently active provider implementation." @synonyms "implementation, active, provider" = "anthropic"
-    currentModel : string @description "The currently active model identifier." @synonyms "model, identifier, selection" = "claude-sonnet-4-20250514"
-    fallbackProvider : string @description "An alternative provider to use when the primary fails." @synonyms "alternate, backup, secondary" = "openai"
+    currentProvider : string @description "The currently active provider implementation." @synonyms "implementation, active, provider" = anthropic
+    currentModel : string @description "The currently active model identifier." @synonyms "model, identifier, selection" = claude-sonnet-4-20250514
+    fallbackProvider : string @description "An alternative provider to use when the primary fails." @synonyms "alternate, backup, secondary" = openai
     requestCount : number @description "The number of times a request has been made." @synonyms "count, requests, usage" = 0
     message : string @description "A textual message associated with the agent provider." @synonyms "text, content, details, note" = ""
-    notificationType : "info" | "success" | "warning" | "error" @description "Specifies the type of notification." @synonyms "type, category, level" = "info"
+    notificationType : "info" | "success" | "warning" | "error" @description "Specifies the type of notification." @synonyms "type, category, level" = info
   }
 
-  type AgentProviderLoaded     = Event AgentProvider                  "Fired when AgentProvider finishes loading"
-  type AgentProviderLoadFailed = Event { message : string } "Fired when AgentProvider fails to load"
-  type AgentProviderRowLoaded  = Event { row : AgentProvider } "Fired on modal open with the pre-fill row"
-  type AgentProviderUpdated = Event { id : string }
-  type AgentProviderUpdateFailed = Event { error : string, code : string }
   trait AgentProviderModal -> AgentProvider [interaction, instance] {
     initial: closed
+
     state closed {
       INIT -> closed
-        (set @entity.currentModel "claude-sonnet-4-20250514")
-        (set @entity.currentProvider "anthropic")
-        (fetch AgentProvider { emit: { success: "AgentProviderLoaded", failure: "AgentProviderLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "repeat"}, { type: "typography", content: "Switch Provider", variant: "h2" }] }, { type: "button", label: "Open", action: "SWITCH", variant: "primary", icon: "repeat" }] }, { type: "divider" }, { type: "empty-state", icon: "repeat", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
+        (set @entity.currentModel claude-sonnet-4-20250514)
+        (set @entity.currentProvider anthropic)
+        (fetch AgentProvider {
+          emit: { failure: AgentProviderLoadFailed, success: AgentProviderLoaded }
+        })
+        (render-ui main {
+          children: [{
+            children: [{
+              children: [{ name: repeat, type: icon }, {
+                content: "Switch Provider"
+                type: typography
+                variant: h2
+              }]
+              direction: horizontal
+              gap: md
+              type: stack
+            }, {
+              action: SWITCH
+              icon: repeat
+              label: Open
+              type: button
+              variant: primary
+            }]
+            direction: horizontal
+            gap: md
+            justify: between
+            type: stack
+          }, { type: divider }, {
+            description: "Click Open to view details in a modal overlay."
+            icon: repeat
+            title: "Nothing open"
+            type: empty-state
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
       SWITCH -> loading
-        (fetch AgentProvider { emit: { success: "AgentProviderRowLoaded", failure: "AgentProviderLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
+        (fetch AgentProvider {
+          emit: { failure: AgentProviderLoadFailed, success: AgentProviderRowLoaded }
+        })
+        (render-ui modal {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Loading…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
     }
+
     state loading {
       AgentProviderRowLoaded -> open
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "repeat"}, { type: "typography", content: "Switch Provider", variant: "h3" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Current:" }, { type: "badge", label: "@entity.currentProvider" }, { type: "badge", label: "@entity.currentModel" }] }, { type: "form-section", entity: @payload.row, mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["currentProvider", "currentModel"] }] })
+        (render-ui modal {
+          children: [{
+            children: [{ name: repeat, type: icon }, {
+              content: "Switch Provider"
+              type: typography
+              variant: h3
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            children: [{
+              content: "Current:"
+              type: typography
+              variant: caption
+            }, { label: @entity.currentProvider, type: badge }, { label: @entity.currentModel, type: badge }]
+            direction: horizontal
+            gap: md
+            type: stack
+          }, {
+            cancelEvent: CLOSE
+            entity: ?row
+            fields: (currentProvider currentModel)
+            mode: edit
+            submitEvent: SAVE
+            type: form-section
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
       AgentProviderLoadFailed -> closed
         (render-ui modal null)
         (notify "Failed to load provider" error)
-        (fetch AgentProvider { emit: { success: "AgentProviderLoaded", failure: "AgentProviderLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "repeat"}, { type: "typography", content: "Switch Provider", variant: "h2" }] }, { type: "button", label: "Open", action: "SWITCH", variant: "primary", icon: "repeat" }] }, { type: "divider" }, { type: "empty-state", icon: "repeat", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
+        (fetch AgentProvider {
+          emit: { failure: AgentProviderLoadFailed, success: AgentProviderLoaded }
+        })
+        (render-ui main {
+          children: [{
+            children: [{
+              children: [{ name: repeat, type: icon }, {
+                content: "Switch Provider"
+                type: typography
+                variant: h2
+              }]
+              direction: horizontal
+              gap: md
+              type: stack
+            }, {
+              action: SWITCH
+              icon: repeat
+              label: Open
+              type: button
+              variant: primary
+            }]
+            direction: horizontal
+            gap: md
+            justify: between
+            type: stack
+          }, { type: divider }, {
+            description: "Click Open to view details in a modal overlay."
+            icon: repeat
+            title: "Nothing open"
+            type: empty-state
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
     }
+
     state open {
       CLOSE -> closed
         (render-ui modal null)
         (notify Cancelled info)
-        (fetch AgentProvider { emit: { success: "AgentProviderLoaded", failure: "AgentProviderLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "repeat"}, { type: "typography", content: "Switch Provider", variant: "h2" }] }, { type: "button", label: "Open", action: "SWITCH", variant: "primary", icon: "repeat" }] }, { type: "divider" }, { type: "empty-state", icon: "repeat", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
+        (fetch AgentProvider {
+          emit: { failure: AgentProviderLoadFailed, success: AgentProviderLoaded }
+        })
+        (render-ui main {
+          children: [{
+            children: [{
+              children: [{ name: repeat, type: icon }, {
+                content: "Switch Provider"
+                type: typography
+                variant: h2
+              }]
+              direction: horizontal
+              gap: md
+              type: stack
+            }, {
+              action: SWITCH
+              icon: repeat
+              label: Open
+              type: button
+              variant: primary
+            }]
+            direction: horizontal
+            gap: md
+            justify: between
+            type: stack
+          }, { type: divider }, {
+            description: "Click Open to view details in a modal overlay."
+            icon: repeat
+            title: "Nothing open"
+            type: empty-state
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
       SAVE -> closed
-        (persist update AgentProvider @payload.data { emit: { success: "AgentProviderUpdated", failure: "AgentProviderUpdateFailed" } })
+        (persist update AgentProvider ?data {
+          emit: { failure: AgentProviderUpdateFailed, success: AgentProviderUpdated }
+        })
         (render-ui modal null)
         (emit SWITCHED)
-        (fetch AgentProvider { emit: { success: "AgentProviderLoaded", failure: "AgentProviderLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "repeat"}, { type: "typography", content: "Switch Provider", variant: "h2" }] }, { type: "button", label: "Open", action: "SWITCH", variant: "primary", icon: "repeat" }] }, { type: "divider" }, { type: "empty-state", icon: "repeat", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
+        (fetch AgentProvider {
+          emit: { failure: AgentProviderLoadFailed, success: AgentProviderLoaded }
+        })
+        (render-ui main {
+          children: [{
+            children: [{
+              children: [{ name: repeat, type: icon }, {
+                content: "Switch Provider"
+                type: typography
+                variant: h2
+              }]
+              direction: horizontal
+              gap: md
+              type: stack
+            }, {
+              action: SWITCH
+              icon: repeat
+              label: Open
+              type: button
+              variant: primary
+            }]
+            direction: horizontal
+            gap: md
+            justify: between
+            type: stack
+          }, { type: divider }, {
+            description: "Click Open to view details in a modal overlay."
+            icon: repeat
+            title: "Nothing open"
+            type: empty-state
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
     }
+
     emits {
-      SWITCHED -> external { id: string }
+      SWITCHED -> external {
+        id : string
+      }
       AgentProviderLoaded
       AgentProviderLoadFailed
       AgentProviderRowLoaded
       AgentProviderUpdated
       AgentProviderUpdateFailed
     }
-    listens {
-      SAVE { data : object! }
-          AgentProviderLoadFailed { message : string }
 
-      AgentProviderUpdateFailed { error : string, code : string }
+    listens {
+      SAVE {
+        data : object!
+      }
+      AgentProviderLoadFailed {
+        message : string
+      }
+      AgentProviderUpdateFailed {
+        error : string
+        code : string
+      }
     }
   }
+
   trait AgentProviderNotification -> AgentProvider [interaction, instance] {
     initial: hidden
+
     state hidden {
       INIT -> hidden
-        (fetch AgentProvider { emit: { success: "AgentProviderLoaded", failure: "AgentProviderLoadFailed" } })
+        (fetch AgentProvider {
+          emit: { failure: AgentProviderLoadFailed, success: AgentProviderLoaded }
+        })
       SHOW -> visible
-        (set @entity.message @payload.message)
-        (set @entity.notificationType @payload.notificationType)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "server"}, { type: "typography", content: "Provider Status", variant: "h2" }] }, { type: "button", label: "Dismiss", action: "HIDE", variant: "ghost", icon: "x" }] }, { type: "divider" }, { type: "alert", variant: "@entity.notificationType", message: "@entity.message" }, { type: "toast-slot" }, { type: "alert", variant: "warning", message: "@entity.message" }] })
+        (set @entity.message ?message)
+        (set @entity.notificationType ?notificationType)
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{
+              align: center
+              children: [{ name: server, type: icon }, {
+                content: "Provider Status"
+                type: typography
+                variant: h2
+              }]
+              direction: horizontal
+              gap: md
+              type: stack
+            }, {
+              action: HIDE
+              icon: x
+              label: Dismiss
+              type: button
+              variant: ghost
+            }]
+            direction: horizontal
+            gap: md
+            justify: between
+            type: stack
+          }, { type: divider }, {
+            message: @entity.message
+            type: alert
+            variant: @entity.notificationType
+          }, { type: toast-slot }, {
+            message: @entity.message
+            type: alert
+            variant: warning
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
     }
+
     state visible {
       SHOW -> visible
-        (set @entity.message @payload.message)
-        (set @entity.notificationType @payload.notificationType)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "server"}, { type: "typography", content: "Provider Status", variant: "h2" }] }, { type: "button", label: "Dismiss", action: "HIDE", variant: "ghost", icon: "x" }] }, { type: "divider" }, { type: "alert", variant: "@entity.notificationType", message: "@entity.message" }, { type: "toast-slot" }, { type: "alert", variant: "warning", message: "@entity.message" }] })
+        (set @entity.message ?message)
+        (set @entity.notificationType ?notificationType)
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{
+              align: center
+              children: [{ name: server, type: icon }, {
+                content: "Provider Status"
+                type: typography
+                variant: h2
+              }]
+              direction: horizontal
+              gap: md
+              type: stack
+            }, {
+              action: HIDE
+              icon: x
+              label: Dismiss
+              type: button
+              variant: ghost
+            }]
+            direction: horizontal
+            gap: md
+            justify: between
+            type: stack
+          }, { type: divider }, {
+            message: @entity.message
+            type: alert
+            variant: @entity.notificationType
+          }, { type: toast-slot }, {
+            message: @entity.message
+            type: alert
+            variant: warning
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
       HIDE -> hidden
         (set @entity.message "")
     }
-emits {
+
+    emits {
       AgentProviderLoaded
       AgentProviderLoadFailed
     }
 
-        listens {
-      SHOW { message : string!, notificationType : "info" | "success" | "warning" | "error" }
-          AgentProviderLoadFailed { message : string }
+    listens {
+      SHOW {
+        message : string!
+        notificationType : "info" | "success" | "warning" | "error"
+      }
+      AgentProviderLoadFailed {
+        message : string
+      }
     }
   }
+
   trait AgentProviderAgent -> AgentProvider [interaction, instance] {
     initial: idle
+
     state idle {
       INIT -> active
-        (set @entity.fallbackProvider "openai")
-        (fetch AgentProvider { emit: { success: "AgentProviderLoaded", failure: "AgentProviderLoadFailed" } })
+        (set @entity.fallbackProvider openai)
+        (fetch AgentProvider {
+          emit: { failure: AgentProviderLoadFailed, success: AgentProviderLoaded }
+        })
         (agent/provider)
         (agent/model)
-        (render-ui main { type: "empty-state", icon: "repeat", title: "Provider", description: "Provider is ready" })
+        (render-ui main {
+          description: "Provider is ready"
+          icon: repeat
+          title: Provider
+          type: empty-state
+        })
       DO_SWITCH -> switching
-        (agent/switch-provider @payload.data.currentProvider @payload.data.currentModel)
-        (set @entity.currentProvider @payload.data.currentProvider)
-        (set @entity.currentModel @payload.data.currentModel)
+        (agent/switch-provider ?data.currentProvider ?data.currentModel)
+        (set @entity.currentProvider ?data.currentProvider)
+        (set @entity.currentModel ?data.currentModel)
     }
+
     state active {
       DO_SWITCH -> switching
-        (agent/switch-provider @payload.data.currentProvider @payload.data.currentModel)
-        (set @entity.currentProvider @payload.data.currentProvider)
-        (set @entity.currentModel @payload.data.currentModel)
+        (agent/switch-provider ?data.currentProvider ?data.currentModel)
+        (set @entity.currentProvider ?data.currentProvider)
+        (set @entity.currentModel ?data.currentModel)
       SWITCHED -> switching
         (agent/switch-provider @entity.currentProvider @entity.currentModel)
       SWITCH_AUTO -> switching
         (agent/switch-provider @entity.fallbackProvider)
         (set @entity.currentProvider @entity.fallbackProvider)
     }
+
     state switching {
       INIT -> active
         (agent/provider)
         (agent/model)
-        (set @entity.requestCount (+ @entity.requestCount 1))
-        (emit SHOW { message: "Provider switched", notificationType: "info" })
+        (set @entity.requestCount ["+", @entity.requestCount, 1])
+        (emit SHOW {
+          message: "Provider switched"
+          notificationType: info
+        })
     }
+
     emits {
-      SHOW -> internal { message: string!, notificationType: "info" | "success" | "warning" | "error" }
+      SHOW -> internal {
+        message : string!
+        notificationType : "info" | "success" | "warning" | "error"
+      }
       AgentProviderLoaded
       AgentProviderLoadFailed
     }
+
     listens {
       AgentProviderModal.SWITCHED -> SWITCHED
-      DO_SWITCH { data : object! }
-          AgentProviderLoadFailed { message : string }
+      DO_SWITCH {
+        data : object!
+      }
+      AgentProviderLoadFailed {
+        message : string
+      }
     }
   }
+
   page "/agentproviders" as AgentProviderPage -> AgentProviderModal, AgentProviderNotification, AgentProviderAgent
 }

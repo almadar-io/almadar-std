@@ -1,58 +1,18 @@
 app std-tabs "2.1.0"
 "std-tabs — embeddable tab-navigation atom. Renders a tabs strip from @config.tabs ([{id, label, icon?, badge?, content?}]); clicking a tab updates @entity.activeTab so only the matching @trait.X content shows. Events remap at the call site for routing, persistence, analytics."
-
 type TabSpec = { id : string, label : string!, value : string, icon : string }
-
 orbital TabsItemOrbital {
-  type TabSpec = {
-    id      : string!
-    label   : string!
-    icon    : string
-    badge   : string
-    content : trait
-  }
+    type TabSpec = { id : string!, label : string!, icon : string, badge : string, content : trait }
 
   entity TabsItem [runtime] {
-    id         : string!
-    activeTab  : string @description "The currently selected tab's identifier." @synonyms "selection, currentTab, highlightedTab" = ""
-    items      : [TabSpec] @description "A collection of tab specifications defining the tab structure." @synonyms "tabs, tab list, tab definitions" = []
+    id : string!
+    activeTab : string @description "The currently selected tab's identifier." @synonyms "selection, currentTab, highlightedTab" = ""
+    items : [TabSpec] @description "A collection of tab specifications defining the tab structure." @synonyms "tabs, tab list, tab definitions" = []
   }
 
   trait TabsItemTabs -> @rebindable TabsItem [interaction, instance] {
     initial: idle
-    config {
-      tabs        : [TabSpec] = [
-        { id: "overview", label: "Overview", icon: "info" },
-        { id: "details", label: "Details", icon: "list" },
-        { id: "settings", label: "Settings", icon: "settings" }
-      ]
-        @label "Tabs"
-        @description "Tab entries with id, label, icon, badge, and optional content trait"
-        @tier "presentation"
-      defaultTab  : string = "overview"
-        @label "Default tab"
-        @description "Tab id selected on first render"
-        @tier "presentation"
-      variant     : "default" | "pills" | "underline" = "default"
-        @label "Tab style"
-        @description "Visual style of the tab strip"
-        @tier "presentation"
-      orientation : "horizontal" | "vertical" = "horizontal"
-        @label "Orientation"
-        @description "Horizontal strip or vertical rail layout"
-        @tier "presentation"
-      bodyContent : render-ui = {
-        type: "tabs",
-        items: "@entity.items",
-        activeTab: "@entity.activeTab",
-        variant: "@config.variant",
-        orientation: "@config.orientation",
-        tabChangeEvent: "TAB_CHANGED"
-      }
-        @label "Body content tree"
-        @description "Render-ui SExpr rendered for the tabs surface. Default is the canonical tabs pattern bound to @entity.items / @entity.activeTab. Layer 3 variants override this with their own tree (segmented-pill bar, vertical sidebar rail, etc.) while inheriting the same trait, state machine, emits, and listens."
-        @tier "internal"
-    }
+
     state idle {
       INIT -> idle
         (set @entity.items @config.tabs)
@@ -60,21 +20,70 @@ orbital TabsItemOrbital {
         (render-ui main @config.bodyContent)
       TAB_CHANGED -> idle
         (set @entity.items @config.tabs)
-        (set @entity.activeTab @payload.tabId)
+        (set @entity.activeTab ?tabId)
         (render-ui main @config.bodyContent)
     }
+
     emits {
-      TAB_CHANGED -> external { tabId : string! }
+      TAB_CHANGED -> external {
+        tabId : string!
+      }
         @description "Signals a tab selection has occurred."
         @synonyms "selected, activated, switched"
         @tier "essential"
     }
+
     listens {
-      TAB_CHANGED { tabId : string! }
+      TAB_CHANGED {
+        tabId : string!
+      }
         @description "A tab selection has occurred."
         @synonyms "selected, activated, switched"
         @tier "essential"
     }
+
+    config {
+      tabs : [TabSpec] = [{
+        icon: info
+        id: overview
+        label: Overview
+      }, {
+        icon: list
+        id: details
+        label: Details
+      }, {
+        icon: settings
+        id: settings
+        label: Settings
+      }]
+        @label "Tabs"
+        @description "Tab entries with id, label, icon, badge, and optional content trait"
+        @tier "presentation"
+      defaultTab : string = overview
+        @label "Default tab"
+        @description "Tab id selected on first render"
+        @tier "presentation"
+      variant : "default" | "pills" | "underline" = default
+        @label "Tab style"
+        @description "Visual style of the tab strip"
+        @tier "presentation"
+      orientation : "horizontal" | "vertical" = horizontal
+        @label "Orientation"
+        @description "Horizontal strip or vertical rail layout"
+        @tier "presentation"
+      bodyContent : render-ui = {
+        activeTab: @entity.activeTab
+        items: @entity.items
+        orientation: @config.orientation
+        tabChangeEvent: TAB_CHANGED
+        type: tabs
+        variant: @config.variant
+      }
+        @label "Body content tree"
+        @description "Render-ui SExpr rendered for the tabs surface. Default is the canonical tabs pattern bound to @entity.items / @entity.activeTab. Layer 3 variants override this with their own tree (segmented-pill bar, vertical sidebar rail, etc.) while inheriting the same trait, state machine, emits, and listens."
+        @tier "internal"
+    }
   }
+
   page "/tabsitems" as TabsItemTabsPage -> TabsItemTabs
 }

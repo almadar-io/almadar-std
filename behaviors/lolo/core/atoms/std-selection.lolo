@@ -1,57 +1,237 @@
 app std-selection "1.0.0"
 "std-selection as a Function"
-
 orbital SelectableItemOrbital {
+    type SelectableItemLoaded = Event { data : [SelectableItem] } "Fired when SelectableItem finishes loading; payload.data holds the list"
+
+    type SelectableItemLoadFailed = Event { error : string, code : string } "Fired when SelectableItem fails to load"
+
   entity SelectableItem [runtime] {
-    id          : string!
-    name        : string! @description "The item's display text or identifier." @synonyms "label, title, identifier"
+    id : string!
+    name : string! @description "The item's display text or identifier." @synonyms "label, title, identifier"
     description : string @description "A textual explanation of the item." @synonyms "details, explanation, notes"
-    status      : "active" | "inactive" | "pending" @description "Indicates the current operational state of the item." @synonyms "state, condition, flag" = "active"
-    createdAt   : string
+    status : "active" | "inactive" | "pending" @description "Indicates the current operational state of the item." @synonyms "state, condition, flag" = active
+    createdAt : string
   }
 
-  type SelectableItemLoaded     = Event { data : [SelectableItem] }        "Fired when SelectableItem finishes loading; payload.data holds the list"
-  type SelectableItemLoadFailed = Event { error : string, code : string } "Fired when SelectableItem fails to load"
-
   trait SelectableItemSelection -> @rebindable SelectableItem [interaction, collection] {
-    config {
-      tableLook : "dense" | "spacious" | "striped" | "borderless" | "card-rows" = "dense"
-        @label "Table look"
-        @description "Layer 2 visual treatment for the data table rendered by this atom."
-        @tier "presentation"
-    }
     initial: loading
+
     state loading {
       INIT -> loading
-        (fetch SelectableItem { emit: { success: "SelectableItemLoaded", failure: "SelectableItemLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
+        (fetch SelectableItem {
+          emit: { failure: SelectableItemLoadFailed, success: SelectableItemLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Loading…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
       SelectableItemLoaded -> idle
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "check-square" }, { type: "typography", content: "SelectableItems", variant: "h2" }] }, { type: "divider" }, { type: "typography", variant: "caption", color: "muted", content: "Choose a selectableitem to continue." }, { type: "data-grid", look: "@config.tableLook", entity: @payload.data, fields: [], className: "transition-shadow hover:shadow-md cursor-pointer", itemActions: [{ label: "Select", event: "SELECT", icon: "check" }], renderItem: ["fn", "item", { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "checkbox", label: "@item.name" }] }] }] })
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: check-square, type: icon }, {
+              content: SelectableItems
+              type: typography
+              variant: h2
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            color: muted
+            content: "Choose a selectableitem to continue."
+            type: typography
+            variant: caption
+          }, {
+            className: "transition-shadow hover:shadow-md cursor-pointer"
+            entity: ?data
+            fields: []
+            itemActions: [{
+              event: SELECT
+              icon: check
+              label: Select
+            }]
+            look: @config.tableLook
+            renderItem: (fn item {
+              align: center
+              children: [{ label: @item.name, type: checkbox }]
+              direction: horizontal
+              gap: sm
+              type: stack
+            })
+            type: data-grid
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
       SelectableItemLoadFailed -> error
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+        (render-ui main {
+          align: center
+          children: [{
+            color: destructive
+            name: alert-triangle
+            type: icon
+          }, {
+            content: "Failed to load"
+            type: typography
+            variant: h3
+          }, {
+            color: muted
+            content: ?error
+            type: typography
+            variant: body
+          }, {
+            action: INIT
+            icon: rotate-ccw
+            label: Retry
+            type: button
+            variant: primary
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
     }
+
     state idle {
       SELECT -> selecting
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "check-square" }, { type: "typography", content: "SelectableItems", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "badge", label: "Selecting" }, { type: "button", label: "Clear", action: "CLEAR", variant: "ghost", icon: "x" }] }] }, { type: "divider" }, { type: "alert", variant: "info", message: "@payload.id" }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Confirm", action: "CONFIRM_SELECTION", actionPayload: { id: "@payload.id" }, icon: "check", variant: "primary" }] }] })
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{
+              align: center
+              children: [{ name: check-square, type: icon }, {
+                content: SelectableItems
+                type: typography
+                variant: h2
+              }]
+              direction: horizontal
+              gap: md
+              type: stack
+            }, {
+              align: center
+              children: [{ label: Selecting, type: badge }, {
+                action: CLEAR
+                icon: x
+                label: Clear
+                type: button
+                variant: ghost
+              }]
+              direction: horizontal
+              gap: sm
+              type: stack
+            }]
+            direction: horizontal
+            gap: md
+            justify: between
+            type: stack
+          }, { type: divider }, {
+            message: ?id
+            type: alert
+            variant: info
+          }, {
+            children: [{
+              action: CONFIRM_SELECTION
+              actionPayload: { id: ?id }
+              icon: check
+              label: Confirm
+              type: button
+              variant: primary
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
     }
+
     state selecting {
       CONFIRM_SELECTION -> selected
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "check-circle" }, { type: "typography", content: "Selection Confirmed", variant: "h2" }] }, { type: "badge", label: "Confirmed" }] }, { type: "divider" }, { type: "alert", variant: "success", message: "Selection confirmed successfully." }, { type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "typography", variant: "caption", content: "Selected ID:" }, { type: "typography", variant: "body", content: "@payload.id" }] }, { type: "button", label: "Clear Selection", action: "CLEAR", variant: "ghost", icon: "rotate-ccw" }] })
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{
+              align: center
+              children: [{ name: check-circle, type: icon }, {
+                content: "Selection Confirmed"
+                type: typography
+                variant: h2
+              }]
+              direction: horizontal
+              gap: md
+              type: stack
+            }, { label: Confirmed, type: badge }]
+            direction: horizontal
+            gap: md
+            justify: between
+            type: stack
+          }, { type: divider }, {
+            message: "Selection confirmed successfully."
+            type: alert
+            variant: success
+          }, {
+            align: center
+            children: [{
+              content: "Selected ID:"
+              type: typography
+              variant: caption
+            }, {
+              content: ?id
+              type: typography
+              variant: body
+            }]
+            direction: horizontal
+            gap: md
+            type: stack
+          }, {
+            action: CLEAR
+            icon: rotate-ccw
+            label: "Clear Selection"
+            type: button
+            variant: ghost
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
       CLEAR -> loading
-        (fetch SelectableItem { emit: { success: "SelectableItemLoaded", failure: "SelectableItemLoadFailed" } })
-        (render-ui main { type: "spinner" })
+        (fetch SelectableItem {
+          emit: { failure: SelectableItemLoadFailed, success: SelectableItemLoaded }
+        })
+        (render-ui main { type: spinner })
     }
+
     state selected {
       CLEAR -> loading
-        (fetch SelectableItem { emit: { success: "SelectableItemLoaded", failure: "SelectableItemLoadFailed" } })
-        (render-ui main { type: "spinner" })
+        (fetch SelectableItem {
+          emit: { failure: SelectableItemLoadFailed, success: SelectableItemLoaded }
+        })
+        (render-ui main { type: spinner })
     }
+
     state error {
       INIT -> loading
-        (fetch SelectableItem { emit: { success: "SelectableItemLoaded", failure: "SelectableItemLoadFailed" } })
-        (render-ui main { type: "spinner" })
+        (fetch SelectableItem {
+          emit: { failure: SelectableItemLoadFailed, success: SelectableItemLoaded }
+        })
+        (render-ui main { type: spinner })
     }
-emits {
+
+    emits {
       SelectableItemLoaded
         @description "Indicates a selectable item has been successfully loaded."
         @synonyms "loaded, initialized, ready"
@@ -62,20 +242,35 @@ emits {
         @tier "internal"
     }
 
-        listens {
-      SELECT { id : string! }
+    listens {
+      SELECT {
+        id : string!
+      }
         @description "Indicates an item has been chosen."
         @synonyms "chosen, picked, highlighted"
         @tier "essential"
-      CONFIRM_SELECTION { id : string! }
+      CONFIRM_SELECTION {
+        id : string!
+      }
         @description "Indicates a selection has been finalized."
         @synonyms "accept, finalize, submit, choose"
         @tier "essential"
-      SelectableItemLoadFailed { error : string, code : string }
+      SelectableItemLoadFailed {
+        error : string
+        code : string
+      }
         @description "Indicates a selectable item failed to load."
         @synonyms "error, failure, problem, load error"
         @tier "internal"
     }
+
+    config {
+      tableLook : "dense" | "spacious" | "striped" | "borderless" | "card-rows" = dense
+        @label "Table look"
+        @description "Layer 2 visual treatment for the data table rendered by this atom."
+        @tier "presentation"
+    }
   }
+
   page "/selectableitems/selection" as SelectableItemSelectionPage -> SelectableItemSelection
 }

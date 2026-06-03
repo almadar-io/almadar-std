@@ -1,8 +1,6 @@
 app std-dashboard-grid-layout "5.0.1"
 "std-dashboard-grid-layout — dashboard-layout chrome mirroring Looker Studio / Power BI: top-right toolbar slots (export / share / settings — feed `headerActions`), horizontal filter row (date range, search, dropdown filters), divider, then 12 numbered tile slots in a responsive simple-grid below. Slots default to EmptyTile so callers only bind what they need via traitOverrides."
-
 type NavItem = { label : string!, href : string!, icon : string, badge : string }
-
 orbital DashboardGridLayoutOrbital {
   entity DashboardGridLayoutData [runtime] {
     id : string!
@@ -10,135 +8,142 @@ orbital DashboardGridLayoutOrbital {
 
   trait EmptyTile -> DashboardGridLayoutData [interaction, instance] {
     initial: idle
+
     state idle {
       INIT -> idle
-        (render-ui main { type: "box" })
+        (render-ui main { type: box })
     }
   }
 
   trait DashboardGridLayout -> DashboardGridLayoutData [interaction, instance] {
     initial: composing
+
+    state composing {
+      INIT -> composing
+        (render-ui main {
+          appName: @config.appName
+          children: [{
+            children: [{
+              align: center
+              children: [@config.filter1Trait, @config.filter2Trait, @config.filter3Trait, @config.filter4Trait]
+              direction: horizontal
+              gap: md
+              type: stack
+              wrap: true
+            }, { type: divider }, {
+              children: [@config.tile1Trait, @config.tile2Trait, @config.tile3Trait, @config.tile4Trait, @config.tile5Trait, @config.tile6Trait, @config.tile7Trait, @config.tile8Trait, @config.tile9Trait, @config.tile10Trait, @config.tile11Trait, @config.tile12Trait]
+              minChildWidth: @config.minTileWidth
+              type: simple-grid
+            }]
+            direction: vertical
+            gap: md
+            type: stack
+          }]
+          headerActions: {
+            align: center
+            children: [@config.toolbar1Trait, @config.toolbar2Trait, @config.toolbar3Trait]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }
+          navItems: @config.navItems
+          type: dashboard-layout
+        })
+    }
+
     config {
-      toolbar1Trait : trait = "@trait.EmptyTile"
+      toolbar1Trait : trait = @trait.EmptyTile
         @label "Toolbar slot 1"
         @description "First top-right toolbar trait (typical use: export action)"
         @tier "internal"
-      toolbar2Trait : trait = "@trait.EmptyTile"
+      toolbar2Trait : trait = @trait.EmptyTile
         @label "Toolbar slot 2"
         @description "Second top-right toolbar trait (typical use: share action)"
         @tier "internal"
-      toolbar3Trait : trait = "@trait.EmptyTile"
+      toolbar3Trait : trait = @trait.EmptyTile
         @label "Toolbar slot 3"
         @description "Third top-right toolbar trait (typical use: settings action)"
         @tier "internal"
-      filter1Trait : trait = "@trait.EmptyTile"
+      filter1Trait : trait = @trait.EmptyTile
         @label "Filter slot 1"
         @description "First filter-row trait (typical use: date range picker)"
         @tier "internal"
-      filter2Trait : trait = "@trait.EmptyTile"
+      filter2Trait : trait = @trait.EmptyTile
         @label "Filter slot 2"
         @description "Second filter-row trait (typical use: search input)"
         @tier "internal"
-      filter3Trait : trait = "@trait.EmptyTile"
+      filter3Trait : trait = @trait.EmptyTile
         @label "Filter slot 3"
         @description "Third filter-row trait (typical use: dropdown filter)"
         @tier "internal"
-      filter4Trait : trait = "@trait.EmptyTile"
+      filter4Trait : trait = @trait.EmptyTile
         @label "Filter slot 4"
         @description "Fourth filter-row trait (typical use: secondary dropdown filter)"
         @tier "internal"
-      tile1Trait  : trait = "@trait.EmptyTile"
+      tile1Trait : trait = @trait.EmptyTile
         @label "Tile slot 1"
         @description "Trait rendered in the first dashboard grid tile"
         @tier "internal"
-      tile2Trait  : trait = "@trait.EmptyTile"
+      tile2Trait : trait = @trait.EmptyTile
         @label "Tile slot 2"
         @description "Trait rendered in the second dashboard grid tile"
         @tier "internal"
-      tile3Trait  : trait = "@trait.EmptyTile"
+      tile3Trait : trait = @trait.EmptyTile
         @label "Tile slot 3"
         @description "Trait rendered in the third dashboard grid tile"
         @tier "internal"
-      tile4Trait  : trait = "@trait.EmptyTile"
+      tile4Trait : trait = @trait.EmptyTile
         @label "Tile slot 4"
         @description "Trait rendered in the fourth dashboard grid tile"
         @tier "internal"
-      tile5Trait  : trait = "@trait.EmptyTile"
+      tile5Trait : trait = @trait.EmptyTile
         @label "Tile slot 5"
         @description "Trait rendered in the fifth dashboard grid tile"
         @tier "internal"
-      tile6Trait  : trait = "@trait.EmptyTile"
+      tile6Trait : trait = @trait.EmptyTile
         @label "Tile slot 6"
         @description "Trait rendered in the sixth dashboard grid tile"
         @tier "internal"
-      tile7Trait  : trait = "@trait.EmptyTile"
+      tile7Trait : trait = @trait.EmptyTile
         @label "Tile slot 7"
         @description "Trait rendered in the seventh dashboard grid tile"
         @tier "internal"
-      tile8Trait  : trait = "@trait.EmptyTile"
+      tile8Trait : trait = @trait.EmptyTile
         @label "Tile slot 8"
         @description "Trait rendered in the eighth dashboard grid tile"
         @tier "internal"
-      tile9Trait  : trait = "@trait.EmptyTile"
+      tile9Trait : trait = @trait.EmptyTile
         @label "Tile slot 9"
         @description "Trait rendered in the ninth dashboard grid tile"
         @tier "internal"
-      tile10Trait : trait = "@trait.EmptyTile"
+      tile10Trait : trait = @trait.EmptyTile
         @label "Tile slot 10"
         @description "Trait rendered in the tenth dashboard grid tile"
         @tier "internal"
-      tile11Trait : trait = "@trait.EmptyTile"
+      tile11Trait : trait = @trait.EmptyTile
         @label "Tile slot 11"
         @description "Trait rendered in the eleventh dashboard grid tile"
         @tier "internal"
-      tile12Trait : trait = "@trait.EmptyTile"
+      tile12Trait : trait = @trait.EmptyTile
         @label "Tile slot 12"
         @description "Trait rendered in the twelfth dashboard grid tile"
         @tier "internal"
-      minTileWidth : number   = 320
+      minTileWidth : number = 320
         @label "Tile min width"
         @description "Minimum pixel width per tile before the grid re-flows"
         @tier "presentation"
-      appName      : string   = "Dashboard"
+      appName : string = Dashboard
         @label "App name"
         @description "Product name shown in the dashboard chrome"
         @tier "presentation"
-      navItems     : [NavItem] = [{ href: "/dashboard", label: "Dashboard", icon: "bar-chart-3" }]
+      navItems : [NavItem] = [{
+        href: "/dashboard"
+        icon: bar-chart-3
+        label: Dashboard
+      }]
         @label "Sidebar links"
         @description "Top-level nav entries on the left rail"
         @tier "presentation"
-    }
-    state composing {
-      INIT -> composing
-        (render-ui main { type: "dashboard-layout", appName: "@config.appName", navItems: "@config.navItems", headerActions: { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
-          "@config.toolbar1Trait",
-          "@config.toolbar2Trait",
-          "@config.toolbar3Trait"
-        ]}, children: [
-          { type: "stack", direction: "vertical", gap: "md", children: [
-            { type: "stack", direction: "horizontal", gap: "md", wrap: true, align: "center", children: [
-              "@config.filter1Trait",
-              "@config.filter2Trait",
-              "@config.filter3Trait",
-              "@config.filter4Trait"
-            ]},
-            { type: "divider" },
-            { type: "simple-grid", minChildWidth: "@config.minTileWidth", children: [
-              "@config.tile1Trait",
-              "@config.tile2Trait",
-              "@config.tile3Trait",
-              "@config.tile4Trait",
-              "@config.tile5Trait",
-              "@config.tile6Trait",
-              "@config.tile7Trait",
-              "@config.tile8Trait",
-              "@config.tile9Trait",
-              "@config.tile10Trait",
-              "@config.tile11Trait",
-              "@config.tile12Trait"
-            ]}
-          ]}
-        ]})
     }
   }
 

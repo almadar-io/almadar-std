@@ -1,68 +1,108 @@
 app std-pagination "1.0.0"
 "std-pagination — single primitive: pagination control. PAGE accepts the Pagination component's `{page}` emit; ITEMS_LOADED accepts an upstream `{data:[ObjectSpec]}` payload and derives totalPages = ceil(len/pageSize). Molecules wire `BrowseItemLoaded -> ITEMS_LOADED` to keep it in lockstep with the data hub."
-
 type ObjectSpec = { id : string, label : string, value : string }
-
 orbital PagedItemOrbital {
-  entity PagedItem [runtime] {
-    id          : string!
-    currentPage : number @description "The current page number being displayed." @synonyms "page, current, index" = 1
-    totalPages  : number @description "The total number of pages available." @synonyms "page count, total pages, number of pages" = 1
-  }
+    type PagedItemLoaded = Event { data : [PagedItem] } "Fired after the PagedItem entity is fetched on INIT; carries the seeded instance(s) so client-side @entity.currentPage / .totalPages bindings resolve before any user interaction."
 
-  type PagedItemLoaded = Event { data : [PagedItem] } "Fired after the PagedItem entity is fetched on INIT; carries the seeded instance(s) so client-side @entity.currentPage / .totalPages bindings resolve before any user interaction."
+  entity PagedItem [runtime] {
+    id : string!
+    currentPage : number @description "The current page number being displayed." @synonyms "page, current, index" = 1
+    totalPages : number @description "The total number of pages available." @synonyms "page count, total pages, number of pages" = 1
+  }
 
   trait PagedItemPagination -> PagedItem [interaction, instance] {
     initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.currentPage 1)
+        (set @entity.totalPages 1)
+        (fetch PagedItem {
+          emit: { success: PagedItemLoaded }
+        })
+        (render-ui main {
+          currentPage: @entity.currentPage
+          pageChangeEvent: @config.event
+          showPageSize: false
+          totalPages: @entity.totalPages
+          type: pagination
+        })
+      PagedItemLoaded -> idle
+        (render-ui main {
+          currentPage: @entity.currentPage
+          pageChangeEvent: @config.event
+          showPageSize: false
+          totalPages: @entity.totalPages
+          type: pagination
+        })
+      PAGE -> idle
+        (set @entity.currentPage ?page)
+        (render-ui main {
+          currentPage: @entity.currentPage
+          pageChangeEvent: @config.event
+          showPageSize: false
+          totalPages: @entity.totalPages
+          type: pagination
+        })
+      ITEMS_LOADED -> idle
+        (set @entity.totalPages (math/ceil ["/", ?totalCount, @config.pageSize]))
+        (render-ui main {
+          currentPage: @entity.currentPage
+          pageChangeEvent: @config.event
+          showPageSize: false
+          totalPages: @entity.totalPages
+          type: pagination
+        })
+    }
+
+    emits {
+      PAGE {
+        page : number!
+      }
+        @description "Indicates a change in the currently displayed page."
+        @synonyms "page-change, navigate, go-to"
+        @tier "essential"
+      PagedItemLoaded {
+        data : [PagedItem]
+      }
+        @description "Indicates a single item has been loaded within a paginated view."
+        @synonyms "item-loaded, data-received, entry-loaded"
+        @tier "essential"
+    }
+
+    listens {
+      PAGE {
+        page : number!
+      }
+        @description "Indicates the user has selected a different page."
+        @synonyms "page-change, navigate, jump"
+        @tier "essential"
+      ITEMS_LOADED {
+        data : [ObjectSpec]
+        totalCount : number
+      }
+        @description "Data has been loaded and pagination limits updated."
+        @synonyms "data-ready, content-loaded, refresh"
+        @tier "essential"
+      PagedItemLoaded {
+        data : [PagedItem]
+      }
+        @description "Indicates a single item has been loaded within a paginated set."
+        @synonyms "item-loaded, data-received, entry-loaded"
+        @tier "essential"
+    }
+
     config {
       pageSize : number = 10
         @label "Page size"
         @description "Rows per page used to derive total page count"
         @tier "presentation"
-      event    : string = "PAGE"
+      event : string = PAGE
         @label "Page-change event"
         @description "Event emitted when the user picks a new page"
         @tier "internal"
     }
-    state idle {
-      INIT -> idle
-        (set @entity.currentPage 1)
-        (set @entity.totalPages 1)
-        (fetch PagedItem { emit: { success: "PagedItemLoaded" } })
-        (render-ui main { type: "pagination", currentPage: "@entity.currentPage", totalPages: "@entity.totalPages", pageChangeEvent: "@config.event", showPageSize: false })
-      PagedItemLoaded -> idle
-        (render-ui main { type: "pagination", currentPage: "@entity.currentPage", totalPages: "@entity.totalPages", pageChangeEvent: "@config.event", showPageSize: false })
-      PAGE -> idle
-        (set @entity.currentPage @payload.page)
-        (render-ui main { type: "pagination", currentPage: "@entity.currentPage", totalPages: "@entity.totalPages", pageChangeEvent: "@config.event", showPageSize: false })
-      ITEMS_LOADED -> idle
-        (set @entity.totalPages (math/ceil (/ @payload.totalCount @config.pageSize)))
-        (render-ui main { type: "pagination", currentPage: "@entity.currentPage", totalPages: "@entity.totalPages", pageChangeEvent: "@config.event", showPageSize: false })
-    }
-    emits {
-      PAGE          { page : number! }
-        @description "Indicates a change in the currently displayed page."
-        @synonyms "page-change, navigate, go-to"
-        @tier "essential"
-      PagedItemLoaded { data : [PagedItem] }
-        @description "Indicates a single item has been loaded within a paginated view."
-        @synonyms "item-loaded, data-received, entry-loaded"
-        @tier "essential"
-    }
-    listens {
-      PAGE { page : number! }
-        @description "Indicates the user has selected a different page."
-        @synonyms "page-change, navigate, jump"
-        @tier "essential"
-      ITEMS_LOADED { data : [ObjectSpec], totalCount : number }
-        @description "Data has been loaded and pagination limits updated."
-        @synonyms "data-ready, content-loaded, refresh"
-        @tier "essential"
-      PagedItemLoaded { data : [PagedItem] }
-        @description "Indicates a single item has been loaded within a paginated set."
-        @synonyms "item-loaded, data-received, entry-loaded"
-        @tier "essential"
-    }
   }
+
   page "/pageditems/paginated" as PagedItemPaginationPage -> PagedItemPagination
 }

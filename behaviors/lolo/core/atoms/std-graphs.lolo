@@ -1,156 +1,170 @@
 app std-graphs "2.0.0"
 "std-graphs — embeddable chart atom. ITEMS_LOADED groups @payload.data by @config.categoryField (or @config.timeField when timeAxis=true) and aggregates per bucket. Multi-series rendering via @config.series (preformatted ChartSeries shape). Histograms via chartType=histogram pass pre-binned @payload.data through unchanged. Stacked / 100% stacked bars via @config.stack. Post-process sort + limit. Clicking a data point emits UI:@config.drillEvent with { label, value, seriesLabel? }. Drop into a dashboard alongside std-stats / std-browse."
-
 type ObjectSpec = { id : string, label : string, value : string }
-
 orbital GraphItemOrbital {
-  type ChartPoint = { label : string!, value : number! }
-  type SeriesSpec = { name : string!, data : [ChartPoint], color : string, dashed : boolean }
+    type ChartPoint = { label : string!, value : number! }
+
+    type SeriesSpec = { name : string!, data : [ChartPoint], color : string, dashed : boolean }
 
   entity GraphItem [runtime] {
-    id        : string!
+    id : string!
     chartData : [ChartPoint] @description "The data points used to render the chart." @synonyms "data, values, points" = []
   }
 
   trait GraphItemGraph -> @rebindable GraphItem [interaction, instance] {
     initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.chartData [{ label: Active, value: 6 }, { label: Pending, value: 3 }, { label: Inactive, value: 1 }])
+        (render-ui main {
+          chartType: @config.chartType
+          data: @entity.chartData
+          drillEvent: @config.drillEvent
+          height: @config.height
+          series: @config.series
+          showLegend: @config.showLegend
+          showValues: @config.showValues
+          stack: @config.stack
+          subtitle: @config.subtitle
+          timeAxis: @config.timeAxis
+          title: @config.title
+          type: @config.viewPattern
+        })
+      ITEMS_LOADED -> idle
+        (set @entity.chartData (if ["=", @config.chartType, histogram] (array/map ?data (fn p {
+          label: (object/get @p label)
+          value: (object/get @p value)
+        })) (array/map (object/entries (array/groupBy ?data (if @config.timeAxis @config.timeField @config.categoryField))) (fn entry {
+          label: (object/get @entry "0")
+          value: (if ["=", @config.aggregation, sum] (array/sum (object/get @entry "1") @config.valueField) (if ["=", @config.aggregation, avg] (array/avg (object/get @entry "1") @config.valueField) (if ["=", @config.aggregation, min] (array/min (object/get @entry "1") @config.valueField) (if ["=", @config.aggregation, max] (array/max (object/get @entry "1") @config.valueField) (array/len (object/get @entry "1"))))))
+        }))))
+        (set @entity.chartData (if ["!=", @config.sortField, none] (array/sort @entity.chartData @config.sortField @config.sortDir) @entity.chartData))
+        (set @entity.chartData (if [">", @config.limit, 0] (array/take @entity.chartData @config.limit) @entity.chartData))
+        (render-ui main {
+          chartType: @config.chartType
+          data: @entity.chartData
+          drillEvent: @config.drillEvent
+          height: @config.height
+          series: @config.series
+          showLegend: @config.showLegend
+          showValues: @config.showValues
+          stack: @config.stack
+          subtitle: @config.subtitle
+          timeAxis: @config.timeAxis
+          title: @config.title
+          type: @config.viewPattern
+        })
+    }
+
+    listens {
+      ITEMS_LOADED {
+        data : [ObjectSpec]
+        totalCount : number
+      }
+        @description "Data has been retrieved and processed for display."
+        @synonyms "data ready, update, refresh, loaded"
+        @tier "essential"
+    }
+
     config {
-      chartType     : "bar" | "line" | "pie" | "area" | "donut" | "histogram" | "scatter" = "bar"
+      chartType : "bar" | "line" | "pie" | "area" | "donut" | "histogram" | "scatter" = bar
         @label "Chart type"
         @description "Visual format for the rendered chart"
         @synonyms "bar = vertical bars, line = connected line, pie = pie chart, donut = pie with hole, area = filled area chart, histogram = frequency distribution, scatter = XY scatter. user phrases: 'switch to donut' / 'make it a donut' / 'as a donut chart' -> donut; 'use a pie chart' -> pie; 'show as line' / 'line chart' -> line; 'as bars' / 'bar chart' -> bar"
         @tier "presentation"
-      timeAxis      : boolean = false
+      timeAxis : boolean = false
         @label "Time axis"
         @description "Group by timeField bucketed by period instead of categoryField"
         @synonyms "true means group by date / month / time. user phrases: 'group by month / week / year / date' -> set timeAxis=true; 'group by status / category' -> timeAxis=false"
         @tier "presentation"
-      categoryField : string  = "status"
+      categoryField : string = status
         @label "Group / categorize / bucket / split by field"
         @description "Entity field whose values become the chart's category buckets. Set this when the user voices 'group by X' / 'categorize by X' / 'bucket by X' / 'split by X' / 'break down by X' for any non-time field X (for time-units, set period + timeAxis=true instead)."
         @synonyms "regroup / rebucket / categorize / breakdown by / split by / segment by. user phrases: 'group by status' -> categoryField=status; 'group by region' / 'by region' -> categoryField=region; 'group by category' / 'by category' -> categoryField=category; 'group by product' / 'by product' -> categoryField=product; 'group by month' / 'by month' -> categoryField=month (when explicitly requested as a category, not a time bucket); 'split by X' / 'break down by X' / 'segment by X' / 'bucket by X' -> categoryField=X"
         @tier "presentation"
-      timeField     : string  = "date"
+      timeField : string = date
         @label "Date field"
         @description "Entity field used as the time axis when timeAxis is on"
         @synonyms "the date / timestamp / created-at column. set when timeAxis=true"
         @tier "presentation"
-      period        : "day" | "week" | "month" | "quarter" | "year" = "month"
+      period : "day" | "week" | "month" | "quarter" | "year" = month
         @label "Group by month / quarter / week / day / year"
         @description "Group by month, quarter, week, day, or year — the calendar bucket the chart groups data into. Set ALONGSIDE timeAxis=true whenever the user says 'group by <time-unit>' or 'by <time-unit>' or 'rebucket to <time-unit>' or 'instead of <other-time-unit>'."
         @synonyms "regroup / rebucket / change bucket / group differently. user phrases: 'group by month' / 'by month' / 'monthly' / 'monthly buckets' / 'switch to monthly' / 'instead of quarter' -> month; 'group by quarter' / 'by quarter' / 'quarterly' -> quarter; 'group by week' / 'by week' / 'weekly' / 'weekly buckets' -> week; 'group by day' / 'by day' / 'daily' / 'daily buckets' -> day; 'group by year' / 'by year' / 'yearly' / 'annually' -> year. Whenever the user voices 'group by <time-unit>' BOTH period AND timeAxis=true should be set."
         @tier "presentation"
-      valueField    : string  = ""
+      valueField : string = ""
         @label "Value field"
         @description "Numeric field aggregated per bucket (blank = row count)"
         @synonyms "the numeric column to aggregate. empty string counts rows. user phrases: 'sum revenue' -> valueField=revenue + aggregation=sum"
         @tier "presentation"
-      aggregation   : "count" | "sum" | "avg" | "min" | "max" = "count"
+      aggregation : "count" | "sum" | "avg" | "min" | "max" = count
         @label "Aggregation"
         @description "How values within a bucket combine into one number"
         @synonyms "user phrases: 'count' / 'how many' -> count; 'total' / 'sum of' -> sum; 'average' / 'mean' -> avg; 'minimum' / 'lowest' -> min; 'maximum' / 'highest' -> max"
         @tier "presentation"
-      series        : [SeriesSpec] = []
+      series : [SeriesSpec] = []
         @label "Series"
         @description "Pre-formatted multi-series spec for stacked or layered charts"
         @synonyms "multiple lines / bars per category. user phrases: 'compare X and Y' -> add two series entries"
         @tier "presentation"
-      stack         : "none" | "stack" | "normalize" = "none"
+      stack : "none" | "stack" | "normalize" = none
         @label "Stacking"
         @description "Stack bars, normalize to 100%, or render side-by-side"
         @synonyms "user phrases: 'side by side' / 'grouped' -> none; 'stacked' / 'stack the bars' -> stack; 'percent stacked' / '100% stacked' / 'normalized' -> normalize"
         @tier "presentation"
-      sortField     : "value" | "label" | "none" = "none"
+      sortField : "value" | "label" | "none" = none
         @label "Sort by"
         @description "Order points by value, label, or leave unsorted"
         @synonyms "user phrases: 'sort by value' / 'order by amount' -> value; 'sort alphabetically' / 'sort by name' -> label; 'no sort' / 'leave order' -> none"
         @tier "presentation"
-      sortDir       : "asc" | "desc" = "desc"
+      sortDir : "asc" | "desc" = desc
         @label "Sort direction"
         @description "Ascending or descending order for the sort field"
         @synonyms "asc = ascending = lowest-to-highest = low-to-high = smallest-first. desc = descending = highest-to-lowest = high-to-low = largest-first. user phrases: 'highest to lowest' / 'largest first' / 'descending' -> desc; 'lowest to highest' / 'smallest first' / 'ascending' -> asc"
         @tier "presentation"
-      limit         : number  = 0
+      limit : number = 0
         @label "Top N"
         @description "Keep only the first N points after sorting (0 = all)"
         @synonyms "user phrases: 'top 5' -> 5; 'top 10' -> 10; 'first 3' -> 3; 'all' / 'no limit' -> 0; 'show all' -> 0"
         @tier "presentation"
-      drillEvent    : string  = ""
+      drillEvent : string = ""
         @label "Drill event"
         @description "Event emitted when a user clicks a chart point"
         @synonyms "click-through navigation event. user phrases: 'on click navigate to X' / 'drill into X' / 'when clicked open X' -> X event name"
         @tier "internal"
-      title         : string  = "Distribution"
+      title : string = Distribution
         @label "Title"
         @description "Heading shown above the chart"
         @synonyms "the chart's header text. user phrases: 'rename to X' / 'title it X' / 'change the title to X' / 'call it X' -> X"
         @tier "presentation"
-      subtitle      : string  = "Counts per category"
+      subtitle : string = "Counts per category"
         @label "Subtitle"
         @description "Secondary line below the title"
         @synonyms "secondary header below the title. user phrases: 'with subtitle X' / 'set subtitle to X' -> X"
         @tier "presentation"
-      height        : number  = 280
+      height : number = 280
         @label "Chart height"
         @description "Pixel height of the rendered chart"
         @synonyms "vertical size in pixels. user phrases: 'taller' / 'make it taller' / 'increase height' / 'bigger vertically' -> larger number (e.g. 300, 400); 'shorter' / 'smaller' -> smaller; 'set height to 300' / '300px tall' -> 300"
         @tier "presentation"
-      showLegend    : boolean = true
+      showLegend : boolean = true
         @label "Show legend"
         @description "Display the series legend"
         @synonyms "true shows the color key. user phrases: 'show legend' / 'show the legend' / 'show key' / 'with legend' / 'with a legend' -> true; 'hide legend' / 'no legend' / 'without legend' / 'remove legend' -> false"
         @tier "presentation"
-      showValues    : boolean = false
+      showValues : boolean = false
         @label "Show values"
         @description "Render the numeric value on top of each data point"
         @synonyms "user phrases: 'show values' / 'show numbers on bars' / 'with data labels' / 'label the bars' -> true; 'hide values' / 'no labels' -> false"
         @tier "presentation"
-      viewPattern   : pattern = "chart"
+      viewPattern : pattern = chart
         @label "Render pattern"
         @description "UI pattern used to draw the chart"
         @synonyms "internal pattern selector. user prompts rarely target this directly — pattern selection is upstream"
         @tier "internal"
     }
-    state idle {
-      INIT -> idle
-        (set @entity.chartData [
-          { label: "Active",   value: 6 },
-          { label: "Pending",  value: 3 },
-          { label: "Inactive", value: 1 }
-        ])
-        (render-ui main { type: "@config.viewPattern", title: "@config.title", subtitle: "@config.subtitle", chartType: "@config.chartType", data: "@entity.chartData", series: "@config.series", height: "@config.height", showLegend: "@config.showLegend", showValues: "@config.showValues", stack: "@config.stack", timeAxis: "@config.timeAxis", drillEvent: "@config.drillEvent" })
-      ITEMS_LOADED -> idle
-        (set @entity.chartData
-          (if (= @config.chartType "histogram")
-              (array/map @payload.data ["fn", "p", { label: (object/get @p "label"), value: (object/get @p "value") }])
-              (array/map (object/entries (array/groupBy @payload.data (if @config.timeAxis @config.timeField @config.categoryField))) ["fn", "entry", {
-                label: (object/get @entry "0"),
-                value: (if (= @config.aggregation "sum")
-                           (array/sum (object/get @entry "1") @config.valueField)
-                           (if (= @config.aggregation "avg")
-                               (array/avg (object/get @entry "1") @config.valueField)
-                               (if (= @config.aggregation "min")
-                                   (array/min (object/get @entry "1") @config.valueField)
-                                   (if (= @config.aggregation "max")
-                                       (array/max (object/get @entry "1") @config.valueField)
-                                       (array/len (object/get @entry "1"))))))
-              }])))
-        (set @entity.chartData
-          (if (!= @config.sortField "none")
-              (array/sort @entity.chartData @config.sortField @config.sortDir)
-              @entity.chartData))
-        (set @entity.chartData
-          (if (> @config.limit 0)
-              (array/take @entity.chartData @config.limit)
-              @entity.chartData))
-        (render-ui main { type: "@config.viewPattern", title: "@config.title", subtitle: "@config.subtitle", chartType: "@config.chartType", data: "@entity.chartData", series: "@config.series", height: "@config.height", showLegend: "@config.showLegend", showValues: "@config.showValues", stack: "@config.stack", timeAxis: "@config.timeAxis", drillEvent: "@config.drillEvent" })
-    }
-    listens {
-      ITEMS_LOADED { data : [ObjectSpec], totalCount : number }
-        @description "Data has been retrieved and processed for display."
-        @synonyms "data ready, update, refresh, loaded"
-        @tier "essential"
-    }
   }
+
   page "/graphitems" as GraphItemGraphPage -> GraphItemGraph
 }

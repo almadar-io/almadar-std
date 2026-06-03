@@ -1,55 +1,64 @@
 app std-filter "1.0.0"
 "std-filter — single primitive: filter-group. Owns a FilterTarget runtime entity; every FILTER transition persists field/value so cross-trait listeners can route the latest selection into data atoms."
-
 type FilterSpec = { field : string!, label : string, filterType : string, options : [string] }
-
 orbital FilterTargetOrbital {
   entity FilterTarget [runtime] {
-    id    : string!
+    id : string!
     field : string @description "The name of the data field being filtered." @synonyms "attribute, property, key"
     value : string @description "The data associated with the filter criterion." @synonyms "data, criterion, content"
   }
 
   trait FilterTargetFilter -> FilterTarget [interaction, instance] {
     initial: idle
-    config {
-      filters : [FilterSpec] = [
-        { field: "status", label: "Status", filterType: "select", options: ["active", "inactive", "pending"] }
-      ]
-        @label "Filter controls"
-        @description "Field, label, control type, and options for each filter input"
-        @tier "presentation"
-      event   : string   = "FILTER"
-        @label "Filter event"
-        @description "Event emitted when the user changes a filter selection"
-        @tier "internal"
-      filterBarLook : "toolbar" | "chips" | "pills" | "popover-trigger" | "inline-column-header" = "toolbar"
-        @label "Filter bar look"
-        @description "Layer 2 visual treatment for the filter bar."
-        @tier "presentation"
-    }
+
     state idle {
       INIT -> idle
         (fetch FilterTarget {})
-        (render-ui main { type: "filter-group", look: "@config.filterBarLook", entity: FilterTarget, filters: "@config.filters" })
+        (render-ui main {
+          entity: FilterTarget
+          filters: @config.filters
+          look: @config.filterBarLook
+          type: filter-group
+        })
       FILTER -> idle
-        (set @entity.field @payload.field)
-        (set @entity.value @payload.value)
-        (render-ui main { type: "filter-group", look: "@config.filterBarLook", entity: FilterTarget, filters: "@config.filters" })
+        (set @entity.field ?field)
+        (set @entity.value ?value)
+        (render-ui main {
+          entity: FilterTarget
+          filters: @config.filters
+          look: @config.filterBarLook
+          type: filter-group
+        })
       CLEAR_FILTERS -> idle
         (set @entity.field "")
         (set @entity.value "")
-        (emit FILTER { field: "", value: "" })
-        (render-ui main { type: "filter-group", look: "@config.filterBarLook", entity: FilterTarget, filters: "@config.filters" })
+        (emit FILTER {
+          field: ""
+          value: ""
+        })
+        (render-ui main {
+          entity: FilterTarget
+          filters: @config.filters
+          look: @config.filterBarLook
+          type: filter-group
+        })
     }
+
     emits {
-      FILTER { field : string!, value : string! }
+      FILTER {
+        field : string!
+        value : string!
+      }
         @description "Signals a filter has been applied or changed."
         @synonyms "apply, update, change, refine"
         @tier "essential"
     }
+
     listens {
-      FILTER         { field : string!, value : string! }
+      FILTER {
+        field : string!
+        value : string!
+      }
         @description "A filter condition has been applied or modified."
         @synonyms "apply, update, change, set"
         @tier "essential"
@@ -58,6 +67,27 @@ orbital FilterTargetOrbital {
         @synonyms "reset, clear, remove, undo"
         @tier "essential"
     }
+
+    config {
+      filters : [FilterSpec] = [{
+        field: status
+        filterType: select
+        label: Status
+        options: (active inactive pending)
+      }]
+        @label "Filter controls"
+        @description "Field, label, control type, and options for each filter input"
+        @tier "presentation"
+      event : string = FILTER
+        @label "Filter event"
+        @description "Event emitted when the user changes a filter selection"
+        @tier "internal"
+      filterBarLook : "toolbar" | "chips" | "pills" | "popover-trigger" | "inline-column-header" = toolbar
+        @label "Filter bar look"
+        @description "Layer 2 visual treatment for the filter bar."
+        @tier "presentation"
+    }
   }
+
   page "/filtertargets" as FilterTargetFilterPage -> FilterTargetFilter
 }

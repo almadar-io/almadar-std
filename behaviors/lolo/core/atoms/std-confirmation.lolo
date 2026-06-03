@@ -6,42 +6,28 @@ app std-confirmation "1.0.0"
 ;; trait-ref call site via `config: { ... }`. Side effects (persist delete,
 ;; notify, etc.) belong in a sibling coordinator trait that
 ;; `listens { ConfirmTrait CONFIRM -> DO_DELETE }`.
-
 orbital ConfirmActionOrbital {
+    type ConfirmActionLoaded = Event { data : [ConfirmAction] }
+
+    type ConfirmActionLoadFailed = Event { error : string, code : string }
+
   entity ConfirmAction [runtime] {
     id : string
     name : string @description "A user-facing identifier for the confirmation action." @synonyms "label, title, identifier"
     description : string @description "A detailed explanation of the action being confirmed." @synonyms "details, explanation, notes, information"
-    status : "active" | "inactive" | "pending" @description "Indicates the current operational state of the action." @synonyms "state, condition, enabled" = "active"
+    status : "active" | "inactive" | "pending" @description "Indicates the current operational state of the action." @synonyms "state, condition, enabled" = active
     createdAt : string
     pendingId : string @description "Unique identifier for the pending confirmation request." @synonyms "requestId, referenceId, confirmationId" = ""
   }
-  type ConfirmActionLoaded = Event { data : [ConfirmAction] }
-  type ConfirmActionLoadFailed = Event { error : string, code : string }
 
   trait ConfirmActionConfirmation -> @rebindable ConfirmAction [interaction, instance] {
-    config {
-      icon : string = "alert-triangle"
-        @label "Icon"
-        @description "Icon name displayed in the confirmation modal header"
-        @tier "presentation"
-      title : string = "Confirm Action"
-        @label "Modal title"
-        @description "Heading shown at the top of the confirmation modal"
-        @tier "presentation"
-      alertMessage : string = "Are you sure?"
-        @label "Alert message"
-        @description "Body text explaining what the user is confirming"
-        @tier "presentation"
-      confirmLabel : string = "Confirm"
-        @label "Confirm button"
-        @description "Label on the primary confirm action button"
-        @tier "presentation"
-    }
     initial: idle
+
     state idle {
       INIT -> idle
-        (fetch ConfirmAction { emit: { success: "ConfirmActionLoaded", failure: "ConfirmActionLoadFailed" } })
+        (fetch ConfirmAction {
+          emit: { failure: ConfirmActionLoadFailed, success: ConfirmActionLoaded }
+        })
       ;; Guard: REQUEST is rejected if no `row` payload was provided.
       ;; "Confirm an action against X" is meaningless without X — a
       ;; confirmation dialog with no entity to display is a precondition
@@ -50,11 +36,58 @@ orbital ConfirmActionOrbital {
       ;; rendering empty (post-codegen-fix) which silently looks like a
       ;; UI bug. The guard surfaces the contract: callers MUST send the
       ;; targeted row in `payload.row`.
-      REQUEST -> confirming when @payload.row
-        (set @entity.pendingId @payload.id)
-        (set @entity.name @payload.row.name)
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "@config.icon" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "error", message: "@config.alertMessage" }, { type: "typography", content: "@entity.name", variant: "h4" }, { type: "typography", content: "@entity.pendingId", variant: "caption", color: "muted" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", action: "CANCEL", variant: "ghost" }, { type: "button", label: "@config.confirmLabel", action: "CONFIRM", actionPayload: { id: "@payload.id" }, variant: "danger", icon: "check" }] }] })
+      REQUEST -> confirming when ?row
+        (set @entity.pendingId ?id)
+        (set @entity.name ?row.name)
+        (render-ui modal {
+          children: [{
+            align: center
+            children: [{ name: @config.icon, type: icon }, {
+              content: @config.title
+              type: typography
+              variant: h3
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            message: @config.alertMessage
+            type: alert
+            variant: error
+          }, {
+            content: @entity.name
+            type: typography
+            variant: h4
+          }, {
+            color: muted
+            content: @entity.pendingId
+            type: typography
+            variant: caption
+          }, {
+            children: [{
+              action: CANCEL
+              label: Cancel
+              type: button
+              variant: ghost
+            }, {
+              action: CONFIRM
+              actionPayload: { id: ?id }
+              icon: check
+              label: @config.confirmLabel
+              type: button
+              variant: danger
+            }]
+            direction: horizontal
+            gap: sm
+            justify: end
+            type: stack
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
     }
+
     state confirming {
       CONFIRM -> idle
         (render-ui modal null)
@@ -65,7 +98,9 @@ orbital ConfirmActionOrbital {
     }
 
     emits {
-      CONFIRM { id : string }
+      CONFIRM {
+        id : string
+      }
         @description "Indicates the user has approved the action."
         @synonyms "approve, accept, ok"
         @tier "essential"
@@ -82,8 +117,12 @@ orbital ConfirmActionOrbital {
         @synonyms "loaded, ready, initialized"
         @tier "internal"
     }
+
     listens {
-      REQUEST { id : string!, row : ConfirmAction }
+      REQUEST {
+        id : string!
+        row : ConfirmAction
+      }
         @description "A request for confirmation before proceeding."
         @synonyms "prompt, ask, verify"
         @tier "essential"
@@ -91,12 +130,34 @@ orbital ConfirmActionOrbital {
         @description "Indicates the user dismissed the confirmation."
         @synonyms "dismiss, decline, reject"
         @tier "essential"
-
-      ConfirmActionLoadFailed { error : string, code : string }
+      ConfirmActionLoadFailed {
+        error : string
+        code : string
+      }
         @description "Indicates that loading the confirmation action failed."
         @synonyms "error, failure, problem, unsuccessful"
         @tier "internal"
     }
+
+    config {
+      icon : string = alert-triangle
+        @label "Icon"
+        @description "Icon name displayed in the confirmation modal header"
+        @tier "presentation"
+      title : string = "Confirm Action"
+        @label "Modal title"
+        @description "Heading shown at the top of the confirmation modal"
+        @tier "presentation"
+      alertMessage : string = "Are you sure?"
+        @label "Alert message"
+        @description "Body text explaining what the user is confirming"
+        @tier "presentation"
+      confirmLabel : string = Confirm
+        @label "Confirm button"
+        @description "Label on the primary confirm action button"
+        @tier "presentation"
+    }
   }
+
   page "/confirmactions/confirm" as ConfirmActionConfirmPage -> ConfirmActionConfirmation
 }

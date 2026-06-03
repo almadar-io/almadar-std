@@ -1,164 +1,538 @@
 app std-version-history "1.0.0"
 "std-version-history — wiki/CMS revision history with diff + rollback. Browses revisions; opens detail in `viewing_single`; compares two revisions in `comparing` with intrinsic version-diff; persists rollback."
-
 orbital RevisionOrbital {
+    type RevisionLoaded = Event { data : [Revision] } "Fired when the revision collection finishes loading"
+
+    type RevisionLoadFailed = Event { error : string, code : string } "Fired when the revision collection fails to load"
+
+    type RevisionRolledBack = Event { row : Revision } "Fired after a rollback persists successfully on the source document"
+
+    type RevisionRollbackFailed = Event { error : string, code : string } "Fired when a rollback fails to persist"
+
   entity Revision [persistent: revisions] {
-    id            : string!
-    documentId    : string! @description "Unique identifier for the associated document." @synonyms "reference, identifier, source"
-    documentType  : string! @description "Specifies the kind of document this revision belongs to." @synonyms "type, kind, category"
+    id : string!
+    documentId : string! @description "Unique identifier for the associated document." @synonyms "reference, identifier, source"
+    documentType : string! @description "Specifies the kind of document this revision belongs to." @synonyms "type, kind, category"
     versionNumber : number! @description "A sequential identifier representing the revision's order." @synonyms "sequence, order, iteration"
-    authorId      : string @description "Unique identifier for the user who made the change." @synonyms "user identifier, creator, contributor"
-    authorName    : string @description "The name of the user who made the change." @synonyms "user, contributor, owner"
-    content       : string @description "The textual data of the revision." @synonyms "text, body, data, value"
-    summary       : string @description "A brief explanation of the revision's changes." @synonyms "description, note, comment, explanation"
-    createdAt     : string
+    authorId : string @description "Unique identifier for the user who made the change." @synonyms "user identifier, creator, contributor"
+    authorName : string @description "The name of the user who made the change." @synonyms "user, contributor, owner"
+    content : string @description "The textual data of the revision." @synonyms "text, body, data, value"
+    summary : string @description "A brief explanation of the revision's changes." @synonyms "description, note, comment, explanation"
+    createdAt : string
   }
 
-  type RevisionLoaded         = Event { data : [Revision] }              "Fired when the revision collection finishes loading"
-  type RevisionLoadFailed     = Event { error : string, code : string }  "Fired when the revision collection fails to load"
-  type RevisionRolledBack     = Event { row : Revision }                 "Fired after a rollback persists successfully on the source document"
-  type RevisionRollbackFailed = Event { error : string, code : string }  "Fired when a rollback fails to persist"
-
   trait RevisionManage -> Revision [interaction, collection] {
+    initial: loading
+
+    state loading {
+      INIT -> loading
+        (fetch Revision {
+          emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Loading version history…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      RevisionLoaded -> browsing
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: history, type: icon }, {
+              content: @config.title
+              type: typography
+              variant: h3
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, {
+            children: [{
+              icon: history
+              label: "Total revisions"
+              look: @config.statLook
+              type: stat-display
+              value: ?data.length
+            }, {
+              icon: users
+              label: Authors
+              look: @config.statLook
+              type: stat-display
+              value: "6"
+            }, {
+              icon: save
+              label: "Saves this week"
+              look: @config.statLook
+              type: stat-display
+              value: "14"
+            }, {
+              icon: rotate-ccw
+              label: Rollbacks
+              look: @config.statLook
+              type: stat-display
+              value: "2"
+            }]
+            cols: 4
+            type: simple-grid
+          }, { type: divider }, {
+            cols: 1
+            entity: ?data
+            fields: [{
+              label: Version
+              name: versionNumber
+              variant: badge
+            }, {
+              label: Author
+              name: authorName
+              variant: caption
+            }, {
+              label: Summary
+              name: summary
+              variant: caption
+            }, {
+              label: Saved
+              name: createdAt
+              variant: caption
+            }]
+            gap: sm
+            itemActions: [{
+              event: OPEN_REVISION
+              icon: arrow-right
+              label: Open
+              variant: primary
+            }, {
+              event: ROLLBACK
+              icon: rotate-ccw
+              label: Rollback
+              variant: danger
+            }]
+            look: @config.tableLook
+            type: data-grid
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      RevisionRolledBack -> loading
+        (fetch Revision {
+          emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
+        })
+      RevisionRollbackFailed -> error
+        (render-ui main {
+          message: ?error
+          type: alert
+          variant: error
+        })
+      RevisionLoadFailed -> error
+        (render-ui main {
+          message: ?error
+          type: alert
+          variant: error
+        })
+    }
+
+    state browsing {
+      OPEN_REVISION -> viewing_single
+        (set @entity.id ?row.id)
+        (set @entity.documentId ?row.documentId)
+        (set @entity.documentType ?row.documentType)
+        (set @entity.versionNumber ?row.versionNumber)
+        (set @entity.authorId ?row.authorId)
+        (set @entity.authorName ?row.authorName)
+        (set @entity.content ?row.content)
+        (set @entity.summary ?row.summary)
+        (set @entity.createdAt ?row.createdAt)
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{
+              action: CLOSE_VIEW
+              label: Back
+              type: button
+              variant: ghost
+            }, { name: file-text, type: icon }, {
+              content: @entity.summary
+              type: typography
+              variant: h3
+            }, {
+              label: @entity.versionNumber
+              type: badge
+              variant: default
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            children: [{
+              children: [{
+                color: muted
+                content: Author
+                type: typography
+                variant: caption
+              }, {
+                content: @entity.authorName
+                type: typography
+                variant: body
+              }]
+              direction: horizontal
+              gap: md
+              type: stack
+            }, {
+              children: [{
+                color: muted
+                content: Saved
+                type: typography
+                variant: caption
+              }, {
+                content: @entity.createdAt
+                type: typography
+                variant: body
+              }]
+              direction: horizontal
+              gap: md
+              type: stack
+            }, {
+              children: [{
+                color: muted
+                content: Content
+                type: typography
+                variant: caption
+              }, {
+                content: @entity.content
+                type: typography
+                variant: body
+              }]
+              direction: horizontal
+              gap: md
+              type: stack
+            }]
+            direction: vertical
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            children: [{
+              icon: tag
+              label: Version
+              look: @config.statLook
+              type: stat-display
+              value: @entity.versionNumber
+            }, {
+              icon: file
+              label: Document
+              look: @config.statLook
+              type: stat-display
+              value: @entity.documentId
+            }, {
+              icon: layers
+              label: Type
+              look: @config.statLook
+              type: stat-display
+              value: @entity.documentType
+            }]
+            cols: 3
+            type: simple-grid
+          }, {
+            align: center
+            children: [{
+              action: COMPARE
+              actionPayload: { id: @entity.id }
+              label: Compare
+              type: button
+              variant: secondary
+            }, {
+              action: ROLLBACK
+              actionPayload: { id: @entity.id }
+              label: Rollback
+              type: button
+              variant: danger
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      ROLLBACK -> loading
+        (set @entity.id ?id)
+        (persist update Revision @entity {
+          emit: { failure: RevisionRollbackFailed, success: RevisionRolledBack }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Rolling back…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
+    }
+
+    state viewing_single {
+      CLOSE_VIEW -> loading
+        (fetch Revision {
+          emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Loading version history…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      COMPARE -> comparing
+        (set @entity.id ?id)
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{
+              action: CLOSE_VIEW
+              label: Back
+              type: button
+              variant: ghost
+            }, { name: git-compare, type: icon }, {
+              content: "Compare versions"
+              type: typography
+              variant: h3
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            afterId: ?afterId
+            beforeId: ?beforeId
+            onRevert: ROLLBACK
+            revisions: ?revisions
+            type: version-diff
+            view: side-by-side
+          }, {
+            align: center
+            children: [{
+              action: ROLLBACK
+              actionPayload: { id: @entity.id }
+              label: Rollback
+              type: button
+              variant: danger
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      ROLLBACK -> loading
+        (set @entity.id ?id)
+        (persist update Revision @entity {
+          emit: { failure: RevisionRollbackFailed, success: RevisionRolledBack }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Rolling back…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
+    }
+
+    state comparing {
+      CLOSE_VIEW -> loading
+        (fetch Revision {
+          emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Loading version history…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      ROLLBACK -> loading
+        (set @entity.id ?id)
+        (persist update Revision @entity {
+          emit: { failure: RevisionRollbackFailed, success: RevisionRolledBack }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Rolling back…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
+    }
+
+    state error {
+      INIT -> loading
+        (fetch Revision {
+          emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
+        })
+        (render-ui main { size: sm, type: spinner })
+    }
+
+    emits {
+      OPEN_REVISION {
+        id : string!
+        row : Revision
+      }
+        @description "Signals a revision has been selected for viewing."
+        @synonyms "select, choose, display"
+        @tier "essential"
+      CLOSE_VIEW
+        @description "Indicates the view has been closed or dismissed."
+        @synonyms "dismiss, hide, close"
+        @tier "essential"
+      COMPARE {
+        id : string!
+        beforeId : string!
+        afterId : string!
+        revisions : [Revision]
+      }
+        @description "Signals a request to compare two versions."
+        @synonyms "compare, diff, contrast"
+        @tier "customization"
+      ROLLBACK {
+        id : string!
+      }
+        @description "Indicates a revision has been successfully reverted."
+        @synonyms "reverted, undone, restored"
+        @tier "essential"
+      RevisionLoaded {
+        data : [Revision]
+      }
+        @description "Signals a revision has been successfully retrieved and is ready."
+        @synonyms "loaded, fetched, retrieved, available"
+        @tier "essential"
+      RevisionLoadFailed {
+        error : string
+        code : string
+      }
+        @description "Indicates a failure to load revision data."
+        @synonyms "error, fail, problem, unsuccessful"
+        @tier "internal"
+      RevisionRolledBack {
+        row : Revision
+      }
+        @description "Indicates a revision has been successfully restored to a previous state."
+        @synonyms "restored, reverted, undone"
+        @tier "customization"
+      RevisionRollbackFailed {
+        error : string
+        code : string
+      }
+        @description "Indicates that a revision rollback operation was unsuccessful."
+        @synonyms "rollback failed, revert error, undo failure"
+        @tier "internal"
+    }
+
+    listens {
+      OPEN_REVISION {
+        id : string!
+        row : Revision
+      }
+        @description "A revision has been selected for viewing."
+        @synonyms "select, choose, load"
+        @tier "essential"
+      CLOSE_VIEW
+        @description "Indicates the revision history view has been closed."
+        @synonyms "dismiss, hide, cancel"
+        @tier "essential"
+      COMPARE {
+        id : string!
+        beforeId : string!
+        afterId : string!
+        revisions : [Revision]
+      }
+        @description "Indicates a request to compare two versions."
+        @synonyms "diff, compare, contrast"
+        @tier "customization"
+      ROLLBACK {
+        id : string!
+      }
+        @description "A revision has been successfully reverted to a previous state."
+        @synonyms "reverted, undone, restored"
+        @tier "essential"
+      RevisionLoaded {
+        data : [Revision]
+      }
+        @description "Indicates a revision has been successfully retrieved and is ready."
+        @synonyms "loaded, fetched, retrieved, available"
+        @tier "essential"
+      RevisionLoadFailed {
+        error : string
+        code : string
+      }
+        @description "Indicates a failure to retrieve revision data."
+        @synonyms "error, failure, problem, fetch failed"
+        @tier "internal"
+      RevisionRolledBack {
+        row : Revision
+      }
+        @description "Indicates a revision has been successfully reverted."
+        @synonyms "reverted, undone, restored"
+        @tier "internal"
+      RevisionRollbackFailed {
+        error : string
+        code : string
+      }
+        @description "Indicates that a revision rollback operation has failed."
+        @synonyms "rollback error, revert failure, undo failed"
+        @tier "internal"
+    }
+
     config {
       title : string = "Version History"
         @label "Section title"
         @description "Heading shown above the revision list"
         @tier "presentation"
-      tableLook : "dense" | "spacious" | "striped" | "borderless" | "card-rows" = "dense"
+      tableLook : "dense" | "spacious" | "striped" | "borderless" | "card-rows" = dense
         @label "Table look"
         @description "Layer 2 visual treatment for the data table rendered by this atom."
         @tier "presentation"
-      statLook : "elevated" | "flat" | "progress-backed" | "gauge" | "sparkline" = "elevated"
+      statLook : "elevated" | "flat" | "progress-backed" | "gauge" | "sparkline" = elevated
         @label "Stat display look"
         @description "Layer 2 visual treatment for stat / KPI cards."
         @tier "presentation"
     }
-    initial: loading
-    state loading {
-      INIT -> loading
-        (fetch Revision { emit: { success: "RevisionLoaded", failure: "RevisionLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading version history…" }] })
-      RevisionLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "history" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", look: "@config.statLook", label: "Total revisions", value: "@payload.data.length", icon: "history" }, { type: "stat-display", look: "@config.statLook", label: "Authors", value: "6", icon: "users" }, { type: "stat-display", look: "@config.statLook", label: "Saves this week", value: "14", icon: "save" }, { type: "stat-display", look: "@config.statLook", label: "Rollbacks", value: "2", icon: "rotate-ccw" }] }, { type: "divider" }, { type: "data-grid", look: "@config.tableLook", entity: "@payload.data", fields: [{ name: "versionNumber", label: "Version", variant: "badge" }, { name: "authorName", label: "Author", variant: "caption" }, { name: "summary", label: "Summary", variant: "caption" }, { name: "createdAt", label: "Saved", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_REVISION", variant: "primary", icon: "arrow-right" }, { label: "Rollback", event: "ROLLBACK", variant: "danger", icon: "rotate-ccw" }] }] })
-      RevisionRolledBack -> loading
-        (fetch Revision { emit: { success: "RevisionLoaded", failure: "RevisionLoadFailed" } })
-      RevisionRollbackFailed -> error
-        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
-      RevisionLoadFailed -> error
-        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
-    }
-    state browsing {
-      OPEN_REVISION -> viewing_single
-        (set @entity.id @payload.row.id)
-        (set @entity.documentId @payload.row.documentId)
-        (set @entity.documentType @payload.row.documentType)
-        (set @entity.versionNumber @payload.row.versionNumber)
-        (set @entity.authorId @payload.row.authorId)
-        (set @entity.authorName @payload.row.authorName)
-        (set @entity.content @payload.row.content)
-        (set @entity.summary @payload.row.summary)
-        (set @entity.createdAt @payload.row.createdAt)
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "file-text" }, { type: "typography", content: "@entity.summary", variant: "h3" }, { type: "badge", label: "@entity.versionNumber", variant: "default" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Author" }, { type: "typography", variant: "body", content: "@entity.authorName" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Saved" }, { type: "typography", variant: "body", content: "@entity.createdAt" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Content" }, { type: "typography", variant: "body", content: "@entity.content" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 3, children: [{ type: "stat-display", look: "@config.statLook", label: "Version", value: "@entity.versionNumber", icon: "tag" }, { type: "stat-display", look: "@config.statLook", label: "Document", value: "@entity.documentId", icon: "file" }, { type: "stat-display", look: "@config.statLook", label: "Type", value: "@entity.documentType", icon: "layers" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Compare", variant: "secondary", action: "COMPARE", actionPayload: { id: "@entity.id" } }, { type: "button", label: "Rollback", variant: "danger", action: "ROLLBACK", actionPayload: { id: "@entity.id" } }] }] })
-      ROLLBACK -> loading
-        (set @entity.id @payload.id)
-        (persist update Revision @entity { emit: { success: "RevisionRolledBack", failure: "RevisionRollbackFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Rolling back…" }] })
-    }
-    state viewing_single {
-      CLOSE_VIEW -> loading
-        (fetch Revision { emit: { success: "RevisionLoaded", failure: "RevisionLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading version history…" }] })
-      COMPARE -> comparing
-        (set @entity.id @payload.id)
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "git-compare" }, { type: "typography", content: "Compare versions", variant: "h3" }] }, { type: "divider" }, { type: "version-diff", revisions: "@payload.revisions", beforeId: "@payload.beforeId", afterId: "@payload.afterId", view: "side-by-side", onRevert: "ROLLBACK" }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Rollback", variant: "danger", action: "ROLLBACK", actionPayload: { id: "@entity.id" } }] }] })
-      ROLLBACK -> loading
-        (set @entity.id @payload.id)
-        (persist update Revision @entity { emit: { success: "RevisionRolledBack", failure: "RevisionRollbackFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Rolling back…" }] })
-    }
-    state comparing {
-      CLOSE_VIEW -> loading
-        (fetch Revision { emit: { success: "RevisionLoaded", failure: "RevisionLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading version history…" }] })
-      ROLLBACK -> loading
-        (set @entity.id @payload.id)
-        (persist update Revision @entity { emit: { success: "RevisionRolledBack", failure: "RevisionRollbackFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Rolling back…" }] })
-    }
-    state error {
-      INIT -> loading
-        (fetch Revision { emit: { success: "RevisionLoaded", failure: "RevisionLoadFailed" } })
-        (render-ui main { type: "spinner", size: "sm" })
-    }
-    emits {
-      OPEN_REVISION { id : string!, row : Revision }
-        @description "Signals a revision has been selected for viewing."
-        @synonyms "select, choose, display"
-        @tier "essential"
-      CLOSE_VIEW    { }
-        @description "Indicates the view has been closed or dismissed."
-        @synonyms "dismiss, hide, close"
-        @tier "essential"
-      COMPARE       { id : string!, beforeId : string!, afterId : string!, revisions : [Revision] }
-        @description "Signals a request to compare two versions."
-        @synonyms "compare, diff, contrast"
-        @tier "customization"
-      ROLLBACK      { id : string! }
-        @description "Indicates a revision has been successfully reverted."
-        @synonyms "reverted, undone, restored"
-        @tier "essential"
-      RevisionLoaded         { data : [Revision] }
-        @description "Signals a revision has been successfully retrieved and is ready."
-        @synonyms "loaded, fetched, retrieved, available"
-        @tier "essential"
-      RevisionLoadFailed     { error : string, code : string }
-        @description "Indicates a failure to load revision data."
-        @synonyms "error, fail, problem, unsuccessful"
-        @tier "internal"
-      RevisionRolledBack     { row : Revision }
-        @description "Indicates a revision has been successfully restored to a previous state."
-        @synonyms "restored, reverted, undone"
-        @tier "customization"
-      RevisionRollbackFailed { error : string, code : string }
-        @description "Indicates that a revision rollback operation was unsuccessful."
-        @synonyms "rollback failed, revert error, undo failure"
-        @tier "internal"
-    }
-    listens {
-      OPEN_REVISION { id : string!, row : Revision }
-        @description "A revision has been selected for viewing."
-        @synonyms "select, choose, load"
-        @tier "essential"
-      CLOSE_VIEW    { }
-        @description "Indicates the revision history view has been closed."
-        @synonyms "dismiss, hide, cancel"
-        @tier "essential"
-      COMPARE       { id : string!, beforeId : string!, afterId : string!, revisions : [Revision] }
-        @description "Indicates a request to compare two versions."
-        @synonyms "diff, compare, contrast"
-        @tier "customization"
-      ROLLBACK      { id : string! }
-        @description "A revision has been successfully reverted to a previous state."
-        @synonyms "reverted, undone, restored"
-        @tier "essential"
-      RevisionLoaded         { data : [Revision] }
-        @description "Indicates a revision has been successfully retrieved and is ready."
-        @synonyms "loaded, fetched, retrieved, available"
-        @tier "essential"
-      RevisionLoadFailed     { error : string, code : string }
-        @description "Indicates a failure to retrieve revision data."
-        @synonyms "error, failure, problem, fetch failed"
-        @tier "internal"
-      RevisionRolledBack     { row : Revision }
-        @description "Indicates a revision has been successfully reverted."
-        @synonyms "reverted, undone, restored"
-        @tier "internal"
-      RevisionRollbackFailed { error : string, code : string }
-        @description "Indicates that a revision rollback operation has failed."
-        @synonyms "rollback error, revert failure, undo failed"
-        @tier "internal"
-    }
   }
+
   page "/revisions/manage" as RevisionManagePage -> RevisionManage
 }

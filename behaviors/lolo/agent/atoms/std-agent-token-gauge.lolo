@@ -1,12 +1,15 @@
 app std-agent-token-gauge "1.0.0"
 "std-agent-token-gauge as a Function"
-
 orbital AgentTokenGaugeOrbital {
+    type AgentTokenGaugeLoaded = Event AgentTokenGauge "Fired when AgentTokenGauge finishes loading"
+
+    type AgentTokenGaugeLoadFailed = Event { message : string } "Fired when AgentTokenGauge fails to load"
+
   entity AgentTokenGauge [runtime] {
     id : string
     name : string @description "A human-readable identifier for the gauge." @synonyms "label, identifier, designation"
     description : string @description "A textual explanation of the gauge's purpose or meaning." @synonyms "explanation, details, notes, information"
-    status : "active" | "inactive" | "pending" @description "Indicates the operational state of the component." @synonyms "state, condition, operational_status" = "active"
+    status : "active" | "inactive" | "pending" @description "Indicates the operational state of the component." @synonyms "state, condition, operational_status" = active
     createdAt : string
     current : number @description "The present value of the monitored metric." @synonyms "value, reading, level" = 0
     max : number @description "The highest observed value." @synonyms "peak, maximum, high" = 180000
@@ -14,80 +17,851 @@ orbital AgentTokenGaugeOrbital {
     lastCompactedAt : string @description "Timestamp of the last compaction event." @synonyms "compacted, last compacted, compaction time" = ""
   }
 
-  type AgentTokenGaugeLoaded     = Event AgentTokenGauge                  "Fired when AgentTokenGauge finishes loading"
-  type AgentTokenGaugeLoadFailed = Event { message : string } "Fired when AgentTokenGauge fails to load"
   trait AgentTokenGaugeGauge -> AgentTokenGauge [interaction, instance] {
     initial: normal
+
     state normal {
       INIT -> normal
         (set @entity.max 180000)
-        (fetch AgentTokenGauge { emit: { success: "AgentTokenGaugeLoaded", failure: "AgentTokenGaugeLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge"}, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
-      UPDATE -> normal when (< (/ @payload.current @entity.max) 0.85)
-        (set @entity.current @payload.current)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge"}, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
-      UPDATE -> warning when (and (>= (/ @payload.current @entity.max) 0.85) (< (/ @payload.current @entity.max) 0.95))
-        (set @entity.current @payload.current)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle"}, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Warning", variant: "warning" }] }, { type: "divider" }, { type: "alert", variant: "warning", message: "Token usage approaching limit. Consider compacting." }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compact", action: "COMPACT", variant: "primary", icon: "minimize-2" }, { type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
-      UPDATE -> critical when (>= (/ @payload.current @entity.max) 0.95)
-        (set @entity.current @payload.current)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-octagon"}, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Critical", variant: "danger" }] }, { type: "divider" }, { type: "alert", variant: "error", message: "Token usage critical. Compact immediately to avoid truncation." }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compact Now", action: "COMPACT", variant: "primary", icon: "minimize-2" }, { type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
+        (fetch AgentTokenGauge {
+          emit: { failure: AgentTokenGaugeLoadFailed, success: AgentTokenGaugeLoaded }
+        })
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: gauge, type: icon }, {
+              content: "Token Usage"
+              type: typography
+              variant: h2
+            }, {
+              label: Normal
+              type: badge
+              variant: default
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            max: @entity.max
+            type: progress-bar
+            value: @entity.current
+          }, {
+            children: [{
+              label: "Tokens Used"
+              type: stat-display
+              value: @entity.current
+            }, {
+              label: "Max Tokens"
+              type: stat-display
+              value: @entity.max
+            }]
+            direction: horizontal
+            gap: md
+            type: stack
+          }, {
+            action: RESET
+            icon: rotate-ccw
+            label: Reset
+            type: button
+            variant: ghost
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
+      UPDATE -> normal when ["<", ["/", ?current, @entity.max], 0.85]
+        (set @entity.current ?current)
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: gauge, type: icon }, {
+              content: "Token Usage"
+              type: typography
+              variant: h2
+            }, {
+              label: Normal
+              type: badge
+              variant: default
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            max: @entity.max
+            type: progress-bar
+            value: @entity.current
+          }, {
+            children: [{
+              label: "Tokens Used"
+              type: stat-display
+              value: @entity.current
+            }, {
+              label: "Max Tokens"
+              type: stat-display
+              value: @entity.max
+            }]
+            direction: horizontal
+            gap: md
+            type: stack
+          }, {
+            action: RESET
+            icon: rotate-ccw
+            label: Reset
+            type: button
+            variant: ghost
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
+      UPDATE -> warning when (and [">=", ["/", ?current, @entity.max], 0.85] ["<", ["/", ?current, @entity.max], 0.95])
+        (set @entity.current ?current)
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: alert-triangle, type: icon }, {
+              content: "Token Usage"
+              type: typography
+              variant: h2
+            }, {
+              label: Warning
+              type: badge
+              variant: warning
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            message: "Token usage approaching limit. Consider compacting."
+            type: alert
+            variant: warning
+          }, {
+            max: @entity.max
+            type: progress-bar
+            value: @entity.current
+          }, {
+            children: [{
+              label: "Tokens Used"
+              type: stat-display
+              value: @entity.current
+            }, {
+              label: "Max Tokens"
+              type: stat-display
+              value: @entity.max
+            }]
+            direction: horizontal
+            gap: md
+            type: stack
+          }, {
+            children: [{
+              action: COMPACT
+              icon: minimize-2
+              label: Compact
+              type: button
+              variant: primary
+            }, {
+              action: RESET
+              icon: rotate-ccw
+              label: Reset
+              type: button
+              variant: ghost
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
+      UPDATE -> critical when [">=", ["/", ?current, @entity.max], 0.95]
+        (set @entity.current ?current)
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: alert-octagon, type: icon }, {
+              content: "Token Usage"
+              type: typography
+              variant: h2
+            }, {
+              label: Critical
+              type: badge
+              variant: danger
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            message: "Token usage critical. Compact immediately to avoid truncation."
+            type: alert
+            variant: error
+          }, {
+            max: @entity.max
+            type: progress-bar
+            value: @entity.current
+          }, {
+            children: [{
+              label: "Tokens Used"
+              type: stat-display
+              value: @entity.current
+            }, {
+              label: "Max Tokens"
+              type: stat-display
+              value: @entity.max
+            }]
+            direction: horizontal
+            gap: md
+            type: stack
+          }, {
+            children: [{
+              action: COMPACT
+              icon: minimize-2
+              label: "Compact Now"
+              type: button
+              variant: primary
+            }, {
+              action: RESET
+              icon: rotate-ccw
+              label: Reset
+              type: button
+              variant: ghost
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
       COMPACT -> normal
         (agent/compact)
         (set @entity.lastCompactedAt @now)
         (agent/token-count)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge"}, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: gauge, type: icon }, {
+              content: "Token Usage"
+              type: typography
+              variant: h2
+            }, {
+              label: Normal
+              type: badge
+              variant: default
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            max: @entity.max
+            type: progress-bar
+            value: @entity.current
+          }, {
+            children: [{
+              label: "Tokens Used"
+              type: stat-display
+              value: @entity.current
+            }, {
+              label: "Max Tokens"
+              type: stat-display
+              value: @entity.max
+            }]
+            direction: horizontal
+            gap: md
+            type: stack
+          }, {
+            action: RESET
+            icon: rotate-ccw
+            label: Reset
+            type: button
+            variant: ghost
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
       RESET -> normal
         (set @entity.current 0)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge"}, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: gauge, type: icon }, {
+              content: "Token Usage"
+              type: typography
+              variant: h2
+            }, {
+              label: Normal
+              type: badge
+              variant: default
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            max: @entity.max
+            type: progress-bar
+            value: @entity.current
+          }, {
+            children: [{
+              label: "Tokens Used"
+              type: stat-display
+              value: @entity.current
+            }, {
+              label: "Max Tokens"
+              type: stat-display
+              value: @entity.max
+            }]
+            direction: horizontal
+            gap: md
+            type: stack
+          }, {
+            action: RESET
+            icon: rotate-ccw
+            label: Reset
+            type: button
+            variant: ghost
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
     }
+
     state warning {
-      UPDATE -> warning when (and (>= (/ @payload.current @entity.max) 0.85) (< (/ @payload.current @entity.max) 0.95))
-        (set @entity.current @payload.current)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle"}, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Warning", variant: "warning" }] }, { type: "divider" }, { type: "alert", variant: "warning", message: "Token usage approaching limit. Consider compacting." }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compact", action: "COMPACT", variant: "primary", icon: "minimize-2" }, { type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
-      UPDATE -> critical when (>= (/ @payload.current @entity.max) 0.95)
-        (set @entity.current @payload.current)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-octagon"}, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Critical", variant: "danger" }] }, { type: "divider" }, { type: "alert", variant: "error", message: "Token usage critical. Compact immediately to avoid truncation." }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compact Now", action: "COMPACT", variant: "primary", icon: "minimize-2" }, { type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
-      UPDATE -> normal when (< (/ @payload.current @entity.max) 0.85)
-        (set @entity.current @payload.current)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge"}, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
+      UPDATE -> warning when (and [">=", ["/", ?current, @entity.max], 0.85] ["<", ["/", ?current, @entity.max], 0.95])
+        (set @entity.current ?current)
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: alert-triangle, type: icon }, {
+              content: "Token Usage"
+              type: typography
+              variant: h2
+            }, {
+              label: Warning
+              type: badge
+              variant: warning
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            message: "Token usage approaching limit. Consider compacting."
+            type: alert
+            variant: warning
+          }, {
+            max: @entity.max
+            type: progress-bar
+            value: @entity.current
+          }, {
+            children: [{
+              label: "Tokens Used"
+              type: stat-display
+              value: @entity.current
+            }, {
+              label: "Max Tokens"
+              type: stat-display
+              value: @entity.max
+            }]
+            direction: horizontal
+            gap: md
+            type: stack
+          }, {
+            children: [{
+              action: COMPACT
+              icon: minimize-2
+              label: Compact
+              type: button
+              variant: primary
+            }, {
+              action: RESET
+              icon: rotate-ccw
+              label: Reset
+              type: button
+              variant: ghost
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
+      UPDATE -> critical when [">=", ["/", ?current, @entity.max], 0.95]
+        (set @entity.current ?current)
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: alert-octagon, type: icon }, {
+              content: "Token Usage"
+              type: typography
+              variant: h2
+            }, {
+              label: Critical
+              type: badge
+              variant: danger
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            message: "Token usage critical. Compact immediately to avoid truncation."
+            type: alert
+            variant: error
+          }, {
+            max: @entity.max
+            type: progress-bar
+            value: @entity.current
+          }, {
+            children: [{
+              label: "Tokens Used"
+              type: stat-display
+              value: @entity.current
+            }, {
+              label: "Max Tokens"
+              type: stat-display
+              value: @entity.max
+            }]
+            direction: horizontal
+            gap: md
+            type: stack
+          }, {
+            children: [{
+              action: COMPACT
+              icon: minimize-2
+              label: "Compact Now"
+              type: button
+              variant: primary
+            }, {
+              action: RESET
+              icon: rotate-ccw
+              label: Reset
+              type: button
+              variant: ghost
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
+      UPDATE -> normal when ["<", ["/", ?current, @entity.max], 0.85]
+        (set @entity.current ?current)
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: gauge, type: icon }, {
+              content: "Token Usage"
+              type: typography
+              variant: h2
+            }, {
+              label: Normal
+              type: badge
+              variant: default
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            max: @entity.max
+            type: progress-bar
+            value: @entity.current
+          }, {
+            children: [{
+              label: "Tokens Used"
+              type: stat-display
+              value: @entity.current
+            }, {
+              label: "Max Tokens"
+              type: stat-display
+              value: @entity.max
+            }]
+            direction: horizontal
+            gap: md
+            type: stack
+          }, {
+            action: RESET
+            icon: rotate-ccw
+            label: Reset
+            type: button
+            variant: ghost
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
       COMPACT -> normal
         (agent/compact)
         (set @entity.lastCompactedAt @now)
         (agent/token-count)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge"}, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: gauge, type: icon }, {
+              content: "Token Usage"
+              type: typography
+              variant: h2
+            }, {
+              label: Normal
+              type: badge
+              variant: default
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            max: @entity.max
+            type: progress-bar
+            value: @entity.current
+          }, {
+            children: [{
+              label: "Tokens Used"
+              type: stat-display
+              value: @entity.current
+            }, {
+              label: "Max Tokens"
+              type: stat-display
+              value: @entity.max
+            }]
+            direction: horizontal
+            gap: md
+            type: stack
+          }, {
+            action: RESET
+            icon: rotate-ccw
+            label: Reset
+            type: button
+            variant: ghost
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
       RESET -> normal
         (set @entity.current 0)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge"}, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: gauge, type: icon }, {
+              content: "Token Usage"
+              type: typography
+              variant: h2
+            }, {
+              label: Normal
+              type: badge
+              variant: default
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            max: @entity.max
+            type: progress-bar
+            value: @entity.current
+          }, {
+            children: [{
+              label: "Tokens Used"
+              type: stat-display
+              value: @entity.current
+            }, {
+              label: "Max Tokens"
+              type: stat-display
+              value: @entity.max
+            }]
+            direction: horizontal
+            gap: md
+            type: stack
+          }, {
+            action: RESET
+            icon: rotate-ccw
+            label: Reset
+            type: button
+            variant: ghost
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
     }
+
     state critical {
-      UPDATE -> critical when (>= (/ @payload.current @entity.max) 0.95)
-        (set @entity.current @payload.current)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-octagon"}, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Critical", variant: "danger" }] }, { type: "divider" }, { type: "alert", variant: "error", message: "Token usage critical. Compact immediately to avoid truncation." }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compact Now", action: "COMPACT", variant: "primary", icon: "minimize-2" }, { type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
-      UPDATE -> warning when (and (>= (/ @payload.current @entity.max) 0.85) (< (/ @payload.current @entity.max) 0.95))
-        (set @entity.current @payload.current)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle"}, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Warning", variant: "warning" }] }, { type: "divider" }, { type: "alert", variant: "warning", message: "Token usage approaching limit. Consider compacting." }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compact", action: "COMPACT", variant: "primary", icon: "minimize-2" }, { type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
-      UPDATE -> normal when (< (/ @payload.current @entity.max) 0.85)
-        (set @entity.current @payload.current)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge"}, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
+      UPDATE -> critical when [">=", ["/", ?current, @entity.max], 0.95]
+        (set @entity.current ?current)
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: alert-octagon, type: icon }, {
+              content: "Token Usage"
+              type: typography
+              variant: h2
+            }, {
+              label: Critical
+              type: badge
+              variant: danger
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            message: "Token usage critical. Compact immediately to avoid truncation."
+            type: alert
+            variant: error
+          }, {
+            max: @entity.max
+            type: progress-bar
+            value: @entity.current
+          }, {
+            children: [{
+              label: "Tokens Used"
+              type: stat-display
+              value: @entity.current
+            }, {
+              label: "Max Tokens"
+              type: stat-display
+              value: @entity.max
+            }]
+            direction: horizontal
+            gap: md
+            type: stack
+          }, {
+            children: [{
+              action: COMPACT
+              icon: minimize-2
+              label: "Compact Now"
+              type: button
+              variant: primary
+            }, {
+              action: RESET
+              icon: rotate-ccw
+              label: Reset
+              type: button
+              variant: ghost
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
+      UPDATE -> warning when (and [">=", ["/", ?current, @entity.max], 0.85] ["<", ["/", ?current, @entity.max], 0.95])
+        (set @entity.current ?current)
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: alert-triangle, type: icon }, {
+              content: "Token Usage"
+              type: typography
+              variant: h2
+            }, {
+              label: Warning
+              type: badge
+              variant: warning
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            message: "Token usage approaching limit. Consider compacting."
+            type: alert
+            variant: warning
+          }, {
+            max: @entity.max
+            type: progress-bar
+            value: @entity.current
+          }, {
+            children: [{
+              label: "Tokens Used"
+              type: stat-display
+              value: @entity.current
+            }, {
+              label: "Max Tokens"
+              type: stat-display
+              value: @entity.max
+            }]
+            direction: horizontal
+            gap: md
+            type: stack
+          }, {
+            children: [{
+              action: COMPACT
+              icon: minimize-2
+              label: Compact
+              type: button
+              variant: primary
+            }, {
+              action: RESET
+              icon: rotate-ccw
+              label: Reset
+              type: button
+              variant: ghost
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
+      UPDATE -> normal when ["<", ["/", ?current, @entity.max], 0.85]
+        (set @entity.current ?current)
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: gauge, type: icon }, {
+              content: "Token Usage"
+              type: typography
+              variant: h2
+            }, {
+              label: Normal
+              type: badge
+              variant: default
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            max: @entity.max
+            type: progress-bar
+            value: @entity.current
+          }, {
+            children: [{
+              label: "Tokens Used"
+              type: stat-display
+              value: @entity.current
+            }, {
+              label: "Max Tokens"
+              type: stat-display
+              value: @entity.max
+            }]
+            direction: horizontal
+            gap: md
+            type: stack
+          }, {
+            action: RESET
+            icon: rotate-ccw
+            label: Reset
+            type: button
+            variant: ghost
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
       COMPACT -> normal
         (agent/compact)
         (set @entity.lastCompactedAt @now)
         (agent/token-count)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge"}, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: gauge, type: icon }, {
+              content: "Token Usage"
+              type: typography
+              variant: h2
+            }, {
+              label: Normal
+              type: badge
+              variant: default
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            max: @entity.max
+            type: progress-bar
+            value: @entity.current
+          }, {
+            children: [{
+              label: "Tokens Used"
+              type: stat-display
+              value: @entity.current
+            }, {
+              label: "Max Tokens"
+              type: stat-display
+              value: @entity.max
+            }]
+            direction: horizontal
+            gap: md
+            type: stack
+          }, {
+            action: RESET
+            icon: rotate-ccw
+            label: Reset
+            type: button
+            variant: ghost
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
       RESET -> normal
         (set @entity.current 0)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge"}, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: gauge, type: icon }, {
+              content: "Token Usage"
+              type: typography
+              variant: h2
+            }, {
+              label: Normal
+              type: badge
+              variant: default
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            max: @entity.max
+            type: progress-bar
+            value: @entity.current
+          }, {
+            children: [{
+              label: "Tokens Used"
+              type: stat-display
+              value: @entity.current
+            }, {
+              label: "Max Tokens"
+              type: stat-display
+              value: @entity.max
+            }]
+            direction: horizontal
+            gap: md
+            type: stack
+          }, {
+            action: RESET
+            icon: rotate-ccw
+            label: Reset
+            type: button
+            variant: ghost
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
     }
-emits {
+
+    emits {
       AgentTokenGaugeLoaded
       AgentTokenGaugeLoadFailed
     }
 
-        listens {
-      UPDATE { current : number! }
-          AgentTokenGaugeLoadFailed { message : string }
+    listens {
+      UPDATE {
+        current : number!
+      }
+      AgentTokenGaugeLoadFailed {
+        message : string
+      }
     }
   }
+
   page "/agenttokengauges" as AgentTokenGaugePage -> AgentTokenGaugeGauge
 }

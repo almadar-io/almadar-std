@@ -1,25 +1,8 @@
 app std-stats "3.1.0"
 "std-stats — embeddable analytics-card atom. ITEMS_LOADED aggregates @payload.data per @config.metrics (count|sum|avg|min|max|variance with optional filter, baselineFilter, format, icon, max, target, trend, trendPolarity, sparkline) and renders one stat-display per entry. Variance metrics compute actual - baseline using `filter` + `baselineFilter` lambdas and report the signed delta as trend. clickEvent emits UI:{clickEvent} { metricLabel } when a card is clicked. Drop into a dashboard alongside std-browse / std-search / std-filter."
-
 type ObjectSpec = { id : string, label : string, value : string }
-
 orbital StatsItemOrbital {
-  type StatCard = {
-    label          : string!
-    value          : number
-    icon           : string
-    format         : "number" | "currency" | "percent"
-    variant        : "default" | "primary" | "success" | "warning" | "error" | "info"
-    prefix         : string
-    suffix         : string
-    max            : number
-    target         : number
-    trend          : number
-    trendPolarity  : "higher-is-better" | "lower-is-better"
-    trendFormat    : "absolute" | "percent"
-    sparklineData  : [number]
-    clickEvent     : string
-  }
+    type StatCard = { label : string!, value : number, icon : string, format : "number" | "currency" | "percent", variant : "default" | "primary" | "success" | "warning" | "error" | "info", prefix : string, suffix : string, max : number, target : number, trend : number, trendPolarity : "higher-is-better" | "lower-is-better", trendFormat : "absolute" | "percent", sparklineData : [number], clickEvent : string }
 
   ;; Author-side metric definition. Superset of StatCard with the
   ;; aggregation knobs (aggregation/field) the trait consumes on
@@ -28,149 +11,141 @@ orbital StatsItemOrbital {
   ;; the runtime reads via `(object/get @metric "filter" true)` — they're
   ;; intentionally absent from the typed shape because lolo has no
   ;; "predicate" type today; authors can still pass them inline.
-  type MetricSpec = {
-    label          : string!
-    value          : number
-    icon           : string
-    format         : "number" | "currency" | "percent"
-    variant        : "default" | "primary" | "success" | "warning" | "error" | "info"
-    prefix         : string
-    suffix         : string
-    max            : number
-    target         : number
-    trend          : number
-    trendPolarity  : "higher-is-better" | "lower-is-better"
-    trendFormat    : "absolute" | "percent"
-    sparklineData  : [number]
-    clickEvent     : string
-    aggregation    : "count" | "sum" | "avg" | "min" | "max" | "variance"
-    field          : string
-  }
+    type MetricSpec = { label : string!, value : number, icon : string, format : "number" | "currency" | "percent", variant : "default" | "primary" | "success" | "warning" | "error" | "info", prefix : string, suffix : string, max : number, target : number, trend : number, trendPolarity : "higher-is-better" | "lower-is-better", trendFormat : "absolute" | "percent", sparklineData : [number], clickEvent : string, aggregation : "count" | "sum" | "avg" | "min" | "max" | "variance", field : string }
 
   entity StatsItem [runtime] {
-    id    : string!
+    id : string!
     cards : [StatCard] @description "A collection of statistical cards to display." @synonyms "statistics, items, displays" = []
   }
 
   trait StatsItemStats -> @rebindable StatsItem [interaction, instance] {
     initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.cards (array/map @config.metrics (fn metric {
+          clickEvent: (object/get @metric clickEvent "")
+          format: (object/get @metric format number)
+          icon: (object/get @metric icon "")
+          label: (object/get @metric label)
+          max: (object/get @metric max 0)
+          prefix: (object/get @metric prefix "")
+          sparklineData: (object/get @metric sparklineData [])
+          suffix: (object/get @metric suffix "")
+          target: (object/get @metric target 0)
+          trend: (object/get @metric trend 0)
+          trendFormat: (object/get @metric trendFormat absolute)
+          trendPolarity: (object/get @metric trendPolarity higher-is-better)
+          value: (object/get @metric value 0)
+          variant: (object/get @metric variant default)
+        })))
+        (render-ui main @config.bodyContent)
+      ;; Pre-seed cards from @config.metrics so the atom renders a
+      ;; visible skeleton on initial mount even before any upstream
+      ;; ITEMS_LOADED fires. If a metric defines a static `value`,
+      ;; honor it (useful for default / standalone previews); otherwise
+      ;; render 0 until ITEMS_LOADED recomputes.
+      ITEMS_LOADED -> idle
+        (set @entity.cards (array/map @config.metrics (fn metric {
+          clickEvent: (object/get @metric clickEvent "")
+          format: (object/get @metric format number)
+          icon: (object/get @metric icon "")
+          label: (object/get @metric label)
+          max: (object/get @metric max 0)
+          prefix: (object/get @metric prefix "")
+          sparklineData: (object/get @metric sparklineData [])
+          suffix: (object/get @metric suffix "")
+          target: (object/get @metric target 0)
+          trend: (if ["=", (object/get @metric aggregation count), variance] ["-", (array/sum (array/filter ?data (object/get @metric filter true)) (object/get @metric field "")), (array/sum (array/filter ?data (object/get @metric baselineFilter true)) (object/get @metric field ""))] (object/get @metric trend 0))
+          trendFormat: (object/get @metric trendFormat absolute)
+          trendPolarity: (object/get @metric trendPolarity higher-is-better)
+          value: (if ["=", (object/get @metric aggregation count), sum] (array/sum (array/filter ?data (object/get @metric filter true)) (object/get @metric field "")) (if ["=", (object/get @metric aggregation count), avg] (array/avg (array/filter ?data (object/get @metric filter true)) (object/get @metric field "")) (if ["=", (object/get @metric aggregation count), min] (array/min (array/filter ?data (object/get @metric filter true)) (object/get @metric field "")) (if ["=", (object/get @metric aggregation count), max] (array/max (array/filter ?data (object/get @metric filter true)) (object/get @metric field "")) (if ["=", (object/get @metric aggregation count), variance] (array/sum (array/filter ?data (object/get @metric filter true)) (object/get @metric field "")) (array/len (array/filter ?data (object/get @metric filter true))))))))
+          variant: (object/get @metric variant default)
+        })))
+        (render-ui main @config.bodyContent)
+    }
+
+    listens {
+      ITEMS_LOADED {
+        data : [ObjectSpec]
+        totalCount : number
+      }
+        @description "Data has been loaded and is ready for processing."
+        @synonyms "data ready, update, refresh, loaded"
+        @tier "essential"
+    }
+
     config {
-      metrics : [MetricSpec] = [
-        { label: "Total Items", aggregation: "count", icon: "list",         variant: "primary", format: "number" },
-        { label: "Active",      aggregation: "count", icon: "check-circle", variant: "success", format: "number" },
-        { label: "Avg Value",   aggregation: "avg",   icon: "trending-up",  variant: "info",    format: "number", field: "value" }
-      ]
+      metrics : [MetricSpec] = [{
+        aggregation: count
+        format: number
+        icon: list
+        label: "Total Items"
+        variant: primary
+      }, {
+        aggregation: count
+        format: number
+        icon: check-circle
+        label: Active
+        variant: success
+      }, {
+        aggregation: avg
+        field: value
+        format: number
+        icon: trending-up
+        label: "Avg Value"
+        variant: info
+      }]
         @label "Metrics"
         @description "One stat card per entry; declares aggregation, format, and styling"
         @synonyms "list of KPI cards / stat tiles / metric cards. each entry has label / value / format / icon / variant / aggregation. user phrases: 'replace metrics with X, Y, Z' -> rewrite array; 'add Revenue tile' -> append entry; 'change KPIs to X' -> rewrite array"
         @tier "presentation"
-      title       : string = "Summary"
+      title : string = Summary
         @label "Section title"
         @description "Heading shown above the stat-card grid"
         @synonyms "the section header text. user phrases: 'rename section to X' / 'title the KPIs X' / 'change section title to X' -> X"
         @tier "presentation"
-      viewPattern : pattern = "data-grid"
+      viewPattern : pattern = data-grid
         @label "Render pattern"
         @description "UI pattern used to arrange the stat cards"
         @synonyms "internal pattern selector. user prompts rarely target this directly"
         @tier "internal"
-      statLook : "elevated" | "flat" | "progress-backed" | "gauge" | "sparkline" = "elevated"
+      statLook : "elevated" | "flat" | "progress-backed" | "gauge" | "sparkline" = elevated
         @label "Stat display look"
         @description "Layer 2 visual treatment for stat / KPI cards."
         @tier "presentation"
       bodyContent : render-ui = {
-        type: "@config.viewPattern",
-        entity: "@entity.cards",
-        fields: [],
-        renderItem: ["fn", "card", {
-          type: "stat-display",
-          look: "@config.statLook",
-          label: "@card.label",
-          value: "@card.value",
-          icon: "@card.icon",
-          format: "@card.format",
-          variant: "@card.variant",
-          prefix: "@card.prefix",
-          suffix: "@card.suffix",
-          max: "@card.max",
-          target: "@card.target",
-          trend: "@card.trend",
-          trendPolarity: "@card.trendPolarity",
-          trendFormat: "@card.trendFormat",
-          sparklineData: "@card.sparklineData",
-          clickEvent: "@card.clickEvent"
-        }]
+        entity: @entity.cards
+        fields: []
+        renderItem: (fn card {
+          clickEvent: @card.clickEvent
+          format: @card.format
+          icon: @card.icon
+          label: @card.label
+          look: @config.statLook
+          max: @card.max
+          prefix: @card.prefix
+          sparklineData: @card.sparklineData
+          suffix: @card.suffix
+          target: @card.target
+          trend: @card.trend
+          trendFormat: @card.trendFormat
+          trendPolarity: @card.trendPolarity
+          type: stat-display
+          value: @card.value
+          variant: @card.variant
+        })
+        type: @config.viewPattern
       }
         @label "Body content tree"
         @description "Render-ui SExpr rendered after metrics aggregate. Default is the canonical data-grid call mapping @entity.cards through stat-display. Layer 3 variants override this with their own tree (hero numbers, sparkline rows, tile splashes) to deliver entirely different KPI UX while inheriting the same trait, state machine, aggregation pipeline, and listens."
         @tier "internal"
     }
-    state idle {
-      INIT -> idle
-        ;; Pre-seed cards from @config.metrics so the atom renders a
-        ;; visible skeleton on initial mount even before any upstream
-        ;; ITEMS_LOADED fires. If a metric defines a static `value`,
-        ;; honor it (useful for default / standalone previews); otherwise
-        ;; render 0 until ITEMS_LOADED recomputes.
-        (set @entity.cards (array/map @config.metrics ["fn", "metric", {
-          label:         (object/get @metric "label"),
-          icon:          (object/get @metric "icon" ""),
-          format:        (object/get @metric "format" "number"),
-          variant:       (object/get @metric "variant" "default"),
-          prefix:        (object/get @metric "prefix" ""),
-          suffix:        (object/get @metric "suffix" ""),
-          max:           (object/get @metric "max" 0),
-          target:        (object/get @metric "target" 0),
-          trend:         (object/get @metric "trend" 0),
-          trendPolarity: (object/get @metric "trendPolarity" "higher-is-better"),
-          trendFormat:   (object/get @metric "trendFormat" "absolute"),
-          sparklineData: (object/get @metric "sparklineData" []),
-          clickEvent:    (object/get @metric "clickEvent" ""),
-          value:         (object/get @metric "value" 0)
-        }]))
-        (render-ui main @config.bodyContent)
-      ITEMS_LOADED -> idle
-        (set @entity.cards (array/map @config.metrics ["fn", "metric", {
-          label:         (object/get @metric "label"),
-          icon:          (object/get @metric "icon" ""),
-          format:        (object/get @metric "format" "number"),
-          variant:       (object/get @metric "variant" "default"),
-          prefix:        (object/get @metric "prefix" ""),
-          suffix:        (object/get @metric "suffix" ""),
-          max:           (object/get @metric "max" 0),
-          target:        (object/get @metric "target" 0),
-          trendPolarity: (object/get @metric "trendPolarity" "higher-is-better"),
-          trendFormat:   (object/get @metric "trendFormat" "absolute"),
-          sparklineData: (object/get @metric "sparklineData" []),
-          clickEvent:    (object/get @metric "clickEvent" ""),
-          ;; Variance is computed as actual - baseline using `filter` + `baselineFilter`.
-          ;; For variance, `trend` carries the signed delta (StatDisplay renders it as ↑/↓ with
-          ;; success/error coloring based on trendPolarity). For other aggregations, `trend`
-          ;; falls back to the metric's authored value (defaults to 0).
-          trend: (if (= (object/get @metric "aggregation" "count") "variance")
-                     (- (array/sum (array/filter @payload.data (object/get @metric "filter" true)) (object/get @metric "field" ""))
-                        (array/sum (array/filter @payload.data (object/get @metric "baselineFilter" true)) (object/get @metric "field" "")))
-                     (object/get @metric "trend" 0)),
-          value: (if (= (object/get @metric "aggregation" "count") "sum")
-                     (array/sum (array/filter @payload.data (object/get @metric "filter" true)) (object/get @metric "field" ""))
-                     (if (= (object/get @metric "aggregation" "count") "avg")
-                         (array/avg (array/filter @payload.data (object/get @metric "filter" true)) (object/get @metric "field" ""))
-                         (if (= (object/get @metric "aggregation" "count") "min")
-                             (array/min (array/filter @payload.data (object/get @metric "filter" true)) (object/get @metric "field" ""))
-                             (if (= (object/get @metric "aggregation" "count") "max")
-                                 (array/max (array/filter @payload.data (object/get @metric "filter" true)) (object/get @metric "field" ""))
-                                 (if (= (object/get @metric "aggregation" "count") "variance")
-                                     (array/sum (array/filter @payload.data (object/get @metric "filter" true)) (object/get @metric "field" ""))
-                                     (array/len (array/filter @payload.data (object/get @metric "filter" true))))))))
-        }]))
-        (render-ui main @config.bodyContent)
-    }
-    listens {
-      ITEMS_LOADED { data : [ObjectSpec], totalCount : number }
-        @description "Data has been loaded and is ready for processing."
-        @synonyms "data ready, update, refresh, loaded"
-        @tier "essential"
-    }
   }
+
+  ;; Variance is computed as actual - baseline using `filter` + `baselineFilter`.
+  ;; For variance, `trend` carries the signed delta (StatDisplay renders it as ↑/↓ with
+  ;; success/error coloring based on trendPolarity). For other aggregations, `trend`
+  ;; falls back to the metric's authored value (defaults to 0).
   page "/statsitems" as StatsItemStatsPage -> StatsItemStats
 }

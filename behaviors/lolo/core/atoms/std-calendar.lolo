@@ -1,97 +1,94 @@
 app std-calendar "1.3.0"
 "std-calendar as a Function — owns the fetch + SELECT_DAY state machine; default bodyContent renders the month-grid + upcoming-events tree. Layer 3 variants override bodyContent to deliver agenda, week-timeline, etc. while inheriting the same trait, state machine, emits, and listens."
-
 orbital CalendarEventOrbital {
+    type CalendarEventLoaded = Event { data : [CalendarEvent] } "Fired when CalendarEvent finishes loading; payload.data holds the events"
+
+    type CalendarEventLoadFailed = Event { error : string, code : string } "Fired when CalendarEvent fails to load"
+
   entity CalendarEvent [runtime] {
-    id          : string!
-    name        : string! @description "event title shown on the calendar" @synonyms "title, label, summary, subject"
+    id : string!
+    name : string! @description "event title shown on the calendar" @synonyms "title, label, summary, subject"
     description : string @description "event details or notes" @synonyms "details, notes, body, summary"
-    status      : "active" | "inactive" | "pending" @description "event lifecycle status" @synonyms "state, stage, phase" = "active"
-    createdAt   : string
-    date        : datetime @intrinsic = ""
-    time        : string @description "event start time of day" @synonyms "start, scheduled time, begins, when, start time" = ""
-    duration    : number @description "event length in minutes" @synonyms "minutes, length, span, duration" = 60
-    selectedRange : string @intrinsic = "month"
+    status : "active" | "inactive" | "pending" @description "event lifecycle status" @synonyms "state, stage, phase" = active
+    createdAt : string
+    date : datetime @intrinsic = ""
+    time : string @description "event start time of day" @synonyms "start, scheduled time, begins, when, start time" = ""
+    duration : number @description "event length in minutes" @synonyms "minutes, length, span, duration" = 60
+    selectedRange : string @intrinsic = month
   }
 
-  type CalendarEventLoaded     = Event { data : [CalendarEvent] }        "Fired when CalendarEvent finishes loading; payload.data holds the events"
-  type CalendarEventLoadFailed = Event { error : string, code : string } "Fired when CalendarEvent fails to load"
-
   trait CalendarEventCalendar -> @rebindable CalendarEvent [interaction, collection] {
-    config {
-      tableLook : "dense" | "spacious" | "striped" | "borderless" | "card-rows" = "dense"
-        @label "Table look"
-        @description "Layer 2 visual treatment for the data table rendered by this atom."
-        @tier "presentation"
-      timeBinding : string = "@item.time"
-        @label "Time binding"
-        @description "Per-row binding for the event time slot."
-        @tier "presentation"
-      titleBinding : string = "@item.name"
-        @label "Title binding"
-        @description "Per-row binding for the event title slot."
-        @tier "presentation"
-      badgeBinding : string = "@item.status"
-        @label "Badge binding"
-        @description "Per-row binding for the event status/badge slot."
-        @tier "presentation"
-      descriptionBinding : string = "@item.description"
-        @label "Description binding"
-        @description "Per-row binding for the event description slot."
-        @tier "presentation"
-      bodyContent : render-ui = {
-        type: "stack",
-        direction: "vertical",
-        gap: "lg",
-        children: [
-          { type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [
-            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
-              { type: "icon", name: "calendar" },
-              { type: "typography", content: "CalendarEvents Calendar", variant: "h2" }
-            ]},
-            { type: "date-range-selector", onSelect: "SELECT_DAY", selected: "@entity.selectedRange" }
-          ]},
-          { type: "divider" },
-          { type: "calendar-grid" },
-          { type: "divider" },
-          { type: "typography", variant: "h4", content: "Upcoming Events" },
-          { type: "data-list", look: "@config.tableLook", entity: "@payload.data",
-            fields: [
-              { name: "name", label: "Event", variant: "h4", icon: "calendar" },
-              { name: "time", label: "Time", variant: "badge" },
-              { name: "date", label: "Date", variant: "caption", format: "date" },
-              { name: "status", label: "Status", variant: "badge" }
-            ],
-            itemActions: [{ label: "View", event: "SELECT_DAY", icon: "eye" }]
-          }
-        ]
-      }
-        @label "Body content tree"
-        @description "Render-ui SExpr rendered after events load. Default is the month-grid + upcoming-events list. Layer 3 variants override this with their own tree (agenda list, week timeline, etc.) to deliver entirely different calendar UX while inheriting the same trait, state machine, emits, and listens."
-        @tier "internal"
-    }
     initial: loading
+
     state loading {
       INIT -> loading
-        (fetch CalendarEvent { emit: { success: "CalendarEventLoaded", failure: "CalendarEventLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading calendar…" }] })
+        (fetch CalendarEvent {
+          emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Loading calendar…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
       CalendarEventLoaded -> month-view
         (render-ui main @config.bodyContent)
       CalendarEventLoadFailed -> error
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+        (render-ui main {
+          align: center
+          children: [{
+            color: destructive
+            name: alert-triangle
+            type: icon
+          }, {
+            content: "Failed to load"
+            type: typography
+            variant: h3
+          }, {
+            color: muted
+            content: ?error
+            type: typography
+            variant: body
+          }, {
+            action: INIT
+            icon: rotate-ccw
+            label: Retry
+            type: button
+            variant: primary
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
     }
+
     state month-view {
       SELECT_DAY -> loading
-        (set @entity.date @payload.value)
-        (set @entity.selectedRange @payload.value)
-        (fetch CalendarEvent { filter: (time/isAfter (time/parse @entity.date) (if (= @payload.value "week") (time/subtract (time/now) 1 "week") (if (= @payload.value "3months") (time/subtract (time/now) 3 "month") (if (= @payload.value "year") (time/subtract (time/now) 1 "year") (time/subtract (time/now) 1 "month"))))), emit: { success: "CalendarEventLoaded", failure: "CalendarEventLoadFailed" } })
+        (set @entity.date ?value)
+        (set @entity.selectedRange ?value)
+        (fetch CalendarEvent {
+          emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
+          filter: (time/isAfter (time/parse @entity.date) (if ["=", ?value, week] (time/subtract (time/now) 1 week) (if ["=", ?value, "3months"] (time/subtract (time/now) 3 month) (if ["=", ?value, year] (time/subtract (time/now) 1 year) (time/subtract (time/now) 1 month)))))
+        })
     }
+
     state error {
       INIT -> loading
-        (fetch CalendarEvent { emit: { success: "CalendarEventLoaded", failure: "CalendarEventLoadFailed" } })
-        (render-ui main { type: "spinner" })
+        (fetch CalendarEvent {
+          emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
+        })
+        (render-ui main { type: spinner })
     }
-emits {
+
+    emits {
       CalendarEventLoaded
         @description "Indicates that calendar events have been successfully retrieved."
         @synonyms "loaded, fetched, retrieved, populated"
@@ -102,20 +99,113 @@ emits {
         @tier "internal"
     }
 
-        listens {
-      SELECT_DAY  { value : string! }
+    listens {
+      SELECT_DAY {
+        value : string!
+      }
         @description "A day has been chosen within the calendar view."
         @synonyms "choose, pick, set, highlight"
         @tier "essential"
-      SELECT_SLOT { time : string! }
+      SELECT_SLOT {
+        time : string!
+      }
         @description "A time slot has been chosen for an event."
         @synonyms "choose, pick, schedule, book"
         @tier "essential"
-      CalendarEventLoadFailed { error : string, code : string }
+      CalendarEventLoadFailed {
+        error : string
+        code : string
+      }
         @description "Indicates a failure to load calendar events."
         @synonyms "error, failure, problem, failed"
         @tier "internal"
     }
+
+    config {
+      tableLook : "dense" | "spacious" | "striped" | "borderless" | "card-rows" = dense
+        @label "Table look"
+        @description "Layer 2 visual treatment for the data table rendered by this atom."
+        @tier "presentation"
+      timeBinding : string = @item.time
+        @label "Time binding"
+        @description "Per-row binding for the event time slot."
+        @tier "presentation"
+      titleBinding : string = @item.name
+        @label "Title binding"
+        @description "Per-row binding for the event title slot."
+        @tier "presentation"
+      badgeBinding : string = @item.status
+        @label "Badge binding"
+        @description "Per-row binding for the event status/badge slot."
+        @tier "presentation"
+      descriptionBinding : string = @item.description
+        @label "Description binding"
+        @description "Per-row binding for the event description slot."
+        @tier "presentation"
+      bodyContent : render-ui = {
+        children: [{
+          align: center
+          children: [{
+            align: center
+            children: [{ name: calendar, type: icon }, {
+              content: "CalendarEvents Calendar"
+              type: typography
+              variant: h2
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, {
+            onSelect: SELECT_DAY
+            selected: @entity.selectedRange
+            type: date-range-selector
+          }]
+          direction: horizontal
+          gap: md
+          justify: between
+          type: stack
+        }, { type: divider }, { type: calendar-grid }, { type: divider }, {
+          content: "Upcoming Events"
+          type: typography
+          variant: h4
+        }, {
+          entity: ?data
+          fields: [{
+            icon: calendar
+            label: Event
+            name: name
+            variant: h4
+          }, {
+            label: Time
+            name: time
+            variant: badge
+          }, {
+            format: date
+            label: Date
+            name: date
+            variant: caption
+          }, {
+            label: Status
+            name: status
+            variant: badge
+          }]
+          itemActions: [{
+            event: SELECT_DAY
+            icon: eye
+            label: View
+          }]
+          look: @config.tableLook
+          type: data-list
+        }]
+        direction: vertical
+        gap: lg
+        type: stack
+      }
+        @label "Body content tree"
+        @description "Render-ui SExpr rendered after events load. Default is the month-grid + upcoming-events list. Layer 3 variants override this with their own tree (agenda list, week timeline, etc.) to deliver entirely different calendar UX while inheriting the same trait, state machine, emits, and listens."
+        @tier "internal"
+    }
   }
+
   page "/calendarevents/calendar" as CalendarEventCalendarPage -> CalendarEventCalendar
 }

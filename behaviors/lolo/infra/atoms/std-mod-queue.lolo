@@ -1,97 +1,191 @@
 app std-mod-queue "1.0.0"
 "std-mod-queue — moderation queue for content review. Owns a ModQueueItem entity (one row per flagged target) and a single review trait that loads pending items, renders them in a data-grid with Approve / Reject / Escalate actions, and persists the reviewer's verdict back to the row."
-
 orbital ModQueueItemOrbital {
+    type ModQueueItemLoaded = Event { data : [ModQueueItem] } "Fired when the moderation queue collection finishes loading"
+
+    type ModQueueItemLoadFailed = Event { error : string, code : string } "Fired when the moderation queue collection fails to load"
+
+    type ModQueueItemReviewed = Event { row : ModQueueItem } "Fired after a queue row's status persists (approve / reject / escalate)"
+
+    type ModQueueItemReviewFailed = Event { error : string, code : string } "Fired when a queue row's status update fails to persist"
+
   entity ModQueueItem [persistent: modqueueitems] {
-    id         : string!
-    targetId   : string! @description "Unique identifier for the item being moderated." @synonyms "item id, reference id, identifier"
+    id : string!
+    targetId : string! @description "Unique identifier for the item being moderated." @synonyms "item id, reference id, identifier"
     targetType : string! @description "Specifies the kind of item being moderated." @synonyms "item type, content type, object type"
-    reason     : "spam" | "abuse" | "off-topic" | "misinformation" | "nsfw" | "other" @description "The justification for flagging the content." @synonyms "flag reason, justification, cause"
-    flagCount  : number @description "The number of times this item has been flagged." @synonyms "flags, flag_count, count"
-    status     : "pending" | "approved" | "rejected" | "escalated" @description "Current state of the moderation item." @synonyms "state, condition, stage" = "pending"
+    reason : "spam" | "abuse" | "off-topic" | "misinformation" | "nsfw" | "other" @description "The justification for flagging the content." @synonyms "flag reason, justification, cause"
+    flagCount : number @description "The number of times this item has been flagged." @synonyms "flags, flag_count, count"
+    status : "pending" | "approved" | "rejected" | "escalated" @description "Current state of the moderation item." @synonyms "state, condition, stage" = pending
     reviewedBy : string @description "The user who performed the review action." @synonyms "reviewer, reviewerId, assignedTo"
     reviewedAt : string @description "Timestamp indicating when the item was last reviewed." @synonyms "review date, review time, last reviewed"
-    notes      : string @description "Free-text comments or observations related to the item." @synonyms "comment, remark, observation, details"
+    notes : string @description "Free-text comments or observations related to the item." @synonyms "comment, remark, observation, details"
   }
 
-  type ModQueueItemLoaded     = Event { data : [ModQueueItem] }              "Fired when the moderation queue collection finishes loading"
-  type ModQueueItemLoadFailed = Event { error : string, code : string }      "Fired when the moderation queue collection fails to load"
-  type ModQueueItemReviewed   = Event { row : ModQueueItem }                 "Fired after a queue row's status persists (approve / reject / escalate)"
-  type ModQueueItemReviewFailed = Event { error : string, code : string }    "Fired when a queue row's status update fails to persist"
-
   trait ModQueueItemReview -> ModQueueItem [interaction, collection, moderation] {
-    config {
-      enabled               : boolean = false
-        @label "Enable moderation queue"
-        @description "Send submissions to a review queue before they go live. Off by default."
-        @synonyms "enable, turn on, enforce, require, activate, apply, switch on, moderation, moderation queue, content review queue, flag for review, content moderation, review flagged content, abuse review, spam queue, report queue"
-        @tier "policy"
-      title                 : string = "Moderation Queue"
-        @label "Section title"
-        @description "Heading shown above the moderation queue"
-        @tier "presentation"
-      autoEscalateThreshold : number = 5
-        @label "Auto-escalate at"
-        @description "Flag count after which an item is auto-escalated to senior review"
-        @tier "policy"
-      tableLook : "dense" | "spacious" | "striped" | "borderless" | "card-rows" = "dense"
-        @label "Table look"
-        @description "Layer 2 visual treatment for the data table rendered by this atom."
-        @tier "presentation"
-      reviewSlot : slot = "modal"
-        @label "Review slot"
-        @description "UI slot the moderation queue renders into. Defaults to the modal overlay so it never seizes the host's main content; summoned via OPEN, cleared via CLOSE."
-        @tier "internal"
-    }
     initial: idle
+
     state idle {
       INIT -> idle
-        (fetch ModQueueItem { emit: { success: "ModQueueItemLoaded", failure: "ModQueueItemLoadFailed" } })
+        (fetch ModQueueItem {
+          emit: { failure: ModQueueItemLoadFailed, success: ModQueueItemLoaded }
+        })
       ModQueueItemLoaded -> idle
       ModQueueItemLoadFailed -> idle
       OPEN -> loading when @config.enabled
-        (fetch ModQueueItem { emit: { success: "ModQueueItemLoaded", failure: "ModQueueItemLoadFailed" } })
-        (render-ui @config.reviewSlot { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading moderation queue…" }] })
+        (fetch ModQueueItem {
+          emit: { failure: ModQueueItemLoadFailed, success: ModQueueItemLoaded }
+        })
+        (render-ui @config.reviewSlot {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Loading moderation queue…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
     }
+
     state loading {
       ModQueueItemLoaded -> reviewing
-        (render-ui @config.reviewSlot { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "shield-alert" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "button", label: "Close", action: "CLOSE", variant: "ghost", icon: "x" }] }, { type: "divider" }, { type: "data-grid", look: "@config.tableLook", entity: "@payload.data", fields: [{ name: "targetType", label: "Type", variant: "badge" }, { name: "reason", label: "Reason", variant: "caption" }, { name: "flagCount", label: "Flags", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Approve", event: "APPROVE", variant: "primary", icon: "check" }, { label: "Reject", event: "REJECT", variant: "danger", icon: "x" }, { label: "Escalate", event: "ESCALATE", variant: "secondary", icon: "alert-triangle" }] }] })
+        (render-ui @config.reviewSlot {
+          children: [{
+            align: center
+            children: [{
+              align: center
+              children: [{ name: shield-alert, type: icon }, {
+                content: @config.title
+                type: typography
+                variant: h3
+              }]
+              direction: horizontal
+              gap: sm
+              type: stack
+            }, {
+              action: CLOSE
+              icon: x
+              label: Close
+              type: button
+              variant: ghost
+            }]
+            direction: horizontal
+            gap: sm
+            justify: between
+            type: stack
+          }, { type: divider }, {
+            cols: 1
+            entity: ?data
+            fields: [{
+              label: Type
+              name: targetType
+              variant: badge
+            }, {
+              label: Reason
+              name: reason
+              variant: caption
+            }, {
+              label: Flags
+              name: flagCount
+              variant: caption
+            }, {
+              label: Status
+              name: status
+              variant: badge
+            }]
+            gap: sm
+            itemActions: [{
+              event: APPROVE
+              icon: check
+              label: Approve
+              variant: primary
+            }, {
+              event: REJECT
+              icon: x
+              label: Reject
+              variant: danger
+            }, {
+              event: ESCALATE
+              icon: alert-triangle
+              label: Escalate
+              variant: secondary
+            }]
+            look: @config.tableLook
+            type: data-grid
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
       ModQueueItemLoadFailed -> error
-        (render-ui @config.reviewSlot { type: "alert", variant: "error", message: "@payload.error" })
+        (render-ui @config.reviewSlot {
+          message: ?error
+          type: alert
+          variant: error
+        })
       CLOSE -> idle
         (render-ui @config.reviewSlot null)
     }
+
     state reviewing {
       APPROVE -> reviewing
-        (persist update ModQueueItem { id: @payload.row.id, status: "approved" } { emit: { success: "ModQueueItemReviewed", failure: "ModQueueItemReviewFailed" } })
+        (persist update ModQueueItem { id: ?row.id, status: approved } {
+          emit: { failure: ModQueueItemReviewFailed, success: ModQueueItemReviewed }
+        })
       REJECT -> reviewing
-        (persist update ModQueueItem { id: @payload.row.id, status: "rejected" } { emit: { success: "ModQueueItemReviewed", failure: "ModQueueItemReviewFailed" } })
+        (persist update ModQueueItem { id: ?row.id, status: rejected } {
+          emit: { failure: ModQueueItemReviewFailed, success: ModQueueItemReviewed }
+        })
       ESCALATE -> reviewing
-        (persist update ModQueueItem { id: @payload.row.id, status: "escalated" } { emit: { success: "ModQueueItemReviewed", failure: "ModQueueItemReviewFailed" } })
+        (persist update ModQueueItem { id: ?row.id, status: escalated } {
+          emit: { failure: ModQueueItemReviewFailed, success: ModQueueItemReviewed }
+        })
       ModQueueItemReviewed -> loading
-        (fetch ModQueueItem { emit: { success: "ModQueueItemLoaded", failure: "ModQueueItemLoadFailed" } })
+        (fetch ModQueueItem {
+          emit: { failure: ModQueueItemLoadFailed, success: ModQueueItemLoaded }
+        })
       ModQueueItemReviewFailed -> reviewing
-        (render-ui @config.reviewSlot { type: "alert", variant: "error", message: "@payload.error" })
+        (render-ui @config.reviewSlot {
+          message: ?error
+          type: alert
+          variant: error
+        })
       CLOSE -> idle
         (render-ui @config.reviewSlot null)
     }
+
     state error {
       OPEN -> loading
-        (fetch ModQueueItem { emit: { success: "ModQueueItemLoaded", failure: "ModQueueItemLoadFailed" } })
-        (render-ui @config.reviewSlot { type: "spinner", size: "sm" })
+        (fetch ModQueueItem {
+          emit: { failure: ModQueueItemLoadFailed, success: ModQueueItemLoaded }
+        })
+        (render-ui @config.reviewSlot { size: sm, type: spinner })
       CLOSE -> idle
         (render-ui @config.reviewSlot null)
     }
+
     emits {
-      APPROVE  { id : string!, row : ModQueueItem }
+      APPROVE {
+        id : string!
+        row : ModQueueItem
+      }
         @description "Signals that a moderation item has been approved."
         @synonyms "accept, confirm, pass"
         @tier "essential"
-      REJECT   { id : string!, row : ModQueueItem }
+      REJECT {
+        id : string!
+        row : ModQueueItem
+      }
         @description "Signals that a moderation item has been rejected."
         @synonyms "deny, dismiss, decline"
         @tier "essential"
-      ESCALATE { id : string!, row : ModQueueItem }
+      ESCALATE {
+        id : string!
+        row : ModQueueItem
+      }
         @description "Signals a flagged item requires further review."
         @synonyms "flag, defer, elevate"
         @tier "customization"
@@ -99,23 +193,34 @@ orbital ModQueueItemOrbital {
         @description "Dismisses the moderation queue overlay."
         @synonyms "dismiss, hide, cancel, done"
         @tier "essential"
-      ModQueueItemLoaded       { data : [ModQueueItem] }
+      ModQueueItemLoaded {
+        data : [ModQueueItem]
+      }
         @description "A new moderation item is ready for review."
         @synonyms "loaded, fetched, available, ready"
         @tier "essential"
-      ModQueueItemLoadFailed   { error : string, code : string }
+      ModQueueItemLoadFailed {
+        error : string
+        code : string
+      }
         @description "Indicates failure to load moderation queue items."
         @synonyms "error, failure, problem, failed"
         @tier "internal"
-      ModQueueItemReviewed     { row : ModQueueItem }
+      ModQueueItemReviewed {
+        row : ModQueueItem
+      }
         @description "Signals a moderation queue item has been reviewed and a verdict recorded."
         @synonyms "reviewed, processed, judged, completed"
         @tier "essential"
-      ModQueueItemReviewFailed { error : string, code : string }
+      ModQueueItemReviewFailed {
+        error : string
+        code : string
+      }
         @description "Indicates a failure to load or process a moderation queue item."
         @synonyms "error, failure, problem, issue"
         @tier "internal"
     }
+
     listens {
       OPEN
         @description "Summons the moderation queue (host nav/affordance requests it)."
@@ -125,35 +230,79 @@ orbital ModQueueItemOrbital {
         @description "Dismisses the moderation queue overlay."
         @synonyms "dismiss, hide, cancel, done"
         @tier "essential"
-      APPROVE  { id : string!, row : ModQueueItem }
+      APPROVE {
+        id : string!
+        row : ModQueueItem
+      }
         @description "Signals that a moderation item has been approved."
         @synonyms "accept, confirm, pass"
         @tier "essential"
-      REJECT   { id : string!, row : ModQueueItem }
+      REJECT {
+        id : string!
+        row : ModQueueItem
+      }
         @description "Signals a content item has been rejected during review."
         @synonyms "dismiss, deny, decline"
         @tier "essential"
-      ESCALATE { id : string!, row : ModQueueItem }
+      ESCALATE {
+        id : string!
+        row : ModQueueItem
+      }
         @description "Signals a moderation item requires further review."
         @synonyms "flag, defer, elevate"
         @tier "customization"
-      ModQueueItemLoaded       { data : [ModQueueItem] }
+      ModQueueItemLoaded {
+        data : [ModQueueItem]
+      }
         @description "A new moderation item is ready for review."
         @synonyms "loaded, fetched, available, ready"
         @tier "essential"
-      ModQueueItemLoadFailed   { error : string, code : string }
+      ModQueueItemLoadFailed {
+        error : string
+        code : string
+      }
         @description "Indicates failure to load a moderation queue item."
         @synonyms "error, failure, problem, issue"
         @tier "internal"
-      ModQueueItemReviewed     { row : ModQueueItem }
+      ModQueueItemReviewed {
+        row : ModQueueItem
+      }
         @description "A moderation queue item's review status has been updated."
         @synonyms "reviewed, updated, verdict, decision"
         @tier "essential"
-      ModQueueItemReviewFailed { error : string, code : string }
+      ModQueueItemReviewFailed {
+        error : string
+        code : string
+      }
         @description "Indicates failure to load a moderation queue item for review."
         @synonyms "error, failure, problem, issue"
         @tier "internal"
     }
+
+    config {
+      enabled : boolean = false
+        @label "Enable moderation queue"
+        @description "Send submissions to a review queue before they go live. Off by default."
+        @synonyms "enable, turn on, enforce, require, activate, apply, switch on, moderation, moderation queue, content review queue, flag for review, content moderation, review flagged content, abuse review, spam queue, report queue"
+        @tier "policy"
+      title : string = "Moderation Queue"
+        @label "Section title"
+        @description "Heading shown above the moderation queue"
+        @tier "presentation"
+      autoEscalateThreshold : number = 5
+        @label "Auto-escalate at"
+        @description "Flag count after which an item is auto-escalated to senior review"
+        @tier "policy"
+      tableLook : "dense" | "spacious" | "striped" | "borderless" | "card-rows" = dense
+        @label "Table look"
+        @description "Layer 2 visual treatment for the data table rendered by this atom."
+        @tier "presentation"
+      reviewSlot : slot = modal
+        @label "Review slot"
+        @description "UI slot the moderation queue renders into. Defaults to the modal overlay so it never seizes the host's main content; summoned via OPEN, cleared via CLOSE."
+        @tier "internal"
+    }
   }
+
   page "/modqueueitems/review" as ModQueueItemReviewPage -> ModQueueItemReview
 }

@@ -1,39 +1,95 @@
 app std-step-flow-cards-deck "1.0.0"
 "Full-page card deck step flow — each step is rendered as one large centered card occupying the viewport with the step icon, title, and description prominent; progress-dots at the bottom indicate position in the sequence; primary advance + back controls flank the dots. Same StepFlowReview trait, same state machine, same emits/listens as std-step-flow — only the bodyContent tree differs. Suited for mobile-flavored onboarding, marketing-campaign creation flows, and any single-focus sequential UX."
-
 orbital CardsDeckOrbital {
   uses StepFlow from "std/behaviors/std-step-flow"
 
   entity CardsDeckView [runtime] {
-    id          : string!
+    id : string!
   }
 
   trait CardsDeckReview = StepFlow.traits.StepFlowReview -> CardsDeckView {
-    config: {
+    config {
       bodyContent: {
-        type: "stack",
-        direction: "vertical",
-        gap: "xl",
-        align: "center",
-        className: "w-full pt-section",
-        children: [
-          { type: "card", look: "@config.cardLook", children: [
-            { type: "stack", direction: "vertical", gap: "lg", align: "center", className: "p-card-xl text-center", children: [
-              { type: "icon", name: "@entity.currentStepIcon", size: "lg" },
-              { type: "typography", content: "@entity.currentStepLabel", variant: "h1", align: "center" },
-              { type: "typography", content: "@entity.currentStepDescription", variant: "body", color: "muted", align: "center" },
-              { type: "stack", direction: "horizontal", gap: "sm", align: "center", className: "pt-md", children: [
-                { type: "button", label: "Reject", variant: "ghost", action: "REJECT", icon: "x", actionPayload: { id: "@entity.id" } },
-                { type: "button", label: "Escalate", variant: "ghost", action: "ESCALATE", icon: "alert-triangle", actionPayload: { id: "@entity.id" } }
-              ] }
-            ] }
-          ] },
-          { type: "stack", direction: "horizontal", gap: "lg", align: "center", className: "justify-between w-full", children: [
-            { type: "button", label: "Back", variant: "ghost", action: "BACK", icon: "chevron-left", disabled: "@entity.isFirstStep", actionPayload: { id: "@entity.id" } },
-            { type: "progress-dots", count: "@entity.totalSteps", currentIndex: "@entity.currentStepIndex", size: "md" },
-            { type: "button", label: "@entity.primaryActionLabel", variant: "primary", action: "ADVANCE", icon: "@entity.primaryActionIcon", actionPayload: { id: "@entity.id" } }
-          ] }
-        ]
+        align: center
+        children: [{
+          children: [{
+            align: center
+            children: [{
+              name: @entity.currentStepIcon
+              size: lg
+              type: icon
+            }, {
+              align: center
+              content: @entity.currentStepLabel
+              type: typography
+              variant: h1
+            }, {
+              align: center
+              color: muted
+              content: @entity.currentStepDescription
+              type: typography
+              variant: body
+            }, {
+              align: center
+              children: [{
+                action: REJECT
+                actionPayload: { id: @entity.id }
+                icon: x
+                label: Reject
+                type: button
+                variant: ghost
+              }, {
+                action: ESCALATE
+                actionPayload: { id: @entity.id }
+                icon: alert-triangle
+                label: Escalate
+                type: button
+                variant: ghost
+              }]
+              className: pt-md
+              direction: horizontal
+              gap: sm
+              type: stack
+            }]
+            className: "p-card-xl text-center"
+            direction: vertical
+            gap: lg
+            type: stack
+          }]
+          look: @config.cardLook
+          type: card
+        }, {
+          align: center
+          children: [{
+            action: BACK
+            actionPayload: { id: @entity.id }
+            disabled: @entity.isFirstStep
+            icon: chevron-left
+            label: Back
+            type: button
+            variant: ghost
+          }, {
+            count: @entity.totalSteps
+            currentIndex: @entity.currentStepIndex
+            size: md
+            type: progress-dots
+          }, {
+            action: ADVANCE
+            actionPayload: { id: @entity.id }
+            icon: @entity.primaryActionIcon
+            label: @entity.primaryActionLabel
+            type: button
+            variant: primary
+          }]
+          className: "justify-between w-full"
+          direction: horizontal
+          gap: lg
+          type: stack
+        }]
+        className: "w-full pt-section"
+        direction: vertical
+        gap: xl
+        type: stack
       }
     }
   }

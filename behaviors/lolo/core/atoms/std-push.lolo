@@ -9,61 +9,164 @@ app std-push "1.0.0"
 ;; Intra-frame: embed @trait.PushIndicator in a layout to show a live
 ;; connection status pill (see molecule std-push-activity-log).
 ;; Inter-frame: any trait can listens: PUSH_RECEIVED and react to payloads.
-
 orbital PushSubscriberOrbital {
+    type PushReceived = Event { message : string } "Fired on every incoming push frame"
+
+    type PushDisconnected = Event { reason : string } "Fired when the push connection drops"
+
+    type PushSubscriberLoaded = Event { data : [PushSubscriber] }
+
+    type PushSubscriberLoadFailed = Event { error : string, code : string }
+
   entity PushSubscriber [runtime] {
     id : string!
     status : string @description "Current operational state of the subscriber." @synonyms "state, condition, mode"
   }
 
-  type PushReceived     = Event { message : string } "Fired on every incoming push frame"
-  type PushDisconnected = Event { reason : string }  "Fired when the push connection drops"
-  type PushSubscriberLoaded = Event { data : [PushSubscriber] }
-  type PushSubscriberLoadFailed = Event { error : string, code : string }
-
   trait PushSubscriberIndicator -> PushSubscriber [interaction, instance] {
     initial: idle
+
     state idle {
       INIT -> connecting
-        (fetch PushSubscriber { emit: { success: "PushSubscriberLoaded", failure: "PushSubscriberLoadFailed" } })
-        (os/watch-http "wss://push.example.com" {
-          emit: {
-            on_message: "PUSH_RECEIVED",
-            failure: "PUSH_DISCONNECTED"
-          }
+        (fetch PushSubscriber {
+          emit: { failure: PushSubscriberLoadFailed, success: PushSubscriberLoaded }
         })
-        (render-ui main { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "spinner" }, { type: "typography", content: "Connecting…", variant: "caption" }] })
+        (os/watch-http "wss://push.example.com" {
+          emit: { failure: PUSH_DISCONNECTED, on_message: PUSH_RECEIVED }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            content: "Connecting…"
+            type: typography
+            variant: caption
+          }]
+          direction: horizontal
+          gap: sm
+          type: stack
+        })
     }
+
     state connecting {
       PUSH_RECEIVED -> subscribed
-        (set @entity.status "subscribed")
-        (render-ui main { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "wifi", color: "success" }, { type: "typography", content: "Connected", variant: "caption" }] })
+        (set @entity.status subscribed)
+        (render-ui main {
+          align: center
+          children: [{
+            color: success
+            name: wifi
+            type: icon
+          }, {
+            content: Connected
+            type: typography
+            variant: caption
+          }]
+          direction: horizontal
+          gap: sm
+          type: stack
+        })
       PUSH_DISCONNECTED -> reconnecting
-        (set @entity.status "reconnecting")
-        (render-ui main { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "wifi-off", color: "warning" }, { type: "typography", content: "Reconnecting…", variant: "caption" }] })
+        (set @entity.status reconnecting)
+        (render-ui main {
+          align: center
+          children: [{
+            color: warning
+            name: wifi-off
+            type: icon
+          }, {
+            content: "Reconnecting…"
+            type: typography
+            variant: caption
+          }]
+          direction: horizontal
+          gap: sm
+          type: stack
+        })
     }
+
     state subscribed {
       PUSH_RECEIVED -> subscribed
-        (set @entity.status "subscribed")
-        (render-ui main { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "wifi", color: "success" }, { type: "typography", content: "Connected", variant: "caption" }] })
+        (set @entity.status subscribed)
+        (render-ui main {
+          align: center
+          children: [{
+            color: success
+            name: wifi
+            type: icon
+          }, {
+            content: Connected
+            type: typography
+            variant: caption
+          }]
+          direction: horizontal
+          gap: sm
+          type: stack
+        })
       PUSH_DISCONNECTED -> reconnecting
-        (set @entity.status "reconnecting")
-        (render-ui main { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "wifi-off", color: "warning" }, { type: "typography", content: "Reconnecting…", variant: "caption" }] })
+        (set @entity.status reconnecting)
+        (render-ui main {
+          align: center
+          children: [{
+            color: warning
+            name: wifi-off
+            type: icon
+          }, {
+            content: "Reconnecting…"
+            type: typography
+            variant: caption
+          }]
+          direction: horizontal
+          gap: sm
+          type: stack
+        })
     }
+
     state reconnecting {
       PUSH_RECEIVED -> subscribed
-        (set @entity.status "subscribed")
-        (render-ui main { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "wifi", color: "success" }, { type: "typography", content: "Connected", variant: "caption" }] })
+        (set @entity.status subscribed)
+        (render-ui main {
+          align: center
+          children: [{
+            color: success
+            name: wifi
+            type: icon
+          }, {
+            content: Connected
+            type: typography
+            variant: caption
+          }]
+          direction: horizontal
+          gap: sm
+          type: stack
+        })
       PUSH_DISCONNECTED -> reconnecting
-        (render-ui main { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "wifi-off", color: "destructive" }, { type: "typography", content: "Disconnected", variant: "caption" }] })
+        (render-ui main {
+          align: center
+          children: [{
+            color: destructive
+            name: wifi-off
+            type: icon
+          }, {
+            content: Disconnected
+            type: typography
+            variant: caption
+          }]
+          direction: horizontal
+          gap: sm
+          type: stack
+        })
     }
-    ;; consumers: any trait that needs live push feed (e.g. std-push-activity-log)
+
     emits {
-      PUSH_RECEIVED -> external { message : string }
+      PUSH_RECEIVED -> external {
+        message : string
+      }
         @description "Data has been successfully received and processed."
         @synonyms "received, updated, ingested"
         @tier "essential"
-      PUSH_DISCONNECTED -> external { reason : string }
+      PUSH_DISCONNECTED -> external {
+        reason : string
+      }
         @description "Indicates the push connection has been lost."
         @synonyms "disconnected, lost, dropped, offline"
         @tier "internal"
@@ -76,22 +179,30 @@ orbital PushSubscriberOrbital {
         @synonyms "initialized, ready, connected"
         @tier "essential"
     }
+
     listens {
-      PUSH_RECEIVED { message : string }
+      PUSH_RECEIVED {
+        message : string
+      }
         @description "Indicates a push notification has been successfully received."
         @synonyms "received, updated, new"
         @tier "essential"
-      PUSH_DISCONNECTED { reason : string }
+      PUSH_DISCONNECTED {
+        reason : string
+      }
         @description "Indicates a disconnection from the push notification service."
         @synonyms "disconnected, offline, lost connection"
         @tier "internal"
-    
-      PushSubscriberLoadFailed { error : string, code : string }
+      PushSubscriberLoadFailed {
+        error : string
+        code : string
+      }
         @description "Indicates a failure to load a subscriber."
         @synonyms "error, failure, problem, unsuccessful"
         @tier "internal"
     }
   }
 
+  ;; consumers: any trait that needs live push feed (e.g. std-push-activity-log)
   page "/push" as Push -> PushSubscriberIndicator
 }

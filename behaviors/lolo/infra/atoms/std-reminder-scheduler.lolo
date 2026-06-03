@@ -1,91 +1,137 @@
 app std-reminder-scheduler "1.1.0"
 "std-reminder-scheduler — deadline reminders for a target entity. A periodic tick scans the target for records whose `dateField` deadline is within `offsetHours` of now and that have not been reminded yet, and emits `ReminderDue` for each — every matching record, via a self-driving scan loop. Marks each record `remindedAt` so it isn't reminded twice. Compose alongside std-notify-on-event to deliver the reminder."
-
 orbital ReminderSchedulerOrbital {
+    type ScanRecordsLoaded = Event { data : [object] } "Internal: target records due for a reminder."
+
+    type ScanFailed = Event { error : string, code : string } "Internal: scan fetch / persist failed."
+
+    type ReminderStepped = Event { id : string } "Internal: one record reminded; drives the next loop pass."
+
+    type ReminderDue = Event { entityId : string, severity : string, template : string } "Re-emitted per record whose deadline is approaching; wire to std-notify-on-event."
+
   entity ReminderRunLog [persistent: reminder_runs] {
-    id            : string!
-    targetEntity  : string  @description "The entity to which the reminder applies." @synonyms "subject, referenced entity, related object" = ""
-    recordCount   : number  @description "The number of records processed during this run." @synonyms "count, total, size" = 0
-    ranAt         : number  @description "Timestamp indicating when the process was executed." @synonyms "execution time, timestamp, run time" = 0
-    errors        : string  @description "Records any errors encountered during processing." @synonyms "error, problem, fault" = ""
-    dueAt         : number  @description "Deadline timestamp (also lets the standalone default target validate)." @synonyms "deadline, due, expiry" = 0
-    remindedAt    : number  @description "When this record was last reminded — the dedup marker; 0 = not yet reminded." @synonyms "notified at, last reminder" = 0
-    headId        : string  @description "Scratch: id of the record the scan loop is currently reminding." @synonyms "current id, cursor" = ""
+    id : string!
+    targetEntity : string @description "The entity to which the reminder applies." @synonyms "subject, referenced entity, related object" = ""
+    recordCount : number @description "The number of records processed during this run." @synonyms "count, total, size" = 0
+    ranAt : number @description "Timestamp indicating when the process was executed." @synonyms "execution time, timestamp, run time" = 0
+    errors : string @description "Records any errors encountered during processing." @synonyms "error, problem, fault" = ""
+    dueAt : number @description "Deadline timestamp (also lets the standalone default target validate)." @synonyms "deadline, due, expiry" = 0
+    remindedAt : number @description "When this record was last reminded — the dedup marker; 0 = not yet reminded." @synonyms "notified at, last reminder" = 0
+    headId : string @description "Scratch: id of the record the scan loop is currently reminding." @synonyms "current id, cursor" = ""
   }
 
-  type ScanRecordsLoaded = Event { data : [object] }                                  "Internal: target records due for a reminder."
-  type ScanFailed        = Event { error : string, code : string }                    "Internal: scan fetch / persist failed."
-  type ReminderStepped   = Event { id : string }                                      "Internal: one record reminded; drives the next loop pass."
-  type ReminderDue       = Event { entityId : string, severity : string, template : string } "Re-emitted per record whose deadline is approaching; wire to std-notify-on-event."
-
   trait ReminderScheduler -> ReminderRunLog [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      ScanRecordsLoaded -> scanning when (and @config.enabled [">", (array/len ?data), 0])
+        (set @entity.headId (object/get (array/first ?data) id))
+        (emit ReminderDue {
+          entityId: @entity.headId
+          severity: @config.severity
+          template: @config.template
+        })
+        (persist update @config.targetEntity { id: @entity.headId, remindedAt: @now } {
+          emit: { failure: ScanFailed, success: ReminderStepped }
+        })
+      ScanRecordsLoaded -> idle when ["=", (array/len ?data), 0]
+      ScanFailed -> idle
+    }
+
+    state scanning {
+      ReminderStepped -> scanning
+        (fetch @config.targetEntity {
+          emit: { failure: ScanFailed, success: ScanRecordsLoaded }
+          filter: (and ["=", (object/get @entity remindedAt), 0] [">", (object/get @entity @config.dateField), @now] ["<", ["-", (object/get @entity @config.dateField), @now], ["*", @config.offsetHours, 3600000]])
+        })
+      ScanRecordsLoaded -> scanning when [">", (array/len ?data), 0]
+        (set @entity.headId (object/get (array/first ?data) id))
+        (emit ReminderDue {
+          entityId: @entity.headId
+          severity: @config.severity
+          template: @config.template
+        })
+        (persist update @config.targetEntity { id: @entity.headId, remindedAt: @now } {
+          emit: { failure: ScanFailed, success: ReminderStepped }
+        })
+      ScanRecordsLoaded -> idle when ["=", (array/len ?data), 0]
+      ScanFailed -> idle
+    }
+
+    emits {
+      ReminderDue -> external {
+        entityId : string
+        severity : string
+        template : string
+      }
+      ScanRecordsLoaded {
+        data : [object]
+      }
+      ScanFailed {
+        error : string
+        code : string
+      }
+      ReminderStepped {
+        id : string
+      }
+    }
+
+    listens {
+      ScanRecordsLoaded {
+        data : [object]
+      }
+      ScanFailed {
+        error : string
+        code : string
+      }
+      ReminderStepped {
+        id : string
+      }
+    }
+
+    ticks {
+      scanCycle every 15m
+        (fetch @config.targetEntity {
+          emit: { failure: ScanFailed, success: ScanRecordsLoaded }
+          filter: (and ["=", (object/get @entity remindedAt), 0] [">", (object/get @entity @config.dateField), @now] ["<", ["-", (object/get @entity @config.dateField), @now], ["*", @config.offsetHours, 3600000]])
+        })
+      
+    }
+
     config {
-      enabled       : boolean = false
+      enabled : boolean = false
         @label "Send deadline reminders"
         @description "Automatically remind about upcoming deadlines. Off by default."
         @synonyms "enable, turn on, activate, switch on, reminders, deadline reminders, due-date reminders, advance notice, heads up, nudge before due"
         @tier "infra"
-      targetEntity  : string  = "ReminderRunLog"
+      targetEntity : string = ReminderRunLog
         @label "Target entity"
         @description "Entity to scan for upcoming deadlines (e.g. 'Task', 'ClassSession'). Defaults to the atom's own log so the standalone validates; rebind per composition."
-        @tier "internal"
         @synonyms "entity to monitor, entity to watch, record type, object type"
-      dateField     : string  = "dueAt"
+        @tier "internal"
+      dateField : string = dueAt
         @label "Deadline field"
         @description "Numeric (ms-epoch) field on the target holding the deadline (e.g. 'dueAt', 'startsAt')."
-        @tier "internal"
         @synonyms "due date field, timestamp field, cutoff field, expiry field, when it's due"
-      offsetHours   : number  = 24
+        @tier "internal"
+      offsetHours : number = 24
         @label "Remind this many hours before the deadline"
         @description "A reminder fires once the deadline is within this many hours of now."
-        @tier "infra"
         @synonyms "advance notice, lead time, heads up, early warning hours, how far ahead"
-      severity      : string  = "info"
+        @tier "infra"
+      severity : string = info
         @label "Severity"
         @description "Severity passed to the notifier: info / warning / error."
-        @tier "infra"
         @synonyms "urgency level, priority, importance, alert level, how urgent"
-      template      : string  = ""
+        @tier "infra"
+      template : string = ""
         @label "Message template"
         @description "Message body passed to the notifier."
-        @tier "presentation"
         @synonyms "message text, reminder body, notification copy, alert message, what to say"
-    }
-    initial: idle
-    state idle {
-      INIT -> idle
-      ScanRecordsLoaded -> scanning when (and @config.enabled (> (array/len @payload.data) 0))
-        (set @entity.headId (object/get (array/first @payload.data) "id"))
-        (emit ReminderDue { entityId: @entity.headId, severity: @config.severity, template: @config.template })
-        (persist update @config.targetEntity { id: @entity.headId, remindedAt: @now } { emit: { success: "ReminderStepped", failure: "ScanFailed" } })
-      ScanRecordsLoaded -> idle when (= (array/len @payload.data) 0)
-      ScanFailed -> idle
-    }
-    state scanning {
-      ReminderStepped -> scanning
-        (fetch @config.targetEntity { filter: (and (= (object/get @entity "remindedAt") 0) (> (object/get @entity @config.dateField) @now) (< (- (object/get @entity @config.dateField) @now) (* @config.offsetHours 3600000))), emit: { success: "ScanRecordsLoaded", failure: "ScanFailed" } })
-      ScanRecordsLoaded -> scanning when (> (array/len @payload.data) 0)
-        (set @entity.headId (object/get (array/first @payload.data) "id"))
-        (emit ReminderDue { entityId: @entity.headId, severity: @config.severity, template: @config.template })
-        (persist update @config.targetEntity { id: @entity.headId, remindedAt: @now } { emit: { success: "ReminderStepped", failure: "ScanFailed" } })
-      ScanRecordsLoaded -> idle when (= (array/len @payload.data) 0)
-      ScanFailed -> idle
-    }
-    ticks {
-      scanCycle every 15 m
-        (fetch @config.targetEntity { filter: (and (= (object/get @entity "remindedAt") 0) (> (object/get @entity @config.dateField) @now) (< (- (object/get @entity @config.dateField) @now) (* @config.offsetHours 3600000))), emit: { success: "ScanRecordsLoaded", failure: "ScanFailed" } })
-    }
-    emits {
-      ReminderDue       -> external { entityId : string, severity : string, template : string }
-      ScanRecordsLoaded { data : [object] }
-      ScanFailed        { error : string, code : string }
-      ReminderStepped   { id : string }
-    }
-    listens {
-      ScanRecordsLoaded { data : [object] }
-      ScanFailed        { error : string, code : string }
-      ReminderStepped   { id : string }
+        @tier "presentation"
     }
   }
+
   page "/reminders/scheduler" as ReminderSchedulerPage -> ReminderScheduler
 }

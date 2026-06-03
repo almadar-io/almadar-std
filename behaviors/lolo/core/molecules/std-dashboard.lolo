@@ -1,85 +1,154 @@
 app std-dashboard "1.0.0"
 "std-dashboard — molecule composing std-stats + std-graphs + std-browse (stat cards top, charts middle, data list bottom). Browse is the data hub; Stats and Graphs listen for `BrowseItemLoaded -> ITEMS_LOADED`."
-
 orbital DashboardItemOrbital {
-  uses Stats  from "std/behaviors/std-stats"
+  uses Stats from "std/behaviors/std-stats"
+
   uses Graphs from "std/behaviors/std-graphs"
+
   uses Browse from "std/behaviors/std-browse"
 
+    type DashboardItemLoaded = Event { data : [DashboardItem] }
+
+    type DashboardItemLoadFailed = Event { error : string, code : string }
+
   entity DashboardItem [persistent: dashboarditems] {
-    id          : string!
-    name        : string @description "A human-readable identifier for the item." @synonyms "title, label, identifier"
-    category    : string @description "The type or classification of the dashboard item." @synonyms "type, kind, group"
-    status      : "active" | "inactive" | "pending" @description "Indicates the current operational state of the item." @synonyms "state, condition, enabled, disabled" = "active"
-    amount      : number @description "The numerical value being represented." @synonyms "value, quantity, count, total" = 0
-    units       : number @description "Represents a numerical measurement or quantity." @synonyms "value, count, measure" = 0
+    id : string!
+    name : string @description "A human-readable identifier for the item." @synonyms "title, label, identifier"
+    category : string @description "The type or classification of the dashboard item." @synonyms "type, kind, group"
+    status : "active" | "inactive" | "pending" @description "Indicates the current operational state of the item." @synonyms "state, condition, enabled, disabled" = active
+    amount : number @description "The numerical value being represented." @synonyms "value, quantity, count, total" = 0
+    units : number @description "Represents a numerical measurement or quantity." @synonyms "value, count, measure" = 0
   }
-  type DashboardItemLoaded = Event { data : [DashboardItem] }
-  type DashboardItemLoadFailed = Event { error : string, code : string }
 
   trait DashboardSummary = Stats.traits.StatsItemStats {
-    config: {
-      title: "Summary",
-      metrics: [
-        { aggregation: "count",  label: "Total Items",   icon: "list",         variant: "primary",  format: "number" },
-        { aggregation: "count",  label: "Active",        icon: "check-circle", variant: "success",  format: "number",   filter: ["fn", "row", ["=", "@row.status", "active"]] },
-        { aggregation: "sum",    label: "Total Revenue", icon: "dollar-sign",  variant: "info",     format: "currency", field: "amount", target: 10000 },
-        { aggregation: "avg",    label: "Avg Units",     icon: "trending-up",  variant: "default",  format: "number",   field: "units",  suffix: " units" }
-      ]
+    config {
+      title: Summary
+      metrics: [{
+        aggregation: count
+        format: number
+        icon: list
+        label: "Total Items"
+        variant: primary
+      }, {
+        aggregation: count
+        filter: (fn row ["=", @row.status, active])
+        format: number
+        icon: check-circle
+        label: Active
+        variant: success
+      }, {
+        aggregation: sum
+        field: amount
+        format: currency
+        icon: dollar-sign
+        label: "Total Revenue"
+        target: 10000
+        variant: info
+      }, {
+        aggregation: avg
+        field: units
+        format: number
+        icon: trending-up
+        label: "Avg Units"
+        suffix: " units"
+        variant: default
+      }]
     }
+
     listens {
       DashboardItemBrowse.BrowseItemLoaded -> ITEMS_LOADED
     }
   }
 
   trait DashboardCategoryChart = Graphs.traits.GraphItemGraph {
-    config: {
-      title: "Items by Category",
-      subtitle: "Count across categories",
-      chartType: "bar",
-      categoryField: "category",
-      aggregation: "count",
-      height: 280,
+    config {
+      title: "Items by Category"
+      subtitle: "Count across categories"
+      chartType: bar
+      categoryField: category
+      aggregation: count
+      height: 280
       showLegend: false
     }
+
     listens {
       DashboardItemBrowse.BrowseItemLoaded -> ITEMS_LOADED
     }
   }
 
   trait DashboardStatusChart = Graphs.traits.GraphItemGraph {
-    config: {
-      title: "Status Mix",
-      chartType: "donut",
-      categoryField: "status",
-      aggregation: "count",
-      height: 280,
+    config {
+      title: "Status Mix"
+      chartType: donut
+      categoryField: status
+      aggregation: count
+      height: 280
       showLegend: true
     }
+
     listens {
       DashboardItemBrowse.BrowseItemLoaded -> ITEMS_LOADED
     }
   }
 
   trait DashboardItemBrowse = Browse.traits.BrowseItemBrowse -> DashboardItem {
-    config: {
-      pageSize: 100,
-      displayPageSize: 5,
-      fields: [
-        { name: "name",     label: "Name",     variant: "h4" },
-        { name: "category", label: "Category", variant: "caption" },
-        { name: "status",   label: "Status",   variant: "badge" },
-        { name: "amount",   label: "Amount",   variant: "caption" }
-      ]
+    config {
+      pageSize: 100
+      displayPageSize: 5
+      fields: [{
+        label: Name
+        name: name
+        variant: h4
+      }, {
+        label: Category
+        name: category
+        variant: caption
+      }, {
+        label: Status
+        name: status
+        variant: badge
+      }, {
+        label: Amount
+        name: amount
+        variant: caption
+      }]
     }
   }
 
   trait DashboardLayout -> DashboardItem [interaction, collection] {
     state composing {
       INIT -> composing
-        (fetch DashboardItem { emit: { success: "DashboardItemLoaded", failure: "DashboardItemLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-6xl mx-auto w-full p-4", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "bar-chart-2" }, { type: "typography", variant: "h2", content: "Dashboard" }] }, { type: "divider" }, "@trait.DashboardSummary", { type: "simple-grid", cols: 2, gap: "md", children: ["@trait.DashboardCategoryChart", "@trait.DashboardStatusChart"] }, { type: "divider" }, { type: "typography", variant: "h3", content: "Recent Items" }, "@trait.DashboardItemBrowse"] })
+        (fetch DashboardItem {
+          emit: { failure: DashboardItemLoadFailed, success: DashboardItemLoaded }
+        })
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: bar-chart-2, type: icon }, {
+              content: Dashboard
+              type: typography
+              variant: h2
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, @trait.DashboardSummary, {
+            children: [@trait.DashboardCategoryChart, @trait.DashboardStatusChart]
+            cols: 2
+            gap: md
+            type: simple-grid
+          }, { type: divider }, {
+            content: "Recent Items"
+            type: typography
+            variant: h3
+          }, @trait.DashboardItemBrowse]
+          className: "max-w-6xl mx-auto w-full p-4"
+          direction: vertical
+          gap: lg
+          type: stack
+        })
     }
+
     emits {
       DashboardItemLoaded
         @description "Signals a data item has been successfully loaded."

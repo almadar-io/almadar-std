@@ -1,85 +1,178 @@
 app std-board-timeline-roadmap "1.1.0"
 "Timeline / roadmap board — horizontal time axis with quarters or months as columns; items render as cards inside their target column (item.stage = column.key). Mirrors the Linear / Asana / Productboard roadmap UX. Configure `columns` as ['Q1', 'Q2', 'Q3', 'Q4'] (or months) and the board lays them out left-to-right along a time axis. Same BoardItemBoard trait, same state machine, same emits/listens as std-board — only the bodyContent tree differs."
-
 orbital TimelineRoadmapBoardOrbital {
   uses Board from "std/behaviors/std-board"
 
   entity TimelineRoadmapItem [persistent: timeline_roadmap_items] {
-    id                  : string!
-    title               : string! @description "The item's displayed name or heading." @synonyms "name, heading, label"
-    description         : string @description "A textual explanation or summary of the item." @synonyms "details, summary, explanation, notes" = ""
-    stage               : "Q1" | "Q2" | "Q3" | "Q4" @description "The item's position within the timeline's time divisions." @synonyms "period, timeframe, phase, quarter, month" = "Q1"
-    notes               : string @description "Free-form text providing additional information." @synonyms "comments, remarks, details, annotations" = ""
-    position            : number @description "Numerical order within the timeline." @synonyms "order, sequence, index" = 0
-    boards              : [object] @intrinsic = []
-    currentId           : string @intrinsic = ""
-    currentTitle        : string @intrinsic = ""
-    currentDescription  : string @intrinsic = ""
-    currentStage        : string @intrinsic = ""
-    currentNotes        : string @intrinsic = ""
-    errorMessage        : string @intrinsic = ""
+    id : string!
+    title : string! @description "The item's displayed name or heading." @synonyms "name, heading, label"
+    description : string @description "A textual explanation or summary of the item." @synonyms "details, summary, explanation, notes" = ""
+    stage : "Q1" | "Q2" | "Q3" | "Q4" @description "The item's position within the timeline's time divisions." @synonyms "period, timeframe, phase, quarter, month" = Q1
+    notes : string @description "Free-form text providing additional information." @synonyms "comments, remarks, details, annotations" = ""
+    position : number @description "Numerical order within the timeline." @synonyms "order, sequence, index" = 0
+    boards : [object] @intrinsic = []
+    currentId : string @intrinsic = ""
+    currentTitle : string @intrinsic = ""
+    currentDescription : string @intrinsic = ""
+    currentStage : string @intrinsic = ""
+    currentNotes : string @intrinsic = ""
+    errorMessage : string @intrinsic = ""
   }
 
   trait TimelineRoadmapBoard = Board.traits.BoardItemBoard -> TimelineRoadmapItem {
-    config: {
-      columns: [
-        { key: "Q1", label: "Q1", icon: "calendar", variant: "default" },
-        { key: "Q2", label: "Q2", icon: "calendar", variant: "primary" },
-        { key: "Q3", label: "Q3", icon: "calendar", variant: "info" },
-        { key: "Q4", label: "Q4", icon: "calendar", variant: "success" }
-      ],
-      gridCols: 4,
+    config {
+      columns: [{
+        icon: calendar
+        key: Q1
+        label: Q1
+        variant: default
+      }, {
+        icon: calendar
+        key: Q2
+        label: Q2
+        variant: primary
+      }, {
+        icon: calendar
+        key: Q3
+        label: Q3
+        variant: info
+      }, {
+        icon: calendar
+        key: Q4
+        label: Q4
+        variant: success
+      }]
+      gridCols: 4
       bodyContent: {
-        type: "stack",
-        direction: "vertical",
-        gap: "md",
-        children: [
-          { type: "stack", direction: "horizontal", gap: "sm", align: "center", className: "px-card-md", children: [
-            { type: "icon", name: "calendar-range" },
-            { type: "typography", content: "@config.title", variant: "h2" },
-            { type: "typography", variant: "caption", color: "muted", content: "Roadmap", className: "ml-2" }
-          ]},
-          { type: "divider" },
-          { type: "stack", direction: "horizontal", gap: "none", align: "stretch", className: "overflow-x-auto border-y border-[var(--color-border)]",
-            children: [
-              { type: "data-grid", entity: "@entity.boards", cols: "@config.gridCols", gap: "none", fields: [], dndRoot: true,
-                className: "min-w-full",
-                renderItem: ["fn", "col", {
-                  type: "stack", direction: "vertical", gap: "none",
-                  className: "min-w-[240px] border-r border-[var(--color-border)] last:border-r-0",
-                  children: [
-                    { type: "stack", direction: "horizontal", gap: "xs", align: "center", className: "px-card-md py-2 bg-[var(--color-surface-subtle)] border-b border-[var(--color-border)] sticky top-0", children: [
-                      { type: "icon", name: "@col.icon" },
-                      { type: "typography", content: "@col.label", variant: "h4", className: "flex-1" },
-                      { type: "badge", label: "@col.count", variant: "primary", size: "sm" }
-                    ]},
-                    { type: "data-list", entity: "@col.items", gap: "sm", fields: [], dragGroup: "@col.key", accepts: "*", sortable: true, dropEvent: "MOVE_CARD", reorderEvent: "REORDER_CARD", positionEvent: "REORDER_POSITION",
-                      className: "p-card-md min-h-[160px]",
-                      renderItem: ["fn", "item", {
-                        type: "card", look: "elevated", padding: "sm",
-                        className: "cursor-grab hover:shadow-md transition-shadow",
-                        children: [
-                          { type: "stack", direction: "vertical", gap: "xs", children: [
-                            { type: "stack", direction: "horizontal", gap: "xs", align: "center", children: [
-                              { type: "icon", name: "flag" },
-                              { type: "typography", content: "@config.cardTitleBinding", variant: "body", weight: "medium", className: "flex-1" }
-                            ]},
-                            { type: "typography", content: "@config.cardDescriptionBinding", variant: "caption", color: "muted", className: "line-clamp-2" },
-                            { type: "stack", direction: "horizontal", gap: "xs", align: "center", className: "pt-1", children: [
-                              { type: "badge", label: "@config.cardStageBinding", variant: "primary", size: "sm" },
-                              { type: "button", label: "Details", variant: "ghost", size: "sm", action: "OPEN_CARD", actionPayload: { id: "@config.cardIdBinding", row: "@item" }, icon: "arrow-right", className: "ml-auto" }
-                            ]}
-                          ]}
-                        ]
-                      }]
-                    }
-                  ]
+        children: [{
+          align: center
+          children: [{ name: calendar-range, type: icon }, {
+            content: @config.title
+            type: typography
+            variant: h2
+          }, {
+            className: ml-2
+            color: muted
+            content: Roadmap
+            type: typography
+            variant: caption
+          }]
+          className: px-card-md
+          direction: horizontal
+          gap: sm
+          type: stack
+        }, { type: divider }, {
+          align: stretch
+          children: [{
+            className: min-w-full
+            cols: @config.gridCols
+            dndRoot: true
+            entity: @entity.boards
+            fields: []
+            gap: none
+            renderItem: (fn col {
+              children: [{
+                align: center
+                children: [{ name: @col.icon, type: icon }, {
+                  className: flex-1
+                  content: @col.label
+                  type: typography
+                  variant: h4
+                }, {
+                  label: @col.count
+                  size: sm
+                  type: badge
+                  variant: primary
                 }]
-              }
-            ]
-          },
-          { type: "floating-action-button", label: "Add milestone", action: "ADD_CARD", icon: "plus", variant: "primary" }
-        ]
+                className: "px-card-md py-2 bg-[var(--color-surface-subtle)] border-b border-[var(--color-border)] sticky top-0"
+                direction: horizontal
+                gap: xs
+                type: stack
+              }, {
+                accepts: "*"
+                className: "p-card-md min-h-[160px]"
+                dragGroup: @col.key
+                dropEvent: MOVE_CARD
+                entity: @col.items
+                fields: []
+                gap: sm
+                positionEvent: REORDER_POSITION
+                renderItem: (fn item {
+                  children: [{
+                    children: [{
+                      align: center
+                      children: [{ name: flag, type: icon }, {
+                        className: flex-1
+                        content: @config.cardTitleBinding
+                        type: typography
+                        variant: body
+                        weight: medium
+                      }]
+                      direction: horizontal
+                      gap: xs
+                      type: stack
+                    }, {
+                      className: line-clamp-2
+                      color: muted
+                      content: @config.cardDescriptionBinding
+                      type: typography
+                      variant: caption
+                    }, {
+                      align: center
+                      children: [{
+                        label: @config.cardStageBinding
+                        size: sm
+                        type: badge
+                        variant: primary
+                      }, {
+                        action: OPEN_CARD
+                        actionPayload: { id: @config.cardIdBinding, row: @item }
+                        className: ml-auto
+                        icon: arrow-right
+                        label: Details
+                        size: sm
+                        type: button
+                        variant: ghost
+                      }]
+                      className: pt-1
+                      direction: horizontal
+                      gap: xs
+                      type: stack
+                    }]
+                    direction: vertical
+                    gap: xs
+                    type: stack
+                  }]
+                  className: "cursor-grab hover:shadow-md transition-shadow"
+                  look: elevated
+                  padding: sm
+                  type: card
+                })
+                reorderEvent: REORDER_CARD
+                sortable: true
+                type: data-list
+              }]
+              className: "min-w-[240px] border-r border-[var(--color-border)] last:border-r-0"
+              direction: vertical
+              gap: none
+              type: stack
+            })
+            type: data-grid
+          }]
+          className: "overflow-x-auto border-y border-[var(--color-border)]"
+          direction: horizontal
+          gap: none
+          type: stack
+        }, {
+          action: ADD_CARD
+          icon: plus
+          label: "Add milestone"
+          type: floating-action-button
+          variant: primary
+        }]
+        direction: vertical
+        gap: md
+        type: stack
       }
     }
   }

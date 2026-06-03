@@ -1,29 +1,52 @@
 app std-row-access-control "1.0.0"
 "std-row-access-control — row-level access control gate / ownership filter / role-based row visibility. Use when a user voices that only certain users should see or edit certain records (only the owner can edit, private to owner, owner-only visibility, only see your own records, role-based visibility, admin-only access, visible to admins only, restricted to role, permission gate, ownership scoping, hide from other users, only show mine). Listens for `RowsLoaded` (rename via traitOverrides.events to the consumer's load event), filters `@payload.data` by `@user.id` (when `ownerField` is set) and/or `@user.role` (when `visibleRoles` is non-empty), re-emits `RowsFiltered` for downstream consumers (rename to wire into the UI atom's listen). Composable via `extraTraits` to interpose between a data fetch and a list/grid UI."
-
 type ItemSpec = { id : string, label : string!, value : string, icon : string }
 type ObjectSpec = { id : string, label : string, value : string }
-
 orbital RowAccessControlOrbital {
+    type RowsLoaded = Event { data : [ObjectSpec] } "Rename via traitOverrides.events to the upstream fetch-success event (e.g. ContactLoaded)."
+
+    type RowsFiltered = Event { data : [ObjectSpec], filteredCount : number } "Re-emitted with the access-gated row set; rename to wire the downstream consumer (e.g. ContactGated)."
+
   entity RowAccessGateView [runtime] {
-    id           : string!
-    filteredData : [ItemSpec]  @description "The data returned after applying access control filters." @synonyms "filtered items, processed data, results, output" = []
-    inputCount   : number    @description "The number of records processed by the access control." @synonyms "record count, item count, total records" = 0
-    outputCount  : number    @description "The number of records that passed the access control filter." @synonyms "count, size, length" = 0
-    accessDenied : boolean   @description "Indicates whether access is denied based on configured rules." @synonyms "denied, restricted, unauthorized, access-denied" = false
+    id : string!
+    filteredData : [ItemSpec] @description "The data returned after applying access control filters." @synonyms "filtered items, processed data, results, output" = []
+    inputCount : number @description "The number of records processed by the access control." @synonyms "record count, item count, total records" = 0
+    outputCount : number @description "The number of records that passed the access control filter." @synonyms "count, size, length" = 0
+    accessDenied : boolean @description "Indicates whether access is denied based on configured rules." @synonyms "denied, restricted, unauthorized, access-denied" = false
   }
 
-  type RowsLoaded   = Event { data : [ObjectSpec] }                          "Rename via traitOverrides.events to the upstream fetch-success event (e.g. ContactLoaded)."
-  type RowsFiltered = Event { data : [ObjectSpec], filteredCount : number }  "Re-emitted with the access-gated row set; rename to wire the downstream consumer (e.g. ContactGated)."
-
   trait RowAccessGate -> @rebindable RowAccessGateView [lifecycle, instance, privacy, access] {
+    initial: idle
+
+    state idle {
+      RowsLoaded -> idle when @config.enabled
+        (set @entity.inputCount (array/len ?data))
+        (set @entity.accessDenied (and (not ["=", (array/len @config.visibleRoles), 0]) (not (array/includes @config.visibleRoles @user.role))))
+        (set @entity.filteredData (if @entity.accessDenied [] (if (not ["=", @config.ownerField, ""]) (array/filter ?data (fn row ["=", (object/get @row @config.ownerField), @user.id])) ?data)))
+        (set @entity.outputCount (array/len @entity.filteredData))
+        (emit RowsFiltered { data: @entity.filteredData, filteredCount: @entity.outputCount })
+    }
+
+    emits {
+      RowsFiltered -> external {
+        data : [ObjectSpec]
+        filteredCount : number
+      }
+    }
+
+    listens {
+      RowsLoaded {
+        data : [ObjectSpec]
+      }
+    }
+
     config {
-      enabled      : boolean  = false
+      enabled : boolean = false
         @label "Restrict who sees records"
         @description "Only let people see records they own, or that match an allowed role. Off by default."
         @synonyms "enable, turn on, enforce, require, activate, apply, switch on, only owner can edit, owner-only, private to owner, only see your own, restrict to role, role-based visibility, permission gate, admin-only access, hide from other users, only show mine, ownership scoping"
         @tier "policy"
-      ownerField   : string   = ""
+      ownerField : string = ""
         @label "Owner field"
         @description "Row field holding the owning user id (blank disables owner filter)"
         @tier "internal"
@@ -32,25 +55,7 @@ orbital RowAccessControlOrbital {
         @description "Roles permitted to see any row (empty = no role gate)"
         @tier "policy"
     }
-    initial: idle
-    state idle {
-      RowsLoaded -> idle when @config.enabled
-        (set @entity.inputCount (array/len @payload.data))
-        (set @entity.accessDenied (and (not (= (array/len @config.visibleRoles) 0)) (not (array/includes @config.visibleRoles @user.role))))
-        (set @entity.filteredData (if @entity.accessDenied
-          []
-          (if (not (= @config.ownerField ""))
-            (array/filter @payload.data ["fn", "row", (= (object/get @row @config.ownerField) @user.id)])
-            @payload.data)))
-        (set @entity.outputCount (array/len @entity.filteredData))
-        (emit RowsFiltered { data: "@entity.filteredData", filteredCount: "@entity.outputCount" })
-    }
-    emits {
-      RowsFiltered -> external { data : [ObjectSpec], filteredCount : number }
-    }
-    listens {
-      RowsLoaded { data : [ObjectSpec] }
-    }
   }
+
   page "/row-access-control" as RowAccessControlPage -> RowAccessGate
 }

@@ -1,32 +1,292 @@
 app std-image-upload-multi "1.0.0"
 "std-image-upload-multi — multi-image upload with drop zone, gallery preview, and per-batch progress."
-
 orbital UploadedImageOrbital {
+    type UploadedImageLoaded = Event { data : [UploadedImage] } "Fired when the uploaded-image collection finishes loading"
+
+    type UploadedImageLoadFailed = Event { error : string, code : string } "Fired when the uploaded-image collection fails to load"
+
+    type UploadedImageCreated = Event { row : UploadedImage } "Fired after a new uploaded image persists successfully"
+
+    type UploadedImageDeleted = Event { id : string } "Fired after an uploaded image is removed"
+
   entity UploadedImage [persistent: uploadedimages] {
-    id         : string!
-    url        : string! @description "The accessible address for retrieving the image data." @synonyms "link, path, address"
-    name       : string @description "The filename or identifier for the uploaded image." @synonyms "filename, originalName, identifier"
-    sizeBytes  : number @description "The file size in bytes." @synonyms "length, filesize, bytes"
-    mimeType   : string @description "The file's internet media type." @synonyms "type, format, media type"
-    width      : number @description "The image's width in pixels." @synonyms "imageWidth, pixelWidth"
-    height     : number @description "The vertical dimension of the image, in pixels." @synonyms "vertical, y, dimension"
-    parentId   : string @description "Identifier of the parent resource this image belongs to." @synonyms "parent, reference, source"
+    id : string!
+    url : string! @description "The accessible address for retrieving the image data." @synonyms "link, path, address"
+    name : string @description "The filename or identifier for the uploaded image." @synonyms "filename, originalName, identifier"
+    sizeBytes : number @description "The file size in bytes." @synonyms "length, filesize, bytes"
+    mimeType : string @description "The file's internet media type." @synonyms "type, format, media type"
+    width : number @description "The image's width in pixels." @synonyms "imageWidth, pixelWidth"
+    height : number @description "The vertical dimension of the image, in pixels." @synonyms "vertical, y, dimension"
+    parentId : string @description "Identifier of the parent resource this image belongs to." @synonyms "parent, reference, source"
     parentType : string @description "Identifies the type of the parent entity." @synonyms "parent, type, category"
     uploadedAt : string @description "Timestamp indicating when the image was uploaded." @synonyms "date, timestamp, upload time"
   }
 
-  type UploadedImageLoaded     = Event { data : [UploadedImage] }            "Fired when the uploaded-image collection finishes loading"
-  type UploadedImageLoadFailed = Event { error : string, code : string }      "Fired when the uploaded-image collection fails to load"
-  type UploadedImageCreated    = Event { row : UploadedImage }                "Fired after a new uploaded image persists successfully"
-  type UploadedImageDeleted    = Event { id : string }                        "Fired after an uploaded image is removed"
-
   trait UploadedImageUpload -> UploadedImage [interaction, collection] {
+    initial: loading
+
+    state loading {
+      INIT -> loading
+        (fetch UploadedImage {
+          emit: { failure: UploadedImageLoadFailed, success: UploadedImageLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Loading images…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      UploadedImageLoaded -> browsing
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: image-plus, type: icon }, {
+              content: @config.title
+              type: typography
+              variant: h3
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            accept: @config.accept
+            action: UPLOAD
+            description: "or click to browse"
+            icon: image-plus
+            label: "Drop images here"
+            maxFiles: @config.maxImages
+            maxSize: @config.maxBytesPerImage
+            type: upload-drop-zone
+          }, { entity: ?data, type: media-gallery }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      UploadedImageLoadFailed -> error
+        (render-ui main {
+          message: ?error
+          type: alert
+          variant: error
+        })
+    }
+
+    state browsing {
+      UPLOAD -> uploading
+        (persist create UploadedImage ?files {
+          emit: { failure: UploadedImageUploadFailed, success: UploadedImageCreated }
+        })
+        (render-ui main {
+          align: center
+          children: [{
+            content: "Uploading images…"
+            type: typography
+            variant: h3
+          }, {
+            max: 100
+            progressType: linear
+            type: progress-bar
+            value: 0
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      DELETE -> browsing
+        (persist delete UploadedImage ?id {
+          emit: { failure: UploadedImageDeleteFailed, success: UploadedImageDeleted }
+        })
+      UploadedImageDeleted -> loading
+        (fetch UploadedImage {
+          emit: { failure: UploadedImageLoadFailed, success: UploadedImageLoaded }
+        })
+      UploadedImageDeleteFailed -> error
+        (render-ui main {
+          message: ?error
+          type: alert
+          variant: error
+        })
+    }
+
+    state uploading {
+      UploadedImageCreated -> loading
+        (fetch UploadedImage {
+          emit: { failure: UploadedImageLoadFailed, success: UploadedImageLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{
+            color: success
+            name: check-circle
+            type: icon
+          }, {
+            content: "Upload complete"
+            type: typography
+            variant: h3
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      UploadedImageUploadFailed -> error
+        (render-ui main {
+          message: ?error
+          type: alert
+          variant: error
+        })
+    }
+
+    state error {
+      UploadedImageLoaded -> browsing
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: image-plus, type: icon }, {
+              content: @config.title
+              type: typography
+              variant: h3
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            accept: @config.accept
+            action: UPLOAD
+            description: "or click to browse"
+            icon: image-plus
+            label: "Drop images here"
+            maxFiles: @config.maxImages
+            maxSize: @config.maxBytesPerImage
+            type: upload-drop-zone
+          }, { entity: ?data, type: media-gallery }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
+    }
+
+    emits {
+      UPLOAD {
+        files : object!
+      }
+        @description "Signals that an image upload process has begun."
+        @synonyms "start, initiate, begin"
+        @tier "essential"
+      DELETE {
+        id : string!
+      }
+        @description "Signals removal of an image from the upload batch."
+        @synonyms "remove, discard, delete, unselect"
+        @tier "customization"
+      UploadedImageLoaded {
+        data : [UploadedImage]
+      }
+        @description "Signals a single image has finished loading."
+        @synonyms "loaded, received, parsed"
+        @tier "essential"
+      UploadedImageLoadFailed {
+        error : string
+        code : string
+      }
+        @description "Indicates an image failed to load during the upload process."
+        @synonyms "error, failure, problem, unsuccessful"
+        @tier "internal"
+      UploadedImageCreated {
+        row : UploadedImage
+      }
+        @description "A new image has been successfully uploaded."
+        @synonyms "added, new, received"
+        @tier "essential"
+      UploadedImageUploadFailed {
+        error : string
+        code : string
+      }
+        @description "Indicates a single image upload encountered an error."
+        @synonyms "error, failure, problem, rejected"
+        @tier "internal"
+      UploadedImageDeleted {
+        id : string!
+      }
+        @description "Signals an image has been removed from the upload queue."
+        @synonyms "removed, discarded, taken out"
+        @tier "customization"
+      UploadedImageDeleteFailed {
+        error : string
+        code : string
+      }
+        @description "Indicates an image deletion operation failed."
+        @synonyms "failed delete, deletion error"
+        @tier "internal"
+    }
+
+    listens {
+      UPLOAD {
+        files : object!
+      }
+        @description "Indicates a file upload has begun."
+        @synonyms "start, begin, initiate"
+        @tier "essential"
+      DELETE {
+        id : string!
+      }
+        @description "Indicates a selected image has been removed."
+        @synonyms "remove, discard, clear"
+        @tier "customization"
+      UploadedImageLoaded {
+        data : [UploadedImage]
+      }
+        @description "Indicates a single image has been successfully loaded."
+        @synonyms "loaded, received, processed"
+        @tier "essential"
+      UploadedImageLoadFailed {
+        error : string
+        code : string
+      }
+        @description "Indicates an image failed to load during the upload process."
+        @synonyms "error, failure, problem, unsuccessful"
+        @tier "internal"
+      UploadedImageCreated {
+        row : UploadedImage
+      }
+        @description "A new image has been successfully uploaded."
+        @synonyms "added, received, new image"
+        @tier "essential"
+      UploadedImageUploadFailed {
+        error : string
+        code : string
+      }
+        @description "Indicates an image upload operation encountered an error."
+        @synonyms "error, failure, problem, rejected"
+        @tier "internal"
+      UploadedImageDeleted {
+        id : string!
+      }
+        @description "An image has been removed from the upload queue."
+        @synonyms "removed, discarded, taken out"
+        @tier "customization"
+      UploadedImageDeleteFailed {
+        error : string
+        code : string
+      }
+        @description "Indicates an image deletion operation failed."
+        @synonyms "error, failure, problem, unsuccessful"
+        @tier "internal"
+    }
+
     config {
-      title            : string = "Upload Images"
+      title : string = "Upload Images"
         @label "Section title"
         @description "Heading shown above the upload zone"
         @tier "presentation"
-      maxImages        : number = 10
+      maxImages : number = 10
         @label "Max images"
         @description "Maximum number of images accepted per upload batch"
         @tier "domain"
@@ -34,111 +294,12 @@ orbital UploadedImageOrbital {
         @label "Size limit (bytes)"
         @description "Per-image upload size cap"
         @tier "domain"
-      accept           : string = "image/*"
+      accept : string = "image/*"
         @label "MIME filter"
         @description "Browser accept filter for the file picker"
         @tier "domain"
     }
-    initial: loading
-    state loading {
-      INIT -> loading
-        (fetch UploadedImage { emit: { success: "UploadedImageLoaded", failure: "UploadedImageLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading images…" }] })
-      UploadedImageLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "image-plus" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "upload-drop-zone", accept: "@config.accept", maxSize: "@config.maxBytesPerImage", maxFiles: "@config.maxImages", label: "Drop images here", description: "or click to browse", icon: "image-plus", action: "UPLOAD" }, { type: "media-gallery", entity: @payload.data }] })
-      UploadedImageLoadFailed -> error
-        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
-    }
-    state browsing {
-      UPLOAD -> uploading
-        (persist create UploadedImage @payload.files { emit: { success: "UploadedImageCreated", failure: "UploadedImageUploadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "typography", variant: "h3", content: "Uploading images…" }, { type: "progress-bar", value: 0, max: 100, progressType: "linear" }] })
-      DELETE -> browsing
-        (persist delete UploadedImage @payload.id { emit: { success: "UploadedImageDeleted", failure: "UploadedImageDeleteFailed" } })
-      UploadedImageDeleted -> loading
-        (fetch UploadedImage { emit: { success: "UploadedImageLoaded", failure: "UploadedImageLoadFailed" } })
-      UploadedImageDeleteFailed -> error
-        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
-    }
-    state uploading {
-      UploadedImageCreated -> loading
-        (fetch UploadedImage { emit: { success: "UploadedImageLoaded", failure: "UploadedImageLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "check-circle", color: "success" }, { type: "typography", variant: "h3", content: "Upload complete" }] })
-      UploadedImageUploadFailed -> error
-        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
-    }
-    state error {
-      UploadedImageLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "image-plus" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "upload-drop-zone", accept: "@config.accept", maxSize: "@config.maxBytesPerImage", maxFiles: "@config.maxImages", label: "Drop images here", description: "or click to browse", icon: "image-plus", action: "UPLOAD" }, { type: "media-gallery", entity: @payload.data }] })
-    }
-    emits {
-      UPLOAD { files : object! }
-        @description "Signals that an image upload process has begun."
-        @synonyms "start, initiate, begin"
-        @tier "essential"
-      DELETE { id : string! }
-        @description "Signals removal of an image from the upload batch."
-        @synonyms "remove, discard, delete, unselect"
-        @tier "customization"
-      UploadedImageLoaded { data : [UploadedImage] }
-        @description "Signals a single image has finished loading."
-        @synonyms "loaded, received, parsed"
-        @tier "essential"
-      UploadedImageLoadFailed { error : string, code : string }
-        @description "Indicates an image failed to load during the upload process."
-        @synonyms "error, failure, problem, unsuccessful"
-        @tier "internal"
-      UploadedImageCreated { row : UploadedImage }
-        @description "A new image has been successfully uploaded."
-        @synonyms "added, new, received"
-        @tier "essential"
-      UploadedImageUploadFailed { error : string, code : string }
-        @description "Indicates a single image upload encountered an error."
-        @synonyms "error, failure, problem, rejected"
-        @tier "internal"
-      UploadedImageDeleted { id : string! }
-        @description "Signals an image has been removed from the upload queue."
-        @synonyms "removed, discarded, taken out"
-        @tier "customization"
-      UploadedImageDeleteFailed { error : string, code : string }
-        @description "Indicates an image deletion operation failed."
-        @synonyms "failed delete, deletion error"
-        @tier "internal"
-    }
-    listens {
-      UPLOAD { files : object! }
-        @description "Indicates a file upload has begun."
-        @synonyms "start, begin, initiate"
-        @tier "essential"
-      DELETE { id : string! }
-        @description "Indicates a selected image has been removed."
-        @synonyms "remove, discard, clear"
-        @tier "customization"
-      UploadedImageLoaded { data : [UploadedImage] }
-        @description "Indicates a single image has been successfully loaded."
-        @synonyms "loaded, received, processed"
-        @tier "essential"
-      UploadedImageLoadFailed { error : string, code : string }
-        @description "Indicates an image failed to load during the upload process."
-        @synonyms "error, failure, problem, unsuccessful"
-        @tier "internal"
-      UploadedImageCreated { row : UploadedImage }
-        @description "A new image has been successfully uploaded."
-        @synonyms "added, received, new image"
-        @tier "essential"
-      UploadedImageUploadFailed { error : string, code : string }
-        @description "Indicates an image upload operation encountered an error."
-        @synonyms "error, failure, problem, rejected"
-        @tier "internal"
-      UploadedImageDeleted { id : string! }
-        @description "An image has been removed from the upload queue."
-        @synonyms "removed, discarded, taken out"
-        @tier "customization"
-      UploadedImageDeleteFailed { error : string, code : string }
-        @description "Indicates an image deletion operation failed."
-        @synonyms "error, failure, problem, unsuccessful"
-        @tier "internal"
-    }
   }
+
   page "/uploadedimages/upload" as UploadedImageUploadPage -> UploadedImageUpload
 }

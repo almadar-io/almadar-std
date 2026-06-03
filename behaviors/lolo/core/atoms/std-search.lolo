@@ -1,43 +1,59 @@
 app std-search "1.0.0"
 "std-search — single primitive: search-input. Owns a SearchResult runtime entity; SEARCH persists @payload.searchTerm (matching SearchInput's emit shape) so cross-trait listeners can route it into data atoms (Browse REFETCH_QUERY)."
-
 orbital SearchResultOrbital {
   entity SearchResult [runtime] {
-    id         : string!
+    id : string!
     searchTerm : string @description "The text entered by the user in the search field." @synonyms "query, search term, input, text"
   }
 
   trait SearchResultSearch -> SearchResult [interaction, instance] {
     initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          event: @config.event
+          placeholder: @config.placeholder
+          type: search-input
+        })
+      SEARCH -> idle
+        (set @entity.searchTerm ?searchTerm)
+        (render-ui main {
+          event: @config.event
+          placeholder: @config.placeholder
+          type: search-input
+        })
+    }
+
+    emits {
+      SEARCH -> external {
+        searchTerm : string!
+      }
+        @description "Initiates a search operation based on the input term."
+        @synonyms "query, lookup, find"
+        @tier "essential"
+    }
+
+    listens {
+      SEARCH {
+        searchTerm : string!
+      }
+        @description "A search query has been submitted and persisted."
+        @synonyms "query, request, lookup"
+        @tier "essential"
+    }
+
     config {
       placeholder : string = "Search…"
         @label "Placeholder text"
         @description "Hint text shown inside the empty search input"
         @tier "presentation"
-      event       : string = "SEARCH"
+      event : string = SEARCH
         @label "Search event"
         @description "Event emitted when the user submits a query"
         @tier "internal"
     }
-    state idle {
-      INIT -> idle
-        (render-ui main { type: "search-input", placeholder: "@config.placeholder", event: "@config.event" })
-      SEARCH -> idle
-        (set @entity.searchTerm @payload.searchTerm)
-        (render-ui main { type: "search-input", placeholder: "@config.placeholder", event: "@config.event" })
-    }
-    emits {
-      SEARCH -> external { searchTerm : string! }
-        @description "Initiates a search operation based on the input term."
-        @synonyms "query, lookup, find"
-        @tier "essential"
-    }
-    listens {
-      SEARCH { searchTerm : string! }
-        @description "A search query has been submitted and persisted."
-        @synonyms "query, request, lookup"
-        @tier "essential"
-    }
   }
+
   page "/searchresults/search" as SearchResultSearchPage -> SearchResultSearch
 }

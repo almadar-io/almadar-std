@@ -1,17 +1,23 @@
 app std-agent-fix-loop "1.0.0"
 "std-agent-fix-loop as a Function"
-
 orbital AgentFixLoopOrbital {
   uses AgentCompletion from "std/behaviors/std-agent-completion"
+
   uses AgentStepProgress from "std/behaviors/std-agent-step-progress"
+
   uses AgentToolCall from "std/behaviors/std-agent-tool-call"
+
   uses Browse from "std/behaviors/std-browse"
+
+    type AgentFixLoopLoaded = Event AgentFixLoop "Fired when AgentFixLoop finishes loading"
+
+    type AgentFixLoopLoadFailed = Event { message : string } "Fired when AgentFixLoop fails to load"
 
   entity AgentFixLoop [runtime] {
     id : string
     name : string @description "A human-readable identifier for the item." @synonyms "label, identifier, designation"
     description : string @description "A textual explanation of the component's functionality." @synonyms "explanation, details, notes, summary"
-    status : "active" | "inactive" | "pending" @description "Indicates the current operational state." @synonyms "state, condition, operational_status" = "active"
+    status : "active" | "inactive" | "pending" @description "Indicates the current operational state." @synonyms "state, condition, operational_status" = active
     createdAt : string
     target : string @description "The destination or endpoint of an action." @synonyms "destination, endpoint, location, reference" = ""
     validationErrors : string @description "A string containing validation error messages." @synonyms "errors, validation, issues" = ""
@@ -28,67 +34,407 @@ orbital AgentFixLoopOrbital {
     result : string @description "The outcome of a process or operation." @synonyms "outcome, output, result, value" = ""
     prompt : string @description "The text input provided to the process." @synonyms "input, query, text" = ""
     response : string @description "The output received from an external service or process." @synonyms "output, result, answer, feedback" = ""
-    provider : string @description "Identifies the source or origin of the data." @synonyms "source, origin, supplier" = "anthropic"
-    model : string @description "The identifier for the language model used." @synonyms "model_id, language_model, llm" = "claude-sonnet-4-20250514"
+    provider : string @description "Identifies the source or origin of the data." @synonyms "source, origin, supplier" = anthropic
+    model : string @description "The identifier for the language model used." @synonyms "model_id, language_model, llm" = claude-sonnet-4-20250514
   }
 
-  type AgentFixLoopLoaded     = Event AgentFixLoop                  "Fired when AgentFixLoop finishes loading"
-  type AgentFixLoopLoadFailed = Event { message : string } "Fired when AgentFixLoop fails to load"
   trait AgentFixLoopCycle -> AgentFixLoop [interaction, collection] {
     initial: idle
+
     state idle {
       INIT -> idle
         (set @entity.maxAttempts 5)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "wrench"}, { type: "typography", content: "Validation-Fix Loop", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Enter the target to validate and auto-fix", variant: "body" }, { type: "form-section", entity: @entity, mode: "edit", submitEvent: "FIX", fields: ["target"] }] }] }] })
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: wrench, type: icon }, {
+              content: "Validation-Fix Loop"
+              type: typography
+              variant: h2
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            children: [{
+              children: [{
+                content: "Enter the target to validate and auto-fix"
+                type: typography
+                variant: body
+              }, {
+                entity: @entity
+                fields: (target)
+                mode: edit
+                submitEvent: FIX
+                type: form-section
+              }]
+              direction: vertical
+              gap: md
+              type: stack
+            }]
+            type: card
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
       FIX -> validating
         (set @entity.status validating)
         (set @entity.fixAttempts 0)
         (set @entity.validationErrors "")
         (set @entity.errorCount 0)
-        (agent/invoke validate-schema { target: "@entity.target" })
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "shield-check"}, { type: "typography", content: "Validating...", variant: "h3" }, { type: "spinner"}, { type: "stack", direction: "horizontal", gap: "md", justify: "center", children: [{ type: "badge", label: "@entity.target" }, { type: "badge", label: "@entity.maxAttempts" }] }] })
+        (agent/invoke validate-schema { target: @entity.target })
+        (render-ui main {
+          align: center
+          children: [{ name: shield-check, type: icon }, {
+            content: "Validating..."
+            type: typography
+            variant: h3
+          }, { type: spinner }, {
+            children: [{ label: @entity.target, type: badge }, { label: @entity.maxAttempts, type: badge }]
+            direction: horizontal
+            gap: md
+            justify: center
+            type: stack
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
     }
+
     state validating {
       VALIDATION_PASSED -> succeeded
         (set @entity.status succeeded)
         (emit FIX_SUCCEEDED)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "check-circle"}, { type: "typography", content: "Validation Passed", variant: "h2" }] }, { type: "button", label: "New Target", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] }, { type: "divider" }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Fix Attempts", value: "@entity.fixAttempts", icon: "wrench" }, { type: "stat-display", label: "Status", value: "Passed", icon: "check" }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Target", variant: "caption" }, { type: "typography", content: "@entity.target", variant: "body" }] }] }] })
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{
+              align: center
+              children: [{ name: check-circle, type: icon }, {
+                content: "Validation Passed"
+                type: typography
+                variant: h2
+              }]
+              direction: horizontal
+              gap: sm
+              type: stack
+            }, {
+              action: RESET
+              icon: rotate-ccw
+              label: "New Target"
+              type: button
+              variant: ghost
+            }]
+            direction: horizontal
+            gap: sm
+            justify: between
+            type: stack
+          }, { type: divider }, {
+            children: [{
+              icon: wrench
+              label: "Fix Attempts"
+              type: stat-display
+              value: @entity.fixAttempts
+            }, {
+              icon: check
+              label: Status
+              type: stat-display
+              value: Passed
+            }]
+            cols: 2
+            type: simple-grid
+          }, {
+            children: [{
+              children: [{
+                content: Target
+                type: typography
+                variant: caption
+              }, {
+                content: @entity.target
+                type: typography
+                variant: body
+              }]
+              direction: vertical
+              gap: sm
+              type: stack
+            }]
+            type: card
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
       VALIDATION_ERRORS -> fixing
-        (set @entity.validationErrors @payload.errors)
-        (set @entity.errorCount @payload.count)
-        (set @entity.fixAttempts (+ @entity.fixAttempts 1))
+        (set @entity.validationErrors ?errors)
+        (set @entity.errorCount ?count)
+        (set @entity.fixAttempts ["+", @entity.fixAttempts, 1])
         (set @entity.status fixing)
-        (agent/generate (str/concat "Target: " @entity.target "\n\nValidation errors:\n" @payload.errors "\n\nGenerate a fix that resolves these errors. Return only the fix content."))
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "cpu"}, { type: "typography", content: "Generating fix...", variant: "h2" }] }, { type: "badge", label: "@entity.fixAttempts" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Validation Errors", variant: "caption" }, { type: "alert", variant: "error", message: "@entity.validationErrors" }] }] }, { type: "spinner"}] })
+        (agent/generate (str/concat "Target: " @entity.target "\n\nValidation errors:\n" ?errors "\n\nGenerate a fix that resolves these errors. Return only the fix content."))
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{
+              align: center
+              children: [{ name: cpu, type: icon }, {
+                content: "Generating fix..."
+                type: typography
+                variant: h2
+              }]
+              direction: horizontal
+              gap: sm
+              type: stack
+            }, { label: @entity.fixAttempts, type: badge }]
+            direction: horizontal
+            gap: sm
+            justify: between
+            type: stack
+          }, { type: divider }, {
+            children: [{
+              children: [{
+                content: "Validation Errors"
+                type: typography
+                variant: caption
+              }, {
+                message: @entity.validationErrors
+                type: alert
+                variant: error
+              }]
+              direction: vertical
+              gap: sm
+              type: stack
+            }]
+            type: card
+          }, { type: spinner }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
       EXCEEDED_ATTEMPTS -> failed
         (set @entity.status failed)
-        (set @entity.error @payload.error)
+        (set @entity.error ?error)
         (emit FIX_FAILED)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "x-circle"}, { type: "typography", content: "Fix Loop Failed", variant: "h2" }, { type: "alert", variant: "error", message: "@entity.error" }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Attempts Used", value: "@entity.fixAttempts", icon: "wrench" }, { type: "stat-display", label: "Remaining Errors", value: "@entity.errorCount", icon: "alert-triangle" }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Last Validation Errors", variant: "caption" }, { type: "typography", content: "@entity.validationErrors", variant: "body" }] }] }, { type: "button", label: "Retry", action: "RESET", variant: "primary", icon: "rotate-ccw" }] })
+        (render-ui main {
+          align: center
+          children: [{ name: x-circle, type: icon }, {
+            content: "Fix Loop Failed"
+            type: typography
+            variant: h2
+          }, {
+            message: @entity.error
+            type: alert
+            variant: error
+          }, {
+            children: [{
+              icon: wrench
+              label: "Attempts Used"
+              type: stat-display
+              value: @entity.fixAttempts
+            }, {
+              icon: alert-triangle
+              label: "Remaining Errors"
+              type: stat-display
+              value: @entity.errorCount
+            }]
+            cols: 2
+            type: simple-grid
+          }, {
+            children: [{
+              children: [{
+                content: "Last Validation Errors"
+                type: typography
+                variant: caption
+              }, {
+                content: @entity.validationErrors
+                type: typography
+                variant: body
+              }]
+              direction: vertical
+              gap: sm
+              type: stack
+            }]
+            type: card
+          }, {
+            action: RESET
+            icon: rotate-ccw
+            label: Retry
+            type: button
+            variant: primary
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
     }
+
     state fixing {
       FIX_GENERATED -> applying
-        (set @entity.currentFix @payload.fix)
+        (set @entity.currentFix ?fix)
         (set @entity.status applying)
-        (agent/invoke apply-fix { target: "@entity.target", fix: "@payload.fix" })
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "tool"}, { type: "typography", content: "Applying fix...", variant: "h3" }, { type: "spinner"}, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Proposed Fix", variant: "caption" }, { type: "typography", content: "@entity.currentFix", variant: "body" }] }] }] })
+        (agent/invoke apply-fix { fix: ?fix, target: @entity.target })
+        (render-ui main {
+          align: center
+          children: [{ name: tool, type: icon }, {
+            content: "Applying fix..."
+            type: typography
+            variant: h3
+          }, { type: spinner }, {
+            children: [{
+              children: [{
+                content: "Proposed Fix"
+                type: typography
+                variant: caption
+              }, {
+                content: @entity.currentFix
+                type: typography
+                variant: body
+              }]
+              direction: vertical
+              gap: sm
+              type: stack
+            }]
+            type: card
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
       FAILED -> failed
-        (set @entity.error @payload.error)
+        (set @entity.error ?error)
         (set @entity.status failed)
         (emit FIX_FAILED)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "x-circle"}, { type: "typography", content: "Fix Loop Failed", variant: "h2" }, { type: "alert", variant: "error", message: "@entity.error" }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Attempts Used", value: "@entity.fixAttempts", icon: "wrench" }, { type: "stat-display", label: "Remaining Errors", value: "@entity.errorCount", icon: "alert-triangle" }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Last Validation Errors", variant: "caption" }, { type: "typography", content: "@entity.validationErrors", variant: "body" }] }] }, { type: "button", label: "Retry", action: "RESET", variant: "primary", icon: "rotate-ccw" }] })
+        (render-ui main {
+          align: center
+          children: [{ name: x-circle, type: icon }, {
+            content: "Fix Loop Failed"
+            type: typography
+            variant: h2
+          }, {
+            message: @entity.error
+            type: alert
+            variant: error
+          }, {
+            children: [{
+              icon: wrench
+              label: "Attempts Used"
+              type: stat-display
+              value: @entity.fixAttempts
+            }, {
+              icon: alert-triangle
+              label: "Remaining Errors"
+              type: stat-display
+              value: @entity.errorCount
+            }]
+            cols: 2
+            type: simple-grid
+          }, {
+            children: [{
+              children: [{
+                content: "Last Validation Errors"
+                type: typography
+                variant: caption
+              }, {
+                content: @entity.validationErrors
+                type: typography
+                variant: body
+              }]
+              direction: vertical
+              gap: sm
+              type: stack
+            }]
+            type: card
+          }, {
+            action: RESET
+            icon: rotate-ccw
+            label: Retry
+            type: button
+            variant: primary
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
     }
+
     state applying {
       FIX_APPLIED -> validating
         (set @entity.status validating)
-        (agent/invoke validate-schema { target: "@entity.target" })
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "shield-check"}, { type: "typography", content: "Validating...", variant: "h3" }, { type: "spinner"}, { type: "stack", direction: "horizontal", gap: "md", justify: "center", children: [{ type: "badge", label: "@entity.target" }, { type: "badge", label: "@entity.maxAttempts" }] }] })
+        (agent/invoke validate-schema { target: @entity.target })
+        (render-ui main {
+          align: center
+          children: [{ name: shield-check, type: icon }, {
+            content: "Validating..."
+            type: typography
+            variant: h3
+          }, { type: spinner }, {
+            children: [{ label: @entity.target, type: badge }, { label: @entity.maxAttempts, type: badge }]
+            direction: horizontal
+            gap: md
+            justify: center
+            type: stack
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
       FAILED -> failed
-        (set @entity.error @payload.error)
+        (set @entity.error ?error)
         (set @entity.status failed)
         (emit FIX_FAILED)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "x-circle"}, { type: "typography", content: "Fix Loop Failed", variant: "h2" }, { type: "alert", variant: "error", message: "@entity.error" }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Attempts Used", value: "@entity.fixAttempts", icon: "wrench" }, { type: "stat-display", label: "Remaining Errors", value: "@entity.errorCount", icon: "alert-triangle" }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Last Validation Errors", variant: "caption" }, { type: "typography", content: "@entity.validationErrors", variant: "body" }] }] }, { type: "button", label: "Retry", action: "RESET", variant: "primary", icon: "rotate-ccw" }] })
+        (render-ui main {
+          align: center
+          children: [{ name: x-circle, type: icon }, {
+            content: "Fix Loop Failed"
+            type: typography
+            variant: h2
+          }, {
+            message: @entity.error
+            type: alert
+            variant: error
+          }, {
+            children: [{
+              icon: wrench
+              label: "Attempts Used"
+              type: stat-display
+              value: @entity.fixAttempts
+            }, {
+              icon: alert-triangle
+              label: "Remaining Errors"
+              type: stat-display
+              value: @entity.errorCount
+            }]
+            cols: 2
+            type: simple-grid
+          }, {
+            children: [{
+              children: [{
+                content: "Last Validation Errors"
+                type: typography
+                variant: caption
+              }, {
+                content: @entity.validationErrors
+                type: typography
+                variant: body
+              }]
+              direction: vertical
+              gap: sm
+              type: stack
+            }]
+            type: card
+          }, {
+            action: RESET
+            icon: rotate-ccw
+            label: Retry
+            type: button
+            variant: primary
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
     }
+
     state succeeded {
       RESET -> idle
         (set @entity.status idle)
@@ -98,8 +444,42 @@ orbital AgentFixLoopOrbital {
         (set @entity.fixAttempts 0)
         (set @entity.errorCount 0)
         (set @entity.error "")
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "wrench"}, { type: "typography", content: "Validation-Fix Loop", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Enter the target to validate and auto-fix", variant: "body" }, { type: "form-section", entity: @entity, mode: "edit", submitEvent: "FIX", fields: ["target"] }] }] }] })
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: wrench, type: icon }, {
+              content: "Validation-Fix Loop"
+              type: typography
+              variant: h2
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            children: [{
+              children: [{
+                content: "Enter the target to validate and auto-fix"
+                type: typography
+                variant: body
+              }, {
+                entity: @entity
+                fields: (target)
+                mode: edit
+                submitEvent: FIX
+                type: form-section
+              }]
+              direction: vertical
+              gap: md
+              type: stack
+            }]
+            type: card
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
     }
+
     state failed {
       RESET -> idle
         (set @entity.status idle)
@@ -109,34 +489,89 @@ orbital AgentFixLoopOrbital {
         (set @entity.fixAttempts 0)
         (set @entity.errorCount 0)
         (set @entity.error "")
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "wrench"}, { type: "typography", content: "Validation-Fix Loop", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Enter the target to validate and auto-fix", variant: "body" }, { type: "form-section", entity: @entity, mode: "edit", submitEvent: "FIX", fields: ["target"] }] }] }] })
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: wrench, type: icon }, {
+              content: "Validation-Fix Loop"
+              type: typography
+              variant: h2
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            children: [{
+              children: [{
+                content: "Enter the target to validate and auto-fix"
+                type: typography
+                variant: body
+              }, {
+                entity: @entity
+                fields: (target)
+                mode: edit
+                submitEvent: FIX
+                type: form-section
+              }]
+              direction: vertical
+              gap: md
+              type: stack
+            }]
+            type: card
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
     }
+
     emits {
-      FIX_SUCCEEDED -> external { target: string }
-      FIX_FAILED -> external { target: string, error: string }
+      FIX_SUCCEEDED -> external {
+        target : string
+      }
+      FIX_FAILED -> external {
+        target : string
+        error : string
+      }
     }
+
     listens {
       AgentFixLoopCycle.FIX_SUCCEEDED -> INIT
       AgentFixLoopCycle.FIX_FAILED -> INIT
-      VALIDATION_ERRORS { errors : string!, count : number! }
-      FIX_GENERATED { fix : string! }
-      EXCEEDED_ATTEMPTS { error : string! }
-      FAILED { error : string! }
+      VALIDATION_ERRORS {
+        errors : string!
+        count : number!
+      }
+      FIX_GENERATED {
+        fix : string!
+      }
+      EXCEEDED_ATTEMPTS {
+        error : string!
+      }
+      FAILED {
+        error : string!
+      }
     }
   }
+
   trait FixLoopStepProgress = AgentStepProgress.traits.AgentStepProgressProgress -> AgentFixLoop {
     emitsScope internal
   }
+
   trait FixLoopErrorsBrowse = Browse.traits.BrowseItemBrowse -> AgentFixLoop {
   }
+
   trait FixLoopValidateCall = AgentToolCall.traits.AgentToolCallModal -> AgentFixLoop {
     emitsScope internal
   }
+
   trait FixLoopFixCall = AgentToolCall.traits.AgentToolCallModal -> AgentFixLoop {
     emitsScope internal
   }
+
   trait FixLoopCompletionFlow = AgentCompletion.traits.AgentCompletionModal -> AgentFixLoop {
     emitsScope internal
   }
+
   page "/agentfixloops" as AgentFixLoopPage -> AgentFixLoopCycle, FixLoopStepProgress, FixLoopErrorsBrowse, FixLoopValidateCall, FixLoopFixCall, FixLoopCompletionFlow
 }

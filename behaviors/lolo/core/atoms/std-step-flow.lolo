@@ -1,292 +1,536 @@
 app std-step-flow "3.4.0"
 "std-step-flow — generic N-step sequential decision chain (Stripe Connect / TurboTax / Vercel deploy style). `config.steps` is an array of step definitions `{ key, label, description, icon, allowedRoles?: [string] }`; the trait projects the current step into a prominent body card and a `wizard-progress` stepper bar at the top. When a step declares `allowedRoles`, only users whose `@user.role` is in that list can advance through it. One primary button ADVANCEs along the chain; at the last step the same button finalizes (label/icon/variant swap via entity binding, state routed via guard). REJECT/ESCALATE terminate. Topology = loading / running / approved / rejected / escalated / error."
-
 type ObjectSpec = { id : string, label : string, value : string }
 type StepSpec = { label : string!, key : string, icon : string, description : string, allowedRoles : [string] }
-
 orbital StepFlowOrbital {
-  type WizardStep = {
-    id           : string!
-    key          : string
-    title        : string!
-    label        : string
-    description  : string
-    icon         : string
-    indexLabel   : string
-    isPending    : boolean
-    badgeVariant : string
-    labelColor   : string
-  }
+    type WizardStep = { id : string!, key : string, title : string!, label : string, description : string, icon : string, indexLabel : string, isPending : boolean, badgeVariant : string, labelColor : string }
+
+    type StepItemsLoaded = Event { data : [ObjectSpec] } "Fired when the source item finishes loading"
+
+    type StepItemsLoadFailed = Event { error : string, code : string } "Fired when source fetch fails"
+
+    type StepItemsSaved = Event { row : object } "Fired when a decision has been persisted"
+
+    type StepItemsSaveFailed = Event { error : string, code : string } "Fired when a persist intent fails"
 
   entity StepFlowView [runtime] {
-    id                    : string!
-    wizardSteps           : [WizardStep] @intrinsic = []
-    currentStepIndex      : number @intrinsic = 0
-    totalSteps            : number @intrinsic = 0
-    currentStepLabel      : string @intrinsic = ""
-    currentStepDescription: string @intrinsic = ""
-    currentStepIcon       : string @intrinsic = "user"
-    isFirstStep           : boolean @intrinsic = true
-    isLastStep            : boolean @intrinsic = false
-    primaryActionLabel    : string @intrinsic = "Approve & Continue"
-    primaryActionVariant  : "primary" | "success" @intrinsic = "primary"
-    primaryActionIcon     : string @intrinsic = "chevron-right"
-    finalStatus           : "approved" | "rejected" | "escalated" | "" @intrinsic = ""
-    rejectionReason       : string @intrinsic = ""
-    errorMessage          : string @intrinsic = ""
+    id : string!
+    wizardSteps : [WizardStep] @intrinsic = []
+    currentStepIndex : number @intrinsic = 0
+    totalSteps : number @intrinsic = 0
+    currentStepLabel : string @intrinsic = ""
+    currentStepDescription : string @intrinsic = ""
+    currentStepIcon : string @intrinsic = user
+    isFirstStep : boolean @intrinsic = true
+    isLastStep : boolean @intrinsic = false
+    primaryActionLabel : string @intrinsic = "Approve & Continue"
+    primaryActionVariant : "primary" | "success" @intrinsic = primary
+    primaryActionIcon : string @intrinsic = chevron-right
+    finalStatus : "approved" | "rejected" | "escalated" | "" @intrinsic = ""
+    rejectionReason : string @intrinsic = ""
+    errorMessage : string @intrinsic = ""
   }
 
-  type StepItemsLoaded     = Event { data : [ObjectSpec] }                "Fired when the source item finishes loading"
-  type StepItemsLoadFailed = Event { error : string, code : string }  "Fired when source fetch fails"
-  type StepItemsSaved      = Event { row : object }                   "Fired when a decision has been persisted"
-  type StepItemsSaveFailed = Event { error : string, code : string }  "Fired when a persist intent fails"
-
   trait StepFlowReview -> @rebindable StepFlowView [interaction, instance] {
-    config {
-      title    : string   = "Review"
-        @label "Flow title"
-        @description "Heading shown above the step progress bar"
-        @tier "presentation"
-      steps    : [StepSpec] = [
-        { key: "manager",   label: "Manager Review",     description: "Initial review by direct manager",   icon: "user" },
-        { key: "director",  label: "Director Approval",  description: "Department director sign-off",       icon: "users" },
-        { key: "executive", label: "Executive Sign-off", description: "Final executive approval",           icon: "shield" }
-      ]
-        @label "Steps"
-        @description "Ordered decision steps with label, icon, and optional role gates"
-        @tier "domain"
-      cardLook : "elevated" | "flat-bordered" | "borderless-divider" | "ticket" | "invoice" | "chip" | "tile-image-first" = "elevated"
-        @label "Card look"
-        @description "Layer 2 visual treatment for cards rendered by this atom."
-        @tier "presentation"
-      bodyContent : render-ui = {
-        type: "stack",
-        direction: "vertical",
-        gap: "lg",
-        children: [
-          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
-            { type: "icon", name: "shield-check" },
-            { type: "typography", content: "@config.title", variant: "h3" }
-          ] },
-          { type: "wizard-progress", steps: "@entity.wizardSteps", currentStep: "@entity.currentStepIndex", allowNavigation: false },
-          { type: "card", look: "@config.cardLook", children: [
-            { type: "stack", direction: "vertical", gap: "md", children: [
-              { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
-                { type: "icon", name: "@entity.currentStepIcon", size: "lg" },
-                { type: "stack", direction: "vertical", gap: "xs", children: [
-                  { type: "typography", content: "@entity.currentStepLabel", variant: "h2" },
-                  { type: "typography", content: "@entity.currentStepDescription", variant: "body", color: "muted" }
-                ] }
-              ] }
-            ] }
-          ] },
-          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
-            { type: "button", label: "Back", variant: "ghost", action: "BACK", icon: "chevron-left", disabled: "@entity.isFirstStep", actionPayload: { id: "@entity.id" } },
-            { type: "button", label: "Reject", variant: "ghost", action: "REJECT", icon: "x", actionPayload: { id: "@entity.id" } },
-            { type: "button", label: "Escalate", variant: "ghost", action: "ESCALATE", icon: "alert-triangle", actionPayload: { id: "@entity.id" } },
-            { type: "button", label: "@entity.primaryActionLabel", variant: "primary", action: "ADVANCE", icon: "@entity.primaryActionIcon", actionPayload: { id: "@entity.id" } }
-          ] }
-        ]
-      }
-        @label "Body content tree"
-        @description "Render-ui SExpr rendered while the step chain is active (loading-success, running, BACK). Default is the canonical wizard-progress + step-card + action-row tree. Layer 3 variants override this with their own tree (horizontal stepper, sidebar progress, card carousel, etc.) to deliver entirely different step UX while inheriting the same trait, state machine, emits, and listens."
-        @tier "internal"
-    }
     initial: loading
+
     state loading {
       INIT -> loading
-        (fetch StepFlowView { emit: { success: "StepItemsLoaded", failure: "StepItemsLoadFailed" } })
-        (render-ui main { type: "loading-state", title: "Loading review…" })
+        (fetch StepFlowView {
+          emit: { failure: StepItemsLoadFailed, success: StepItemsLoaded }
+        })
+        (render-ui main {
+          title: "Loading review…"
+          type: loading-state
+        })
       StepItemsLoaded -> running
-        (set @entity.id (object/get (array/nth @payload.data 0) "id"))
+        (set @entity.id (object/get (array/nth ?data 0) id))
         (set @entity.currentStepIndex 0)
         (set @entity.totalSteps (array/len @config.steps))
-        (set @entity.wizardSteps (array/map @config.steps ["fn", "step", {
-          id:           (object/get @step "key"),
-          key:          (object/get @step "key"),
-          title:        (object/get @step "label"),
-          label:        (object/get @step "label"),
-          description:  (object/get @step "description" ""),
-          icon:         (object/get @step "icon" "circle"),
-          indexLabel:   (str/concat "" (+ @index 1)),
-          isPending:    (> @index @entity.currentStepIndex),
-          badgeVariant: (if (< @index @entity.currentStepIndex) "success" (if (= @index @entity.currentStepIndex) "primary" "neutral")),
-          labelColor:   (if (= @index @entity.currentStepIndex) "default" "muted")
-        }]))
-        (set @entity.currentStepLabel       (object/get (array/nth @config.steps 0) "label"))
-        (set @entity.currentStepDescription (object/get (array/nth @config.steps 0) "description" ""))
-        (set @entity.currentStepIcon        (object/get (array/nth @config.steps 0) "icon" "user"))
+        (set @entity.wizardSteps (array/map @config.steps (fn step {
+          badgeVariant: (if ["<", @index, @entity.currentStepIndex] success (if ["=", @index, @entity.currentStepIndex] primary neutral))
+          description: (object/get @step description "")
+          icon: (object/get @step icon circle)
+          id: (object/get @step key)
+          indexLabel: (str/concat "" ["+", @index, 1])
+          isPending: [">", @index, @entity.currentStepIndex]
+          key: (object/get @step key)
+          label: (object/get @step label)
+          labelColor: (if ["=", @index, @entity.currentStepIndex] default muted)
+          title: (object/get @step label)
+        })))
+        (set @entity.currentStepLabel (object/get (array/nth @config.steps 0) label))
+        (set @entity.currentStepDescription (object/get (array/nth @config.steps 0) description ""))
+        (set @entity.currentStepIcon (object/get (array/nth @config.steps 0) icon user))
         (set @entity.isFirstStep true)
-        (set @entity.isLastStep  (= (array/len @config.steps) 1))
-        (set @entity.primaryActionLabel   (if (= (array/len @config.steps) 1) "Finalize Approval" "Approve & Continue"))
-        (set @entity.primaryActionVariant (if (= (array/len @config.steps) 1) "success" "primary"))
-        (set @entity.primaryActionIcon    (if (= (array/len @config.steps) 1) "check-circle" "chevron-right"))
+        (set @entity.isLastStep ["=", (array/len @config.steps), 1])
+        (set @entity.primaryActionLabel (if ["=", (array/len @config.steps), 1] "Finalize Approval" "Approve & Continue"))
+        (set @entity.primaryActionVariant (if ["=", (array/len @config.steps), 1] success primary))
+        (set @entity.primaryActionIcon (if ["=", (array/len @config.steps), 1] check-circle chevron-right))
         (render-ui main @config.bodyContent)
       StepItemsLoadFailed -> error
-        (set @entity.errorMessage @payload.error)
-        (render-ui main { type: "error-state", title: "Failed to load", message: "@entity.errorMessage" })
+        (set @entity.errorMessage ?error)
+        (render-ui main {
+          message: @entity.errorMessage
+          title: "Failed to load"
+          type: error-state
+        })
       StepItemsSaved -> running
       StepItemsSaveFailed -> error
-        (set @entity.errorMessage @payload.error)
-        (render-ui main { type: "error-state", title: "Save failed", message: "@entity.errorMessage" })
+        (set @entity.errorMessage ?error)
+        (render-ui main {
+          message: @entity.errorMessage
+          title: "Save failed"
+          type: error-state
+        })
     }
+
     state running {
       ;; Role guard idiom: 3-arg object/get with a STRING sentinel default
       ;; instead of [] (Zod's SExpr schema rejects bare empty arrays inside a
       ;; guard expression; the sentinel form is structurally-valid SExpr and
       ;; semantically equivalent for the "no allowedRoles → permit everyone"
       ;; case). If allowedRoles is present, fall through to array/includes.
-      ADVANCE -> running when (and (not @entity.isLastStep) (or (= (object/get (array/nth @config.steps @entity.currentStepIndex) "allowedRoles" "ANY") "ANY") (array/includes (object/get (array/nth @config.steps @entity.currentStepIndex) "allowedRoles") @user.role)))
-        (set @entity.currentStepIndex (+ @entity.currentStepIndex 1))
-        (set @entity.currentStepLabel       (object/get (array/nth @config.steps @entity.currentStepIndex) "label"))
-        (set @entity.currentStepDescription (object/get (array/nth @config.steps @entity.currentStepIndex) "description" ""))
-        (set @entity.currentStepIcon        (object/get (array/nth @config.steps @entity.currentStepIndex) "icon" "user"))
-        (set @entity.isFirstStep (= @entity.currentStepIndex 0))
-        (set @entity.isLastStep  (= @entity.currentStepIndex (- @entity.totalSteps 1)))
-        (set @entity.primaryActionLabel   (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) "Finalize Approval" "Approve & Continue"))
-        (set @entity.primaryActionVariant (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) "success" "primary"))
-        (set @entity.primaryActionIcon    (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) "check-circle" "chevron-right"))
-        (set @entity.wizardSteps (array/map @config.steps ["fn", "step", {
-          id:           (object/get @step "key"),
-          key:          (object/get @step "key"),
-          title:        (object/get @step "label"),
-          label:        (object/get @step "label"),
-          description:  (object/get @step "description" ""),
-          icon:         (object/get @step "icon" "circle"),
-          indexLabel:   (str/concat "" (+ @index 1)),
-          isPending:    (> @index @entity.currentStepIndex),
-          badgeVariant: (if (< @index @entity.currentStepIndex) "success" (if (= @index @entity.currentStepIndex) "primary" "neutral")),
-          labelColor:   (if (= @index @entity.currentStepIndex) "default" "muted")
-        }]))
+      ADVANCE -> running when (and (not @entity.isLastStep) (or ["=", (object/get (array/nth @config.steps @entity.currentStepIndex) allowedRoles ANY), ANY] (array/includes (object/get (array/nth @config.steps @entity.currentStepIndex) allowedRoles) @user.role)))
+        (set @entity.currentStepIndex ["+", @entity.currentStepIndex, 1])
+        (set @entity.currentStepLabel (object/get (array/nth @config.steps @entity.currentStepIndex) label))
+        (set @entity.currentStepDescription (object/get (array/nth @config.steps @entity.currentStepIndex) description ""))
+        (set @entity.currentStepIcon (object/get (array/nth @config.steps @entity.currentStepIndex) icon user))
+        (set @entity.isFirstStep ["=", @entity.currentStepIndex, 0])
+        (set @entity.isLastStep ["=", @entity.currentStepIndex, ["-", @entity.totalSteps, 1]])
+        (set @entity.primaryActionLabel (if ["=", @entity.currentStepIndex, ["-", @entity.totalSteps, 1]] "Finalize Approval" "Approve & Continue"))
+        (set @entity.primaryActionVariant (if ["=", @entity.currentStepIndex, ["-", @entity.totalSteps, 1]] success primary))
+        (set @entity.primaryActionIcon (if ["=", @entity.currentStepIndex, ["-", @entity.totalSteps, 1]] check-circle chevron-right))
+        (set @entity.wizardSteps (array/map @config.steps (fn step {
+          badgeVariant: (if ["<", @index, @entity.currentStepIndex] success (if ["=", @index, @entity.currentStepIndex] primary neutral))
+          description: (object/get @step description "")
+          icon: (object/get @step icon circle)
+          id: (object/get @step key)
+          indexLabel: (str/concat "" ["+", @index, 1])
+          isPending: [">", @index, @entity.currentStepIndex]
+          key: (object/get @step key)
+          label: (object/get @step label)
+          labelColor: (if ["=", @index, @entity.currentStepIndex] default muted)
+          title: (object/get @step label)
+        })))
         (render-ui main @config.bodyContent)
-      ADVANCE -> approved when (and @entity.isLastStep (or (= (object/get (array/nth @config.steps @entity.currentStepIndex) "allowedRoles" "ANY") "ANY") (array/includes (object/get (array/nth @config.steps @entity.currentStepIndex) "allowedRoles") @user.role)))
-        (set @entity.finalStatus "approved")
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle", size: "lg" }, { type: "typography", content: "Approved", variant: "h2", align: "center" }, { type: "typography", content: "All review steps completed successfully.", variant: "body", color: "muted", align: "center" }, { type: "wizard-progress", steps: "@entity.wizardSteps", currentStep: "@entity.totalSteps", allowNavigation: false }, { type: "button", label: "Start a new review", variant: "secondary", action: "RESTART", icon: "rotate-ccw", actionPayload: { id: "@entity.id" } }] })
+      ADVANCE -> approved when (and @entity.isLastStep (or ["=", (object/get (array/nth @config.steps @entity.currentStepIndex) allowedRoles ANY), ANY] (array/includes (object/get (array/nth @config.steps @entity.currentStepIndex) allowedRoles) @user.role)))
+        (set @entity.finalStatus approved)
+        (render-ui main {
+          align: center
+          children: [{
+            name: check-circle
+            size: lg
+            type: icon
+          }, {
+            align: center
+            content: Approved
+            type: typography
+            variant: h2
+          }, {
+            align: center
+            color: muted
+            content: "All review steps completed successfully."
+            type: typography
+            variant: body
+          }, {
+            allowNavigation: false
+            currentStep: @entity.totalSteps
+            steps: @entity.wizardSteps
+            type: wizard-progress
+          }, {
+            action: RESTART
+            actionPayload: { id: @entity.id }
+            icon: rotate-ccw
+            label: "Start a new review"
+            type: button
+            variant: secondary
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
       BACK -> running
-        (set @entity.currentStepIndex (- @entity.currentStepIndex 1))
-        (set @entity.currentStepLabel       (object/get (array/nth @config.steps @entity.currentStepIndex) "label"))
-        (set @entity.currentStepDescription (object/get (array/nth @config.steps @entity.currentStepIndex) "description" ""))
-        (set @entity.currentStepIcon        (object/get (array/nth @config.steps @entity.currentStepIndex) "icon" "user"))
-        (set @entity.isFirstStep (= @entity.currentStepIndex 0))
-        (set @entity.isLastStep  (= @entity.currentStepIndex (- @entity.totalSteps 1)))
-        (set @entity.primaryActionLabel   (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) "Finalize Approval" "Approve & Continue"))
-        (set @entity.primaryActionVariant (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) "success" "primary"))
-        (set @entity.primaryActionIcon    (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) "check-circle" "chevron-right"))
-        (set @entity.wizardSteps (array/map @config.steps ["fn", "step", {
-          id:           (object/get @step "key"),
-          key:          (object/get @step "key"),
-          title:        (object/get @step "label"),
-          label:        (object/get @step "label"),
-          description:  (object/get @step "description" ""),
-          icon:         (object/get @step "icon" "circle"),
-          indexLabel:   (str/concat "" (+ @index 1)),
-          isPending:    (> @index @entity.currentStepIndex),
-          badgeVariant: (if (< @index @entity.currentStepIndex) "success" (if (= @index @entity.currentStepIndex) "primary" "neutral")),
-          labelColor:   (if (= @index @entity.currentStepIndex) "default" "muted")
-        }]))
+        (set @entity.currentStepIndex ["-", @entity.currentStepIndex, 1])
+        (set @entity.currentStepLabel (object/get (array/nth @config.steps @entity.currentStepIndex) label))
+        (set @entity.currentStepDescription (object/get (array/nth @config.steps @entity.currentStepIndex) description ""))
+        (set @entity.currentStepIcon (object/get (array/nth @config.steps @entity.currentStepIndex) icon user))
+        (set @entity.isFirstStep ["=", @entity.currentStepIndex, 0])
+        (set @entity.isLastStep ["=", @entity.currentStepIndex, ["-", @entity.totalSteps, 1]])
+        (set @entity.primaryActionLabel (if ["=", @entity.currentStepIndex, ["-", @entity.totalSteps, 1]] "Finalize Approval" "Approve & Continue"))
+        (set @entity.primaryActionVariant (if ["=", @entity.currentStepIndex, ["-", @entity.totalSteps, 1]] success primary))
+        (set @entity.primaryActionIcon (if ["=", @entity.currentStepIndex, ["-", @entity.totalSteps, 1]] check-circle chevron-right))
+        (set @entity.wizardSteps (array/map @config.steps (fn step {
+          badgeVariant: (if ["<", @index, @entity.currentStepIndex] success (if ["=", @index, @entity.currentStepIndex] primary neutral))
+          description: (object/get @step description "")
+          icon: (object/get @step icon circle)
+          id: (object/get @step key)
+          indexLabel: (str/concat "" ["+", @index, 1])
+          isPending: [">", @index, @entity.currentStepIndex]
+          key: (object/get @step key)
+          label: (object/get @step label)
+          labelColor: (if ["=", @index, @entity.currentStepIndex] default muted)
+          title: (object/get @step label)
+        })))
         (render-ui main @config.bodyContent)
       REJECT -> rejected
-        (set @entity.finalStatus "rejected")
-        (set @entity.rejectionReason @payload.reason)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "x-circle", size: "lg" }, { type: "typography", content: "Rejected", variant: "h2", align: "center" }, { type: "card", look: "@config.cardLook", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", color: "muted", content: "Reason" }, { type: "typography", variant: "body", content: "@entity.rejectionReason" }] }] }, { type: "button", label: "Start a new review", variant: "secondary", action: "RESTART", icon: "rotate-ccw", actionPayload: { id: "@entity.id" } }] })
+        (set @entity.finalStatus rejected)
+        (set @entity.rejectionReason ?reason)
+        (render-ui main {
+          align: center
+          children: [{
+            name: x-circle
+            size: lg
+            type: icon
+          }, {
+            align: center
+            content: Rejected
+            type: typography
+            variant: h2
+          }, {
+            children: [{
+              children: [{
+                color: muted
+                content: Reason
+                type: typography
+                variant: caption
+              }, {
+                content: @entity.rejectionReason
+                type: typography
+                variant: body
+              }]
+              direction: vertical
+              gap: sm
+              type: stack
+            }]
+            look: @config.cardLook
+            type: card
+          }, {
+            action: RESTART
+            actionPayload: { id: @entity.id }
+            icon: rotate-ccw
+            label: "Start a new review"
+            type: button
+            variant: secondary
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
       ESCALATE -> escalated
-        (set @entity.finalStatus "escalated")
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "lg" }, { type: "typography", content: "Escalated", variant: "h2", align: "center" }, { type: "typography", content: "This item has been escalated for further review.", variant: "body", color: "muted", align: "center" }, { type: "button", label: "Start a new review", variant: "secondary", action: "RESTART", icon: "rotate-ccw", actionPayload: { id: "@entity.id" } }] })
+        (set @entity.finalStatus escalated)
+        (render-ui main {
+          align: center
+          children: [{
+            name: alert-triangle
+            size: lg
+            type: icon
+          }, {
+            align: center
+            content: Escalated
+            type: typography
+            variant: h2
+          }, {
+            align: center
+            color: muted
+            content: "This item has been escalated for further review."
+            type: typography
+            variant: body
+          }, {
+            action: RESTART
+            actionPayload: { id: @entity.id }
+            icon: rotate-ccw
+            label: "Start a new review"
+            type: button
+            variant: secondary
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
     }
+
     state approved {
       RESTART -> loading
         (set @entity.finalStatus "")
         (set @entity.currentStepIndex 0)
-        (fetch StepFlowView { emit: { success: "StepItemsLoaded", failure: "StepItemsLoadFailed" } })
-        (render-ui main { type: "loading-state", title: "Restarting…" })
+        (fetch StepFlowView {
+          emit: { failure: StepItemsLoadFailed, success: StepItemsLoaded }
+        })
+        (render-ui main {
+          title: "Restarting…"
+          type: loading-state
+        })
     }
+
     state rejected {
       RESTART -> loading
         (set @entity.finalStatus "")
         (set @entity.currentStepIndex 0)
         (set @entity.rejectionReason "")
-        (fetch StepFlowView { emit: { success: "StepItemsLoaded", failure: "StepItemsLoadFailed" } })
-        (render-ui main { type: "loading-state", title: "Restarting…" })
+        (fetch StepFlowView {
+          emit: { failure: StepItemsLoadFailed, success: StepItemsLoaded }
+        })
+        (render-ui main {
+          title: "Restarting…"
+          type: loading-state
+        })
     }
+
     state escalated {
       RESTART -> loading
         (set @entity.finalStatus "")
         (set @entity.currentStepIndex 0)
-        (fetch StepFlowView { emit: { success: "StepItemsLoaded", failure: "StepItemsLoadFailed" } })
-        (render-ui main { type: "loading-state", title: "Restarting…" })
+        (fetch StepFlowView {
+          emit: { failure: StepItemsLoadFailed, success: StepItemsLoaded }
+        })
+        (render-ui main {
+          title: "Restarting…"
+          type: loading-state
+        })
     }
+
     state error {
       INIT -> loading
-        (render-ui main { type: "loading-state", title: "Retrying…" })
+        (render-ui main {
+          title: "Retrying…"
+          type: loading-state
+        })
     }
+
     emits {
-      ADVANCE                { id : string, stepKey : string }
+      ADVANCE {
+        id : string
+        stepKey : string
+      }
         @description "Signals progression to the next step in the sequence."
         @synonyms "next, proceed, continue, move forward"
         @tier "essential"
-      BACK                   { id : string }
+      BACK {
+        id : string
+      }
         @description "Indicates a request to navigate to the previous step."
         @synonyms "previous, undo, return"
         @tier "essential"
-      REJECT                 { id : string, reason : string }
+      REJECT {
+        id : string
+        reason : string
+      }
         @description "Indicates the user or system rejected the current step."
         @synonyms "cancel, decline, dismiss"
         @tier "essential"
-      ESCALATE               { id : string, reason : string }
+      ESCALATE {
+        id : string
+        reason : string
+      }
         @description "Signals a request to elevate the process to a higher authority."
         @synonyms "defer, transfer, handoff"
         @tier "customization"
-      RESTART                { id : string }
+      RESTART {
+        id : string
+      }
         @description "Initiates a reset of the current workflow process."
         @synonyms "reset, refresh, restart, reinitialize"
         @tier "internal"
-      StepItemsLoaded        { data : [ObjectSpec] }
+      StepItemsLoaded {
+        data : [ObjectSpec]
+      }
         @description "Signals that the step items have been successfully loaded."
         @synonyms "loaded, fetched, retrieved, populated"
         @tier "internal"
-      StepItemsLoadFailed    { error : string, code : string }
+      StepItemsLoadFailed {
+        error : string
+        code : string
+      }
         @description "Indicates failure to load step configuration items."
         @synonyms "load error, failed fetch, data problem"
         @tier "internal"
     }
+
     listens {
-      ADVANCE                { id : string, stepKey : string }
+      ADVANCE {
+        id : string
+        stepKey : string
+      }
         @description "User confirms proceeding to the next step in the flow."
         @synonyms "proceed, next, continue, move forward"
         @tier "essential"
-      BACK                   { id : string }
+      BACK {
+        id : string
+      }
         @description "Navigates to the previous step in the sequence."
         @synonyms "previous, undo, return"
         @tier "essential"
-      REJECT                 { id : string, reason : string }
+      REJECT {
+        id : string
+        reason : string
+      }
         @description "Indicates a user or system rejected the current step."
         @synonyms "cancel, decline, dismiss"
         @tier "essential"
-      ESCALATE               { id : string, reason : string }
+      ESCALATE {
+        id : string
+        reason : string
+      }
         @description "Signals a request to elevate the process to a higher authority."
         @synonyms "defer, transfer, handoff"
         @tier "customization"
-      RESTART                { id : string }
+      RESTART {
+        id : string
+      }
         @description "Resets the step flow to the beginning."
         @synonyms "reset, refresh, start-over"
         @tier "customization"
-      StepItemsLoaded        { data : [ObjectSpec] }
+      StepItemsLoaded {
+        data : [ObjectSpec]
+      }
         @description "Indicates that the data for the step items has been successfully loaded."
         @synonyms "loaded, data ready, initialized"
         @tier "essential"
-      StepItemsLoadFailed    { error : string, code : string }
+      StepItemsLoadFailed {
+        error : string
+        code : string
+      }
         @description "Indicates failure to load step configuration data."
         @synonyms "load error, failed fetch, data problem"
         @tier "internal"
-      StepItemsSaved         { row : object }
+      StepItemsSaved {
+        row : object
+      }
         @description "Data for the current step has been successfully saved."
         @synonyms "update, persist, store, commit"
         @tier "customization"
-      StepItemsSaveFailed    { error : string, code : string }
+      StepItemsSaveFailed {
+        error : string
+        code : string
+      }
         @description "Indicates a failure to save step item data."
         @synonyms "save error, data failed, persistence error"
         @tier "internal"
     }
+
+    config {
+      title : string = Review
+        @label "Flow title"
+        @description "Heading shown above the step progress bar"
+        @tier "presentation"
+      steps : [StepSpec] = [{
+        description: "Initial review by direct manager"
+        icon: user
+        key: manager
+        label: "Manager Review"
+      }, {
+        description: "Department director sign-off"
+        icon: users
+        key: director
+        label: "Director Approval"
+      }, {
+        description: "Final executive approval"
+        icon: shield
+        key: executive
+        label: "Executive Sign-off"
+      }]
+        @label "Steps"
+        @description "Ordered decision steps with label, icon, and optional role gates"
+        @tier "domain"
+      cardLook : "elevated" | "flat-bordered" | "borderless-divider" | "ticket" | "invoice" | "chip" | "tile-image-first" = elevated
+        @label "Card look"
+        @description "Layer 2 visual treatment for cards rendered by this atom."
+        @tier "presentation"
+      bodyContent : render-ui = {
+        children: [{
+          align: center
+          children: [{ name: shield-check, type: icon }, {
+            content: @config.title
+            type: typography
+            variant: h3
+          }]
+          direction: horizontal
+          gap: sm
+          type: stack
+        }, {
+          allowNavigation: false
+          currentStep: @entity.currentStepIndex
+          steps: @entity.wizardSteps
+          type: wizard-progress
+        }, {
+          children: [{
+            children: [{
+              align: center
+              children: [{
+                name: @entity.currentStepIcon
+                size: lg
+                type: icon
+              }, {
+                children: [{
+                  content: @entity.currentStepLabel
+                  type: typography
+                  variant: h2
+                }, {
+                  color: muted
+                  content: @entity.currentStepDescription
+                  type: typography
+                  variant: body
+                }]
+                direction: vertical
+                gap: xs
+                type: stack
+              }]
+              direction: horizontal
+              gap: sm
+              type: stack
+            }]
+            direction: vertical
+            gap: md
+            type: stack
+          }]
+          look: @config.cardLook
+          type: card
+        }, {
+          align: center
+          children: [{
+            action: BACK
+            actionPayload: { id: @entity.id }
+            disabled: @entity.isFirstStep
+            icon: chevron-left
+            label: Back
+            type: button
+            variant: ghost
+          }, {
+            action: REJECT
+            actionPayload: { id: @entity.id }
+            icon: x
+            label: Reject
+            type: button
+            variant: ghost
+          }, {
+            action: ESCALATE
+            actionPayload: { id: @entity.id }
+            icon: alert-triangle
+            label: Escalate
+            type: button
+            variant: ghost
+          }, {
+            action: ADVANCE
+            actionPayload: { id: @entity.id }
+            icon: @entity.primaryActionIcon
+            label: @entity.primaryActionLabel
+            type: button
+            variant: primary
+          }]
+          direction: horizontal
+          gap: sm
+          type: stack
+        }]
+        direction: vertical
+        gap: lg
+        type: stack
+      }
+        @label "Body content tree"
+        @description "Render-ui SExpr rendered while the step chain is active (loading-success, running, BACK). Default is the canonical wizard-progress + step-card + action-row tree. Layer 3 variants override this with their own tree (horizontal stepper, sidebar progress, card carousel, etc.) to deliver entirely different step UX while inheriting the same trait, state machine, emits, and listens."
+        @tier "internal"
+    }
   }
+
   page "/step-flow" as StepFlowPage -> StepFlowReview
 }

@@ -1,79 +1,128 @@
 app std-hero-banner "1.0.0"
 "Hero marquee — eyebrow + headline + lead + primary CTA, centered in an elevated card. Above-the-fold landing surface. Standalone atom; fetches one HeroPromo record and renders inline."
-
 orbital HeroBannerOrbital {
-  entity HeroPromo [runtime] {
-    id           : string!
-    eyebrow      : string  @description "A short introductory text or tagline." @synonyms "subtitle, teaser, prefix" = "Announcing"
-    headline     : string! @description "The main title or heading for a promotional message." @synonyms "title, heading, main text" = "Headline"
-    lead         : string  @description "The main descriptive text for the component." @synonyms "body, content, text" = ""
-    ctaLabel     : string  @description "Text for the call to action button." @synonyms "button text, action label, call to action" = "Get started"
-    ctaEvent     : string  @description "The event triggered when the call to action is activated." @synonyms "event, action, trigger" = "PRIMARY_CTA"
-    errorMessage : string  @description "Error message to display if data retrieval fails." @synonyms "error, alert, message" = ""
-  }
+    type HeroPromoLoaded = Event { data : [object] } "Fired when the hero promo finishes loading"
 
-  type HeroPromoLoaded     = Event { data : [object] }              "Fired when the hero promo finishes loading"
-  type HeroPromoLoadFailed = Event { error : string, code : string } "Fired when the hero promo fetch fails"
+    type HeroPromoLoadFailed = Event { error : string, code : string } "Fired when the hero promo fetch fails"
+
+  entity HeroPromo [runtime] {
+    id : string!
+    eyebrow : string @description "A short introductory text or tagline." @synonyms "subtitle, teaser, prefix" = Announcing
+    headline : string! @description "The main title or heading for a promotional message." @synonyms "title, heading, main text" = Headline
+    lead : string @description "The main descriptive text for the component." @synonyms "body, content, text" = ""
+    ctaLabel : string @description "Text for the call to action button." @synonyms "button text, action label, call to action" = "Get started"
+    ctaEvent : string @description "The event triggered when the call to action is activated." @synonyms "event, action, trigger" = PRIMARY_CTA
+    errorMessage : string @description "Error message to display if data retrieval fails." @synonyms "error, alert, message" = ""
+  }
 
   trait HeroBanner -> HeroPromo [interaction, instance] {
     initial: loading
+
     state loading {
       INIT -> loading
-        (fetch HeroPromo { limit: 1, emit: { success: "HeroPromoLoaded", failure: "HeroPromoLoadFailed" } })
-        (render-ui main { type: "loading-state", title: "Loading…" })
-      HeroPromoLoaded -> ready
-        (set @entity.eyebrow  (object/get (array/first @payload.data) "eyebrow"))
-        (set @entity.headline (object/get (array/first @payload.data) "headline"))
-        (set @entity.lead     (object/get (array/first @payload.data) "lead"))
-        (set @entity.ctaLabel (object/get (array/first @payload.data) "ctaLabel"))
-        (set @entity.ctaEvent (object/get (array/first @payload.data) "ctaEvent"))
+        (fetch HeroPromo {
+          emit: { failure: HeroPromoLoadFailed, success: HeroPromoLoaded }
+          limit: 1
+        })
         (render-ui main {
-          type: "card", look: "elevated", padding: "lg",
+          title: "Loading…"
+          type: loading-state
+        })
+      HeroPromoLoaded -> ready
+        (set @entity.eyebrow (object/get (array/first ?data) eyebrow))
+        (set @entity.headline (object/get (array/first ?data) headline))
+        (set @entity.lead (object/get (array/first ?data) lead))
+        (set @entity.ctaLabel (object/get (array/first ?data) ctaLabel))
+        (set @entity.ctaEvent (object/get (array/first ?data) ctaEvent))
+        (render-ui main {
           children: [{
-            type: "stack", direction: "vertical", gap: "lg", align: "center",
-            children: [
-              { type: "badge", label: "@entity.eyebrow", variant: "neutral", size: "sm" },
-              { type: "typography", variant: "h1", weight: "bold", content: "@entity.headline" },
-              { type: "typography", variant: "body", color: "muted", content: "@entity.lead" },
-              { type: "button", label: "@entity.ctaLabel", variant: "primary", size: "lg", action: "@entity.ctaEvent" }
-            ]
+            align: center
+            children: [{
+              label: @entity.eyebrow
+              size: sm
+              type: badge
+              variant: neutral
+            }, {
+              content: @entity.headline
+              type: typography
+              variant: h1
+              weight: bold
+            }, {
+              color: muted
+              content: @entity.lead
+              type: typography
+              variant: body
+            }, {
+              action: @entity.ctaEvent
+              label: @entity.ctaLabel
+              size: lg
+              type: button
+              variant: primary
+            }]
+            direction: vertical
+            gap: lg
+            type: stack
           }]
+          look: elevated
+          padding: lg
+          type: card
         })
       HeroPromoLoadFailed -> error
-        (set @entity.errorMessage @payload.error)
-        (render-ui main { type: "error-state", title: "Failed to load hero", message: "@entity.errorMessage" })
+        (set @entity.errorMessage ?error)
+        (render-ui main {
+          message: @entity.errorMessage
+          title: "Failed to load hero"
+          type: error-state
+        })
     }
+
     state ready {
       PRIMARY_CTA -> ready
     }
+
     state error {
       INIT -> loading
-        (render-ui main { type: "loading-state", title: "Retrying…" })
+        (render-ui main {
+          title: "Retrying…"
+          type: loading-state
+        })
     }
+
     emits {
-      PRIMARY_CTA          { }
+      PRIMARY_CTA
         @description "Signals that the primary call to action has been triggered."
         @synonyms "click, activate, submit, trigger"
         @tier "essential"
-      HeroPromoLoaded      { data : [object] }
+      HeroPromoLoaded {
+        data : [object]
+      }
         @description "Signals successful loading of the hero promotion data."
         @synonyms "loaded, fetched, received, ready"
         @tier "essential"
-      HeroPromoLoadFailed  { error : string, code : string }
+      HeroPromoLoadFailed {
+        error : string
+        code : string
+      }
         @description "Indicates failure to load the hero promotion data."
         @synonyms "error, failed, load error"
         @tier "internal"
     }
+
     listens {
-      PRIMARY_CTA          { }
+      PRIMARY_CTA
         @description "A primary call to action has been triggered."
         @synonyms "click, action, submit, trigger"
         @tier "essential"
-      HeroPromoLoaded      { data : [object] }
+      HeroPromoLoaded {
+        data : [object]
+      }
         @description "Indicates the hero promotion data has been successfully retrieved."
         @synonyms "loaded, fetched, received, initialized"
         @tier "essential"
-      HeroPromoLoadFailed  { error : string, code : string }
+      HeroPromoLoadFailed {
+        error : string
+        code : string
+      }
         @description "Indicates failure to retrieve or process promotional data."
         @synonyms "error, failure, problem, load failed"
         @tier "internal"

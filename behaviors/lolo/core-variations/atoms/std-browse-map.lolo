@@ -1,39 +1,68 @@
 app std-browse-map "1.0.0"
 "Map browse — geo pin map: rows with lat/lng render as markers on a map-view, with a compact list beneath. For fleet vehicles, field technicians, store locations, delivery routes — anything with coordinates. Same BrowseItemBrowse trait + state machine as std-browse; only the bodyContent differs (a map instead of a grid)."
-
 orbital MapBrowseOrbital {
   uses Browse from "std/behaviors/std-browse"
 
   entity MapRow [runtime] {
-    id        : string!
-    name      : string! @description "A descriptive label for the row." @synonyms "title, label, identifier"
-    status    : "active" | "inactive" | "pending" @description "Indicates the current operational state of the row." @synonyms "state, condition, enabled, disabled" = "active"
-    lat       : number @description "Represents the latitude coordinate." @synonyms "latitude, y-coordinate, north-south position" = 0
-    lng       : number @description "The longitude coordinate of a location." @synonyms "longitude, x, horizontal position" = 0
-    address   : string @description "The textual location associated with the coordinate data." @synonyms "location, place, addressString" = ""
+    id : string!
+    name : string! @description "A descriptive label for the row." @synonyms "title, label, identifier"
+    status : "active" | "inactive" | "pending" @description "Indicates the current operational state of the row." @synonyms "state, condition, enabled, disabled" = active
+    lat : number @description "Represents the latitude coordinate." @synonyms "latitude, y-coordinate, north-south position" = 0
+    lng : number @description "The longitude coordinate of a location." @synonyms "longitude, x, horizontal position" = 0
+    address : string @description "The textual location associated with the coordinate data." @synonyms "location, place, addressString" = ""
     createdAt : string = ""
   }
 
   trait MapBrowse = Browse.traits.BrowseItemBrowse -> MapRow {
-    config: {
-      fields: [
-        { name: "name",    label: "Name",    variant: "h4" },
-        { name: "address", label: "Address", variant: "caption" },
-        { name: "status",  label: "Status",  variant: "badge" }
-      ],
+    config {
+      fields: [{
+        label: Name
+        name: name
+        variant: h4
+      }, {
+        label: Address
+        name: address
+        variant: caption
+      }, {
+        label: Status
+        name: status
+        variant: badge
+      }]
       bodyContent: {
-        type: "stack",
-        direction: "vertical",
-        gap: "md",
-        className: "p-card-md",
-        children: [
-          { type: "stack", direction: "horizontal", gap: "sm", align: "center", className: "w-full max-w-2xl rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 shadow-sm", children: [
-            { type: "icon", name: "search", className: "text-muted-foreground" },
-            { type: "input", inputType: "search", placeholder: "@config.searchPlaceholder", action: "REFETCH_QUERY", className: "flex-1" }
-          ]},
-          { type: "map-view", markers: "@payload.data", height: "440px", className: "w-full rounded-lg overflow-hidden border border-[var(--color-border)]" },
-          { type: "data-list", look: "@config.tableLook", entity: "@payload.data", fields: "@config.fields", gap: "sm", itemActions: "@config.itemActions" }
-        ]
+        children: [{
+          align: center
+          children: [{
+            className: text-muted-foreground
+            name: search
+            type: icon
+          }, {
+            action: REFETCH_QUERY
+            className: flex-1
+            inputType: search
+            placeholder: @config.searchPlaceholder
+            type: input
+          }]
+          className: "w-full max-w-2xl rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 shadow-sm"
+          direction: horizontal
+          gap: sm
+          type: stack
+        }, {
+          className: "w-full rounded-lg overflow-hidden border border-[var(--color-border)]"
+          height: "440px"
+          markers: ?data
+          type: map-view
+        }, {
+          entity: ?data
+          fields: @config.fields
+          gap: sm
+          itemActions: @config.itemActions
+          look: @config.tableLook
+          type: data-list
+        }]
+        className: p-card-md
+        direction: vertical
+        gap: md
+        type: stack
       }
     }
   }
