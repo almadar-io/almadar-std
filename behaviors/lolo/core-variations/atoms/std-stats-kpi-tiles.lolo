@@ -1,67 +1,132 @@
 app std-stats-kpi-tiles "1.2.0"
 "KPI tiles — Stripe-dashboard style. 3–4 large numeric tiles arranged in a horizontal grid: huge typography number, label below, optional change indicator and sparkline hint. For trading dashboards, finance trackers, ecommerce metrics, payment volume. Same StatsItemStats trait, same aggregation pipeline, same listens as std-stats — only the bodyContent tree differs."
-
 orbital KpiTilesStatsOrbital {
   uses Stats from "std/behaviors/std-stats"
 
-  type StatCard = {
-    label          : string!
-    value          : number
-    icon           : string
-    format         : "number" | "currency" | "percent"
-    variant        : "default" | "primary" | "success" | "warning" | "error" | "info"
-    prefix         : string
-    suffix         : string
-    max            : number
-    target         : number
-    trend          : number
-    trendPolarity  : "higher-is-better" | "lower-is-better"
-    trendFormat    : "absolute" | "percent"
-    sparklineData  : [number]
-    clickEvent     : string
-  }
+    type StatCard = { label : string!, value : number, icon : string, format : "number" | "currency" | "percent", variant : "default" | "primary" | "success" | "warning" | "error" | "info", prefix : string, suffix : string, max : number, target : number, trend : number, trendPolarity : "higher-is-better" | "lower-is-better", trendFormat : "absolute" | "percent", sparklineData : [number], clickEvent : string }
 
   entity KpiTileStats [runtime] {
-    id    : string!
+    id : string!
     cards : [StatCard] @description "An array of statistical cards displayed within the tile." @synonyms "items, data, elements" = []
   }
 
   trait KpiTileStatsItemStats = Stats.traits.StatsItemStats -> KpiTileStats {
-    config: {
-      metrics: [
-        { label: "Revenue",      value: 72400, format: "currency", prefix: "$", icon: "dollar-sign", variant: "success", trend: 12.4, trendPolarity: "higher-is-better", trendFormat: "percent", sparklineData: [42000, 45000, 43500, 48000, 52000, 50500, 58000, 61000, 59000, 64200, 67800, 72400] },
-        { label: "Active Users", value: 3240,  format: "number",                icon: "users",         variant: "primary", trend: 8.1,  trendPolarity: "higher-is-better", trendFormat: "percent", sparklineData: [2800, 2950, 2900, 3100, 3050, 3200, 3180, 3240] },
-        { label: "Conversion",   value: 4.7,   format: "percent", suffix: "%",  icon: "trending-up",   variant: "info",    trend: -1.2, trendPolarity: "higher-is-better", trendFormat: "percent", sparklineData: [5.2, 5.0, 4.8, 4.9, 4.6, 4.7, 4.5, 4.7] },
-        { label: "Churn",        value: 1.9,   format: "percent", suffix: "%",  icon: "trending-down", variant: "warning", trend: -0.4, trendPolarity: "lower-is-better",  trendFormat: "percent", sparklineData: [2.3, 2.1, 2.2, 2.0, 1.9, 2.0, 1.8, 1.9] }
-      ],
+    config {
+      metrics: [{
+        format: currency
+        icon: dollar-sign
+        label: Revenue
+        prefix: "$"
+        sparklineData: [42000, 45000, 43500, 48000, 52000, 50500, 58000, 61000, 59000, 64200, 67800, 72400]
+        trend: 12.4
+        trendFormat: percent
+        trendPolarity: higher-is-better
+        value: 72400
+        variant: success
+      }, {
+        format: number
+        icon: users
+        label: "Active Users"
+        sparklineData: [2800, 2950, 2900, 3100, 3050, 3200, 3180, 3240]
+        trend: 8.1
+        trendFormat: percent
+        trendPolarity: higher-is-better
+        value: 3240
+        variant: primary
+      }, {
+        format: percent
+        icon: trending-up
+        label: Conversion
+        sparklineData: [5.2, 5, 4.8, 4.9, 4.6, 4.7, 4.5, 4.7]
+        suffix: "%"
+        trend: -1.2
+        trendFormat: percent
+        trendPolarity: higher-is-better
+        value: 4.7
+        variant: info
+      }, {
+        format: percent
+        icon: trending-down
+        label: Churn
+        sparklineData: [2.3, 2.1, 2.2, 2, 1.9, 2, 1.8, 1.9]
+        suffix: "%"
+        trend: -0.4
+        trendFormat: percent
+        trendPolarity: lower-is-better
+        value: 1.9
+        variant: warning
+      }]
       bodyContent: {
-        type: "data-grid",
-        minCardWidth: 220,
-        gap: "lg",
-        entity: "@entity.cards",
-        fields: [],
-        className: "w-full",
-        renderItem: ["fn", "card", {
-          type: "stack",
-          direction: "vertical",
-          gap: "sm",
-          className: "rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-card-lg shadow-elevation-sm hover:shadow-elevation-md transition-shadow",
-          children: [
-            { type: "stack", direction: "horizontal", gap: "xs", align: "center", justify: "between", children: [
-              { type: "typography", variant: "caption", color: "muted", weight: "medium", content: "@card.label", className: "uppercase tracking-wide" },
-              { type: "icon", name: "@card.icon", size: "sm", color: "muted" }
-            ]},
-            { type: "stack", direction: "horizontal", gap: "xs", align: "baseline", children: [
-              { type: "typography", variant: "caption", color: "muted", content: "@card.prefix" },
-              { type: "animated-counter", value: "@card.value", className: "text-4xl font-bold tracking-tight" },
-              { type: "typography", variant: "caption", color: "muted", content: "@card.suffix" }
-            ]},
-            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
-              { type: "trend-indicator", value: "@card.trend", size: "sm", showValue: true },
-              { type: "sparkline", data: "@card.sparklineData", color: "auto", height: 24, fill: true, className: "flex-1" }
-            ]}
-          ]
-        }]
+        className: w-full
+        entity: @entity.cards
+        fields: []
+        gap: lg
+        minCardWidth: 220
+        renderItem: (fn card {
+          children: [{
+            align: center
+            children: [{
+              className: "uppercase tracking-wide"
+              color: muted
+              content: @card.label
+              type: typography
+              variant: caption
+              weight: medium
+            }, {
+              color: muted
+              name: @card.icon
+              size: sm
+              type: icon
+            }]
+            direction: horizontal
+            gap: xs
+            justify: between
+            type: stack
+          }, {
+            align: baseline
+            children: [{
+              color: muted
+              content: @card.prefix
+              type: typography
+              variant: caption
+            }, {
+              className: "text-4xl font-bold tracking-tight"
+              type: animated-counter
+              value: @card.value
+            }, {
+              color: muted
+              content: @card.suffix
+              type: typography
+              variant: caption
+            }]
+            direction: horizontal
+            gap: xs
+            type: stack
+          }, {
+            align: center
+            children: [{
+              showValue: true
+              size: sm
+              type: trend-indicator
+              value: @card.trend
+            }, {
+              className: flex-1
+              color: auto
+              data: @card.sparklineData
+              fill: true
+              height: 24
+              type: sparkline
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }]
+          className: "rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-card-lg shadow-elevation-sm hover:shadow-elevation-md transition-shadow"
+          direction: vertical
+          gap: sm
+          type: stack
+        })
+        type: data-grid
       }
     }
   }

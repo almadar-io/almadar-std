@@ -1,183 +1,448 @@
 app std-rich-editor "1.0.0"
 "std-rich-editor — wiki/CMS Notion-style block editor. Browses documents in `browsing`; opens the rich-block-editor on a selected row; persists block edits + publish status."
-
 type BlockSpec = { type : string!, content : string, id : string }
 type ObjectSpec = { id : string, label : string, value : string }
-
 orbital DocumentOrbital {
+    type DocumentLoaded = Event { data : [Document] } "Fired when the documents collection finishes loading"
+
+    type DocumentLoadFailed = Event { error : string, code : string } "Fired when the documents collection fails to load"
+
+    type DocumentSaved = Event { row : Document } "Fired after a document's block content persists successfully"
+
+    type DocumentPublished = Event { row : Document } "Fired after a document's status flips to published"
+
+    type DocumentSaveFailed = Event { error : string, code : string } "Fired when persisting a document edit fails"
+
   entity Document [persistent: documents] {
-    id         : string!
-    title      : string! @description "The human-readable name of the document." @synonyms "name, heading, label"
+    id : string!
+    title : string! @description "The human-readable name of the document." @synonyms "name, heading, label"
     blocksJson : [BlockSpec] @description "Serialized representation of the document's content blocks." @synonyms "content, data, structure, blocks"
-    authorId   : string @description "Unique identifier of the user who created the document." @synonyms "creatorId, userId, ownerId"
-    parentId   : string @description "Reference to the parent document or container." @synonyms "parent, container, owner"
-    kind       : "page" | "doc" | "post" @description "Specifies the document type." @synonyms "type, documentType, category" = "page"
-    status     : "draft" | "published" | "archived" @description "Indicates the current state of the document." @synonyms "state, condition, lifecycle" = "draft"
-    version    : number @description "Represents the version number of the document." @synonyms "revision, release, iteration" = 1
-    createdAt  : string
-    updatedAt  : string
+    authorId : string @description "Unique identifier of the user who created the document." @synonyms "creatorId, userId, ownerId"
+    parentId : string @description "Reference to the parent document or container." @synonyms "parent, container, owner"
+    kind : "page" | "doc" | "post" @description "Specifies the document type." @synonyms "type, documentType, category" = page
+    status : "draft" | "published" | "archived" @description "Indicates the current state of the document." @synonyms "state, condition, lifecycle" = draft
+    version : number @description "Represents the version number of the document." @synonyms "revision, release, iteration" = 1
+    createdAt : string
+    updatedAt : string
   }
 
-  type DocumentLoaded      = Event { data : [Document] }              "Fired when the documents collection finishes loading"
-  type DocumentLoadFailed  = Event { error : string, code : string }  "Fired when the documents collection fails to load"
-  type DocumentSaved       = Event { row : Document }                 "Fired after a document's block content persists successfully"
-  type DocumentPublished   = Event { row : Document }                 "Fired after a document's status flips to published"
-  type DocumentSaveFailed  = Event { error : string, code : string }  "Fired when persisting a document edit fails"
-
   trait DocumentEdit -> Document [interaction, collection] {
-    config {
-      title : string = "Documents"
-        @label "Section title"
-        @description "Heading shown above the document list"
-        @tier "presentation"
-      tableLook : "dense" | "spacious" | "striped" | "borderless" | "card-rows" = "dense"
-        @label "Table look"
-        @description "Layer 2 visual treatment for the data table rendered by this atom."
-        @tier "presentation"
-      statLook : "elevated" | "flat" | "progress-backed" | "gauge" | "sparkline" = "elevated"
-        @label "Stat display look"
-        @description "Layer 2 visual treatment for stat / KPI cards."
-        @tier "presentation"
-    }
     initial: loading
+
     state loading {
       INIT -> loading
-        (fetch Document { emit: { success: "DocumentLoaded", failure: "DocumentLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading documents…" }] })
+        (fetch Document {
+          emit: { failure: DocumentLoadFailed, success: DocumentLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Loading documents…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
       DocumentLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-text" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", look: "@config.statLook", label: "Total docs", value: "@payload.data.length", icon: "file-text" }, { type: "stat-display", look: "@config.statLook", label: "Drafts", value: "12", icon: "edit-3" }, { type: "stat-display", look: "@config.statLook", label: "Published", value: "84", icon: "check-circle" }, { type: "stat-display", look: "@config.statLook", label: "Archived", value: "9", icon: "archive" }] }, { type: "divider" }, { type: "data-grid", look: "@config.tableLook", entity: "@payload.data", fields: [{ name: "title", label: "Title", variant: "caption" }, { name: "kind", label: "Kind", variant: "badge" }, { name: "status", label: "Status", variant: "badge" }, { name: "version", label: "v", variant: "caption" }, { name: "updatedAt", label: "Updated", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN", variant: "primary", icon: "edit" }, { label: "Publish", event: "PUBLISH", variant: "secondary", icon: "send" }] }] })
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: file-text, type: icon }, {
+              content: @config.title
+              type: typography
+              variant: h3
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, {
+            children: [{
+              icon: file-text
+              label: "Total docs"
+              look: @config.statLook
+              type: stat-display
+              value: ?data.length
+            }, {
+              icon: edit-3
+              label: Drafts
+              look: @config.statLook
+              type: stat-display
+              value: "12"
+            }, {
+              icon: check-circle
+              label: Published
+              look: @config.statLook
+              type: stat-display
+              value: "84"
+            }, {
+              icon: archive
+              label: Archived
+              look: @config.statLook
+              type: stat-display
+              value: "9"
+            }]
+            cols: 4
+            type: simple-grid
+          }, { type: divider }, {
+            cols: 1
+            entity: ?data
+            fields: [{
+              label: Title
+              name: title
+              variant: caption
+            }, {
+              label: Kind
+              name: kind
+              variant: badge
+            }, {
+              label: Status
+              name: status
+              variant: badge
+            }, {
+              label: v
+              name: version
+              variant: caption
+            }, {
+              label: Updated
+              name: updatedAt
+              variant: caption
+            }]
+            gap: sm
+            itemActions: [{
+              event: OPEN
+              icon: edit
+              label: Open
+              variant: primary
+            }, {
+              event: PUBLISH
+              icon: send
+              label: Publish
+              variant: secondary
+            }]
+            look: @config.tableLook
+            type: data-grid
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
       DocumentSaved -> loading
-        (fetch Document { emit: { success: "DocumentLoaded", failure: "DocumentLoadFailed" } })
+        (fetch Document {
+          emit: { failure: DocumentLoadFailed, success: DocumentLoaded }
+        })
       DocumentPublished -> loading
-        (fetch Document { emit: { success: "DocumentLoaded", failure: "DocumentLoadFailed" } })
+        (fetch Document {
+          emit: { failure: DocumentLoadFailed, success: DocumentLoaded }
+        })
       DocumentSaveFailed -> error
-        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+        (render-ui main {
+          message: ?error
+          type: alert
+          variant: error
+        })
       DocumentLoadFailed -> error
-        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+        (render-ui main {
+          message: ?error
+          type: alert
+          variant: error
+        })
     }
+
     state browsing {
       OPEN -> editing
-        (set @entity.id @payload.row.id)
-        (set @entity.title @payload.row.title)
-        (set @entity.blocksJson @payload.row.blocksJson)
-        (set @entity.authorId @payload.row.authorId)
-        (set @entity.parentId @payload.row.parentId)
-        (set @entity.kind @payload.row.kind)
-        (set @entity.status @payload.row.status)
-        (set @entity.version @payload.row.version)
-        (set @entity.createdAt @payload.row.createdAt)
-        (set @entity.updatedAt @payload.row.updatedAt)
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "file-text" }, { type: "typography", content: "@entity.title", variant: "h3" }, { type: "badge", label: "@entity.status", variant: "secondary" }] }, { type: "divider" }, { type: "rich-block-editor", initialBlocks: @entity.blocksJson, changeEvent: "BLOCKS_CHANGE", placeholder: "Start writing…", showToolbar: true }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Save", variant: "primary", action: "SAVE", actionPayload: { id: "@entity.id" } }, { type: "button", label: "Publish", variant: "secondary", action: "PUBLISH", actionPayload: { id: "@entity.id" } }] }] })
+        (set @entity.id ?row.id)
+        (set @entity.title ?row.title)
+        (set @entity.blocksJson ?row.blocksJson)
+        (set @entity.authorId ?row.authorId)
+        (set @entity.parentId ?row.parentId)
+        (set @entity.kind ?row.kind)
+        (set @entity.status ?row.status)
+        (set @entity.version ?row.version)
+        (set @entity.createdAt ?row.createdAt)
+        (set @entity.updatedAt ?row.updatedAt)
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{
+              action: CLOSE_VIEW
+              label: Back
+              type: button
+              variant: ghost
+            }, { name: file-text, type: icon }, {
+              content: @entity.title
+              type: typography
+              variant: h3
+            }, {
+              label: @entity.status
+              type: badge
+              variant: secondary
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            changeEvent: BLOCKS_CHANGE
+            initialBlocks: @entity.blocksJson
+            placeholder: "Start writing…"
+            showToolbar: true
+            type: rich-block-editor
+          }, {
+            align: center
+            children: [{
+              action: SAVE
+              actionPayload: { id: @entity.id }
+              label: Save
+              type: button
+              variant: primary
+            }, {
+              action: PUBLISH
+              actionPayload: { id: @entity.id }
+              label: Publish
+              type: button
+              variant: secondary
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
       PUBLISH -> loading
-        (set @entity.id @payload.id)
-        (fetch Document { emit: { success: "DocumentLoaded", failure: "DocumentLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Publishing document…" }] })
+        (set @entity.id ?id)
+        (fetch Document {
+          emit: { failure: DocumentLoadFailed, success: DocumentLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Publishing document…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
     }
+
     state editing {
       BLOCKS_CHANGE -> editing
-        (set @entity.blocksJson @payload.blocks)
+        (set @entity.blocksJson ?blocks)
       CLOSE_VIEW -> loading
-        (fetch Document { emit: { success: "DocumentLoaded", failure: "DocumentLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading documents…" }] })
+        (fetch Document {
+          emit: { failure: DocumentLoadFailed, success: DocumentLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Loading documents…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
       SAVE -> loading
-        (set @entity.id @payload.id)
-        (persist update Document @entity { emit: { success: "DocumentSaved", failure: "DocumentSaveFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Saving document…" }] })
+        (set @entity.id ?id)
+        (persist update Document @entity {
+          emit: { failure: DocumentSaveFailed, success: DocumentSaved }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Saving document…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
       PUBLISH -> loading
-        (set @entity.id @payload.id)
-        (set @entity.status "published")
-        (persist update Document @entity { emit: { success: "DocumentPublished", failure: "DocumentSaveFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Publishing document…" }] })
+        (set @entity.id ?id)
+        (set @entity.status published)
+        (persist update Document @entity {
+          emit: { failure: DocumentSaveFailed, success: DocumentPublished }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Publishing document…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
     }
+
     state error {
       INIT -> loading
-        (fetch Document { emit: { success: "DocumentLoaded", failure: "DocumentLoadFailed" } })
-        (render-ui main { type: "spinner", size: "sm" })
+        (fetch Document {
+          emit: { failure: DocumentLoadFailed, success: DocumentLoaded }
+        })
+        (render-ui main { size: sm, type: spinner })
     }
+
     emits {
-      OPEN          { id : string!, row : Document }
+      OPEN {
+        id : string!
+        row : Document
+      }
         @description "Signals the editor is being displayed."
         @synonyms "show, launch, reveal"
         @tier "essential"
-      CLOSE_VIEW    { }
+      CLOSE_VIEW
         @description "Indicates the editor view is being closed."
         @synonyms "dismiss, hide, exit"
         @tier "essential"
-      BLOCKS_CHANGE { blocks : [ObjectSpec] }
+      BLOCKS_CHANGE {
+        blocks : [ObjectSpec]
+      }
         @description "Signals that the content of a block has been modified."
         @synonyms "update, modify, changed, edit"
         @tier "essential"
-      SAVE          { id : string! }
+      SAVE {
+        id : string!
+      }
         @description "Signals that changes have been saved."
         @synonyms "persist, update, commit"
         @tier "essential"
-      PUBLISH       { id : string! }
+      PUBLISH {
+        id : string!
+      }
         @description "Signals that content has been published."
         @synonyms "publish, release, finalize"
         @tier "essential"
-      DocumentLoaded     { data : [Document] }
+      DocumentLoaded {
+        data : [Document]
+      }
         @description "Signals that a document has been successfully loaded."
         @synonyms "loaded, fetched, retrieved"
         @tier "essential"
-      DocumentLoadFailed { error : string, code : string }
+      DocumentLoadFailed {
+        error : string
+        code : string
+      }
         @description "Indicates that loading a document failed."
         @synonyms "error, failure, problem, unsuccessful"
         @tier "internal"
-      DocumentSaved      { row : Document }
+      DocumentSaved {
+        row : Document
+      }
         @description "Signals that a document has been successfully saved."
         @synonyms "saved, persisted, updated"
         @tier "essential"
-      DocumentPublished  { row : Document }
+      DocumentPublished {
+        row : Document
+      }
         @description "Indicates a document has been successfully published."
         @synonyms "published, released, finalized"
         @tier "customization"
-      DocumentSaveFailed { error : string, code : string }
+      DocumentSaveFailed {
+        error : string
+        code : string
+      }
         @description "Indicates that saving the document failed."
         @synonyms "error, failure, problem, unsuccessful"
         @tier "internal"
     }
+
     listens {
-      OPEN          { id : string!, row : Document }
+      OPEN {
+        id : string!
+        row : Document
+      }
         @description "Indicates a rich editor view should be displayed."
         @synonyms "show, launch, reveal, display"
         @tier "essential"
-      CLOSE_VIEW    { }
+      CLOSE_VIEW
         @description "Indicates the editor view is being dismissed."
         @synonyms "dismiss, hide, close, exit"
         @tier "essential"
-      BLOCKS_CHANGE { blocks : [ObjectSpec] }
+      BLOCKS_CHANGE {
+        blocks : [ObjectSpec]
+      }
         @description "Indicates changes to the content of editable blocks."
         @synonyms "update, modify, edit"
         @tier "essential"
-      SAVE          { id : string! }
+      SAVE {
+        id : string!
+      }
         @description "Indicates that changes have been saved."
         @synonyms "persist, update, commit"
         @tier "essential"
-      PUBLISH       { id : string! }
+      PUBLISH {
+        id : string!
+      }
         @description "Indicates the document has been successfully published."
         @synonyms "publish, submit, finalize"
         @tier "essential"
-      DocumentLoaded     { data : [Document] }
+      DocumentLoaded {
+        data : [Document]
+      }
         @description "Signals that a document has been successfully retrieved."
         @synonyms "loaded, fetched, retrieved"
         @tier "essential"
-      DocumentLoadFailed { error : string, code : string }
+      DocumentLoadFailed {
+        error : string
+        code : string
+      }
         @description "Indicates that loading a document failed."
         @synonyms "error, failure, problem, unsuccessful"
         @tier "internal"
-      DocumentSaved      { row : Document }
+      DocumentSaved {
+        row : Document
+      }
         @description "Indicates a document has been successfully saved."
         @synonyms "saved, updated, persisted"
         @tier "essential"
-      DocumentPublished  { row : Document }
+      DocumentPublished {
+        row : Document
+      }
         @description "Indicates a document has been successfully published."
         @synonyms "published, released, finalized"
         @tier "customization"
-      DocumentSaveFailed { error : string, code : string }
+      DocumentSaveFailed {
+        error : string
+        code : string
+      }
         @description "Indicates a failure to save document changes."
         @synonyms "error, failure, problem, unsuccessful"
         @tier "internal"
     }
+
+    config {
+      title : string = Documents
+        @label "Section title"
+        @description "Heading shown above the document list"
+        @tier "presentation"
+      tableLook : "dense" | "spacious" | "striped" | "borderless" | "card-rows" = dense
+        @label "Table look"
+        @description "Layer 2 visual treatment for the data table rendered by this atom."
+        @tier "presentation"
+      statLook : "elevated" | "flat" | "progress-backed" | "gauge" | "sparkline" = elevated
+        @label "Stat display look"
+        @description "Layer 2 visual treatment for stat / KPI cards."
+        @tier "presentation"
+    }
   }
+
   page "/documents/edit" as DocumentEditPage -> DocumentEdit
 }

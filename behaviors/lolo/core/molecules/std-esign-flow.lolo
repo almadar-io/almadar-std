@@ -1,59 +1,176 @@
 app std-esign-flow "1.1.0"
 "std-esign-flow — the send-for-signature flow: list signature requests, create one (pick document + recipient), resend or cancel, track status. Composes std-file-store + std-esign-request; no document-rendering or code-preview chrome."
-
 orbital SignatureSessionOrbital {
-  uses StoredFile     from "std/behaviors/std-file-store"
-  uses ESignRequest   from "std/behaviors/std-esign-request"
-  uses Modal          from "std/behaviors/std-modal"
-  uses Confirmation   from "std/behaviors/std-confirmation"
+  uses StoredFile from "std/behaviors/std-file-store"
+
+  uses ESignRequest from "std/behaviors/std-esign-request"
+
+  uses Modal from "std/behaviors/std-modal"
+
+  uses Confirmation from "std/behaviors/std-confirmation"
+
+    type SignatureSessionLoaded = Event { data : [SignatureSession] } "Fired when the SignatureSession collection finishes loading"
+
+    type SignatureSessionLoadFailed = Event { error : string, code : string } "Fired when the SignatureSession collection fails to load"
 
   entity SignatureSession [persistent: signaturesessions] {
-    id             : string!
-    documentId     : string! @description "Unique identifier for the associated document." @synonyms "fileID, docID, documentReference"
-    documentName   : string @description "The name of the document associated with the signature request." @synonyms "filename, document, file" = ""
-    recipientName  : string! @description "The name of the recipient for the signature request." @synonyms "recipient, name, user"
+    id : string!
+    documentId : string! @description "Unique identifier for the associated document." @synonyms "fileID, docID, documentReference"
+    documentName : string @description "The name of the document associated with the signature request." @synonyms "filename, document, file" = ""
+    recipientName : string! @description "The name of the recipient for the signature request." @synonyms "recipient, name, user"
     recipientEmail : string! @description "The email address of the recipient." @synonyms "email, address, contact"
-    requesterName  : string @description "The name of the user initiating the signature request." @synonyms "initiator, sender, originator" = ""
-    status         : "draft" | "sent" | "viewed" | "signed" | "declined" @description "Current state of the signature request." @synonyms "state, condition, stage" = "draft"
-    sentAt         : string @description "Timestamp indicating when the request was sent." @synonyms "sent date, submission time, dispatched" = ""
-    signedAt       : string @description "The date and time the signature was applied." @synonyms "signed date, completion date, signature time" = ""
-    pendingId      : string @description "Unique identifier for a pending action or task." @synonyms "taskId, pendingKey, referenceId" = ""
+    requesterName : string @description "The name of the user initiating the signature request." @synonyms "initiator, sender, originator" = ""
+    status : "draft" | "sent" | "viewed" | "signed" | "declined" @description "Current state of the signature request." @synonyms "state, condition, stage" = draft
+    sentAt : string @description "Timestamp indicating when the request was sent." @synonyms "sent date, submission time, dispatched" = ""
+    signedAt : string @description "The date and time the signature was applied." @synonyms "signed date, completion date, signature time" = ""
+    pendingId : string @description "Unique identifier for a pending action or task." @synonyms "taskId, pendingKey, referenceId" = ""
   }
-
-  type SignatureSessionLoaded     = Event { data : [SignatureSession] }            "Fired when the SignatureSession collection finishes loading"
-  type SignatureSessionLoadFailed = Event { error : string, code : string }        "Fired when the SignatureSession collection fails to load"
 
   trait SignatureSessionBrowse -> SignatureSession [interaction, collection] {
     initial: loading
+
     state loading {
       INIT -> loading
-        (fetch SignatureSession { emit: { success: "SignatureSessionLoaded", failure: "SignatureSessionLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading signature requests…" }] })
+        (fetch SignatureSession {
+          emit: { failure: SignatureSessionLoadFailed, success: SignatureSessionLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Loading signature requests…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
       SignatureSessionLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "file-signature" }, { type: "typography", content: "Signature Requests", variant: "h2" }] }, { type: "button", label: "New Signature Request", action: "CREATE", variant: "primary", icon: "plus" }] }, { type: "divider" }, { type: "data-grid", entity: @payload.data, itemActions: [{ label: "Resend", event: "RESEND_REQUEST", variant: "primary" }, { label: "Cancel", event: "REQUEST_DELETE", variant: "danger" }], fields: [{ name: "documentName", label: "Document", variant: "h4", icon: "file-text" }, { name: "recipientName", label: "Recipient", variant: "body" }, { name: "recipientEmail", label: "Email", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "sentAt", label: "Sent", variant: "caption" }] }] })
+        (render-ui main {
+          children: [{
+            children: [{
+              children: [{ name: file-signature, type: icon }, {
+                content: "Signature Requests"
+                type: typography
+                variant: h2
+              }]
+              direction: horizontal
+              gap: md
+              type: stack
+            }, {
+              action: CREATE
+              icon: plus
+              label: "New Signature Request"
+              type: button
+              variant: primary
+            }]
+            direction: horizontal
+            gap: md
+            justify: between
+            type: stack
+          }, { type: divider }, {
+            entity: ?data
+            fields: [{
+              icon: file-text
+              label: Document
+              name: documentName
+              variant: h4
+            }, {
+              label: Recipient
+              name: recipientName
+              variant: body
+            }, {
+              label: Email
+              name: recipientEmail
+              variant: caption
+            }, {
+              label: Status
+              name: status
+              variant: badge
+            }, {
+              label: Sent
+              name: sentAt
+              variant: caption
+            }]
+            itemActions: [{
+              event: RESEND_REQUEST
+              label: Resend
+              variant: primary
+            }, {
+              event: REQUEST_DELETE
+              label: Cancel
+              variant: danger
+            }]
+            type: data-grid
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
       SignatureSessionLoadFailed -> error
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load signature requests" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+        (render-ui main {
+          align: center
+          children: [{
+            color: destructive
+            name: alert-triangle
+            type: icon
+          }, {
+            content: "Failed to load signature requests"
+            type: typography
+            variant: h3
+          }, {
+            color: muted
+            content: ?error
+            type: typography
+            variant: body
+          }, {
+            action: INIT
+            icon: rotate-ccw
+            label: Retry
+            type: button
+            variant: primary
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
     }
+
     state browsing {
       INIT -> loading
-        (fetch SignatureSession { emit: { success: "SignatureSessionLoaded", failure: "SignatureSessionLoadFailed" } })
-        (render-ui main { type: "spinner" })
+        (fetch SignatureSession {
+          emit: { failure: SignatureSessionLoadFailed, success: SignatureSessionLoaded }
+        })
+        (render-ui main { type: spinner })
     }
+
     state error {
       INIT -> loading
-        (fetch SignatureSession { emit: { success: "SignatureSessionLoaded", failure: "SignatureSessionLoadFailed" } })
-        (render-ui main { type: "spinner" })
+        (fetch SignatureSession {
+          emit: { failure: SignatureSessionLoadFailed, success: SignatureSessionLoaded }
+        })
+        (render-ui main { type: spinner })
     }
+
     emits {
       CREATE
         @description "Indicates a new signature request has been initiated."
         @synonyms "new, initiate, start, begin"
         @tier "essential"
-      RESEND_REQUEST { id : string!, row : SignatureSession }
+      RESEND_REQUEST {
+        id : string!
+        row : SignatureSession
+      }
         @description "Indicates a signature request has been resent."
         @synonyms "resend, retransmit, repeat"
         @tier "customization"
-      REQUEST_DELETE { id : string!, row : SignatureSession }
+      REQUEST_DELETE {
+        id : string!
+        row : SignatureSession
+      }
         @description "Signals a signature request has been removed."
         @synonyms "remove, purge, discard"
         @tier "customization"
@@ -66,39 +183,53 @@ orbital SignatureSessionOrbital {
         @synonyms "error, failure, problem, unsuccessful"
         @tier "internal"
     }
+
     listens {
-      SignatureSessionLoadFailed { error : string, code : string }
+      SignatureSessionLoadFailed {
+        error : string
+        code : string
+      }
         @description "Indicates failure to load a signature session."
         @synonyms "error, failure, problem, unsuccessful"
         @tier "internal"
       SignatureSessionPersistor.SESSION_CREATED -> INIT
-      SignatureSessionPersistor.SESSION_RESENT  -> INIT
+      SignatureSessionPersistor.SESSION_RESENT -> INIT
       SignatureSessionPersistor.SESSION_DELETED -> INIT
     }
   }
 
   trait SignatureSessionCreate = Modal.traits.ModalRecordModal -> SignatureSession {
-    config: {
-      icon: "file-signature",
-      title: "New Signature Request",
-      openButtonLabel: "New Signature Request",
-      fields: ["documentId", "recipientName", "recipientEmail", "requesterName"],
-      mode: "create"
-    }
     events {
       OPEN: CREATE
     }
+
+    config {
+      icon: file-signature
+      title: "New Signature Request"
+      openButtonLabel: "New Signature Request"
+      fields: (documentId recipientName recipientEmail requesterName)
+      mode: create
+    }
+
     listens {
       SignatureSessionBrowse.CREATE -> CREATE
-      CREATE { id : string, row : SignatureSession }
+      CREATE {
+        id : string
+        row : SignatureSession
+      }
         @description "A new signature request is being initiated."
         @synonyms "new, start, begin, initiate"
         @tier "essential"
-      SAVE { data : object! }
+      SAVE {
+        data : object!
+      }
         @description "Data has been persisted; update the UI accordingly."
         @synonyms "persist, store, update, commit"
         @tier "essential"
-      ModalRecordLoadFailed { error : string, code : string }
+      ModalRecordLoadFailed {
+        error : string
+        code : string
+      }
         @description "Indicates a failure to load record data for a modal."
         @synonyms "error, failure, problem, unsuccessful"
         @tier "internal"
@@ -106,23 +237,31 @@ orbital SignatureSessionOrbital {
   }
 
   trait SignatureSessionDelete = Confirmation.traits.ConfirmActionConfirmation -> SignatureSession {
-    config: {
-      icon: "alert-triangle",
-      title: "Cancel Signature Request",
-      alertMessage: "Are you sure you want to cancel this signature request?",
-      confirmLabel: "Cancel Request"
-    }
     events {
       REQUEST: DELETE
       CONFIRM: CONFIRM_DELETE
     }
+
+    config {
+      icon: alert-triangle
+      title: "Cancel Signature Request"
+      alertMessage: "Are you sure you want to cancel this signature request?"
+      confirmLabel: "Cancel Request"
+    }
+
     listens {
       SignatureSessionBrowse.REQUEST_DELETE -> DELETE
-      DELETE { id : string, row : SignatureSession }
+      DELETE {
+        id : string
+        row : SignatureSession
+      }
         @description "A request to remove a signature request from the list."
         @synonyms "remove, dismiss, discard"
         @tier "customization"
-      ConfirmActionLoadFailed { error : string, code : string }
+      ConfirmActionLoadFailed {
+        error : string
+        code : string
+      }
         @description "Indicates a failure to load data needed for an action."
         @synonyms "error, failure, problem, unsuccessful"
         @tier "internal"
@@ -131,45 +270,66 @@ orbital SignatureSessionOrbital {
 
   trait SignatureSessionPersistor -> SignatureSession [lifecycle, instance] {
     initial: idle
+
     state idle {
       INIT -> idle
       DO_CREATE -> idle
-        (persist create SignatureSession @payload.data { emit: { success: "SESSION_CREATED" } })
+        (persist create SignatureSession ?data {
+          emit: { success: SESSION_CREATED }
+        })
       DO_RESEND -> idle
-        (persist update SignatureSession @payload.id { emit: { success: "SESSION_RESENT" } })
+        (persist update SignatureSession ?id {
+          emit: { success: SESSION_RESENT }
+        })
       DO_DELETE -> idle
-        (persist delete SignatureSession @payload.id { emit: { success: "SESSION_DELETED" } })
+        (persist delete SignatureSession ?id {
+          emit: { success: SESSION_DELETED }
+        })
     }
+
     emits {
-      SESSION_CREATED -> external { id : string }
+      SESSION_CREATED -> external {
+        id : string
+      }
         @description "A new signature session has been initialized."
         @synonyms "start, begin, initialize"
         @tier "essential"
-      SESSION_RESENT  -> external { id : string }
+      SESSION_RESENT -> external {
+        id : string
+      }
         @description "Indicates a signature request has been resent."
         @synonyms "resend, retransmit, send again"
         @tier "customization"
-      SESSION_DELETED -> external { id : string }
+      SESSION_DELETED -> external {
+        id : string
+      }
         @description "Indicates a signature session has been removed or invalidated."
         @synonyms "removed, cleared, expired, terminated"
         @tier "internal"
     }
+
     listens {
-      DO_CREATE { data : object! }
+      DO_CREATE {
+        data : object!
+      }
         @description "Initiates the creation of a new signature request."
         @synonyms "new, add, generate, start"
         @tier "essential"
-      DO_RESEND { id : string }
+      DO_RESEND {
+        id : string
+      }
         @description "A request to resend a signature request."
         @synonyms "retry, repeat, send again"
         @tier "customization"
-      DO_DELETE { id : string }
+      DO_DELETE {
+        id : string
+      }
         @description "A request to remove an item from the current view."
         @synonyms "remove, discard, clear, erase"
         @tier "customization"
-      SignatureSessionCreate.SAVE                  -> DO_CREATE
-      SignatureSessionBrowse.RESEND_REQUEST        -> DO_RESEND
-      SignatureSessionDelete.CONFIRM_DELETE        -> DO_DELETE
+      SignatureSessionCreate.SAVE -> DO_CREATE
+      SignatureSessionBrowse.RESEND_REQUEST -> DO_RESEND
+      SignatureSessionDelete.CONFIRM_DELETE -> DO_DELETE
     }
   }
 

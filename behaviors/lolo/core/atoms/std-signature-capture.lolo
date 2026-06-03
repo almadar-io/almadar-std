@@ -1,25 +1,340 @@
 app std-signature-capture "2.0.0"
 "std-signature-capture — a drawn-signature pad. The signer draws, clears, or submits; on submit the signature persists and the atom emits SignatureSubmitted. One job: capture a signature and report when done."
-
 orbital SignatureCaptureOrbital {
+    type SignatureLoaded = Event { data : [Signature] } "Fired when the signer's prior signature (if any) loads"
+
+    type SignatureLoadFailed = Event { error : string, code : string } "Fired when the prior-signature load fails"
+
+    type SignatureSubmitted = Event { row : Signature } "Fired after a signature persists successfully"
+
+    type SignatureSubmitFailed = Event { error : string, code : string } "Fired when persisting a signature fails"
+
   entity Signature [persistent: signatures] {
-    id               : string!
-    targetId         : string! @description "Unique identifier for the target of the signature." @synonyms "referenceId, associatedId, target"
-    targetType       : string! @description "Specifies the type of target associated with the signature." @synonyms "type, kind, category"
-    signerName       : string! @description "The name of the person providing the signature." @synonyms "name, user, person"
+    id : string!
+    targetId : string! @description "Unique identifier for the target of the signature." @synonyms "referenceId, associatedId, target"
+    targetType : string! @description "Specifies the type of target associated with the signature." @synonyms "type, kind, category"
+    signerName : string! @description "The name of the person providing the signature." @synonyms "name, user, person"
     signatureDataUrl : string! @description "Encoded signature image data, typically a data URL." @synonyms "signature image, image data, signature representation"
-    signedAt         : string @description "Timestamp indicating when the signature was captured." @synonyms "date, time, timestamp"
-    ipAddress        : string @description "The client's IP address during signature capture." @synonyms "client IP, source IP, originating IP"
+    signedAt : string @description "Timestamp indicating when the signature was captured." @synonyms "date, time, timestamp"
+    ipAddress : string @description "The client's IP address during signature capture." @synonyms "client IP, source IP, originating IP"
   }
 
-  type SignatureLoaded       = Event { data : [Signature] }            "Fired when the signer's prior signature (if any) loads"
-  type SignatureLoadFailed   = Event { error : string, code : string } "Fired when the prior-signature load fails"
-  type SignatureSubmitted    = Event { row : Signature }               "Fired after a signature persists successfully"
-  type SignatureSubmitFailed = Event { error : string, code : string } "Fired when persisting a signature fails"
-
   trait SignatureCapture -> Signature [interaction, instance] {
+    initial: loading
+
+    state loading {
+      INIT -> loading
+        (fetch Signature {
+          emit: { failure: SignatureLoadFailed, success: SignatureLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Loading…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      SignatureLoaded -> idle
+        (render-ui main {
+          children: [{
+            content: @config.title
+            type: typography
+            variant: h3
+          }, {
+            color: muted
+            content: @config.instructions
+            type: typography
+            variant: caption
+          }, {
+            onChange: CHANGE
+            type: signature-pad
+            value: @entity.signatureDataUrl
+          }, {
+            children: [{
+              action: CLEAR
+              icon: trash
+              label: Clear
+              type: button
+              variant: secondary
+            }, {
+              action: SUBMIT
+              icon: send
+              label: Submit
+              type: button
+              variant: primary
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      SignatureLoadFailed -> idle
+        (render-ui main {
+          children: [{
+            content: @config.title
+            type: typography
+            variant: h3
+          }, {
+            color: muted
+            content: @config.instructions
+            type: typography
+            variant: caption
+          }, {
+            onChange: CHANGE
+            type: signature-pad
+            value: @entity.signatureDataUrl
+          }, {
+            children: [{
+              action: CLEAR
+              icon: trash
+              label: Clear
+              type: button
+              variant: secondary
+            }, {
+              action: SUBMIT
+              icon: send
+              label: Submit
+              type: button
+              variant: primary
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
+    }
+
+    state idle {
+      CHANGE -> idle
+        (set @entity.signatureDataUrl ?dataUrl)
+      CLEAR -> idle
+        (set @entity.signatureDataUrl "")
+        (render-ui main {
+          children: [{
+            content: @config.title
+            type: typography
+            variant: h3
+          }, {
+            color: muted
+            content: @config.instructions
+            type: typography
+            variant: caption
+          }, {
+            onChange: CHANGE
+            type: signature-pad
+            value: @entity.signatureDataUrl
+          }, {
+            children: [{
+              action: CLEAR
+              icon: trash
+              label: Clear
+              type: button
+              variant: secondary
+            }, {
+              action: SUBMIT
+              icon: send
+              label: Submit
+              type: button
+              variant: primary
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      SUBMIT -> submitting
+        (persist create Signature ?data {
+          emit: { failure: SignatureSubmitFailed, success: SignatureSubmitted }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Submitting your signature…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
+    }
+
+    state submitting {
+      SignatureSubmitted -> submitted
+        (render-ui main {
+          align: center
+          children: [{
+            color: success
+            name: check-circle
+            type: icon
+          }, {
+            content: "Signature recorded. Thank you."
+            type: typography
+            variant: h3
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      SignatureSubmitFailed -> idle
+        (render-ui main {
+          message: ?error
+          type: alert
+          variant: error
+        })
+    }
+
+    state submitted {
+      INIT -> idle
+        (set @entity.signatureDataUrl "")
+        (render-ui main {
+          children: [{
+            content: @config.title
+            type: typography
+            variant: h3
+          }, {
+            color: muted
+            content: @config.instructions
+            type: typography
+            variant: caption
+          }, {
+            onChange: CHANGE
+            type: signature-pad
+            value: @entity.signatureDataUrl
+          }, {
+            children: [{
+              action: CLEAR
+              icon: trash
+              label: Clear
+              type: button
+              variant: secondary
+            }, {
+              action: SUBMIT
+              icon: send
+              label: Submit
+              type: button
+              variant: primary
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
+    }
+
+    emits {
+      CHANGE {
+        dataUrl : string!
+      }
+        @description "Indicates a change in the signature drawing."
+        @synonyms "update, modify, alter"
+        @tier "customization"
+      SUBMIT {
+        data : object!
+      }
+        @description "Signals the signature capture process is complete."
+        @synonyms "done, finalized, confirmed, saved"
+        @tier "essential"
+      CLEAR
+        @description "Signals the signature pad has been cleared."
+        @synonyms "reset, erase, remove"
+        @tier "essential"
+      SignatureLoaded {
+        data : [Signature]
+      }
+        @description "Indicates the signature pad is ready for use."
+        @synonyms "ready, initialized, available"
+        @tier "essential"
+      SignatureLoadFailed {
+        error : string
+        code : string
+      }
+        @description "Indicates the signature data could not be loaded."
+        @synonyms "load error, failed load, data error"
+        @tier "internal"
+      SignatureSubmitted {
+        row : Signature
+      }
+        @description "Indicates a signature has been successfully captured and submitted."
+        @synonyms "signed, finalized, completed"
+        @tier "essential"
+      SignatureSubmitFailed {
+        error : string
+        code : string
+      }
+        @description "Indicates signature submission failed."
+        @synonyms "error, failure, rejected"
+        @tier "internal"
+    }
+
+    listens {
+      CHANGE {
+        dataUrl : string!
+      }
+        @description "Indicates a change in the signature drawing area."
+        @synonyms "update, modify, redraw"
+        @tier "essential"
+      SUBMIT {
+        data : object!
+      }
+        @description "Indicates the signature capture process is complete."
+        @synonyms "done, finalized, confirmed, saved"
+        @tier "essential"
+      CLEAR
+        @description "Indicates the signature area has been cleared."
+        @synonyms "reset, erase, delete"
+        @tier "essential"
+      SignatureLoaded {
+        data : [Signature]
+      }
+        @description "Indicates the signature data has been successfully retrieved."
+        @synonyms "loaded, fetched, retrieved, initialized"
+        @tier "internal"
+      SignatureLoadFailed {
+        error : string
+        code : string
+      }
+        @description "Indicates the signature data could not be loaded."
+        @synonyms "error, failure, problem, unsuccessful"
+        @tier "internal"
+      SignatureSubmitted {
+        row : Signature
+      }
+        @description "Indicates a signature has been successfully submitted."
+        @synonyms "saved, finalized, confirmed"
+        @tier "essential"
+      SignatureSubmitFailed {
+        error : string
+        code : string
+      }
+        @description "Indicates signature submission failed; retry or review."
+        @synonyms "error, failure, rejected, invalid"
+        @tier "internal"
+    }
+
     config {
-      title        : string = "Sign here"
+      title : string = "Sign here"
         @label "Pad title"
         @description "Heading shown above the signature pad"
         @tier "presentation"
@@ -28,97 +343,7 @@ orbital SignatureCaptureOrbital {
         @description "Helper text shown to the signer above the pad"
         @tier "presentation"
     }
-    initial: loading
-    state loading {
-      INIT -> loading
-        (fetch Signature { emit: { success: "SignatureLoaded", failure: "SignatureLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
-      SignatureLoaded -> idle
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@config.title", variant: "h3" }, { type: "typography", content: "@config.instructions", variant: "caption", color: "muted" }, { type: "signature-pad", value: @entity.signatureDataUrl, onChange: "CHANGE" }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Clear", action: "CLEAR", variant: "secondary", icon: "trash" }, { type: "button", label: "Submit", action: "SUBMIT", variant: "primary", icon: "send" }] }] })
-      SignatureLoadFailed -> idle
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@config.title", variant: "h3" }, { type: "typography", content: "@config.instructions", variant: "caption", color: "muted" }, { type: "signature-pad", value: @entity.signatureDataUrl, onChange: "CHANGE" }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Clear", action: "CLEAR", variant: "secondary", icon: "trash" }, { type: "button", label: "Submit", action: "SUBMIT", variant: "primary", icon: "send" }] }] })
-    }
-    state idle {
-      CHANGE -> idle
-        (set @entity.signatureDataUrl @payload.dataUrl)
-      CLEAR -> idle
-        (set @entity.signatureDataUrl "")
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@config.title", variant: "h3" }, { type: "typography", content: "@config.instructions", variant: "caption", color: "muted" }, { type: "signature-pad", value: @entity.signatureDataUrl, onChange: "CHANGE" }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Clear", action: "CLEAR", variant: "secondary", icon: "trash" }, { type: "button", label: "Submit", action: "SUBMIT", variant: "primary", icon: "send" }] }] })
-      SUBMIT -> submitting
-        (persist create Signature @payload.data { emit: { success: "SignatureSubmitted", failure: "SignatureSubmitFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Submitting your signature…" }] })
-    }
-    state submitting {
-      SignatureSubmitted -> submitted
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "check-circle", color: "success" }, { type: "typography", variant: "h3", content: "Signature recorded. Thank you." }] })
-      SignatureSubmitFailed -> idle
-        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
-    }
-    state submitted {
-      INIT -> idle
-        (set @entity.signatureDataUrl "")
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@config.title", variant: "h3" }, { type: "typography", content: "@config.instructions", variant: "caption", color: "muted" }, { type: "signature-pad", value: @entity.signatureDataUrl, onChange: "CHANGE" }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Clear", action: "CLEAR", variant: "secondary", icon: "trash" }, { type: "button", label: "Submit", action: "SUBMIT", variant: "primary", icon: "send" }] }] })
-    }
-    emits {
-      CHANGE { dataUrl : string! }
-        @description "Indicates a change in the signature drawing."
-        @synonyms "update, modify, alter"
-        @tier "customization"
-      SUBMIT { data : object! }
-        @description "Signals the signature capture process is complete."
-        @synonyms "done, finalized, confirmed, saved"
-        @tier "essential"
-      CLEAR
-        @description "Signals the signature pad has been cleared."
-        @synonyms "reset, erase, remove"
-        @tier "essential"
-      SignatureLoaded { data : [Signature] }
-        @description "Indicates the signature pad is ready for use."
-        @synonyms "ready, initialized, available"
-        @tier "essential"
-      SignatureLoadFailed { error : string, code : string }
-        @description "Indicates the signature data could not be loaded."
-        @synonyms "load error, failed load, data error"
-        @tier "internal"
-      SignatureSubmitted { row : Signature }
-        @description "Indicates a signature has been successfully captured and submitted."
-        @synonyms "signed, finalized, completed"
-        @tier "essential"
-      SignatureSubmitFailed { error : string, code : string }
-        @description "Indicates signature submission failed."
-        @synonyms "error, failure, rejected"
-        @tier "internal"
-    }
-    listens {
-      CHANGE { dataUrl : string! }
-        @description "Indicates a change in the signature drawing area."
-        @synonyms "update, modify, redraw"
-        @tier "essential"
-      SUBMIT { data : object! }
-        @description "Indicates the signature capture process is complete."
-        @synonyms "done, finalized, confirmed, saved"
-        @tier "essential"
-      CLEAR
-        @description "Indicates the signature area has been cleared."
-        @synonyms "reset, erase, delete"
-        @tier "essential"
-      SignatureLoaded { data : [Signature] }
-        @description "Indicates the signature data has been successfully retrieved."
-        @synonyms "loaded, fetched, retrieved, initialized"
-        @tier "internal"
-      SignatureLoadFailed { error : string, code : string }
-        @description "Indicates the signature data could not be loaded."
-        @synonyms "error, failure, problem, unsuccessful"
-        @tier "internal"
-      SignatureSubmitted { row : Signature }
-        @description "Indicates a signature has been successfully submitted."
-        @synonyms "saved, finalized, confirmed"
-        @tier "essential"
-      SignatureSubmitFailed { error : string, code : string }
-        @description "Indicates signature submission failed; retry or review."
-        @synonyms "error, failure, rejected, invalid"
-        @tier "internal"
-    }
   }
+
   page "/signatures/capture" as SignatureCapturePage -> SignatureCapture
 }

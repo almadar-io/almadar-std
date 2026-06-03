@@ -1,74 +1,110 @@
 app std-cascade-on-delete "1.1.0"
 "std-cascade-on-delete — relational `owns` cascade. Listens for a parent-deleted sentinel (`ParentDeleted` — rename via traitOverrides.events to the consumer's actual parent-deleted event), then deletes every dependent row whose `foreignKeyField` points at the deleted parent — via a self-driving loop (delete the head of the matching set, re-fetch until none remain). Emits `CascadeRowDeleted` per row and `CascadeCompleted` when done."
-
 orbital CascadeOnDeleteOrbital {
+    type ParentDeleted = Event { data : object } "Rename via traitOverrides.events to the upstream parent-deleted event (e.g. ContactDeleted). `data.id` carries the parent's primary key."
+
+    type DepsLoaded = Event { data : [object] } "Internal: dependent rows fetched for the deleted parent."
+
+    type CascadeStepped = Event { id : string } "Internal: one dependent deleted; drives the next loop pass."
+
+    type CascadeFailed = Event { error : string, code : string } "Internal: dependent fetch / delete failed."
+
+    type CascadeRowDeleted = Event { id : string } "Re-emitted per dependent row deleted."
+
+    type CascadeCompleted = Event { parentId : string } "Fired once every dependent of the parent has been deleted."
+
   entity CascadeLog [persistent: cascade_logs] {
-    id           : string!
-    parentId     : string  @description "Identifier of the deleted parent the cascade is clearing dependents for." @synonyms "parent, source, origin" = ""
-    parentEntity : string  @description "Identifies the parent entity of the cascade." @synonyms "related entity, source entity, parent" = ""
-    rowCount     : number  @description "The number of rows deleted by the cascade." @synonyms "count, size, quantity" = 0
-    headId       : string  @description "Scratch: id of the dependent row the loop is currently deleting." @synonyms "current id, cursor" = ""
+    id : string!
+    parentId : string @description "Identifier of the deleted parent the cascade is clearing dependents for." @synonyms "parent, source, origin" = ""
+    parentEntity : string @description "Identifies the parent entity of the cascade." @synonyms "related entity, source entity, parent" = ""
+    rowCount : number @description "The number of rows deleted by the cascade." @synonyms "count, size, quantity" = 0
+    headId : string @description "Scratch: id of the dependent row the loop is currently deleting." @synonyms "current id, cursor" = ""
   }
 
-  type ParentDeleted     = Event { data : object }                          "Rename via traitOverrides.events to the upstream parent-deleted event (e.g. ContactDeleted). `data.id` carries the parent's primary key."
-  type DepsLoaded        = Event { data : [object] }                        "Internal: dependent rows fetched for the deleted parent."
-  type CascadeStepped    = Event { id : string }                            "Internal: one dependent deleted; drives the next loop pass."
-  type CascadeFailed     = Event { error : string, code : string }          "Internal: dependent fetch / delete failed."
-  type CascadeRowDeleted = Event { id : string }                            "Re-emitted per dependent row deleted."
-  type CascadeCompleted  = Event { parentId : string }                      "Fired once every dependent of the parent has been deleted."
-
   trait CascadeOnDeleteGate -> CascadeLog [lifecycle, instance, cascade-delete] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      ParentDeleted -> scanning when @config.enabled
+        (set @entity.parentId ?data.id)
+        (set @entity.parentEntity @config.parentEntity)
+        (fetch @config.dependentEntity {
+          emit: { failure: CascadeFailed, success: DepsLoaded }
+        })
+    }
+
+    state scanning {
+      DepsLoaded -> scanning when [">", (array/len (array/filter ?data (fn row ["=", (object/get @row @config.foreignKeyField), @entity.parentId]))), 0]
+        (set @entity.headId (object/get (array/first (array/filter ?data (fn row ["=", (object/get @row @config.foreignKeyField), @entity.parentId]))) id))
+        (emit CascadeRowDeleted { id: @entity.headId })
+        (persist delete @config.dependentEntity @entity.headId {
+          emit: { failure: CascadeFailed, success: CascadeStepped }
+        })
+      DepsLoaded -> idle when ["=", (array/len (array/filter ?data (fn row ["=", (object/get @row @config.foreignKeyField), @entity.parentId]))), 0]
+        (emit CascadeCompleted { parentId: @entity.parentId })
+      CascadeStepped -> scanning
+        (fetch @config.dependentEntity {
+          emit: { failure: CascadeFailed, success: DepsLoaded }
+        })
+      CascadeFailed -> idle
+    }
+
+    emits {
+      CascadeRowDeleted -> external {
+        id : string
+      }
+      CascadeCompleted -> external {
+        parentId : string
+      }
+      DepsLoaded {
+        data : [object]
+      }
+      CascadeStepped {
+        id : string
+      }
+      CascadeFailed {
+        error : string
+        code : string
+      }
+    }
+
+    listens {
+      ParentDeleted {
+        data : object
+      }
+      DepsLoaded {
+        data : [object]
+      }
+      CascadeStepped {
+        id : string
+      }
+      CascadeFailed {
+        error : string
+        code : string
+      }
+    }
+
     config {
-      enabled          : boolean = false
+      enabled : boolean = false
         @label "Delete related records too"
         @description "When a record is deleted, also delete the records that belong to it. Off by default."
         @synonyms "enable, turn on, enforce, require, activate, apply, switch on, cascade delete, delete children, on delete cascade, cascade on delete, remove related, soft delete cascade, dependent deletes, integrity cascade"
         @tier "infra"
-      parentEntity     : string  = ""
+      parentEntity : string = ""
         @label "Parent entity"
         @description "Entity whose deletion triggers the cascade."
         @tier "internal"
-      dependentEntity  : string  = "CascadeLog"
+      dependentEntity : string = CascadeLog
         @label "Dependent entity"
         @description "Entity holding rows that point at the parent (compose one cascade trait per dependent type). Defaults to the atom's own log so the standalone validates; rebind per composition."
         @tier "internal"
-      foreignKeyField  : string  = "parentId"
+      foreignKeyField : string = parentId
         @label "Foreign-key field"
         @description "Field on dependent rows that holds the parent's id."
         @tier "internal"
     }
-    initial: idle
-    state idle {
-      INIT -> idle
-      ParentDeleted -> scanning when @config.enabled
-        (set @entity.parentId @payload.data.id)
-        (set @entity.parentEntity @config.parentEntity)
-        (fetch @config.dependentEntity { emit: { success: "DepsLoaded", failure: "CascadeFailed" } })
-    }
-    state scanning {
-      DepsLoaded -> scanning when (> (array/len (array/filter @payload.data ["fn", "row", (= (object/get @row @config.foreignKeyField) @entity.parentId)])) 0)
-        (set @entity.headId (object/get (array/first (array/filter @payload.data ["fn", "row", (= (object/get @row @config.foreignKeyField) @entity.parentId)])) "id"))
-        (emit CascadeRowDeleted { id: @entity.headId })
-        (persist delete @config.dependentEntity @entity.headId { emit: { success: "CascadeStepped", failure: "CascadeFailed" } })
-      DepsLoaded -> idle when (= (array/len (array/filter @payload.data ["fn", "row", (= (object/get @row @config.foreignKeyField) @entity.parentId)])) 0)
-        (emit CascadeCompleted { parentId: @entity.parentId })
-      CascadeStepped -> scanning
-        (fetch @config.dependentEntity { emit: { success: "DepsLoaded", failure: "CascadeFailed" } })
-      CascadeFailed -> idle
-    }
-    emits {
-      CascadeRowDeleted -> external { id : string }
-      CascadeCompleted  -> external { parentId : string }
-      DepsLoaded        { data : [object] }
-      CascadeStepped    { id : string }
-      CascadeFailed     { error : string, code : string }
-    }
-    listens {
-      ParentDeleted     { data : object }
-      DepsLoaded        { data : [object] }
-      CascadeStepped    { id : string }
-      CascadeFailed     { error : string, code : string }
-    }
   }
+
   page "/cascade-on-delete" as CascadeOnDeletePage -> CascadeOnDeleteGate
 }

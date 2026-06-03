@@ -1,207 +1,402 @@
 app std-event-log "2.1.0"
 "std-event-log — generic chronological event feed (Stripe activity log / GitHub PR timeline / Linear event feed style). Renders a vertical `timeline` with type-coded dots, a single horizontal chip-bar of kind filters (All + per-kind), reverse-chronological sort, and an inline form for logging events that weren't auto-captured. `config.kindOptions` maps each kind → status/icon/label so consuming molecules/organisms get type-coded visuals without re-implementing topology. Topology = loading / viewing / backfilling / error."
-
 type ObjectSpec = { id : string, label : string, value : string }
 type KindOption = { label : string!, value : string! }
-
 orbital EventLogOrbital {
-  type LogEntry = {
-    id          : string!
-    title       : string!
-    description : string
-    date        : string
-    status      : "complete" | "active" | "pending" | "error"
-    kind        : "created" | "updated" | "approved" | "rejected"
-  }
+    type LogEntry = { id : string!, title : string!, description : string, date : string, status : "complete" | "active" | "pending" | "error", kind : "created" | "updated" | "approved" | "rejected" }
 
-  type KindOption = {
-    key    : string!
-    label  : string!
-    icon   : string
-    status : "complete" | "active" | "pending" | "error"
-  }
+    type KindOption = { key : string!, label : string!, icon : string, status : "complete" | "active" | "pending" | "error" }
 
-  type FilterChip = {
-    id    : string!
-    label : string!
-    icon  : string
-  }
+    type FilterChip = { id : string!, label : string!, icon : string }
+
+    type EventLogLoaded = Event { data : [ObjectSpec] } "Fired when event entries finish loading"
+
+    type EventLogLoadFailed = Event { error : string, code : string } "Fired when fetch fails"
+
+    type EventLogSaved = Event { row : object } "Fired when an entry has been persisted"
+
+    type EventLogSaveFailed = Event { error : string, code : string } "Fired when persist fails"
 
   entity EventLogView [runtime] {
-    id                  : string!
-    title               : string @description "The descriptive name or heading for the event log." @synonyms "heading, label, name" = ""
-    description         : string @description "A human-readable explanation of the event." @synonyms "text, details, explanation, summary" = ""
-    kind                : "created" | "updated" | "approved" | "rejected" @description "The type of event being logged." @synonyms "event type, event category, kind, status" = "created"
-    date                : string @description "The timestamp associated with the event." @synonyms "timestamp, time, occurred" = ""
-    allEntries          : [LogEntry] @description "An array of log entry objects." @synonyms "entries, records, items, data" = []
-    entries             : [LogEntry] @description "A list of log entries, each with associated data." @synonyms "records, items, data, events" = []
-    filterChips         : [FilterChip] @description "Represents selectable filter options for event categories." @synonyms "filters, categories, types, selections" = []
-    filterKind          : string @description "The type of filter currently applied to the event log." @synonyms "filter, category, type" = ""
-    backfillTitle       : string @description "A descriptive title for a manually added event." @synonyms "manual title, user-provided title, custom title" = ""
+    id : string!
+    title : string @description "The descriptive name or heading for the event log." @synonyms "heading, label, name" = ""
+    description : string @description "A human-readable explanation of the event." @synonyms "text, details, explanation, summary" = ""
+    kind : "created" | "updated" | "approved" | "rejected" @description "The type of event being logged." @synonyms "event type, event category, kind, status" = created
+    date : string @description "The timestamp associated with the event." @synonyms "timestamp, time, occurred" = ""
+    allEntries : [LogEntry] @description "An array of log entry objects." @synonyms "entries, records, items, data" = []
+    entries : [LogEntry] @description "A list of log entries, each with associated data." @synonyms "records, items, data, events" = []
+    filterChips : [FilterChip] @description "Represents selectable filter options for event categories." @synonyms "filters, categories, types, selections" = []
+    filterKind : string @description "The type of filter currently applied to the event log." @synonyms "filter, category, type" = ""
+    backfillTitle : string @description "A descriptive title for a manually added event." @synonyms "manual title, user-provided title, custom title" = ""
     backfillDescription : string @description "A textual explanation for the event backfill process." @synonyms "explanation, details, notes, information" = ""
-    backfillDate        : string @description "The date and time when the event was manually added." @synonyms "timestamp, entered date, manual date" = ""
-    backfillKind        : string @description "Specifies the category or type of the manually added event." @synonyms "event type, category, kind" = ""
-    errorMessage        : string @description "A human-readable message indicating an error condition." @synonyms "error, error message, problem, issue" = ""
+    backfillDate : string @description "The date and time when the event was manually added." @synonyms "timestamp, entered date, manual date" = ""
+    backfillKind : string @description "Specifies the category or type of the manually added event." @synonyms "event type, category, kind" = ""
+    errorMessage : string @description "A human-readable message indicating an error condition." @synonyms "error, error message, problem, issue" = ""
   }
 
-  type EventLogLoaded     = Event { data : [ObjectSpec] }                "Fired when event entries finish loading"
-  type EventLogLoadFailed = Event { error : string, code : string }  "Fired when fetch fails"
-  type EventLogSaved      = Event { row : object }                   "Fired when an entry has been persisted"
-  type EventLogSaveFailed = Event { error : string, code : string }  "Fired when persist fails"
-
   trait EventLogTimeline -> EventLogView [interaction, instance] {
-    config {
-      title       : string     = "Activity"
-        @label "Section title"
-        @description "Heading shown above the activity timeline"
-        @tier "presentation"
-      kindOptions : [KindOption]   = [
-        { key: "created",  label: "Created",  icon: "plus-circle",   status: "active"   },
-        { key: "updated",  label: "Updated",  icon: "edit-3",        status: "pending"  },
-        { key: "approved", label: "Approved", icon: "check-circle",  status: "complete" },
-        { key: "rejected", label: "Rejected", icon: "x-circle",      status: "error"    }
-      ]
-        @label "Event kinds"
-        @description "Maps each event kind to its label, icon, and status color"
-        @tier "presentation"
-      formFields  : [string]   = ["backfillTitle", "backfillDescription", "backfillKind", "backfillDate"]
-        @label "Backfill fields"
-        @description "Inputs shown in the form for manually logging missed events"
-        @tier "presentation"
-      cardLook : "elevated" | "flat-bordered" | "borderless-divider" | "ticket" | "invoice" | "chip" | "tile-image-first" = "elevated"
-        @label "Card look"
-        @description "Layer 2 visual treatment for cards rendered by this atom."
-        @tier "presentation"
-      timelineLook : "vertical-compact" | "vertical-spacious" | "horizontal" | "swimlane" = "vertical-spacious"
-        @label "Timeline look"
-        @description "Layer 2 visual treatment for the timeline."
-        @tier "presentation"
-    }
     initial: loading
+
     state loading {
       INIT -> loading
-        (fetch EventLogView { emit: { success: "EventLogLoaded", failure: "EventLogLoadFailed" } })
-        (render-ui main { type: "loading-state", title: "Loading activity…" })
+        (fetch EventLogView {
+          emit: { failure: EventLogLoadFailed, success: EventLogLoaded }
+        })
+        (render-ui main {
+          title: "Loading activity…"
+          type: loading-state
+        })
       EventLogLoaded -> viewing
-        (set @entity.filterChips (array/prepend (array/map @config.kindOptions ["fn", "k", { id: (object/get @k "key"), label: (object/get @k "label"), icon: (object/get @k "icon" "circle") }]) { id: "", label: "All", icon: "list" }))
-        (set @entity.allEntries (array/sort (array/map @payload.data ["fn", "row", {
-          id:          (object/get @row "id" ""),
-          title:       (object/get @row "title" ""),
-          description: (object/get @row "description" ""),
-          date:        (object/get @row "createdAt" (object/get @row "date" "")),
-          status:      (object/get (or (array/find @config.kindOptions ["fn", "k", (= (object/get @k "key") (object/get @row "kind" ""))]) {}) "status" "pending"),
-          kind:        (object/get @row "kind" "")
-        }]) "date" "desc"))
-        (set @entity.entries (array/sort (array/map @payload.data ["fn", "row", {
-          id:          (object/get @row "id" ""),
-          title:       (object/get @row "title" ""),
-          description: (object/get @row "description" ""),
-          date:        (object/get @row "createdAt" (object/get @row "date" "")),
-          status:      (object/get (or (array/find @config.kindOptions ["fn", "k", (= (object/get @k "key") (object/get @row "kind" ""))]) {}) "status" "pending"),
-          kind:        (object/get @row "kind" "")
-        }]) "date" "desc"))
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "history" }, { type: "typography", content: "@config.title", variant: "h3" }, { type: "button", label: "Log event", variant: "primary", action: "OPEN_BACKFILL", icon: "plus" }] }, { type: "tabs", tabs: "@entity.filterChips", activeTab: "@entity.filterKind", tabChangeEvent: "APPLY_FILTER" }, { type: "timeline", look: "@config.timelineLook", entity: "@entity.entries", fields: ["title", "description", "date", "status"] }] })
+        (set @entity.filterChips (array/prepend (array/map @config.kindOptions (fn k {
+          icon: (object/get @k icon circle)
+          id: (object/get @k key)
+          label: (object/get @k label)
+        })) {
+          icon: list
+          id: ""
+          label: All
+        }))
+        (set @entity.allEntries (array/sort (array/map ?data (fn row {
+          date: (object/get @row createdAt (object/get @row date ""))
+          description: (object/get @row description "")
+          id: (object/get @row id "")
+          kind: (object/get @row kind "")
+          status: (object/get (or (array/find @config.kindOptions (fn k ["=", (object/get @k key), (object/get @row kind "")])) {}) status pending)
+          title: (object/get @row title "")
+        })) date desc))
+        (set @entity.entries (array/sort (array/map ?data (fn row {
+          date: (object/get @row createdAt (object/get @row date ""))
+          description: (object/get @row description "")
+          id: (object/get @row id "")
+          kind: (object/get @row kind "")
+          status: (object/get (or (array/find @config.kindOptions (fn k ["=", (object/get @k key), (object/get @row kind "")])) {}) status pending)
+          title: (object/get @row title "")
+        })) date desc))
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: history, type: icon }, {
+              content: @config.title
+              type: typography
+              variant: h3
+            }, {
+              action: OPEN_BACKFILL
+              icon: plus
+              label: "Log event"
+              type: button
+              variant: primary
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, {
+            activeTab: @entity.filterKind
+            tabChangeEvent: APPLY_FILTER
+            tabs: @entity.filterChips
+            type: tabs
+          }, {
+            entity: @entity.entries
+            fields: (title description date status)
+            look: @config.timelineLook
+            type: timeline
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
       EventLogLoadFailed -> error
-        (set @entity.errorMessage @payload.error)
-        (render-ui main { type: "error-state", title: "Failed to load", message: "@entity.errorMessage" })
+        (set @entity.errorMessage ?error)
+        (render-ui main {
+          message: @entity.errorMessage
+          title: "Failed to load"
+          type: error-state
+        })
       EventLogSaved -> loading
-        (fetch EventLogView { emit: { success: "EventLogLoaded", failure: "EventLogLoadFailed" } })
-        (render-ui main { type: "loading-state", title: "Refreshing…" })
+        (fetch EventLogView {
+          emit: { failure: EventLogLoadFailed, success: EventLogLoaded }
+        })
+        (render-ui main {
+          title: "Refreshing…"
+          type: loading-state
+        })
       EventLogSaveFailed -> error
-        (set @entity.errorMessage @payload.error)
-        (render-ui main { type: "error-state", title: "Save failed", message: "@entity.errorMessage" })
+        (set @entity.errorMessage ?error)
+        (render-ui main {
+          message: @entity.errorMessage
+          title: "Save failed"
+          type: error-state
+        })
     }
+
     state viewing {
       APPLY_FILTER -> viewing
-        (set @entity.filterKind @payload.tabId)
-        (set @entity.entries (array/filter @entity.allEntries ["fn", "e", (or (= @payload.tabId "") (= (object/get @e "kind") @payload.tabId))]))
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "history" }, { type: "typography", content: "@config.title", variant: "h3" }, { type: "button", label: "Log event", variant: "primary", action: "OPEN_BACKFILL", icon: "plus" }] }, { type: "tabs", tabs: "@entity.filterChips", activeTab: "@entity.filterKind", tabChangeEvent: "APPLY_FILTER" }, { type: "timeline", look: "@config.timelineLook", entity: "@entity.entries", fields: ["title", "description", "date", "status"] }] })
+        (set @entity.filterKind ?tabId)
+        (set @entity.entries (array/filter @entity.allEntries (fn e (or ["=", ?tabId, ""] ["=", (object/get @e kind), ?tabId]))))
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: history, type: icon }, {
+              content: @config.title
+              type: typography
+              variant: h3
+            }, {
+              action: OPEN_BACKFILL
+              icon: plus
+              label: "Log event"
+              type: button
+              variant: primary
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, {
+            activeTab: @entity.filterKind
+            tabChangeEvent: APPLY_FILTER
+            tabs: @entity.filterChips
+            type: tabs
+          }, {
+            entity: @entity.entries
+            fields: (title description date status)
+            look: @config.timelineLook
+            type: timeline
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
       OPEN_BACKFILL -> backfilling
         (set @entity.backfillTitle "")
         (set @entity.backfillDescription "")
         (set @entity.backfillDate "")
         (set @entity.backfillKind "")
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CANCEL_BACKFILL", icon: "arrow-left" }, { type: "icon", name: "plus-circle" }, { type: "typography", content: "Log event", variant: "h3" }] }, { type: "divider" }, { type: "card", look: "@config.cardLook", children: [{ type: "form-section", entity: "@entity", mode: "create", submitEvent: "SAVE_BACKFILL", cancelEvent: "CANCEL_BACKFILL", fields: "@config.formFields" }] }] })
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{
+              action: CANCEL_BACKFILL
+              icon: arrow-left
+              label: Back
+              type: button
+              variant: ghost
+            }, { name: plus-circle, type: icon }, {
+              content: "Log event"
+              type: typography
+              variant: h3
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            children: [{
+              cancelEvent: CANCEL_BACKFILL
+              entity: @entity
+              fields: @config.formFields
+              mode: create
+              submitEvent: SAVE_BACKFILL
+              type: form-section
+            }]
+            look: @config.cardLook
+            type: card
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
     }
+
     state backfilling {
       SAVE_BACKFILL -> loading
-        (persist create EventLogView @payload.data { emit: { success: "EventLogSaved", failure: "EventLogSaveFailed" } })
-        (render-ui main { type: "loading-state", title: "Saving entry…" })
+        (persist create EventLogView ?data {
+          emit: { failure: EventLogSaveFailed, success: EventLogSaved }
+        })
+        (render-ui main {
+          title: "Saving entry…"
+          type: loading-state
+        })
       CANCEL_BACKFILL -> viewing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "history" }, { type: "typography", content: "@config.title", variant: "h3" }, { type: "button", label: "Log event", variant: "primary", action: "OPEN_BACKFILL", icon: "plus" }] }, { type: "tabs", tabs: "@entity.filterChips", activeTab: "@entity.filterKind", tabChangeEvent: "APPLY_FILTER" }, { type: "timeline", look: "@config.timelineLook", entity: "@entity.entries", fields: ["title", "description", "date", "status"] }] })
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: history, type: icon }, {
+              content: @config.title
+              type: typography
+              variant: h3
+            }, {
+              action: OPEN_BACKFILL
+              icon: plus
+              label: "Log event"
+              type: button
+              variant: primary
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, {
+            activeTab: @entity.filterKind
+            tabChangeEvent: APPLY_FILTER
+            tabs: @entity.filterChips
+            type: tabs
+          }, {
+            entity: @entity.entries
+            fields: (title description date status)
+            look: @config.timelineLook
+            type: timeline
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
     }
+
     state error {
       INIT -> loading
-        (render-ui main { type: "loading-state", title: "Retrying…" })
+        (render-ui main {
+          title: "Retrying…"
+          type: loading-state
+        })
     }
+
     emits {
-      APPLY_FILTER           { tabId : string }
+      APPLY_FILTER {
+        tabId : string
+      }
         @description "Signals a filter has been applied to the event log."
         @synonyms "filter, refine, narrow, update"
         @tier "customization"
-      OPEN_BACKFILL          { }
+      OPEN_BACKFILL
         @description "Initiates a backfill operation to retrieve historical events."
         @synonyms "refresh, retrieve, load history"
         @tier "advanced"
-      SAVE_BACKFILL          { data : object }
+      SAVE_BACKFILL {
+        data : object
+      }
         @description "Indicates successful completion of backfill data saving."
         @synonyms "saved, persisted, committed"
         @tier "customization"
-      CANCEL_BACKFILL        { }
+      CANCEL_BACKFILL
         @description "Aborts the backfill process."
         @synonyms "abort, stop, dismiss, undo"
         @tier "customization"
-      EventLogLoaded         { data : [ObjectSpec] }
+      EventLogLoaded {
+        data : [ObjectSpec]
+      }
         @description "Signals the event log has finished loading."
         @synonyms "loaded, ready, initialized"
         @tier "essential"
-      EventLogLoadFailed     { error : string, code : string }
+      EventLogLoadFailed {
+        error : string
+        code : string
+      }
         @description "Indicates that loading the event log failed."
         @synonyms "error, failure, failed, problem"
         @tier "internal"
-      EventLogSaved          { row : object }
+      EventLogSaved {
+        row : object
+      }
         @description "Indicates a new event has been successfully logged."
         @synonyms "saved, added, created, recorded"
         @tier "essential"
-      EventLogSaveFailed     { error : string, code : string }
+      EventLogSaveFailed {
+        error : string
+        code : string
+      }
         @description "Indicates that saving an event failed."
         @synonyms "error, failure, failed, problem"
         @tier "internal"
     }
+
     listens {
-      APPLY_FILTER           { tabId : string }
+      APPLY_FILTER {
+        tabId : string
+      }
         @description "Signals a filter has been applied to the event feed."
         @synonyms "filter, refine, change view"
         @tier "customization"
-      OPEN_BACKFILL          { }
+      OPEN_BACKFILL
         @description "Initiates a backfill operation to retrieve historical events."
         @synonyms "fetch history, retrieve data, load past"
         @tier "advanced"
-      SAVE_BACKFILL          { data : object }
+      SAVE_BACKFILL {
+        data : object
+      }
         @description "Indicates a backfill operation has been successfully saved."
         @synonyms "saved, persisted, completed"
         @tier "customization"
-      CANCEL_BACKFILL        { }
+      CANCEL_BACKFILL
         @description "Aborts an in-progress backfill operation."
         @synonyms "abort, stop, dismiss, undo"
         @tier "customization"
-      EventLogLoaded         { data : [ObjectSpec] }
+      EventLogLoaded {
+        data : [ObjectSpec]
+      }
         @description "Signals the event log has finished loading."
         @synonyms "loaded, ready, initialized"
         @tier "essential"
-      EventLogLoadFailed     { error : string, code : string }
+      EventLogLoadFailed {
+        error : string
+        code : string
+      }
         @description "Indicates the event log failed to load."
         @synonyms "error, failure, failed, loading error"
         @tier "internal"
-      EventLogSaved          { row : object }
+      EventLogSaved {
+        row : object
+      }
         @description "Indicates a new event has been successfully recorded."
         @synonyms "saved, added, created, persisted"
         @tier "essential"
-      EventLogSaveFailed     { error : string, code : string }
+      EventLogSaveFailed {
+        error : string
+        code : string
+      }
         @description "Indicates an attempt to save an event failed."
         @synonyms "error, failure, save failed"
         @tier "internal"
     }
+
+    config {
+      title : string = Activity
+        @label "Section title"
+        @description "Heading shown above the activity timeline"
+        @tier "presentation"
+      kindOptions : [KindOption] = [{
+        icon: plus-circle
+        key: created
+        label: Created
+        status: active
+      }, {
+        icon: edit-3
+        key: updated
+        label: Updated
+        status: pending
+      }, {
+        icon: check-circle
+        key: approved
+        label: Approved
+        status: complete
+      }, {
+        icon: x-circle
+        key: rejected
+        label: Rejected
+        status: error
+      }]
+        @label "Event kinds"
+        @description "Maps each event kind to its label, icon, and status color"
+        @tier "presentation"
+      formFields : [string] = (backfillTitle backfillDescription backfillKind backfillDate)
+        @label "Backfill fields"
+        @description "Inputs shown in the form for manually logging missed events"
+        @tier "presentation"
+      cardLook : "elevated" | "flat-bordered" | "borderless-divider" | "ticket" | "invoice" | "chip" | "tile-image-first" = elevated
+        @label "Card look"
+        @description "Layer 2 visual treatment for cards rendered by this atom."
+        @tier "presentation"
+      timelineLook : "vertical-compact" | "vertical-spacious" | "horizontal" | "swimlane" = vertical-spacious
+        @label "Timeline look"
+        @description "Layer 2 visual treatment for the timeline."
+        @tier "presentation"
+    }
   }
+
   page "/event-log" as EventLogPage -> EventLogTimeline
 }

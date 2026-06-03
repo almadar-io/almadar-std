@@ -1,19 +1,24 @@
 app std-agent-rag "1.0.0"
 "std-agent-rag as a Function"
-
 type ItemSpec = { id : string, label : string!, value : string, icon : string }
-
 orbital AgentRagOrbital {
   uses AgentCompletion from "std/behaviors/std-agent-completion"
+
   uses AgentMemory from "std/behaviors/std-agent-memory"
+
   uses AgentSearch from "std/behaviors/std-agent-search"
+
   uses Tabs from "std/behaviors/std-tabs"
+
+    type AgentRagLoaded = Event AgentRag "Fired when AgentRag finishes loading"
+
+    type AgentRagLoadFailed = Event { message : string } "Fired when AgentRag fails to load"
 
   entity AgentRag [runtime] {
     id : string
     name : string @description "A human-readable identifier for the agent." @synonyms "title, label, identifier"
     description : string @description "A brief explanation of the component's function." @synonyms "explanation, details, summary, notes"
-    status : "active" | "inactive" | "pending" @description "Indicates the current operational state of the component." @synonyms "state, condition, operational_status" = "active"
+    status : "active" | "inactive" | "pending" @description "Indicates the current operational state of the component." @synonyms "state, condition, operational_status" = active
     createdAt : string
     query : string @description "The text used to initiate a search or request." @synonyms "search term, request, input, question" = ""
     context : string @description "The surrounding information used for processing." @synonyms "background, details, surrounding text" = ""
@@ -30,51 +35,245 @@ orbital AgentRagOrbital {
     resultCount : number @description "The number of results returned." @synonyms "count, size, total, quantity" = 0
     results : string @description "The output or outcome of a process or operation." @synonyms "output, outcome, result, data" = "[]"
     prompt : string @description "The text used as input for generating a response." @synonyms "instruction, query, input" = ""
-    provider : string @description "Identifies the source or service providing data." @synonyms "source, origin, vendor" = "anthropic"
-    model : string @description "Specifies the language model used for processing." @synonyms "engine, classifier, algorithm" = "claude-sonnet-4-20250514"
+    provider : string @description "Identifies the source or service providing data." @synonyms "source, origin, vendor" = anthropic
+    model : string @description "Specifies the language model used for processing." @synonyms "engine, classifier, algorithm" = claude-sonnet-4-20250514
     activeTab : string @description "The currently selected tab within the interface." @synonyms "selection, current tab, tab" = ""
     items : [ItemSpec] @description "A list of items retrieved or processed." @synonyms "entries, records, data" = []
-
   }
 
-  type AgentRagLoaded     = Event AgentRag                  "Fired when AgentRag finishes loading"
-  type AgentRagLoadFailed = Event { message : string } "Fired when AgentRag fails to load"
   trait AgentRagRag -> AgentRag [interaction, collection] {
     initial: idle
+
     state idle {
       INIT -> idle
         (set @entity.query "")
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "brain"}, { type: "typography", content: "RAG Pipeline", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Enter a query to retrieve context and generate a response", variant: "body" }, { type: "form-section", entity: @entity, mode: "edit", submitEvent: "GENERATE", fields: ["query"] }] }] }] })
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: brain, type: icon }, {
+              content: "RAG Pipeline"
+              type: typography
+              variant: h2
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            children: [{
+              children: [{
+                content: "Enter a query to retrieve context and generate a response"
+                type: typography
+                variant: body
+              }, {
+                entity: @entity
+                fields: (query)
+                mode: edit
+                submitEvent: GENERATE
+                type: form-section
+              }]
+              direction: vertical
+              gap: md
+              type: stack
+            }]
+            type: card
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
       GENERATE -> retrieving
         (set @entity.status retrieving)
         (agent/recall @entity.query 5)
         (agent/search-code @entity.query)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "search"}, { type: "typography", content: "Retrieving context...", variant: "h3" }, { type: "spinner"}, { type: "stack", direction: "horizontal", gap: "md", justify: "center", children: [{ type: "badge", label: "Recalling memories" }, { type: "badge", label: "Searching code" }] }] })
+        (render-ui main {
+          align: center
+          children: [{ name: search, type: icon }, {
+            content: "Retrieving context..."
+            type: typography
+            variant: h3
+          }, { type: spinner }, {
+            children: [{
+              label: "Recalling memories"
+              type: badge
+            }, {
+              label: "Searching code"
+              type: badge
+            }]
+            direction: horizontal
+            gap: md
+            justify: center
+            type: stack
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
     }
+
     state retrieving {
       RETRIEVAL_DONE -> generating
-        (set @entity.context @payload.context)
-        (set @entity.memoryHits @payload.memoryHits)
-        (set @entity.searchHits @payload.searchHits)
+        (set @entity.context ?context)
+        (set @entity.memoryHits ?memoryHits)
+        (set @entity.searchHits ?searchHits)
         (set @entity.status generating)
         (agent/generate (str/concat "Context:\n" @entity.context "\n\nQuery: " @entity.query "\n\nProvide a comprehensive answer based on the retrieved context."))
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "cpu"}, { type: "typography", content: "Generating response...", variant: "h3" }, { type: "spinner"}, { type: "stack", direction: "horizontal", gap: "md", justify: "center", children: [{ type: "badge", label: "@entity.memoryHits" }, { type: "badge", label: "@entity.searchHits" }] }] })
+        (render-ui main {
+          align: center
+          children: [{ name: cpu, type: icon }, {
+            content: "Generating response..."
+            type: typography
+            variant: h3
+          }, { type: spinner }, {
+            children: [{ label: @entity.memoryHits, type: badge }, { label: @entity.searchHits, type: badge }]
+            direction: horizontal
+            gap: md
+            justify: center
+            type: stack
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
       FAILED -> idle
-        (set @entity.error @payload.error)
+        (set @entity.error ?error)
         (set @entity.status error)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "alert-triangle"}, { type: "typography", content: "RAG Pipeline Error", variant: "h2" }, { type: "alert", variant: "error", message: "@entity.error" }, { type: "button", label: "Try Again", action: "RESET", variant: "primary", icon: "rotate-ccw" }] })
+        (render-ui main {
+          align: center
+          children: [{ name: alert-triangle, type: icon }, {
+            content: "RAG Pipeline Error"
+            type: typography
+            variant: h2
+          }, {
+            message: @entity.error
+            type: alert
+            variant: error
+          }, {
+            action: RESET
+            icon: rotate-ccw
+            label: "Try Again"
+            type: button
+            variant: primary
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
     }
+
     state generating {
       GENERATION_DONE -> completed
-        (set @entity.response @payload.response)
+        (set @entity.response ?response)
         (set @entity.status completed)
         (agent/memorize (str/concat "RAG query: " @entity.query) pattern-affinity)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "check-circle"}, { type: "typography", content: "RAG Complete", variant: "h2" }] }, { type: "button", label: "New Query", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] }, { type: "divider" }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Memory Hits", value: "@entity.memoryHits", icon: "brain" }, { type: "stat-display", label: "Code Hits", value: "@entity.searchHits", icon: "code" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Query", variant: "caption" }, { type: "typography", content: "@entity.query", variant: "body" }, { type: "divider" }, { type: "typography", content: "Response", variant: "caption" }, { type: "typography", content: "@entity.response", variant: "body" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Retrieved Context", variant: "caption" }, { type: "typography", content: "@entity.context", variant: "body" }] }] }] })
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{
+              align: center
+              children: [{ name: check-circle, type: icon }, {
+                content: "RAG Complete"
+                type: typography
+                variant: h2
+              }]
+              direction: horizontal
+              gap: sm
+              type: stack
+            }, {
+              action: RESET
+              icon: rotate-ccw
+              label: "New Query"
+              type: button
+              variant: ghost
+            }]
+            direction: horizontal
+            gap: sm
+            justify: between
+            type: stack
+          }, { type: divider }, {
+            children: [{
+              icon: brain
+              label: "Memory Hits"
+              type: stat-display
+              value: @entity.memoryHits
+            }, {
+              icon: code
+              label: "Code Hits"
+              type: stat-display
+              value: @entity.searchHits
+            }]
+            cols: 2
+            type: simple-grid
+          }, { type: divider }, {
+            children: [{
+              children: [{
+                content: Query
+                type: typography
+                variant: caption
+              }, {
+                content: @entity.query
+                type: typography
+                variant: body
+              }, { type: divider }, {
+                content: Response
+                type: typography
+                variant: caption
+              }, {
+                content: @entity.response
+                type: typography
+                variant: body
+              }]
+              direction: vertical
+              gap: md
+              type: stack
+            }]
+            type: card
+          }, {
+            children: [{
+              children: [{
+                content: "Retrieved Context"
+                type: typography
+                variant: caption
+              }, {
+                content: @entity.context
+                type: typography
+                variant: body
+              }]
+              direction: vertical
+              gap: sm
+              type: stack
+            }]
+            type: card
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
       FAILED -> idle
-        (set @entity.error @payload.error)
+        (set @entity.error ?error)
         (set @entity.status error)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "alert-triangle"}, { type: "typography", content: "RAG Pipeline Error", variant: "h2" }, { type: "alert", variant: "error", message: "@entity.error" }, { type: "button", label: "Try Again", action: "RESET", variant: "primary", icon: "rotate-ccw" }] })
+        (render-ui main {
+          align: center
+          children: [{ name: alert-triangle, type: icon }, {
+            content: "RAG Pipeline Error"
+            type: typography
+            variant: h2
+          }, {
+            message: @entity.error
+            type: alert
+            variant: error
+          }, {
+            action: RESET
+            icon: rotate-ccw
+            label: "Try Again"
+            type: button
+            variant: primary
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
     }
+
     state completed {
       RESET -> idle
         (set @entity.status idle)
@@ -83,24 +282,71 @@ orbital AgentRagOrbital {
         (set @entity.memoryHits 0)
         (set @entity.searchHits 0)
         (set @entity.error "")
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "brain"}, { type: "typography", content: "RAG Pipeline", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Enter a query to retrieve context and generate a response", variant: "body" }, { type: "form-section", entity: @entity, mode: "edit", submitEvent: "GENERATE", fields: ["query"] }] }] }] })
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: brain, type: icon }, {
+              content: "RAG Pipeline"
+              type: typography
+              variant: h2
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            children: [{
+              children: [{
+                content: "Enter a query to retrieve context and generate a response"
+                type: typography
+                variant: body
+              }, {
+                entity: @entity
+                fields: (query)
+                mode: edit
+                submitEvent: GENERATE
+                type: form-section
+              }]
+              direction: vertical
+              gap: md
+              type: stack
+            }]
+            type: card
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
     }
+
     listens {
-      RETRIEVAL_DONE { context : string!, memoryHits : number!, searchHits : number! }
-      GENERATION_DONE { response : string! }
-      FAILED { error : string! }
+      RETRIEVAL_DONE {
+        context : string!
+        memoryHits : number!
+        searchHits : number!
+      }
+      GENERATION_DONE {
+        response : string!
+      }
+      FAILED {
+        error : string!
+      }
     }
   }
+
   trait RagTabs = Tabs.traits.TabsItemTabs -> AgentRag {
   }
+
   trait RagMemoryLifecycle = AgentMemory.traits.AgentMemoryBrowse -> AgentRag {
     emitsScope internal
   }
+
   trait RagSearchLifecycle = AgentSearch.traits.AgentSearchBrowse -> AgentRag {
     emitsScope internal
   }
+
   trait RagCompletionFlow = AgentCompletion.traits.AgentCompletionModal -> AgentRag {
     emitsScope internal
   }
+
   page "/agentrags" as AgentRagPage -> AgentRagRag, RagTabs, RagMemoryLifecycle, RagSearchLifecycle, RagCompletionFlow
 }

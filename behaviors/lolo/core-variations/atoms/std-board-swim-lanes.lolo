@@ -1,71 +1,139 @@
 app std-board-swim-lanes "1.0.2"
 "Swim-lane board — full-width horizontal lanes per status, cards flow left-to-right within each lane. Lane header on top with icon + label + count; cards render in the lane body. Useful for HR-portal recruiting stages and project-manager team boards. Same BoardItemBoard trait, same state machine, same emits/listens as std-board — only the bodyContent tree differs."
-
 orbital SwimLanesBoardOrbital {
   uses Board from "std/behaviors/std-board"
 
   entity SwimLaneItem [persistent: swim_lane_items] {
-    id                  : string!
-    title               : string! @description "The text displayed as the lane's header." @synonyms "label, heading, name"
-    description         : string @description "A brief explanation or summary of the item." @synonyms "summary, details, explanation, notes" = ""
-    stage               : "todo" | "doing" | "done" @description "The current status or phase of the item." @synonyms "status, phase, state, step" = "todo"
-    notes               : string @description "Free-form text providing additional information or context." @synonyms "comments, remarks, details, information" = ""
-    position            : number @description "The sequential order of this item within its parent." @synonyms "order, sequence, index, rank" = 0
-    boards              : [object] @description "A collection of related board items." @synonyms "items, records, entries" = []
-    currentId           : string @description "The unique identifier for this item." @synonyms "identifier, key, ref" = ""
-    currentTitle        : string @description "The displayed title for the current item." @synonyms "label, heading, name" = ""
-    currentDescription  : string @description "The current textual description associated with the item." @synonyms "text, details, content, notes" = ""
-    currentStage        : string @description "The current status or phase of an item." @synonyms "status, phase, step, stage" = ""
-    currentNotes        : string @description "The textual notes associated with the current item." @synonyms "comments, remarks, annotations, details" = ""
-    errorMessage        : string @description "Error message associated with the item." @synonyms "error, alert, message" = ""
+    id : string!
+    title : string! @description "The text displayed as the lane's header." @synonyms "label, heading, name"
+    description : string @description "A brief explanation or summary of the item." @synonyms "summary, details, explanation, notes" = ""
+    stage : "todo" | "doing" | "done" @description "The current status or phase of the item." @synonyms "status, phase, state, step" = todo
+    notes : string @description "Free-form text providing additional information or context." @synonyms "comments, remarks, details, information" = ""
+    position : number @description "The sequential order of this item within its parent." @synonyms "order, sequence, index, rank" = 0
+    boards : [object] @description "A collection of related board items." @synonyms "items, records, entries" = []
+    currentId : string @description "The unique identifier for this item." @synonyms "identifier, key, ref" = ""
+    currentTitle : string @description "The displayed title for the current item." @synonyms "label, heading, name" = ""
+    currentDescription : string @description "The current textual description associated with the item." @synonyms "text, details, content, notes" = ""
+    currentStage : string @description "The current status or phase of an item." @synonyms "status, phase, step, stage" = ""
+    currentNotes : string @description "The textual notes associated with the current item." @synonyms "comments, remarks, annotations, details" = ""
+    errorMessage : string @description "Error message associated with the item." @synonyms "error, alert, message" = ""
   }
 
   trait SwimLanesBoard = Board.traits.BoardItemBoard -> SwimLaneItem {
-    config: {
+    config {
       bodyContent: {
-        type: "stack",
-        direction: "vertical",
-        gap: "md",
-        children: [
-          { type: "stack", direction: "horizontal", gap: "sm", align: "center", className: "px-card-md", children: [
-            { type: "icon", name: "layout-rows" },
-            { type: "typography", content: "@config.title", variant: "h2" }
-          ]},
-          { type: "divider" },
-          { type: "data-list", entity: "@entity.boards", gap: "md", fields: [], dndRoot: true,
-            renderItem: ["fn", "col", {
-              type: "card", look: "flat-bordered", padding: "none",
-              className: "overflow-hidden rounded-lg",
-              children: [
-                { type: "stack", direction: "vertical", gap: "none", children: [
-                  { type: "stack", direction: "horizontal", gap: "sm", align: "center", className: "p-card-md border-b border-[var(--color-border)] bg-[var(--color-surface-subtle)]", children: [
-                    { type: "icon", name: "@col.icon" },
-                    { type: "typography", content: "@col.label", variant: "h4", className: "flex-1" },
-                    { type: "badge", label: "@col.count", variant: "primary", size: "sm" }
-                  ]},
-                  { type: "data-list", entity: "@col.items", gap: "sm", fields: [], dragGroup: "@col.key", accepts: "*", sortable: true, dropEvent: "MOVE_CARD", reorderEvent: "REORDER_CARD", positionEvent: "REORDER_POSITION",
-                    className: "p-card-md min-h-[140px] flex flex-row flex-nowrap gap-3 overflow-x-auto",
-                    renderItem: ["fn", "item", {
-                      type: "card", look: "elevated", padding: "sm",
-                      className: "min-w-[220px] max-w-[260px] rounded-md cursor-grab shadow-sm hover:shadow-md transition-shadow",
-                      children: [
-                        { type: "stack", direction: "vertical", gap: "xs", children: [
-                          { type: "typography", content: "@config.cardTitleBinding", variant: "body", weight: "medium" },
-                          { type: "typography", content: "@config.cardDescriptionBinding", variant: "caption", color: "muted", className: "line-clamp-2" },
-                          { type: "stack", direction: "horizontal", gap: "xs", align: "center", className: "pt-1", children: [
-                            { type: "badge", label: "@config.cardStageBinding", variant: "primary", size: "sm" },
-                            { type: "button", label: "Open", variant: "ghost", size: "sm", action: "OPEN_CARD", actionPayload: { id: "@config.cardIdBinding", row: "@item" }, icon: "arrow-right", className: "ml-auto" }
-                          ]}
-                        ]}
-                      ]
+        children: [{
+          align: center
+          children: [{ name: layout-rows, type: icon }, {
+            content: @config.title
+            type: typography
+            variant: h2
+          }]
+          className: px-card-md
+          direction: horizontal
+          gap: sm
+          type: stack
+        }, { type: divider }, {
+          dndRoot: true
+          entity: @entity.boards
+          fields: []
+          gap: md
+          renderItem: (fn col {
+            children: [{
+              children: [{
+                align: center
+                children: [{ name: @col.icon, type: icon }, {
+                  className: flex-1
+                  content: @col.label
+                  type: typography
+                  variant: h4
+                }, {
+                  label: @col.count
+                  size: sm
+                  type: badge
+                  variant: primary
+                }]
+                className: "p-card-md border-b border-[var(--color-border)] bg-[var(--color-surface-subtle)]"
+                direction: horizontal
+                gap: sm
+                type: stack
+              }, {
+                accepts: "*"
+                className: "p-card-md min-h-[140px] flex flex-row flex-nowrap gap-3 overflow-x-auto"
+                dragGroup: @col.key
+                dropEvent: MOVE_CARD
+                entity: @col.items
+                fields: []
+                gap: sm
+                positionEvent: REORDER_POSITION
+                renderItem: (fn item {
+                  children: [{
+                    children: [{
+                      content: @config.cardTitleBinding
+                      type: typography
+                      variant: body
+                      weight: medium
+                    }, {
+                      className: line-clamp-2
+                      color: muted
+                      content: @config.cardDescriptionBinding
+                      type: typography
+                      variant: caption
+                    }, {
+                      align: center
+                      children: [{
+                        label: @config.cardStageBinding
+                        size: sm
+                        type: badge
+                        variant: primary
+                      }, {
+                        action: OPEN_CARD
+                        actionPayload: { id: @config.cardIdBinding, row: @item }
+                        className: ml-auto
+                        icon: arrow-right
+                        label: Open
+                        size: sm
+                        type: button
+                        variant: ghost
+                      }]
+                      className: pt-1
+                      direction: horizontal
+                      gap: xs
+                      type: stack
                     }]
-                  }
-                ]}
-              ]
+                    direction: vertical
+                    gap: xs
+                    type: stack
+                  }]
+                  className: "min-w-[220px] max-w-[260px] rounded-md cursor-grab shadow-sm hover:shadow-md transition-shadow"
+                  look: elevated
+                  padding: sm
+                  type: card
+                })
+                reorderEvent: REORDER_CARD
+                sortable: true
+                type: data-list
+              }]
+              direction: vertical
+              gap: none
+              type: stack
             }]
-          },
-          { type: "floating-action-button", label: "Add card", action: "ADD_CARD", icon: "plus", variant: "primary" }
-        ]
+            className: "overflow-hidden rounded-lg"
+            look: flat-bordered
+            padding: none
+            type: card
+          })
+          type: data-list
+        }, {
+          action: ADD_CARD
+          icon: plus
+          label: "Add card"
+          type: floating-action-button
+          variant: primary
+        }]
+        direction: vertical
+        gap: md
+        type: stack
       }
     }
   }

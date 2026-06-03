@@ -1,91 +1,266 @@
 app std-cache-aside "1.0.0"
 "std-cache-aside as a Function"
-
 orbital CacheEntryOrbital {
+    type CacheEntryLoaded = Event { data : [CacheEntry] } "Fired when CacheEntry finishes loading; payload.data holds the entries"
+
+    type CacheEntryLoadFailed = Event { error : string, code : string } "Fired when CacheEntry fails to load"
+
+    type CacheEntryUpdated = Event { id : string } "Fired when persist update succeeds"
+
+    type CacheEntryUpdateFailed = Event { error : string, code : string } "Fired when persist update fails"
+
   entity CacheEntry [runtime] {
-    id          : string!
-    name        : string! @description "A user-defined identifier for the cache entry." @synonyms "key, identifier, alias"
+    id : string!
+    name : string! @description "A user-defined identifier for the cache entry." @synonyms "key, identifier, alias"
     description : string @description "A human-readable explanation of the entry's content." @synonyms "explanation, details, notes, summary"
-    status      : "active" | "inactive" | "pending" @description "Current operational state of the entry." @synonyms "state, condition, operationalStatus" = "active"
-    createdAt   : string
-    hitCount    : number @description "The number of times this entry has been retrieved." @synonyms "count, occurrences, retrievals" = 0
-    cacheAge    : number @description "Duration since the cache entry was last updated." @synonyms "age, duration, expiry" = 0
+    status : "active" | "inactive" | "pending" @description "Current operational state of the entry." @synonyms "state, condition, operationalStatus" = active
+    createdAt : string
+    hitCount : number @description "The number of times this entry has been retrieved." @synonyms "count, occurrences, retrievals" = 0
+    cacheAge : number @description "Duration since the cache entry was last updated." @synonyms "age, duration, expiry" = 0
   }
 
-  type CacheEntryLoaded        = Event { data : [CacheEntry] }           "Fired when CacheEntry finishes loading; payload.data holds the entries"
-  type CacheEntryLoadFailed    = Event { error : string, code : string } "Fired when CacheEntry fails to load"
-  type CacheEntryUpdated       = Event { id : string }                   "Fired when persist update succeeds"
-  type CacheEntryUpdateFailed  = Event { error : string, code : string } "Fired when persist update fails"
-
   trait CacheEntryCacheManager -> CacheEntry [interaction, collection] {
-    config {
-      ttlSeconds : number = 300
-        @label "TTL (seconds)"
-        @description "Cache entry time-to-live before it goes stale. Default 5 minutes. Shorter = fresher/real-time data; longer = stable/long-lived caching."
-        @tier "domain"
-        @synonyms "expiration, time to live, cache duration, freshness, real-time (short) vs long-lived (long)"
-      staleWhileRevalidate : boolean = true
-        @label "Serve stale while revalidating"
-        @description "When true, serve stale entries to consumers while a background refresh fetches fresh data. Reduces latency at the cost of brief staleness."
-        @tier "domain"
-        @synonyms "SWR, stale serving"
-      evictionPolicy : "lru" | "lfu" | "fifo" | "ttl-only" = "lru"
-        @label "Eviction policy"
-        @description "How entries are evicted when the cache fills: least-recently-used, least-frequently-used, first-in-first-out, or TTL-only (never evict early)."
-        @tier "domain"
-        @synonyms "cache replacement, eviction strategy"
-      maxCacheSize : number = 1000
-        @label "Max cache entries"
-        @description "Hard cap on cached entries before eviction. 0 = unlimited."
-        @tier "domain"
-        @synonyms "cache capacity, max entries"
-      emptyLook : "illustrated" | "icon-only" | "text-only" | "mascot" = "icon-only"
-        @label "Empty-state look"
-        @description "Layer 2 visual treatment for the empty-state placeholder."
-        @tier "presentation"
-      tableLook : "dense" | "spacious" | "striped" | "borderless" | "card-rows" = "dense"
-        @label "Table look"
-        @description "Layer 2 visual treatment for the data table rendered by this atom."
-        @tier "presentation"
-    }
     initial: empty
+
     state empty {
       INIT -> empty
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "database" }, { type: "typography", content: "Cache (empty)", variant: "h2" }] }, { type: "button", label: "Fetch", action: "FETCH", variant: "primary", icon: "download" }] }, { type: "divider" }, { type: "empty-state", look: "@config.emptyLook", icon: "inbox", title: "Cache is empty", description: "Fetch data to populate the cache." }] })
+        (render-ui main {
+          children: [{
+            children: [{
+              children: [{ name: database, type: icon }, {
+                content: "Cache (empty)"
+                type: typography
+                variant: h2
+              }]
+              direction: horizontal
+              gap: md
+              type: stack
+            }, {
+              action: FETCH
+              icon: download
+              label: Fetch
+              type: button
+              variant: primary
+            }]
+            direction: horizontal
+            gap: md
+            justify: between
+            type: stack
+          }, { type: divider }, {
+            description: "Fetch data to populate the cache."
+            icon: inbox
+            look: @config.emptyLook
+            title: "Cache is empty"
+            type: empty-state
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
       FETCH -> loading
-        (fetch CacheEntry { emit: { success: "CacheEntryLoaded", failure: "CacheEntryLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Fetching cache…" }] })
+        (fetch CacheEntry {
+          emit: { failure: CacheEntryLoadFailed, success: CacheEntryLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Fetching cache…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
     }
+
     state loading {
       CacheEntryLoaded -> cached
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "database" }, { type: "typography", content: "Cache (hot)", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "status-dot", status: "online", pulse: false, label: "Cached" }, { type: "button", label: "Invalidate", action: "INVALIDATE", variant: "ghost", icon: "trash" }] }] }, { type: "divider" }, { type: "data-grid", look: "@config.tableLook", entity: @payload.data, fields: [], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "database" }, { type: "typography", variant: "h4", content: "@item.name" }] }, { type: "badge", label: "@item.description" }] }, { type: "typography", variant: "caption", content: "@item.status" }] }] }] })
+        (render-ui main {
+          children: [{
+            children: [{
+              children: [{ name: database, type: icon }, {
+                content: "Cache (hot)"
+                type: typography
+                variant: h2
+              }]
+              direction: horizontal
+              gap: md
+              type: stack
+            }, {
+              align: center
+              children: [{
+                label: Cached
+                pulse: false
+                status: online
+                type: status-dot
+              }, {
+                action: INVALIDATE
+                icon: trash
+                label: Invalidate
+                type: button
+                variant: ghost
+              }]
+              direction: horizontal
+              gap: sm
+              type: stack
+            }]
+            direction: horizontal
+            gap: md
+            justify: between
+            type: stack
+          }, { type: divider }, {
+            entity: ?data
+            fields: []
+            look: @config.tableLook
+            renderItem: (fn item {
+              children: [{
+                align: center
+                children: [{
+                  align: center
+                  children: [{ name: database, type: icon }, {
+                    content: @item.name
+                    type: typography
+                    variant: h4
+                  }]
+                  direction: horizontal
+                  gap: sm
+                  type: stack
+                }, { label: @item.description, type: badge }]
+                direction: horizontal
+                justify: between
+                type: stack
+              }, {
+                content: @item.status
+                type: typography
+                variant: caption
+              }]
+              direction: vertical
+              gap: sm
+              type: stack
+            })
+            type: data-grid
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
       CacheEntryLoadFailed -> error
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "FETCH", variant: "primary", icon: "rotate-ccw" }] })
+        (render-ui main {
+          align: center
+          children: [{
+            color: destructive
+            name: alert-triangle
+            type: icon
+          }, {
+            content: "Failed to load"
+            type: typography
+            variant: h3
+          }, {
+            color: muted
+            content: ?error
+            type: typography
+            variant: body
+          }, {
+            action: FETCH
+            icon: rotate-ccw
+            label: Retry
+            type: button
+            variant: primary
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
     }
+
     state cached {
       INVALIDATE -> stale
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "database" }, { type: "typography", content: "Cache (stale)", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "status-dot", status: "warning", pulse: true, label: "Stale" }, { type: "button", label: "Refresh", action: "REFRESH", variant: "primary", icon: "refresh-cw" }] }] }, { type: "divider" }, { type: "alert", variant: "warning", message: "Cache data is stale. Refresh to get the latest data." }] })
+        (render-ui main {
+          children: [{
+            children: [{
+              children: [{ name: database, type: icon }, {
+                content: "Cache (stale)"
+                type: typography
+                variant: h2
+              }]
+              direction: horizontal
+              gap: md
+              type: stack
+            }, {
+              align: center
+              children: [{
+                label: Stale
+                pulse: true
+                status: warning
+                type: status-dot
+              }, {
+                action: REFRESH
+                icon: refresh-cw
+                label: Refresh
+                type: button
+                variant: primary
+              }]
+              direction: horizontal
+              gap: sm
+              type: stack
+            }]
+            direction: horizontal
+            gap: md
+            justify: between
+            type: stack
+          }, { type: divider }, {
+            message: "Cache data is stale. Refresh to get the latest data."
+            type: alert
+            variant: warning
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
       CACHED -> loading
-        (persist update CacheEntry @payload.data { emit: { success: "CacheEntryUpdated", failure: "CacheEntryUpdateFailed" } })
-        (fetch CacheEntry { emit: { success: "CacheEntryLoaded", failure: "CacheEntryLoadFailed" } })
-        (render-ui main { type: "spinner" })
+        (persist update CacheEntry ?data {
+          emit: { failure: CacheEntryUpdateFailed, success: CacheEntryUpdated }
+        })
+        (fetch CacheEntry {
+          emit: { failure: CacheEntryLoadFailed, success: CacheEntryLoaded }
+        })
+        (render-ui main { type: spinner })
     }
+
     state stale {
       REFRESH -> loading
-        (fetch CacheEntry { emit: { success: "CacheEntryLoaded", failure: "CacheEntryLoadFailed" } })
-        (render-ui main { type: "spinner" })
+        (fetch CacheEntry {
+          emit: { failure: CacheEntryLoadFailed, success: CacheEntryLoaded }
+        })
+        (render-ui main { type: spinner })
       FETCH -> loading
-        (fetch CacheEntry { emit: { success: "CacheEntryLoaded", failure: "CacheEntryLoadFailed" } })
-        (render-ui main { type: "spinner" })
+        (fetch CacheEntry {
+          emit: { failure: CacheEntryLoadFailed, success: CacheEntryLoaded }
+        })
+        (render-ui main { type: spinner })
     }
+
     state error {
       INIT -> empty
-        (render-ui main { type: "empty-state", look: "@config.emptyLook", icon: "inbox", title: "Cache is empty", description: "Fetch data to populate the cache." })
+        (render-ui main {
+          description: "Fetch data to populate the cache."
+          icon: inbox
+          look: @config.emptyLook
+          title: "Cache is empty"
+          type: empty-state
+        })
       FETCH -> loading
-        (fetch CacheEntry { emit: { success: "CacheEntryLoaded", failure: "CacheEntryLoadFailed" } })
-        (render-ui main { type: "spinner" })
+        (fetch CacheEntry {
+          emit: { failure: CacheEntryLoadFailed, success: CacheEntryLoaded }
+        })
+        (render-ui main { type: spinner })
     }
-emits {
+
+    emits {
       CacheEntryLoaded
         @description "Indicates a cache entry has been successfully retrieved."
         @synonyms "loaded, retrieved, fetched"
@@ -104,20 +279,60 @@ emits {
         @tier "internal"
     }
 
-        listens {
-      CACHED                 { data : CacheEntry }
+    listens {
+      CACHED {
+        data : CacheEntry
+      }
         @description "Data retrieved successfully from the cache."
         @synonyms "hit, found, retrieved"
         @tier "essential"
-      CacheEntryLoadFailed   { error : string, code : string }
+      CacheEntryLoadFailed {
+        error : string
+        code : string
+      }
         @description "Indicates a failure to retrieve a cached entry."
         @synonyms "error, failure, miss, not found"
         @tier "internal"
-      CacheEntryUpdateFailed { error : string, code : string }
+      CacheEntryUpdateFailed {
+        error : string
+        code : string
+      }
         @description "Indicates a failure to update a cached entry."
         @synonyms "error, failure, problem, unsuccessful"
         @tier "internal"
     }
+
+    config {
+      ttlSeconds : number = 300
+        @label "TTL (seconds)"
+        @description "Cache entry time-to-live before it goes stale. Default 5 minutes. Shorter = fresher/real-time data; longer = stable/long-lived caching."
+        @synonyms "expiration, time to live, cache duration, freshness, real-time (short) vs long-lived (long)"
+        @tier "domain"
+      staleWhileRevalidate : boolean = true
+        @label "Serve stale while revalidating"
+        @description "When true, serve stale entries to consumers while a background refresh fetches fresh data. Reduces latency at the cost of brief staleness."
+        @synonyms "SWR, stale serving"
+        @tier "domain"
+      evictionPolicy : "lru" | "lfu" | "fifo" | "ttl-only" = lru
+        @label "Eviction policy"
+        @description "How entries are evicted when the cache fills: least-recently-used, least-frequently-used, first-in-first-out, or TTL-only (never evict early)."
+        @synonyms "cache replacement, eviction strategy"
+        @tier "domain"
+      maxCacheSize : number = 1000
+        @label "Max cache entries"
+        @description "Hard cap on cached entries before eviction. 0 = unlimited."
+        @synonyms "cache capacity, max entries"
+        @tier "domain"
+      emptyLook : "illustrated" | "icon-only" | "text-only" | "mascot" = icon-only
+        @label "Empty-state look"
+        @description "Layer 2 visual treatment for the empty-state placeholder."
+        @tier "presentation"
+      tableLook : "dense" | "spacious" | "striped" | "borderless" | "card-rows" = dense
+        @label "Table look"
+        @description "Layer 2 visual treatment for the data table rendered by this atom."
+        @tier "presentation"
+    }
   }
+
   page "/cacheentrys" as CacheEntryPage -> CacheEntryCacheManager
 }

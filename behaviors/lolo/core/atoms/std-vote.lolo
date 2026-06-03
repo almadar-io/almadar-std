@@ -1,102 +1,216 @@
 app std-vote "1.0.0"
 "std-vote — forum-style up/down vote tally with single-vote-per-user constraint. Owns a Vote entity; VOTE persists the new direction (toggling to none when re-clicking the active arrow) and emits VoteCasted so cross-trait listeners can recompute aggregates."
-
 orbital VoteOrbital {
+    type VoteLoaded = Event { data : [Vote] } "Fired when the vote collection finishes loading"
+
+    type VoteLoadFailed = Event { error : string, code : string } "Fired when the vote collection fails to load"
+
+    type VoteCasted = Event { row : Vote } "Fired after a vote persists successfully"
+
+    type VoteCastFailed = Event { error : string, code : string } "Fired when persisting a vote fails"
+
   entity Vote [persistent: votes] {
-    id        : string!
-    targetId  : string! @description "Identifier for the item being voted on." @synonyms "reference, item, subject"
-    voterId   : string! @description "Unique identifier of the user casting the vote." @synonyms "user, author, participant"
-    direction : "up" | "down" | "none" @description "Indicates the vote's direction." @synonyms "vote, sentiment, choice" = "none"
+    id : string!
+    targetId : string! @description "Identifier for the item being voted on." @synonyms "reference, item, subject"
+    voterId : string! @description "Unique identifier of the user casting the vote." @synonyms "user, author, participant"
+    direction : "up" | "down" | "none" @description "Indicates the vote's direction." @synonyms "vote, sentiment, choice" = none
     createdAt : string
   }
 
-  type VoteLoaded     = Event { data : [Vote] }                    "Fired when the vote collection finishes loading"
-  type VoteLoadFailed = Event { error : string, code : string }    "Fired when the vote collection fails to load"
-  type VoteCasted     = Event { row : Vote }                       "Fired after a vote persists successfully"
-  type VoteCastFailed = Event { error : string, code : string }    "Fired when persisting a vote fails"
-
   trait VoteCast -> Vote [interaction, instance] {
+    initial: loading
+
+    state loading {
+      INIT -> loading
+        (fetch Vote {
+          emit: { failure: VoteLoadFailed, success: VoteLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Loading votes…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      VoteLoaded -> idle
+        (render-ui main {
+          count: 0
+          label: Vote
+          onVote: VOTE
+          type: vote-stack
+          userVote: @entity.direction
+          variant: vertical
+        })
+      VoteLoadFailed -> idle
+        (render-ui main {
+          message: ?error
+          type: alert
+          variant: error
+        })
+    }
+
+    state idle {
+      VOTE -> voting when (not ["=", ?next, @entity.direction])
+        (set @entity.direction ?next)
+        (persist update Vote ?data {
+          emit: { failure: VoteCastFailed, success: VoteCasted }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Recording your vote…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      VOTE -> voting when ["=", ?next, @entity.direction]
+        (set @entity.direction none)
+        (persist update Vote ?data {
+          emit: { failure: VoteCastFailed, success: VoteCasted }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Clearing your vote…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
+    }
+
+    state voting {
+      VoteCasted -> idle
+        (render-ui main {
+          count: 0
+          label: Vote
+          onVote: VOTE
+          type: vote-stack
+          userVote: @entity.direction
+          variant: vertical
+        })
+      VoteCastFailed -> error
+        (render-ui main {
+          message: ?error
+          type: alert
+          variant: error
+        })
+    }
+
+    state error {
+      INIT -> loading
+        (fetch Vote {
+          emit: { failure: VoteLoadFailed, success: VoteLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Loading votes…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
+    }
+
+    emits {
+      VOTE {
+        next : "up" | "down" | "none"
+        data : object!
+      }
+        @description "Signals a vote has been successfully recorded."
+        @synonyms "voted, submitted, confirmed"
+        @tier "essential"
+      VoteLoaded {
+        data : [Vote]
+      }
+        @description "Indicates a vote has been successfully retrieved."
+        @synonyms "loaded, fetched, retrieved"
+        @tier "internal"
+      VoteLoadFailed {
+        error : string
+        code : string
+      }
+        @description "Indicates that loading a vote failed."
+        @synonyms "load error, failed load, fetch failure"
+        @tier "internal"
+      VoteCasted {
+        row : Vote
+      }
+        @description "Indicates a vote has been successfully recorded."
+        @synonyms "voted, vote-submitted, vote-changed"
+        @tier "essential"
+      VoteCastFailed {
+        error : string
+        code : string
+      }
+        @description "Indicates a vote submission failed, likely due to a constraint."
+        @synonyms "failed, rejected, error"
+        @tier "customization"
+    }
+
+    listens {
+      VOTE {
+        next : "up" | "down" | "none"
+        data : object!
+      }
+        @description "A user has submitted or changed their vote."
+        @synonyms "voted, submitted, updated"
+        @tier "essential"
+      VoteLoaded {
+        data : [Vote]
+      }
+        @description "Indicates a vote data load has completed."
+        @synonyms "loaded, fetched, retrieved"
+        @tier "internal"
+      VoteLoadFailed {
+        error : string
+        code : string
+      }
+        @description "Indicates a failure to load vote data."
+        @synonyms "error, failed, problem, issue"
+        @tier "internal"
+      VoteCasted {
+        row : Vote
+      }
+        @description "A vote has been successfully recorded."
+        @synonyms "voted, tallied, updated"
+        @tier "essential"
+      VoteCastFailed {
+        error : string
+        code : string
+      }
+        @description "Indicates a vote submission could not be processed."
+        @synonyms "error, rejected, failed, invalid"
+        @tier "internal"
+    }
+
     config {
       allowDown : boolean = true
         @label "Allow downvotes"
         @description "Show the downvote arrow alongside the upvote"
         @tier "domain"
     }
-    initial: loading
-    state loading {
-      INIT -> loading
-        (fetch Vote { emit: { success: "VoteLoaded", failure: "VoteLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading votes…" }] })
-      VoteLoaded -> idle
-        (render-ui main { type: "vote-stack", count: 0, userVote: @entity.direction, onVote: "VOTE", variant: "vertical", label: "Vote" })
-      VoteLoadFailed -> idle
-        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
-    }
-    state idle {
-      VOTE -> voting when (not (= @payload.next @entity.direction))
-        (set @entity.direction @payload.next)
-        (persist update Vote @payload.data { emit: { success: "VoteCasted", failure: "VoteCastFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Recording your vote…" }] })
-      VOTE -> voting when (= @payload.next @entity.direction)
-        (set @entity.direction "none")
-        (persist update Vote @payload.data { emit: { success: "VoteCasted", failure: "VoteCastFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Clearing your vote…" }] })
-    }
-    state voting {
-      VoteCasted -> idle
-        (render-ui main { type: "vote-stack", count: 0, userVote: @entity.direction, onVote: "VOTE", variant: "vertical", label: "Vote" })
-      VoteCastFailed -> error
-        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
-    }
-    state error {
-      INIT -> loading
-        (fetch Vote { emit: { success: "VoteLoaded", failure: "VoteLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading votes…" }] })
-    }
-    emits {
-      VOTE { next : "up" | "down" | "none", data : object! }
-        @description "Signals a vote has been successfully recorded."
-        @synonyms "voted, submitted, confirmed"
-        @tier "essential"
-      VoteLoaded { data : [Vote] }
-        @description "Indicates a vote has been successfully retrieved."
-        @synonyms "loaded, fetched, retrieved"
-        @tier "internal"
-      VoteLoadFailed { error : string, code : string }
-        @description "Indicates that loading a vote failed."
-        @synonyms "load error, failed load, fetch failure"
-        @tier "internal"
-      VoteCasted { row : Vote }
-        @description "Indicates a vote has been successfully recorded."
-        @synonyms "voted, vote-submitted, vote-changed"
-        @tier "essential"
-      VoteCastFailed { error : string, code : string }
-        @description "Indicates a vote submission failed, likely due to a constraint."
-        @synonyms "failed, rejected, error"
-        @tier "customization"
-    }
-    listens {
-      VOTE { next : "up" | "down" | "none", data : object! }
-        @description "A user has submitted or changed their vote."
-        @synonyms "voted, submitted, updated"
-        @tier "essential"
-      VoteLoaded { data : [Vote] }
-        @description "Indicates a vote data load has completed."
-        @synonyms "loaded, fetched, retrieved"
-        @tier "internal"
-      VoteLoadFailed { error : string, code : string }
-        @description "Indicates a failure to load vote data."
-        @synonyms "error, failed, problem, issue"
-        @tier "internal"
-      VoteCasted { row : Vote }
-        @description "A vote has been successfully recorded."
-        @synonyms "voted, tallied, updated"
-        @tier "essential"
-      VoteCastFailed { error : string, code : string }
-        @description "Indicates a vote submission could not be processed."
-        @synonyms "error, rejected, failed, invalid"
-        @tier "internal"
-    }
   }
+
   page "/votes/cast" as VoteCastPage -> VoteCast
 }

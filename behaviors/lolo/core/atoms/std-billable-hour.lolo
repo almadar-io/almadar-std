@@ -1,138 +1,441 @@
 app std-billable-hour "1.0.0"
 "std-billable-hour — generic billable-hour timesheet primitive for legal, agency, and consulting domains. Lists entries in `browsing`; opens entry detail in `viewing_single` with Invoice / Write Off actions."
-
 orbital BillableHourOrbital {
+    type BillableHourLoaded = Event { data : [BillableHour] } "Fired when the billable-hour collection finishes loading"
+
+    type BillableHourLoadFailed = Event { error : string, code : string } "Fired when the billable-hour collection fails to load"
+
   entity BillableHour [persistent: billablehours] {
-    id            : string!
-    workerId      : string! @description "Unique identifier for the worker." @synonyms "employeeId, staffId, userId"
-    workerName    : string @description "The name of the worker associated with the time entry." @synonyms "employee, staff, personnel" = ""
-    matterId      : string @description "Unique identifier for the associated case or project." @synonyms "caseId, projectID, reference" = ""
-    projectId     : string @description "Identifier for the project associated with the time entry." @synonyms "project, task, reference" = ""
-    workDate      : string! @description "The date on which the work was performed." @synonyms "date, transaction date, service date"
-    hours         : number @description "The quantity of time recorded." @synonyms "duration, time, amount" = 0
-    rate          : number @description "The hourly charge for the work performed." @synonyms "price, cost, amount" = 0
-    description   : string @description "A textual explanation of the hour entry." @synonyms "explanation, notes, details, comment" = ""
-    isBillable    : boolean @description "Indicates whether the hour is eligible for billing." @synonyms "billable flag, billing status, billable indicator" = true
-    invoiceStatus : "unbilled" | "invoiced" | "paid" | "written_off" @description "The current billing status of the hour entry." @synonyms "status, billing status, payment status" = "unbilled"
+    id : string!
+    workerId : string! @description "Unique identifier for the worker." @synonyms "employeeId, staffId, userId"
+    workerName : string @description "The name of the worker associated with the time entry." @synonyms "employee, staff, personnel" = ""
+    matterId : string @description "Unique identifier for the associated case or project." @synonyms "caseId, projectID, reference" = ""
+    projectId : string @description "Identifier for the project associated with the time entry." @synonyms "project, task, reference" = ""
+    workDate : string! @description "The date on which the work was performed." @synonyms "date, transaction date, service date"
+    hours : number @description "The quantity of time recorded." @synonyms "duration, time, amount" = 0
+    rate : number @description "The hourly charge for the work performed." @synonyms "price, cost, amount" = 0
+    description : string @description "A textual explanation of the hour entry." @synonyms "explanation, notes, details, comment" = ""
+    isBillable : boolean @description "Indicates whether the hour is eligible for billing." @synonyms "billable flag, billing status, billable indicator" = true
+    invoiceStatus : "unbilled" | "invoiced" | "paid" | "written_off" @description "The current billing status of the hour entry." @synonyms "status, billing status, payment status" = unbilled
   }
 
-  type BillableHourLoaded     = Event { data : [BillableHour] }           "Fired when the billable-hour collection finishes loading"
-  type BillableHourLoadFailed = Event { error : string, code : string }   "Fired when the billable-hour collection fails to load"
-
   trait BillableHourTimesheet -> BillableHour [interaction, collection] {
+    initial: loading
+
+    state loading {
+      INIT -> loading
+        (fetch BillableHour {
+          emit: { failure: BillableHourLoadFailed, success: BillableHourLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Loading time entries…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      BillableHourLoaded -> browsing
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: clock, type: icon }, {
+              content: @config.title
+              type: typography
+              variant: h3
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, {
+            children: [{
+              icon: clock
+              label: "Total entries"
+              look: @config.statLook
+              type: stat-display
+              value: ?data.length
+            }, {
+              icon: hourglass
+              label: "Unbilled hours"
+              look: @config.statLook
+              type: stat-display
+              value: "248"
+            }, {
+              icon: file-text
+              label: "Invoiced this month"
+              look: @config.statLook
+              type: stat-display
+              value: "32"
+            }, {
+              icon: x-circle
+              label: "Written off"
+              look: @config.statLook
+              type: stat-display
+              value: "4"
+            }]
+            cols: 4
+            type: simple-grid
+          }, { type: divider }, {
+            cols: 1
+            entity: ?data
+            fields: [{
+              label: Worker
+              name: workerName
+              variant: caption
+            }, {
+              label: Matter
+              name: matterId
+              variant: caption
+            }, {
+              label: Date
+              name: workDate
+              variant: caption
+            }, {
+              label: Hours
+              name: hours
+              variant: caption
+            }, {
+              label: Rate
+              name: rate
+              variant: caption
+            }, {
+              label: Status
+              name: invoiceStatus
+              variant: badge
+            }]
+            gap: sm
+            itemActions: [{
+              event: OPEN_HOURS
+              icon: arrow-right
+              label: Open
+              variant: primary
+            }, {
+              event: WRITE_OFF_HOURS
+              label: "Write Off"
+              variant: danger
+            }]
+            look: @config.tableLook
+            type: data-grid
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      BillableHourLoadFailed -> error
+        (render-ui main {
+          message: ?error
+          type: alert
+          variant: error
+        })
+    }
+
+    state browsing {
+      OPEN_HOURS -> viewing_single
+        (set @entity.id ?row.id)
+        (set @entity.workerId ?row.workerId)
+        (set @entity.workerName ?row.workerName)
+        (set @entity.matterId ?row.matterId)
+        (set @entity.projectId ?row.projectId)
+        (set @entity.workDate ?row.workDate)
+        (set @entity.hours ?row.hours)
+        (set @entity.rate ?row.rate)
+        (set @entity.description ?row.description)
+        (set @entity.isBillable ?row.isBillable)
+        (set @entity.invoiceStatus ?row.invoiceStatus)
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{
+              action: CLOSE_VIEW
+              label: Back
+              type: button
+              variant: ghost
+            }, { name: clock, type: icon }, {
+              content: @entity.workerName
+              type: typography
+              variant: h3
+            }, {
+              label: @entity.invoiceStatus
+              type: badge
+              variant: default
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            children: [{
+              children: [{
+                color: muted
+                content: Matter
+                type: typography
+                variant: caption
+              }, {
+                content: @entity.matterId
+                type: typography
+                variant: body
+              }]
+              direction: horizontal
+              gap: md
+              type: stack
+            }, {
+              children: [{
+                color: muted
+                content: Project
+                type: typography
+                variant: caption
+              }, {
+                content: @entity.projectId
+                type: typography
+                variant: body
+              }]
+              direction: horizontal
+              gap: md
+              type: stack
+            }, {
+              children: [{
+                color: muted
+                content: Description
+                type: typography
+                variant: caption
+              }, {
+                content: @entity.description
+                type: typography
+                variant: body
+              }]
+              direction: horizontal
+              gap: md
+              type: stack
+            }]
+            direction: vertical
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            children: [{
+              icon: clock
+              label: Hours
+              look: @config.statLook
+              type: stat-display
+              value: @entity.hours
+            }, {
+              icon: dollar-sign
+              label: Rate
+              look: @config.statLook
+              type: stat-display
+              value: @entity.rate
+            }, {
+              icon: calendar
+              label: Date
+              look: @config.statLook
+              type: stat-display
+              value: @entity.workDate
+            }]
+            cols: 3
+            type: simple-grid
+          }, {
+            align: center
+            children: [{
+              action: INVOICE_HOURS
+              actionPayload: { id: @entity.id }
+              label: Invoice
+              type: button
+              variant: primary
+            }, {
+              action: WRITE_OFF_HOURS
+              actionPayload: { id: @entity.id }
+              label: "Write Off"
+              type: button
+              variant: danger
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      WRITE_OFF_HOURS -> loading
+        (set @entity.id ?id)
+        (fetch BillableHour {
+          emit: { failure: BillableHourLoadFailed, success: BillableHourLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Writing off hours…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
+    }
+
+    state viewing_single {
+      CLOSE_VIEW -> loading
+        (fetch BillableHour {
+          emit: { failure: BillableHourLoadFailed, success: BillableHourLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Loading time entries…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      INVOICE_HOURS -> loading
+        (set @entity.id ?id)
+        (fetch BillableHour {
+          emit: { failure: BillableHourLoadFailed, success: BillableHourLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Invoicing hours…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      WRITE_OFF_HOURS -> loading
+        (set @entity.id ?id)
+        (fetch BillableHour {
+          emit: { failure: BillableHourLoadFailed, success: BillableHourLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Writing off hours…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
+    }
+
+    state error {
+      INIT -> loading
+        (fetch BillableHour {
+          emit: { failure: BillableHourLoadFailed, success: BillableHourLoaded }
+        })
+        (render-ui main { size: sm, type: spinner })
+    }
+
+    emits {
+      OPEN_HOURS {
+        id : string!
+        row : BillableHour
+      }
+        @description "Signals the display of the hours list."
+        @synonyms "show, display, list"
+        @tier "essential"
+      CLOSE_VIEW
+        @description "Indicates the detail view has been dismissed."
+        @synonyms "dismiss, close, hide"
+        @tier "essential"
+      INVOICE_HOURS {
+        id : string!
+      }
+        @description "Signals that billable hours have been invoiced."
+        @synonyms "invoice, charge, bill"
+        @tier "customization"
+      WRITE_OFF_HOURS {
+        id : string!
+      }
+        @description "Indicates billable hours have been written off."
+        @synonyms "deduct, remove, cancel"
+        @tier "customization"
+      BillableHourLoaded {
+        data : [BillableHour]
+      }
+        @description "Signals that a billable hour data set has been successfully retrieved."
+        @synonyms "loaded, fetched, retrieved, populated"
+        @tier "essential"
+      BillableHourLoadFailed {
+        error : string
+        code : string
+      }
+        @description "Indicates a failure to load billable hour data."
+        @synonyms "error, failed, problem, unsuccessful"
+        @tier "internal"
+    }
+
+    listens {
+      OPEN_HOURS {
+        id : string!
+        row : BillableHour
+      }
+        @description "Indicates a request to display the hours list."
+        @synonyms "show, display, list"
+        @tier "essential"
+      CLOSE_VIEW
+        @description "Dismisses the current view or detail panel."
+        @synonyms "close, dismiss, hide, cancel"
+        @tier "essential"
+      INVOICE_HOURS {
+        id : string!
+      }
+        @description "Hours are marked as ready for invoicing."
+        @synonyms "invoice, bill, submit"
+        @tier "essential"
+      WRITE_OFF_HOURS {
+        id : string!
+      }
+        @description "Hours have been marked as non-billable."
+        @synonyms "deduct, remove, expense, adjust"
+        @tier "customization"
+      BillableHourLoaded {
+        data : [BillableHour]
+      }
+        @description "Indicates that billable hour data has been successfully retrieved."
+        @synonyms "loaded, fetched, received, populated"
+        @tier "essential"
+      BillableHourLoadFailed {
+        error : string
+        code : string
+      }
+        @description "Indicates failure to load billable hour data."
+        @synonyms "error, failed, problem, unsuccessful"
+        @tier "internal"
+    }
+
     config {
       title : string = "Time Entries"
         @label "Section title"
         @description "Heading shown above the time-entries list"
         @tier "presentation"
-      tableLook : "dense" | "spacious" | "striped" | "borderless" | "card-rows" = "dense"
+      tableLook : "dense" | "spacious" | "striped" | "borderless" | "card-rows" = dense
         @label "Table look"
         @description "Layer 2 visual treatment for the data table rendered by this atom."
         @tier "presentation"
-      statLook : "elevated" | "flat" | "progress-backed" | "gauge" | "sparkline" = "elevated"
+      statLook : "elevated" | "flat" | "progress-backed" | "gauge" | "sparkline" = elevated
         @label "Stat display look"
         @description "Layer 2 visual treatment for stat / KPI cards."
         @tier "presentation"
     }
-    initial: loading
-    state loading {
-      INIT -> loading
-        (fetch BillableHour { emit: { success: "BillableHourLoaded", failure: "BillableHourLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading time entries…" }] })
-      BillableHourLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clock" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", look: "@config.statLook", label: "Total entries", value: "@payload.data.length", icon: "clock" }, { type: "stat-display", look: "@config.statLook", label: "Unbilled hours", value: "248", icon: "hourglass" }, { type: "stat-display", look: "@config.statLook", label: "Invoiced this month", value: "32", icon: "file-text" }, { type: "stat-display", look: "@config.statLook", label: "Written off", value: "4", icon: "x-circle" }] }, { type: "divider" }, { type: "data-grid", look: "@config.tableLook", entity: "@payload.data", fields: [{ name: "workerName", label: "Worker", variant: "caption" }, { name: "matterId", label: "Matter", variant: "caption" }, { name: "workDate", label: "Date", variant: "caption" }, { name: "hours", label: "Hours", variant: "caption" }, { name: "rate", label: "Rate", variant: "caption" }, { name: "invoiceStatus", label: "Status", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_HOURS", variant: "primary", icon: "arrow-right" }, { label: "Write Off", event: "WRITE_OFF_HOURS", variant: "danger" }] }] })
-      BillableHourLoadFailed -> error
-        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
-    }
-    state browsing {
-      OPEN_HOURS -> viewing_single
-        (set @entity.id @payload.row.id)
-        (set @entity.workerId @payload.row.workerId)
-        (set @entity.workerName @payload.row.workerName)
-        (set @entity.matterId @payload.row.matterId)
-        (set @entity.projectId @payload.row.projectId)
-        (set @entity.workDate @payload.row.workDate)
-        (set @entity.hours @payload.row.hours)
-        (set @entity.rate @payload.row.rate)
-        (set @entity.description @payload.row.description)
-        (set @entity.isBillable @payload.row.isBillable)
-        (set @entity.invoiceStatus @payload.row.invoiceStatus)
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "clock" }, { type: "typography", content: "@entity.workerName", variant: "h3" }, { type: "badge", label: "@entity.invoiceStatus", variant: "default" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Matter" }, { type: "typography", variant: "body", content: "@entity.matterId" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Project" }, { type: "typography", variant: "body", content: "@entity.projectId" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Description" }, { type: "typography", variant: "body", content: "@entity.description" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 3, children: [{ type: "stat-display", look: "@config.statLook", label: "Hours", value: "@entity.hours", icon: "clock" }, { type: "stat-display", look: "@config.statLook", label: "Rate", value: "@entity.rate", icon: "dollar-sign" }, { type: "stat-display", look: "@config.statLook", label: "Date", value: "@entity.workDate", icon: "calendar" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Invoice", variant: "primary", action: "INVOICE_HOURS", actionPayload: { id: "@entity.id" } }, { type: "button", label: "Write Off", variant: "danger", action: "WRITE_OFF_HOURS", actionPayload: { id: "@entity.id" } }] }] })
-      WRITE_OFF_HOURS -> loading
-        (set @entity.id @payload.id)
-        (fetch BillableHour { emit: { success: "BillableHourLoaded", failure: "BillableHourLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Writing off hours…" }] })
-    }
-    state viewing_single {
-      CLOSE_VIEW -> loading
-        (fetch BillableHour { emit: { success: "BillableHourLoaded", failure: "BillableHourLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading time entries…" }] })
-      INVOICE_HOURS -> loading
-        (set @entity.id @payload.id)
-        (fetch BillableHour { emit: { success: "BillableHourLoaded", failure: "BillableHourLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Invoicing hours…" }] })
-      WRITE_OFF_HOURS -> loading
-        (set @entity.id @payload.id)
-        (fetch BillableHour { emit: { success: "BillableHourLoaded", failure: "BillableHourLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Writing off hours…" }] })
-    }
-    state error {
-      INIT -> loading
-        (fetch BillableHour { emit: { success: "BillableHourLoaded", failure: "BillableHourLoadFailed" } })
-        (render-ui main { type: "spinner", size: "sm" })
-    }
-    emits {
-      OPEN_HOURS      { id : string!, row : BillableHour }
-        @description "Signals the display of the hours list."
-        @synonyms "show, display, list"
-        @tier "essential"
-      CLOSE_VIEW      { }
-        @description "Indicates the detail view has been dismissed."
-        @synonyms "dismiss, close, hide"
-        @tier "essential"
-      INVOICE_HOURS   { id : string! }
-        @description "Signals that billable hours have been invoiced."
-        @synonyms "invoice, charge, bill"
-        @tier "customization"
-      WRITE_OFF_HOURS { id : string! }
-        @description "Indicates billable hours have been written off."
-        @synonyms "deduct, remove, cancel"
-        @tier "customization"
-      BillableHourLoaded     { data : [BillableHour] }
-        @description "Signals that a billable hour data set has been successfully retrieved."
-        @synonyms "loaded, fetched, retrieved, populated"
-        @tier "essential"
-      BillableHourLoadFailed { error : string, code : string }
-        @description "Indicates a failure to load billable hour data."
-        @synonyms "error, failed, problem, unsuccessful"
-        @tier "internal"
-    }
-    listens {
-      OPEN_HOURS      { id : string!, row : BillableHour }
-        @description "Indicates a request to display the hours list."
-        @synonyms "show, display, list"
-        @tier "essential"
-      CLOSE_VIEW      { }
-        @description "Dismisses the current view or detail panel."
-        @synonyms "close, dismiss, hide, cancel"
-        @tier "essential"
-      INVOICE_HOURS   { id : string! }
-        @description "Hours are marked as ready for invoicing."
-        @synonyms "invoice, bill, submit"
-        @tier "essential"
-      WRITE_OFF_HOURS { id : string! }
-        @description "Hours have been marked as non-billable."
-        @synonyms "deduct, remove, expense, adjust"
-        @tier "customization"
-      BillableHourLoaded     { data : [BillableHour] }
-        @description "Indicates that billable hour data has been successfully retrieved."
-        @synonyms "loaded, fetched, received, populated"
-        @tier "essential"
-      BillableHourLoadFailed { error : string, code : string }
-        @description "Indicates failure to load billable hour data."
-        @synonyms "error, failed, problem, unsuccessful"
-        @tier "internal"
-    }
   }
+
   page "/timesheet" as BillableHourPage -> BillableHourTimesheet
 }

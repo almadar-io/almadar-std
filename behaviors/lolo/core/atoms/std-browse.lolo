@@ -1,39 +1,188 @@
 app std-browse "2.2.0"
 "std-browse as a Function — single primitive: data-grid. Owns the fetch + REFETCH (query/filter/page) state machine. Consumers configure fields/imageField/itemActions/cols/gap/variant; the atom renders the grid. Each `fields[]` entry accepts `{ name, label, variant }` plus optional `referenceEntity` + `displayField` to render a foreign-key column as the joined entity's display value (data-grid resolves @list[referenceEntity] at render time when both keys are present)."
-
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
 type ColumnSpec = { key : string!, field : string, header : string, width : string, align : string, className : string, weight : string, format : string, icon : string }
 type FilterSpec = { field : string!, label : string, options : [string] }
-
 orbital BrowseItemOrbital {
-  entity BrowseItem [runtime] {
-    id          : string!
-    name        : string! @description "The item's identifier or title." @synonyms "title, label, itemName"
-    description : string @description "A textual explanation or summary of the item." @synonyms "summary, details, notes, explanation"
-    status      : "active" | "inactive" | "pending" @description "Indicates the current operational state of the item." @synonyms "state, condition, flag" = "active"
-    createdAt   : string
-  }
+    type BrowseItemLoaded = Event { data : [BrowseItem], totalCount : number } "Fired when the BrowseItem collection finishes loading; payload.data holds the (possibly paginated) slice and totalCount holds the unsliced filter total. totalCount is optional so compiled-path emitters that haven't been migrated yet still validate"
 
-  type BrowseItemLoaded     = Event { data : [BrowseItem], totalCount : number } "Fired when the BrowseItem collection finishes loading; payload.data holds the (possibly paginated) slice and totalCount holds the unsliced filter total. totalCount is optional so compiled-path emitters that haven't been migrated yet still validate"
-  type BrowseItemLoadFailed = Event { error : string, code : string } "Fired when the BrowseItem collection fails to load"
+    type BrowseItemLoadFailed = Event { error : string, code : string } "Fired when the BrowseItem collection fails to load"
+
+  entity BrowseItem [runtime] {
+    id : string!
+    name : string! @description "The item's identifier or title." @synonyms "title, label, itemName"
+    description : string @description "A textual explanation or summary of the item." @synonyms "summary, details, notes, explanation"
+    status : "active" | "inactive" | "pending" @description "Indicates the current operational state of the item." @synonyms "state, condition, flag" = active
+    createdAt : string
+  }
 
   trait BrowseItemBrowse -> @rebindable BrowseItem [interaction, collection] {
     initial: loading
+
+    state loading {
+      INIT -> loading
+        (fetch BrowseItem {
+          emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
+          limit: @config.pageSize
+          offset: 0
+        })
+        (render-ui main { size: sm, type: spinner })
+      BrowseItemLoaded -> browsing
+        (render-ui main @config.bodyContent)
+      BrowseItemLoadFailed -> error
+        (render-ui main {
+          color: error
+          content: ?error
+          type: typography
+          variant: caption
+        })
+    }
+
+    state browsing {
+      INIT -> loading
+        (fetch BrowseItem {
+          emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
+          limit: @config.pageSize
+          offset: 0
+        })
+        (render-ui main { size: sm, type: spinner })
+      ;; REFETCH_* stays in `browsing` and DOES NOT replace the data-grid
+      ;; with a spinner. Replacing during search-as-you-type unmounts the
+      ;; grid every keystroke and causes a visible flicker. The fetch fires
+      ;; in the background; when BrowseItemLoaded arrives we render the
+      ;; grid with the new rows (handler below), so React reconciles the
+      ;; data-grid in place instead of unmounting it.
+      REFETCH_QUERY -> browsing
+        (fetch BrowseItem {
+          emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
+          filter: (or ["=", ?searchTerm, ""] (str/includes (object/get @entity name) ?searchTerm))
+          limit: @config.pageSize
+          offset: 0
+        })
+      REFETCH_FILTER -> browsing
+        (fetch BrowseItem {
+          emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
+          filter: (or ["=", ?value, ""] ["=", (object/get @entity ?field), ?value])
+          limit: @config.pageSize
+          offset: 0
+        })
+      REFETCH_PAGE -> browsing
+        (fetch BrowseItem {
+          emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
+          limit: @config.pageSize
+          offset: ["*", ["-", ?page, 1], @config.pageSize]
+        })
+      BrowseItemLoaded -> browsing
+        (render-ui main @config.bodyContent)
+    }
+
+    state error {
+      INIT -> loading
+        (fetch BrowseItem {
+          emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
+          limit: @config.pageSize
+          offset: 0
+        })
+        (render-ui main { size: sm, type: spinner })
+    }
+
+    emits {
+      BrowseItemLoaded
+        @description "Signals that a browse item has been successfully loaded."
+        @synonyms "loaded, received, populated"
+        @tier "essential"
+      BrowseItemLoadFailed
+        @description "Indicates a failure to load a browse item."
+        @synonyms "error, failed, problem, unsuccessful"
+        @tier "internal"
+      VIEW -> external {
+        id : string!
+        row : BrowseItem
+      }
+        @description "Signals a grid view has been displayed or updated."
+        @synonyms "display, show, update, render"
+        @tier "essential"
+      EDIT -> external {
+        id : string!
+        row : BrowseItem
+      }
+        @description "Signals a request to edit the selected item."
+        @synonyms "modify, update, change"
+        @tier "essential"
+      DELETE -> external {
+        id : string!
+        row : BrowseItem
+      }
+        @description "Signals a request to remove an item from the dataset."
+        @synonyms "remove, discard, delete, purge"
+        @tier "customization"
+    }
+
+    listens {
+      REFETCH_QUERY {
+        searchTerm : string!
+      }
+        @description "Triggers a data refresh based on the current query."
+        @synonyms "refresh, reload, update, re-query"
+        @tier "essential"
+      REFETCH_FILTER {
+        field : string!
+        value : string!
+      }
+        @description "Triggers a data refresh based on current filter criteria."
+        @synonyms "refresh, filter, update, reload"
+        @tier "essential"
+      REFETCH_PAGE {
+        page : number!
+      }
+        @description "Triggers a data grid page refresh."
+        @synonyms "reload, refresh, update, paginate"
+        @tier "essential"
+      BrowseItemLoadFailed {
+        error : string
+        code : string
+      }
+        @description "Indicates a failure to load a browse item."
+        @synonyms "error, failure, problem, unsuccessful"
+        @tier "internal"
+    }
+
     config {
-      fields : [FieldSpec] = [
-        { name: "name", label: "Name", variant: "h4" },
-        { name: "description", label: "Description", variant: "caption" },
-        { name: "status", label: "Status", variant: "badge" }
-      ]
+      fields : [FieldSpec] = [{
+        label: Name
+        name: name
+        variant: h4
+      }, {
+        label: Description
+        name: description
+        variant: caption
+      }, {
+        label: Status
+        name: status
+        variant: badge
+      }]
         @label "Columns to show"
         @description "Each column maps to one field on the BrowseItem entity"
         @tier "presentation"
-      columns : [ColumnSpec] = [
-        { key: "name", field: "name", header: "Name", align: "left", weight: "medium" },
-        { key: "description", field: "description", header: "Detail", align: "left" },
-        { key: "status", field: "status", header: "Status", align: "center", format: "badge" }
-      ]
+      columns : [ColumnSpec] = [{
+        align: left
+        field: name
+        header: Name
+        key: name
+        weight: medium
+      }, {
+        align: left
+        field: description
+        header: Detail
+        key: description
+      }, {
+        align: center
+        field: status
+        format: badge
+        header: Status
+        key: status
+      }]
         @label "Table columns"
         @description "Column definitions for table-style variants (dense). Each maps an entity field to a column with optional width / align / weight / format."
         @tier "presentation"
@@ -41,39 +190,39 @@ orbital BrowseItemOrbital {
         @label "Image field"
         @description "Entity field that holds the row thumbnail URL"
         @tier "presentation"
-      titleBinding : string = "@item.name"
+      titleBinding : string = @item.name
         @label "Title binding"
         @description "Per-row binding string for the card title slot. Layer 3 variants read this inside their renderItem; consumers override it to point at their entity's field (e.g. \"@item.dishName\")."
         @tier "presentation"
-      descriptionBinding : string = "@item.description"
+      descriptionBinding : string = @item.description
         @label "Description binding"
         @description "Per-row binding string for the card body/subtitle slot."
         @tier "presentation"
-      badgeBinding : string = "@item.status"
+      badgeBinding : string = @item.status
         @label "Badge binding"
         @description "Per-row binding string for the status/badge slot."
         @tier "presentation"
-      imageLabelBinding : string = "@item.thumbnailLabel"
+      imageLabelBinding : string = @item.thumbnailLabel
         @label "Image label binding"
         @description "Per-row binding string for the image-area label slot (image-first variants)."
         @tier "presentation"
-      priceBinding : string = "@item.price"
+      priceBinding : string = @item.price
         @label "Price binding"
         @description "Per-row binding string for the price/amount overlay slot."
         @tier "presentation"
-      metaBinding : string = "@item.createdAt"
+      metaBinding : string = @item.createdAt
         @label "Meta binding"
         @description "Per-row binding string for the secondary meta slot (timestamp / category)."
         @tier "presentation"
-      categoryBinding : string = "@item.category"
+      categoryBinding : string = @item.category
         @label "Category binding"
         @description "Per-row binding string for the category/tag slot."
         @tier "presentation"
-      priorityBinding : string = "@item.priority"
+      priorityBinding : string = @item.priority
         @label "Priority binding"
         @description "Per-row binding string for the priority slot (triage / work-queue variants)."
         @tier "presentation"
-      assigneeBinding : string = "@item.assignee"
+      assigneeBinding : string = @item.assignee
         @label "Assignee binding"
         @description "Per-row binding string for the assignee/owner slot."
         @tier "presentation"
@@ -85,7 +234,7 @@ orbital BrowseItemOrbital {
         @label "Grid columns"
         @description "Number of columns in the responsive grid layout"
         @tier "presentation"
-      gap : string = "md"
+      gap : string = md
         @label "Cell spacing"
         @description "Gap size between rows (sm, md, lg)"
         @tier "presentation"
@@ -109,108 +258,35 @@ orbital BrowseItemOrbital {
         @label "Search placeholder"
         @description "Placeholder text in the list's search box. Set per-domain (e.g. 'Search events…') so the box never leaks the variation name."
         @tier "presentation"
-      viewPattern : pattern = "data-grid"
+      viewPattern : pattern = data-grid
         @label "Render pattern"
         @description "UI pattern used to render the collection. Used by the default bodyContent tree; Layer 3 variants override bodyContent directly instead and may ignore this knob."
         @tier "internal"
       bodyContent : render-ui = {
-        type: "stack",
-        direction: "vertical",
         children: [{
-          type: "data-grid",
-          entity: "@payload.data",
-          fields: "@config.fields",
-          imageField: "@config.imageField",
-          itemActions: "@config.itemActions",
-          cols: "@config.cols",
-          gap: "@config.gap",
-          pageSize: "@config.displayPageSize"
+          cols: @config.cols
+          entity: ?data
+          fields: @config.fields
+          gap: @config.gap
+          imageField: @config.imageField
+          itemActions: @config.itemActions
+          pageSize: @config.displayPageSize
+          type: data-grid
         }]
+        direction: vertical
+        type: stack
       }
         @label "Body content tree"
         @description "Render-ui SExpr rendered after rows load. Default is the canonical data-grid call wrapped in a stack. Layer 3 variants override this with their own tree (composing data-list/data-grid/entity-table + custom renderItem lambdas + filter-group, kbd, card, etc.) to deliver entirely different browse UX while inheriting the same trait, state machine, emits, and listens."
         @tier "internal"
     }
-    state loading {
-      INIT -> loading
-        (fetch BrowseItem { offset: 0, limit: @config.pageSize, emit: { success: "BrowseItemLoaded", failure: "BrowseItemLoadFailed" } })
-        (render-ui main { type: "spinner", size: "sm" })
-      BrowseItemLoaded -> browsing
-        (render-ui main @config.bodyContent)
-      BrowseItemLoadFailed -> error
-        (render-ui main { type: "typography", variant: "caption", color: "error", content: "@payload.error" })
-    }
-    state browsing {
-      INIT -> loading
-        (fetch BrowseItem { offset: 0, limit: @config.pageSize, emit: { success: "BrowseItemLoaded", failure: "BrowseItemLoadFailed" } })
-        (render-ui main { type: "spinner", size: "sm" })
-      ;; REFETCH_* stays in `browsing` and DOES NOT replace the data-grid
-      ;; with a spinner. Replacing during search-as-you-type unmounts the
-      ;; grid every keystroke and causes a visible flicker. The fetch fires
-      ;; in the background; when BrowseItemLoaded arrives we render the
-      ;; grid with the new rows (handler below), so React reconciles the
-      ;; data-grid in place instead of unmounting it.
-      REFETCH_QUERY -> browsing
-        (fetch BrowseItem { offset: 0, limit: @config.pageSize, filter: (or (= @payload.searchTerm "") (str/includes (object/get @entity "name") @payload.searchTerm)), emit: { success: "BrowseItemLoaded", failure: "BrowseItemLoadFailed" } })
-      REFETCH_FILTER -> browsing
-        (fetch BrowseItem { offset: 0, limit: @config.pageSize, filter: (or (= @payload.value "") (= (object/get @entity @payload.field) @payload.value)), emit: { success: "BrowseItemLoaded", failure: "BrowseItemLoadFailed" } })
-      REFETCH_PAGE -> browsing
-        (fetch BrowseItem { offset: (* (- @payload.page 1) @config.pageSize), limit: @config.pageSize, emit: { success: "BrowseItemLoaded", failure: "BrowseItemLoadFailed" } })
-      BrowseItemLoaded -> browsing
-        (render-ui main @config.bodyContent)
-    }
-    state error {
-      INIT -> loading
-        (fetch BrowseItem { offset: 0, limit: @config.pageSize, emit: { success: "BrowseItemLoaded", failure: "BrowseItemLoadFailed" } })
-        (render-ui main { type: "spinner", size: "sm" })
-    }
-emits {
-      BrowseItemLoaded
-        @description "Signals that a browse item has been successfully loaded."
-        @synonyms "loaded, received, populated"
-        @tier "essential"
-      BrowseItemLoadFailed
-        @description "Indicates a failure to load a browse item."
-        @synonyms "error, failed, problem, unsuccessful"
-        @tier "internal"
-      ;; Generic CRUD item-action events fired when a consumer-supplied
-      ;; `itemActions[]` button is clicked in the data-grid. Declared here
-      ;; so any consumer that wires VIEW / EDIT / DELETE actions doesn't
-      ;; need to re-declare on the bind site. Domain-specific actions
-      ;; (ADD_TO_CART, FAVORITE, etc.) still need to be declared by the
-      ;; consumer or wired via call-site emits override.
-      VIEW   -> external { id : string!, row : BrowseItem }
-        @description "Signals a grid view has been displayed or updated."
-        @synonyms "display, show, update, render"
-        @tier "essential"
-      EDIT   -> external { id : string!, row : BrowseItem }
-        @description "Signals a request to edit the selected item."
-        @synonyms "modify, update, change"
-        @tier "essential"
-      DELETE -> external { id : string!, row : BrowseItem }
-        @description "Signals a request to remove an item from the dataset."
-        @synonyms "remove, discard, delete, purge"
-        @tier "customization"
-    }
-
-        listens {
-      REFETCH_QUERY { searchTerm : string! }
-        @description "Triggers a data refresh based on the current query."
-        @synonyms "refresh, reload, update, re-query"
-        @tier "essential"
-      REFETCH_FILTER { field : string!, value : string! }
-        @description "Triggers a data refresh based on current filter criteria."
-        @synonyms "refresh, filter, update, reload"
-        @tier "essential"
-      REFETCH_PAGE { page : number! }
-        @description "Triggers a data grid page refresh."
-        @synonyms "reload, refresh, update, paginate"
-        @tier "essential"
-      BrowseItemLoadFailed { error : string, code : string }
-        @description "Indicates a failure to load a browse item."
-        @synonyms "error, failure, problem, unsuccessful"
-        @tier "internal"
-    }
   }
+
+  ;; Generic CRUD item-action events fired when a consumer-supplied
+  ;; `itemActions[]` button is clicked in the data-grid. Declared here
+  ;; so any consumer that wires VIEW / EDIT / DELETE actions doesn't
+  ;; need to re-declare on the bind site. Domain-specific actions
+  ;; (ADD_TO_CART, FAVORITE, etc.) still need to be declared by the
+  ;; consumer or wired via call-site emits override.
   page "/browseitems" as BrowseItemPage -> BrowseItemBrowse
 }

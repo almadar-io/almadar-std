@@ -1,72 +1,301 @@
 app std-agent-chat-thread "1.0.0"
 "std-agent-chat-thread as a Function"
-
 orbital AgentChatThreadOrbital {
-  entity AgentChatThread [persistent: agentchatthreads] {
-    id          : string!
-    name        : string @description "A user-friendly identifier for the chat thread." @synonyms "title, label, identifier"
-    description : string @description "A brief explanation of the thread's subject or purpose." @synonyms "summary, explanation, details"
-    status      : "active" | "inactive" | "pending" | "sent" @description "Indicates the current operational state of the thread." @synonyms "state, condition, mode" = "active"
-    createdAt   : string
-    role        : "user" | "assistant" | "system" | "tool" @description "Indicates the actor responsible for the message." @synonyms "actor, speaker, sender, originator" = "user"
-    content     : string @description "The textual message or response within the thread." @synonyms "message, text, body" = ""
-    timestamp   : string @description "The date and time when the event occurred." @synonyms "date, time, when" = ""
-    toolName    : string @description "The name of the tool used to generate this message." @synonyms "tool, application, source" = ""
-  }
+    type AgentChatThreadLoaded = Event { data : [AgentChatThread] } "Fired when the chat thread finishes loading; payload.data holds the messages"
 
-  type AgentChatThreadLoaded       = Event { data : [AgentChatThread] }       "Fired when the chat thread finishes loading; payload.data holds the messages"
-  type AgentChatThreadLoadFailed   = Event { error : string, code : string }  "Fired when the chat thread fails to load"
-  type AgentChatThreadSaved        = Event { id : string }                    "Fired when a new message is persisted"
-  type AgentChatThreadSaveFailed   = Event { error : string, code : string }  "Fired when a message persist fails"
-  type AgentChatThreadDeleted      = Event { id : string }                    "Fired when the chat thread is cleared"
-  type AgentChatThreadDeleteFailed = Event { error : string, code : string }  "Fired when clearing the chat thread fails"
+    type AgentChatThreadLoadFailed = Event { error : string, code : string } "Fired when the chat thread fails to load"
+
+    type AgentChatThreadSaved = Event { id : string } "Fired when a new message is persisted"
+
+    type AgentChatThreadSaveFailed = Event { error : string, code : string } "Fired when a message persist fails"
+
+    type AgentChatThreadDeleted = Event { id : string } "Fired when the chat thread is cleared"
+
+    type AgentChatThreadDeleteFailed = Event { error : string, code : string } "Fired when clearing the chat thread fails"
+
+  entity AgentChatThread [persistent: agentchatthreads] {
+    id : string!
+    name : string @description "A user-friendly identifier for the chat thread." @synonyms "title, label, identifier"
+    description : string @description "A brief explanation of the thread's subject or purpose." @synonyms "summary, explanation, details"
+    status : "active" | "inactive" | "pending" | "sent" @description "Indicates the current operational state of the thread." @synonyms "state, condition, mode" = active
+    createdAt : string
+    role : "user" | "assistant" | "system" | "tool" @description "Indicates the actor responsible for the message." @synonyms "actor, speaker, sender, originator" = user
+    content : string @description "The textual message or response within the thread." @synonyms "message, text, body" = ""
+    timestamp : string @description "The date and time when the event occurred." @synonyms "date, time, when" = ""
+    toolName : string @description "The name of the tool used to generate this message." @synonyms "tool, application, source" = ""
+  }
 
   trait AgentChatThreadThread -> AgentChatThread [interaction, collection] {
     initial: loading
+
     state loading {
       INIT -> loading
-        (fetch AgentChatThread { emit: { success: "AgentChatThreadLoaded", failure: "AgentChatThreadLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading conversation…" }] })
+        (fetch AgentChatThread {
+          emit: { failure: AgentChatThreadLoadFailed, success: AgentChatThreadLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Loading conversation…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
       AgentChatThreadLoaded -> idle
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle" }, { type: "typography", content: "Chat Thread", variant: "h2" }] }, { type: "button", label: "New Message", action: "COMPOSE", variant: "primary", icon: "plus" }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, fields: [], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "badge", label: "@item.role" }, { type: "badge", label: "@item.status", variant: "secondary" }, { type: "typography", variant: "caption", color: "muted", content: "@item.timestamp" }] }, { type: "typography", variant: "body", content: "@item.content" }] }] }] })
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{
+              align: center
+              children: [{ name: message-circle, type: icon }, {
+                content: "Chat Thread"
+                type: typography
+                variant: h2
+              }]
+              direction: horizontal
+              gap: sm
+              type: stack
+            }, {
+              action: COMPOSE
+              icon: plus
+              label: "New Message"
+              type: button
+              variant: primary
+            }]
+            direction: horizontal
+            gap: sm
+            justify: between
+            type: stack
+          }, { type: divider }, {
+            entity: ?data
+            fields: []
+            renderItem: (fn item {
+              children: [{
+                align: center
+                children: [{ label: @item.role, type: badge }, {
+                  label: @item.status
+                  type: badge
+                  variant: secondary
+                }, {
+                  color: muted
+                  content: @item.timestamp
+                  type: typography
+                  variant: caption
+                }]
+                direction: horizontal
+                gap: sm
+                type: stack
+              }, {
+                content: @item.content
+                type: typography
+                variant: body
+              }]
+              direction: vertical
+              gap: xs
+              type: stack
+            })
+            type: data-list
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
       AgentChatThreadLoadFailed -> error
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load conversation" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+        (render-ui main {
+          align: center
+          children: [{
+            color: destructive
+            name: alert-triangle
+            type: icon
+          }, {
+            content: "Failed to load conversation"
+            type: typography
+            variant: h3
+          }, {
+            color: muted
+            content: ?error
+            type: typography
+            variant: body
+          }, {
+            action: INIT
+            icon: rotate-ccw
+            label: Retry
+            type: button
+            variant: primary
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
     }
+
     state idle {
       COMPOSE -> composing
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle" }, { type: "typography", content: "Chat Thread", variant: "h2" }] }] }, { type: "divider" }, { type: "form-section", mode: "create", submitEvent: "SEND", cancelEvent: "CANCEL_COMPOSE", fields: ["content"] }] })
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{
+              align: center
+              children: [{ name: message-circle, type: icon }, {
+                content: "Chat Thread"
+                type: typography
+                variant: h2
+              }]
+              direction: horizontal
+              gap: sm
+              type: stack
+            }]
+            direction: horizontal
+            gap: sm
+            justify: between
+            type: stack
+          }, { type: divider }, {
+            cancelEvent: CANCEL_COMPOSE
+            fields: (content)
+            mode: create
+            submitEvent: SEND
+            type: form-section
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
       CLEAR -> deleting
-        (persist delete AgentChatThread { emit: { success: "AgentChatThreadDeleted", failure: "AgentChatThreadDeleteFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Clearing conversation…" }] })
+        (persist delete AgentChatThread {
+          emit: { failure: AgentChatThreadDeleteFailed, success: AgentChatThreadDeleted }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Clearing conversation…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
     }
+
     state composing {
       SEND -> persisting
-        (persist create AgentChatThread { role: "user", content: "@payload.content", timestamp: "@now", status: "sent" } { emit: { success: "AgentChatThreadSaved", failure: "AgentChatThreadSaveFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Sending…" }] })
+        (persist create AgentChatThread {
+          content: ?content
+          role: user
+          status: sent
+          timestamp: @now
+        } {
+          emit: { failure: AgentChatThreadSaveFailed, success: AgentChatThreadSaved }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Sending…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
       CANCEL_COMPOSE -> loading
-        (fetch AgentChatThread { emit: { success: "AgentChatThreadLoaded", failure: "AgentChatThreadLoadFailed" } })
-        (render-ui main { type: "spinner" })
+        (fetch AgentChatThread {
+          emit: { failure: AgentChatThreadLoadFailed, success: AgentChatThreadLoaded }
+        })
+        (render-ui main { type: spinner })
     }
+
     state persisting {
       AgentChatThreadSaved -> loading
-        (fetch AgentChatThread { emit: { success: "AgentChatThreadLoaded", failure: "AgentChatThreadLoadFailed" } })
-        (render-ui main { type: "spinner" })
+        (fetch AgentChatThread {
+          emit: { failure: AgentChatThreadLoadFailed, success: AgentChatThreadLoaded }
+        })
+        (render-ui main { type: spinner })
       AgentChatThreadSaveFailed -> error
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to send message" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+        (render-ui main {
+          align: center
+          children: [{
+            color: destructive
+            name: alert-triangle
+            type: icon
+          }, {
+            content: "Failed to send message"
+            type: typography
+            variant: h3
+          }, {
+            color: muted
+            content: ?error
+            type: typography
+            variant: body
+          }, {
+            action: INIT
+            icon: rotate-ccw
+            label: Retry
+            type: button
+            variant: primary
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
     }
+
     state deleting {
       AgentChatThreadDeleted -> loading
-        (fetch AgentChatThread { emit: { success: "AgentChatThreadLoaded", failure: "AgentChatThreadLoadFailed" } })
-        (render-ui main { type: "spinner" })
+        (fetch AgentChatThread {
+          emit: { failure: AgentChatThreadLoadFailed, success: AgentChatThreadLoaded }
+        })
+        (render-ui main { type: spinner })
       AgentChatThreadDeleteFailed -> error
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to clear conversation" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+        (render-ui main {
+          align: center
+          children: [{
+            color: destructive
+            name: alert-triangle
+            type: icon
+          }, {
+            content: "Failed to clear conversation"
+            type: typography
+            variant: h3
+          }, {
+            color: muted
+            content: ?error
+            type: typography
+            variant: body
+          }, {
+            action: INIT
+            icon: rotate-ccw
+            label: Retry
+            type: button
+            variant: primary
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
     }
+
     state error {
       INIT -> loading
-        (fetch AgentChatThread { emit: { success: "AgentChatThreadLoaded", failure: "AgentChatThreadLoadFailed" } })
-        (render-ui main { type: "spinner" })
+        (fetch AgentChatThread {
+          emit: { failure: AgentChatThreadLoadFailed, success: AgentChatThreadLoaded }
+        })
+        (render-ui main { type: spinner })
     }
-emits {
+
+    emits {
       AgentChatThreadLoaded
       AgentChatThreadLoadFailed
       AgentChatThreadSaved
@@ -75,11 +304,22 @@ emits {
       AgentChatThreadDeleteFailed
     }
 
-        listens {
-      SEND { content : string! }
-      AgentChatThreadLoadFailed { error : string, code : string }
-      AgentChatThreadSaveFailed { error : string, code : string }
-      AgentChatThreadDeleteFailed { error : string, code : string }
+    listens {
+      SEND {
+        content : string!
+      }
+      AgentChatThreadLoadFailed {
+        error : string
+        code : string
+      }
+      AgentChatThreadSaveFailed {
+        error : string
+        code : string
+      }
+      AgentChatThreadDeleteFailed {
+        error : string
+        code : string
+      }
     }
   }
 

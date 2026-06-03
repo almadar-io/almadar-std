@@ -1,6 +1,5 @@
 app std-tabs-layout "2.0.0"
 "std-tabs-layout — chrome with std-tabs strip; consumer overrides config.tabs[].content with @trait.X references."
-
 orbital TabsLayoutOrbital {
   uses Tabs from "std/behaviors/std-tabs"
 
@@ -13,19 +12,37 @@ orbital TabsLayoutOrbital {
 
   trait TabsLayout [interaction, instance] {
     initial: composing
+
+    state composing {
+      INIT -> composing
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: @config.icon, type: icon }, {
+              content: @config.title
+              type: typography
+              variant: h2
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, @trait.TabsLayoutTabs]
+          className: "max-w-6xl mx-auto w-full"
+          direction: vertical
+          gap: md
+          type: stack
+        })
+    }
+
     config {
       title : string = "Tabbed View"
         @label "Page title"
         @description "Heading shown above the tab strip"
         @tier "presentation"
-      icon  : string = "layout"
+      icon : string = layout
         @label "Header icon"
         @description "Icon name displayed next to the title"
         @tier "presentation"
-    }
-    state composing {
-      INIT -> composing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", className: "max-w-6xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "@config.icon" }, { type: "typography", variant: "h2", content: "@config.title" }] }, { type: "divider" }, "@trait.TabsLayoutTabs"] })
     }
   }
 

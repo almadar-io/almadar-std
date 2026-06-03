@@ -1,39 +1,54 @@
 app std-calendar-week-timeline "1.2.0"
 "Week-timeline calendar — events grouped by weekday in a 7-column timeline. The visible window normalizes to the payload's actual date range, so events stack into whichever day-of-week they fall on. Same CalendarEventCalendar trait, same state machine as std-calendar — only bodyContent differs. For weekly schedule views (fitness class week, healthcare appointment week)."
-
 orbital WeekTimelineCalendarOrbital {
   uses Calendar from "std/behaviors/std-calendar"
 
   entity WeekTimelineEvent [runtime] {
-    id          : string!
-    name        : string! @description "A user-friendly identifier for the event." @synonyms "title, label, eventName"
+    id : string!
+    name : string! @description "A user-friendly identifier for the event." @synonyms "title, label, eventName"
     description : string @description "A textual explanation of the event." @synonyms "details, notes, explanation, summary"
-    status      : "active" | "inactive" | "pending" @description "Indicates the current operational state of the event." @synonyms "state, condition, flag" = "active"
-    createdAt   : string
-    date        : datetime @intrinsic = ""
-    time        : string @description "The time of day the event occurs." @synonyms "hour, start time, scheduled time" = ""
-    duration    : number @description "The length of time for the event, typically in minutes." @synonyms "length, time, span" = 60
-    weekday     : string @description "The day of the week this event occurs on." @synonyms "day, dayOfWeek" = ""
-    selectedRange : string @intrinsic = "week"
+    status : "active" | "inactive" | "pending" @description "Indicates the current operational state of the event." @synonyms "state, condition, flag" = active
+    createdAt : string
+    date : datetime @intrinsic = ""
+    time : string @description "The time of day the event occurs." @synonyms "hour, start time, scheduled time" = ""
+    duration : number @description "The length of time for the event, typically in minutes." @synonyms "length, time, span" = 60
+    weekday : string @description "The day of the week this event occurs on." @synonyms "day, dayOfWeek" = ""
+    selectedRange : string @intrinsic = week
   }
 
   trait WeekTimelineCalendar = Calendar.traits.CalendarEventCalendar -> WeekTimelineEvent {
-    config: {
+    config {
       bodyContent: {
-        type: "stack",
-        direction: "vertical",
-        gap: "md",
-        children: [
-          { type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [
-            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
-              { type: "icon", name: "calendar" },
-              { type: "typography", content: "Week", variant: "h2" }
-            ]},
-            { type: "date-range-selector", onSelect: "SELECT_DAY", selected: "@entity.selectedRange" }
-          ]},
-          { type: "divider" },
-          { type: "calendar-grid", events: "@payload.data", dayWindow: 7, className: "w-full" }
-        ]
+        children: [{
+          align: center
+          children: [{
+            align: center
+            children: [{ name: calendar, type: icon }, {
+              content: Week
+              type: typography
+              variant: h2
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, {
+            onSelect: SELECT_DAY
+            selected: @entity.selectedRange
+            type: date-range-selector
+          }]
+          direction: horizontal
+          gap: md
+          justify: between
+          type: stack
+        }, { type: divider }, {
+          className: w-full
+          dayWindow: 7
+          events: ?data
+          type: calendar-grid
+        }]
+        direction: vertical
+        gap: md
+        type: stack
       }
     }
   }

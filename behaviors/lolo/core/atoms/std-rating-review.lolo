@@ -1,386 +1,1553 @@
 app std-rating-review "2.1.1"
 "std-rating-review — Airbnb / Amazon / Google Maps style review surface. Header with aggregate score + Write CTA, per-star distribution bars, working sort chips (recent / top rated / lowest), scrollable reviews list with author + stars + comment + helpful action. Topology = loading / viewing / composing / submitting / submitted / error."
-
 type ObjectSpec = { id : string, label : string, value : string }
 type SortOption = { id : string!, label : string!, icon : string }
 type StarBucket = { label : string!, percentage : number! }
-
 orbital RatingReviewOrbital {
-  type ReviewRow = {
-    id          : string!
-    rating      : number
-    comment     : string
-    authorName  : string
-    avatarIcon  : string
-    createdAt   : string
-    helpful     : number
-  }
+    type ReviewRow = { id : string!, rating : number, comment : string, authorName : string, avatarIcon : string, createdAt : string, helpful : number }
 
-  type StarBar = {
-    label      : string!
-    percentage : number
-  }
+    type StarBar = { label : string!, percentage : number }
+
+    type ReviewsLoaded = Event { data : [ObjectSpec] } "Fired when the reviews collection finishes loading"
+
+    type ReviewsLoadFailed = Event { error : string, code : string } "Fired when reviews fetch fails"
+
+    type ReviewSaved = Event { row : object } "Fired after a new review persists successfully"
+
+    type ReviewSaveFailed = Event { error : string, code : string } "Fired when persist fails"
 
   entity ReviewView [runtime] {
-    id              : string!
-    reviews         : [ReviewRow] @description "A list of individual review entries." @synonyms "reviews, entries, items" = []
-    reviewsSource   : [ReviewRow] @description "Collection of individual review entries." @synonyms "items, records, data" = []
-    totalReviews    : number @description "The total count of reviews associated with this view." @synonyms "count, number, total, size" = 0
-    averageRating   : number @description "The average numerical rating value." @synonyms "rating, score, value" = 0
-    starDistribution: [StarBar] @description "Distribution of reviews across star ratings." @synonyms "star counts, rating breakdown, star frequency" = []
-    currentSort     : "recent" | "highest" | "lowest" @description "Specifies the current sorting order applied to the reviews." @synonyms "sort, order, arrangement" = "recent"
-    draftRating     : number @description "The user's tentative star rating for the review." @synonyms "rating, star_value, score" = 0
-    draftComment    : string @description "The text content of a review in draft state." @synonyms "comment, text, body, content" = ""
-    errorMessage    : string @description "Text displayed when an error occurs during review submission." @synonyms "error text, error message, failure message" = ""
+    id : string!
+    reviews : [ReviewRow] @description "A list of individual review entries." @synonyms "reviews, entries, items" = []
+    reviewsSource : [ReviewRow] @description "Collection of individual review entries." @synonyms "items, records, data" = []
+    totalReviews : number @description "The total count of reviews associated with this view." @synonyms "count, number, total, size" = 0
+    averageRating : number @description "The average numerical rating value." @synonyms "rating, score, value" = 0
+    starDistribution : [StarBar] @description "Distribution of reviews across star ratings." @synonyms "star counts, rating breakdown, star frequency" = []
+    currentSort : "recent" | "highest" | "lowest" @description "Specifies the current sorting order applied to the reviews." @synonyms "sort, order, arrangement" = recent
+    draftRating : number @description "The user's tentative star rating for the review." @synonyms "rating, star_value, score" = 0
+    draftComment : string @description "The text content of a review in draft state." @synonyms "comment, text, body, content" = ""
+    errorMessage : string @description "Text displayed when an error occurs during review submission." @synonyms "error text, error message, failure message" = ""
   }
 
-  type ReviewsLoaded    = Event { data : [ObjectSpec] }                "Fired when the reviews collection finishes loading"
-  type ReviewsLoadFailed= Event { error : string, code : string }  "Fired when reviews fetch fails"
-  type ReviewSaved      = Event { row : object }                   "Fired after a new review persists successfully"
-  type ReviewSaveFailed = Event { error : string, code : string }  "Fired when persist fails"
-
   trait RatingReviewBoard -> ReviewView [interaction, instance] {
-    config {
-      subjectTitle  : string   = "Bali Sunset Villa · 3 nights"
-        @label "Subject title"
-        @description "Name of the item being reviewed (shown in the header)"
-        @tier "presentation"
-      submitLabel   : string   = "Submit review"
-        @label "Submit button"
-        @description "Label on the primary submit-review button"
-        @tier "presentation"
-      writeLabel    : string   = "Write a review"
-        @label "Write CTA"
-        @description "Label on the call-to-action that opens the compose form"
-        @tier "presentation"
-      cancelLabel   : string   = "Cancel"
-        @label "Cancel button"
-        @description "Label on the cancel button inside the compose form"
-        @tier "presentation"
-      reviewFields  : [string] = ["draftComment"]
-        @label "Review form fields"
-        @description "Inputs shown in the review compose form"
-        @tier "presentation"
-      sortOptions   : [SortOption] = [
-        { id: "recent",  label: "Most recent", icon: "clock" },
-        { id: "highest", label: "Top rated",   icon: "star" },
-        { id: "lowest",  label: "Lowest",      icon: "trending-down" }
-      ]
-        @label "Sort tabs"
-        @description "Sort modes shown as tabs above the reviews list"
-        @tier "presentation"
-      starDistribution : [StarBucket] = [
-        { label: "5 stars", percentage: 74 },
-        { label: "4 stars", percentage: 18 },
-        { label: "3 stars", percentage: 5 },
-        { label: "2 stars", percentage: 2 },
-        { label: "1 star",  percentage: 1 }
-      ]
-        @label "Star bars"
-        @description "Per-star distribution displayed as horizontal progress bars"
-        @tier "presentation"
-      cardLook : "elevated" | "flat-bordered" | "borderless-divider" | "ticket" | "invoice" | "chip" | "tile-image-first" = "elevated"
-        @label "Card look"
-        @description "Layer 2 visual treatment for cards rendered by this atom."
-        @tier "presentation"
-    }
     initial: loading
+
     state loading {
       INIT -> loading
-        (fetch ReviewView { emit: { success: "ReviewsLoaded", failure: "ReviewsLoadFailed" } })
-        (render-ui main { type: "loading-state", title: "Loading reviews…" })
+        (fetch ReviewView {
+          emit: { failure: ReviewsLoadFailed, success: ReviewsLoaded }
+        })
+        (render-ui main {
+          title: "Loading reviews…"
+          type: loading-state
+        })
       ReviewsLoaded -> viewing
-        (set @entity.reviewsSource (array/map @payload.data ["fn", "row", {
-          id:         (object/get @row "id" ""),
-          rating:     (object/get @row "rating" 5),
-          comment:    (object/get @row "comment" ""),
-          authorName: (object/get @row "authorName" "Guest"),
-          avatarIcon: (object/get @row "avatarIcon" "user"),
-          createdAt:  (object/get @row "createdAt" ""),
-          helpful:    (object/get @row "helpful" 0)
-        }]))
+        (set @entity.reviewsSource (array/map ?data (fn row {
+          authorName: (object/get @row authorName Guest)
+          avatarIcon: (object/get @row avatarIcon user)
+          comment: (object/get @row comment "")
+          createdAt: (object/get @row createdAt "")
+          helpful: (object/get @row helpful 0)
+          id: (object/get @row id "")
+          rating: (object/get @row rating 5)
+        })))
         (set @entity.reviews @entity.reviewsSource)
-        (set @entity.totalReviews (array/len @payload.data))
-        (set @entity.averageRating (array/avg (array/map @payload.data ["fn", "row", (object/get @row "rating" 5)])))
-        (set @entity.starDistribution (array/map @config.starDistribution ["fn", "bar", {
-          label:      (object/get @bar "label" ""),
-          percentage: (object/get @bar "percentage" 0)
-        }]))
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "vertical", gap: "xs", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "star" }, { type: "typography", content: "Reviews", variant: "h3" }, { type: "typography", content: "·", color: "muted" }, { type: "typography", content: "@entity.averageRating", variant: "h3" }, { type: "icon", name: "star", color: "warning" }, { type: "typography", content: "·", color: "muted" }, { type: "typography", content: "@entity.totalReviews", variant: "h4", color: "muted" }, { type: "typography", content: "reviews", variant: "h4", color: "muted" }] }, { type: "typography", content: "@config.subjectTitle", variant: "caption", color: "muted" }] }, { type: "button", label: "@config.writeLabel", variant: "primary", action: "WRITE_REVIEW", icon: "edit" }] }, { type: "card", look: "@config.cardLook", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Rating distribution", variant: "h4" }, { type: "data-list", entity: "@entity.starDistribution", gap: "sm", fields: [], renderItem: ["fn", "bar", { type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "typography", content: "@bar.label", variant: "caption" }, { type: "progress-bar", value: "@bar.percentage", max: 100, variant: "primary" }, { type: "typography", content: "@bar.percentage", variant: "caption", color: "muted" }, { type: "typography", content: "%", variant: "caption", color: "muted" }] }] }] }] }, { type: "tabs", tabs: "@config.sortOptions", activeTab: "@entity.currentSort", tabChangeEvent: "CHANGE_SORT" }, { type: "data-list", entity: "@entity.reviews", gap: "md", fields: [], renderItem: ["fn", "review", { type: "card", look: "@config.cardLook", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "@review.avatarIcon" }, { type: "typography", content: "@review.authorName", weight: "bold" }, { type: "typography", content: "·", color: "muted" }, { type: "icon", name: "star", color: "warning" }, { type: "typography", content: "@review.rating", weight: "bold" }, { type: "typography", content: "·", color: "muted" }, { type: "typography", content: "@review.createdAt", variant: "caption", color: "muted" }] }, { type: "typography", content: "@review.comment", variant: "body" }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Helpful", variant: "ghost", action: "MARK_HELPFUL", actionPayload: { id: "@review.id" }, icon: "thumbs-up" }, { type: "typography", content: "@review.helpful", variant: "caption", color: "muted" }] }] }] }] }] })
+        (set @entity.totalReviews (array/len ?data))
+        (set @entity.averageRating (array/avg (array/map ?data (fn row (object/get @row rating 5)))))
+        (set @entity.starDistribution (array/map @config.starDistribution (fn bar {
+          label: (object/get @bar label "")
+          percentage: (object/get @bar percentage 0)
+        })))
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{
+              children: [{
+                align: center
+                children: [{ name: star, type: icon }, {
+                  content: Reviews
+                  type: typography
+                  variant: h3
+                }, {
+                  color: muted
+                  content: "·"
+                  type: typography
+                }, {
+                  content: @entity.averageRating
+                  type: typography
+                  variant: h3
+                }, {
+                  color: warning
+                  name: star
+                  type: icon
+                }, {
+                  color: muted
+                  content: "·"
+                  type: typography
+                }, {
+                  color: muted
+                  content: @entity.totalReviews
+                  type: typography
+                  variant: h4
+                }, {
+                  color: muted
+                  content: reviews
+                  type: typography
+                  variant: h4
+                }]
+                direction: horizontal
+                gap: sm
+                type: stack
+              }, {
+                color: muted
+                content: @config.subjectTitle
+                type: typography
+                variant: caption
+              }]
+              direction: vertical
+              gap: xs
+              type: stack
+            }, {
+              action: WRITE_REVIEW
+              icon: edit
+              label: @config.writeLabel
+              type: button
+              variant: primary
+            }]
+            direction: horizontal
+            gap: md
+            justify: between
+            type: stack
+          }, {
+            children: [{
+              children: [{
+                content: "Rating distribution"
+                type: typography
+                variant: h4
+              }, {
+                entity: @entity.starDistribution
+                fields: []
+                gap: sm
+                renderItem: (fn bar {
+                  align: center
+                  children: [{
+                    content: @bar.label
+                    type: typography
+                    variant: caption
+                  }, {
+                    max: 100
+                    type: progress-bar
+                    value: @bar.percentage
+                    variant: primary
+                  }, {
+                    color: muted
+                    content: @bar.percentage
+                    type: typography
+                    variant: caption
+                  }, {
+                    color: muted
+                    content: "%"
+                    type: typography
+                    variant: caption
+                  }]
+                  direction: horizontal
+                  gap: md
+                  type: stack
+                })
+                type: data-list
+              }]
+              direction: vertical
+              gap: sm
+              type: stack
+            }]
+            look: @config.cardLook
+            type: card
+          }, {
+            activeTab: @entity.currentSort
+            tabChangeEvent: CHANGE_SORT
+            tabs: @config.sortOptions
+            type: tabs
+          }, {
+            entity: @entity.reviews
+            fields: []
+            gap: md
+            renderItem: (fn review {
+              children: [{
+                children: [{
+                  align: center
+                  children: [{ name: @review.avatarIcon, type: icon }, {
+                    content: @review.authorName
+                    type: typography
+                    weight: bold
+                  }, {
+                    color: muted
+                    content: "·"
+                    type: typography
+                  }, {
+                    color: warning
+                    name: star
+                    type: icon
+                  }, {
+                    content: @review.rating
+                    type: typography
+                    weight: bold
+                  }, {
+                    color: muted
+                    content: "·"
+                    type: typography
+                  }, {
+                    color: muted
+                    content: @review.createdAt
+                    type: typography
+                    variant: caption
+                  }]
+                  direction: horizontal
+                  gap: sm
+                  type: stack
+                }, {
+                  content: @review.comment
+                  type: typography
+                  variant: body
+                }, {
+                  align: center
+                  children: [{
+                    action: MARK_HELPFUL
+                    actionPayload: { id: @review.id }
+                    icon: thumbs-up
+                    label: Helpful
+                    type: button
+                    variant: ghost
+                  }, {
+                    color: muted
+                    content: @review.helpful
+                    type: typography
+                    variant: caption
+                  }]
+                  direction: horizontal
+                  gap: sm
+                  type: stack
+                }]
+                direction: vertical
+                gap: sm
+                type: stack
+              }]
+              look: @config.cardLook
+              type: card
+            })
+            type: data-list
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
       ReviewsLoadFailed -> error
-        (set @entity.errorMessage @payload.error)
-        (render-ui main { type: "error-state", title: "Failed to load reviews", message: "@entity.errorMessage" })
+        (set @entity.errorMessage ?error)
+        (render-ui main {
+          message: @entity.errorMessage
+          title: "Failed to load reviews"
+          type: error-state
+        })
       ReviewSaved -> loading
-        (fetch ReviewView { emit: { success: "ReviewsLoaded", failure: "ReviewsLoadFailed" } })
-        (render-ui main { type: "loading-state", title: "Refreshing reviews…" })
+        (fetch ReviewView {
+          emit: { failure: ReviewsLoadFailed, success: ReviewsLoaded }
+        })
+        (render-ui main {
+          title: "Refreshing reviews…"
+          type: loading-state
+        })
       ReviewSaveFailed -> error
-        (set @entity.errorMessage @payload.error)
-        (render-ui main { type: "error-state", title: "Failed to submit", message: "@entity.errorMessage" })
+        (set @entity.errorMessage ?error)
+        (render-ui main {
+          message: @entity.errorMessage
+          title: "Failed to submit"
+          type: error-state
+        })
     }
+
     state viewing {
       WRITE_REVIEW -> composing
         (set @entity.draftRating 0)
         (set @entity.draftComment "")
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CANCEL_REVIEW", icon: "arrow-left" }, { type: "icon", name: "edit" }, { type: "typography", content: "Write a review", variant: "h3" }] }, { type: "card", look: "@config.cardLook", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@config.subjectTitle", variant: "caption", color: "muted" }, { type: "typography", content: "How would you rate it?", variant: "h4" }, { type: "star-rating", value: "@entity.draftRating", max: 5, action: "RATE_DRAFT" }, { type: "typography", content: "Share more details (optional)", variant: "h4" }, { type: "form-section", entity: "@entity", mode: "edit", submitEvent: "SUBMIT_REVIEW", cancelEvent: "CANCEL_REVIEW", submitLabel: "@config.submitLabel", fields: "@config.reviewFields" }] }] }] })
-      CHANGE_SORT -> viewing when (= @payload.tabId "highest")
-        (set @entity.currentSort "highest")
-        (set @entity.reviews (array/sort @entity.reviewsSource "rating" "desc"))
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "vertical", gap: "xs", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "star" }, { type: "typography", content: "Reviews", variant: "h3" }, { type: "typography", content: "·", color: "muted" }, { type: "typography", content: "@entity.averageRating", variant: "h3" }, { type: "icon", name: "star", color: "warning" }, { type: "typography", content: "·", color: "muted" }, { type: "typography", content: "@entity.totalReviews", variant: "h4", color: "muted" }, { type: "typography", content: "reviews", variant: "h4", color: "muted" }] }, { type: "typography", content: "@config.subjectTitle", variant: "caption", color: "muted" }] }, { type: "button", label: "@config.writeLabel", variant: "primary", action: "WRITE_REVIEW", icon: "edit" }] }, { type: "card", look: "@config.cardLook", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Rating distribution", variant: "h4" }, { type: "data-list", entity: "@entity.starDistribution", gap: "sm", fields: [], renderItem: ["fn", "bar", { type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "typography", content: "@bar.label", variant: "caption" }, { type: "progress-bar", value: "@bar.percentage", max: 100, variant: "primary" }, { type: "typography", content: "@bar.percentage", variant: "caption", color: "muted" }, { type: "typography", content: "%", variant: "caption", color: "muted" }] }] }] }] }, { type: "tabs", tabs: "@config.sortOptions", activeTab: "@entity.currentSort", tabChangeEvent: "CHANGE_SORT" }, { type: "data-list", entity: "@entity.reviews", gap: "md", fields: [], renderItem: ["fn", "review", { type: "card", look: "@config.cardLook", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "@review.avatarIcon" }, { type: "typography", content: "@review.authorName", weight: "bold" }, { type: "typography", content: "·", color: "muted" }, { type: "icon", name: "star", color: "warning" }, { type: "typography", content: "@review.rating", weight: "bold" }, { type: "typography", content: "·", color: "muted" }, { type: "typography", content: "@review.createdAt", variant: "caption", color: "muted" }] }, { type: "typography", content: "@review.comment", variant: "body" }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Helpful", variant: "ghost", action: "MARK_HELPFUL", actionPayload: { id: "@review.id" }, icon: "thumbs-up" }, { type: "typography", content: "@review.helpful", variant: "caption", color: "muted" }] }] }] }] }] })
-      CHANGE_SORT -> viewing when (= @payload.tabId "lowest")
-        (set @entity.currentSort "lowest")
-        (set @entity.reviews (array/sort @entity.reviewsSource "rating" "asc"))
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "vertical", gap: "xs", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "star" }, { type: "typography", content: "Reviews", variant: "h3" }, { type: "typography", content: "·", color: "muted" }, { type: "typography", content: "@entity.averageRating", variant: "h3" }, { type: "icon", name: "star", color: "warning" }, { type: "typography", content: "·", color: "muted" }, { type: "typography", content: "@entity.totalReviews", variant: "h4", color: "muted" }, { type: "typography", content: "reviews", variant: "h4", color: "muted" }] }, { type: "typography", content: "@config.subjectTitle", variant: "caption", color: "muted" }] }, { type: "button", label: "@config.writeLabel", variant: "primary", action: "WRITE_REVIEW", icon: "edit" }] }, { type: "card", look: "@config.cardLook", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Rating distribution", variant: "h4" }, { type: "data-list", entity: "@entity.starDistribution", gap: "sm", fields: [], renderItem: ["fn", "bar", { type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "typography", content: "@bar.label", variant: "caption" }, { type: "progress-bar", value: "@bar.percentage", max: 100, variant: "primary" }, { type: "typography", content: "@bar.percentage", variant: "caption", color: "muted" }, { type: "typography", content: "%", variant: "caption", color: "muted" }] }] }] }] }, { type: "tabs", tabs: "@config.sortOptions", activeTab: "@entity.currentSort", tabChangeEvent: "CHANGE_SORT" }, { type: "data-list", entity: "@entity.reviews", gap: "md", fields: [], renderItem: ["fn", "review", { type: "card", look: "@config.cardLook", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "@review.avatarIcon" }, { type: "typography", content: "@review.authorName", weight: "bold" }, { type: "typography", content: "·", color: "muted" }, { type: "icon", name: "star", color: "warning" }, { type: "typography", content: "@review.rating", weight: "bold" }, { type: "typography", content: "·", color: "muted" }, { type: "typography", content: "@review.createdAt", variant: "caption", color: "muted" }] }, { type: "typography", content: "@review.comment", variant: "body" }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Helpful", variant: "ghost", action: "MARK_HELPFUL", actionPayload: { id: "@review.id" }, icon: "thumbs-up" }, { type: "typography", content: "@review.helpful", variant: "caption", color: "muted" }] }] }] }] }] })
-      CHANGE_SORT -> viewing when (= @payload.tabId "recent")
-        (set @entity.currentSort "recent")
-        (set @entity.reviews (array/sort @entity.reviewsSource "createdAt" "desc"))
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "vertical", gap: "xs", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "star" }, { type: "typography", content: "Reviews", variant: "h3" }, { type: "typography", content: "·", color: "muted" }, { type: "typography", content: "@entity.averageRating", variant: "h3" }, { type: "icon", name: "star", color: "warning" }, { type: "typography", content: "·", color: "muted" }, { type: "typography", content: "@entity.totalReviews", variant: "h4", color: "muted" }, { type: "typography", content: "reviews", variant: "h4", color: "muted" }] }, { type: "typography", content: "@config.subjectTitle", variant: "caption", color: "muted" }] }, { type: "button", label: "@config.writeLabel", variant: "primary", action: "WRITE_REVIEW", icon: "edit" }] }, { type: "card", look: "@config.cardLook", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Rating distribution", variant: "h4" }, { type: "data-list", entity: "@entity.starDistribution", gap: "sm", fields: [], renderItem: ["fn", "bar", { type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "typography", content: "@bar.label", variant: "caption" }, { type: "progress-bar", value: "@bar.percentage", max: 100, variant: "primary" }, { type: "typography", content: "@bar.percentage", variant: "caption", color: "muted" }, { type: "typography", content: "%", variant: "caption", color: "muted" }] }] }] }] }, { type: "tabs", tabs: "@config.sortOptions", activeTab: "@entity.currentSort", tabChangeEvent: "CHANGE_SORT" }, { type: "data-list", entity: "@entity.reviews", gap: "md", fields: [], renderItem: ["fn", "review", { type: "card", look: "@config.cardLook", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "@review.avatarIcon" }, { type: "typography", content: "@review.authorName", weight: "bold" }, { type: "typography", content: "·", color: "muted" }, { type: "icon", name: "star", color: "warning" }, { type: "typography", content: "@review.rating", weight: "bold" }, { type: "typography", content: "·", color: "muted" }, { type: "typography", content: "@review.createdAt", variant: "caption", color: "muted" }] }, { type: "typography", content: "@review.comment", variant: "body" }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Helpful", variant: "ghost", action: "MARK_HELPFUL", actionPayload: { id: "@review.id" }, icon: "thumbs-up" }, { type: "typography", content: "@review.helpful", variant: "caption", color: "muted" }] }] }] }] }] })
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{
+              action: CANCEL_REVIEW
+              icon: arrow-left
+              label: Back
+              type: button
+              variant: ghost
+            }, { name: edit, type: icon }, {
+              content: "Write a review"
+              type: typography
+              variant: h3
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, {
+            children: [{
+              children: [{
+                color: muted
+                content: @config.subjectTitle
+                type: typography
+                variant: caption
+              }, {
+                content: "How would you rate it?"
+                type: typography
+                variant: h4
+              }, {
+                action: RATE_DRAFT
+                max: 5
+                type: star-rating
+                value: @entity.draftRating
+              }, {
+                content: "Share more details (optional)"
+                type: typography
+                variant: h4
+              }, {
+                cancelEvent: CANCEL_REVIEW
+                entity: @entity
+                fields: @config.reviewFields
+                mode: edit
+                submitEvent: SUBMIT_REVIEW
+                submitLabel: @config.submitLabel
+                type: form-section
+              }]
+              direction: vertical
+              gap: md
+              type: stack
+            }]
+            look: @config.cardLook
+            type: card
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      CHANGE_SORT -> viewing when ["=", ?tabId, highest]
+        (set @entity.currentSort highest)
+        (set @entity.reviews (array/sort @entity.reviewsSource rating desc))
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{
+              children: [{
+                align: center
+                children: [{ name: star, type: icon }, {
+                  content: Reviews
+                  type: typography
+                  variant: h3
+                }, {
+                  color: muted
+                  content: "·"
+                  type: typography
+                }, {
+                  content: @entity.averageRating
+                  type: typography
+                  variant: h3
+                }, {
+                  color: warning
+                  name: star
+                  type: icon
+                }, {
+                  color: muted
+                  content: "·"
+                  type: typography
+                }, {
+                  color: muted
+                  content: @entity.totalReviews
+                  type: typography
+                  variant: h4
+                }, {
+                  color: muted
+                  content: reviews
+                  type: typography
+                  variant: h4
+                }]
+                direction: horizontal
+                gap: sm
+                type: stack
+              }, {
+                color: muted
+                content: @config.subjectTitle
+                type: typography
+                variant: caption
+              }]
+              direction: vertical
+              gap: xs
+              type: stack
+            }, {
+              action: WRITE_REVIEW
+              icon: edit
+              label: @config.writeLabel
+              type: button
+              variant: primary
+            }]
+            direction: horizontal
+            gap: md
+            justify: between
+            type: stack
+          }, {
+            children: [{
+              children: [{
+                content: "Rating distribution"
+                type: typography
+                variant: h4
+              }, {
+                entity: @entity.starDistribution
+                fields: []
+                gap: sm
+                renderItem: (fn bar {
+                  align: center
+                  children: [{
+                    content: @bar.label
+                    type: typography
+                    variant: caption
+                  }, {
+                    max: 100
+                    type: progress-bar
+                    value: @bar.percentage
+                    variant: primary
+                  }, {
+                    color: muted
+                    content: @bar.percentage
+                    type: typography
+                    variant: caption
+                  }, {
+                    color: muted
+                    content: "%"
+                    type: typography
+                    variant: caption
+                  }]
+                  direction: horizontal
+                  gap: md
+                  type: stack
+                })
+                type: data-list
+              }]
+              direction: vertical
+              gap: sm
+              type: stack
+            }]
+            look: @config.cardLook
+            type: card
+          }, {
+            activeTab: @entity.currentSort
+            tabChangeEvent: CHANGE_SORT
+            tabs: @config.sortOptions
+            type: tabs
+          }, {
+            entity: @entity.reviews
+            fields: []
+            gap: md
+            renderItem: (fn review {
+              children: [{
+                children: [{
+                  align: center
+                  children: [{ name: @review.avatarIcon, type: icon }, {
+                    content: @review.authorName
+                    type: typography
+                    weight: bold
+                  }, {
+                    color: muted
+                    content: "·"
+                    type: typography
+                  }, {
+                    color: warning
+                    name: star
+                    type: icon
+                  }, {
+                    content: @review.rating
+                    type: typography
+                    weight: bold
+                  }, {
+                    color: muted
+                    content: "·"
+                    type: typography
+                  }, {
+                    color: muted
+                    content: @review.createdAt
+                    type: typography
+                    variant: caption
+                  }]
+                  direction: horizontal
+                  gap: sm
+                  type: stack
+                }, {
+                  content: @review.comment
+                  type: typography
+                  variant: body
+                }, {
+                  align: center
+                  children: [{
+                    action: MARK_HELPFUL
+                    actionPayload: { id: @review.id }
+                    icon: thumbs-up
+                    label: Helpful
+                    type: button
+                    variant: ghost
+                  }, {
+                    color: muted
+                    content: @review.helpful
+                    type: typography
+                    variant: caption
+                  }]
+                  direction: horizontal
+                  gap: sm
+                  type: stack
+                }]
+                direction: vertical
+                gap: sm
+                type: stack
+              }]
+              look: @config.cardLook
+              type: card
+            })
+            type: data-list
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
+      CHANGE_SORT -> viewing when ["=", ?tabId, lowest]
+        (set @entity.currentSort lowest)
+        (set @entity.reviews (array/sort @entity.reviewsSource rating asc))
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{
+              children: [{
+                align: center
+                children: [{ name: star, type: icon }, {
+                  content: Reviews
+                  type: typography
+                  variant: h3
+                }, {
+                  color: muted
+                  content: "·"
+                  type: typography
+                }, {
+                  content: @entity.averageRating
+                  type: typography
+                  variant: h3
+                }, {
+                  color: warning
+                  name: star
+                  type: icon
+                }, {
+                  color: muted
+                  content: "·"
+                  type: typography
+                }, {
+                  color: muted
+                  content: @entity.totalReviews
+                  type: typography
+                  variant: h4
+                }, {
+                  color: muted
+                  content: reviews
+                  type: typography
+                  variant: h4
+                }]
+                direction: horizontal
+                gap: sm
+                type: stack
+              }, {
+                color: muted
+                content: @config.subjectTitle
+                type: typography
+                variant: caption
+              }]
+              direction: vertical
+              gap: xs
+              type: stack
+            }, {
+              action: WRITE_REVIEW
+              icon: edit
+              label: @config.writeLabel
+              type: button
+              variant: primary
+            }]
+            direction: horizontal
+            gap: md
+            justify: between
+            type: stack
+          }, {
+            children: [{
+              children: [{
+                content: "Rating distribution"
+                type: typography
+                variant: h4
+              }, {
+                entity: @entity.starDistribution
+                fields: []
+                gap: sm
+                renderItem: (fn bar {
+                  align: center
+                  children: [{
+                    content: @bar.label
+                    type: typography
+                    variant: caption
+                  }, {
+                    max: 100
+                    type: progress-bar
+                    value: @bar.percentage
+                    variant: primary
+                  }, {
+                    color: muted
+                    content: @bar.percentage
+                    type: typography
+                    variant: caption
+                  }, {
+                    color: muted
+                    content: "%"
+                    type: typography
+                    variant: caption
+                  }]
+                  direction: horizontal
+                  gap: md
+                  type: stack
+                })
+                type: data-list
+              }]
+              direction: vertical
+              gap: sm
+              type: stack
+            }]
+            look: @config.cardLook
+            type: card
+          }, {
+            activeTab: @entity.currentSort
+            tabChangeEvent: CHANGE_SORT
+            tabs: @config.sortOptions
+            type: tabs
+          }, {
+            entity: @entity.reviews
+            fields: []
+            gap: md
+            renderItem: (fn review {
+              children: [{
+                children: [{
+                  align: center
+                  children: [{ name: @review.avatarIcon, type: icon }, {
+                    content: @review.authorName
+                    type: typography
+                    weight: bold
+                  }, {
+                    color: muted
+                    content: "·"
+                    type: typography
+                  }, {
+                    color: warning
+                    name: star
+                    type: icon
+                  }, {
+                    content: @review.rating
+                    type: typography
+                    weight: bold
+                  }, {
+                    color: muted
+                    content: "·"
+                    type: typography
+                  }, {
+                    color: muted
+                    content: @review.createdAt
+                    type: typography
+                    variant: caption
+                  }]
+                  direction: horizontal
+                  gap: sm
+                  type: stack
+                }, {
+                  content: @review.comment
+                  type: typography
+                  variant: body
+                }, {
+                  align: center
+                  children: [{
+                    action: MARK_HELPFUL
+                    actionPayload: { id: @review.id }
+                    icon: thumbs-up
+                    label: Helpful
+                    type: button
+                    variant: ghost
+                  }, {
+                    color: muted
+                    content: @review.helpful
+                    type: typography
+                    variant: caption
+                  }]
+                  direction: horizontal
+                  gap: sm
+                  type: stack
+                }]
+                direction: vertical
+                gap: sm
+                type: stack
+              }]
+              look: @config.cardLook
+              type: card
+            })
+            type: data-list
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
+      CHANGE_SORT -> viewing when ["=", ?tabId, recent]
+        (set @entity.currentSort recent)
+        (set @entity.reviews (array/sort @entity.reviewsSource createdAt desc))
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{
+              children: [{
+                align: center
+                children: [{ name: star, type: icon }, {
+                  content: Reviews
+                  type: typography
+                  variant: h3
+                }, {
+                  color: muted
+                  content: "·"
+                  type: typography
+                }, {
+                  content: @entity.averageRating
+                  type: typography
+                  variant: h3
+                }, {
+                  color: warning
+                  name: star
+                  type: icon
+                }, {
+                  color: muted
+                  content: "·"
+                  type: typography
+                }, {
+                  color: muted
+                  content: @entity.totalReviews
+                  type: typography
+                  variant: h4
+                }, {
+                  color: muted
+                  content: reviews
+                  type: typography
+                  variant: h4
+                }]
+                direction: horizontal
+                gap: sm
+                type: stack
+              }, {
+                color: muted
+                content: @config.subjectTitle
+                type: typography
+                variant: caption
+              }]
+              direction: vertical
+              gap: xs
+              type: stack
+            }, {
+              action: WRITE_REVIEW
+              icon: edit
+              label: @config.writeLabel
+              type: button
+              variant: primary
+            }]
+            direction: horizontal
+            gap: md
+            justify: between
+            type: stack
+          }, {
+            children: [{
+              children: [{
+                content: "Rating distribution"
+                type: typography
+                variant: h4
+              }, {
+                entity: @entity.starDistribution
+                fields: []
+                gap: sm
+                renderItem: (fn bar {
+                  align: center
+                  children: [{
+                    content: @bar.label
+                    type: typography
+                    variant: caption
+                  }, {
+                    max: 100
+                    type: progress-bar
+                    value: @bar.percentage
+                    variant: primary
+                  }, {
+                    color: muted
+                    content: @bar.percentage
+                    type: typography
+                    variant: caption
+                  }, {
+                    color: muted
+                    content: "%"
+                    type: typography
+                    variant: caption
+                  }]
+                  direction: horizontal
+                  gap: md
+                  type: stack
+                })
+                type: data-list
+              }]
+              direction: vertical
+              gap: sm
+              type: stack
+            }]
+            look: @config.cardLook
+            type: card
+          }, {
+            activeTab: @entity.currentSort
+            tabChangeEvent: CHANGE_SORT
+            tabs: @config.sortOptions
+            type: tabs
+          }, {
+            entity: @entity.reviews
+            fields: []
+            gap: md
+            renderItem: (fn review {
+              children: [{
+                children: [{
+                  align: center
+                  children: [{ name: @review.avatarIcon, type: icon }, {
+                    content: @review.authorName
+                    type: typography
+                    weight: bold
+                  }, {
+                    color: muted
+                    content: "·"
+                    type: typography
+                  }, {
+                    color: warning
+                    name: star
+                    type: icon
+                  }, {
+                    content: @review.rating
+                    type: typography
+                    weight: bold
+                  }, {
+                    color: muted
+                    content: "·"
+                    type: typography
+                  }, {
+                    color: muted
+                    content: @review.createdAt
+                    type: typography
+                    variant: caption
+                  }]
+                  direction: horizontal
+                  gap: sm
+                  type: stack
+                }, {
+                  content: @review.comment
+                  type: typography
+                  variant: body
+                }, {
+                  align: center
+                  children: [{
+                    action: MARK_HELPFUL
+                    actionPayload: { id: @review.id }
+                    icon: thumbs-up
+                    label: Helpful
+                    type: button
+                    variant: ghost
+                  }, {
+                    color: muted
+                    content: @review.helpful
+                    type: typography
+                    variant: caption
+                  }]
+                  direction: horizontal
+                  gap: sm
+                  type: stack
+                }]
+                direction: vertical
+                gap: sm
+                type: stack
+              }]
+              look: @config.cardLook
+              type: card
+            })
+            type: data-list
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
       MARK_HELPFUL -> viewing
-        (render-ui main { type: "loading-state", title: "Recording…" })
+        (render-ui main {
+          title: "Recording…"
+          type: loading-state
+        })
     }
+
     state composing {
       RATE_DRAFT -> composing
-        (set @entity.draftRating @payload.rating)
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CANCEL_REVIEW", icon: "arrow-left" }, { type: "icon", name: "edit" }, { type: "typography", content: "Write a review", variant: "h3" }] }, { type: "card", look: "@config.cardLook", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@config.subjectTitle", variant: "caption", color: "muted" }, { type: "typography", content: "How would you rate it?", variant: "h4" }, { type: "star-rating", value: "@entity.draftRating", max: 5, action: "RATE_DRAFT" }, { type: "typography", content: "Share more details (optional)", variant: "h4" }, { type: "form-section", entity: "@entity", mode: "edit", submitEvent: "SUBMIT_REVIEW", cancelEvent: "CANCEL_REVIEW", submitLabel: "@config.submitLabel", fields: "@config.reviewFields" }] }] }] })
+        (set @entity.draftRating ?rating)
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{
+              action: CANCEL_REVIEW
+              icon: arrow-left
+              label: Back
+              type: button
+              variant: ghost
+            }, { name: edit, type: icon }, {
+              content: "Write a review"
+              type: typography
+              variant: h3
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, {
+            children: [{
+              children: [{
+                color: muted
+                content: @config.subjectTitle
+                type: typography
+                variant: caption
+              }, {
+                content: "How would you rate it?"
+                type: typography
+                variant: h4
+              }, {
+                action: RATE_DRAFT
+                max: 5
+                type: star-rating
+                value: @entity.draftRating
+              }, {
+                content: "Share more details (optional)"
+                type: typography
+                variant: h4
+              }, {
+                cancelEvent: CANCEL_REVIEW
+                entity: @entity
+                fields: @config.reviewFields
+                mode: edit
+                submitEvent: SUBMIT_REVIEW
+                submitLabel: @config.submitLabel
+                type: form-section
+              }]
+              direction: vertical
+              gap: md
+              type: stack
+            }]
+            look: @config.cardLook
+            type: card
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
       SUBMIT_REVIEW -> submitting
-        (persist create ReviewView { rating: @entity.draftRating, comment: @entity.draftComment } { emit: { success: "ReviewSaved", failure: "ReviewSaveFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", children: [{ type: "icon", name: "send", size: "lg" }, { type: "typography", content: "Submitting your review…", variant: "h3" }] })
+        (persist create ReviewView { comment: @entity.draftComment, rating: @entity.draftRating } {
+          emit: { failure: ReviewSaveFailed, success: ReviewSaved }
+        })
+        (render-ui main {
+          align: center
+          children: [{
+            name: send
+            size: lg
+            type: icon
+          }, {
+            content: "Submitting your review…"
+            type: typography
+            variant: h3
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
       CANCEL_REVIEW -> viewing
         (set @entity.draftRating 0)
         (set @entity.draftComment "")
-        (render-ui main { type: "loading-state", title: "Returning…" })
+        (render-ui main {
+          title: "Returning…"
+          type: loading-state
+        })
     }
+
     state submitting {
       ReviewSaved -> submitted
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle", size: "lg" }, { type: "typography", content: "Thanks for your review!", variant: "h2", align: "center" }, { type: "typography", content: "It will appear on the page shortly.", variant: "body", color: "muted", align: "center" }, { type: "button", label: "Back to reviews", variant: "primary", action: "RESTART", icon: "arrow-left" }] })
+        (render-ui main {
+          align: center
+          children: [{
+            name: check-circle
+            size: lg
+            type: icon
+          }, {
+            align: center
+            content: "Thanks for your review!"
+            type: typography
+            variant: h2
+          }, {
+            align: center
+            color: muted
+            content: "It will appear on the page shortly."
+            type: typography
+            variant: body
+          }, {
+            action: RESTART
+            icon: arrow-left
+            label: "Back to reviews"
+            type: button
+            variant: primary
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
       ReviewSaveFailed -> error
-        (set @entity.errorMessage @payload.error)
-        (render-ui main { type: "error-state", title: "Submit failed", message: "@entity.errorMessage" })
+        (set @entity.errorMessage ?error)
+        (render-ui main {
+          message: @entity.errorMessage
+          title: "Submit failed"
+          type: error-state
+        })
     }
+
     state submitted {
       RESTART -> loading
-        (fetch ReviewView { emit: { success: "ReviewsLoaded", failure: "ReviewsLoadFailed" } })
-        (render-ui main { type: "loading-state", title: "Refreshing reviews…" })
+        (fetch ReviewView {
+          emit: { failure: ReviewsLoadFailed, success: ReviewsLoaded }
+        })
+        (render-ui main {
+          title: "Refreshing reviews…"
+          type: loading-state
+        })
     }
+
     state error {
       INIT -> loading
-        (fetch ReviewView { emit: { success: "ReviewsLoaded", failure: "ReviewsLoadFailed" } })
-        (render-ui main { type: "loading-state", title: "Retrying…" })
+        (fetch ReviewView {
+          emit: { failure: ReviewsLoadFailed, success: ReviewsLoaded }
+        })
+        (render-ui main {
+          title: "Retrying…"
+          type: loading-state
+        })
     }
+
     emits {
-      WRITE_REVIEW       { }
+      WRITE_REVIEW
         @description "Initiates the review composition flow."
         @synonyms "compose, create, add"
         @tier "essential"
-      RATE_DRAFT         { rating : number }
+      RATE_DRAFT {
+        rating : number
+      }
         @description "Signals a draft rating has been created or modified."
         @synonyms "draft, update, modify, change"
         @tier "customization"
-      SUBMIT_REVIEW      { data : object }
+      SUBMIT_REVIEW {
+        data : object
+      }
         @description "Signals a review has been successfully submitted."
         @synonyms "saved, posted, sent"
         @tier "essential"
-      CANCEL_REVIEW      { }
+      CANCEL_REVIEW
         @description "Aborts the review composition process."
         @synonyms "discard, abandon, close, revert"
         @tier "customization"
-      CHANGE_SORT        { tabId : string }
+      CHANGE_SORT {
+        tabId : string
+      }
         @description "Signals a change in the review sorting criteria."
         @synonyms "sort, order, filter"
         @tier "customization"
-      MARK_HELPFUL       { id : string }
+      MARK_HELPFUL {
+        id : string
+      }
         @description "Indicates a review has been marked as helpful."
         @synonyms "helpful, useful, thumbs up, agree"
         @tier "customization"
-      RESTART            { }
+      RESTART
         @description "Triggers a full refresh of the review data and UI."
         @synonyms "refresh, reload, reset"
         @tier "internal"
-      ReviewsLoaded      { data : [ObjectSpec] }
+      ReviewsLoaded {
+        data : [ObjectSpec]
+      }
         @description "Signals that the reviews data has been successfully retrieved."
         @synonyms "loaded, fetched, ready, available"
         @tier "essential"
-      ReviewsLoadFailed  { error : string, code : string }
+      ReviewsLoadFailed {
+        error : string
+        code : string
+      }
         @description "Indicates that loading reviews was unsuccessful."
         @synonyms "failed, error, problem, unsuccessful"
         @tier "internal"
-      ReviewSaved        { row : object }
+      ReviewSaved {
+        row : object
+      }
         @description "Indicates a review has been successfully saved."
         @synonyms "saved, persisted, updated"
         @tier "essential"
-      ReviewSaveFailed   { error : string, code : string }
+      ReviewSaveFailed {
+        error : string
+        code : string
+      }
         @description "Indicates a review save operation failed."
         @synonyms "failed, error, unsuccessful"
         @tier "internal"
     }
+
     listens {
-      WRITE_REVIEW       { }
+      WRITE_REVIEW
         @description "Initiates the process of composing a new review."
         @synonyms "compose, create, add, write"
         @tier "essential"
-      RATE_DRAFT         { rating : number }
+      RATE_DRAFT {
+        rating : number
+      }
         @description "A draft rating has been created or updated."
         @synonyms "draft, save, pending"
         @tier "customization"
-      SUBMIT_REVIEW      { data : object }
+      SUBMIT_REVIEW {
+        data : object
+      }
         @description "Indicates a review has been successfully submitted."
         @synonyms "saved, posted, sent"
         @tier "essential"
-      CANCEL_REVIEW      { }
+      CANCEL_REVIEW
         @description "Aborts the review composition process."
         @synonyms "discard, abandon, revert, close"
         @tier "customization"
-      CHANGE_SORT        { tabId : string }
+      CHANGE_SORT {
+        tabId : string
+      }
         @description "Indicates a change in the sorting order of reviews."
         @synonyms "sort, order, filter"
         @tier "customization"
-      MARK_HELPFUL       { id : string }
+      MARK_HELPFUL {
+        id : string
+      }
         @description "A review has been marked as helpful by a user."
         @synonyms "helpful, useful, thumbs up, agree"
         @tier "essential"
-      RESTART            { }
+      RESTART
         @description "Triggers a refresh of the review data and UI."
         @synonyms "refresh, reload, reset"
         @tier "internal"
-      ReviewsLoaded      { data : [ObjectSpec] }
+      ReviewsLoaded {
+        data : [ObjectSpec]
+      }
         @description "Indicates that the reviews data has been successfully retrieved."
         @synonyms "loaded, fetched, received, populated"
         @tier "essential"
-      ReviewsLoadFailed  { error : string, code : string }
+      ReviewsLoadFailed {
+        error : string
+        code : string
+      }
         @description "Indicates that loading reviews was unsuccessful."
         @synonyms "failure, error, problem, unsuccessful"
         @tier "internal"
-      ReviewSaved        { row : object }
+      ReviewSaved {
+        row : object
+      }
         @description "Indicates a review has been successfully stored."
         @synonyms "saved, persisted, updated"
         @tier "customization"
-      ReviewSaveFailed   { error : string, code : string }
+      ReviewSaveFailed {
+        error : string
+        code : string
+      }
         @description "Indicates a review save operation failed."
         @synonyms "failed, error, unsuccessful"
         @tier "internal"
     }
-  }
-  trait RatingReviewSubmit -> ReviewView [interaction, instance] {
+
     config {
-      title         : string  = "Write a review"
-        @label "Form title"
-        @description "Heading shown above the review compose form"
+      subjectTitle : string = "Bali Sunset Villa · 3 nights"
+        @label "Subject title"
+        @description "Name of the item being reviewed (shown in the header)"
         @tier "presentation"
-      submitLabel   : string  = "Submit review"
+      submitLabel : string = "Submit review"
         @label "Submit button"
-        @description "Label on the primary submit button"
+        @description "Label on the primary submit-review button"
         @tier "presentation"
-      cancelLabel   : string  = "Cancel"
+      writeLabel : string = "Write a review"
+        @label "Write CTA"
+        @description "Label on the call-to-action that opens the compose form"
+        @tier "presentation"
+      cancelLabel : string = Cancel
         @label "Cancel button"
-        @description "Label on the cancel button"
+        @description "Label on the cancel button inside the compose form"
         @tier "presentation"
-      submitEvent   : string  = "SUBMIT_REVIEW"
-        @label "Submit event"
-        @description "Event emitted when the user submits the form"
-        @tier "internal"
-      maxStars      : number  = 5
-        @label "Max stars"
-        @description "Top of the rating scale (typically 5)"
-        @tier "domain"
-      allowComment  : boolean = true
-        @label "Allow comment"
-        @description "Show a free-text comment field below the stars"
+      reviewFields : [string] = (draftComment)
+        @label "Review form fields"
+        @description "Inputs shown in the review compose form"
         @tier "presentation"
-      allowPhotos   : boolean = false
-        @label "Allow photos"
-        @description "Let the user attach photos to the review"
+      sortOptions : [SortOption] = [{
+        icon: clock
+        id: recent
+        label: "Most recent"
+      }, {
+        icon: star
+        id: highest
+        label: "Top rated"
+      }, {
+        icon: trending-down
+        id: lowest
+        label: Lowest
+      }]
+        @label "Sort tabs"
+        @description "Sort modes shown as tabs above the reviews list"
         @tier "presentation"
-      cardLook : "elevated" | "flat-bordered" | "borderless-divider" | "ticket" | "invoice" | "chip" | "tile-image-first" = "elevated"
+      starDistribution : [StarBucket] = [{
+        label: "5 stars"
+        percentage: 74
+      }, {
+        label: "4 stars"
+        percentage: 18
+      }, {
+        label: "3 stars"
+        percentage: 5
+      }, {
+        label: "2 stars"
+        percentage: 2
+      }, {
+        label: "1 star"
+        percentage: 1
+      }]
+        @label "Star bars"
+        @description "Per-star distribution displayed as horizontal progress bars"
+        @tier "presentation"
+      cardLook : "elevated" | "flat-bordered" | "borderless-divider" | "ticket" | "invoice" | "chip" | "tile-image-first" = elevated
         @label "Card look"
-        @description "Visual style of the wrapper card. Layer 2 cardLook knob — render-ui references @config.cardLook on the compose card."
+        @description "Layer 2 visual treatment for cards rendered by this atom."
         @tier "presentation"
     }
+  }
+
+  trait RatingReviewSubmit -> ReviewView [interaction, instance] {
     initial: composing
+
     state composing {
       INIT -> composing
         (set @entity.draftRating 0)
         (set @entity.draftComment "")
-        (render-ui main { type: "card", look: "@config.cardLook", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@config.title", variant: "h3" }, { type: "star-rating", value: "@entity.draftRating", max: "@config.maxStars", action: "RATE_DRAFT" }, { type: "form-section", entity: "@entity", mode: "edit", submitEvent: "SUBMIT_REVIEW", cancelEvent: "CANCEL_REVIEW", submitLabel: "@config.submitLabel", fields: ["draftComment"] }] }] })
+        (render-ui main {
+          children: [{
+            children: [{
+              content: @config.title
+              type: typography
+              variant: h3
+            }, {
+              action: RATE_DRAFT
+              max: @config.maxStars
+              type: star-rating
+              value: @entity.draftRating
+            }, {
+              cancelEvent: CANCEL_REVIEW
+              entity: @entity
+              fields: (draftComment)
+              mode: edit
+              submitEvent: SUBMIT_REVIEW
+              submitLabel: @config.submitLabel
+              type: form-section
+            }]
+            direction: vertical
+            gap: md
+            type: stack
+          }]
+          look: @config.cardLook
+          type: card
+        })
       RATE_DRAFT -> composing
-        (set @entity.draftRating @payload.rating)
-        (render-ui main { type: "card", look: "@config.cardLook", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@config.title", variant: "h3" }, { type: "star-rating", value: "@entity.draftRating", max: "@config.maxStars", action: "RATE_DRAFT" }, { type: "form-section", entity: "@entity", mode: "edit", submitEvent: "SUBMIT_REVIEW", cancelEvent: "CANCEL_REVIEW", submitLabel: "@config.submitLabel", fields: ["draftComment"] }] }] })
+        (set @entity.draftRating ?rating)
+        (render-ui main {
+          children: [{
+            children: [{
+              content: @config.title
+              type: typography
+              variant: h3
+            }, {
+              action: RATE_DRAFT
+              max: @config.maxStars
+              type: star-rating
+              value: @entity.draftRating
+            }, {
+              cancelEvent: CANCEL_REVIEW
+              entity: @entity
+              fields: (draftComment)
+              mode: edit
+              submitEvent: SUBMIT_REVIEW
+              submitLabel: @config.submitLabel
+              type: form-section
+            }]
+            direction: vertical
+            gap: md
+            type: stack
+          }]
+          look: @config.cardLook
+          type: card
+        })
       SUBMIT_REVIEW -> submitting
-        (persist create ReviewView { rating: @entity.draftRating, comment: @entity.draftComment } { emit: { success: "ReviewSaved", failure: "ReviewSaveFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", children: [{ type: "icon", name: "send", size: "lg" }, { type: "typography", content: "Submitting…", variant: "h3" }] })
+        (persist create ReviewView { comment: @entity.draftComment, rating: @entity.draftRating } {
+          emit: { failure: ReviewSaveFailed, success: ReviewSaved }
+        })
+        (render-ui main {
+          align: center
+          children: [{
+            name: send
+            size: lg
+            type: icon
+          }, {
+            content: "Submitting…"
+            type: typography
+            variant: h3
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
       CANCEL_REVIEW -> composing
         (set @entity.draftRating 0)
         (set @entity.draftComment "")
-        (render-ui main { type: "card", look: "@config.cardLook", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@config.title", variant: "h3" }, { type: "star-rating", value: 0, max: "@config.maxStars", action: "RATE_DRAFT" }, { type: "form-section", entity: "@entity", mode: "edit", submitEvent: "SUBMIT_REVIEW", cancelEvent: "CANCEL_REVIEW", submitLabel: "@config.submitLabel", fields: ["draftComment"] }] }] })
+        (render-ui main {
+          children: [{
+            children: [{
+              content: @config.title
+              type: typography
+              variant: h3
+            }, {
+              action: RATE_DRAFT
+              max: @config.maxStars
+              type: star-rating
+              value: 0
+            }, {
+              cancelEvent: CANCEL_REVIEW
+              entity: @entity
+              fields: (draftComment)
+              mode: edit
+              submitEvent: SUBMIT_REVIEW
+              submitLabel: @config.submitLabel
+              type: form-section
+            }]
+            direction: vertical
+            gap: md
+            type: stack
+          }]
+          look: @config.cardLook
+          type: card
+        })
     }
+
     state submitting {
       ReviewSaved -> submitted
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle", size: "lg" }, { type: "typography", content: "Thanks for your review!", variant: "h2" }, { type: "button", label: "Write another review", variant: "primary", action: "RESTART", icon: "plus" }] })
+        (render-ui main {
+          align: center
+          children: [{
+            name: check-circle
+            size: lg
+            type: icon
+          }, {
+            content: "Thanks for your review!"
+            type: typography
+            variant: h2
+          }, {
+            action: RESTART
+            icon: plus
+            label: "Write another review"
+            type: button
+            variant: primary
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
       ReviewSaveFailed -> error
-        (set @entity.errorMessage @payload.error)
-        (render-ui main { type: "error-state", title: "Submit failed", message: "@entity.errorMessage" })
+        (set @entity.errorMessage ?error)
+        (render-ui main {
+          message: @entity.errorMessage
+          title: "Submit failed"
+          type: error-state
+        })
     }
+
     state submitted {
       RESTART -> composing
         (set @entity.draftRating 0)
         (set @entity.draftComment "")
-        (render-ui main { type: "card", look: "@config.cardLook", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@config.title", variant: "h3" }, { type: "star-rating", value: 0, max: "@config.maxStars", action: "RATE_DRAFT" }, { type: "form-section", entity: "@entity", mode: "edit", submitEvent: "SUBMIT_REVIEW", cancelEvent: "CANCEL_REVIEW", submitLabel: "@config.submitLabel", fields: ["draftComment"] }] }] })
+        (render-ui main {
+          children: [{
+            children: [{
+              content: @config.title
+              type: typography
+              variant: h3
+            }, {
+              action: RATE_DRAFT
+              max: @config.maxStars
+              type: star-rating
+              value: 0
+            }, {
+              cancelEvent: CANCEL_REVIEW
+              entity: @entity
+              fields: (draftComment)
+              mode: edit
+              submitEvent: SUBMIT_REVIEW
+              submitLabel: @config.submitLabel
+              type: form-section
+            }]
+            direction: vertical
+            gap: md
+            type: stack
+          }]
+          look: @config.cardLook
+          type: card
+        })
     }
+
     state error {
       RESTART -> composing
-        (render-ui main { type: "card", look: "@config.cardLook", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@config.title", variant: "h3" }, { type: "star-rating", value: 0, max: "@config.maxStars", action: "RATE_DRAFT" }, { type: "form-section", entity: "@entity", mode: "edit", submitEvent: "SUBMIT_REVIEW", cancelEvent: "CANCEL_REVIEW", submitLabel: "@config.submitLabel", fields: ["draftComment"] }] }] })
+        (render-ui main {
+          children: [{
+            children: [{
+              content: @config.title
+              type: typography
+              variant: h3
+            }, {
+              action: RATE_DRAFT
+              max: @config.maxStars
+              type: star-rating
+              value: 0
+            }, {
+              cancelEvent: CANCEL_REVIEW
+              entity: @entity
+              fields: (draftComment)
+              mode: edit
+              submitEvent: SUBMIT_REVIEW
+              submitLabel: @config.submitLabel
+              type: form-section
+            }]
+            direction: vertical
+            gap: md
+            type: stack
+          }]
+          look: @config.cardLook
+          type: card
+        })
     }
+
     emits {
-      RATE_DRAFT         { rating : number }
+      RATE_DRAFT {
+        rating : number
+      }
         @description "Signals a review draft has been created or updated."
         @synonyms "draft, save, pending"
         @tier "customization"
-      SUBMIT_REVIEW      { data : object }
+      SUBMIT_REVIEW {
+        data : object
+      }
         @description "Signals a review has been successfully submitted."
         @synonyms "saved, posted, sent"
         @tier "essential"
-      CANCEL_REVIEW      { }
+      CANCEL_REVIEW
         @description "Aborts the review composition process."
         @synonyms "discard, abandon, close, revert"
         @tier "customization"
-      RESTART            { }
+      RESTART
         @description "Triggers a refresh of the review data and UI."
         @synonyms "refresh, reload, reset"
         @tier "internal"
-      ReviewSaved        { row : object }
+      ReviewSaved {
+        row : object
+      }
         @description "Indicates a review has been successfully stored."
         @synonyms "saved, persisted, updated"
         @tier "customization"
-      ReviewSaveFailed   { error : string, code : string }
+      ReviewSaveFailed {
+        error : string
+        code : string
+      }
         @description "Indicates a review save operation failed."
         @synonyms "failed, error, unsuccessful"
         @tier "internal"
     }
+
     listens {
-      RATE_DRAFT         { rating : number }
+      RATE_DRAFT {
+        rating : number
+      }
         @description "A draft rating has been created or updated."
         @synonyms "draft, pending, incomplete"
         @tier "customization"
-      SUBMIT_REVIEW      { data : object }
+      SUBMIT_REVIEW {
+        data : object
+      }
         @description "A review has been successfully submitted."
         @synonyms "saved, posted, confirmed"
         @tier "essential"
-      CANCEL_REVIEW      { }
+      CANCEL_REVIEW
         @description "Aborts the review composition process."
         @synonyms "discard, abandon, revert, close"
         @tier "customization"
-      RESTART            { }
+      RESTART
         @description "Triggers a refresh of the review data and UI."
         @synonyms "refresh, reload, reset"
         @tier "internal"
-      ReviewSaved        { row : object }
+      ReviewSaved {
+        row : object
+      }
         @description "Indicates a review has been successfully stored."
         @synonyms "saved, persisted, updated"
         @tier "customization"
-      ReviewSaveFailed   { error : string, code : string }
+      ReviewSaveFailed {
+        error : string
+        code : string
+      }
         @description "Indicates a review save operation was unsuccessful."
         @synonyms "failed, error, unsuccessful"
         @tier "internal"
     }
+
+    config {
+      title : string = "Write a review"
+        @label "Form title"
+        @description "Heading shown above the review compose form"
+        @tier "presentation"
+      submitLabel : string = "Submit review"
+        @label "Submit button"
+        @description "Label on the primary submit button"
+        @tier "presentation"
+      cancelLabel : string = Cancel
+        @label "Cancel button"
+        @description "Label on the cancel button"
+        @tier "presentation"
+      submitEvent : string = SUBMIT_REVIEW
+        @label "Submit event"
+        @description "Event emitted when the user submits the form"
+        @tier "internal"
+      maxStars : number = 5
+        @label "Max stars"
+        @description "Top of the rating scale (typically 5)"
+        @tier "domain"
+      allowComment : boolean = true
+        @label "Allow comment"
+        @description "Show a free-text comment field below the stars"
+        @tier "presentation"
+      allowPhotos : boolean = false
+        @label "Allow photos"
+        @description "Let the user attach photos to the review"
+        @tier "presentation"
+      cardLook : "elevated" | "flat-bordered" | "borderless-divider" | "ticket" | "invoice" | "chip" | "tile-image-first" = elevated
+        @label "Card look"
+        @description "Visual style of the wrapper card. Layer 2 cardLook knob — render-ui references @config.cardLook on the compose card."
+        @tier "presentation"
+    }
   }
+
   page "/reviews" as RatingReviewPage -> RatingReviewBoard
+
   page "/reviews/new" as RatingReviewSubmitPage -> RatingReviewSubmit
 }

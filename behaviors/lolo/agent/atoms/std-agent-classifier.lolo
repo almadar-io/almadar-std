@@ -1,121 +1,385 @@
 app std-agent-classifier "1.0.0"
 "std-agent-classifier as a Function"
-
 orbital AgentClassifierOrbital {
+    type AgentClassifierLoaded = Event AgentClassifier "Fired when AgentClassifier finishes loading"
+
+    type AgentClassifierLoadFailed = Event { message : string } "Fired when AgentClassifier fails to load"
+
+    type AgentClassifierSaved = Event { id : string }
+
+    type AgentClassifierSaveFailed = Event { error : string, code : string }
+
   entity AgentClassifier [persistent: agentclassifiers] {
     id : string
     name : string @description "A human-readable identifier for the agent classifier." @synonyms "identifier, label, designation"
     description : string @description "A textual explanation of the agent's classification." @synonyms "explanation, details, notes, summary"
-    status : "active" | "inactive" | "pending" @description "Indicates the current operational state of the classifier." @synonyms "state, condition, operationalStatus" = "active"
+    status : "active" | "inactive" | "pending" @description "Indicates the current operational state of the classifier." @synonyms "state, condition, operationalStatus" = active
     createdAt : string
     input : string @description "Data provided to the component for processing." @synonyms "data, value, content, source" = ""
     category : string @description "Represents the classification type or group." @synonyms "type, class, group" = ""
     confidence : number @description "Represents the certainty level of a classification result." @synonyms "score, probability, certainty" = 0
-    model : string @description "The identifier or path to the machine learning model." @synonyms "path, identifier, reference, location" = "claude-sonnet-4-20250514"
+    model : string @description "The identifier or path to the machine learning model." @synonyms "path, identifier, reference, location" = claude-sonnet-4-20250514
     message : string @description "The text content of the message being processed." @synonyms "text, content, body, payload" = ""
-    notificationType : "info" | "success" | "warning" | "error" @description "Indicates the type of notification generated." @synonyms "type, level, severity" = "info"
+    notificationType : "info" | "success" | "warning" | "error" @description "Indicates the type of notification generated." @synonyms "type, level, severity" = info
   }
 
-  type AgentClassifierLoaded     = Event AgentClassifier                  "Fired when AgentClassifier finishes loading"
-  type AgentClassifierLoadFailed = Event { message : string } "Fired when AgentClassifier fails to load"
-  type AgentClassifierSaved = Event { id : string }
-  type AgentClassifierSaveFailed = Event { error : string, code : string }
   trait AgentClassifierModal -> AgentClassifier [interaction, instance] {
     initial: closed
+
     state closed {
       INIT -> closed
-        (fetch AgentClassifier { emit: { success: "AgentClassifierLoaded", failure: "AgentClassifierLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "tag"}, { type: "typography", content: "AgentClassifier", variant: "h2" }] }, { type: "button", label: "Open", action: "CLASSIFY", variant: "primary", icon: "tag" }] }, { type: "divider" }, { type: "empty-state", icon: "tag", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
+        (fetch AgentClassifier {
+          emit: { failure: AgentClassifierLoadFailed, success: AgentClassifierLoaded }
+        })
+        (render-ui main {
+          children: [{
+            children: [{
+              children: [{ name: tag, type: icon }, {
+                content: AgentClassifier
+                type: typography
+                variant: h2
+              }]
+              direction: horizontal
+              gap: md
+              type: stack
+            }, {
+              action: CLASSIFY
+              icon: tag
+              label: Open
+              type: button
+              variant: primary
+            }]
+            direction: horizontal
+            gap: md
+            justify: between
+            type: stack
+          }, { type: divider }, {
+            description: "Click Open to view details in a modal overlay."
+            icon: tag
+            title: "Nothing open"
+            type: empty-state
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
       CLASSIFY -> open
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "tag"}, { type: "typography", content: "AgentClassifier", variant: "h3" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Categories:" }, { type: "badge", label: "positive", variant: "secondary" }, { type: "badge", label: "negative", variant: "secondary" }, { type: "badge", label: "neutral", variant: "secondary" }] }, { type: "form-section", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["input"] }] })
+        (render-ui modal {
+          children: [{
+            children: [{ name: tag, type: icon }, {
+              content: AgentClassifier
+              type: typography
+              variant: h3
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            children: [{
+              content: "Categories:"
+              type: typography
+              variant: caption
+            }, {
+              label: positive
+              type: badge
+              variant: secondary
+            }, {
+              label: negative
+              type: badge
+              variant: secondary
+            }, {
+              label: neutral
+              type: badge
+              variant: secondary
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, {
+            cancelEvent: CLOSE
+            fields: (input)
+            mode: create
+            submitEvent: SAVE
+            type: form-section
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
     }
+
     state open {
       CLOSE -> closed
         (render-ui modal null)
         (notify Cancelled info)
-        (fetch AgentClassifier { emit: { success: "AgentClassifierLoaded", failure: "AgentClassifierLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "tag"}, { type: "typography", content: "AgentClassifier", variant: "h2" }] }, { type: "button", label: "Open", action: "CLASSIFY", variant: "primary", icon: "tag" }] }, { type: "divider" }, { type: "empty-state", icon: "tag", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
+        (fetch AgentClassifier {
+          emit: { failure: AgentClassifierLoadFailed, success: AgentClassifierLoaded }
+        })
+        (render-ui main {
+          children: [{
+            children: [{
+              children: [{ name: tag, type: icon }, {
+                content: AgentClassifier
+                type: typography
+                variant: h2
+              }]
+              direction: horizontal
+              gap: md
+              type: stack
+            }, {
+              action: CLASSIFY
+              icon: tag
+              label: Open
+              type: button
+              variant: primary
+            }]
+            direction: horizontal
+            gap: md
+            justify: between
+            type: stack
+          }, { type: divider }, {
+            description: "Click Open to view details in a modal overlay."
+            icon: tag
+            title: "Nothing open"
+            type: empty-state
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
       SAVE -> closed
-        (persist create AgentClassifier @payload.data { emit: { success: "AgentClassifierSaved", failure: "AgentClassifierSaveFailed" } })
+        (persist create AgentClassifier ?data {
+          emit: { failure: AgentClassifierSaveFailed, success: AgentClassifierSaved }
+        })
         (render-ui modal null)
         (emit CLASSIFIED)
-        (fetch AgentClassifier { emit: { success: "AgentClassifierLoaded", failure: "AgentClassifierLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "tag"}, { type: "typography", content: "AgentClassifier", variant: "h2" }] }, { type: "button", label: "Open", action: "CLASSIFY", variant: "primary", icon: "tag" }] }, { type: "divider" }, { type: "empty-state", icon: "tag", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
+        (fetch AgentClassifier {
+          emit: { failure: AgentClassifierLoadFailed, success: AgentClassifierLoaded }
+        })
+        (render-ui main {
+          children: [{
+            children: [{
+              children: [{ name: tag, type: icon }, {
+                content: AgentClassifier
+                type: typography
+                variant: h2
+              }]
+              direction: horizontal
+              gap: md
+              type: stack
+            }, {
+              action: CLASSIFY
+              icon: tag
+              label: Open
+              type: button
+              variant: primary
+            }]
+            direction: horizontal
+            gap: md
+            justify: between
+            type: stack
+          }, { type: divider }, {
+            description: "Click Open to view details in a modal overlay."
+            icon: tag
+            title: "Nothing open"
+            type: empty-state
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
     }
+
     emits {
-      CLASSIFIED -> external { id: string }
+      CLASSIFIED -> external {
+        id : string
+      }
       AgentClassifierLoaded
       AgentClassifierLoadFailed
       AgentClassifierSaved
       AgentClassifierSaveFailed
     }
+
     listens {
-      SAVE { data : object! }
-          AgentClassifierLoadFailed { message : string }
-    
-      AgentClassifierSaveFailed { error : string, code : string }
+      SAVE {
+        data : object!
+      }
+      AgentClassifierLoadFailed {
+        message : string
+      }
+      AgentClassifierSaveFailed {
+        error : string
+        code : string
+      }
     }
   }
+
   trait AgentClassifierNotification -> AgentClassifier [interaction, instance] {
     initial: hidden
+
     state hidden {
       INIT -> hidden
-        (fetch AgentClassifier { emit: { success: "AgentClassifierLoaded", failure: "AgentClassifierLoadFailed" } })
+        (fetch AgentClassifier {
+          emit: { failure: AgentClassifierLoadFailed, success: AgentClassifierLoaded }
+        })
       SHOW -> visible
-        (set @entity.message @payload.message)
-        (set @entity.notificationType @payload.notificationType)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "tag"}, { type: "typography", content: "AgentClassifier Result", variant: "h2" }] }, { type: "button", label: "Dismiss", action: "HIDE", variant: "ghost", icon: "x" }] }, { type: "divider" }, { type: "alert", variant: "@entity.notificationType", message: "@entity.message" }, { type: "toast-slot" }, { type: "alert", variant: "warning", message: "@entity.message" }] })
+        (set @entity.message ?message)
+        (set @entity.notificationType ?notificationType)
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{
+              align: center
+              children: [{ name: tag, type: icon }, {
+                content: "AgentClassifier Result"
+                type: typography
+                variant: h2
+              }]
+              direction: horizontal
+              gap: md
+              type: stack
+            }, {
+              action: HIDE
+              icon: x
+              label: Dismiss
+              type: button
+              variant: ghost
+            }]
+            direction: horizontal
+            gap: md
+            justify: between
+            type: stack
+          }, { type: divider }, {
+            message: @entity.message
+            type: alert
+            variant: @entity.notificationType
+          }, { type: toast-slot }, {
+            message: @entity.message
+            type: alert
+            variant: warning
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
     }
+
     state visible {
       SHOW -> visible
-        (set @entity.message @payload.message)
-        (set @entity.notificationType @payload.notificationType)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "tag"}, { type: "typography", content: "AgentClassifier Result", variant: "h2" }] }, { type: "button", label: "Dismiss", action: "HIDE", variant: "ghost", icon: "x" }] }, { type: "divider" }, { type: "alert", variant: "@entity.notificationType", message: "@entity.message" }, { type: "toast-slot" }, { type: "alert", variant: "warning", message: "@entity.message" }] })
+        (set @entity.message ?message)
+        (set @entity.notificationType ?notificationType)
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{
+              align: center
+              children: [{ name: tag, type: icon }, {
+                content: "AgentClassifier Result"
+                type: typography
+                variant: h2
+              }]
+              direction: horizontal
+              gap: md
+              type: stack
+            }, {
+              action: HIDE
+              icon: x
+              label: Dismiss
+              type: button
+              variant: ghost
+            }]
+            direction: horizontal
+            gap: md
+            justify: between
+            type: stack
+          }, { type: divider }, {
+            message: @entity.message
+            type: alert
+            variant: @entity.notificationType
+          }, { type: toast-slot }, {
+            message: @entity.message
+            type: alert
+            variant: warning
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
       HIDE -> hidden
         (set @entity.message "")
     }
-emits {
+
+    emits {
       AgentClassifierLoaded
       AgentClassifierLoadFailed
     }
 
-        listens {
-      SHOW { message : string!, notificationType : "info" | "success" | "warning" | "error" }
-          AgentClassifierLoadFailed { message : string }
+    listens {
+      SHOW {
+        message : string!
+        notificationType : "info" | "success" | "warning" | "error"
+      }
+      AgentClassifierLoadFailed {
+        message : string
+      }
     }
   }
+
   trait AgentClassifierAgent -> AgentClassifier [interaction, instance] {
     initial: idle
+
     state idle {
       INIT -> idle
-        (fetch AgentClassifier { emit: { success: "AgentClassifierLoaded", failure: "AgentClassifierLoadFailed" } })
-        (render-ui main { type: "empty-state", icon: "tag", title: "Classifier", description: "Classifier is ready" })
+        (fetch AgentClassifier {
+          emit: { failure: AgentClassifierLoadFailed, success: AgentClassifierLoaded }
+        })
+        (render-ui main {
+          description: "Classifier is ready"
+          icon: tag
+          title: Classifier
+          type: empty-state
+        })
       DO_CLASSIFY -> classifying
         (agent/generate (str/concat "Classify the following text into one of these categories: " "positive, negative, neutral" ". Text: " @entity.input ". Respond with JSON: {\"category\": \"...\", \"confidence\": 0.0-1.0}"))
       CLASSIFIED -> classifying
         (agent/generate (str/concat "Classify the following text into one of these categories: " "positive, negative, neutral" ". Text: " @entity.input ". Respond with JSON: {\"category\": \"...\", \"confidence\": 0.0-1.0}"))
     }
+
     state classifying {
       DO_CLASSIFY -> classified
-        (set @entity.category @payload.data.input)
-        (emit SHOW { message: "Classification complete", notificationType: "success" })
+        (set @entity.category ?data.input)
+        (emit SHOW {
+          message: "Classification complete"
+          notificationType: success
+        })
     }
+
     state classified {
       RESET -> idle
         (set @entity.input "")
         (set @entity.category "")
         (set @entity.confidence 0)
     }
+
     emits {
-      SHOW -> internal { message: string!, notificationType: "info" | "success" | "warning" | "error" }
+      SHOW -> internal {
+        message : string!
+        notificationType : "info" | "success" | "warning" | "error"
+      }
       AgentClassifierLoaded
       AgentClassifierLoadFailed
     }
+
     listens {
       AgentClassifierModal.CLASSIFIED -> CLASSIFIED
-      DO_CLASSIFY { data : object! }
-          AgentClassifierLoadFailed { message : string }
+      DO_CLASSIFY {
+        data : object!
+      }
+      AgentClassifierLoadFailed {
+        message : string
+      }
     }
   }
+
   page "/agentclassifiers" as AgentClassifierPage -> AgentClassifierModal, AgentClassifierNotification, AgentClassifierAgent
 }

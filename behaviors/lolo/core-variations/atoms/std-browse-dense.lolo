@@ -1,55 +1,118 @@
 app std-browse-dense "1.2.0"
 "Spreadsheet-style dense browse — column-row data-table molecule with sticky header, monospaced numerics, status badges, tight row padding."
-
 orbital DenseBrowseOrbital {
   uses Browse from "std/behaviors/std-browse"
 
   entity DenseRow [runtime] {
-    id          : string!
-    name        : string! @description "A human-readable identifier for the row." @synonyms "label, identifier, rowKey"
+    id : string!
+    name : string! @description "A human-readable identifier for the row." @synonyms "label, identifier, rowKey"
     description : string @description "A textual explanation or summary of the row's content." @synonyms "explanation, summary, details, notes"
-    value       : string @description "The data contained within the row." @synonyms "data, content, entry"
-    change      : string @description "Records the modification history or timestamp of the row." @synonyms "modified, updated, lastChange, timestamp"
-    volume      : string @description "The quantity or amount represented." @synonyms "amount, quantity, size, measure"
-    status      : "ok" | "warn" | "error" @description "Indicates the current operational state." @synonyms "condition, state, flag" = "ok"
-    createdAt   : string
+    value : string @description "The data contained within the row." @synonyms "data, content, entry"
+    change : string @description "Records the modification history or timestamp of the row." @synonyms "modified, updated, lastChange, timestamp"
+    volume : string @description "The quantity or amount represented." @synonyms "amount, quantity, size, measure"
+    status : "ok" | "warn" | "error" @description "Indicates the current operational state." @synonyms "condition, state, flag" = ok
+    createdAt : string
   }
 
   trait DenseBrowse = Browse.traits.BrowseItemBrowse -> DenseRow {
-    config: {
-      columns: [
-        { key: "id",          field: "id",          header: "ID",      width: "7rem",                  align: "left",   className: " text-[var(--color-text-muted)]" },
-        { key: "name",        field: "name",        header: "Name",    width: "minmax(10rem, 1.5fr)",  align: "left",   weight: "medium" },
-        { key: "description", field: "description", header: "Detail",  width: "minmax(12rem, 2fr)",    align: "left",   className: "text-[var(--color-text-muted)]" },
-        { key: "value",       field: "value",       header: "Value",   width: "6rem",                  align: "right",  className: "" },
-        { key: "change",      field: "change",      header: "Change",  width: "6rem",                  align: "right",  className: "" },
-        { key: "volume",      field: "volume",      header: "Volume",  width: "6rem",                  align: "right",  className: " text-[var(--color-text-muted)]" },
-        { key: "status",      field: "status",      header: "Status",  width: "6rem",                  align: "center", format: "badge" },
-        { key: "createdAt",   field: "createdAt",   header: "Created", width: "9rem",                  align: "right",  className: " text-[var(--color-text-muted)]", format: "date" }
-      ],
+    config {
+      columns: [{
+        align: left
+        className: " text-[var(--color-text-muted)]"
+        field: id
+        header: ID
+        key: id
+        width: "7rem"
+      }, {
+        align: left
+        field: name
+        header: Name
+        key: name
+        weight: medium
+        width: "minmax(10rem, 1.5fr)"
+      }, {
+        align: left
+        className: "text-[var(--color-text-muted)]"
+        field: description
+        header: Detail
+        key: description
+        width: "minmax(12rem, 2fr)"
+      }, {
+        align: right
+        className: ""
+        field: value
+        header: Value
+        key: value
+        width: "6rem"
+      }, {
+        align: right
+        className: ""
+        field: change
+        header: Change
+        key: change
+        width: "6rem"
+      }, {
+        align: right
+        className: " text-[var(--color-text-muted)]"
+        field: volume
+        header: Volume
+        key: volume
+        width: "6rem"
+      }, {
+        align: center
+        field: status
+        format: badge
+        header: Status
+        key: status
+        width: "6rem"
+      }, {
+        align: right
+        className: " text-[var(--color-text-muted)]"
+        field: createdAt
+        format: date
+        header: Created
+        key: createdAt
+        width: "9rem"
+      }]
       bodyContent: {
-        type: "stack",
-        direction: "vertical",
-        gap: "sm",
-        className: "p-card-md",
-        children: [
-          { type: "stack", direction: "horizontal", gap: "sm", align: "center", className: "w-full max-w-2xl rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 shadow-sm", children: [
-            { type: "icon", name: "search", className: "text-muted-foreground" },
-            { type: "input", inputType: "search", placeholder: "@config.searchPlaceholder", action: "REFETCH_QUERY", className: "flex-1" }
-          ]},
-          { type: "stack", direction: "vertical", gap: "none", className: "rounded-lg border border-[var(--color-border)] overflow-x-auto bg-[var(--color-card)] shadow-sm", children: [
-            { type: "table-view",
-              entity: "@payload.data",
-              selectable: true,
-              look: "dense",
-              emptyMessage: "No records",
-              columns: "@config.columns",
-              itemActions: "@config.itemActions",
-              maxInlineActions: "@config.maxInlineActions",
-              pageSize: "@config.displayPageSize"
-            }
-          ]}
-        ]
+        children: [{
+          align: center
+          children: [{
+            className: text-muted-foreground
+            name: search
+            type: icon
+          }, {
+            action: REFETCH_QUERY
+            className: flex-1
+            inputType: search
+            placeholder: @config.searchPlaceholder
+            type: input
+          }]
+          className: "w-full max-w-2xl rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 shadow-sm"
+          direction: horizontal
+          gap: sm
+          type: stack
+        }, {
+          children: [{
+            columns: @config.columns
+            emptyMessage: "No records"
+            entity: ?data
+            itemActions: @config.itemActions
+            look: dense
+            maxInlineActions: @config.maxInlineActions
+            pageSize: @config.displayPageSize
+            selectable: true
+            type: table-view
+          }]
+          className: "rounded-lg border border-[var(--color-border)] overflow-x-auto bg-[var(--color-card)] shadow-sm"
+          direction: vertical
+          gap: none
+          type: stack
+        }]
+        className: p-card-md
+        direction: vertical
+        gap: sm
+        type: stack
       }
     }
   }

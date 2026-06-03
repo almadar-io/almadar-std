@@ -1,38 +1,363 @@
 app std-file-store "2.0.0"
 "std-file-store — the generic file/page tree primitive. A file-tree + config-driven data table over a hierarchical collection; opens a row in `viewing_single` with config-driven detail actions. Rebindable: pass `fields`/`itemActions`/`detailActions`/`tree` to retarget it at any hierarchical entity (files, wiki pages, note trees). Folds in the former std-page-tree via `reorderable` + a page field/action set."
-
-type FieldSpec  = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
-type TreeNode   = { name : string!, path : string!, type : string!, children : [object] }
-
+type TreeNode = { name : string!, path : string!, type : string!, children : [object] }
 orbital StoredFileOrbital {
+    type StoredFileLoaded = Event { data : [StoredFile] } "Fired when the collection finishes loading"
+
+    type StoredFileLoadFailed = Event { error : string, code : string } "Fired when the collection fails to load"
+
   entity StoredFile [persistent: storedfiles] {
-    id            : string!
-    name          : string! @description "The file's display name or title." @synonyms "title, label, filename"
-    path          : string @description "The location of the file within the storage system." @synonyms "location, filepath, address" = ""
-    mimeType      : string @description "The file's content type, indicating its format." @synonyms "type, format, media type" = ""
-    sizeBytes     : number @description "The file's size in bytes." @synonyms "length, filesize, byteCount" = 0
-    uploaderId    : string @description "Identifier of the user who uploaded the file." @synonyms "user, owner, creator" = ""
-    uploaderName  : string @description "The name of the user who uploaded the file." @synonyms "owner, user, author" = ""
-    folder        : string @description "The path to the containing directory." @synonyms "parent, directory, location" = ""
-    uploadedAt    : string @description "Timestamp indicating when the file was uploaded." @synonyms "upload date, date uploaded, upload time" = ""
-    isArchived    : boolean @description "Indicates whether the file is archived." @synonyms "archived, status, state" = false
+    id : string!
+    name : string! @description "The file's display name or title." @synonyms "title, label, filename"
+    path : string @description "The location of the file within the storage system." @synonyms "location, filepath, address" = ""
+    mimeType : string @description "The file's content type, indicating its format." @synonyms "type, format, media type" = ""
+    sizeBytes : number @description "The file's size in bytes." @synonyms "length, filesize, byteCount" = 0
+    uploaderId : string @description "Identifier of the user who uploaded the file." @synonyms "user, owner, creator" = ""
+    uploaderName : string @description "The name of the user who uploaded the file." @synonyms "owner, user, author" = ""
+    folder : string @description "The path to the containing directory." @synonyms "parent, directory, location" = ""
+    uploadedAt : string @description "Timestamp indicating when the file was uploaded." @synonyms "upload date, date uploaded, upload time" = ""
+    isArchived : boolean @description "Indicates whether the file is archived." @synonyms "archived, status, state" = false
   }
 
-  type StoredFileLoaded     = Event { data : [StoredFile] }                "Fired when the collection finishes loading"
-  type StoredFileLoadFailed = Event { error : string, code : string }      "Fired when the collection fails to load"
-
   trait StoredFileStore -> @rebindable StoredFile [interaction, collection] {
+    initial: loading
+
+    state loading {
+      INIT -> loading
+        (fetch StoredFile {
+          emit: { failure: StoredFileLoadFailed, success: StoredFileLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Loading…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      StoredFileLoaded -> browsing
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: @config.headerIcon, type: icon }, {
+              content: @config.title
+              type: typography
+              variant: h3
+            }, {
+              label: ?data.length
+              size: sm
+              type: badge
+              variant: neutral
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, { tree: @config.tree, type: file-tree }, { type: divider }, {
+            entity: ?data
+            fields: @config.fields
+            gap: sm
+            itemActions: @config.itemActions
+            look: @config.tableLook
+            reorderEvent: REORDER
+            reorderable: @config.reorderable
+            type: data-list
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      StoredFileLoadFailed -> error
+        (render-ui main {
+          message: ?error
+          type: alert
+          variant: error
+        })
+    }
+
+    state browsing {
+      OPEN_FILE -> viewing_single
+        (set @entity.id ?row.id)
+        (set @entity.name ?row.name)
+        (set @entity.path ?row.path)
+        (set @entity.folder ?row.folder)
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{
+              action: CLOSE_VIEW
+              label: Back
+              type: button
+              variant: ghost
+            }, { name: @config.headerIcon, type: icon }, {
+              content: @entity.name
+              type: typography
+              variant: h3
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            children: [{
+              children: [{
+                color: muted
+                content: Folder
+                type: typography
+                variant: caption
+              }, {
+                content: @entity.folder
+                type: typography
+                variant: body
+              }]
+              direction: horizontal
+              gap: md
+              type: stack
+            }, {
+              children: [{
+                color: muted
+                content: Path
+                type: typography
+                variant: caption
+              }, {
+                content: @entity.path
+                type: typography
+                variant: body
+              }]
+              direction: horizontal
+              gap: md
+              type: stack
+            }]
+            direction: vertical
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            entity: @config.detailActions
+            fields: []
+            gap: sm
+            renderItem: (fn a {
+              action: @a.event
+              actionPayload: { id: @entity.id }
+              label: @a.label
+              type: button
+              variant: @a.variant
+            })
+            type: data-list
+            variant: default
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      REORDER -> loading
+        (set @entity.id ?row.id)
+        (fetch StoredFile {
+          emit: { failure: StoredFileLoadFailed, success: StoredFileLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Reordering…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      ARCHIVE_FILE -> loading
+        (set @entity.id ?id)
+        (fetch StoredFile {
+          emit: { failure: StoredFileLoadFailed, success: StoredFileLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Archiving…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
+    }
+
+    state viewing_single {
+      CLOSE_VIEW -> loading
+        (fetch StoredFile {
+          emit: { failure: StoredFileLoadFailed, success: StoredFileLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Loading…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      DOWNLOAD_FILE -> loading
+        (set @entity.id ?id)
+        (fetch StoredFile {
+          emit: { failure: StoredFileLoadFailed, success: StoredFileLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Preparing…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      ARCHIVE_FILE -> loading
+        (set @entity.id ?id)
+        (fetch StoredFile {
+          emit: { failure: StoredFileLoadFailed, success: StoredFileLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Archiving…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
+    }
+
+    state error {
+      INIT -> loading
+        (fetch StoredFile {
+          emit: { failure: StoredFileLoadFailed, success: StoredFileLoaded }
+        })
+        (render-ui main { size: sm, type: spinner })
+    }
+
+    emits {
+      OPEN_FILE {
+        id : string!
+        row : StoredFile
+      }
+        @description "Indicates a file has been selected for viewing."
+        @synonyms "select, choose, activate"
+        @tier "essential"
+      CLOSE_VIEW
+        @description "Signals the view has been closed or dismissed."
+        @synonyms "dismiss, hide, close"
+        @tier "essential"
+      DOWNLOAD_FILE {
+        id : string!
+      }
+        @description "Initiates a file download process."
+        @synonyms "export, save, retrieve"
+        @tier "essential"
+      ARCHIVE_FILE {
+        id : string!
+      }
+        @description "Signals a file is being moved to archive storage."
+        @synonyms "archive, move to archive, delete permanently"
+        @tier "customization"
+      REORDER {
+        id : string!
+        row : StoredFile
+      }
+        @description "Indicates the order of items in the tree has changed."
+        @synonyms "sort, rearrange, move, change order"
+        @tier "customization"
+      StoredFileLoaded {
+        data : [StoredFile]
+      }
+        @description "Indicates a file has been successfully retrieved and is ready."
+        @synonyms "loaded, fetched, retrieved, ready"
+        @tier "essential"
+      StoredFileLoadFailed {
+        error : string
+        code : string
+      }
+        @description "Indicates a failure to load a stored file."
+        @synonyms "error, failed, problem, unsuccessful"
+        @tier "internal"
+    }
+
+    listens {
+      OPEN_FILE {
+        id : string!
+        row : StoredFile
+      }
+        @description "A file has been selected for viewing or processing."
+        @synonyms "select, choose, activate, open"
+        @tier "essential"
+      CLOSE_VIEW
+        @description "Indicates the view/window should be closed or dismissed."
+        @synonyms "dismiss, hide, close, exit"
+        @tier "essential"
+      DOWNLOAD_FILE {
+        id : string!
+      }
+        @description "Initiates a file download process."
+        @synonyms "export, retrieve, save"
+        @tier "essential"
+      ARCHIVE_FILE {
+        id : string!
+      }
+        @description "Signals a request to archive or delete the selected file."
+        @synonyms "delete, remove, trash, discard"
+        @tier "customization"
+      REORDER {
+        id : string!
+        row : StoredFile
+      }
+        @description "Indicates a change in the order of items within the tree."
+        @synonyms "sort, rearrange, move, sequence"
+        @tier "customization"
+      StoredFileLoaded {
+        data : [StoredFile]
+      }
+        @description "Indicates a file has been successfully retrieved and is ready for display."
+        @synonyms "loaded, fetched, retrieved, ready"
+        @tier "essential"
+      StoredFileLoadFailed {
+        error : string
+        code : string
+      }
+        @description "Indicates a failure to load a file from storage."
+        @synonyms "error, failure, load failed, problem"
+        @tier "internal"
+    }
+
     config {
-      title : string = "Files"
+      title : string = Files
         @label "Section title"
         @description "Heading shown above the browser"
         @tier "presentation"
-      headerIcon : string = "folder"
+      headerIcon : string = folder
         @label "Header icon"
         @description "Icon shown beside the section title and in the detail header"
         @tier "presentation"
-      tableLook : "dense" | "spacious" | "striped" | "borderless" | "card-rows" = "dense"
+      tableLook : "dense" | "spacious" | "striped" | "borderless" | "card-rows" = dense
         @label "Table look"
         @description "Layer 2 visual treatment for the data table rendered by this atom."
         @tier "presentation"
@@ -40,143 +365,100 @@ orbital StoredFileOrbital {
         @label "Reorderable rows"
         @description "Allow drag-reordering of rows (emits REORDER). On for ordered trees (e.g. wiki page nav)."
         @tier "presentation"
-      fields : [FieldSpec] = [
-        { name: "name",       label: "Name",     variant: "caption" },
-        { name: "folder",     label: "Folder",   variant: "caption" },
-        { name: "mimeType",   label: "Type",     variant: "badge"   },
-        { name: "sizeBytes",  label: "Size",     variant: "caption" },
-        { name: "uploadedAt", label: "Uploaded", variant: "caption" }
-      ]
+      fields : [FieldSpec] = [{
+        label: Name
+        name: name
+        variant: caption
+      }, {
+        label: Folder
+        name: folder
+        variant: caption
+      }, {
+        label: Type
+        name: mimeType
+        variant: badge
+      }, {
+        label: Size
+        name: sizeBytes
+        variant: caption
+      }, {
+        label: Uploaded
+        name: uploadedAt
+        variant: caption
+      }]
         @label "Columns to show"
         @description "Each column maps to one field on the linked entity"
         @tier "presentation"
-      itemActions : [ItemAction] = [
-        { label: "Open",    event: "OPEN_FILE",    variant: "primary", icon: "arrow-right" },
-        { label: "Archive", event: "ARCHIVE_FILE", variant: "danger" }
-      ]
+      itemActions : [ItemAction] = [{
+        event: OPEN_FILE
+        icon: arrow-right
+        label: Open
+        variant: primary
+      }, {
+        event: ARCHIVE_FILE
+        label: Archive
+        variant: danger
+      }]
         @label "Row actions"
         @description "Buttons on each row"
         @tier "presentation"
-      detailActions : [ItemAction] = [
-        { label: "Download", event: "DOWNLOAD_FILE", variant: "primary" },
-        { label: "Archive",  event: "ARCHIVE_FILE",  variant: "danger" }
-      ]
+      detailActions : [ItemAction] = [{
+        event: DOWNLOAD_FILE
+        label: Download
+        variant: primary
+      }, {
+        event: ARCHIVE_FILE
+        label: Archive
+        variant: danger
+      }]
         @label "Detail actions"
         @description "Buttons shown on the opened row's detail"
         @tier "presentation"
-      tree : [TreeNode] = [
-        { name: "Contracts", path: "Contracts", type: "dir", children: [{ name: "Active.pdf", path: "Active.pdf", type: "file" }, { name: "Archived.pdf", path: "Archived.pdf", type: "file" }] },
-        { name: "Policies",  path: "Policies",  type: "dir", children: [{ name: "HR.docx", path: "Policies/HR.docx", type: "file" }, { name: "Security.md", path: "Policies/Security.md", type: "file" }] },
-        { name: "Templates", path: "Templates", type: "dir", children: [{ name: "Invoice.docx", path: "Templates/Invoice.docx", type: "file" }, { name: "NDA.pdf", path: "Templates/NDA.pdf", type: "file" }] }
-      ]
+      tree : [TreeNode] = [{
+        children: [{
+          name: "Active.pdf"
+          path: "Active.pdf"
+          type: file
+        }, {
+          name: "Archived.pdf"
+          path: "Archived.pdf"
+          type: file
+        }]
+        name: Contracts
+        path: Contracts
+        type: dir
+      }, {
+        children: [{
+          name: "HR.docx"
+          path: "Policies/HR.docx"
+          type: file
+        }, {
+          name: "Security.md"
+          path: "Policies/Security.md"
+          type: file
+        }]
+        name: Policies
+        path: Policies
+        type: dir
+      }, {
+        children: [{
+          name: "Invoice.docx"
+          path: "Templates/Invoice.docx"
+          type: file
+        }, {
+          name: "NDA.pdf"
+          path: "Templates/NDA.pdf"
+          type: file
+        }]
+        name: Templates
+        path: Templates
+        type: dir
+      }]
         @label "Folder tree"
         @description "Hierarchical nav tree shown above the table"
         @tier "presentation"
     }
-    initial: loading
-    state loading {
-      INIT -> loading
-        (fetch StoredFile { emit: { success: "StoredFileLoaded", failure: "StoredFileLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
-      StoredFileLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "@config.headerIcon" }, { type: "typography", content: "@config.title", variant: "h3" }, { type: "badge", label: "@payload.data.length", variant: "neutral", size: "sm" }] }, { type: "divider" }, { type: "file-tree", tree: "@config.tree" }, { type: "divider" }, { type: "data-list", look: "@config.tableLook", entity: "@payload.data", fields: "@config.fields", gap: "sm", reorderable: "@config.reorderable", reorderEvent: "REORDER", itemActions: "@config.itemActions" }] })
-      StoredFileLoadFailed -> error
-        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
-    }
-    state browsing {
-      OPEN_FILE -> viewing_single
-        (set @entity.id @payload.row.id)
-        (set @entity.name @payload.row.name)
-        (set @entity.path @payload.row.path)
-        (set @entity.folder @payload.row.folder)
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "@config.headerIcon" }, { type: "typography", content: "@entity.name", variant: "h3" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Folder" }, { type: "typography", variant: "body", content: "@entity.folder" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Path" }, { type: "typography", variant: "body", content: "@entity.path" }] }] }, { type: "divider" }, { type: "data-list", entity: "@config.detailActions", gap: "sm", variant: "default", fields: [], renderItem: ["fn", "a", { type: "button", label: "@a.label", variant: "@a.variant", action: "@a.event", actionPayload: { id: "@entity.id" } }] }] })
-      REORDER -> loading
-        (set @entity.id @payload.row.id)
-        (fetch StoredFile { emit: { success: "StoredFileLoaded", failure: "StoredFileLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Reordering…" }] })
-      ARCHIVE_FILE -> loading
-        (set @entity.id @payload.id)
-        (fetch StoredFile { emit: { success: "StoredFileLoaded", failure: "StoredFileLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Archiving…" }] })
-    }
-    state viewing_single {
-      CLOSE_VIEW -> loading
-        (fetch StoredFile { emit: { success: "StoredFileLoaded", failure: "StoredFileLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
-      DOWNLOAD_FILE -> loading
-        (set @entity.id @payload.id)
-        (fetch StoredFile { emit: { success: "StoredFileLoaded", failure: "StoredFileLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Preparing…" }] })
-      ARCHIVE_FILE -> loading
-        (set @entity.id @payload.id)
-        (fetch StoredFile { emit: { success: "StoredFileLoaded", failure: "StoredFileLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Archiving…" }] })
-    }
-    state error {
-      INIT -> loading
-        (fetch StoredFile { emit: { success: "StoredFileLoaded", failure: "StoredFileLoadFailed" } })
-        (render-ui main { type: "spinner", size: "sm" })
-    }
-    emits {
-      OPEN_FILE     { id : string!, row : StoredFile }
-        @description "Indicates a file has been selected for viewing."
-        @synonyms "select, choose, activate"
-        @tier "essential"
-      CLOSE_VIEW    { }
-        @description "Signals the view has been closed or dismissed."
-        @synonyms "dismiss, hide, close"
-        @tier "essential"
-      DOWNLOAD_FILE { id : string! }
-        @description "Initiates a file download process."
-        @synonyms "export, save, retrieve"
-        @tier "essential"
-      ARCHIVE_FILE  { id : string! }
-        @description "Signals a file is being moved to archive storage."
-        @synonyms "archive, move to archive, delete permanently"
-        @tier "customization"
-      REORDER       { id : string!, row : StoredFile }
-        @description "Indicates the order of items in the tree has changed."
-        @synonyms "sort, rearrange, move, change order"
-        @tier "customization"
-      StoredFileLoaded     { data : [StoredFile] }
-        @description "Indicates a file has been successfully retrieved and is ready."
-        @synonyms "loaded, fetched, retrieved, ready"
-        @tier "essential"
-      StoredFileLoadFailed { error : string, code : string }
-        @description "Indicates a failure to load a stored file."
-        @synonyms "error, failed, problem, unsuccessful"
-        @tier "internal"
-    }
-    listens {
-      OPEN_FILE     { id : string!, row : StoredFile }
-        @description "A file has been selected for viewing or processing."
-        @synonyms "select, choose, activate, open"
-        @tier "essential"
-      CLOSE_VIEW    { }
-        @description "Indicates the view/window should be closed or dismissed."
-        @synonyms "dismiss, hide, close, exit"
-        @tier "essential"
-      DOWNLOAD_FILE { id : string! }
-        @description "Initiates a file download process."
-        @synonyms "export, retrieve, save"
-        @tier "essential"
-      ARCHIVE_FILE  { id : string! }
-        @description "Signals a request to archive or delete the selected file."
-        @synonyms "delete, remove, trash, discard"
-        @tier "customization"
-      REORDER       { id : string!, row : StoredFile }
-        @description "Indicates a change in the order of items within the tree."
-        @synonyms "sort, rearrange, move, sequence"
-        @tier "customization"
-      StoredFileLoaded     { data : [StoredFile] }
-        @description "Indicates a file has been successfully retrieved and is ready for display."
-        @synonyms "loaded, fetched, retrieved, ready"
-        @tier "essential"
-      StoredFileLoadFailed { error : string, code : string }
-        @description "Indicates a failure to load a file from storage."
-        @synonyms "error, failure, load failed, problem"
-        @tier "internal"
-    }
   }
+
   page "/files" as StoredFilePage -> StoredFileStore
 }

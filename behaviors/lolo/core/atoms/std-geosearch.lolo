@@ -1,23 +1,106 @@
 app std-geosearch "1.0.0"
 "std-geosearch — location-aware search variant: search-input + map-view + range-slider for radius. Owns a GeoSearchResult runtime entity; GEO_SEARCH persists @payload.searchTerm/lat/lng/radiusKm so cross-trait listeners can route them into geo-aware data atoms."
-
 orbital GeoSearchResultOrbital {
   entity GeoSearchResult [runtime] {
-    id          : string!
-    searchTerm  : string @description "The user's search query string." @synonyms "query, text, input"
-    centerLat   : number @description "Latitude coordinate of the search center." @synonyms "lat, y, north"
-    centerLng   : number @description "The longitude coordinate of the search center." @synonyms "longitude, lng"
-    radiusKm    : number @description "The search radius in kilometers." @synonyms "range, distance, extent" = 10
+    id : string!
+    searchTerm : string @description "The user's search query string." @synonyms "query, text, input"
+    centerLat : number @description "Latitude coordinate of the search center." @synonyms "lat, y, north"
+    centerLng : number @description "The longitude coordinate of the search center." @synonyms "longitude, lng"
+    radiusKm : number @description "The search radius in kilometers." @synonyms "range, distance, extent" = 10
     boundsNorth : number @description "Northern boundary coordinate of the search area." @synonyms "north, upper, top"
     boundsSouth : number @description "Southern boundary coordinate of the search area." @synonyms "south, bottom, lowerBoundary"
-    boundsEast  : number @description "The eastern boundary coordinate of the search area." @synonyms "east, right, longitude"
-    boundsWest  : number @description "Western boundary coordinate of the search area." @synonyms "west, longitude, x"
+    boundsEast : number @description "The eastern boundary coordinate of the search area." @synonyms "east, right, longitude"
+    boundsWest : number @description "Western boundary coordinate of the search area." @synonyms "west, longitude, x"
   }
 
   trait GeoSearchResultSearch -> GeoSearchResult [interaction, instance] {
     initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          children: [{
+            event: @config.event
+            placeholder: @config.placeholder
+            type: search-input
+          }, {
+            centerLat: @entity.centerLat
+            centerLng: @entity.centerLng
+            height: "240px"
+            markers: []
+            type: map-view
+            zoom: 12
+          }, {
+            action: GEO_SEARCH
+            max: 100
+            min: 1
+            showTooltip: true
+            step: 1
+            type: range-slider
+            value: @entity.radiusKm
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      GEO_SEARCH -> idle
+        (set @entity.searchTerm ?searchTerm)
+        (set @entity.centerLat ?lat)
+        (set @entity.centerLng ?lng)
+        (set @entity.radiusKm ?radiusKm)
+        (render-ui main {
+          children: [{
+            event: @config.event
+            placeholder: @config.placeholder
+            type: search-input
+          }, {
+            centerLat: @entity.centerLat
+            centerLng: @entity.centerLng
+            height: "240px"
+            markers: []
+            type: map-view
+            zoom: 12
+          }, {
+            action: GEO_SEARCH
+            max: 100
+            min: 1
+            showTooltip: true
+            step: 1
+            type: range-slider
+            value: @entity.radiusKm
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
+    }
+
+    emits {
+      GEO_SEARCH {
+        searchTerm : string!
+        lat : number!
+        lng : number!
+        radiusKm : number!
+      }
+        @description "Indicates a search request with location parameters."
+        @synonyms "search, locate, find, query"
+        @tier "essential"
+    }
+
+    listens {
+      GEO_SEARCH {
+        searchTerm : string!
+        lat : number!
+        lng : number!
+        radiusKm : number!
+      }
+        @description "A search request with location and radius parameters."
+        @synonyms "search, query, locate, find"
+        @tier "essential"
+    }
+
     config {
-      placeholder     : string = "Search nearby…"
+      placeholder : string = "Search nearby…"
         @label "Search placeholder"
         @description "Hint text in the location search input"
         @tier "presentation"
@@ -25,33 +108,12 @@ orbital GeoSearchResultOrbital {
         @label "Default radius (km)"
         @description "Initial search radius around the chosen center"
         @tier "presentation"
-      event           : string = "GEO_SEARCH"
+      event : string = GEO_SEARCH
         @label "Search event"
         @description "Event emitted when the user runs a geo search"
         @tier "internal"
     }
-    state idle {
-      INIT -> idle
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "search-input", placeholder: "@config.placeholder", event: "@config.event" }, { type: "map-view", markers: [], centerLat: @entity.centerLat, centerLng: @entity.centerLng, height: "240px", zoom: 12 }, { type: "range-slider", min: 1, max: 100, value: @entity.radiusKm, step: 1, showTooltip: true, action: "GEO_SEARCH" }] })
-      GEO_SEARCH -> idle
-        (set @entity.searchTerm @payload.searchTerm)
-        (set @entity.centerLat @payload.lat)
-        (set @entity.centerLng @payload.lng)
-        (set @entity.radiusKm @payload.radiusKm)
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "search-input", placeholder: "@config.placeholder", event: "@config.event" }, { type: "map-view", markers: [], centerLat: @entity.centerLat, centerLng: @entity.centerLng, height: "240px", zoom: 12 }, { type: "range-slider", min: 1, max: 100, value: @entity.radiusKm, step: 1, showTooltip: true, action: "GEO_SEARCH" }] })
-    }
-    emits {
-      GEO_SEARCH { searchTerm : string!, lat : number!, lng : number!, radiusKm : number! }
-        @description "Indicates a search request with location parameters."
-        @synonyms "search, locate, find, query"
-        @tier "essential"
-    }
-    listens {
-      GEO_SEARCH { searchTerm : string!, lat : number!, lng : number!, radiusKm : number! }
-        @description "A search request with location and radius parameters."
-        @synonyms "search, query, locate, find"
-        @tier "essential"
-    }
   }
+
   page "/geosearchresults/search" as GeoSearchResultSearchPage -> GeoSearchResultSearch
 }

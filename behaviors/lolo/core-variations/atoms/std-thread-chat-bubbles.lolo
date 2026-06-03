@@ -1,62 +1,86 @@
 app std-thread-chat-bubbles "1.0.3"
 "Chat-bubbles thread — iMessage/WhatsApp DM style: two-party back-and-forth with sender-vs-receiver bubble alignment and tint."
-
 orbital ChatBubblesThreadOrbital {
   uses Thread from "std/behaviors/std-thread"
 
   entity ChatBubblesPost [persistent: chatbubblesposts] {
-    id            : string!
-    parentId      : string @description "Reference to the preceding message in the conversation." @synonyms "previous, predecessor, parent"
-    threadRootId  : string! @description "Identifier for the initial message in the conversation." @synonyms "rootId, originalId, startingMessageId"
-    authorId      : "me" | "them" @description "Identifies the user who created the message." @synonyms "user, sender, creator" = "them"
-    authorName    : string! @description "The name of the user who created the post." @synonyms "username, user, creator, poster"
-    recipientId   : string @description "Identifier of the message recipient." @synonyms "receiver, target, addressee"
-    content       : string! @description "The text content of the message." @synonyms "message, text, body"
-    createdAt     : string
-    voteCount     : number @description "The number of votes or ratings associated with this item." @synonyms "rating, score, likes, upvotes" = 0
-    replyCount    : number @description "The number of replies to this post." @synonyms "count, number of replies, responses" = 0
-    replies       : [ChatBubblesPost] @description "A list of child posts in a conversation thread." @synonyms "child posts, responses, replies, sub-messages"
-    focusedRow    : object @description "The currently selected or active row within the chat thread." @synonyms "selection, active, current" = {}
+    id : string!
+    parentId : string @description "Reference to the preceding message in the conversation." @synonyms "previous, predecessor, parent"
+    threadRootId : string! @description "Identifier for the initial message in the conversation." @synonyms "rootId, originalId, startingMessageId"
+    authorId : "me" | "them" @description "Identifies the user who created the message." @synonyms "user, sender, creator" = them
+    authorName : string! @description "The name of the user who created the post." @synonyms "username, user, creator, poster"
+    recipientId : string @description "Identifier of the message recipient." @synonyms "receiver, target, addressee"
+    content : string! @description "The text content of the message." @synonyms "message, text, body"
+    createdAt : string
+    voteCount : number @description "The number of votes or ratings associated with this item." @synonyms "rating, score, likes, upvotes" = 0
+    replyCount : number @description "The number of replies to this post." @synonyms "count, number of replies, responses" = 0
+    replies : [ChatBubblesPost] @description "A list of child posts in a conversation thread." @synonyms "child posts, responses, replies, sub-messages"
+    focusedRow : object @description "The currently selected or active row within the chat thread." @synonyms "selection, active, current" = {}
   }
 
   trait ChatBubblesThread = Thread.traits.ThreadPostBrowse -> ChatBubblesPost {
-    config: {
-      recipientName: "Alex Rivera",
+    config {
+      recipientName: "Alex Rivera"
       bodyContent: {
-        type: "stack",
-        direction: "vertical",
-        gap: "none",
-        className: "w-full px-card-md py-section h-full",
-        children: [
-          { type: "stack", direction: "horizontal", gap: "sm", align: "center",
-            className: "pb-md border-b border-[var(--color-border)]",
-            children: [
-              { type: "avatar", name: "@config.recipientName", size: "md" },
-              { type: "stack", direction: "vertical", gap: "xs", className: "flex-1",
-                children: [
-                  { type: "typography", variant: "body", weight: "medium", content: "@config.recipientName" },
-                  { type: "typography", variant: "caption", color: "muted", content: "Active now" }
-                ]
-              }
-            ]
-          },
-          { type: "data-list", entity: "@payload.data",
-            gap: "sm", variant: "message",
-            senderField: "authorId", currentUser: "me",
-            className: "flex-1 overflow-y-auto py-md",
-            fields: [
-              { name: "content", variant: "body" },
-              { name: "createdAt", format: "date" }
-            ]
-          },
-          { type: "stack", direction: "horizontal", gap: "sm", align: "center",
-            className: "mt-md border-t border-[var(--color-border)] pt-md",
-            children: [
-              { type: "input", inputType: "text", placeholder: "Message…", action: "EDIT_REPLY" },
-              { type: "button", label: "Send", icon: "send", action: "SUBMIT_REPLY", variant: "primary" }
-            ]
-          }
-        ]
+        children: [{
+          align: center
+          children: [{
+            name: @config.recipientName
+            size: md
+            type: avatar
+          }, {
+            children: [{
+              content: @config.recipientName
+              type: typography
+              variant: body
+              weight: medium
+            }, {
+              color: muted
+              content: "Active now"
+              type: typography
+              variant: caption
+            }]
+            className: flex-1
+            direction: vertical
+            gap: xs
+            type: stack
+          }]
+          className: "pb-md border-b border-[var(--color-border)]"
+          direction: horizontal
+          gap: sm
+          type: stack
+        }, {
+          className: "flex-1 overflow-y-auto py-md"
+          currentUser: me
+          entity: ?data
+          fields: [{ name: content, variant: body }, { format: date, name: createdAt }]
+          gap: sm
+          senderField: authorId
+          type: data-list
+          variant: message
+        }, {
+          align: center
+          children: [{
+            action: EDIT_REPLY
+            inputType: text
+            placeholder: "Message…"
+            type: input
+          }, {
+            action: SUBMIT_REPLY
+            icon: send
+            label: Send
+            type: button
+            variant: primary
+          }]
+          className: "mt-md border-t border-[var(--color-border)] pt-md"
+          direction: horizontal
+          gap: sm
+          type: stack
+        }]
+        className: "w-full px-card-md py-section h-full"
+        direction: vertical
+        gap: none
+        type: stack
       }
     }
   }

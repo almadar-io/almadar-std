@@ -1,66 +1,239 @@
 app std-agent-activity-log "1.0.0"
 "std-agent-activity-log as a Function"
-
 orbital AgentActivityLogOrbital {
-  entity AgentActivityLog [persistent: agentactivitylogs] {
-    id          : string!
-    name        : string @description "A short identifier or label for the activity." @synonyms "label, identifier, title"
-    description : string @description "A textual explanation of the activity." @synonyms "explanation, note, summary, remarks"
-    status      : "active" | "inactive" | "pending" @description "Current operational state of the activity." @synonyms "state, condition, operational_status" = "active"
-    createdAt   : string
-    action      : string @description "The event or operation that occurred." @synonyms "event, operation, type, task" = ""
-    detail      : string @description "Provides additional information about the activity." @synonyms "notes, specifics, particulars, details" = ""
-    timestamp   : string @description "The date and time when the event occurred." @synonyms "date, time, when" = ""
-    duration    : number @description "The length of time an activity took to complete." @synonyms "time, length, elapsed" = 0
-    icon        : string @description "A visual representation, often a symbol or image." @synonyms "image, symbol, graphic, representation" = "circle"
-  }
+    type AgentActivityLogLoaded = Event { data : [AgentActivityLog] } "Fired when the AgentActivityLog collection finishes loading; payload.data holds the list"
 
-  type AgentActivityLogLoaded       = Event { data : [AgentActivityLog] }      "Fired when the AgentActivityLog collection finishes loading; payload.data holds the list"
-  type AgentActivityLogLoadFailed   = Event { error : string, code : string }  "Fired when the AgentActivityLog collection fails to load"
-  type AgentActivityLogSaved        = Event { id : string }                    "Fired when a LOG_ENTRY persist succeeds"
-  type AgentActivityLogSaveFailed   = Event { error : string, code : string }  "Fired when a LOG_ENTRY persist fails"
-  type AgentActivityLogDeleted      = Event { id : string }                    "Fired when CLEAR deletes activity log rows"
-  type AgentActivityLogDeleteFailed = Event { error : string, code : string }  "Fired when CLEAR fails to delete"
+    type AgentActivityLogLoadFailed = Event { error : string, code : string } "Fired when the AgentActivityLog collection fails to load"
+
+    type AgentActivityLogSaved = Event { id : string } "Fired when a LOG_ENTRY persist succeeds"
+
+    type AgentActivityLogSaveFailed = Event { error : string, code : string } "Fired when a LOG_ENTRY persist fails"
+
+    type AgentActivityLogDeleted = Event { id : string } "Fired when CLEAR deletes activity log rows"
+
+    type AgentActivityLogDeleteFailed = Event { error : string, code : string } "Fired when CLEAR fails to delete"
+
+  entity AgentActivityLog [persistent: agentactivitylogs] {
+    id : string!
+    name : string @description "A short identifier or label for the activity." @synonyms "label, identifier, title"
+    description : string @description "A textual explanation of the activity." @synonyms "explanation, note, summary, remarks"
+    status : "active" | "inactive" | "pending" @description "Current operational state of the activity." @synonyms "state, condition, operational_status" = active
+    createdAt : string
+    action : string @description "The event or operation that occurred." @synonyms "event, operation, type, task" = ""
+    detail : string @description "Provides additional information about the activity." @synonyms "notes, specifics, particulars, details" = ""
+    timestamp : string @description "The date and time when the event occurred." @synonyms "date, time, when" = ""
+    duration : number @description "The length of time an activity took to complete." @synonyms "time, length, elapsed" = 0
+    icon : string @description "A visual representation, often a symbol or image." @synonyms "image, symbol, graphic, representation" = circle
+  }
 
   trait AgentActivityLogLog -> AgentActivityLog [interaction, collection] {
     initial: loading
+
     state loading {
       INIT -> loading
-        (fetch AgentActivityLog { emit: { success: "AgentActivityLogLoaded", failure: "AgentActivityLogLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading activity log…" }] })
+        (fetch AgentActivityLog {
+          emit: { failure: AgentActivityLogLoadFailed, success: AgentActivityLogLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Loading activity log…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
       AgentActivityLogLoaded -> logging
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "activity" }, { type: "typography", content: "Activity Log", variant: "h2" }] }, { type: "button", label: "Clear", action: "CLEAR", variant: "ghost", icon: "trash" }] }, { type: "divider" }, { type: "timeline", fields: [], entity: @payload.data }] })
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{
+              align: center
+              children: [{ name: activity, type: icon }, {
+                content: "Activity Log"
+                type: typography
+                variant: h2
+              }]
+              direction: horizontal
+              gap: sm
+              type: stack
+            }, {
+              action: CLEAR
+              icon: trash
+              label: Clear
+              type: button
+              variant: ghost
+            }]
+            direction: horizontal
+            gap: sm
+            justify: between
+            type: stack
+          }, { type: divider }, {
+            entity: ?data
+            fields: []
+            type: timeline
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
       AgentActivityLogLoadFailed -> error
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load activity log" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+        (render-ui main {
+          align: center
+          children: [{
+            color: destructive
+            name: alert-triangle
+            type: icon
+          }, {
+            content: "Failed to load activity log"
+            type: typography
+            variant: h3
+          }, {
+            color: muted
+            content: ?error
+            type: typography
+            variant: body
+          }, {
+            action: INIT
+            icon: rotate-ccw
+            label: Retry
+            type: button
+            variant: primary
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
     }
+
     state logging {
       LOG_ENTRY -> persisting
-        (persist create AgentActivityLog { action: "@payload.action", detail: "@payload.detail", status: "@payload.status", timestamp: "@now" } { emit: { success: "AgentActivityLogSaved", failure: "AgentActivityLogSaveFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Recording entry…" }] })
+        (persist create AgentActivityLog {
+          action: ?action
+          detail: ?detail
+          status: ?status
+          timestamp: @now
+        } {
+          emit: { failure: AgentActivityLogSaveFailed, success: AgentActivityLogSaved }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Recording entry…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
       CLEAR -> deleting
-        (persist delete AgentActivityLog { emit: { success: "AgentActivityLogDeleted", failure: "AgentActivityLogDeleteFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Clearing activity log…" }] })
+        (persist delete AgentActivityLog {
+          emit: { failure: AgentActivityLogDeleteFailed, success: AgentActivityLogDeleted }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Clearing activity log…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
     }
+
     state persisting {
       AgentActivityLogSaved -> loading
-        (fetch AgentActivityLog { emit: { success: "AgentActivityLogLoaded", failure: "AgentActivityLogLoadFailed" } })
-        (render-ui main { type: "spinner" })
+        (fetch AgentActivityLog {
+          emit: { failure: AgentActivityLogLoadFailed, success: AgentActivityLogLoaded }
+        })
+        (render-ui main { type: spinner })
       AgentActivityLogSaveFailed -> error
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to record entry" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+        (render-ui main {
+          align: center
+          children: [{
+            color: destructive
+            name: alert-triangle
+            type: icon
+          }, {
+            content: "Failed to record entry"
+            type: typography
+            variant: h3
+          }, {
+            color: muted
+            content: ?error
+            type: typography
+            variant: body
+          }, {
+            action: INIT
+            icon: rotate-ccw
+            label: Retry
+            type: button
+            variant: primary
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
     }
+
     state deleting {
       AgentActivityLogDeleted -> loading
-        (fetch AgentActivityLog { emit: { success: "AgentActivityLogLoaded", failure: "AgentActivityLogLoadFailed" } })
-        (render-ui main { type: "spinner" })
+        (fetch AgentActivityLog {
+          emit: { failure: AgentActivityLogLoadFailed, success: AgentActivityLogLoaded }
+        })
+        (render-ui main { type: spinner })
       AgentActivityLogDeleteFailed -> error
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to clear activity log" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+        (render-ui main {
+          align: center
+          children: [{
+            color: destructive
+            name: alert-triangle
+            type: icon
+          }, {
+            content: "Failed to clear activity log"
+            type: typography
+            variant: h3
+          }, {
+            color: muted
+            content: ?error
+            type: typography
+            variant: body
+          }, {
+            action: INIT
+            icon: rotate-ccw
+            label: Retry
+            type: button
+            variant: primary
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
     }
+
     state error {
       INIT -> loading
-        (fetch AgentActivityLog { emit: { success: "AgentActivityLogLoaded", failure: "AgentActivityLogLoadFailed" } })
-        (render-ui main { type: "spinner" })
+        (fetch AgentActivityLog {
+          emit: { failure: AgentActivityLogLoadFailed, success: AgentActivityLogLoaded }
+        })
+        (render-ui main { type: spinner })
     }
-emits {
+
+    emits {
       AgentActivityLogLoaded
       AgentActivityLogLoadFailed
       AgentActivityLogSaved
@@ -69,11 +242,24 @@ emits {
       AgentActivityLogDeleteFailed
     }
 
-        listens {
-      LOG_ENTRY { action : string, detail : string, status : string }
-      AgentActivityLogLoadFailed { error : string, code : string }
-      AgentActivityLogSaveFailed { error : string, code : string }
-      AgentActivityLogDeleteFailed { error : string, code : string }
+    listens {
+      LOG_ENTRY {
+        action : string
+        detail : string
+        status : string
+      }
+      AgentActivityLogLoadFailed {
+        error : string
+        code : string
+      }
+      AgentActivityLogSaveFailed {
+        error : string
+        code : string
+      }
+      AgentActivityLogDeleteFailed {
+        error : string
+        code : string
+      }
     }
   }
 

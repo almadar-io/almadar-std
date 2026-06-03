@@ -1,55 +1,98 @@
 app std-notify-on-event "1.2.0"
 "std-notify-on-event — cross-orbital wiring atom. Subscribes to events from another orbital (e.g. CheckoutOrbital emits OrderPlaced, OrderRecordOrbital reacts via this atom) and dispatches a notification. Use when one orbital needs to react to or be notified about events that happen in another orbital — the wiring goes through this atom's `EventOccurred` listener which the molecule renames via traitOverrides.events to the upstream event name. Resolves recipient from `recipients` (first entry; multi-recipient fan-out is a future extension) or falls back to `@user.id`. Skips dispatch when the recipient is in `suppressionList`. Emits in-app `notify` when `notifyChannel` is `\"in-app\"`, or persists a `NotificationRecord` row for out-of-band delivery when channel is `\"email\"` or `\"sms\"`."
-
 type QuietHoursSpec = { start : string, end : string }
-
 orbital NotifyOnEventOrbital {
+    type EventOccurred = Event { data : object } "Rename via traitOverrides.events to the upstream event (e.g. ContactSaved). The atom listens on this sentinel and dispatches a notification."
+
+    type NotificationDispatched = Event { recipient : string, channel : string, message : string, severity : string } "Re-emitted after dispatch; rename to wire downstream observers (e.g. NotificationLogAppended)."
+
   entity NotificationRecord [persistent: notifications] {
-    id         : string!
-    recipient  : string  @description "The identifier of the entity receiving the notification." @synonyms "user, target, receiver, destination" = ""
-    channel    : string  @description "The delivery method for the notification (e.g., email, SMS, in-app)." @synonyms "delivery, medium, type" = "in-app"
-    message    : string  @description "The content of the notification message." @synonyms "text, content, body" = ""
-    severity   : string  @description "Indicates the importance or urgency level of the notification." @synonyms "priority, level, importance" = "info"
+    id : string!
+    recipient : string @description "The identifier of the entity receiving the notification." @synonyms "user, target, receiver, destination" = ""
+    channel : string @description "The delivery method for the notification (e.g., email, SMS, in-app)." @synonyms "delivery, medium, type" = in-app
+    message : string @description "The content of the notification message." @synonyms "text, content, body" = ""
+    severity : string @description "Indicates the importance or urgency level of the notification." @synonyms "priority, level, importance" = info
     dispatched : boolean @description "Indicates whether the notification has been successfully sent." @synonyms "sent, delivered, status" = false
-    recordedAt : number  @description "Timestamp indicating when the notification record was created." @synonyms "creation time, timestamp, date, when" = 0
+    recordedAt : number @description "Timestamp indicating when the notification record was created." @synonyms "creation time, timestamp, date, when" = 0
   }
 
-  type EventOccurred         = Event { data : object }                                                                  "Rename via traitOverrides.events to the upstream event (e.g. ContactSaved). The atom listens on this sentinel and dispatches a notification."
-  type NotificationDispatched = Event { recipient : string, channel : string, message : string, severity : string }     "Re-emitted after dispatch; rename to wire downstream observers (e.g. NotificationLogAppended)."
-
   trait NotifyOnEventListener -> NotificationRecord [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      EventOccurred -> idle
+        (set @entity.recipient (if ["=", (array/len @config.recipients), 0] @user.id (array/first @config.recipients)))
+        (set @entity.channel @config.notifyChannel)
+        (set @entity.message @config.template)
+        (set @entity.severity @config.severity)
+        (set @entity.dispatched (and ["=", @config.notifyChannel, in-app] (not (array/includes @config.suppressionList @entity.recipient))))
+        (set @entity.recordedAt 0)
+        (when (not (array/includes @config.suppressionList @entity.recipient)) (if ["=", @config.notifyChannel, in-app] (notify @config.severity @config.template) (persist create NotificationRecord {
+          channel: @config.notifyChannel
+          dispatched: false
+          message: @config.template
+          recipient: @entity.recipient
+          recordedAt: 0
+          severity: @config.severity
+        })))
+        (emit NotificationDispatched {
+          channel: @config.notifyChannel
+          message: @config.template
+          recipient: @entity.recipient
+          severity: @config.severity
+        })
+    }
+
+    emits {
+      NotificationDispatched -> external {
+        recipient : string
+        channel : string
+        message : string
+        severity : string
+      }
+    }
+
+    listens {
+      EventOccurred {
+        data : object
+      }
+    }
+
     config {
-      listensFor    : [string] = []
+      listensFor : [string] = []
         @label "Trigger events"
         @description "Event names that should fire a notification. Set this to the upstream event name (e.g. OrderPlaced, CheckoutCompleted) so this atom listens for events from the orbital that emits them. The orbital owning this trait reacts whenever the named event fires anywhere in the schema."
-        @tier "internal"
         @synonyms "subscribe to event, listen for event, react to event, watch for, wire upstream event, observe event from another orbital, cross-orbital subscription, on-event trigger"
-      notifyChannel : string   = "in-app"
+        @tier "internal"
+      notifyChannel : string = in-app
         @label "Channel"
         @description "Delivery channel: in-app, email, or sms"
-        @tier "policy"
         @synonyms "delivery method, notification channel, send via, dispatch through"
-      template      : string   = ""
+        @tier "policy"
+      template : string = ""
         @label "Message template"
         @description "Text shown to the recipient; supports payload interpolation"
-        @tier "presentation"
         @synonyms "notification text, message body, alert text"
-      severity      : string   = "info"
+        @tier "presentation"
+      severity : string = info
         @label "Severity"
         @description "info, success, warning, or error — controls styling"
-        @tier "policy"
         @synonyms "alert level, priority, urgency"
-      recipients    : [string] = []
+        @tier "policy"
+      recipients : [string] = []
         @label "Recipients"
         @description "Recipient ids/addresses. v1.1 uses the first entry; multi-recipient fan-out lands in v1.2 (gap). When empty, falls back to the authenticated user."
-        @tier "policy"
         @synonyms "targets, addressees, notify to"
+        @tier "policy"
       suppressionList : [string] = []
         @label "Suppression list"
         @description "Recipient ids/addresses to skip (e.g. unsubscribed users). Suppression check runs before dispatch."
-        @tier "policy"
         @synonyms "block list, unsubscribed, opt-out list"
-      quietHours    : QuietHoursSpec = { start: "", end: "" }
+        @tier "policy"
+      quietHours : QuietHoursSpec = {
+        end: ""
+        start: ""
+      }
         @label "Quiet hours"
         @description "Local-time window during which dispatch is suppressed. Both start and end required to activate. WIRING DEFERRED: needs @now-aware time comparison primitive (gap — docs/Almadar_Std_Factories.md)."
         @tier "policy"
@@ -58,42 +101,7 @@ orbital NotifyOnEventOrbital {
         @description "Max sends per (channel, recipient) per rolling 7-day window. 0 = uncapped. WIRING DEFERRED: needs stateful history query (gap — docs/Almadar_Std_Factories.md)."
         @tier "policy"
     }
-    initial: idle
-    state idle {
-      EventOccurred -> idle
-        (set @entity.recipient
-          (if (= (array/len @config.recipients) 0) "@user.id" (array/first @config.recipients)))
-        (set @entity.channel @config.notifyChannel)
-        (set @entity.message @config.template)
-        (set @entity.severity @config.severity)
-        (set @entity.dispatched
-          (and (= @config.notifyChannel "in-app")
-               (not (array/includes @config.suppressionList @entity.recipient))))
-        (set @entity.recordedAt 0)
-        (when (not (array/includes @config.suppressionList @entity.recipient))
-          (if (= @config.notifyChannel "in-app")
-            (notify @config.severity @config.template)
-            (persist create NotificationRecord {
-              recipient:  @entity.recipient,
-              channel:    "@config.notifyChannel",
-              message:    "@config.template",
-              severity:   "@config.severity",
-              dispatched: false,
-              recordedAt: 0
-            })))
-        (emit NotificationDispatched {
-          recipient: @entity.recipient,
-          channel:   "@config.notifyChannel",
-          message:   "@config.template",
-          severity:  "@config.severity"
-        })
-    }
-    emits {
-      NotificationDispatched -> external { recipient : string, channel : string, message : string, severity : string }
-    }
-    listens {
-      EventOccurred { data : object }
-    }
   }
+
   page "/notify-on-event" as NotifyOnEventPage -> NotifyOnEventListener
 }

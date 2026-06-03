@@ -1,118 +1,380 @@
 app std-branching-logic "1.0.0"
 "std-branching-logic — survey skip-logic rules. Lists rules in `browsing`; opens rule detail in `viewing_single` with Edit / Delete actions."
-
 orbital BranchingLogicOrbital {
+    type BranchingRuleLoaded = Event { data : [BranchingRule] } "Fired when the branching-rule collection finishes loading"
+
+    type BranchingRuleLoadFailed = Event { error : string, code : string } "Fired when the branching-rule collection fails to load"
+
   entity BranchingRule [persistent: branchingrules] {
-    id               : string!
-    surveyId         : string! @description "Unique identifier for the survey this rule applies to." @synonyms "survey, questionnaire, form"
+    id : string!
+    surveyId : string! @description "Unique identifier for the survey this rule applies to." @synonyms "survey, questionnaire, form"
     sourceQuestionId : string! @description "The ID of the question triggering the branching logic." @synonyms "trigger, source, question_id"
-    operator         : "equals" | "not-equals" | "contains" | "in" @description "Specifies the comparison method used in the rule." @synonyms "comparison, method, type" = "equals"
-    value            : string @description "The data being compared against a condition." @synonyms "data, content, expression"
+    operator : "equals" | "not-equals" | "contains" | "in" @description "Specifies the comparison method used in the rule." @synonyms "comparison, method, type" = equals
+    value : string @description "The data being compared against a condition." @synonyms "data, content, expression"
     targetQuestionId : string! @description "The ID of the question to navigate to based on the rule." @synonyms "destination, nextQuestion, target"
-    priority         : number @description "Specifies the order in which rules are evaluated." @synonyms "order, sequence, precedence" = 0
+    priority : number @description "Specifies the order in which rules are evaluated." @synonyms "order, sequence, precedence" = 0
   }
 
-  type BranchingRuleLoaded     = Event { data : [BranchingRule] }            "Fired when the branching-rule collection finishes loading"
-  type BranchingRuleLoadFailed = Event { error : string, code : string }     "Fired when the branching-rule collection fails to load"
-
   trait BranchingRuleManage -> BranchingRule [interaction, collection] {
+    initial: loading
+
+    state loading {
+      INIT -> loading
+        (fetch BranchingRule {
+          emit: { failure: BranchingRuleLoadFailed, success: BranchingRuleLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Loading branching rules…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      BranchingRuleLoaded -> browsing
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: git-branch, type: icon }, {
+              content: @config.title
+              type: typography
+              variant: h3
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, {
+            children: [{
+              icon: git-branch
+              label: "Total rules"
+              look: @config.statLook
+              type: stat-display
+              value: ?data.length
+            }, {
+              icon: clipboard-list
+              label: "Active surveys"
+              look: @config.statLook
+              type: stat-display
+              value: "8"
+            }, {
+              icon: skip-forward
+              label: "Skip jumps"
+              look: @config.statLook
+              type: stat-display
+              value: "42"
+            }, {
+              icon: trending-up
+              label: "Priority avg"
+              look: @config.statLook
+              type: stat-display
+              value: "3"
+            }]
+            cols: 4
+            type: simple-grid
+          }, { type: divider }, {
+            cols: 1
+            entity: ?data
+            fields: [{
+              label: "If question"
+              name: sourceQuestionId
+              variant: caption
+            }, {
+              label: Op
+              name: operator
+              variant: badge
+            }, {
+              label: Value
+              name: value
+              variant: caption
+            }, {
+              label: "Jump to"
+              name: targetQuestionId
+              variant: caption
+            }, {
+              label: Priority
+              name: priority
+              variant: badge
+            }]
+            gap: sm
+            itemActions: [{
+              event: OPEN_RULE
+              icon: arrow-right
+              label: Open
+              variant: primary
+            }, {
+              event: DELETE_RULE
+              icon: trash-2
+              label: Delete
+              variant: danger
+            }]
+            look: @config.tableLook
+            type: data-grid
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      BranchingRuleLoadFailed -> error
+        (render-ui main {
+          message: ?error
+          type: alert
+          variant: error
+        })
+    }
+
+    state browsing {
+      OPEN_RULE -> viewing_single
+        (set @entity.id ?row.id)
+        (set @entity.surveyId ?row.surveyId)
+        (set @entity.sourceQuestionId ?row.sourceQuestionId)
+        (set @entity.operator ?row.operator)
+        (set @entity.value ?row.value)
+        (set @entity.targetQuestionId ?row.targetQuestionId)
+        (set @entity.priority ?row.priority)
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{
+              action: CLOSE_VIEW
+              label: Back
+              type: button
+              variant: ghost
+            }, { name: git-branch, type: icon }, {
+              content: @entity.sourceQuestionId
+              type: typography
+              variant: h3
+            }, {
+              label: @entity.operator
+              type: badge
+              variant: default
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            children: [{
+              children: [{
+                color: muted
+                content: Survey
+                type: typography
+                variant: caption
+              }, {
+                content: @entity.surveyId
+                type: typography
+                variant: body
+              }]
+              direction: horizontal
+              gap: md
+              type: stack
+            }, {
+              children: [{
+                color: muted
+                content: Value
+                type: typography
+                variant: caption
+              }, {
+                content: @entity.value
+                type: typography
+                variant: body
+              }]
+              direction: horizontal
+              gap: md
+              type: stack
+            }]
+            direction: vertical
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            children: [{
+              icon: help-circle
+              label: Source
+              look: @config.statLook
+              type: stat-display
+              value: @entity.sourceQuestionId
+            }, {
+              icon: arrow-right-circle
+              label: Target
+              look: @config.statLook
+              type: stat-display
+              value: @entity.targetQuestionId
+            }, {
+              icon: trending-up
+              label: Priority
+              look: @config.statLook
+              type: stat-display
+              value: @entity.priority
+            }]
+            cols: 3
+            type: simple-grid
+          }, {
+            align: center
+            children: [{
+              action: DELETE_RULE
+              actionPayload: { id: @entity.id }
+              label: Delete
+              type: button
+              variant: danger
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      DELETE_RULE -> loading
+        (set @entity.id ?id)
+        (fetch BranchingRule {
+          emit: { failure: BranchingRuleLoadFailed, success: BranchingRuleLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Deleting rule…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
+    }
+
+    state viewing_single {
+      CLOSE_VIEW -> loading
+        (fetch BranchingRule {
+          emit: { failure: BranchingRuleLoadFailed, success: BranchingRuleLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Loading branching rules…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      DELETE_RULE -> loading
+        (set @entity.id ?id)
+        (fetch BranchingRule {
+          emit: { failure: BranchingRuleLoadFailed, success: BranchingRuleLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Deleting rule…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
+    }
+
+    state error {
+      INIT -> loading
+        (fetch BranchingRule {
+          emit: { failure: BranchingRuleLoadFailed, success: BranchingRuleLoaded }
+        })
+        (render-ui main { size: sm, type: spinner })
+    }
+
+    emits {
+      OPEN_RULE {
+        id : string!
+        row : BranchingRule
+      }
+        @description "Signals a rule detail view should be opened."
+        @synonyms "show, display, reveal, open"
+        @tier "customization"
+      CLOSE_VIEW
+        @description "Indicates the detail view has been closed."
+        @synonyms "dismiss, hide, close"
+        @tier "customization"
+      DELETE_RULE {
+        id : string!
+      }
+        @description "Signals a branching rule has been removed."
+        @synonyms "remove, discard, delete"
+        @tier "customization"
+      BranchingRuleLoaded {
+        data : [BranchingRule]
+      }
+        @description "Indicates a branching rule has been successfully retrieved."
+        @synonyms "loaded, fetched, retrieved"
+        @tier "internal"
+      BranchingRuleLoadFailed {
+        error : string
+        code : string
+      }
+        @description "Indicates a failure to load a branching rule."
+        @synonyms "error, failure, problem, unsuccessful"
+        @tier "internal"
+    }
+
+    listens {
+      OPEN_RULE {
+        id : string!
+        row : BranchingRule
+      }
+        @description "A rule detail view is requested or needs to be displayed."
+        @synonyms "show, display, reveal, open"
+        @tier "customization"
+      CLOSE_VIEW
+        @description "Indicates the detail view has been closed."
+        @synonyms "dismiss, hide, close"
+        @tier "customization"
+      DELETE_RULE {
+        id : string!
+      }
+        @description "A branching rule has been removed from the system."
+        @synonyms "remove, delete, discard"
+        @tier "customization"
+      BranchingRuleLoaded {
+        data : [BranchingRule]
+      }
+        @description "Indicates a branching rule has been successfully retrieved."
+        @synonyms "loaded, fetched, retrieved"
+        @tier "internal"
+      BranchingRuleLoadFailed {
+        error : string
+        code : string
+      }
+        @description "Indicates a failure to load a branching rule."
+        @synonyms "error, failure, problem, load failed"
+        @tier "internal"
+    }
+
     config {
       title : string = "Branching Rules"
         @label "Section title"
         @description "Heading shown above the branching-rule list"
         @tier "presentation"
-      tableLook : "dense" | "spacious" | "striped" | "borderless" | "card-rows" = "dense"
+      tableLook : "dense" | "spacious" | "striped" | "borderless" | "card-rows" = dense
         @label "Table look"
         @description "Layer 2 visual treatment for the data table rendered by this atom."
         @tier "presentation"
-      statLook : "elevated" | "flat" | "progress-backed" | "gauge" | "sparkline" = "elevated"
+      statLook : "elevated" | "flat" | "progress-backed" | "gauge" | "sparkline" = elevated
         @label "Stat display look"
         @description "Layer 2 visual treatment for stat / KPI cards."
         @tier "presentation"
     }
-    initial: loading
-    state loading {
-      INIT -> loading
-        (fetch BranchingRule { emit: { success: "BranchingRuleLoaded", failure: "BranchingRuleLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading branching rules…" }] })
-      BranchingRuleLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "git-branch" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", look: "@config.statLook", label: "Total rules", value: "@payload.data.length", icon: "git-branch" }, { type: "stat-display", look: "@config.statLook", label: "Active surveys", value: "8", icon: "clipboard-list" }, { type: "stat-display", look: "@config.statLook", label: "Skip jumps", value: "42", icon: "skip-forward" }, { type: "stat-display", look: "@config.statLook", label: "Priority avg", value: "3", icon: "trending-up" }] }, { type: "divider" }, { type: "data-grid", look: "@config.tableLook", entity: "@payload.data", fields: [{ name: "sourceQuestionId", label: "If question", variant: "caption" }, { name: "operator", label: "Op", variant: "badge" }, { name: "value", label: "Value", variant: "caption" }, { name: "targetQuestionId", label: "Jump to", variant: "caption" }, { name: "priority", label: "Priority", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_RULE", variant: "primary", icon: "arrow-right" }, { label: "Delete", event: "DELETE_RULE", variant: "danger", icon: "trash-2" }] }] })
-      BranchingRuleLoadFailed -> error
-        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
-    }
-    state browsing {
-      OPEN_RULE -> viewing_single
-        (set @entity.id @payload.row.id)
-        (set @entity.surveyId @payload.row.surveyId)
-        (set @entity.sourceQuestionId @payload.row.sourceQuestionId)
-        (set @entity.operator @payload.row.operator)
-        (set @entity.value @payload.row.value)
-        (set @entity.targetQuestionId @payload.row.targetQuestionId)
-        (set @entity.priority @payload.row.priority)
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "git-branch" }, { type: "typography", content: "@entity.sourceQuestionId", variant: "h3" }, { type: "badge", label: "@entity.operator", variant: "default" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Survey" }, { type: "typography", variant: "body", content: "@entity.surveyId" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Value" }, { type: "typography", variant: "body", content: "@entity.value" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 3, children: [{ type: "stat-display", look: "@config.statLook", label: "Source", value: "@entity.sourceQuestionId", icon: "help-circle" }, { type: "stat-display", look: "@config.statLook", label: "Target", value: "@entity.targetQuestionId", icon: "arrow-right-circle" }, { type: "stat-display", look: "@config.statLook", label: "Priority", value: "@entity.priority", icon: "trending-up" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Delete", variant: "danger", action: "DELETE_RULE", actionPayload: { id: "@entity.id" } }] }] })
-      DELETE_RULE -> loading
-        (set @entity.id @payload.id)
-        (fetch BranchingRule { emit: { success: "BranchingRuleLoaded", failure: "BranchingRuleLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Deleting rule…" }] })
-    }
-    state viewing_single {
-      CLOSE_VIEW -> loading
-        (fetch BranchingRule { emit: { success: "BranchingRuleLoaded", failure: "BranchingRuleLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading branching rules…" }] })
-      DELETE_RULE -> loading
-        (set @entity.id @payload.id)
-        (fetch BranchingRule { emit: { success: "BranchingRuleLoaded", failure: "BranchingRuleLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Deleting rule…" }] })
-    }
-    state error {
-      INIT -> loading
-        (fetch BranchingRule { emit: { success: "BranchingRuleLoaded", failure: "BranchingRuleLoadFailed" } })
-        (render-ui main { type: "spinner", size: "sm" })
-    }
-    emits {
-      OPEN_RULE   { id : string!, row : BranchingRule }
-        @description "Signals a rule detail view should be opened."
-        @synonyms "show, display, reveal, open"
-        @tier "customization"
-      CLOSE_VIEW  { }
-        @description "Indicates the detail view has been closed."
-        @synonyms "dismiss, hide, close"
-        @tier "customization"
-      DELETE_RULE { id : string! }
-        @description "Signals a branching rule has been removed."
-        @synonyms "remove, discard, delete"
-        @tier "customization"
-      BranchingRuleLoaded     { data : [BranchingRule] }
-        @description "Indicates a branching rule has been successfully retrieved."
-        @synonyms "loaded, fetched, retrieved"
-        @tier "internal"
-      BranchingRuleLoadFailed { error : string, code : string }
-        @description "Indicates a failure to load a branching rule."
-        @synonyms "error, failure, problem, unsuccessful"
-        @tier "internal"
-    }
-    listens {
-      OPEN_RULE   { id : string!, row : BranchingRule }
-        @description "A rule detail view is requested or needs to be displayed."
-        @synonyms "show, display, reveal, open"
-        @tier "customization"
-      CLOSE_VIEW  { }
-        @description "Indicates the detail view has been closed."
-        @synonyms "dismiss, hide, close"
-        @tier "customization"
-      DELETE_RULE { id : string! }
-        @description "A branching rule has been removed from the system."
-        @synonyms "remove, delete, discard"
-        @tier "customization"
-      BranchingRuleLoaded     { data : [BranchingRule] }
-        @description "Indicates a branching rule has been successfully retrieved."
-        @synonyms "loaded, fetched, retrieved"
-        @tier "internal"
-      BranchingRuleLoadFailed { error : string, code : string }
-        @description "Indicates a failure to load a branching rule."
-        @synonyms "error, failure, problem, load failed"
-        @tier "internal"
-    }
   }
+
   page "/branching-rules" as BranchingRuleManagePage -> BranchingRuleManage
 }

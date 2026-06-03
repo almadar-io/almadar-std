@@ -1,94 +1,233 @@
 app std-saved-search "1.0.0"
 "std-saved-search — persisted query + alert subscription. Owns a SavedSearch entity (one row per saved query) and a single manage trait that lists saved searches in a data-grid, lets users toggle their alert subscription / rename the search / delete it, and persists each change."
-
 orbital SavedSearchOrbital {
+    type SavedSearchLoaded = Event { data : [SavedSearch] } "Fired when the saved-search collection finishes loading"
+
+    type SavedSearchLoadFailed = Event { error : string, code : string } "Fired when the saved-search collection fails to load"
+
+    type SavedSearchUpdated = Event { row : SavedSearch } "Fired after a saved-search row's update persists (toggle alert / rename / change frequency)"
+
+    type SavedSearchDeleted = Event { id : string } "Fired after a saved-search row is deleted"
+
   entity SavedSearch [persistent: savedsearches] {
-    id             : string!
-    name           : string! @description "A user-defined label for the saved search." @synonyms "title, label, search name"
-    query          : string @description "The text of the search query." @synonyms "search, expression, criteria"
-    filters        : object @description "Criteria used to define the search." @synonyms "criteria, conditions, constraints"
-    alertEnabled   : boolean @description "Indicates whether alerts are enabled for this saved search." @synonyms "enabled, active, notification status" = false
-    alertFrequency : "instant" | "daily" | "weekly" @description "How often alerts are triggered." @synonyms "frequency, interval, recurrence" = "daily"
-    userId         : string @description "Identifier of the user who created the saved search." @synonyms "creator, owner, user_id"
+    id : string!
+    name : string! @description "A user-defined label for the saved search." @synonyms "title, label, search name"
+    query : string @description "The text of the search query." @synonyms "search, expression, criteria"
+    filters : object @description "Criteria used to define the search." @synonyms "criteria, conditions, constraints"
+    alertEnabled : boolean @description "Indicates whether alerts are enabled for this saved search." @synonyms "enabled, active, notification status" = false
+    alertFrequency : "instant" | "daily" | "weekly" @description "How often alerts are triggered." @synonyms "frequency, interval, recurrence" = daily
+    userId : string @description "Identifier of the user who created the saved search." @synonyms "creator, owner, user_id"
     lastNotifiedAt : string @description "Timestamp of the last notification sent." @synonyms "last_notification, notified_at, last_alert"
-    createdAt      : string
+    createdAt : string
   }
 
-  type SavedSearchLoaded     = Event { data : [SavedSearch] }              "Fired when the saved-search collection finishes loading"
-  type SavedSearchLoadFailed = Event { error : string, code : string }     "Fired when the saved-search collection fails to load"
-  type SavedSearchUpdated    = Event { row : SavedSearch }                 "Fired after a saved-search row's update persists (toggle alert / rename / change frequency)"
-  type SavedSearchDeleted    = Event { id : string }                       "Fired after a saved-search row is deleted"
-
   trait SavedSearchManage -> SavedSearch [interaction, collection] {
-    config {
-      title : string = "Saved Searches"
-        @label "Section title"
-        @description "Heading shown above the saved-search list"
-        @tier "presentation"
-      tableLook : "dense" | "spacious" | "striped" | "borderless" | "card-rows" = "dense"
-        @label "Table look"
-        @description "Layer 2 visual treatment for the data table rendered by this atom."
-        @tier "presentation"
-    }
     initial: loading
+
     state loading {
       INIT -> loading
-        (fetch SavedSearch { emit: { success: "SavedSearchLoaded", failure: "SavedSearchLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading saved searches…" }] })
+        (fetch SavedSearch {
+          emit: { failure: SavedSearchLoadFailed, success: SavedSearchLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Loading saved searches…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
       SavedSearchLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "bookmark" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-grid", look: "@config.tableLook", entity: "@payload.data", fields: [{ name: "name", label: "Name", variant: "h4" }, { name: "query", label: "Query", variant: "caption" }, { name: "alertFrequency", label: "Frequency", variant: "badge" }, { name: "alertEnabled", label: "Alerts", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Toggle alert", event: "TOGGLE_ALERT", variant: "secondary", icon: "bell" }, { label: "Edit", event: "EDIT", variant: "secondary", icon: "pencil" }, { label: "Delete", event: "DELETE", variant: "danger", icon: "trash-2" }] }] })
+        (render-ui main {
+          children: [{
+            children: [{ name: bookmark, type: icon }, {
+              content: @config.title
+              type: typography
+              variant: h3
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            cols: 1
+            entity: ?data
+            fields: [{
+              label: Name
+              name: name
+              variant: h4
+            }, {
+              label: Query
+              name: query
+              variant: caption
+            }, {
+              label: Frequency
+              name: alertFrequency
+              variant: badge
+            }, {
+              label: Alerts
+              name: alertEnabled
+              variant: badge
+            }]
+            gap: sm
+            itemActions: [{
+              event: TOGGLE_ALERT
+              icon: bell
+              label: "Toggle alert"
+              variant: secondary
+            }, {
+              event: EDIT
+              icon: pencil
+              label: Edit
+              variant: secondary
+            }, {
+              event: DELETE
+              icon: trash-2
+              label: Delete
+              variant: danger
+            }]
+            look: @config.tableLook
+            type: data-grid
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
       SavedSearchLoadFailed -> error
-        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+        (render-ui main {
+          message: ?error
+          type: alert
+          variant: error
+        })
     }
+
     state browsing {
       TOGGLE_ALERT -> browsing
-        (set @entity.id @payload.id)
-        (set @entity.alertEnabled @payload.enabled)
-        (persist update SavedSearch @entity { emit: { success: "SavedSearchUpdated", failure: "SavedSearchLoadFailed" } })
+        (set @entity.id ?id)
+        (set @entity.alertEnabled ?enabled)
+        (persist update SavedSearch @entity {
+          emit: { failure: SavedSearchLoadFailed, success: SavedSearchUpdated }
+        })
       DELETE -> browsing
-        (set @entity.id @payload.id)
-        (persist delete SavedSearch @entity { emit: { success: "SavedSearchDeleted", failure: "SavedSearchLoadFailed" } })
+        (set @entity.id ?id)
+        (persist delete SavedSearch @entity {
+          emit: { failure: SavedSearchLoadFailed, success: SavedSearchDeleted }
+        })
       EDIT -> editing
-        (set @entity.id @payload.id)
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "pencil" }, { type: "typography", content: "Edit saved search", variant: "h3" }] }, { type: "divider" }, { type: "input", placeholder: "Name", value: @entity.name, action: "RENAME" }, { type: "select", options: [{ label: "Instant", value: "instant" }, { label: "Daily", value: "daily" }, { label: "Weekly", value: "weekly" }], placeholder: "Alert frequency", value: @entity.alertFrequency, action: "CHANGE_FREQUENCY" }, { type: "switch", checked: @entity.alertEnabled, label: "Alerts enabled" }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Save", action: "SAVE", variant: "primary", icon: "check" }, { type: "button", label: "Cancel", action: "CANCEL", variant: "secondary", icon: "x" }] }] })
+        (set @entity.id ?id)
+        (render-ui main {
+          children: [{
+            children: [{ name: pencil, type: icon }, {
+              content: "Edit saved search"
+              type: typography
+              variant: h3
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            action: RENAME
+            placeholder: Name
+            type: input
+            value: @entity.name
+          }, {
+            action: CHANGE_FREQUENCY
+            options: [{ label: Instant, value: instant }, { label: Daily, value: daily }, { label: Weekly, value: weekly }]
+            placeholder: "Alert frequency"
+            type: select
+            value: @entity.alertFrequency
+          }, {
+            checked: @entity.alertEnabled
+            label: "Alerts enabled"
+            type: switch
+          }, {
+            children: [{
+              action: SAVE
+              icon: check
+              label: Save
+              type: button
+              variant: primary
+            }, {
+              action: CANCEL
+              icon: x
+              label: Cancel
+              type: button
+              variant: secondary
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
       SavedSearchUpdated -> loading
-        (fetch SavedSearch { emit: { success: "SavedSearchLoaded", failure: "SavedSearchLoadFailed" } })
+        (fetch SavedSearch {
+          emit: { failure: SavedSearchLoadFailed, success: SavedSearchLoaded }
+        })
       SavedSearchDeleted -> loading
-        (fetch SavedSearch { emit: { success: "SavedSearchLoaded", failure: "SavedSearchLoadFailed" } })
+        (fetch SavedSearch {
+          emit: { failure: SavedSearchLoadFailed, success: SavedSearchLoaded }
+        })
     }
+
     state editing {
       RENAME -> editing
-        (set @entity.name @payload.value)
+        (set @entity.name ?value)
       CHANGE_FREQUENCY -> editing
-        (set @entity.alertFrequency @payload.value)
+        (set @entity.alertFrequency ?value)
       SAVE -> browsing
-        (persist update SavedSearch @entity { emit: { success: "SavedSearchUpdated", failure: "SavedSearchLoadFailed" } })
+        (persist update SavedSearch @entity {
+          emit: { failure: SavedSearchLoadFailed, success: SavedSearchUpdated }
+        })
       CANCEL -> loading
-        (fetch SavedSearch { emit: { success: "SavedSearchLoaded", failure: "SavedSearchLoadFailed" } })
+        (fetch SavedSearch {
+          emit: { failure: SavedSearchLoadFailed, success: SavedSearchLoaded }
+        })
     }
+
     state error {
       INIT -> loading
-        (fetch SavedSearch { emit: { success: "SavedSearchLoaded", failure: "SavedSearchLoadFailed" } })
-        (render-ui main { type: "spinner", size: "sm" })
+        (fetch SavedSearch {
+          emit: { failure: SavedSearchLoadFailed, success: SavedSearchLoaded }
+        })
+        (render-ui main { size: sm, type: spinner })
     }
+
     emits {
-      TOGGLE_ALERT     { id : string!, enabled : boolean! }
+      TOGGLE_ALERT {
+        id : string!
+        enabled : boolean!
+      }
         @description "Indicates the alert subscription status has been changed."
         @synonyms "subscribe, unsubscribe, notify, alert-state"
         @tier "essential"
-      DELETE           { id : string! }
+      DELETE {
+        id : string!
+      }
         @description "Signals a saved search has been removed."
         @synonyms "remove, discard, clear"
         @tier "customization"
-      EDIT             { id : string! }
+      EDIT {
+        id : string!
+      }
         @description "Indicates a saved search is being modified."
         @synonyms "modify, update, change"
         @tier "customization"
-      RENAME           { value : string! }
+      RENAME {
+        value : string!
+      }
         @description "Indicates a saved search has been renamed."
         @synonyms "update, modify, change name"
         @tier "customization"
-      CHANGE_FREQUENCY { value : string! }
+      CHANGE_FREQUENCY {
+        value : string!
+      }
         @description "Indicates a change in the alert frequency setting."
         @synonyms "update, modify, adjust, refresh"
         @tier "customization"
@@ -100,41 +239,62 @@ orbital SavedSearchOrbital {
         @description "Aborts the current operation."
         @synonyms "abort, dismiss, undo"
         @tier "essential"
-      SavedSearchLoaded     { data : [SavedSearch] }
+      SavedSearchLoaded {
+        data : [SavedSearch]
+      }
         @description "Signals that a saved search has been successfully retrieved."
         @synonyms "loaded, retrieved, fetched"
         @tier "essential"
-      SavedSearchLoadFailed { error : string, code : string }
+      SavedSearchLoadFailed {
+        error : string
+        code : string
+      }
         @description "Indicates a failure to load saved search data."
         @synonyms "error, failure, load error"
         @tier "internal"
-      SavedSearchUpdated    { row : SavedSearch }
+      SavedSearchUpdated {
+        row : SavedSearch
+      }
         @description "Indicates a saved search has been modified and persisted."
         @synonyms "modified, changed, updated, persisted"
         @tier "customization"
-      SavedSearchDeleted    { id : string! }
+      SavedSearchDeleted {
+        id : string!
+      }
         @description "Indicates a saved search has been removed."
         @synonyms "removed, purged, discarded"
         @tier "customization"
     }
+
     listens {
-      TOGGLE_ALERT     { id : string!, enabled : boolean! }
+      TOGGLE_ALERT {
+        id : string!
+        enabled : boolean!
+      }
         @description "Alert subscription status has been changed."
         @synonyms "subscribe, unsubscribe, notify, enable, disable"
         @tier "essential"
-      DELETE           { id : string! }
+      DELETE {
+        id : string!
+      }
         @description "A saved search has been removed from the system."
         @synonyms "remove, purge, discard"
         @tier "essential"
-      EDIT             { id : string! }
+      EDIT {
+        id : string!
+      }
         @description "A saved search is being edited by the user."
         @synonyms "modify, update, change"
         @tier "customization"
-      RENAME           { value : string! }
+      RENAME {
+        value : string!
+      }
         @description "A saved search's name has been modified."
         @synonyms "update, modify, change"
         @tier "customization"
-      CHANGE_FREQUENCY { value : string! }
+      CHANGE_FREQUENCY {
+        value : string!
+      }
         @description "A saved search's update frequency has been modified."
         @synonyms "update, refresh, interval"
         @tier "customization"
@@ -146,23 +306,44 @@ orbital SavedSearchOrbital {
         @description "Aborts the current operation or view."
         @synonyms "dismiss, close, undo"
         @tier "essential"
-      SavedSearchLoaded     { data : [SavedSearch] }
+      SavedSearchLoaded {
+        data : [SavedSearch]
+      }
         @description "Indicates that saved search data has been successfully retrieved."
         @synonyms "loaded, fetched, retrieved, initialized"
         @tier "essential"
-      SavedSearchLoadFailed { error : string, code : string }
+      SavedSearchLoadFailed {
+        error : string
+        code : string
+      }
         @description "Indicates failure to load saved search data."
         @synonyms "error, failure, load error"
         @tier "internal"
-      SavedSearchUpdated    { row : SavedSearch }
+      SavedSearchUpdated {
+        row : SavedSearch
+      }
         @description "A saved search's details have been modified."
         @synonyms "modified, changed, updated"
         @tier "customization"
-      SavedSearchDeleted    { id : string! }
+      SavedSearchDeleted {
+        id : string!
+      }
         @description "Indicates a saved search has been removed from the system."
         @synonyms "removed, purged, discarded"
         @tier "internal"
     }
+
+    config {
+      title : string = "Saved Searches"
+        @label "Section title"
+        @description "Heading shown above the saved-search list"
+        @tier "presentation"
+      tableLook : "dense" | "spacious" | "striped" | "borderless" | "card-rows" = dense
+        @label "Table look"
+        @description "Layer 2 visual treatment for the data table rendered by this atom."
+        @tier "presentation"
+    }
   }
+
   page "/savedsearches" as SavedSearchManagePage -> SavedSearchManage
 }

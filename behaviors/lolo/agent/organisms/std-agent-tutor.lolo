@@ -1,73 +1,457 @@
 app std-agent-tutor "1.0.0"
 "Agent tutor: personalized tutoring with quizzes, concepts, and student assessments."
-
 type ItemSpec = { id : string, label : string!, value : string, icon : string }
-
 orbital TutorSessionOrbital {
   uses Browse from "std/behaviors/std-browse"
+
   uses Tabs from "std/behaviors/std-tabs"
+
+    type TutorSessionLoaded = Event { data : [TutorSession] } "Fired when TutorSession finishes loading"
+
+    type TutorSessionLoadFailed = Event { error : string, code : string } "Fired when TutorSession fails to load"
+
+    type TutorChatDeleted = Event { id : string }
+
+    type TutorChatDeleteFailed = Event { error : string, code : string }
+
+    type ConceptSaved = Event { id : string }
+
+    type ConceptSaveFailed = Event { error : string, code : string }
+
+    type StudentAssessmentSaved = Event { id : string }
+
+    type StudentAssessmentSaveFailed = Event { error : string, code : string }
 
   entity TutorSession [runtime] {
     id : string!
     topic : string @description "The subject or area of study being addressed." @synonyms "subject, area, theme, focus" = ""
-    studentLevel : string @description "Represents the student's proficiency level." @synonyms "level, skill, proficiency" = "unknown"
+    studentLevel : string @description "Represents the student's proficiency level." @synonyms "level, skill, proficiency" = unknown
     explanation : string @description "Detailed clarification or reasoning for a concept or answer." @synonyms "reasoning, justification, details, elaboration" = ""
     questionsAsked : number @description "The total number of questions presented during the session." @synonyms "count, number, total" = 0
     correctAnswers : number @description "The number of questions answered correctly." @synonyms "count, total, score" = 0
-    sessionStatus : string @description "The current state of the tutoring session." @synonyms "status, state, condition" = "idle"
+    sessionStatus : string @description "The current state of the tutoring session." @synonyms "status, state, condition" = idle
     error : string @description "A textual description of any encountered problem." @synonyms "issue, problem, fault, failure" = ""
     activeTab : string @description "The currently selected tab or view within the session." @synonyms "tab, view, selection" = ""
     items : [ItemSpec] @description "A list of items associated with the session." @synonyms "elements, entries, list" = []
-
   }
 
-  type TutorSessionLoaded     = Event { data : [TutorSession] }                  "Fired when TutorSession finishes loading"
-  type TutorSessionLoadFailed = Event { error : string, code : string } "Fired when TutorSession fails to load"
-  type TutorChatDeleted = Event { id : string }
-  type TutorChatDeleteFailed = Event { error : string, code : string }
-  type ConceptSaved = Event { id : string }
-  type ConceptSaveFailed = Event { error : string, code : string }
-  type StudentAssessmentSaved = Event { id : string }
-  type StudentAssessmentSaveFailed = Event { error : string, code : string }
   trait TeachingSession -> TutorSession [interaction, collection] {
     initial: idle
+
     state idle {
       INIT -> idle
-        (set @entity.studentLevel "unknown")
-        (fetch TutorSession { emit: { success: "TutorSessionLoaded", failure: "TutorSessionLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "AI Tutor", navItems: [{ label: "Teach", href: "/teach", icon: "book-open" }, { label: "Quiz", href: "/quiz", icon: "help-circle" }, { label: "Concepts", href: "/concepts", icon: "brain" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "graduation-cap"}, { type: "typography", content: "Tutor", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "What topic would you like to learn about? The tutor will assess your level and guide you through it.", variant: "body" }, { type: "form-section", entity: @entity, mode: "edit", submitEvent: "START_SESSION", fields: ["topic"] }] }] }] }] })
+        (set @entity.studentLevel unknown)
+        (fetch TutorSession {
+          emit: { failure: TutorSessionLoadFailed, success: TutorSessionLoaded }
+        })
+        (render-ui main {
+          appName: "AI Tutor"
+          children: [{
+            children: [{
+              align: center
+              children: [{ name: graduation-cap, type: icon }, {
+                content: Tutor
+                type: typography
+                variant: h2
+              }]
+              direction: horizontal
+              gap: sm
+              type: stack
+            }, { type: divider }, {
+              children: [{
+                children: [{
+                  content: "What topic would you like to learn about? The tutor will assess your level and guide you through it."
+                  type: typography
+                  variant: body
+                }, {
+                  entity: @entity
+                  fields: (topic)
+                  mode: edit
+                  submitEvent: START_SESSION
+                  type: form-section
+                }]
+                direction: vertical
+                gap: md
+                type: stack
+              }]
+              type: card
+            }]
+            direction: vertical
+            gap: lg
+            type: stack
+          }]
+          navItems: [{
+            href: "/teach"
+            icon: book-open
+            label: Teach
+          }, {
+            href: "/quiz"
+            icon: help-circle
+            label: Quiz
+          }, {
+            href: "/concepts"
+            icon: brain
+            label: Concepts
+          }]
+          type: dashboard-layout
+        })
       START_SESSION -> assessing
-        (set @entity.topic @payload.topic)
+        (set @entity.topic ?topic)
         (set @entity.sessionStatus assessing)
-        (agent/recall @payload.topic)
-        (agent/generate @payload.topic)
-        (render-ui main { type: "dashboard-layout", appName: "AI Tutor", navItems: [{ label: "Teach", href: "/teach", icon: "book-open" }, { label: "Quiz", href: "/quiz", icon: "help-circle" }, { label: "Concepts", href: "/concepts", icon: "brain" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "search"}, { type: "typography", content: "Assessing your level...", variant: "h3" }, { type: "spinner"}, { type: "typography", content: "Recalling prior learning and classifying skill level", variant: "caption" }] }] })
+        (agent/recall ?topic)
+        (agent/generate ?topic)
+        (render-ui main {
+          appName: "AI Tutor"
+          children: [{
+            align: center
+            children: [{ name: search, type: icon }, {
+              content: "Assessing your level..."
+              type: typography
+              variant: h3
+            }, { type: spinner }, {
+              content: "Recalling prior learning and classifying skill level"
+              type: typography
+              variant: caption
+            }]
+            direction: vertical
+            gap: lg
+            type: stack
+          }]
+          navItems: [{
+            href: "/teach"
+            icon: book-open
+            label: Teach
+          }, {
+            href: "/quiz"
+            icon: help-circle
+            label: Quiz
+          }, {
+            href: "/concepts"
+            icon: brain
+            label: Concepts
+          }]
+          type: dashboard-layout
+        })
     }
+
     state assessing {
       ASSESSMENT_COMPLETE -> teaching
         (set @entity.sessionStatus teaching)
         (agent/memorize @entity.topic student-level)
         (emit ASSESSMENT_DONE)
-        (render-ui main { type: "dashboard-layout", appName: "AI Tutor", navItems: [{ label: "Teach", href: "/teach", icon: "book-open" }, { label: "Quiz", href: "/quiz", icon: "help-circle" }, { label: "Concepts", href: "/concepts", icon: "brain" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "book-open"}, { type: "typography", content: "Lesson: @entity.topic", variant: "h2" }] }, { type: "badge", label: "@entity.studentLevel" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@entity.explanation", variant: "body" }] }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Quiz Me", action: "START_QUIZ", variant: "primary", icon: "help-circle" }, { type: "button", label: "Explain More", action: "EXPLAIN_MORE", variant: "secondary", icon: "book-open" }, { type: "button", label: "New Topic", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] }, { type: "stack", direction: "horizontal", gap: "xs", children: [{ type: "badge", label: "@entity.questionsAsked" }, { type: "badge", label: "@entity.correctAnswers" }] }] }] })
+        (render-ui main {
+          appName: "AI Tutor"
+          children: [{
+            children: [{
+              align: center
+              children: [{
+                align: center
+                children: [{ name: book-open, type: icon }, {
+                  content: "Lesson: @entity.topic"
+                  type: typography
+                  variant: h2
+                }]
+                direction: horizontal
+                gap: sm
+                type: stack
+              }, { label: @entity.studentLevel, type: badge }]
+              direction: horizontal
+              gap: sm
+              justify: between
+              type: stack
+            }, { type: divider }, {
+              children: [{
+                children: [{
+                  content: @entity.explanation
+                  type: typography
+                  variant: body
+                }]
+                direction: vertical
+                gap: md
+                type: stack
+              }]
+              type: card
+            }, {
+              children: [{
+                action: START_QUIZ
+                icon: help-circle
+                label: "Quiz Me"
+                type: button
+                variant: primary
+              }, {
+                action: EXPLAIN_MORE
+                icon: book-open
+                label: "Explain More"
+                type: button
+                variant: secondary
+              }, {
+                action: RESET
+                icon: rotate-ccw
+                label: "New Topic"
+                type: button
+                variant: ghost
+              }]
+              direction: horizontal
+              gap: sm
+              type: stack
+            }, {
+              children: [{ label: @entity.questionsAsked, type: badge }, { label: @entity.correctAnswers, type: badge }]
+              direction: horizontal
+              gap: xs
+              type: stack
+            }]
+            direction: vertical
+            gap: lg
+            type: stack
+          }]
+          navItems: [{
+            href: "/teach"
+            icon: book-open
+            label: Teach
+          }, {
+            href: "/quiz"
+            icon: help-circle
+            label: Quiz
+          }, {
+            href: "/concepts"
+            icon: brain
+            label: Concepts
+          }]
+          type: dashboard-layout
+        })
     }
+
     state teaching {
       EXPLAIN_MORE -> teaching
         (agent/generate @entity.topic)
-        (render-ui main { type: "dashboard-layout", appName: "AI Tutor", navItems: [{ label: "Teach", href: "/teach", icon: "book-open" }, { label: "Quiz", href: "/quiz", icon: "help-circle" }, { label: "Concepts", href: "/concepts", icon: "brain" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "book-open"}, { type: "typography", content: "Lesson: @entity.topic", variant: "h2" }] }, { type: "badge", label: "@entity.studentLevel" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@entity.explanation", variant: "body" }] }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Quiz Me", action: "START_QUIZ", variant: "primary", icon: "help-circle" }, { type: "button", label: "Explain More", action: "EXPLAIN_MORE", variant: "secondary", icon: "book-open" }, { type: "button", label: "New Topic", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] }, { type: "stack", direction: "horizontal", gap: "xs", children: [{ type: "badge", label: "@entity.questionsAsked" }, { type: "badge", label: "@entity.correctAnswers" }] }] }] })
+        (render-ui main {
+          appName: "AI Tutor"
+          children: [{
+            children: [{
+              align: center
+              children: [{
+                align: center
+                children: [{ name: book-open, type: icon }, {
+                  content: "Lesson: @entity.topic"
+                  type: typography
+                  variant: h2
+                }]
+                direction: horizontal
+                gap: sm
+                type: stack
+              }, { label: @entity.studentLevel, type: badge }]
+              direction: horizontal
+              gap: sm
+              justify: between
+              type: stack
+            }, { type: divider }, {
+              children: [{
+                children: [{
+                  content: @entity.explanation
+                  type: typography
+                  variant: body
+                }]
+                direction: vertical
+                gap: md
+                type: stack
+              }]
+              type: card
+            }, {
+              children: [{
+                action: START_QUIZ
+                icon: help-circle
+                label: "Quiz Me"
+                type: button
+                variant: primary
+              }, {
+                action: EXPLAIN_MORE
+                icon: book-open
+                label: "Explain More"
+                type: button
+                variant: secondary
+              }, {
+                action: RESET
+                icon: rotate-ccw
+                label: "New Topic"
+                type: button
+                variant: ghost
+              }]
+              direction: horizontal
+              gap: sm
+              type: stack
+            }, {
+              children: [{ label: @entity.questionsAsked, type: badge }, { label: @entity.correctAnswers, type: badge }]
+              direction: horizontal
+              gap: xs
+              type: stack
+            }]
+            direction: vertical
+            gap: lg
+            type: stack
+          }]
+          navItems: [{
+            href: "/teach"
+            icon: book-open
+            label: Teach
+          }, {
+            href: "/quiz"
+            icon: help-circle
+            label: Quiz
+          }, {
+            href: "/concepts"
+            icon: brain
+            label: Concepts
+          }]
+          type: dashboard-layout
+        })
       START_QUIZ -> teaching
         (emit ASSESSMENT_DONE)
-        (render-ui main { type: "dashboard-layout", appName: "AI Tutor", navItems: [{ label: "Teach", href: "/teach", icon: "book-open" }, { label: "Quiz", href: "/quiz", icon: "help-circle" }, { label: "Concepts", href: "/concepts", icon: "brain" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "book-open"}, { type: "typography", content: "Lesson: @entity.topic", variant: "h2" }] }, { type: "badge", label: "@entity.studentLevel" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@entity.explanation", variant: "body" }] }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Quiz Me", action: "START_QUIZ", variant: "primary", icon: "help-circle" }, { type: "button", label: "Explain More", action: "EXPLAIN_MORE", variant: "secondary", icon: "book-open" }, { type: "button", label: "New Topic", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] }, { type: "stack", direction: "horizontal", gap: "xs", children: [{ type: "badge", label: "@entity.questionsAsked" }, { type: "badge", label: "@entity.correctAnswers" }] }] }] })
+        (render-ui main {
+          appName: "AI Tutor"
+          children: [{
+            children: [{
+              align: center
+              children: [{
+                align: center
+                children: [{ name: book-open, type: icon }, {
+                  content: "Lesson: @entity.topic"
+                  type: typography
+                  variant: h2
+                }]
+                direction: horizontal
+                gap: sm
+                type: stack
+              }, { label: @entity.studentLevel, type: badge }]
+              direction: horizontal
+              gap: sm
+              justify: between
+              type: stack
+            }, { type: divider }, {
+              children: [{
+                children: [{
+                  content: @entity.explanation
+                  type: typography
+                  variant: body
+                }]
+                direction: vertical
+                gap: md
+                type: stack
+              }]
+              type: card
+            }, {
+              children: [{
+                action: START_QUIZ
+                icon: help-circle
+                label: "Quiz Me"
+                type: button
+                variant: primary
+              }, {
+                action: EXPLAIN_MORE
+                icon: book-open
+                label: "Explain More"
+                type: button
+                variant: secondary
+              }, {
+                action: RESET
+                icon: rotate-ccw
+                label: "New Topic"
+                type: button
+                variant: ghost
+              }]
+              direction: horizontal
+              gap: sm
+              type: stack
+            }, {
+              children: [{ label: @entity.questionsAsked, type: badge }, { label: @entity.correctAnswers, type: badge }]
+              direction: horizontal
+              gap: xs
+              type: stack
+            }]
+            direction: vertical
+            gap: lg
+            type: stack
+          }]
+          navItems: [{
+            href: "/teach"
+            icon: book-open
+            label: Teach
+          }, {
+            href: "/quiz"
+            icon: help-circle
+            label: Quiz
+          }, {
+            href: "/concepts"
+            icon: brain
+            label: Concepts
+          }]
+          type: dashboard-layout
+        })
       RESET -> idle
         (set @entity.sessionStatus idle)
         (set @entity.topic "")
         (set @entity.explanation "")
         (set @entity.questionsAsked 0)
         (set @entity.correctAnswers 0)
-        (render-ui main { type: "dashboard-layout", appName: "AI Tutor", navItems: [{ label: "Teach", href: "/teach", icon: "book-open" }, { label: "Quiz", href: "/quiz", icon: "help-circle" }, { label: "Concepts", href: "/concepts", icon: "brain" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "graduation-cap"}, { type: "typography", content: "Tutor", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "What topic would you like to learn about? The tutor will assess your level and guide you through it.", variant: "body" }, { type: "form-section", entity: @entity, mode: "edit", submitEvent: "START_SESSION", fields: ["topic"] }] }] }] }] })
+        (render-ui main {
+          appName: "AI Tutor"
+          children: [{
+            children: [{
+              align: center
+              children: [{ name: graduation-cap, type: icon }, {
+                content: Tutor
+                type: typography
+                variant: h2
+              }]
+              direction: horizontal
+              gap: sm
+              type: stack
+            }, { type: divider }, {
+              children: [{
+                children: [{
+                  content: "What topic would you like to learn about? The tutor will assess your level and guide you through it."
+                  type: typography
+                  variant: body
+                }, {
+                  entity: @entity
+                  fields: (topic)
+                  mode: edit
+                  submitEvent: START_SESSION
+                  type: form-section
+                }]
+                direction: vertical
+                gap: md
+                type: stack
+              }]
+              type: card
+            }]
+            direction: vertical
+            gap: lg
+            type: stack
+          }]
+          navItems: [{
+            href: "/teach"
+            icon: book-open
+            label: Teach
+          }, {
+            href: "/quiz"
+            icon: help-circle
+            label: Quiz
+          }, {
+            href: "/concepts"
+            icon: brain
+            label: Concepts
+          }]
+          type: dashboard-layout
+        })
     }
+
     emits {
-      ASSESSMENT_DONE -> internal { level: string }
-      ASSESSMENT_DONE -> external { level: string }
+      ASSESSMENT_DONE -> internal {
+        level : string
+      }
+      ASSESSMENT_DONE -> external {
+        level : string
+      }
       TutorSessionLoaded
       TutorSessionLoadFailed
       TutorChatDeleted
@@ -77,18 +461,38 @@ orbital TutorSessionOrbital {
       StudentAssessmentSaved
       StudentAssessmentSaveFailed
     }
+
     listens {
-      START_SESSION { topic : string! }
-          TutorSessionLoadFailed { error : string, code : string }
-    
-      TutorChatDeleteFailed { error : string, code : string }
-      ConceptSaveFailed { error : string, code : string }
-      StudentAssessmentSaveFailed { error : string, code : string }
+      START_SESSION {
+        topic : string!
+      }
+      TutorSessionLoadFailed {
+        error : string
+        code : string
+      }
+      TutorChatDeleteFailed {
+        error : string
+        code : string
+      }
+      ConceptSaveFailed {
+        error : string
+        code : string
+      }
+      StudentAssessmentSaveFailed {
+        error : string
+        code : string
+      }
     }
   }
+
   page "/teach" as TeachPage -> TeachingSession
 }
+
 orbital QuizQuestionOrbital {
+    type QuizQuestionLoaded = Event { data : [QuizQuestion] } "Fired when QuizQuestion finishes loading"
+
+    type QuizQuestionLoadFailed = Event { error : string, code : string } "Fired when QuizQuestion fails to load"
+
   entity QuizQuestion [runtime] {
     id : string!
     question : string @description "The text of a question presented to the student." @synonyms "prompt, query, inquiry"
@@ -100,60 +504,392 @@ orbital QuizQuestionOrbital {
     quizStatus : string @description "Indicates the current state of a quiz." @synonyms "status, progress, state"
   }
 
-  type QuizQuestionLoaded     = Event { data : [QuizQuestion] }                  "Fired when QuizQuestion finishes loading"
-  type QuizQuestionLoadFailed = Event { error : string, code : string } "Fired when QuizQuestion fails to load"
   trait QuizEngine -> QuizQuestion [interaction, collection] {
     initial: idle
+
     state idle {
       INIT -> idle
         (set @entity.correctAnswer "")
         (set @entity.isCorrect false)
         (set @entity.options "")
         (set @entity.question "")
-        (fetch QuizQuestion { emit: { success: "QuizQuestionLoaded", failure: "QuizQuestionLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "AI Tutor", navItems: [{ label: "Teach", href: "/teach", icon: "book-open" }, { label: "Quiz", href: "/quiz", icon: "help-circle" }, { label: "Concepts", href: "/concepts", icon: "brain" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "help-circle"}, { type: "typography", content: "Quiz", variant: "h2" }] }, { type: "divider" }, { type: "typography", content: "Waiting for a quiz to start...", variant: "body" }] }] })
+        (fetch QuizQuestion {
+          emit: { failure: QuizQuestionLoadFailed, success: QuizQuestionLoaded }
+        })
+        (render-ui main {
+          appName: "AI Tutor"
+          children: [{
+            children: [{
+              align: center
+              children: [{ name: help-circle, type: icon }, {
+                content: Quiz
+                type: typography
+                variant: h2
+              }]
+              direction: horizontal
+              gap: sm
+              type: stack
+            }, { type: divider }, {
+              content: "Waiting for a quiz to start..."
+              type: typography
+              variant: body
+            }]
+            direction: vertical
+            gap: lg
+            type: stack
+          }]
+          navItems: [{
+            href: "/teach"
+            icon: book-open
+            label: Teach
+          }, {
+            href: "/quiz"
+            icon: help-circle
+            label: Quiz
+          }, {
+            href: "/concepts"
+            icon: brain
+            label: Concepts
+          }]
+          type: dashboard-layout
+        })
       GENERATE_QUESTION -> quizzing
         (set @entity.quizStatus generating)
         (agent/generate @entity.question)
-        (render-ui main { type: "dashboard-layout", appName: "AI Tutor", navItems: [{ label: "Teach", href: "/teach", icon: "book-open" }, { label: "Quiz", href: "/quiz", icon: "help-circle" }, { label: "Concepts", href: "/concepts", icon: "brain" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "help-circle"}, { type: "typography", content: "Quiz Question", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@entity.question", variant: "h3" }, { type: "typography", content: "@entity.options", variant: "body" }, { type: "form-section", entity: @entity, mode: "edit", submitEvent: "SUBMIT_ANSWER", fields: ["studentAnswer"] }] }] }] }] })
+        (render-ui main {
+          appName: "AI Tutor"
+          children: [{
+            children: [{
+              align: center
+              children: [{ name: help-circle, type: icon }, {
+                content: "Quiz Question"
+                type: typography
+                variant: h2
+              }]
+              direction: horizontal
+              gap: sm
+              type: stack
+            }, { type: divider }, {
+              children: [{
+                children: [{
+                  content: @entity.question
+                  type: typography
+                  variant: h3
+                }, {
+                  content: @entity.options
+                  type: typography
+                  variant: body
+                }, {
+                  entity: @entity
+                  fields: (studentAnswer)
+                  mode: edit
+                  submitEvent: SUBMIT_ANSWER
+                  type: form-section
+                }]
+                direction: vertical
+                gap: md
+                type: stack
+              }]
+              type: card
+            }]
+            direction: vertical
+            gap: lg
+            type: stack
+          }]
+          navItems: [{
+            href: "/teach"
+            icon: book-open
+            label: Teach
+          }, {
+            href: "/quiz"
+            icon: help-circle
+            label: Quiz
+          }, {
+            href: "/concepts"
+            icon: brain
+            label: Concepts
+          }]
+          type: dashboard-layout
+        })
     }
+
     state quizzing {
       QUESTION_READY -> quizzing
         (set @entity.quizStatus waiting)
-        (render-ui main { type: "dashboard-layout", appName: "AI Tutor", navItems: [{ label: "Teach", href: "/teach", icon: "book-open" }, { label: "Quiz", href: "/quiz", icon: "help-circle" }, { label: "Concepts", href: "/concepts", icon: "brain" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "help-circle"}, { type: "typography", content: "Quiz Question", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@entity.question", variant: "h3" }, { type: "typography", content: "@entity.options", variant: "body" }, { type: "form-section", entity: @entity, mode: "edit", submitEvent: "SUBMIT_ANSWER", fields: ["studentAnswer"] }] }] }] }] })
+        (render-ui main {
+          appName: "AI Tutor"
+          children: [{
+            children: [{
+              align: center
+              children: [{ name: help-circle, type: icon }, {
+                content: "Quiz Question"
+                type: typography
+                variant: h2
+              }]
+              direction: horizontal
+              gap: sm
+              type: stack
+            }, { type: divider }, {
+              children: [{
+                children: [{
+                  content: @entity.question
+                  type: typography
+                  variant: h3
+                }, {
+                  content: @entity.options
+                  type: typography
+                  variant: body
+                }, {
+                  entity: @entity
+                  fields: (studentAnswer)
+                  mode: edit
+                  submitEvent: SUBMIT_ANSWER
+                  type: form-section
+                }]
+                direction: vertical
+                gap: md
+                type: stack
+              }]
+              type: card
+            }]
+            direction: vertical
+            gap: lg
+            type: stack
+          }]
+          navItems: [{
+            href: "/teach"
+            icon: book-open
+            label: Teach
+          }, {
+            href: "/quiz"
+            icon: help-circle
+            label: Quiz
+          }, {
+            href: "/concepts"
+            icon: brain
+            label: Concepts
+          }]
+          type: dashboard-layout
+        })
       SUBMIT_ANSWER -> reviewing
-        (set @entity.studentAnswer @payload.studentAnswer)
+        (set @entity.studentAnswer ?studentAnswer)
         (set @entity.quizStatus grading)
-        (agent/generate @payload.studentAnswer)
+        (agent/generate ?studentAnswer)
         (emit QUIZ_GRADED)
-        (render-ui main { type: "dashboard-layout", appName: "AI Tutor", navItems: [{ label: "Teach", href: "/teach", icon: "book-open" }, { label: "Quiz", href: "/quiz", icon: "help-circle" }, { label: "Concepts", href: "/concepts", icon: "brain" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "check-circle"}, { type: "typography", content: "Answer Review", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "badge", label: "@entity.feedback" }] }, { type: "typography", content: "@entity.feedback", variant: "body" }, { type: "typography", content: "Correct answer", variant: "caption" }, { type: "typography", content: "@entity.correctAnswer", variant: "body" }] }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Next Question", action: "NEXT_QUESTION", variant: "primary", icon: "arrow-right" }, { type: "button", label: "Back to Lesson", action: "BACK_TO_LESSON", variant: "ghost", icon: "book-open" }] }] }] })
+        (render-ui main {
+          appName: "AI Tutor"
+          children: [{
+            children: [{
+              align: center
+              children: [{ name: check-circle, type: icon }, {
+                content: "Answer Review"
+                type: typography
+                variant: h2
+              }]
+              direction: horizontal
+              gap: sm
+              type: stack
+            }, { type: divider }, {
+              children: [{
+                children: [{
+                  children: [{ label: @entity.feedback, type: badge }]
+                  direction: horizontal
+                  gap: sm
+                  type: stack
+                }, {
+                  content: @entity.feedback
+                  type: typography
+                  variant: body
+                }, {
+                  content: "Correct answer"
+                  type: typography
+                  variant: caption
+                }, {
+                  content: @entity.correctAnswer
+                  type: typography
+                  variant: body
+                }]
+                direction: vertical
+                gap: md
+                type: stack
+              }]
+              type: card
+            }, {
+              children: [{
+                action: NEXT_QUESTION
+                icon: arrow-right
+                label: "Next Question"
+                type: button
+                variant: primary
+              }, {
+                action: BACK_TO_LESSON
+                icon: book-open
+                label: "Back to Lesson"
+                type: button
+                variant: ghost
+              }]
+              direction: horizontal
+              gap: sm
+              type: stack
+            }]
+            direction: vertical
+            gap: lg
+            type: stack
+          }]
+          navItems: [{
+            href: "/teach"
+            icon: book-open
+            label: Teach
+          }, {
+            href: "/quiz"
+            icon: help-circle
+            label: Quiz
+          }, {
+            href: "/concepts"
+            icon: brain
+            label: Concepts
+          }]
+          type: dashboard-layout
+        })
     }
+
     state reviewing {
       NEXT_QUESTION -> quizzing
         (set @entity.quizStatus generating)
         (set @entity.studentAnswer "")
         (set @entity.feedback "")
         (agent/generate @entity.question)
-        (render-ui main { type: "dashboard-layout", appName: "AI Tutor", navItems: [{ label: "Teach", href: "/teach", icon: "book-open" }, { label: "Quiz", href: "/quiz", icon: "help-circle" }, { label: "Concepts", href: "/concepts", icon: "brain" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "help-circle"}, { type: "typography", content: "Quiz Question", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@entity.question", variant: "h3" }, { type: "typography", content: "@entity.options", variant: "body" }, { type: "form-section", entity: @entity, mode: "edit", submitEvent: "SUBMIT_ANSWER", fields: ["studentAnswer"] }] }] }] }] })
+        (render-ui main {
+          appName: "AI Tutor"
+          children: [{
+            children: [{
+              align: center
+              children: [{ name: help-circle, type: icon }, {
+                content: "Quiz Question"
+                type: typography
+                variant: h2
+              }]
+              direction: horizontal
+              gap: sm
+              type: stack
+            }, { type: divider }, {
+              children: [{
+                children: [{
+                  content: @entity.question
+                  type: typography
+                  variant: h3
+                }, {
+                  content: @entity.options
+                  type: typography
+                  variant: body
+                }, {
+                  entity: @entity
+                  fields: (studentAnswer)
+                  mode: edit
+                  submitEvent: SUBMIT_ANSWER
+                  type: form-section
+                }]
+                direction: vertical
+                gap: md
+                type: stack
+              }]
+              type: card
+            }]
+            direction: vertical
+            gap: lg
+            type: stack
+          }]
+          navItems: [{
+            href: "/teach"
+            icon: book-open
+            label: Teach
+          }, {
+            href: "/quiz"
+            icon: help-circle
+            label: Quiz
+          }, {
+            href: "/concepts"
+            icon: brain
+            label: Concepts
+          }]
+          type: dashboard-layout
+        })
       BACK_TO_LESSON -> idle
         (set @entity.quizStatus idle)
-        (render-ui main { type: "dashboard-layout", appName: "AI Tutor", navItems: [{ label: "Teach", href: "/teach", icon: "book-open" }, { label: "Quiz", href: "/quiz", icon: "help-circle" }, { label: "Concepts", href: "/concepts", icon: "brain" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "help-circle"}, { type: "typography", content: "Quiz", variant: "h2" }] }, { type: "divider" }, { type: "typography", content: "Waiting for a quiz to start...", variant: "body" }] }] })
+        (render-ui main {
+          appName: "AI Tutor"
+          children: [{
+            children: [{
+              align: center
+              children: [{ name: help-circle, type: icon }, {
+                content: Quiz
+                type: typography
+                variant: h2
+              }]
+              direction: horizontal
+              gap: sm
+              type: stack
+            }, { type: divider }, {
+              content: "Waiting for a quiz to start..."
+              type: typography
+              variant: body
+            }]
+            direction: vertical
+            gap: lg
+            type: stack
+          }]
+          navItems: [{
+            href: "/teach"
+            icon: book-open
+            label: Teach
+          }, {
+            href: "/quiz"
+            icon: help-circle
+            label: Quiz
+          }, {
+            href: "/concepts"
+            icon: brain
+            label: Concepts
+          }]
+          type: dashboard-layout
+        })
     }
+
     emits {
-      QUIZ_GRADED -> internal { correct: boolean }
-      QUIZ_GRADED -> external { correct: boolean }
+      QUIZ_GRADED -> internal {
+        correct : boolean
+      }
+      QUIZ_GRADED -> external {
+        correct : boolean
+      }
       QuizQuestionLoaded
       QuizQuestionLoadFailed
     }
+
     listens {
       TutorSessionOrbital.TeachingSession.ASSESSMENT_DONE -> GENERATE_QUESTION
-          QuizQuestionLoadFailed { error : string, code : string }
-          SUBMIT_ANSWER { studentAnswer : string }
+      QuizQuestionLoadFailed {
+        error : string
+        code : string
+      }
+      SUBMIT_ANSWER {
+        studentAnswer : string
+      }
     }
   }
+
   page "/quiz" -> QuizEngine
 }
+
 orbital TutorChatOrbital {
+    type TutorChatLoaded = Event { data : [TutorChat] } "Fired when TutorChat finishes loading"
+
+    type TutorChatLoadFailed = Event { error : string, code : string } "Fired when TutorChat fails to load"
+
+    type TutorChatDeleteFailed = Event { error : string, code : string }
+
+    type TutorChatDeleted = Event { id : string }
+
   entity TutorChat [runtime] {
     id : string!
     messages : [string] @description "A sequence of messages exchanged during the session." @synonyms "dialogue, conversation, transcript"
@@ -167,69 +903,257 @@ orbital TutorChatOrbital {
     status : string @description "The current state or condition of the session." @synonyms "state, condition, progress"
   }
 
-  type TutorChatLoaded     = Event { data : [TutorChat] }                  "Fired when TutorChat finishes loading"
-  type TutorChatLoadFailed = Event { error : string, code : string } "Fired when TutorChat fails to load"
-  type TutorChatDeleteFailed = Event { error : string, code : string }
-  type TutorChatDeleted = Event { id : string }
   trait TutorConversation -> TutorChat [interaction, collection] {
     initial: idle
+
     state idle {
       INIT -> idle
-        (fetch TutorChat { emit: { success: "TutorChatLoaded", failure: "TutorChatLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
+        (fetch TutorChat {
+          emit: { failure: TutorChatLoadFailed, success: TutorChatLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Loading…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
       TutorChatLoaded -> idle
-        (render-ui main { type: "dashboard-layout", appName: "AI Tutor", navItems: [{ label: "Teach", href: "/teach", icon: "book-open" }, { label: "Quiz", href: "/quiz", icon: "help-circle" }, { label: "Concepts", href: "/concepts", icon: "brain" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle"}, { type: "typography", content: "TutorChat Thread", variant: "h2" }] }, { type: "button", label: "New Message", action: "COMPOSE", variant: "primary", icon: "plus" }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, fields: [], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "badge", label: "@item.role" }, { type: "badge", label: "@item.status", variant: "neutral" }, { type: "typography", variant: "caption", color: "muted", content: "@item.timestamp" }] }, { type: "typography", variant: "body", content: "@item.content" }] }] }] }] })
+        (render-ui main {
+          appName: "AI Tutor"
+          children: [{
+            children: [{
+              align: center
+              children: [{
+                align: center
+                children: [{ name: message-circle, type: icon }, {
+                  content: "TutorChat Thread"
+                  type: typography
+                  variant: h2
+                }]
+                direction: horizontal
+                gap: sm
+                type: stack
+              }, {
+                action: COMPOSE
+                icon: plus
+                label: "New Message"
+                type: button
+                variant: primary
+              }]
+              direction: horizontal
+              gap: sm
+              justify: between
+              type: stack
+            }, { type: divider }, {
+              entity: ?data
+              fields: []
+              renderItem: (fn item {
+                children: [{
+                  align: center
+                  children: [{ label: @item.role, type: badge }, {
+                    label: @item.status
+                    type: badge
+                    variant: neutral
+                  }, {
+                    color: muted
+                    content: @item.timestamp
+                    type: typography
+                    variant: caption
+                  }]
+                  direction: horizontal
+                  gap: sm
+                  type: stack
+                }, {
+                  content: @item.content
+                  type: typography
+                  variant: body
+                }]
+                direction: vertical
+                gap: xs
+                type: stack
+              })
+              type: data-list
+            }]
+            direction: vertical
+            gap: lg
+            type: stack
+          }]
+          navItems: [{
+            href: "/teach"
+            icon: book-open
+            label: Teach
+          }, {
+            href: "/quiz"
+            icon: help-circle
+            label: Quiz
+          }, {
+            href: "/concepts"
+            icon: brain
+            label: Concepts
+          }]
+          type: dashboard-layout
+        })
       TutorChatLoadFailed -> idle
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load tutorchat" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+        (render-ui main {
+          align: center
+          children: [{
+            color: destructive
+            name: alert-triangle
+            type: icon
+          }, {
+            content: "Failed to load tutorchat"
+            type: typography
+            variant: h3
+          }, {
+            color: muted
+            content: ?error
+            type: typography
+            variant: body
+          }, {
+            action: INIT
+            icon: rotate-ccw
+            label: Retry
+            type: button
+            variant: primary
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
       COMPOSE -> composing
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle" }, { type: "typography", content: "TutorChat Thread", variant: "h2" }] }, { type: "divider" }, { type: "form-section", mode: "create", submitEvent: "SEND", cancelEvent: "CANCEL_COMPOSE", fields: ["content"] }] })
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: message-circle, type: icon }, {
+              content: "TutorChat Thread"
+              type: typography
+              variant: h2
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            cancelEvent: CANCEL_COMPOSE
+            fields: (content)
+            mode: create
+            submitEvent: SEND
+            type: form-section
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
       CLEAR -> idle
-        (persist delete TutorChat { emit: { success: "TutorChatDeleted", failure: "TutorChatDeleteFailed" } })
-        (fetch TutorChat { emit: { success: "TutorChatLoaded", failure: "TutorChatLoadFailed" } })
-        (render-ui main { type: "spinner" })
+        (persist delete TutorChat {
+          emit: { failure: TutorChatDeleteFailed, success: TutorChatDeleted }
+        })
+        (fetch TutorChat {
+          emit: { failure: TutorChatLoadFailed, success: TutorChatLoaded }
+        })
+        (render-ui main { type: spinner })
     }
+
     state composing {
       SEND -> idle
-        (persist create TutorChat { role: "user", content: "@payload.content", timestamp: "@now", status: "sent" } { emit: { success: "SEND_MESSAGE" } })
-        (fetch TutorChat { emit: { success: "TutorChatLoaded", failure: "TutorChatLoadFailed" } })
-        (render-ui main { type: "spinner" })
+        (persist create TutorChat {
+          content: ?content
+          role: user
+          status: sent
+          timestamp: @now
+        } {
+          emit: { success: SEND_MESSAGE }
+        })
+        (fetch TutorChat {
+          emit: { failure: TutorChatLoadFailed, success: TutorChatLoaded }
+        })
+        (render-ui main { type: spinner })
       CANCEL_COMPOSE -> idle
-        (fetch TutorChat { emit: { success: "TutorChatLoaded", failure: "TutorChatLoadFailed" } })
-        (render-ui main { type: "spinner" })
+        (fetch TutorChat {
+          emit: { failure: TutorChatLoadFailed, success: TutorChatLoaded }
+        })
+        (render-ui main { type: spinner })
       CLEAR -> idle
-        (persist delete TutorChat { emit: { success: "TutorChatDeleted", failure: "TutorChatDeleteFailed" } })
-        (fetch TutorChat { emit: { success: "TutorChatLoaded", failure: "TutorChatLoadFailed" } })
-        (render-ui main { type: "spinner" })
+        (persist delete TutorChat {
+          emit: { failure: TutorChatDeleteFailed, success: TutorChatDeleted }
+        })
+        (fetch TutorChat {
+          emit: { failure: TutorChatLoadFailed, success: TutorChatLoaded }
+        })
+        (render-ui main { type: spinner })
     }
+
     emits {
-      SEND_MESSAGE -> internal { content: string }
+      SEND_MESSAGE -> internal {
+        content : string
+      }
       TutorChatDeleteFailed
       TutorChatDeleted
       TutorChatLoadFailed
       TutorChatLoaded
     }
+
     listens {
-      TutorChatLoadFailed { error : string, code : string }
-      SEND { content : string }
+      TutorChatLoadFailed {
+        error : string
+        code : string
+      }
+      SEND {
+        content : string
+      }
     }
   }
+
   trait TutorChatAgent -> TutorChat [interaction, collection] {
     initial: idle
+
     state idle {
       INIT -> idle
-        (fetch TutorChat { emit: { success: "TutorChatLoaded", failure: "TutorChatLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "AI Tutor", navItems: [{ label: "Teach", href: "/teach", icon: "book-open" }, { label: "Quiz", href: "/quiz", icon: "help-circle" }, { label: "Concepts", href: "/concepts", icon: "brain" }], children: [{ type: "empty-state", icon: "message-circle", title: "Conversation", description: "Conversation is ready" }] })
+        (fetch TutorChat {
+          emit: { failure: TutorChatLoadFailed, success: TutorChatLoaded }
+        })
+        (render-ui main {
+          appName: "AI Tutor"
+          children: [{
+            description: "Conversation is ready"
+            icon: message-circle
+            title: Conversation
+            type: empty-state
+          }]
+          navItems: [{
+            href: "/teach"
+            icon: book-open
+            label: Teach
+          }, {
+            href: "/quiz"
+            icon: help-circle
+            label: Quiz
+          }, {
+            href: "/concepts"
+            icon: brain
+            label: Concepts
+          }]
+          type: dashboard-layout
+        })
       SEND_MESSAGE -> active
-        (set @entity.lastMessage @payload.content)
-        (set @entity.turnCount (+ @entity.turnCount 1))
-        (agent/generate @payload.content)
+        (set @entity.lastMessage ?content)
+        (set @entity.turnCount ["+", @entity.turnCount, 1])
+        (agent/generate ?content)
         (emit TOKEN_UPDATE)
     }
+
     state active {
       SEND_MESSAGE -> active
-        (set @entity.lastMessage @payload.content)
-        (set @entity.turnCount (+ @entity.turnCount 1))
-        (agent/generate @payload.content)
+        (set @entity.lastMessage ?content)
+        (set @entity.turnCount ["+", @entity.turnCount, 1])
+        (agent/generate ?content)
         (emit TOKEN_UPDATE)
       PAUSE -> paused
       CLEAR -> idle
@@ -238,6 +1162,7 @@ orbital TutorChatOrbital {
         (set @entity.lastMessage "")
         (set @entity.tokenCount 0)
     }
+
     state paused {
       RESUME -> active
       CLEAR -> idle
@@ -246,19 +1171,38 @@ orbital TutorChatOrbital {
         (set @entity.lastMessage "")
         (set @entity.tokenCount 0)
     }
+
     emits {
-      TOKEN_UPDATE -> internal { tokenCount: number }
+      TOKEN_UPDATE -> internal {
+        tokenCount : number
+      }
       TutorChatLoaded
       TutorChatLoadFailed
     }
+
     listens {
-      TutorChatLoadFailed { error : string, code : string }
-      SEND_MESSAGE { content : string }
+      TutorChatLoadFailed {
+        error : string
+        code : string
+      }
+      SEND_MESSAGE {
+        content : string
+      }
     }
   }
+
   page "/chat" -> TutorConversation
 }
+
 orbital ConceptOrbital {
+    type ConceptLoaded = Event { data : [Concept] } "Fired when Concept finishes loading"
+
+    type ConceptLoadFailed = Event { error : string, code : string } "Fired when Concept fails to load"
+
+    type ConceptSaveFailed = Event { error : string, code : string }
+
+    type ConceptSaved = Event { id : string }
+
   entity Concept [persistent: concepts] {
     id : string!
     content : string @description "The textual material presented to the user." @synonyms "text, body, material, data"
@@ -270,58 +1214,242 @@ orbital ConceptOrbital {
     createdAt : string
   }
 
-  type ConceptLoaded     = Event { data : [Concept] }                  "Fired when Concept finishes loading"
-  type ConceptLoadFailed = Event { error : string, code : string } "Fired when Concept fails to load"
-  type ConceptSaveFailed = Event { error : string, code : string }
-  type ConceptSaved = Event { id : string }
   trait ConceptBrowse -> Concept [interaction, collection] {
     state browsing {
       INIT -> browsing
-        (fetch Concept { emit: { success: "ConceptLoaded", failure: "ConceptLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
+        (fetch Concept {
+          emit: { failure: ConceptLoadFailed, success: ConceptLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Loading…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
       ConceptLoaded -> browsing
-        (render-ui main { type: "dashboard-layout", appName: "AI Tutor", navItems: [{ label: "Teach", href: "/teach", icon: "book-open" }, { label: "Quiz", href: "/quiz", icon: "help-circle" }, { label: "Concepts", href: "/concepts", icon: "brain" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "brain"}, { type: "typography", content: "Concept Manager", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Memorize", action: "MEMORIZE", variant: "primary", icon: "plus" }, { type: "button", label: "Recall", action: "RECALL", variant: "secondary", icon: "search" }, { type: "button", label: "Decay All", action: "DECAY", variant: "ghost", icon: "clock" }] }] }, { type: "divider" }, { type: "data-grid", entity: @payload.data, itemActions: [{ label: "Pin", event: "PIN", variant: "ghost"}, { label: "Reinforce", event: "REINFORCE", variant: "ghost"}, { label: "Forget", event: "FORGET", variant: "danger"}], fields: [{ name: "content", label: "Content", variant: "h4", icon: "brain" }, { name: "category", label: "Category", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "strength", label: "Strength", variant: "caption" }] }] }] })
+        (render-ui main {
+          appName: "AI Tutor"
+          children: [{
+            children: [{
+              align: center
+              children: [{
+                align: center
+                children: [{ name: brain, type: icon }, {
+                  content: "Concept Manager"
+                  type: typography
+                  variant: h2
+                }]
+                direction: horizontal
+                gap: sm
+                type: stack
+              }, {
+                children: [{
+                  action: MEMORIZE
+                  icon: plus
+                  label: Memorize
+                  type: button
+                  variant: primary
+                }, {
+                  action: RECALL
+                  icon: search
+                  label: Recall
+                  type: button
+                  variant: secondary
+                }, {
+                  action: DECAY
+                  icon: clock
+                  label: "Decay All"
+                  type: button
+                  variant: ghost
+                }]
+                direction: horizontal
+                gap: sm
+                type: stack
+              }]
+              direction: horizontal
+              gap: md
+              justify: between
+              type: stack
+            }, { type: divider }, {
+              entity: ?data
+              fields: [{
+                icon: brain
+                label: Content
+                name: content
+                variant: h4
+              }, {
+                colorMap: {
+                  active: success
+                  archived: neutral
+                  cancelled: destructive
+                  completed: success
+                  done: success
+                  draft: warning
+                  error: destructive
+                  failed: destructive
+                  inactive: neutral
+                  pending: warning
+                  scheduled: warning
+                }
+                label: Category
+                name: category
+                variant: badge
+              }, {
+                label: Strength
+                name: strength
+                variant: caption
+              }]
+              itemActions: [{
+                event: PIN
+                label: Pin
+                variant: ghost
+              }, {
+                event: REINFORCE
+                label: Reinforce
+                variant: ghost
+              }, {
+                event: FORGET
+                label: Forget
+                variant: danger
+              }]
+              type: data-grid
+            }]
+            className: "max-w-5xl mx-auto w-full"
+            direction: vertical
+            gap: lg
+            type: stack
+          }]
+          navItems: [{
+            href: "/teach"
+            icon: book-open
+            label: Teach
+          }, {
+            href: "/quiz"
+            icon: help-circle
+            label: Quiz
+          }, {
+            href: "/concepts"
+            icon: brain
+            label: Concepts
+          }]
+          type: dashboard-layout
+        })
       ConceptLoadFailed -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load concept" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+        (render-ui main {
+          align: center
+          children: [{
+            color: destructive
+            name: alert-triangle
+            type: icon
+          }, {
+            content: "Failed to load concept"
+            type: typography
+            variant: h3
+          }, {
+            color: muted
+            content: ?error
+            type: typography
+            variant: body
+          }, {
+            action: INIT
+            icon: rotate-ccw
+            label: Retry
+            type: button
+            variant: primary
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
     }
+
     emits {
       MEMORIZE
       RECALL
       DECAY
-      PIN { id : string!, row : Concept }
-      REINFORCE { id : string!, row : Concept }
-      FORGET { id : string!, row : Concept }
+      PIN {
+        id : string!
+        row : Concept
+      }
+      REINFORCE {
+        id : string!
+        row : Concept
+      }
+      FORGET {
+        id : string!
+        row : Concept
+      }
       ConceptLoaded
       ConceptLoadFailed
     }
+
     listens {
       ConceptCreate.MEMORIZED -> INIT
       ConceptAgent.PINNED -> INIT
       ConceptAgent.FORGOT -> INIT
       ConceptAgent.REINFORCED -> INIT
       ConceptAgent.DECAYED -> INIT
-          ConceptLoadFailed { error : string, code : string }
+      ConceptLoadFailed {
+        error : string
+        code : string
+      }
     }
   }
+
   trait ConceptCreate -> Concept [interaction, collection] {
     initial: closed
+
     state closed {
       INIT -> closed
-        (fetch Concept { emit: { success: "ConceptLoaded", failure: "ConceptLoadFailed" } })
+        (fetch Concept {
+          emit: { failure: ConceptLoadFailed, success: ConceptLoaded }
+        })
       MEMORIZE -> open
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle"}, { type: "typography", content: "Memorize", variant: "h3" }] }, { type: "divider" }, { type: "form-section", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["content", "category", "scope"] }] })
+        (render-ui modal {
+          children: [{
+            children: [{ name: plus-circle, type: icon }, {
+              content: Memorize
+              type: typography
+              variant: h3
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            cancelEvent: CLOSE
+            fields: (content category scope)
+            mode: create
+            submitEvent: SAVE
+            type: form-section
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
     }
+
     state open {
       CLOSE -> closed
         (render-ui modal null)
-        (render-ui main { type: "box" })
+        (render-ui main { type: box })
         (notify Cancelled info)
       SAVE -> closed
-        (persist create Concept @payload.data { emit: { success: "ConceptSaved", failure: "ConceptSaveFailed" } })
+        (persist create Concept ?data {
+          emit: { failure: ConceptSaveFailed, success: ConceptSaved }
+        })
         (render-ui modal null)
-        (render-ui main { type: "box" })
+        (render-ui main { type: box })
         (emit MEMORIZED)
     }
+
     emits {
       MEMORIZED
       ConceptLoadFailed
@@ -329,62 +1457,122 @@ orbital ConceptOrbital {
       ConceptSaveFailed
       ConceptSaved
     }
+
     listens {
-      ConceptLoadFailed { error : string, code : string }
-      SAVE { data : string }
+      ConceptLoadFailed {
+        error : string
+        code : string
+      }
+      SAVE {
+        data : string
+      }
       ConceptBrowse.MEMORIZE -> MEMORIZE
     }
   }
+
   trait ConceptAgent -> Concept [interaction, collection] {
     initial: idle
+
     state idle {
       INIT -> idle
-        (fetch Concept { emit: { success: "ConceptLoaded", failure: "ConceptLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "AI Tutor", navItems: [{ label: "Teach", href: "/teach", icon: "book-open" }, { label: "Quiz", href: "/quiz", icon: "help-circle" }, { label: "Concepts", href: "/concepts", icon: "brain" }], children: [{ type: "empty-state", icon: "brain", title: "Memory", description: "Memory is ready" }] })
+        (fetch Concept {
+          emit: { failure: ConceptLoadFailed, success: ConceptLoaded }
+        })
+        (render-ui main {
+          appName: "AI Tutor"
+          children: [{
+            description: "Memory is ready"
+            icon: brain
+            title: Memory
+            type: empty-state
+          }]
+          navItems: [{
+            href: "/teach"
+            icon: book-open
+            label: Teach
+          }, {
+            href: "/quiz"
+            icon: help-circle
+            label: Quiz
+          }, {
+            href: "/concepts"
+            icon: brain
+            label: Concepts
+          }]
+          type: dashboard-layout
+        })
       DO_MEMORIZE -> active
-        (agent/memorize @payload.data.content @payload.data.category)
-        (persist create Concept @payload.data { emit: { success: "ConceptSaved", failure: "ConceptSaveFailed" } })
+        (agent/memorize ?data.content ?data.category)
+        (persist create Concept ?data {
+          emit: { failure: ConceptSaveFailed, success: ConceptSaved }
+        })
       DECAY -> idle
         (agent/decay)
         (emit DECAYED)
       MEMORIZED -> active
-        (fetch Concept { emit: { success: "ConceptLoaded", failure: "ConceptLoadFailed" } })
+        (fetch Concept {
+          emit: { failure: ConceptLoadFailed, success: ConceptLoaded }
+        })
     }
+
     state active {
       RECALL -> active
-        (agent/recall @payload.query)
-      PIN -> active when (not (agent/is-pinned @payload.id))
-        (agent/pin @payload.id)
+        (agent/recall ?query)
+      PIN -> active when (not (agent/is-pinned ?id))
+        (agent/pin ?id)
         (set @entity.pinned true)
         (emit PINNED)
       FORGET -> idle
-        (agent/forget @payload.id)
+        (agent/forget ?id)
         (emit FORGOT)
       REINFORCE -> active
-        (agent/reinforce @payload.id)
+        (agent/reinforce ?id)
         (emit REINFORCED)
       DECAY -> active
         (agent/decay)
         (emit DECAYED)
     }
+
     emits {
-      FORGOT -> external { id: string }
-      REINFORCED -> external { id: string }
-      DECAYED -> external { id: string }
-      PINNED -> external { id: string }
+      FORGOT -> external {
+        id : string
+      }
+      REINFORCED -> external {
+        id : string
+      }
+      DECAYED -> external {
+        id : string
+      }
+      PINNED -> external {
+        id : string
+      }
       ConceptLoadFailed
       ConceptLoaded
       ConceptSaveFailed
       ConceptSaved
     }
+
     listens {
       QuizQuestionOrbital.QuizEngine.QUIZ_GRADED -> REINFORCE
-          ConceptLoadFailed { error : string, code : string }
-          DO_MEMORIZE { data : string }
-          RECALL { query : string }
-          PIN { id : string }
-          FORGET { id : string }
-          REINFORCE { id : string }
+      ConceptLoadFailed {
+        error : string
+        code : string
+      }
+      DO_MEMORIZE {
+        data : string
+      }
+      RECALL {
+        query : string
+      }
+      PIN {
+        id : string
+      }
+      FORGET {
+        id : string
+      }
+      REINFORCE {
+        id : string
+      }
       ConceptBrowse.RECALL -> RECALL
       ConceptBrowse.DECAY -> DECAY
       ConceptBrowse.PIN -> PIN
@@ -392,9 +1580,19 @@ orbital ConceptOrbital {
       ConceptBrowse.FORGET -> FORGET
     }
   }
+
   page "/concepts" -> ConceptBrowse, ConceptCreate, ConceptAgent
 }
+
 orbital StudentAssessmentOrbital {
+    type StudentAssessmentLoaded = Event { data : [StudentAssessment] } "Fired when StudentAssessment finishes loading"
+
+    type StudentAssessmentLoadFailed = Event { error : string, code : string } "Fired when StudentAssessment fails to load"
+
+    type StudentAssessmentSaveFailed = Event { error : string, code : string }
+
+    type StudentAssessmentSaved = Event { id : string }
+
   entity StudentAssessment [runtime] {
     id : string!
     input : string @description "User-provided text or data for processing." @synonyms "prompt, query, text, data"
@@ -402,35 +1600,231 @@ orbital StudentAssessmentOrbital {
     confidence : number @description "Represents a numerical measure of certainty or likelihood." @synonyms "probability, certainty, likelihood, score"
     model : string @description "The underlying language model used for the session." @synonyms "engine, algorithm, LLM"
     message : string @description "Text content of a message exchange." @synonyms "text, content, body"
-    notificationType : "info" | "success" | "warning" | "error" @description "Indicates the type of notification displayed to the user." @synonyms "alert type, message type, notification level" = "info"
+    notificationType : "info" | "success" | "warning" | "error" @description "Indicates the type of notification displayed to the user." @synonyms "alert type, message type, notification level" = info
   }
 
-  type StudentAssessmentLoaded     = Event { data : [StudentAssessment] }                  "Fired when StudentAssessment finishes loading"
-  type StudentAssessmentLoadFailed = Event { error : string, code : string } "Fired when StudentAssessment fails to load"
-  type StudentAssessmentSaveFailed = Event { error : string, code : string }
-  type StudentAssessmentSaved = Event { id : string }
   trait LevelClassifier -> StudentAssessment [interaction, collection] {
     initial: closed
+
     state closed {
       INIT -> closed
-        (fetch StudentAssessment { emit: { success: "StudentAssessmentLoaded", failure: "StudentAssessmentLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "AI Tutor", navItems: [{ label: "Teach", href: "/teach", icon: "book-open" }, { label: "Quiz", href: "/quiz", icon: "help-circle" }, { label: "Concepts", href: "/concepts", icon: "brain" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "tag"}, { type: "typography", content: "StudentAssessment", variant: "h2" }] }, { type: "button", label: "Open", action: "CLASSIFY", variant: "primary", icon: "tag" }] }, { type: "divider" }, { type: "empty-state", icon: "tag", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
+        (fetch StudentAssessment {
+          emit: { failure: StudentAssessmentLoadFailed, success: StudentAssessmentLoaded }
+        })
+        (render-ui main {
+          appName: "AI Tutor"
+          children: [{
+            children: [{
+              children: [{
+                children: [{ name: tag, type: icon }, {
+                  content: StudentAssessment
+                  type: typography
+                  variant: h2
+                }]
+                direction: horizontal
+                gap: md
+                type: stack
+              }, {
+                action: CLASSIFY
+                icon: tag
+                label: Open
+                type: button
+                variant: primary
+              }]
+              direction: horizontal
+              gap: md
+              justify: between
+              type: stack
+            }, { type: divider }, {
+              description: "Click Open to view details in a modal overlay."
+              icon: tag
+              title: "Nothing open"
+              type: empty-state
+            }]
+            direction: vertical
+            gap: lg
+            type: stack
+          }]
+          navItems: [{
+            href: "/teach"
+            icon: book-open
+            label: Teach
+          }, {
+            href: "/quiz"
+            icon: help-circle
+            label: Quiz
+          }, {
+            href: "/concepts"
+            icon: brain
+            label: Concepts
+          }]
+          type: dashboard-layout
+        })
       CLASSIFY -> open
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "tag"}, { type: "typography", content: "StudentAssessment", variant: "h3" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Categories:" }, { type: "badge", label: "beginner", variant: "secondary" }, { type: "badge", label: "intermediate", variant: "secondary" }, { type: "badge", label: "advanced", variant: "secondary" }, { type: "badge", label: "expert", variant: "secondary" }] }, { type: "form-section", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["input"] }] })
+        (render-ui modal {
+          children: [{
+            children: [{ name: tag, type: icon }, {
+              content: StudentAssessment
+              type: typography
+              variant: h3
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            children: [{
+              content: "Categories:"
+              type: typography
+              variant: caption
+            }, {
+              label: beginner
+              type: badge
+              variant: secondary
+            }, {
+              label: intermediate
+              type: badge
+              variant: secondary
+            }, {
+              label: advanced
+              type: badge
+              variant: secondary
+            }, {
+              label: expert
+              type: badge
+              variant: secondary
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, {
+            cancelEvent: CLOSE
+            fields: (input)
+            mode: create
+            submitEvent: SAVE
+            type: form-section
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
     }
+
     state open {
       CLOSE -> closed
         (render-ui modal null)
         (notify Cancelled info)
-        (fetch StudentAssessment { emit: { success: "StudentAssessmentLoaded", failure: "StudentAssessmentLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "AI Tutor", navItems: [{ label: "Teach", href: "/teach", icon: "book-open" }, { label: "Quiz", href: "/quiz", icon: "help-circle" }, { label: "Concepts", href: "/concepts", icon: "brain" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "tag"}, { type: "typography", content: "StudentAssessment", variant: "h2" }] }, { type: "button", label: "Open", action: "CLASSIFY", variant: "primary", icon: "tag" }] }, { type: "divider" }, { type: "empty-state", icon: "tag", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
+        (fetch StudentAssessment {
+          emit: { failure: StudentAssessmentLoadFailed, success: StudentAssessmentLoaded }
+        })
+        (render-ui main {
+          appName: "AI Tutor"
+          children: [{
+            children: [{
+              children: [{
+                children: [{ name: tag, type: icon }, {
+                  content: StudentAssessment
+                  type: typography
+                  variant: h2
+                }]
+                direction: horizontal
+                gap: md
+                type: stack
+              }, {
+                action: CLASSIFY
+                icon: tag
+                label: Open
+                type: button
+                variant: primary
+              }]
+              direction: horizontal
+              gap: md
+              justify: between
+              type: stack
+            }, { type: divider }, {
+              description: "Click Open to view details in a modal overlay."
+              icon: tag
+              title: "Nothing open"
+              type: empty-state
+            }]
+            direction: vertical
+            gap: lg
+            type: stack
+          }]
+          navItems: [{
+            href: "/teach"
+            icon: book-open
+            label: Teach
+          }, {
+            href: "/quiz"
+            icon: help-circle
+            label: Quiz
+          }, {
+            href: "/concepts"
+            icon: brain
+            label: Concepts
+          }]
+          type: dashboard-layout
+        })
       SAVE -> closed
-        (persist create StudentAssessment @payload.data { emit: { success: "StudentAssessmentSaved", failure: "StudentAssessmentSaveFailed" } })
+        (persist create StudentAssessment ?data {
+          emit: { failure: StudentAssessmentSaveFailed, success: StudentAssessmentSaved }
+        })
         (render-ui modal null)
         (emit CLASSIFIED)
-        (fetch StudentAssessment { emit: { success: "StudentAssessmentLoaded", failure: "StudentAssessmentLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "AI Tutor", navItems: [{ label: "Teach", href: "/teach", icon: "book-open" }, { label: "Quiz", href: "/quiz", icon: "help-circle" }, { label: "Concepts", href: "/concepts", icon: "brain" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "tag"}, { type: "typography", content: "StudentAssessment", variant: "h2" }] }, { type: "button", label: "Open", action: "CLASSIFY", variant: "primary", icon: "tag" }] }, { type: "divider" }, { type: "empty-state", icon: "tag", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
+        (fetch StudentAssessment {
+          emit: { failure: StudentAssessmentLoadFailed, success: StudentAssessmentLoaded }
+        })
+        (render-ui main {
+          appName: "AI Tutor"
+          children: [{
+            children: [{
+              children: [{
+                children: [{ name: tag, type: icon }, {
+                  content: StudentAssessment
+                  type: typography
+                  variant: h2
+                }]
+                direction: horizontal
+                gap: md
+                type: stack
+              }, {
+                action: CLASSIFY
+                icon: tag
+                label: Open
+                type: button
+                variant: primary
+              }]
+              direction: horizontal
+              gap: md
+              justify: between
+              type: stack
+            }, { type: divider }, {
+              description: "Click Open to view details in a modal overlay."
+              icon: tag
+              title: "Nothing open"
+              type: empty-state
+            }]
+            direction: vertical
+            gap: lg
+            type: stack
+          }]
+          navItems: [{
+            href: "/teach"
+            icon: book-open
+            label: Teach
+          }, {
+            href: "/quiz"
+            icon: help-circle
+            label: Quiz
+          }, {
+            href: "/concepts"
+            icon: brain
+            label: Concepts
+          }]
+          type: dashboard-layout
+        })
     }
+
     emits {
       CLASSIFIED
       StudentAssessmentLoadFailed
@@ -438,91 +1832,258 @@ orbital StudentAssessmentOrbital {
       StudentAssessmentSaveFailed
       StudentAssessmentSaved
     }
+
     listens {
-      StudentAssessmentLoadFailed { error : string, code : string }
-      SAVE { data : string }
+      StudentAssessmentLoadFailed {
+        error : string
+        code : string
+      }
+      SAVE {
+        data : string
+      }
     }
   }
+
   trait StudentAssessmentNotification -> StudentAssessment [interaction, collection] {
     initial: hidden
+
     state hidden {
       INIT -> hidden
-        (fetch StudentAssessment { emit: { success: "StudentAssessmentLoaded", failure: "StudentAssessmentLoadFailed" } })
+        (fetch StudentAssessment {
+          emit: { failure: StudentAssessmentLoadFailed, success: StudentAssessmentLoaded }
+        })
       SHOW -> visible
-        (set @entity.message @payload.message)
-        (set @entity.notificationType @payload.notificationType)
-        (render-ui main { type: "dashboard-layout", appName: "AI Tutor", navItems: [{ label: "Teach", href: "/teach", icon: "book-open" }, { label: "Quiz", href: "/quiz", icon: "help-circle" }, { label: "Concepts", href: "/concepts", icon: "brain" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "tag"}, { type: "typography", content: "StudentAssessment Result", variant: "h2" }] }, { type: "button", label: "Dismiss", action: "HIDE", variant: "ghost", icon: "x" }] }, { type: "divider" }, { type: "alert", variant: "@entity.notificationType", message: "@entity.message" }, { type: "toast-slot" }, { type: "alert", variant: "warning", message: "@entity.message" }] }] })
+        (set @entity.message ?message)
+        (set @entity.notificationType ?notificationType)
+        (render-ui main {
+          appName: "AI Tutor"
+          children: [{
+            children: [{
+              align: center
+              children: [{
+                align: center
+                children: [{ name: tag, type: icon }, {
+                  content: "StudentAssessment Result"
+                  type: typography
+                  variant: h2
+                }]
+                direction: horizontal
+                gap: md
+                type: stack
+              }, {
+                action: HIDE
+                icon: x
+                label: Dismiss
+                type: button
+                variant: ghost
+              }]
+              direction: horizontal
+              gap: md
+              justify: between
+              type: stack
+            }, { type: divider }, {
+              message: @entity.message
+              type: alert
+              variant: @entity.notificationType
+            }, { type: toast-slot }, {
+              message: @entity.message
+              type: alert
+              variant: warning
+            }]
+            direction: vertical
+            gap: lg
+            type: stack
+          }]
+          navItems: [{
+            href: "/teach"
+            icon: book-open
+            label: Teach
+          }, {
+            href: "/quiz"
+            icon: help-circle
+            label: Quiz
+          }, {
+            href: "/concepts"
+            icon: brain
+            label: Concepts
+          }]
+          type: dashboard-layout
+        })
     }
+
     state visible {
       SHOW -> visible
-        (set @entity.message @payload.message)
-        (set @entity.notificationType @payload.notificationType)
-        (render-ui main { type: "dashboard-layout", appName: "AI Tutor", navItems: [{ label: "Teach", href: "/teach", icon: "book-open" }, { label: "Quiz", href: "/quiz", icon: "help-circle" }, { label: "Concepts", href: "/concepts", icon: "brain" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "tag"}, { type: "typography", content: "StudentAssessment Result", variant: "h2" }] }, { type: "button", label: "Dismiss", action: "HIDE", variant: "ghost", icon: "x" }] }, { type: "divider" }, { type: "alert", variant: "@entity.notificationType", message: "@entity.message" }, { type: "toast-slot" }, { type: "alert", variant: "warning", message: "@entity.message" }] }] })
+        (set @entity.message ?message)
+        (set @entity.notificationType ?notificationType)
+        (render-ui main {
+          appName: "AI Tutor"
+          children: [{
+            children: [{
+              align: center
+              children: [{
+                align: center
+                children: [{ name: tag, type: icon }, {
+                  content: "StudentAssessment Result"
+                  type: typography
+                  variant: h2
+                }]
+                direction: horizontal
+                gap: md
+                type: stack
+              }, {
+                action: HIDE
+                icon: x
+                label: Dismiss
+                type: button
+                variant: ghost
+              }]
+              direction: horizontal
+              gap: md
+              justify: between
+              type: stack
+            }, { type: divider }, {
+              message: @entity.message
+              type: alert
+              variant: @entity.notificationType
+            }, { type: toast-slot }, {
+              message: @entity.message
+              type: alert
+              variant: warning
+            }]
+            direction: vertical
+            gap: lg
+            type: stack
+          }]
+          navItems: [{
+            href: "/teach"
+            icon: book-open
+            label: Teach
+          }, {
+            href: "/quiz"
+            icon: help-circle
+            label: Quiz
+          }, {
+            href: "/concepts"
+            icon: brain
+            label: Concepts
+          }]
+          type: dashboard-layout
+        })
       HIDE -> hidden
         (set @entity.message "")
     }
-emits {
+
+    emits {
       StudentAssessmentLoaded
       StudentAssessmentLoadFailed
     }
 
-        listens {
-      StudentAssessmentLoadFailed { error : string, code : string }
-      SHOW { message : string, notificationType : string }
+    listens {
+      StudentAssessmentLoadFailed {
+        error : string
+        code : string
+      }
+      SHOW {
+        message : string
+        notificationType : string
+      }
     }
   }
+
   trait StudentAssessmentAgent -> StudentAssessment [interaction, collection] {
     initial: idle
+
     state idle {
       INIT -> idle
-        (fetch StudentAssessment { emit: { success: "StudentAssessmentLoaded", failure: "StudentAssessmentLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "AI Tutor", navItems: [{ label: "Teach", href: "/teach", icon: "book-open" }, { label: "Quiz", href: "/quiz", icon: "help-circle" }, { label: "Concepts", href: "/concepts", icon: "brain" }], children: [{ type: "empty-state", icon: "tag", title: "Classifier", description: "Classifier is ready" }] })
+        (fetch StudentAssessment {
+          emit: { failure: StudentAssessmentLoadFailed, success: StudentAssessmentLoaded }
+        })
+        (render-ui main {
+          appName: "AI Tutor"
+          children: [{
+            description: "Classifier is ready"
+            icon: tag
+            title: Classifier
+            type: empty-state
+          }]
+          navItems: [{
+            href: "/teach"
+            icon: book-open
+            label: Teach
+          }, {
+            href: "/quiz"
+            icon: help-circle
+            label: Quiz
+          }, {
+            href: "/concepts"
+            icon: brain
+            label: Concepts
+          }]
+          type: dashboard-layout
+        })
       DO_CLASSIFY -> classifying
         (agent/generate (str/concat "Classify the following text into one of these categories: " "beginner, intermediate, advanced, expert" ". Text: " @entity.input ". Respond with JSON: {\"category\": \"...\", \"confidence\": 0.0-1.0}"))
       CLASSIFIED -> classifying
         (agent/generate (str/concat "Classify the following text into one of these categories: " "beginner, intermediate, advanced, expert" ". Text: " @entity.input ". Respond with JSON: {\"category\": \"...\", \"confidence\": 0.0-1.0}"))
     }
+
     state classifying {
       DO_CLASSIFY -> classified
-        (set @entity.category @payload.data.input)
+        (set @entity.category ?data.input)
         (emit SHOW)
     }
+
     state classified {
       RESET -> idle
         (set @entity.input "")
         (set @entity.category "")
         (set @entity.confidence 0)
     }
+
     emits {
-      SHOW -> internal { category: string, confidence: number }
+      SHOW -> internal {
+        category : string
+        confidence : number
+      }
       StudentAssessmentLoaded
       StudentAssessmentLoadFailed
     }
+
     listens {
       LevelClassifier.CLASSIFIED -> CLASSIFIED
-          StudentAssessmentLoadFailed { error : string, code : string }
-          DO_CLASSIFY { data : string }
+      StudentAssessmentLoadFailed {
+        error : string
+        code : string
+      }
+      DO_CLASSIFY {
+        data : string
+      }
     }
   }
+
   page "/assessment" -> LevelClassifier
 }
+
 orbital TutorNavOrbital {
   uses Tabs from "std/behaviors/std-tabs"
 
   entity TutorNav [runtime] {
     id : string!
     topic : string @description "The subject or area of study being addressed." @synonyms "subject, theme, area, focus" = ""
-    studentLevel : string @description "Represents the student's proficiency level." @synonyms "level, skill, expertise, proficiency" = "unknown"
+    studentLevel : string @description "Represents the student's proficiency level." @synonyms "level, skill, expertise, proficiency" = unknown
     explanation : string @description "Detailed textual clarification or justification." @synonyms "justification, rationale, details, clarification" = ""
     questionsAsked : number @description "The total number of questions presented during the session." @synonyms "count, number, total" = 0
     correctAnswers : number @description "The number of questions answered correctly." @synonyms "count, total, number, score" = 0
-    sessionStatus : string @description "Indicates the current state of the session." @synonyms "status, state, condition" = "idle"
+    sessionStatus : string @description "Indicates the current state of the session." @synonyms "status, state, condition" = idle
     error : string @description "A textual description of any encountered problem." @synonyms "issue, problem, fault, exception" = ""
   }
+
   trait TutorTabs = Tabs.traits.TabsItemTabs -> TutorSession {
   }
+
   page "/tutor/nav" -> TutorTabs
 }
+
 orbital ConceptViewOrbital {
   uses Browse from "std/behaviors/std-browse"
 
@@ -532,7 +2093,9 @@ orbital ConceptViewOrbital {
     category : string @description "A classification or grouping for the session content." @synonyms "type, classification, group"
     strength : number @description "A numerical value representing a measure of proficiency." @synonyms "score, level, rating, proficiency"
   }
+
   trait ConceptsBrowse = Browse.traits.BrowseItemBrowse -> Concept {
   }
+
   page "/tutor/concepts" -> ConceptsBrowse
 }

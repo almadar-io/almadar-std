@@ -1,76 +1,274 @@
 app std-agent-conversation "1.0.0"
 "std-agent-conversation as a Function"
-
 orbital AgentConversationOrbital {
-  entity AgentConversation [persistent: agentconversations] {
-    id          : string!
-    name        : string @description "A human-readable identifier for the conversation." @synonyms "title, label, identifier"
-    description : string @description "A textual summary or explanation of the conversation." @synonyms "summary, explanation, details, overview"
-    status      : "active" | "inactive" | "pending" | "sent" @description "Current operational state of the conversation." @synonyms "state, condition, mode" = "active"
-    createdAt   : string
-    messages    : [string] @description "An array of messages exchanged during the conversation." @synonyms "conversation history, chat log, message list" = []
-    turnCount   : number @description "The number of turns in the conversation." @synonyms "count, number, iterations" = 0
-    lastMessage : string @description "The text of the most recent message." @synonyms "latest message, recent message, last text" = ""
-    tokenCount  : number @description "The number of tokens used in the conversation." @synonyms "count, length, size" = 0
-    role        : "user" | "assistant" | "system" | "tool" @description "Identifies the participant in the conversation." @synonyms "participant, speaker, actor, persona" = "user"
-    content     : string @description "The textual body of a message or response." @synonyms "text, body, payload, value" = ""
-    timestamp   : string @description "The date and time when an event occurred." @synonyms "date, time, when" = ""
-    toolName    : string @description "The name of the tool utilized in this conversation." @synonyms "tool, utility, application" = ""
-  }
+    type AgentConversationLoaded = Event { data : [AgentConversation] } "Fired when conversation finishes loading; payload.data holds the turns"
 
-  type AgentConversationLoaded       = Event { data : [AgentConversation] }      "Fired when conversation finishes loading; payload.data holds the turns"
-  type AgentConversationLoadFailed   = Event { error : string, code : string }  "Fired when conversation fails to load"
-  type AgentConversationSaved        = Event { id : string }                    "Fired when a new turn is persisted"
-  type AgentConversationSaveFailed   = Event { error : string, code : string }  "Fired when persisting a turn fails"
-  type AgentConversationDeleted      = Event { id : string }                    "Fired when the conversation is cleared"
-  type AgentConversationDeleteFailed = Event { error : string, code : string }  "Fired when clearing the conversation fails"
+    type AgentConversationLoadFailed = Event { error : string, code : string } "Fired when conversation fails to load"
+
+    type AgentConversationSaved = Event { id : string } "Fired when a new turn is persisted"
+
+    type AgentConversationSaveFailed = Event { error : string, code : string } "Fired when persisting a turn fails"
+
+    type AgentConversationDeleted = Event { id : string } "Fired when the conversation is cleared"
+
+    type AgentConversationDeleteFailed = Event { error : string, code : string } "Fired when clearing the conversation fails"
+
+  entity AgentConversation [persistent: agentconversations] {
+    id : string!
+    name : string @description "A human-readable identifier for the conversation." @synonyms "title, label, identifier"
+    description : string @description "A textual summary or explanation of the conversation." @synonyms "summary, explanation, details, overview"
+    status : "active" | "inactive" | "pending" | "sent" @description "Current operational state of the conversation." @synonyms "state, condition, mode" = active
+    createdAt : string
+    messages : [string] @description "An array of messages exchanged during the conversation." @synonyms "conversation history, chat log, message list" = []
+    turnCount : number @description "The number of turns in the conversation." @synonyms "count, number, iterations" = 0
+    lastMessage : string @description "The text of the most recent message." @synonyms "latest message, recent message, last text" = ""
+    tokenCount : number @description "The number of tokens used in the conversation." @synonyms "count, length, size" = 0
+    role : "user" | "assistant" | "system" | "tool" @description "Identifies the participant in the conversation." @synonyms "participant, speaker, actor, persona" = user
+    content : string @description "The textual body of a message or response." @synonyms "text, body, payload, value" = ""
+    timestamp : string @description "The date and time when an event occurred." @synonyms "date, time, when" = ""
+    toolName : string @description "The name of the tool utilized in this conversation." @synonyms "tool, utility, application" = ""
+  }
 
   trait AgentConversationThread -> AgentConversation [interaction, collection] {
     initial: loading
+
     state loading {
       INIT -> loading
-        (fetch AgentConversation { emit: { success: "AgentConversationLoaded", failure: "AgentConversationLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading conversation…" }] })
+        (fetch AgentConversation {
+          emit: { failure: AgentConversationLoadFailed, success: AgentConversationLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Loading conversation…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
       AgentConversationLoaded -> idle
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle" }, { type: "typography", content: "Conversation Thread", variant: "h2" }] }, { type: "button", label: "New Message", action: "COMPOSE", variant: "primary", icon: "plus" }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, fields: [], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "badge", label: "@item.role" }, { type: "badge", label: "@item.status", variant: "secondary" }, { type: "typography", variant: "caption", color: "muted", content: "@item.timestamp" }] }, { type: "typography", variant: "body", content: "@item.content" }] }] }] })
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{
+              align: center
+              children: [{ name: message-circle, type: icon }, {
+                content: "Conversation Thread"
+                type: typography
+                variant: h2
+              }]
+              direction: horizontal
+              gap: sm
+              type: stack
+            }, {
+              action: COMPOSE
+              icon: plus
+              label: "New Message"
+              type: button
+              variant: primary
+            }]
+            direction: horizontal
+            gap: sm
+            justify: between
+            type: stack
+          }, { type: divider }, {
+            entity: ?data
+            fields: []
+            renderItem: (fn item {
+              children: [{
+                align: center
+                children: [{ label: @item.role, type: badge }, {
+                  label: @item.status
+                  type: badge
+                  variant: secondary
+                }, {
+                  color: muted
+                  content: @item.timestamp
+                  type: typography
+                  variant: caption
+                }]
+                direction: horizontal
+                gap: sm
+                type: stack
+              }, {
+                content: @item.content
+                type: typography
+                variant: body
+              }]
+              direction: vertical
+              gap: xs
+              type: stack
+            })
+            type: data-list
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
       AgentConversationLoadFailed -> error
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+        (render-ui main {
+          align: center
+          children: [{
+            color: destructive
+            name: alert-triangle
+            type: icon
+          }, {
+            content: "Failed to load"
+            type: typography
+            variant: h3
+          }, {
+            color: muted
+            content: ?error
+            type: typography
+            variant: body
+          }, {
+            action: INIT
+            icon: rotate-ccw
+            label: Retry
+            type: button
+            variant: primary
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
     }
+
     state idle {
       COMPOSE -> composing
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle" }, { type: "typography", content: "Conversation Thread", variant: "h2" }] }, { type: "divider" }, { type: "form-section", mode: "create", submitEvent: "SEND", cancelEvent: "CANCEL_COMPOSE", fields: ["content"] }] })
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: message-circle, type: icon }, {
+              content: "Conversation Thread"
+              type: typography
+              variant: h2
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            cancelEvent: CANCEL_COMPOSE
+            fields: (content)
+            mode: create
+            submitEvent: SEND
+            type: form-section
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
       CLEAR -> deleting
-        (persist delete AgentConversation { emit: { success: "AgentConversationDeleted", failure: "AgentConversationDeleteFailed" } })
-        (render-ui main { type: "spinner" })
+        (persist delete AgentConversation {
+          emit: { failure: AgentConversationDeleteFailed, success: AgentConversationDeleted }
+        })
+        (render-ui main { type: spinner })
     }
+
     state composing {
       SEND -> persisting
-        (persist create AgentConversation { role: "user", content: "@payload.content", timestamp: "@now", status: "sent" } { emit: { success: "AgentConversationSaved", failure: "AgentConversationSaveFailed" } })
-        (render-ui main { type: "spinner" })
+        (persist create AgentConversation {
+          content: ?content
+          role: user
+          status: sent
+          timestamp: @now
+        } {
+          emit: { failure: AgentConversationSaveFailed, success: AgentConversationSaved }
+        })
+        (render-ui main { type: spinner })
       CANCEL_COMPOSE -> loading
-        (fetch AgentConversation { emit: { success: "AgentConversationLoaded", failure: "AgentConversationLoadFailed" } })
-        (render-ui main { type: "spinner" })
+        (fetch AgentConversation {
+          emit: { failure: AgentConversationLoadFailed, success: AgentConversationLoaded }
+        })
+        (render-ui main { type: spinner })
     }
+
     state persisting {
       AgentConversationSaved -> loading
-        (fetch AgentConversation { emit: { success: "AgentConversationLoaded", failure: "AgentConversationLoadFailed" } })
-        (render-ui main { type: "spinner" })
+        (fetch AgentConversation {
+          emit: { failure: AgentConversationLoadFailed, success: AgentConversationLoaded }
+        })
+        (render-ui main { type: spinner })
       AgentConversationSaveFailed -> error
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to send" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+        (render-ui main {
+          align: center
+          children: [{
+            color: destructive
+            name: alert-triangle
+            type: icon
+          }, {
+            content: "Failed to send"
+            type: typography
+            variant: h3
+          }, {
+            color: muted
+            content: ?error
+            type: typography
+            variant: body
+          }, {
+            action: INIT
+            icon: rotate-ccw
+            label: Retry
+            type: button
+            variant: primary
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
     }
+
     state deleting {
       AgentConversationDeleted -> loading
-        (fetch AgentConversation { emit: { success: "AgentConversationLoaded", failure: "AgentConversationLoadFailed" } })
-        (render-ui main { type: "spinner" })
+        (fetch AgentConversation {
+          emit: { failure: AgentConversationLoadFailed, success: AgentConversationLoaded }
+        })
+        (render-ui main { type: spinner })
       AgentConversationDeleteFailed -> error
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to clear" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+        (render-ui main {
+          align: center
+          children: [{
+            color: destructive
+            name: alert-triangle
+            type: icon
+          }, {
+            content: "Failed to clear"
+            type: typography
+            variant: h3
+          }, {
+            color: muted
+            content: ?error
+            type: typography
+            variant: body
+          }, {
+            action: INIT
+            icon: rotate-ccw
+            label: Retry
+            type: button
+            variant: primary
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
     }
+
     state error {
       INIT -> loading
-        (fetch AgentConversation { emit: { success: "AgentConversationLoaded", failure: "AgentConversationLoadFailed" } })
-        (render-ui main { type: "spinner" })
+        (fetch AgentConversation {
+          emit: { failure: AgentConversationLoadFailed, success: AgentConversationLoaded }
+        })
+        (render-ui main { type: spinner })
     }
-emits {
+
+    emits {
       AgentConversationLoaded
       AgentConversationLoadFailed
       AgentConversationSaved
@@ -79,44 +277,76 @@ emits {
       AgentConversationDeleteFailed
     }
 
-        listens {
-      SEND { content : string! }
-      AgentConversationLoadFailed { error : string, code : string }
-      AgentConversationSaveFailed { error : string, code : string }
-      AgentConversationDeleteFailed { error : string, code : string }
+    listens {
+      SEND {
+        content : string!
+      }
+      AgentConversationLoadFailed {
+        error : string
+        code : string
+      }
+      AgentConversationSaveFailed {
+        error : string
+        code : string
+      }
+      AgentConversationDeleteFailed {
+        error : string
+        code : string
+      }
     }
   }
 
   trait AgentConversationAgent -> AgentConversation [interaction, collection] {
     initial: idle
+
     state idle {
       INIT -> idle
-        (fetch AgentConversation { emit: { success: "AgentConversationLoaded", failure: "AgentConversationLoadFailed" } })
-        (render-ui main { type: "empty-state", icon: "message-circle", title: "Conversation", description: "Conversation is ready" })
+        (fetch AgentConversation {
+          emit: { failure: AgentConversationLoadFailed, success: AgentConversationLoaded }
+        })
+        (render-ui main {
+          description: "Conversation is ready"
+          icon: message-circle
+          title: Conversation
+          type: empty-state
+        })
       SEND_MESSAGE -> active
-        (agent/generate @payload.content)
+        (agent/generate ?content)
         (emit TOKEN_UPDATE { tokenCount: 0 })
     }
+
     state active {
       SEND_MESSAGE -> active
-        (agent/generate @payload.content)
+        (agent/generate ?content)
         (emit TOKEN_UPDATE { tokenCount: 0 })
       PAUSE -> paused
       CLEAR -> idle
     }
+
     state paused {
       RESUME -> active
       CLEAR -> idle
     }
+
     emits {
-      TOKEN_UPDATE -> internal { tokenCount : number! }
+      TOKEN_UPDATE -> internal {
+        tokenCount : number!
+      }
       AgentConversationLoaded
       AgentConversationLoadFailed
     }
+
     listens {
-      SEND_MESSAGE { content : string! }
-      TOKEN_UPDATE { tokenCount : number! }
-      AgentConversationLoadFailed { error : string, code : string }
+      SEND_MESSAGE {
+        content : string!
+      }
+      TOKEN_UPDATE {
+        tokenCount : number!
+      }
+      AgentConversationLoadFailed {
+        error : string
+        code : string
+      }
     }
   }
 

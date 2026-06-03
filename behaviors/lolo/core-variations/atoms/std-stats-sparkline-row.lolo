@@ -1,67 +1,134 @@
 app std-stats-sparkline-row "1.2.0"
 "Sparkline tile grid — chart-first card tiles where the mini trend line is the visual centerpiece, with label above and value+delta footer. For trend-led overviews: telemetry, weekly active users, traffic shape, observability at a glance."
-
 orbital SparklineRowStatsOrbital {
   uses Stats from "std/behaviors/std-stats"
 
-  type StatCard = {
-    label          : string!
-    value          : number
-    icon           : string
-    format         : "number" | "currency" | "percent"
-    variant        : "default" | "primary" | "success" | "warning" | "error" | "info"
-    prefix         : string
-    suffix         : string
-    max            : number
-    target         : number
-    trend          : number
-    trendPolarity  : "higher-is-better" | "lower-is-better"
-    trendFormat    : "absolute" | "percent"
-    sparklineData  : [number]
-    clickEvent     : string
-  }
+    type StatCard = { label : string!, value : number, icon : string, format : "number" | "currency" | "percent", variant : "default" | "primary" | "success" | "warning" | "error" | "info", prefix : string, suffix : string, max : number, target : number, trend : number, trendPolarity : "higher-is-better" | "lower-is-better", trendFormat : "absolute" | "percent", sparklineData : [number], clickEvent : string }
 
   entity SparklineRowStats [runtime] {
-    id    : string!
+    id : string!
     cards : [StatCard] @description "An array of statistical cards displayed in a row." @synonyms "tiles, items, elements" = []
   }
 
   trait SparklineRowStatsItemStats = Stats.traits.StatsItemStats -> SparklineRowStats {
-    config: {
-      metrics: [
-        { label: "Weekly Active Users", value: 18420, format: "number",                 icon: "users",        variant: "primary", trend: 9.3,  trendPolarity: "higher-is-better", trendFormat: "percent", sparklineData: [12000, 12800, 13500, 13200, 14600, 15400, 15100, 16200, 16900, 17400, 17900, 18420] },
-        { label: "Requests / min",      value: 2340,  format: "number",                 icon: "activity",     variant: "info",    trend: -4.1, trendPolarity: "higher-is-better", trendFormat: "percent", sparklineData: [2600, 2520, 2580, 2490, 2410, 2450, 2380, 2360, 2410, 2350, 2330, 2340] },
-        { label: "p95 Latency",         value: 184,   format: "number", suffix: "ms",   icon: "gauge",        variant: "warning", trend: -12.0, trendPolarity: "lower-is-better",  trendFormat: "percent", sparklineData: [240, 232, 228, 235, 210, 205, 198, 201, 190, 188, 186, 184] },
-        { label: "Error Rate",          value: 0.42,  format: "percent", suffix: "%",   icon: "alert-circle", variant: "error",   trend: -0.18, trendPolarity: "lower-is-better",  trendFormat: "absolute", sparklineData: [0.9, 0.82, 0.78, 0.7, 0.66, 0.61, 0.55, 0.52, 0.48, 0.45, 0.43, 0.42] }
-      ],
+    config {
+      metrics: [{
+        format: number
+        icon: users
+        label: "Weekly Active Users"
+        sparklineData: [12000, 12800, 13500, 13200, 14600, 15400, 15100, 16200, 16900, 17400, 17900, 18420]
+        trend: 9.3
+        trendFormat: percent
+        trendPolarity: higher-is-better
+        value: 18420
+        variant: primary
+      }, {
+        format: number
+        icon: activity
+        label: "Requests / min"
+        sparklineData: [2600, 2520, 2580, 2490, 2410, 2450, 2380, 2360, 2410, 2350, 2330, 2340]
+        trend: -4.1
+        trendFormat: percent
+        trendPolarity: higher-is-better
+        value: 2340
+        variant: info
+      }, {
+        format: number
+        icon: gauge
+        label: "p95 Latency"
+        sparklineData: [240, 232, 228, 235, 210, 205, 198, 201, 190, 188, 186, 184]
+        suffix: ms
+        trend: -12
+        trendFormat: percent
+        trendPolarity: lower-is-better
+        value: 184
+        variant: warning
+      }, {
+        format: percent
+        icon: alert-circle
+        label: "Error Rate"
+        sparklineData: [0.9, 0.82, 0.78, 0.7, 0.66, 0.61, 0.55, 0.52, 0.48, 0.45, 0.43, 0.42]
+        suffix: "%"
+        trend: -0.18
+        trendFormat: absolute
+        trendPolarity: lower-is-better
+        value: 0.42
+        variant: error
+      }]
       bodyContent: {
-        type: "data-grid",
-        minCardWidth: 260,
-        gap: "md",
-        entity: "@entity.cards",
-        fields: [],
-        className: "w-full",
-        renderItem: ["fn", "card", {
-          type: "stack",
-          direction: "vertical",
-          gap: "sm",
-          className: "rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] p-card-md shadow-elevation-sm hover:shadow-elevation-md transition-shadow min-h-[180px]",
-          children: [
-            { type: "stack", direction: "horizontal", gap: "xs", align: "center", children: [
-              { type: "icon", name: "@card.icon", size: "xs", color: "muted" },
-              { type: "typography", variant: "overline", color: "muted", weight: "semibold", content: "@card.label", className: "uppercase tracking-wide truncate" }
-            ]},
-            { type: "sparkline", data: "@card.sparklineData", color: "auto", height: 64, strokeWidth: 2, fill: true, className: "w-full" },
-            { type: "stack", direction: "horizontal", gap: "sm", align: "baseline", justify: "between", children: [
-              { type: "stack", direction: "horizontal", gap: "xs", align: "baseline", children: [
-                { type: "typography", variant: "caption", color: "muted", content: "@card.prefix" },
-                { type: "typography", variant: "h3", weight: "semibold", content: "@card.value", className: "tabular-nums" },
-                { type: "typography", variant: "caption", color: "muted", content: "@card.suffix" }
-              ]},
-              { type: "trend-indicator", value: "@card.trend", size: "sm", showValue: true }
-            ]}
-          ]
-        }]
+        className: w-full
+        entity: @entity.cards
+        fields: []
+        gap: md
+        minCardWidth: 260
+        renderItem: (fn card {
+          children: [{
+            align: center
+            children: [{
+              color: muted
+              name: @card.icon
+              size: xs
+              type: icon
+            }, {
+              className: "uppercase tracking-wide truncate"
+              color: muted
+              content: @card.label
+              type: typography
+              variant: overline
+              weight: semibold
+            }]
+            direction: horizontal
+            gap: xs
+            type: stack
+          }, {
+            className: w-full
+            color: auto
+            data: @card.sparklineData
+            fill: true
+            height: 64
+            strokeWidth: 2
+            type: sparkline
+          }, {
+            align: baseline
+            children: [{
+              align: baseline
+              children: [{
+                color: muted
+                content: @card.prefix
+                type: typography
+                variant: caption
+              }, {
+                className: tabular-nums
+                content: @card.value
+                type: typography
+                variant: h3
+                weight: semibold
+              }, {
+                color: muted
+                content: @card.suffix
+                type: typography
+                variant: caption
+              }]
+              direction: horizontal
+              gap: xs
+              type: stack
+            }, {
+              showValue: true
+              size: sm
+              type: trend-indicator
+              value: @card.trend
+            }]
+            direction: horizontal
+            gap: sm
+            justify: between
+            type: stack
+          }]
+          className: "rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] p-card-md shadow-elevation-sm hover:shadow-elevation-md transition-shadow min-h-[180px]"
+          direction: vertical
+          gap: sm
+          type: stack
+        })
+        type: data-grid
       }
     }
   }

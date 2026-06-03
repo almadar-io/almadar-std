@@ -1,91 +1,175 @@
 app std-gallery "1.0.0"
 "std-gallery — image gallery primitive. Browses GalleryItems in a media-gallery grid; opens a lightbox modal for full-size viewing."
-
 orbital GalleryItemOrbital {
+    type GalleryItemLoaded = Event { data : [GalleryItem] } "Fired when GalleryItem finishes loading; payload.data holds the gallery"
+
+    type GalleryItemLoadFailed = Event { error : string, code : string } "Fired when GalleryItem fails to load"
+
   entity GalleryItem [runtime] {
-    id          : string!
-    name        : string! @description "A user-friendly identifier for the item." @synonyms "title, label, identifier"
+    id : string!
+    name : string! @description "A user-friendly identifier for the item." @synonyms "title, label, identifier"
     description : string @description "A brief textual summary of the item's content." @synonyms "caption, summary, details, notes"
-    status      : "active" | "inactive" | "pending" @description "Indicates the current state of the item." @synonyms "state, condition, flag" = "active"
-    createdAt   : string
-    imageUrl    : string @description "The URL pointing to the image resource." @synonyms "image, src, path" = "https://picsum.photos/seed/gallery/800/600"
+    status : "active" | "inactive" | "pending" @description "Indicates the current state of the item." @synonyms "state, condition, flag" = active
+    createdAt : string
+    imageUrl : string @description "The URL pointing to the image resource." @synonyms "image, src, path" = "https://picsum.photos/seed/gallery/800/600"
   }
 
-  type GalleryItemLoaded     = Event { data : [GalleryItem] }        "Fired when GalleryItem finishes loading; payload.data holds the gallery"
-  type GalleryItemLoadFailed = Event { error : string, code : string } "Fired when GalleryItem fails to load"
-
   trait GalleryItemGallery -> @rebindable GalleryItem [interaction, collection] {
-    config {
-      title : string = "Gallery"
-        @label "Section title"
-        @description "Heading shown above the image gallery"
-        @tier "presentation"
-    }
     initial: loading
+
     state loading {
       INIT -> loading
-        (fetch GalleryItem { emit: { success: "GalleryItemLoaded", failure: "GalleryItemLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading gallery…" }] })
+        (fetch GalleryItem {
+          emit: { failure: GalleryItemLoadFailed, success: GalleryItemLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Loading gallery…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
       GalleryItemLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "image" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "media-gallery", entity: "@payload.data" }] })
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: image, type: icon }, {
+              content: @config.title
+              type: typography
+              variant: h3
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, { entity: ?data, type: media-gallery }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
       GalleryItemLoadFailed -> error
-        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+        (render-ui main {
+          message: ?error
+          type: alert
+          variant: error
+        })
     }
+
     state browsing {
       VIEW -> viewing
-        (set @entity.id @payload.id)
-        (set @entity.name @payload.row.name)
-        (set @entity.description @payload.row.description)
-        (set @entity.imageUrl @payload.row.imageUrl)
-        (render-ui modal { type: "lightbox", isOpen: true, closeAction: "CLOSE", images: [{ src: "@entity.imageUrl", alt: "@entity.name", caption: "@entity.name" }], currentIndex: 0, showCounter: true })
+        (set @entity.id ?id)
+        (set @entity.name ?row.name)
+        (set @entity.description ?row.description)
+        (set @entity.imageUrl ?row.imageUrl)
+        (render-ui modal {
+          closeAction: CLOSE
+          currentIndex: 0
+          images: [{
+            alt: @entity.name
+            caption: @entity.name
+            src: @entity.imageUrl
+          }]
+          isOpen: true
+          showCounter: true
+          type: lightbox
+        })
     }
+
     state viewing {
       CLOSE -> loading
         (render-ui modal null)
-        (fetch GalleryItem { emit: { success: "GalleryItemLoaded", failure: "GalleryItemLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading gallery…" }] })
+        (fetch GalleryItem {
+          emit: { failure: GalleryItemLoadFailed, success: GalleryItemLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Loading gallery…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
     }
+
     state error {
       INIT -> loading
-        (fetch GalleryItem { emit: { success: "GalleryItemLoaded", failure: "GalleryItemLoadFailed" } })
-        (render-ui main { type: "spinner", size: "sm" })
+        (fetch GalleryItem {
+          emit: { failure: GalleryItemLoadFailed, success: GalleryItemLoaded }
+        })
+        (render-ui main { size: sm, type: spinner })
     }
+
     emits {
-      VIEW  -> external { id : string!, row : GalleryItem }
+      VIEW -> external {
+        id : string!
+        row : GalleryItem
+      }
         @description "Signals an item has been selected for viewing."
         @synonyms "select, choose, display"
         @tier "essential"
-      CLOSE { }
+      CLOSE
         @description "Indicates the gallery has been closed."
         @synonyms "dismiss, hide, cancel"
         @tier "essential"
-      GalleryItemLoaded     { data : [GalleryItem] }
+      GalleryItemLoaded {
+        data : [GalleryItem]
+      }
         @description "Indicates a GalleryItem has finished loading."
         @synonyms "loaded, ready, available"
         @tier "internal"
-      GalleryItemLoadFailed { error : string, code : string }
+      GalleryItemLoadFailed {
+        error : string
+        code : string
+      }
         @description "Indicates a GalleryItem failed to load."
         @synonyms "error, failure, problem, load error"
         @tier "internal"
     }
+
     listens {
-      VIEW  { id : string!, row : GalleryItem }
+      VIEW {
+        id : string!
+        row : GalleryItem
+      }
         @description "Indicates a GalleryItem has been selected for viewing."
         @synonyms "select, choose, display"
         @tier "essential"
-      CLOSE { }
+      CLOSE
         @description "Indicates the gallery or lightbox has been dismissed."
         @synonyms "dismiss, hide, close, cancel"
         @tier "essential"
-      GalleryItemLoaded     { data : [GalleryItem] }
+      GalleryItemLoaded {
+        data : [GalleryItem]
+      }
         @description "Indicates a GalleryItem has finished loading."
         @synonyms "loaded, ready, available"
         @tier "internal"
-      GalleryItemLoadFailed { error : string, code : string }
+      GalleryItemLoadFailed {
+        error : string
+        code : string
+      }
         @description "Indicates a GalleryItem failed to load."
         @synonyms "error, fail, problem, loading issue"
         @tier "internal"
     }
+
+    config {
+      title : string = Gallery
+        @label "Section title"
+        @description "Heading shown above the image gallery"
+        @tier "presentation"
+    }
   }
+
   page "/galleryitems/gallery" as GalleryItemGalleryPage -> GalleryItemGallery
 }
