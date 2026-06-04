@@ -92,19 +92,6 @@
               ]
             },
             {
-              "event": "DELETE",
-              "description": "Signals removal of an image from the upload batch.",
-              "synonyms": "remove, discard, delete, unselect",
-              "tier": "customization",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                }
-              ]
-            },
-            {
               "event": "UploadedImageLoaded",
               "description": "Signals a single image has finished loading.",
               "synonyms": "loaded, received, parsed",
@@ -296,8 +283,8 @@
               {
                 "key": "DELETE",
                 "name": "Delete",
-                "description": "Signals removal of an image from the upload batch.",
-                "synonyms": "remove, discard, delete, unselect",
+                "description": "Indicates a selected image has been removed.",
+                "synonyms": "remove, discard, clear",
                 "tier": "customization",
                 "payloadSchema": [
                   {
@@ -380,8 +367,8 @@
                     "UploadedImage",
                     {
                       "emit": {
-                        "success": "UploadedImageLoaded",
-                        "failure": "UploadedImageLoadFailed"
+                        "failure": "UploadedImageLoadFailed",
+                        "success": "UploadedImageLoaded"
                       }
                     }
                   ],
@@ -389,22 +376,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "gap": "md",
-                      "direction": "vertical",
-                      "className": "py-12",
-                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "variant": "caption",
                           "color": "muted",
                           "content": "Loading images…",
-                          "type": "typography",
-                          "variant": "caption"
+                          "type": "typography"
                         }
-                      ]
+                      ],
+                      "align": "center",
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -421,12 +408,12 @@
                       "gap": "md",
                       "children": [
                         {
+                          "align": "center",
                           "type": "stack",
-                          "gap": "sm",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "image-plus"
+                              "name": "image-plus",
+                              "type": "icon"
                             },
                             {
                               "variant": "h3",
@@ -435,28 +422,28 @@
                             }
                           ],
                           "direction": "horizontal",
-                          "align": "center"
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "maxFiles": "@config.maxImages",
-                          "type": "upload-drop-zone",
-                          "accept": "@config.accept",
+                          "action": "UPLOAD",
                           "maxSize": "@config.maxBytesPerImage",
+                          "accept": "@config.accept",
+                          "maxFiles": "@config.maxImages",
                           "icon": "image-plus",
                           "description": "or click to browse",
-                          "action": "UPLOAD",
+                          "type": "upload-drop-zone",
                           "label": "Drop images here"
                         },
                         {
-                          "type": "media-gallery",
-                          "entity": "@payload.data"
+                          "entity": "@payload.data",
+                          "type": "media-gallery"
                         }
                       ],
-                      "type": "stack",
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -471,8 +458,8 @@
                     "main",
                     {
                       "variant": "error",
-                      "type": "alert",
-                      "message": "@payload.error"
+                      "message": "@payload.error",
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -489,8 +476,8 @@
                     "@payload.files",
                     {
                       "emit": {
-                        "success": "UploadedImageCreated",
-                        "failure": "UploadedImageUploadFailed"
+                        "failure": "UploadedImageUploadFailed",
+                        "success": "UploadedImageCreated"
                       }
                     }
                   ],
@@ -498,24 +485,24 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "typography",
                           "content": "Uploading images…",
-                          "variant": "h3"
+                          "variant": "h3",
+                          "type": "typography"
                         },
                         {
-                          "progressType": "linear",
-                          "value": 0.0,
                           "type": "progress-bar",
-                          "max": 100.0
+                          "value": 0.0,
+                          "max": 100.0,
+                          "progressType": "linear"
                         }
                       ],
-                      "type": "stack",
-                      "className": "py-12",
                       "gap": "md",
-                      "align": "center"
+                      "align": "center",
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -549,8 +536,8 @@
                     "UploadedImage",
                     {
                       "emit": {
-                        "failure": "UploadedImageLoadFailed",
-                        "success": "UploadedImageLoaded"
+                        "success": "UploadedImageLoaded",
+                        "failure": "UploadedImageLoadFailed"
                       }
                     }
                   ]
@@ -565,8 +552,8 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "@payload.error",
                       "type": "alert",
+                      "message": "@payload.error",
                       "variant": "error"
                     }
                   ]
@@ -591,23 +578,23 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
                       "align": "center",
+                      "className": "py-12",
+                      "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
-                          "name": "check-circle",
+                          "type": "icon",
                           "color": "success",
-                          "type": "icon"
+                          "name": "check-circle"
                         },
                         {
                           "content": "Upload complete",
-                          "type": "typography",
-                          "variant": "h3"
+                          "variant": "h3",
+                          "type": "typography"
                         }
-                      ],
-                      "className": "py-12",
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -621,9 +608,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
                       "variant": "error",
-                      "message": "@payload.error"
+                      "message": "@payload.error",
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -637,45 +624,45 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
                       "gap": "md",
                       "children": [
                         {
-                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack",
                           "align": "center",
                           "children": [
                             {
-                              "name": "image-plus",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "image-plus"
                             },
                             {
-                              "content": "@config.title",
                               "variant": "h3",
+                              "content": "@config.title",
                               "type": "typography"
                             }
                           ],
-                          "type": "stack",
-                          "gap": "sm"
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "maxSize": "@config.maxBytesPerImage",
                           "description": "or click to browse",
+                          "maxFiles": "@config.maxImages",
+                          "action": "UPLOAD",
                           "type": "upload-drop-zone",
                           "accept": "@config.accept",
-                          "maxFiles": "@config.maxImages",
-                          "label": "Drop images here",
+                          "maxSize": "@config.maxBytesPerImage",
                           "icon": "image-plus",
-                          "action": "UPLOAD"
+                          "label": "Drop images here"
                         },
                         {
-                          "type": "media-gallery",
-                          "entity": "@payload.data"
+                          "entity": "@payload.data",
+                          "type": "media-gallery"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -683,6 +670,13 @@
             ]
           },
           "config": {
+            "maxBytesPerImage": {
+              "type": "number",
+              "default": 10485760.0,
+              "label": "Size limit (bytes)",
+              "description": "Per-image upload size cap",
+              "tier": "domain"
+            },
             "maxImages": {
               "type": "number",
               "default": 10.0,
@@ -696,13 +690,6 @@
               "label": "Section title",
               "description": "Heading shown above the upload zone",
               "tier": "presentation"
-            },
-            "maxBytesPerImage": {
-              "type": "number",
-              "default": 10485760.0,
-              "label": "Size limit (bytes)",
-              "description": "Per-image upload size cap",
-              "tier": "domain"
             },
             "accept": {
               "type": "string",
