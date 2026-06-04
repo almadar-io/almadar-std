@@ -1,0 +1,96 @@
+app std-status-lifecycle "0.1.0"
+"Infra substrate: data-driven entity status lifecycle. The statuses and the allowed transitions are config data over a fixed single-state topology, so a host organism can expand or collapse its lifecycle without forking. Compose onto an entity, rename the ChangeStatusRequested listen to the host's status-change action, and supply `states` + `transitions`. A requested move is validated against the `transitions` table (illegal moves are rejected), then the new value is written to `statusField` on the target entity and StatusChanged is emitted. Surfaces nothing — the host renders the badge and buttons."
+orbital StatusLifecycleOrbital {
+    type TransitionSpec = { from : string!, to : string!, event : string, label : string }
+
+    type ChangeStatusRequested = Event { id : string, from : string, to : string } "Rename via traitOverrides.events to the host's status-change action (e.g. CONTRACT_STATUS_CHANGE). Carries the record id, its current status, and the requested status."
+
+    type StatusChanged = Event { entityId : string, status : string } "Re-emitted per record after a legal transition; rename to wire downstream reactions (notify, audit, archive)."
+
+    type StatusChangeFailed = Event { error : string, code : string } "Internal: persist of the new status failed."
+
+  entity StatusRecord [persistent: status_records] {
+    id : string!
+    status : string @description "Current lifecycle status of the record." @synonyms "state, stage, phase" = ""
+  }
+
+  trait StatusMachine -> @rebindable StatusRecord [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      ChangeStatusRequested -> idle when (and @config.enabled (array/some @config.transitions (fn t (and ["=", (object/get @t from), ?from] ["=", (object/get @t to), ?to]))))
+        (persist update @config.targetEntity (object/set { id: ?id } @config.statusField ?to) {
+          emit: { failure: StatusChangeFailed, success: StatusChanged }
+        })
+        (emit StatusChanged { entityId: ?id, status: ?to })
+      StatusChangeFailed -> idle
+    }
+
+    emits {
+      StatusChanged -> external {
+        entityId : string
+        status : string
+      }
+      StatusChangeFailed {
+        error : string
+        code : string
+      }
+    }
+
+    listens {
+      ChangeStatusRequested {
+        id : string
+        from : string
+        to : string
+      }
+      StatusChangeFailed {
+        error : string
+        code : string
+      }
+    }
+
+    config {
+      enabled : boolean = false
+        @label "Enforce status lifecycle"
+        @description "Validate and apply status transitions against the configured table. Off by default."
+        @synonyms "lifecycle, statuses, states, stages, workflow, status transitions, enforce, enable, apply"
+        @tier "infra"
+      targetEntity : string = StatusRecord
+        @label "Target entity"
+        @description "Entity name whose status field this lifecycle drives (e.g. 'Contract'). Defaults to the atom's own record so the standalone validates; rebind per composition."
+        @tier "internal"
+      statusField : string = "status"
+        @label "Status field"
+        @description "Which entity field this lifecycle drives. Defaults to 'status'; set it to bind any field (e.g. 'state', 'stage', 'phase')."
+        @synonyms "state field, stage field, status column, lifecycle field"
+        @tier "domain"
+      initialStatus : string = "draft"
+        @label "Initial status"
+        @description "The status a new record starts in."
+        @synonyms "starting state, default status, first stage"
+        @tier "domain"
+      states : [string] = (draft active archived)
+        @label "Statuses"
+        @description "The closed set of statuses a record can hold."
+        @synonyms "states, stages, phases, statuses, lifecycle, workflow steps"
+        @tier "domain"
+      transitions : [TransitionSpec] = [{
+        event: ACTIVATE
+        from: draft
+        label: "Activate"
+        to: active
+      }, {
+        event: ARCHIVE
+        from: active
+        label: "Archive"
+        to: archived
+      }]
+        @label "Allowed transitions"
+        @description "The legal moves: each row is { from, to, event, label }. A requested move is applied only if it matches a row."
+        @synonyms "edges, allowed moves, status flow, workflow transitions"
+        @tier "domain"
+    }
+  }
+
+  page "/status-lifecycle" as StatusLifecyclePage -> StatusMachine
+}
