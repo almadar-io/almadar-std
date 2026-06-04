@@ -8,8 +8,8 @@ orbital NegotiatorGameOrbital {
     description : string
     status : "active" | "inactive" | "pending" = "active"
     createdAt : string
-    score : number = 0
-    level : number = 1
+    score : number @intrinsic = 0
+    level : number @intrinsic = 1
   }
 
   type NegotiatorGameLoaded     = Event NegotiatorGame                  "Fired when NegotiatorGame finishes loading"
@@ -32,7 +32,10 @@ orbital NegotiatorGameOrbital {
       RESTART -> menu
         (render-ui main { type: "game-menu", title: "Negotiator", menuItems: [{ label: "Start", event: "START", variant: "primary" }] })
     }
-    emits: [NegotiatorGameLoaded, NegotiatorGameLoadFailed]
+    emits {
+      NegotiatorGameLoaded
+      NegotiatorGameLoadFailed
+    }
     listens {
       NegotiatorGameLoadFailed { message : string }
     }

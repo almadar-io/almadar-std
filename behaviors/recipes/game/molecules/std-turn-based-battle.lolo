@@ -9,7 +9,7 @@ orbital BattleUnitOrbital {
     status : "active" | "inactive" | "pending" = "active"
     createdAt : string
     turn : number = 0
-    score : number = 0
+    score : number @intrinsic = 0
   }
 
   type BattleUnitLoaded     = Event BattleUnit                  "Fired when BattleUnit finishes loading"
@@ -49,7 +49,10 @@ orbital BattleUnitOrbital {
       RESTART -> menu
         (render-ui main { type: "game-menu", title: "Battle Arena", subtitle: "Turn-Based Strategy", menuItems: [{ label: "Start Battle", event: "START", variant: "primary" }] })
     }
-    emits: [BattleUnitLoaded, BattleUnitLoadFailed]
+    emits {
+      BattleUnitLoaded
+      BattleUnitLoadFailed
+    }
     listens {
       BattleUnitLoadFailed { message : string }
     }
@@ -67,7 +70,10 @@ orbital BattleUnitOrbital {
       LOG_EVENT { data : object! }
           BattleUnitLoadFailed { message : string }
     }
-    emits: [BattleUnitLoaded, BattleUnitLoadFailed]
+    emits {
+      BattleUnitLoaded
+      BattleUnitLoadFailed
+    }
   }
   page "/battleunits" as BattleUnitPage -> BattleUnitBattleFlow, BattleUnitCombatLog
 }

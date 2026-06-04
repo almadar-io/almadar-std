@@ -30,6 +30,10 @@ orbital ServiceCustomNoauthOrbital {
       CALL_API -> calling
         (render-ui main { type: "loading-state", title: "Calling API...", message: "Sending request to servicecustomnoauth endpoint..." })
         (call-service custom-noauth-api execute { endpoint: "@entity.endpoint", method: "@entity.method", body: "@entity.requestBody" } { emit: { success: "ServiceCustomNoauthCustomNoauthApiCompleted", failure: "ServiceCustomNoauthCustomNoauthApiFailed" } })
+      ServiceCustomNoauthLoaded -> idle
+        (set @entity.endpoint @payload.endpoint)
+        (set @entity.method @payload.method)
+        (set @entity.requestBody @payload.requestBody)
     }
     state calling {
       API_RESPONSE -> complete
@@ -57,7 +61,12 @@ orbital ServiceCustomNoauthOrbital {
     
       ServiceCustomNoauthCustomNoauthApiFailed { error : string, code : string }
     }
-    emits: [ServiceCustomNoauthLoaded, ServiceCustomNoauthLoadFailed, ServiceCustomNoauthCustomNoauthApiCompleted, ServiceCustomNoauthCustomNoauthApiFailed]
+    emits {
+      ServiceCustomNoauthLoaded
+      ServiceCustomNoauthLoadFailed
+      ServiceCustomNoauthCustomNoauthApiCompleted
+      ServiceCustomNoauthCustomNoauthApiFailed
+    }
   }
   page "/servicecustomnoauths" as ServiceCustomNoauthPage -> ServiceCustomNoauthCustomNoauth
 }

@@ -8,8 +8,8 @@ orbital DebuggerGameOrbital {
     description : string
     status : "active" | "inactive" | "pending" = "active"
     createdAt : string
-    score : number = 0
-    level : number = 1
+    score : number @intrinsic = 0
+    level : number @intrinsic = 1
   }
 
   type DebuggerGameLoaded     = Event DebuggerGame                  "Fired when DebuggerGame finishes loading"
@@ -32,7 +32,10 @@ orbital DebuggerGameOrbital {
       RESTART -> menu
         (render-ui main { type: "game-menu", title: "Bug Hunter", menuItems: [{ label: "Start", event: "START", variant: "primary" }] })
     }
-    emits: [DebuggerGameLoaded, DebuggerGameLoadFailed]
+    emits {
+      DebuggerGameLoaded
+      DebuggerGameLoadFailed
+    }
     listens {
       DebuggerGameLoadFailed { message : string }
     }

@@ -21,7 +21,7 @@ orbital ValidatorOrbital {
   type ValidationFailed = Event { rule : string, field : string, message : string }
   type ValidationPassed = Event { event : string }
 
-  trait RuleSet -> ValidationRun [interaction, instance] {
+  trait RuleSet -> ValidationRun [lifecycle, instance] {
     initial: idle
     state idle {
       INIT -> idle
@@ -37,9 +37,16 @@ orbital ValidatorOrbital {
     state blocked {
       FIX -> idle
     }
+    listens {
+      FAIL {
+        rule    : string
+        field   : string
+        message : string
+      }
+    }
     emits {
-      ValidationPassed external { event: string }
-      ValidationFailed external { rule: string, field: string, message: string }
+      ValidationPassed -> external { event: string }
+      ValidationFailed -> external { rule: string, field: string, message: string }
     }
   }
 

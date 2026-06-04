@@ -10,7 +10,7 @@ orbital DrawerMasterOrbital {
   uses Browse from "std/behaviors/std-browse"
   uses Drawer from "std/behaviors/std-drawer"
 
-  entity DrawerMasterItem [persistent: drawermasteritems] {
+  entity DrawerMasterItem [runtime] {
     id : string!
     name : string
     description : string
@@ -33,7 +33,10 @@ orbital DrawerMasterOrbital {
         (fetch DrawerMasterItem { emit: { success: "DrawerMasterItemLoaded", failure: "DrawerMasterItemLoadFailed" } })
         (render-ui main { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "box", children: ["@trait.DrawerMasterBrowse"] }, { type: "box", children: ["@trait.DrawerMasterDrawer"] }] })
     }
-    emits: [DrawerMasterItemLoadFailed, DrawerMasterItemLoaded]
+    emits {
+      DrawerMasterItemLoadFailed
+      DrawerMasterItemLoaded
+    }
   }
 
   page "/drawer-master" as DrawerMaster -> DrawerMasterLayout

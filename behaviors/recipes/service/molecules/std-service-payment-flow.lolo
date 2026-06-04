@@ -13,9 +13,9 @@ orbital ServicePaymentFlowOrbital {
     paymentIntentId : string
     clientSecret : string
     paymentStatus : string = "idle"
-    to : string
-    subject : string = "Payment Receipt"
-    body : string
+    to : string @intrinsic
+    subject : string @intrinsic = "Payment Receipt"
+    body : string @intrinsic
     sendStatus : string = "idle"
     error : string
   }
@@ -32,6 +32,9 @@ orbital ServicePaymentFlowOrbital {
       INIT -> idle
         (fetch ServicePaymentFlow { emit: { success: "ServicePaymentFlowLoaded", failure: "ServicePaymentFlowLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "credit-card" }, { type: "typography", content: "Payment", variant: "h2" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "md", children: [{ type: "input", inputType: "number", placeholder: "0.00" }, { type: "select", options: [{ label: "USD", value: "usd" }, { label: "EUR", value: "eur" }, { label: "GBP", value: "gbp" }] }] }, { type: "button", label: "Pay", action: "CREATE_PAYMENT", variant: "primary", icon: "credit-card" }] })
+      ServicePaymentFlowLoaded -> idle
+        (set @entity.amount @payload.amount)
+        (set @entity.currency @payload.currency)
       CREATE_PAYMENT -> creating
         (render-ui main { type: "loading-state", title: "Creating payment...", message: "Setting up your payment intent." })
         (call-service stripe "createPaymentIntent" { amount: "@entity.amount", currency: "@entity.currency" } { emit: { success: "ServicePaymentFlowStripeCompleted", failure: "ServicePaymentFlowStripeFailed" } })
@@ -76,7 +79,14 @@ orbital ServicePaymentFlowOrbital {
       ServicePaymentFlowStripeFailed { error : string, code : string }
       ServicePaymentFlowEmailFailed { error : string, code : string }
     }
-    emits: [ServicePaymentFlowLoaded, ServicePaymentFlowLoadFailed, ServicePaymentFlowStripeCompleted, ServicePaymentFlowStripeFailed, ServicePaymentFlowEmailCompleted, ServicePaymentFlowEmailFailed]
+    emits {
+      ServicePaymentFlowLoaded
+      ServicePaymentFlowLoadFailed
+      ServicePaymentFlowStripeCompleted
+      ServicePaymentFlowStripeFailed
+      ServicePaymentFlowEmailCompleted
+      ServicePaymentFlowEmailFailed
+    }
   }
   trait ServicePaymentFlowReceipt -> ServicePaymentFlow [interaction, instance] {
     initial: waiting
@@ -106,9 +116,12 @@ orbital ServicePaymentFlowOrbital {
         (call-service email send { to: "@entity.to", subject: "@entity.subject", body: "@entity.body" } { emit: { success: "ServicePaymentFlowEmailCompleted", failure: "ServicePaymentFlowEmailFailed" } })
     }
 
-    emits: [ServicePaymentFlowEmailCompleted, ServicePaymentFlowEmailFailed]
+    emits {
+      ServicePaymentFlowEmailCompleted
+      ServicePaymentFlowEmailFailed
+    }
     listens {
-      ServicePaymentFlowPayment SEND_RECEIPT -> SEND_RECEIPT
+      ServicePaymentFlowPayment.SEND_RECEIPT -> SEND_RECEIPT
       FAILED { error : string! }
     }
   }

@@ -8,11 +8,11 @@ orbital PuzzleBoardOrbital {
     description : string
     status : "active" | "inactive" | "pending" = "active"
     createdAt : string
-    score : number = 0
-    highScore : number = 0
+    score : number @intrinsic = 0
+    highScore : number @intrinsic = 0
     combo : number = 0
     multiplier : number = 1
-    level : number = 1
+    level : number @intrinsic = 1
     moves : number = 0
   }
 
@@ -54,7 +54,10 @@ orbital PuzzleBoardOrbital {
       RESTART -> menu
         (render-ui main { type: "game-menu", title: "Puzzle", subtitle: "Puzzle Challenge", menuItems: [{ label: "Start Puzzle", event: "START", variant: "primary" }] })
     }
-    emits: [PuzzleBoardLoaded, PuzzleBoardLoadFailed]
+    emits {
+      PuzzleBoardLoaded
+      PuzzleBoardLoadFailed
+    }
     listens {
       PuzzleBoardLoadFailed { message : string }
     }
@@ -81,7 +84,10 @@ orbital PuzzleBoardOrbital {
       COMBO { multiplier : number! }
           PuzzleBoardLoadFailed { message : string }
     }
-    emits: [PuzzleBoardLoaded, PuzzleBoardLoadFailed]
+    emits {
+      PuzzleBoardLoaded
+      PuzzleBoardLoadFailed
+    }
   }
   page "/puzzleboards" as PuzzleBoardPage -> PuzzleBoardPuzzleFlow, PuzzleBoardPuzzleScore
 }

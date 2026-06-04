@@ -8,8 +8,8 @@ orbital BuilderGameOrbital {
     description : string
     status : "active" | "inactive" | "pending" = "active"
     createdAt : string
-    score : number = 0
-    level : number = 1
+    score : number @intrinsic = 0
+    level : number @intrinsic = 1
   }
 
   type BuilderGameLoaded     = Event BuilderGame                  "Fired when BuilderGame finishes loading"
@@ -32,7 +32,10 @@ orbital BuilderGameOrbital {
       RESTART -> menu
         (render-ui main { type: "game-menu", title: "Builder Challenge", menuItems: [{ label: "Start", event: "START", variant: "primary" }] })
     }
-    emits: [BuilderGameLoaded, BuilderGameLoadFailed]
+    emits {
+      BuilderGameLoaded
+      BuilderGameLoadFailed
+    }
     listens {
       BuilderGameLoadFailed { message : string }
     }

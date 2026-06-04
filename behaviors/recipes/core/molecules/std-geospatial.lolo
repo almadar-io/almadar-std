@@ -10,9 +10,9 @@ orbital LocationOrbital {
 
   entity Location [persistent: locations] {
     id          : string!
-    name        : string!
-    description : string
-    status      : "active" | "inactive" | "pending" = "active"
+    name        : string! @intrinsic
+    description : string @intrinsic
+    status      : "active" | "inactive" | "pending" @intrinsic = "active"
     createdAt   : string
     pendingId   : string = ""
   }
@@ -42,11 +42,15 @@ orbital LocationOrbital {
         (fetch Location { emit: { success: "LocationLoaded", failure: "LocationLoadFailed" } })
         (render-ui main { type: "spinner" })
     }
-    emits: [LocationLoaded, LocationLoadFailed]
+    emits {
+      LocationLoaded
+      LocationLoadFailed
+      SELECT { id : string! }
+    }
     listens {
       LocationLoadFailed { error : string, code : string }
-      LocationConfirmSelect CONFIRMED -> INIT
-      LocationSelectionFlow LocationSelected -> INIT
+      LocationConfirmSelect.CONFIRMED -> INIT
+      LocationSelectionFlow.LocationSelected -> INIT
     }
   }
 
@@ -67,12 +71,16 @@ orbital LocationOrbital {
         (render-ui modal null)
     }
     emits {
-      CONFIRM_SELECT external { id : string! }
+      CONFIRM_SELECT -> external { id : string! }
     }
 
-    emits: [LocationLoadFailed, LocationLoaded]
+    emits {
+      LocationLoadFailed
+      LocationLoaded
+    }
     listens {
       SELECT { id : string! }
+      LocationBrowse.SELECT -> SELECT
     }
   }
 
@@ -99,11 +107,11 @@ orbital LocationOrbital {
         (emit LocationSelected { id: "@payload.id" })
     }
     emits {
-      LocationSelected external { id : string! }
+      LocationSelected -> external { id : string! }
     }
     listens {
       DO_EMIT_SELECTED { id : string! }
-      LocationConfirmSelect CONFIRMED -> DO_EMIT_SELECTED
+      LocationConfirmSelect.CONFIRMED -> DO_EMIT_SELECTED
     }
   }
 

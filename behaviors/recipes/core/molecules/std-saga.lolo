@@ -28,25 +28,25 @@ orbital SagaOrbital {
   type StepStarted      = Event { id : string, step : number }
   type StepCompensated  = Event { id : string, step : number }
 
-  trait Forward -> SagaRun [interaction, collection] {
+  trait Forward -> SagaRun [lifecycle, collection] {
     initial: idle
     state idle {
       INIT  -> idle
       START -> stepping
-        (emit StepStarted { id: "@row.id", step: 0 })
+        (emit StepStarted { id: "@payload.id", step: 0 })
     }
     state stepping {
       OK   -> stepping
-        (emit StepStarted { id: "@row.id", step: "@payload.step" })
+        (emit StepStarted { id: "@payload.id", step: "@payload.step" })
       DONE -> committed
-        (emit SagaCommitted { id: "@row.id" })
+        (emit SagaCommitted { id: "@payload.id" })
       FAIL -> compensating
     }
     state compensating {
       OK   -> compensating
-        (emit StepCompensated { id: "@row.id", step: "@payload.step" })
+        (emit StepCompensated { id: "@payload.id", step: "@payload.step" })
       DONE -> rolledBack
-        (emit SagaRolledBack { id: "@row.id", lastError: "@row.lastError" })
+        (emit SagaRolledBack { id: "@payload.id", lastError: "@payload.lastError" })
     }
     state committed {
       RESET -> idle
@@ -54,11 +54,24 @@ orbital SagaOrbital {
     state rolledBack {
       RESET -> idle
     }
+    listens {
+      START {
+        id : string!
+      }
+      OK {
+        id   : string!
+        step : number
+      }
+      DONE {
+        id        : string!
+        lastError : string
+      }
+    }
     emits {
-      SagaCommitted    external { id : string }
-      SagaRolledBack   external { id : string, lastError : string }
-      StepStarted      external { id : string, step : number }
-      StepCompensated  external { id : string, step : number }
+      SagaCommitted    -> external { id : string }
+      SagaRolledBack   -> external { id : string, lastError : string }
+      StepStarted      -> external { id : string, step : number }
+      StepCompensated  -> external { id : string, step : number }
     }
   }
 

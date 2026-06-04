@@ -19,7 +19,7 @@ orbital HedgerOrbital {
   type RaceWon    = Event { provider : string, value : string }
   type RaceFailed = Event { errors : string }
 
-  trait HedgedRead -> Race [interaction, instance] {
+  trait HedgedRead -> Race [lifecycle, instance] {
     initial: idle
     state idle {
       INIT -> idle
@@ -39,9 +39,20 @@ orbital HedgerOrbital {
     state failed {
       RETRY -> racing
     }
+    listens {
+      A_OK {
+        value : string
+      }
+      B_OK {
+        value : string
+      }
+      BOTH_FAIL {
+        errors : string
+      }
+    }
     emits {
-      RaceWon    external { provider : string, value : string }
-      RaceFailed external { errors : string }
+      RaceWon    -> external { provider : string, value : string }
+      RaceFailed -> external { errors : string }
     }
   }
 

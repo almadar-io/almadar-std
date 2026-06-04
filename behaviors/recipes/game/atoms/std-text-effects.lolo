@@ -21,6 +21,9 @@ orbital TextContentOrbital {
       INIT -> idle
         (fetch TextContent { emit: { success: "TextContentLoaded", failure: "TextContentLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "type" }, { type: "typography", content: "Text Effects", variant: "h2" }] }, { type: "divider" }, { type: "markdown-content", content: "@entity.name" }, { type: "code-block", code: "@entity.reference", language: "text" }, { type: "typography", variant: "body", content: "@entity.name" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Animate", action: "ANIMATE", variant: "primary", icon: "play" }, { type: "button", label: "Highlight", action: "HIGHLIGHT", variant: "secondary", icon: "highlighter" }] }] })
+      TextContentLoaded -> idle
+        (set @entity.name @payload.name)
+        (set @entity.reference @payload.reference)
       ANIMATE -> animating
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "type" }, { type: "typography", content: "Text Effects", variant: "h2" }] }, { type: "divider" }, { type: "typewriter-text", text: "@entity.name", speed: 50}, { type: "law-reference-tooltip", reference: "@entity.reference", children: [{ type: "typography", variant: "caption", color: "muted", content: "Hover for reference details" }] }, { type: "button", label: "Highlight", action: "HIGHLIGHT", variant: "secondary", icon: "highlighter" }] })
       HIGHLIGHT -> highlighted
@@ -36,7 +39,10 @@ orbital TextContentOrbital {
       RESET -> idle
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "type" }, { type: "typography", content: "Text Effects", variant: "h2" }] }, { type: "divider" }, { type: "markdown-content", content: "@entity.name" }, { type: "code-block", code: "@entity.reference", language: "text" }, { type: "typography", variant: "body", content: "@entity.name" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Animate", action: "ANIMATE", variant: "primary", icon: "play" }, { type: "button", label: "Highlight", action: "HIGHLIGHT", variant: "secondary", icon: "highlighter" }] }] })
     }
-    emits: [TextContentLoaded, TextContentLoadFailed]
+    emits {
+      TextContentLoaded
+      TextContentLoadFailed
+    }
     listens {
       TextContentLoadFailed { message : string }
     }

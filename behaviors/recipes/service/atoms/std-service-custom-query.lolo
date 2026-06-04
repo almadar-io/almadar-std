@@ -30,6 +30,10 @@ orbital ServiceCustomQueryOrbital {
       CALL_API -> calling
         (render-ui main { type: "loading-state", title: "Calling API...", message: "Sending request to servicecustomquery endpoint..." })
         (call-service custom-query-api execute { endpoint: "@entity.endpoint", method: "@entity.method", body: "@entity.requestBody" } { emit: { success: "ServiceCustomQueryCustomQueryApiCompleted", failure: "ServiceCustomQueryCustomQueryApiFailed" } })
+      ServiceCustomQueryLoaded -> idle
+        (set @entity.endpoint @payload.endpoint)
+        (set @entity.method @payload.method)
+        (set @entity.requestBody @payload.requestBody)
     }
     state calling {
       API_RESPONSE -> complete
@@ -57,7 +61,12 @@ orbital ServiceCustomQueryOrbital {
     
       ServiceCustomQueryCustomQueryApiFailed { error : string, code : string }
     }
-    emits: [ServiceCustomQueryLoaded, ServiceCustomQueryLoadFailed, ServiceCustomQueryCustomQueryApiCompleted, ServiceCustomQueryCustomQueryApiFailed]
+    emits {
+      ServiceCustomQueryLoaded
+      ServiceCustomQueryLoadFailed
+      ServiceCustomQueryCustomQueryApiCompleted
+      ServiceCustomQueryCustomQueryApiFailed
+    }
   }
   page "/servicecustomquerys" as ServiceCustomQueryPage -> ServiceCustomQueryCustomQuery
 }

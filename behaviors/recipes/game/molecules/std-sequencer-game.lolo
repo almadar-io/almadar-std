@@ -8,8 +8,8 @@ orbital SequencerGameOrbital {
     description : string
     status : "active" | "inactive" | "pending" = "active"
     createdAt : string
-    score : number = 0
-    level : number = 1
+    score : number @intrinsic = 0
+    level : number @intrinsic = 1
   }
 
   type SequencerGameLoaded     = Event SequencerGame                  "Fired when SequencerGame finishes loading"
@@ -32,7 +32,10 @@ orbital SequencerGameOrbital {
       RESTART -> menu
         (render-ui main { type: "game-menu", title: "Sequencer", menuItems: [{ label: "Start", event: "START", variant: "primary" }] })
     }
-    emits: [SequencerGameLoaded, SequencerGameLoadFailed]
+    emits {
+      SequencerGameLoaded
+      SequencerGameLoadFailed
+    }
     listens {
       SequencerGameLoadFailed { message : string }
     }

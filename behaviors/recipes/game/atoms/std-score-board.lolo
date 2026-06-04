@@ -22,6 +22,12 @@ orbital ScoreBoardEntryOrbital {
       INIT -> idle
         (fetch ScoreBoardEntry { emit: { success: "ScoreBoardEntryLoaded", failure: "ScoreBoardEntryLoadFailed" } })
         (render-ui main { type: "score-board", score: "@entity.score", highScore: "@entity.highScore", combo: "@entity.combo", multiplier: "@entity.multiplier", level: "@entity.level" })
+      ScoreBoardEntryLoaded -> idle
+        (set @entity.score @payload.score)
+        (set @entity.highScore @payload.highScore)
+        (set @entity.combo @payload.combo)
+        (set @entity.multiplier @payload.multiplier)
+        (set @entity.level @payload.level)
       ADD_SCORE -> idle
         (set @entity.score (+ @entity.score @payload.points))
         (set @entity.combo (+ @entity.combo 1))
@@ -40,7 +46,10 @@ orbital ScoreBoardEntryOrbital {
       COMBO { multiplier : number! }
           ScoreBoardEntryLoadFailed { message : string }
     }
-    emits: [ScoreBoardEntryLoaded, ScoreBoardEntryLoadFailed]
+    emits {
+      ScoreBoardEntryLoaded
+      ScoreBoardEntryLoadFailed
+    }
   }
   page "/scoreboardentrys" as ScoreBoardEntryScorePage -> ScoreBoardEntryScoreBoard
 }

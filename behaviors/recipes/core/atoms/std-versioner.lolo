@@ -20,7 +20,7 @@ orbital VersionerOrbital {
   type WriteAccepted = Event { id : string, etag : string }
   type Conflict      = Event { id : string, currentEtag : string, attemptedEtag : string }
 
-  trait EtagGuard -> HeldVersion [interaction, instance] {
+  trait EtagGuard -> HeldVersion [lifecycle, instance] {
     initial: idle
     state idle {
       INIT -> idle
@@ -35,9 +35,20 @@ orbital VersionerOrbital {
     state stale {
       REFETCH -> held
     }
+    listens {
+      WRITE_OK {
+        id   : string
+        etag : string
+      }
+      WRITE_STALE {
+        id            : string
+        currentEtag   : string
+        attemptedEtag : string
+      }
+    }
     emits {
-      WriteAccepted external { id : string, etag : string }
-      Conflict      external { id : string, currentEtag : string, attemptedEtag : string }
+      WriteAccepted -> external { id : string, etag : string }
+      Conflict      -> external { id : string, currentEtag : string, attemptedEtag : string }
     }
   }
 

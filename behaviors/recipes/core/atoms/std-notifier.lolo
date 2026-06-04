@@ -20,7 +20,7 @@ orbital NotifierOrbital {
   type ToastShown    = Event { severity : string, message : string }
   type ToastDismissed = Event { id : string }
 
-  trait OutcomeToast -> Notice [interaction, instance] {
+  trait OutcomeToast -> Notice [lifecycle, instance] {
     initial: idle
     state idle {
       INIT -> idle
@@ -35,9 +35,17 @@ orbital NotifierOrbital {
       DISMISS -> idle
         (emit ToastDismissed { id: "@payload.id" })
     }
+    listens {
+      FAILED {
+        error : string
+      }
+      DISMISS {
+        id : string
+      }
+    }
     emits {
-      ToastShown     external { severity : string, message : string }
-      ToastDismissed external { id : string }
+      ToastShown     -> external { severity : string, message : string }
+      ToastDismissed -> external { id : string }
     }
   }
 

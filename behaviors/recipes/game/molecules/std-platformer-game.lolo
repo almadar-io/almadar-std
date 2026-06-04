@@ -8,10 +8,10 @@ orbital PlatLevelOrbital {
     description : string
     status : "active" | "inactive" | "pending" = "active"
     createdAt : string
-    score : number = 0
-    lives : number = 3
-    player : string = ""
-    platforms : string = ""
+    score : number @intrinsic = 0
+    lives : number @intrinsic = 3
+    player : string @intrinsic = ""
+    platforms : [string] @intrinsic
   }
 
   type PlatLevelLoaded     = Event PlatLevel                  "Fired when PlatLevel finishes loading"
@@ -52,7 +52,10 @@ orbital PlatLevelOrbital {
       RESTART -> menu
         (render-ui main { type: "game-menu", title: "Platformer", subtitle: "Side-Scrolling Adventure", menuItems: [{ label: "Start Game", event: "START", variant: "primary" }] })
     }
-    emits: [PlatLevelLoaded, PlatLevelLoadFailed]
+    emits {
+      PlatLevelLoaded
+      PlatLevelLoadFailed
+    }
     listens {
       PlatLevelLoadFailed { message : string }
     }
@@ -72,7 +75,10 @@ orbital PlatLevelOrbital {
       STOP -> idle
         (render-ui main { type: "platformer-canvas", platforms: "@entity.platforms", player: "@entity.player", canvasWidth: 800, canvasHeight: 400, worldWidth: 2400, worldHeight: 400, followCamera: true, bgColor: "#1a1a2e", leftEvent: "LEFT", rightEvent: "RIGHT", jumpEvent: "JUMP", stopEvent: "STOP" })
     }
-    emits: [PlatLevelLoaded, PlatLevelLoadFailed]
+    emits {
+      PlatLevelLoaded
+      PlatLevelLoadFailed
+    }
     listens {
       PlatLevelLoadFailed { message : string }
     }

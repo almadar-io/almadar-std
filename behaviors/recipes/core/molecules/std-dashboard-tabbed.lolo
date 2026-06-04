@@ -7,9 +7,9 @@ app std-dashboard-tabbed "1.0.0"
 
 orbital DashboardTabbedOrbital {
   uses Tabs    from "std/behaviors/std-tabs"
-  uses Display from "std/behaviors/std-display"
+  uses Stats   from "std/behaviors/std-stats"
 
-  entity DashboardItem [persistent: dashboarditems] {
+  entity DashboardItem [runtime] {
     id : string!
     name : string
     value : string
@@ -18,10 +18,10 @@ orbital DashboardTabbedOrbital {
   type DashboardItemLoaded = Event { data : [DashboardItem] }
   type DashboardItemLoadFailed = Event { error : string, code : string }
 
-  trait DashboardTabs     = Tabs.traits.TabContentTabs       -> DashboardItem {}
-  trait DashboardSummary  = Display.traits.DisplayItemDisplay -> DashboardItem {}
-  trait DashboardMetrics  = Display.traits.DisplayItemDisplay -> DashboardItem {}
-  trait DashboardRecent   = Display.traits.DisplayItemDisplay -> DashboardItem {}
+  trait DashboardTabs     = Tabs.traits.TabsItemTabs       -> DashboardItem {}
+  trait DashboardSummary  = Stats.traits.StatsItemStats -> DashboardItem {}
+  trait DashboardMetrics  = Stats.traits.StatsItemStats -> DashboardItem {}
+  trait DashboardRecent   = Stats.traits.StatsItemStats -> DashboardItem {}
 
   trait DashboardLayout -> DashboardItem [interaction, instance] {
     state composing {
@@ -46,7 +46,10 @@ orbital DashboardTabbedOrbital {
           ]
         })
     }
-    emits: [DashboardItemLoadFailed, DashboardItemLoaded]
+    emits {
+      DashboardItemLoadFailed
+      DashboardItemLoaded
+    }
   }
 
   page "/dashboard" as Dashboard -> DashboardLayout

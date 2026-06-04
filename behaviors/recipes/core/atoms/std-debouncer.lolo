@@ -19,7 +19,7 @@ orbital DebouncerOrbital {
 
   type DebounceFlushed = Event { value : string }
 
-  trait Coalesce -> DebounceWindow [interaction, instance] {
+  trait Coalesce -> DebounceWindow [lifecycle, instance] {
     initial: open
     state open {
       INIT -> open
@@ -30,8 +30,13 @@ orbital DebouncerOrbital {
       SETTLE   -> open
         (emit DebounceFlushed { value: "@payload.value" })
     }
+    listens {
+      SETTLE {
+        value : string
+      }
+    }
     emits {
-      DebounceFlushed external { value : string }
+      DebounceFlushed -> external { value : string }
     }
   }
 

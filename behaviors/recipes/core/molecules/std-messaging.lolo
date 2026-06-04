@@ -10,9 +10,9 @@ orbital ChatMessageOrbital {
 
   entity ChatMessage [persistent: chatmessages] {
     id          : string!
-    name        : string!
-    description : string
-    status      : "active" | "inactive" | "pending" = "active"
+    name        : string! @intrinsic
+    description : string @intrinsic
+    status      : "active" | "inactive" | "pending" @intrinsic = "active"
     createdAt   : string
   }
 
@@ -40,10 +40,15 @@ orbital ChatMessageOrbital {
         (fetch ChatMessage { emit: { success: "ChatMessageLoaded", failure: "ChatMessageLoadFailed" } })
         (render-ui main { type: "spinner" })
     }
-    emits: [ChatMessageLoaded, ChatMessageLoadFailed]
+    emits {
+      ChatMessageLoaded
+      ChatMessageLoadFailed
+      COMPOSE
+      VIEW { id : string! }
+    }
     listens {
       ChatMessageLoadFailed { error : string, code : string }
-      ChatMessagePersistor CHAT_MESSAGE_SENT -> INIT
+      ChatMessagePersistor.CHAT_MESSAGE_SENT -> INIT
     }
   }
 
@@ -72,9 +77,13 @@ orbital ChatMessageOrbital {
         (render-ui modal null)
     }
 
-    emits: [ChatMessageLoadFailed, ChatMessageLoaded]
+    emits {
+      ChatMessageLoadFailed
+      ChatMessageLoaded
+    }
     listens {
       VIEW { id : string! }
+      ChatMessageBrowse.VIEW -> VIEW
     }
   }
 
@@ -87,11 +96,11 @@ orbital ChatMessageOrbital {
         (emit CHAT_MESSAGE_SENT { id: "@payload.data.id" })
     }
     emits {
-      CHAT_MESSAGE_SENT external { id : string! }
+      CHAT_MESSAGE_SENT -> external { id : string! }
     }
     listens {
       DO_SEND { data : ChatMessage }
-      ChatMessageCompose CHAT_MESSAGE_SENT -> DO_SEND
+      ChatMessageCompose.CHAT_MESSAGE_SENT -> DO_SEND
     }
   }
 

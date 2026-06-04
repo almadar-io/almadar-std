@@ -23,7 +23,7 @@ orbital AuditorOrbital {
   type AuditEntrySaved = Event { id : string }
   type AuditEntrySaveFailed = Event { error : string, code : string }
 
-  trait WildcardLog -> AuditEntry [interaction, collection] {
+  trait WildcardLog -> AuditEntry [lifecycle, collection] {
     initial: listening
     state listening {
       INIT -> listening
@@ -37,11 +37,17 @@ orbital AuditorOrbital {
          })
     }
     listens {
-      ;; consumer wires its own coordinator emits to RECORD.
+      RECORD {
+        trait : string!
+        event : string!
+        actorId : string
+        payload : string
+        timestamp : datetime!
+      }
     }
     emits {
-      AuditEntrySaved      external { id : string }
-      AuditEntrySaveFailed external { error : string, code : string }
+      AuditEntrySaved      -> external { id : string }
+      AuditEntrySaveFailed -> external { error : string, code : string }
     }
   }
 

@@ -12,9 +12,9 @@ orbital DetailRecordOrbital {
 
   entity DetailRecord [persistent: detailrecords] {
     id          : string!
-    name        : string!
-    description : string
-    status      : "active" | "inactive" | "pending" = "active"
+    name        : string! @intrinsic
+    description : string @intrinsic
+    status      : "active" | "inactive" | "pending" @intrinsic = "active"
     createdAt   : string
   }
 
@@ -42,10 +42,15 @@ orbital DetailRecordOrbital {
         (fetch DetailRecord { emit: { success: "DetailRecordLoaded", failure: "DetailRecordLoadFailed" } })
         (render-ui main { type: "spinner" })
     }
-    emits: [DetailRecordLoaded, DetailRecordLoadFailed]
+    emits {
+      DetailRecordLoaded
+      DetailRecordLoadFailed
+      CREATE
+      VIEW { id : string! }
+    }
     listens {
       DetailRecordLoadFailed { error : string, code : string }
-      DetailRecordPersistor DETAIL_RECORD_CREATED -> INIT
+      DetailRecordPersistor.DETAIL_RECORD_CREATED -> INIT
     }
   }
 
@@ -77,9 +82,13 @@ orbital DetailRecordOrbital {
         (render-ui modal null)
     }
 
-    emits: [DetailRecordLoadFailed, DetailRecordLoaded]
+    emits {
+      DetailRecordLoadFailed
+      DetailRecordLoaded
+    }
     listens {
       VIEW { id : string! }
+      DetailRecordBrowse.VIEW -> VIEW
     }
   }
 
@@ -93,11 +102,11 @@ orbital DetailRecordOrbital {
         (emit DETAIL_RECORD_CREATED { id: "@payload.data.id" })
     }
     emits {
-      DETAIL_RECORD_CREATED external { id : string! }
+      DETAIL_RECORD_CREATED -> external { id : string! }
     }
     listens {
       DO_CREATE { data : DetailRecord }
-      DetailRecordCreate DETAIL_RECORD_CREATED -> DO_CREATE
+      DetailRecordCreate.DETAIL_RECORD_CREATED -> DO_CREATE
     }
   }
 
