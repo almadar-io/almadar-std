@@ -309,6 +309,17 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     params: [{ name: '...exprs', type: SEXPR, description: 'Effects/expressions to run in order' }],
     example: '["do", ["set", "@entity.x", 0], ["set", "@entity.y", 0]]',
   },
+  list: {
+    module: 'core',
+    category: 'control',
+    minArity: 0,
+    maxArity: null,
+    description: 'Literal array constructor — evaluates each argument and returns them as an array. Lowering wraps a literal list bound for a literal-array slot in `list` so it is unambiguously data, never a call (disambiguates a list whose first element collides with an operator name, e.g. [path method …]).',
+    hasSideEffects: false,
+    returnType: 'array',
+    params: [{ name: '...items', type: SEXPR, description: 'Items to collect into a literal array' }],
+    example: '["list", "path", "method", "status"] // => ["path", "method", "status"]',
+  },
   when: {
     module: 'core',
     category: 'control',
