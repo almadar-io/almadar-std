@@ -40,13 +40,6 @@ export interface StdImageUploadMultiUploadPayload {
 }
 
 /**
- * Payload shape for the `DELETE` event.
- */
-export interface StdImageUploadMultiDeletePayload {
-  id: string;
-}
-
-/**
  * Payload shape for the `UploadedImageLoaded` event.
  */
 export interface StdImageUploadMultiUploadedImageLoadedPayload {
@@ -109,12 +102,12 @@ export interface StdImageUploadMultiUploadedImageDeleteFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdImageUploadMultiConfig {
+  /** Default: `10485760` */
+  maxBytesPerImage?: number;
   /** Default: `10` */
   maxImages?: number;
   /** Default: `"Upload Images"` */
   title?: string;
-  /** Default: `10485760` */
-  maxBytesPerImage?: number;
   /** Default: `"image/*"` */
   accept?: string;
 }

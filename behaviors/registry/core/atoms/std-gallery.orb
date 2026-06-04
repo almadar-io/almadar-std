@@ -108,12 +108,6 @@
               ]
             },
             {
-              "event": "CLOSE",
-              "description": "Indicates the gallery has been closed.",
-              "synonyms": "dismiss, hide, cancel",
-              "tier": "essential"
-            },
-            {
               "event": "GalleryItemLoaded",
               "description": "Indicates a GalleryItem has finished loading.",
               "synonyms": "loaded, ready, available",
@@ -214,8 +208,8 @@
               {
                 "key": "CLOSE",
                 "name": "Close",
-                "description": "Indicates the gallery has been closed.",
-                "synonyms": "dismiss, hide, cancel",
+                "description": "Indicates the gallery or lightbox has been dismissed.",
+                "synonyms": "dismiss, hide, close, cancel",
                 "tier": "essential"
               }
             ],
@@ -239,22 +233,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
+                      "gap": "md",
                       "className": "py-12",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "variant": "caption",
                           "color": "muted",
-                          "content": "Loading gallery…",
                           "type": "typography",
-                          "variant": "caption"
+                          "content": "Loading gallery…"
                         }
-                      ],
-                      "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -269,23 +263,25 @@
                     "main",
                     {
                       "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
                       "children": [
                         {
-                          "align": "center",
-                          "gap": "sm",
-                          "direction": "horizontal",
                           "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "image"
+                              "name": "image",
+                              "type": "icon"
                             },
                             {
                               "variant": "h3",
-                              "content": "@config.title",
-                              "type": "typography"
+                              "type": "typography",
+                              "content": "@config.title"
                             }
-                          ]
+                          ],
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
@@ -294,9 +290,7 @@
                           "entity": "@payload.data",
                           "type": "media-gallery"
                         }
-                      ],
-                      "gap": "md",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -311,8 +305,8 @@
                     "main",
                     {
                       "type": "alert",
-                      "message": "@payload.error",
-                      "variant": "error"
+                      "variant": "error",
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -346,18 +340,18 @@
                     "render-ui",
                     "modal",
                     {
-                      "showCounter": true,
-                      "isOpen": true,
-                      "type": "lightbox",
-                      "currentIndex": 0.0,
                       "images": [
                         {
+                          "caption": "@entity.name",
                           "src": "@entity.imageUrl",
-                          "alt": "@entity.name",
-                          "caption": "@entity.name"
+                          "alt": "@entity.name"
                         }
                       ],
-                      "closeAction": "CLOSE"
+                      "isOpen": true,
+                      "closeAction": "CLOSE",
+                      "showCounter": true,
+                      "type": "lightbox",
+                      "currentIndex": 0.0
                     }
                   ]
                 ]
@@ -386,22 +380,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "align": "center",
-                      "gap": "md",
-                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "variant": "caption",
+                          "type": "typography",
                           "color": "muted",
-                          "content": "Loading gallery…",
-                          "type": "typography"
+                          "content": "Loading gallery…"
                         }
                       ],
-                      "className": "py-12"
+                      "align": "center",
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -416,8 +410,8 @@
                     "GalleryItem",
                     {
                       "emit": {
-                        "success": "GalleryItemLoaded",
-                        "failure": "GalleryItemLoadFailed"
+                        "failure": "GalleryItemLoadFailed",
+                        "success": "GalleryItemLoaded"
                       }
                     }
                   ],
@@ -425,8 +419,8 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]
