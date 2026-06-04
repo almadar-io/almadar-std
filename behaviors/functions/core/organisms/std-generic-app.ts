@@ -185,57 +185,57 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
         'ref': 'AppShell.traits.AppLayout',
         'name': 'ContactAppLayout',
         'config': {
-          'notifications': [],
           'searchEvent': 'CONTACT_SEARCH',
+          'notifications': [],
           'notificationClickEvent': 'CONTACT_NOTIFICATIONS_OPEN',
           'appName': 'App',
+          'contentTrait': '@trait.ContactCatalog',
           'navItems': [
             {
-              'label': 'Contacts',
-              'href': '/contacts',
               'icon': 'users',
+              'href': '/contacts',
+              'label': 'Contacts',
             },
             {
-              'icon': 'package',
-              'href': '/items',
               'label': 'Items',
+              'href': '/items',
+              'icon': 'package',
             },
             {
               'href': '/activities',
-              'label': 'Activities',
               'icon': 'activity',
+              'label': 'Activities',
             },
             {
               'label': 'Tasks',
-              'href': '/tasks',
               'icon': 'check-square',
+              'href': '/tasks',
             },
             {
               'label': 'Calendar',
-              'icon': 'calendar',
               'href': '/calendar',
+              'icon': 'calendar',
             },
             {
-              'label': 'Dashboard',
-              'icon': 'layout-dashboard',
               'href': '/widgets',
+              'icon': 'layout-dashboard',
+              'label': 'Dashboard',
             },
             {
+              'icon': 'rss',
               'label': 'Feed',
               'href': '/feed',
-              'icon': 'rss',
             },
             {
-              'icon': 'file-text',
-              'label': 'Notes',
               'href': '/notes',
+              'label': 'Notes',
+              'icon': 'file-text',
             },
           ],
-          'contentTrait': '@trait.ContactCatalog',
         },
         'events': {
-          'NOTIFY_CLICK': 'CONTACT_NOTIFICATIONS_OPEN',
           'SEARCH': 'CONTACT_SEARCH',
+          'NOTIFY_CLICK': 'CONTACT_NOTIFICATIONS_OPEN',
         },
       }),
       rebindInlineTraitEntity({
@@ -330,61 +330,61 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
                     'direction': 'vertical',
-                    'gap': 'lg',
                     'children': [
                       {
-                        'gap': 'md',
+                        'justify': 'between',
                         'children': [
                           {
                             'align': 'center',
+                            'direction': 'horizontal',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'users',
+                                'type': 'icon',
                               },
                               {
                                 'type': 'typography',
-                                'variant': 'h2',
                                 'content': 'Contacts',
+                                'variant': 'h2',
                               },
                             ],
                             'gap': 'sm',
-                            'direction': 'horizontal',
                             'type': 'stack',
                           },
                           {
-                            'icon': 'plus',
                             'type': 'button',
                             'label': 'New Contact',
                             'action': 'CREATE',
+                            'icon': 'plus',
                             'variant': 'primary',
                           },
                         ],
-                        'justify': 'between',
+                        'align': 'center',
                         'type': 'stack',
                         'direction': 'horizontal',
-                        'align': 'center',
+                        'gap': 'md',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'gap': 'md',
-                        'align': 'center',
                         'direction': 'horizontal',
+                        'align': 'center',
+                        'gap': 'md',
+                        'type': 'stack',
                         'children': [
                           '@trait.ContactSearch',
                           '@trait.ContactFilter',
                         ],
-                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
                       },
                       '@trait.ContactBrowseList',
                     ],
+                    'type': 'stack',
+                    'gap': 'lg',
                   },
                 ],
               ],
@@ -403,7 +403,6 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
                   'render-ui',
                   'main',
                   {
-                    'className': 'py-8',
                     'align': 'center',
                     'children': [
                       {
@@ -412,18 +411,19 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
                       },
                       {
                         'content': 'No notifications',
-                        'type': 'typography',
                         'variant': 'h3',
+                        'type': 'typography',
                       },
                       {
+                        'action': 'INIT',
                         'type': 'button',
                         'label': 'Back',
-                        'action': 'INIT',
                         'variant': 'ghost',
                       },
                     ],
-                    'gap': 'md',
+                    'className': 'py-8',
                     'direction': 'vertical',
+                    'gap': 'md',
                     'type': 'stack',
                   },
                 ],
@@ -437,23 +437,23 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'ContactSearch',
         'config': {
-          'placeholder': 'Search contacts…',
           'event': 'CONTACT_SEARCH',
+          'placeholder': 'Search contacts…',
         },
       }),
       makeTraitRef({
         'ref': 'Filter.traits.FilterTargetFilter',
         'name': 'ContactFilter',
         'config': {
+          'event': 'CONTACT_FILTER',
           'filters': [
             {
-              'filterType': 'select',
               'field': 'company',
               'options': [],
               'label': 'Company',
+              'filterType': 'select',
             },
           ],
-          'event': 'CONTACT_FILTER',
         },
       }),
       makeTraitRef({
@@ -464,41 +464,41 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
           'gap': 'sm',
           'fields': [
             {
-              'variant': 'h3',
-              'name': 'name',
               'icon': 'user',
+              'name': 'name',
+              'variant': 'h3',
             },
             {
               'name': 'email',
               'variant': 'body',
             },
             {
-              'name': 'phone',
               'variant': 'caption',
+              'name': 'phone',
             },
             {
               'name': 'company',
               'variant': 'badge',
             },
             {
-              'variant': 'caption',
               'name': 'role',
+              'variant': 'caption',
             },
           ],
           'itemActions': [
             {
-              'event': 'VIEW',
               'variant': 'ghost',
               'label': 'View',
+              'event': 'VIEW',
             },
             {
-              'label': 'Edit',
               'event': 'EDIT',
               'variant': 'ghost',
+              'label': 'Edit',
             },
             {
-              'event': 'DELETE',
               'label': 'Delete',
+              'event': 'DELETE',
               'variant': 'danger',
             },
           ],
@@ -552,6 +552,7 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
         'name': 'ContactCreate',
         'linkedEntity': canonicalName,
         'config': {
+          'title': 'New Contact',
           'fields': [
             'name',
             'email',
@@ -560,9 +561,8 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
             'role',
             'notes',
           ],
-          'icon': 'plus-circle',
           'mode': 'create',
-          'title': 'New Contact',
+          'icon': 'plus-circle',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -583,7 +583,6 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
         'name': 'ContactEdit',
         'linkedEntity': canonicalName,
         'config': {
-          'icon': 'edit',
           'fields': [
             'name',
             'email',
@@ -594,6 +593,7 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
           ],
           'title': 'Edit Contact',
           'mode': 'edit',
+          'icon': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -614,6 +614,8 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
         'name': 'ContactView',
         'linkedEntity': canonicalName,
         'config': {
+          'mode': 'edit',
+          'title': 'View Contact',
           'fields': [
             'name',
             'email',
@@ -623,8 +625,6 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
             'notes',
           ],
           'icon': 'eye',
-          'title': 'View Contact',
-          'mode': 'edit',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -645,14 +645,14 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
         'name': 'ContactDelete',
         'linkedEntity': canonicalName,
         'config': {
-          'alertMessage': 'This action cannot be undone.',
-          'confirmLabel': 'Delete',
-          'icon': 'alert-triangle',
           'title': 'Delete Contact',
+          'icon': 'alert-triangle',
+          'confirmLabel': 'Delete',
+          'alertMessage': 'This action cannot be undone.',
         },
         'events': {
-          'REQUEST': 'DELETE',
           'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
         },
         'listens': [
           {
@@ -1174,23 +1174,24 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
         'ref': 'AppShell.traits.AppLayout',
         'name': 'ItemAppLayout',
         'config': {
+          'appName': 'App',
+          'contentTrait': '@trait.ItemCatalog',
           'notifications': [],
           'topBarActions': [
             {
-              'label': 'Approvals',
-              'event': 'OPEN_APPROVALS',
-              'variant': 'ghost',
               'icon': 'shield-check',
+              'event': 'OPEN_APPROVALS',
+              'variant': 'default',
+              'label': 'Approvals',
             },
           ],
-          'contentTrait': '@trait.ItemCatalog',
-          'appName': 'App',
+          'searchEvent': 'ITEM_SEARCH',
           'notificationClickEvent': 'ITEM_NOTIFICATIONS_OPEN',
           'navItems': [
             {
               'icon': 'users',
-              'label': 'Contacts',
               'href': '/contacts',
+              'label': 'Contacts',
             },
             {
               'icon': 'package',
@@ -1199,13 +1200,13 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
             },
             {
               'href': '/activities',
-              'icon': 'activity',
               'label': 'Activities',
+              'icon': 'activity',
             },
             {
-              'label': 'Tasks',
               'href': '/tasks',
               'icon': 'check-square',
+              'label': 'Tasks',
             },
             {
               'label': 'Calendar',
@@ -1213,8 +1214,8 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
               'icon': 'calendar',
             },
             {
-              'label': 'Dashboard',
               'href': '/widgets',
+              'label': 'Dashboard',
               'icon': 'layout-dashboard',
             },
             {
@@ -1223,16 +1224,15 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
               'href': '/feed',
             },
             {
-              'icon': 'file-text',
-              'label': 'Notes',
               'href': '/notes',
+              'label': 'Notes',
+              'icon': 'file-text',
             },
           ],
-          'searchEvent': 'ITEM_SEARCH',
         },
         'events': {
-          'NOTIFY_CLICK': 'ITEM_NOTIFICATIONS_OPEN',
           'SEARCH': 'ITEM_SEARCH',
+          'NOTIFY_CLICK': 'ITEM_NOTIFICATIONS_OPEN',
         },
       }),
       rebindInlineTraitEntity({
@@ -1327,57 +1327,57 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
                     'children': [
                       {
-                        'type': 'stack',
-                        'gap': 'md',
                         'align': 'center',
-                        'justify': 'between',
                         'children': [
                           {
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'package',
+                                'type': 'icon',
                               },
                               {
-                                'variant': 'h2',
                                 'type': 'typography',
                                 'content': 'Items',
+                                'variant': 'h2',
                               },
                             ],
                             'align': 'center',
-                            'type': 'stack',
                             'direction': 'horizontal',
                             'gap': 'sm',
+                            'type': 'stack',
                           },
                           {
-                            'icon': 'plus',
                             'variant': 'primary',
+                            'type': 'button',
+                            'icon': 'plus',
                             'label': 'New Item',
                             'action': 'CREATE',
-                            'type': 'button',
                           },
                         ],
+                        'gap': 'md',
                         'direction': 'horizontal',
+                        'justify': 'between',
+                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'type': 'stack',
-                        'gap': 'md',
-                        'align': 'center',
                         'children': [
                           '@trait.ItemSearch',
                           '@trait.ItemFilter',
                         ],
                         'direction': 'horizontal',
+                        'align': 'center',
+                        'gap': 'md',
+                        'type': 'stack',
                       },
                       '@trait.ItemBrowseList',
                     ],
                     'direction': 'vertical',
+                    'type': 'stack',
                     'gap': 'lg',
                   },
                 ],
@@ -1397,28 +1397,28 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
-                    'gap': 'md',
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'type': 'icon',
                         'name': 'bell',
+                        'type': 'icon',
                       },
                       {
-                        'variant': 'h3',
                         'content': 'No notifications',
+                        'variant': 'h3',
                         'type': 'typography',
                       },
                       {
-                        'action': 'INIT',
-                        'label': 'Back',
                         'type': 'button',
                         'variant': 'ghost',
+                        'action': 'INIT',
+                        'label': 'Back',
                       },
                     ],
+                    'gap': 'md',
+                    'type': 'stack',
                     'align': 'center',
                     'className': 'py-8',
-                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -1431,8 +1431,8 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'ItemSearch',
         'config': {
-          'placeholder': 'Search items…',
           'event': 'ITEM_SEARCH',
+          'placeholder': 'Search items…',
         },
       }),
       makeTraitRef({
@@ -1441,10 +1441,10 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
         'config': {
           'filters': [
             {
-              'filterType': 'select',
+              'label': 'Category',
               'options': [],
               'field': 'category',
-              'label': 'Category',
+              'filterType': 'select',
             },
           ],
           'event': 'ITEM_FILTER',
@@ -1455,6 +1455,24 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
         'name': 'ItemBrowseList',
         'linkedEntity': canonicalName,
         'config': {
+          'itemActions': [
+            {
+              'event': 'VIEW',
+              'label': 'View',
+              'variant': 'ghost',
+            },
+            {
+              'variant': 'ghost',
+              'label': 'Edit',
+              'event': 'EDIT',
+            },
+            {
+              'label': 'Delete',
+              'event': 'DELETE',
+              'variant': 'danger',
+            },
+          ],
+          'cols': 2,
           'fields': [
             {
               'icon': 'package',
@@ -1470,13 +1488,13 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
               'variant': 'caption',
             },
             {
+              'name': 'price',
               'format': 'currency',
               'variant': 'badge',
-              'name': 'price',
             },
             {
-              'name': 'quantity',
               'variant': 'badge',
+              'name': 'quantity',
             },
             {
               'variant': 'caption',
@@ -1485,24 +1503,6 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
             {
               'variant': 'badge',
               'name': 'status',
-            },
-          ],
-          'cols': 2,
-          'itemActions': [
-            {
-              'variant': 'ghost',
-              'label': 'View',
-              'event': 'VIEW',
-            },
-            {
-              'label': 'Edit',
-              'variant': 'ghost',
-              'event': 'EDIT',
-            },
-            {
-              'variant': 'danger',
-              'label': 'Delete',
-              'event': 'DELETE',
             },
           ],
           'gap': 'sm',
@@ -1555,7 +1555,8 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
         'name': 'ItemCreate',
         'linkedEntity': canonicalName,
         'config': {
-          'title': 'New Item',
+          'mode': 'create',
+          'icon': 'plus-circle',
           'fields': [
             'name',
             'description',
@@ -1564,8 +1565,7 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
             'quantity',
             'category',
           ],
-          'mode': 'create',
-          'icon': 'plus-circle',
+          'title': 'New Item',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -1586,6 +1586,9 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
         'name': 'ItemEdit',
         'linkedEntity': canonicalName,
         'config': {
+          'icon': 'edit',
+          'mode': 'edit',
+          'title': 'Edit Item',
           'fields': [
             'name',
             'description',
@@ -1594,9 +1597,6 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
             'quantity',
             'category',
           ],
-          'icon': 'edit',
-          'title': 'Edit Item',
-          'mode': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -1617,6 +1617,9 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
         'name': 'ItemView',
         'linkedEntity': canonicalName,
         'config': {
+          'title': 'View Item',
+          'icon': 'eye',
+          'mode': 'edit',
           'fields': [
             'name',
             'description',
@@ -1625,9 +1628,6 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
             'quantity',
             'category',
           ],
-          'title': 'View Item',
-          'icon': 'eye',
-          'mode': 'edit',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -1648,14 +1648,14 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
         'name': 'ItemDelete',
         'linkedEntity': canonicalName,
         'config': {
-          'icon': 'alert-triangle',
           'title': 'Delete Item',
-          'alertMessage': 'This action cannot be undone.',
           'confirmLabel': 'Delete',
+          'icon': 'alert-triangle',
+          'alertMessage': 'This action cannot be undone.',
         },
         'events': {
-          'REQUEST': 'DELETE',
           'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
         },
         'listens': [
           {
@@ -1878,9 +1878,9 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
                   'create',
                   'ApprovalRequest',
                   {
-                    'payload': '@payload.data',
                     'gatedEvent': 'ITEM_CREATE',
                     'status': 'pending',
+                    'payload': '@payload.data',
                   },
                 ],
               ],
@@ -1982,9 +1982,9 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
         'ref': 'Audit.traits.AuditCaptureListener',
         'name': 'ItemAudit',
         'config': {
+          'captureEntity': 'Item',
           'enabled': true,
           'captureBeforeAfter': true,
-          'captureEntity': 'Item',
         },
         'listens': [
           {
@@ -2266,34 +2266,34 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
           'contentTrait': '@trait.ActivityCatalog',
           'navItems': [
             {
-              'href': '/contacts',
               'icon': 'users',
               'label': 'Contacts',
+              'href': '/contacts',
             },
             {
-              'href': '/items',
               'icon': 'package',
               'label': 'Items',
+              'href': '/items',
             },
             {
-              'icon': 'activity',
               'href': '/activities',
+              'icon': 'activity',
               'label': 'Activities',
             },
             {
               'href': '/tasks',
-              'label': 'Tasks',
               'icon': 'check-square',
+              'label': 'Tasks',
             },
             {
-              'label': 'Calendar',
               'href': '/calendar',
               'icon': 'calendar',
+              'label': 'Calendar',
             },
             {
+              'label': 'Dashboard',
               'href': '/widgets',
               'icon': 'layout-dashboard',
-              'label': 'Dashboard',
             },
             {
               'label': 'Feed',
@@ -2301,15 +2301,15 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
               'icon': 'rss',
             },
             {
+              'label': 'Notes',
               'href': '/notes',
               'icon': 'file-text',
-              'label': 'Notes',
             },
           ],
-          'notifications': [],
-          'appName': 'App',
-          'notificationClickEvent': 'ACTIVITY_NOTIFICATIONS_OPEN',
           'searchEvent': 'ACTIVITY_SEARCH',
+          'notificationClickEvent': 'ACTIVITY_NOTIFICATIONS_OPEN',
+          'appName': 'App',
+          'notifications': [],
         },
         'events': {
           'SEARCH': 'ACTIVITY_SEARCH',
@@ -2386,32 +2386,32 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
                   'render-ui',
                   'main',
                   {
-                    'gap': 'lg',
-                    'direction': 'vertical',
-                    'type': 'stack',
                     'children': [
                       {
-                        'gap': 'sm',
+                        'type': 'stack',
                         'align': 'center',
+                        'direction': 'horizontal',
+                        'gap': 'sm',
                         'children': [
                           {
-                            'type': 'icon',
                             'name': 'activity',
+                            'type': 'icon',
                           },
                           {
+                            'content': 'Activities',
                             'variant': 'h2',
                             'type': 'typography',
-                            'content': 'Activities',
                           },
                         ],
-                        'direction': 'horizontal',
-                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
                       },
                       '@trait.ActivityBrowseList',
                     ],
+                    'gap': 'lg',
+                    'type': 'stack',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -2430,8 +2430,10 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
                   'render-ui',
                   'main',
                   {
+                    'gap': 'md',
+                    'type': 'stack',
+                    'align': 'center',
                     'className': 'py-8',
-                    'direction': 'vertical',
                     'children': [
                       {
                         'type': 'icon',
@@ -2439,19 +2441,17 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
                       },
                       {
                         'type': 'typography',
-                        'variant': 'h3',
                         'content': 'No notifications',
+                        'variant': 'h3',
                       },
                       {
+                        'variant': 'ghost',
                         'type': 'button',
                         'action': 'INIT',
                         'label': 'Back',
-                        'variant': 'ghost',
                       },
                     ],
-                    'type': 'stack',
-                    'gap': 'md',
-                    'align': 'center',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -2468,27 +2468,27 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
           'cols': 1,
           'itemActions': [
             {
-              'variant': 'ghost',
-              'label': 'View',
               'event': 'VIEW',
-            },
-            {
+              'label': 'View',
               'variant': 'ghost',
-              'label': 'Edit',
-              'event': 'EDIT',
             },
             {
-              'label': 'Delete',
+              'event': 'EDIT',
+              'label': 'Edit',
+              'variant': 'ghost',
+            },
+            {
               'event': 'DELETE',
               'variant': 'danger',
+              'label': 'Delete',
             },
           ],
           'gap': 'sm',
           'fields': [
             {
               'variant': 'h4',
-              'name': 'title',
               'icon': 'activity',
+              'name': 'title',
             },
             {
               'variant': 'badge',
@@ -2500,8 +2500,8 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
             },
             {
               'format': 'date',
-              'name': 'timestamp',
               'variant': 'caption',
+              'name': 'timestamp',
             },
             {
               'name': 'status',
@@ -2541,8 +2541,8 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
         'name': 'ActivityView',
         'linkedEntity': canonicalName,
         'config': {
-          'title': 'View Activity',
           'icon': 'eye',
+          'title': 'View Activity',
           'mode': 'edit',
           'fields': [
             'title',
@@ -2603,10 +2603,10 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
         'name': 'ActivityDelete',
         'linkedEntity': canonicalName,
         'config': {
-          'title': 'Delete Activity',
-          'alertMessage': 'This action cannot be undone.',
           'confirmLabel': 'Delete',
           'icon': 'alert-triangle',
+          'alertMessage': 'This action cannot be undone.',
+          'title': 'Delete Activity',
         },
         'events': {
           'REQUEST': 'DELETE',
@@ -3058,39 +3058,41 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
         'ref': 'AppShell.traits.AppLayout',
         'name': 'TaskAppLayout',
         'config': {
+          'searchEvent': 'TASK_SEARCH',
           'notifications': [],
           'notificationClickEvent': 'TASK_NOTIFICATIONS_OPEN',
           'appName': 'App',
+          'contentTrait': '@trait.TaskCatalog',
           'navItems': [
             {
-              'href': '/contacts',
               'icon': 'users',
               'label': 'Contacts',
+              'href': '/contacts',
             },
             {
-              'label': 'Items',
-              'href': '/items',
               'icon': 'package',
+              'href': '/items',
+              'label': 'Items',
             },
             {
-              'icon': 'activity',
               'label': 'Activities',
               'href': '/activities',
+              'icon': 'activity',
             },
             {
+              'icon': 'check-square',
               'label': 'Tasks',
               'href': '/tasks',
-              'icon': 'check-square',
             },
             {
-              'icon': 'calendar',
               'label': 'Calendar',
               'href': '/calendar',
+              'icon': 'calendar',
             },
             {
+              'href': '/widgets',
               'icon': 'layout-dashboard',
               'label': 'Dashboard',
-              'href': '/widgets',
             },
             {
               'icon': 'rss',
@@ -3098,13 +3100,11 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
               'label': 'Feed',
             },
             {
-              'icon': 'file-text',
-              'href': '/notes',
               'label': 'Notes',
+              'href': '/notes',
+              'icon': 'file-text',
             },
           ],
-          'searchEvent': 'TASK_SEARCH',
-          'contentTrait': '@trait.TaskCatalog',
         },
         'events': {
           'SEARCH': 'TASK_SEARCH',
@@ -3203,40 +3203,40 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
+                    'direction': 'vertical',
                     'children': [
                       {
+                        'align': 'center',
+                        'justify': 'between',
+                        'type': 'stack',
                         'children': [
                           {
-                            'children': [
-                              {
-                                'type': 'icon',
-                                'name': 'check-square',
-                              },
-                              {
-                                'content': 'Tasks',
-                                'type': 'typography',
-                                'variant': 'h2',
-                              },
-                            ],
                             'gap': 'sm',
                             'direction': 'horizontal',
-                            'type': 'stack',
+                            'children': [
+                              {
+                                'name': 'check-square',
+                                'type': 'icon',
+                              },
+                              {
+                                'variant': 'h2',
+                                'content': 'Tasks',
+                                'type': 'typography',
+                              },
+                            ],
                             'align': 'center',
+                            'type': 'stack',
                           },
                           {
-                            'action': 'CREATE',
                             'type': 'button',
+                            'variant': 'primary',
                             'label': 'New Task',
                             'icon': 'plus',
-                            'variant': 'primary',
+                            'action': 'CREATE',
                           },
                         ],
-                        'direction': 'horizontal',
-                        'type': 'stack',
                         'gap': 'md',
-                        'justify': 'between',
-                        'align': 'center',
+                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
@@ -3247,8 +3247,8 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
                       },
                       '@trait.TaskBrowseList',
                     ],
-                    'direction': 'vertical',
                     'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -3269,26 +3269,26 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
                   {
                     'children': [
                       {
-                        'type': 'icon',
                         'name': 'bell',
+                        'type': 'icon',
                       },
                       {
-                        'variant': 'h3',
                         'content': 'No notifications',
+                        'variant': 'h3',
                         'type': 'typography',
                       },
                       {
-                        'label': 'Back',
-                        'variant': 'ghost',
                         'type': 'button',
+                        'label': 'Back',
                         'action': 'INIT',
+                        'variant': 'ghost',
                       },
                     ],
-                    'gap': 'md',
-                    'direction': 'vertical',
-                    'type': 'stack',
-                    'align': 'center',
                     'className': 'py-8',
+                    'align': 'center',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -3309,12 +3309,12 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
               'label': 'To Do',
             },
             {
-              'label': 'Doing',
               'value': 'doing',
+              'label': 'Doing',
             },
             {
-              'value': 'done',
               'label': 'Done',
+              'value': 'done',
             },
           ],
         },
@@ -3324,13 +3324,13 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
         'name': 'TaskBrowseList',
         'linkedEntity': canonicalName,
         'config': {
-          'cols': 1,
           'gap': 'sm',
+          'cols': 1,
           'itemActions': [
             {
-              'label': 'View',
-              'variant': 'ghost',
               'event': 'VIEW',
+              'variant': 'ghost',
+              'label': 'View',
             },
             {
               'event': 'EDIT',
@@ -3346,21 +3346,21 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
           'fields': [
             {
               'name': 'title',
-              'icon': 'check-square',
               'variant': 'h4',
+              'icon': 'check-square',
             },
             {
               'name': 'description',
               'variant': 'body',
             },
             {
-              'name': 'assignee',
               'variant': 'caption',
+              'name': 'assignee',
             },
             {
-              'name': 'dueDate',
               'variant': 'caption',
               'format': 'date',
+              'name': 'dueDate',
             },
             {
               'variant': 'badge',
@@ -3404,7 +3404,9 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
         'name': 'TaskCreate',
         'linkedEntity': canonicalName,
         'config': {
+          'icon': 'plus-circle',
           'title': 'New Task',
+          'mode': 'create',
           'fields': [
             'title',
             'description',
@@ -3413,8 +3415,6 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
             'priority',
             'status',
           ],
-          'icon': 'plus-circle',
-          'mode': 'create',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -3443,9 +3443,9 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
             'priority',
             'status',
           ],
-          'title': 'Edit Task',
-          'icon': 'edit',
           'mode': 'edit',
+          'icon': 'edit',
+          'title': 'Edit Task',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -3466,9 +3466,9 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
         'name': 'TaskView',
         'linkedEntity': canonicalName,
         'config': {
-          'mode': 'edit',
           'title': 'View Task',
           'icon': 'eye',
+          'mode': 'edit',
           'fields': [
             'title',
             'description',
@@ -3498,13 +3498,13 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
         'linkedEntity': canonicalName,
         'config': {
           'icon': 'alert-triangle',
-          'alertMessage': 'This action cannot be undone.',
           'title': 'Delete Task',
+          'alertMessage': 'This action cannot be undone.',
           'confirmLabel': 'Delete',
         },
         'events': {
-          'CONFIRM': 'CONFIRM_DELETE',
           'REQUEST': 'DELETE',
+          'CONFIRM': 'CONFIRM_DELETE',
         },
         'listens': [
           {
@@ -3990,24 +3990,23 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
         'ref': 'AppShell.traits.AppLayout',
         'name': 'CalendarAppLayout',
         'config': {
-          'notificationClickEvent': 'CAL_NOTIFICATIONS_OPEN',
           'appName': 'App',
           'notifications': [],
           'navItems': [
             {
-              'icon': 'users',
               'href': '/contacts',
+              'icon': 'users',
               'label': 'Contacts',
             },
             {
+              'icon': 'package',
               'href': '/items',
               'label': 'Items',
-              'icon': 'package',
             },
             {
+              'label': 'Activities',
               'href': '/activities',
               'icon': 'activity',
-              'label': 'Activities',
             },
             {
               'label': 'Tasks',
@@ -4015,9 +4014,9 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
               'icon': 'check-square',
             },
             {
-              'icon': 'calendar',
-              'label': 'Calendar',
               'href': '/calendar',
+              'label': 'Calendar',
+              'icon': 'calendar',
             },
             {
               'href': '/widgets',
@@ -4025,16 +4024,17 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
               'label': 'Dashboard',
             },
             {
-              'icon': 'rss',
               'label': 'Feed',
               'href': '/feed',
+              'icon': 'rss',
             },
             {
-              'icon': 'file-text',
               'label': 'Notes',
               'href': '/notes',
+              'icon': 'file-text',
             },
           ],
+          'notificationClickEvent': 'CAL_NOTIFICATIONS_OPEN',
           'searchEvent': 'CAL_SEARCH',
           'contentTrait': '@trait.CalendarCatalog',
         },
@@ -4135,39 +4135,41 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
+                    'type': 'stack',
                     'children': [
                       {
-                        'type': 'stack',
+                        'align': 'center',
                         'justify': 'between',
                         'children': [
                           {
                             'direction': 'horizontal',
+                            'gap': 'sm',
                             'children': [
                               {
                                 'type': 'icon',
                                 'name': 'calendar',
                               },
                               {
-                                'content': 'Calendar',
                                 'type': 'typography',
                                 'variant': 'h2',
+                                'content': 'Calendar',
                               },
                             ],
-                            'gap': 'sm',
                             'align': 'center',
                             'type': 'stack',
                           },
                           {
                             'type': 'button',
-                            'label': 'New Event',
                             'variant': 'primary',
                             'icon': 'plus',
+                            'label': 'New Event',
                             'action': 'CREATE',
                           },
                         ],
-                        'direction': 'horizontal',
                         'gap': 'md',
-                        'align': 'center',
+                        'type': 'stack',
+                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
@@ -4179,8 +4181,6 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
                       '@trait.CalendarBrowseList',
                     ],
                     'gap': 'lg',
-                    'type': 'stack',
-                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -4199,28 +4199,28 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
                     'className': 'py-8',
-                    'gap': 'md',
-                    'align': 'center',
+                    'direction': 'vertical',
+                    'type': 'stack',
                     'children': [
                       {
                         'name': 'bell',
                         'type': 'icon',
                       },
                       {
-                        'variant': 'h3',
-                        'content': 'No notifications',
                         'type': 'typography',
+                        'content': 'No notifications',
+                        'variant': 'h3',
                       },
                       {
+                        'label': 'Back',
                         'variant': 'ghost',
                         'action': 'INIT',
-                        'label': 'Back',
                         'type': 'button',
                       },
                     ],
-                    'direction': 'vertical',
+                    'gap': 'md',
+                    'align': 'center',
                   },
                 ],
               ],
@@ -4233,9 +4233,9 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
         'ref': 'Calendar.traits.CalendarEventCalendar',
         'name': 'CalendarView',
         'config': {
-          'labelField': 'title',
           'dateField': 'startTime',
           'title': 'Schedule',
+          'labelField': 'title',
         },
         'listens': [
           {
@@ -4253,12 +4253,11 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
         'name': 'CalendarBrowseList',
         'linkedEntity': canonicalName,
         'config': {
-          'cols': 1,
           'itemActions': [
             {
-              'event': 'VIEW',
-              'label': 'View',
               'variant': 'ghost',
+              'label': 'View',
+              'event': 'VIEW',
             },
             {
               'event': 'EDIT',
@@ -4266,22 +4265,23 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
               'variant': 'ghost',
             },
             {
-              'label': 'Delete',
               'variant': 'danger',
               'event': 'DELETE',
+              'label': 'Delete',
             },
           ],
+          'cols': 1,
           'gap': 'sm',
           'fields': [
             {
-              'name': 'title',
               'variant': 'h4',
               'icon': 'calendar',
+              'name': 'title',
             },
             {
-              'format': 'date',
               'name': 'startTime',
               'variant': 'caption',
+              'format': 'date',
             },
             {
               'name': 'endTime',
@@ -4289,8 +4289,8 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
               'format': 'date',
             },
             {
-              'variant': 'body',
               'name': 'location',
+              'variant': 'body',
             },
             {
               'variant': 'caption',
@@ -4330,6 +4330,9 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
         'name': 'CalendarCreate',
         'linkedEntity': canonicalName,
         'config': {
+          'icon': 'plus-circle',
+          'mode': 'create',
+          'title': 'New Event',
           'fields': [
             'title',
             'startTime',
@@ -4338,9 +4341,6 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
             'attendees',
             'description',
           ],
-          'icon': 'plus-circle',
-          'title': 'New Event',
-          'mode': 'create',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -4361,8 +4361,8 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
         'name': 'CalendarEdit',
         'linkedEntity': canonicalName,
         'config': {
-          'icon': 'edit',
           'mode': 'edit',
+          'title': 'Edit Event',
           'fields': [
             'title',
             'startTime',
@@ -4371,7 +4371,7 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
             'attendees',
             'description',
           ],
-          'title': 'Edit Event',
+          'icon': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -4398,8 +4398,8 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
           'confirmLabel': 'Delete',
         },
         'events': {
-          'REQUEST': 'DELETE',
           'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
         },
         'listens': [
           {
@@ -4878,57 +4878,57 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
         'ref': 'AppShell.traits.AppLayout',
         'name': 'WidgetAppLayout',
         'config': {
-          'appName': 'App',
-          'searchEvent': 'WIDGET_SEARCH',
-          'notificationClickEvent': 'WIDGET_NOTIFICATIONS_OPEN',
           'navItems': [
             {
+              'icon': 'users',
               'label': 'Contacts',
               'href': '/contacts',
-              'icon': 'users',
             },
             {
-              'label': 'Items',
               'href': '/items',
               'icon': 'package',
+              'label': 'Items',
             },
             {
+              'label': 'Activities',
               'href': '/activities',
               'icon': 'activity',
-              'label': 'Activities',
             },
             {
               'href': '/tasks',
-              'label': 'Tasks',
               'icon': 'check-square',
+              'label': 'Tasks',
             },
             {
-              'href': '/calendar',
               'icon': 'calendar',
+              'href': '/calendar',
               'label': 'Calendar',
             },
             {
               'icon': 'layout-dashboard',
-              'href': '/widgets',
               'label': 'Dashboard',
+              'href': '/widgets',
             },
             {
+              'icon': 'rss',
               'label': 'Feed',
               'href': '/feed',
-              'icon': 'rss',
             },
             {
+              'label': 'Notes',
               'icon': 'file-text',
               'href': '/notes',
-              'label': 'Notes',
             },
           ],
-          'contentTrait': '@trait.WidgetCatalog',
           'notifications': [],
+          'notificationClickEvent': 'WIDGET_NOTIFICATIONS_OPEN',
+          'appName': 'App',
+          'searchEvent': 'WIDGET_SEARCH',
+          'contentTrait': '@trait.WidgetCatalog',
         },
         'events': {
-          'NOTIFY_CLICK': 'WIDGET_NOTIFICATIONS_OPEN',
           'SEARCH': 'WIDGET_SEARCH',
+          'NOTIFY_CLICK': 'WIDGET_NOTIFICATIONS_OPEN',
         },
       }),
       rebindInlineTraitEntity({
@@ -5002,23 +5002,24 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
                   'main',
                   {
                     'direction': 'vertical',
+                    'type': 'stack',
                     'children': [
                       {
-                        'direction': 'horizontal',
-                        'gap': 'sm',
-                        'type': 'stack',
-                        'align': 'center',
                         'children': [
                           {
                             'name': 'layout-dashboard',
                             'type': 'icon',
                           },
                           {
+                            'variant': 'h2',
                             'type': 'typography',
                             'content': 'Dashboard',
-                            'variant': 'h2',
                           },
                         ],
+                        'align': 'center',
+                        'gap': 'sm',
+                        'direction': 'horizontal',
+                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
@@ -5031,7 +5032,6 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
                       '@trait.WidgetBrowseList',
                     ],
                     'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
@@ -5050,28 +5050,28 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
                   'render-ui',
                   'main',
                   {
-                    'className': 'py-8',
-                    'type': 'stack',
                     'children': [
                       {
-                        'name': 'bell',
                         'type': 'icon',
+                        'name': 'bell',
                       },
                       {
-                        'content': 'No notifications',
                         'type': 'typography',
+                        'content': 'No notifications',
                         'variant': 'h3',
                       },
                       {
-                        'variant': 'ghost',
-                        'type': 'button',
                         'label': 'Back',
+                        'type': 'button',
                         'action': 'INIT',
+                        'variant': 'ghost',
                       },
                     ],
-                    'direction': 'vertical',
-                    'align': 'center',
+                    'className': 'py-8',
                     'gap': 'md',
+                    'align': 'center',
+                    'direction': 'vertical',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -5084,24 +5084,24 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
         'ref': 'Stats.traits.StatsItemStats',
         'name': 'WidgetStats',
         'config': {
-          'title': 'Key Metrics',
           'metrics': [
             {
-              'format': 'number',
               'label': 'Widgets',
               'icon': 'layout-dashboard',
-              'aggregation': 'count',
               'variant': 'primary',
+              'aggregation': 'count',
+              'format': 'number',
             },
             {
+              'format': 'number',
               'icon': 'trending-up',
               'label': 'Total Value',
-              'variant': 'success',
-              'format': 'number',
-              'aggregation': 'sum',
               'field': 'value',
+              'aggregation': 'sum',
+              'variant': 'success',
             },
           ],
+          'title': 'Key Metrics',
         },
         'listens': [
           {
@@ -5118,13 +5118,13 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
         'ref': 'Graphs.traits.GraphItemGraph',
         'name': 'WidgetGraphs',
         'config': {
-          'chartType': 'pie',
+          'height': 240,
           'title': 'Widgets by type',
           'subtitle': 'Distribution',
+          'chartType': 'pie',
           'categoryField': 'type',
           'aggregation': 'count',
           'showLegend': true,
-          'height': 240,
         },
         'listens': [
           {
@@ -5142,25 +5142,25 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
         'name': 'WidgetBrowseList',
         'linkedEntity': canonicalName,
         'config': {
-          'gap': 'sm',
+          'cols': 2,
           'fields': [
             {
-              'name': 'title',
               'variant': 'h4',
               'icon': 'layout-dashboard',
+              'name': 'title',
+            },
+            {
+              'name': 'type',
+              'variant': 'badge',
+            },
+            {
+              'name': 'label',
+              'variant': 'caption',
             },
             {
               'variant': 'badge',
-              'name': 'type',
-            },
-            {
-              'variant': 'caption',
-              'name': 'label',
-            },
-            {
               'format': 'number',
               'name': 'value',
-              'variant': 'badge',
             },
             {
               'name': 'dataSource',
@@ -5169,14 +5169,14 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
           ],
           'itemActions': [
             {
+              'label': 'View',
               'variant': 'ghost',
               'event': 'VIEW',
-              'label': 'View',
             },
             {
               'variant': 'ghost',
-              'label': 'Edit',
               'event': 'EDIT',
+              'label': 'Edit',
             },
             {
               'label': 'Delete',
@@ -5184,7 +5184,7 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
               'event': 'DELETE',
             },
           ],
-          'cols': 2,
+          'gap': 'sm',
         },
         'listens': [
           {
@@ -5226,9 +5226,9 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
             'dataSource',
             'refreshInterval',
           ],
+          'mode': 'edit',
           'icon': 'eye',
           'title': 'View Widget',
-          'mode': 'edit',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -5249,7 +5249,6 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
         'name': 'WidgetEdit',
         'linkedEntity': canonicalName,
         'config': {
-          'icon': 'edit',
           'title': 'Edit Widget',
           'fields': [
             'title',
@@ -5260,6 +5259,7 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
             'refreshInterval',
           ],
           'mode': 'edit',
+          'icon': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -5281,13 +5281,13 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
         'linkedEntity': canonicalName,
         'config': {
           'title': 'Delete Widget',
-          'confirmLabel': 'Delete',
           'icon': 'alert-triangle',
+          'confirmLabel': 'Delete',
           'alertMessage': 'This action cannot be undone.',
         },
         'events': {
-          'REQUEST': 'DELETE',
           'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
         },
         'listens': [
           {
@@ -5726,57 +5726,57 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
         'ref': 'AppShell.traits.AppLayout',
         'name': 'FeedAppLayout',
         'config': {
-          'contentTrait': '@trait.FeedCatalog',
           'navItems': [
             {
-              'label': 'Contacts',
               'href': '/contacts',
               'icon': 'users',
+              'label': 'Contacts',
             },
             {
-              'label': 'Items',
-              'href': '/items',
               'icon': 'package',
+              'href': '/items',
+              'label': 'Items',
             },
             {
-              'label': 'Activities',
               'icon': 'activity',
               'href': '/activities',
+              'label': 'Activities',
             },
             {
               'href': '/tasks',
-              'icon': 'check-square',
               'label': 'Tasks',
+              'icon': 'check-square',
             },
             {
-              'href': '/calendar',
               'icon': 'calendar',
+              'href': '/calendar',
               'label': 'Calendar',
             },
             {
-              'label': 'Dashboard',
               'href': '/widgets',
               'icon': 'layout-dashboard',
+              'label': 'Dashboard',
             },
             {
-              'label': 'Feed',
-              'href': '/feed',
               'icon': 'rss',
+              'href': '/feed',
+              'label': 'Feed',
             },
             {
+              'href': '/notes',
               'icon': 'file-text',
               'label': 'Notes',
-              'href': '/notes',
             },
           ],
-          'searchEvent': 'FEED_SEARCH',
-          'appName': 'App',
-          'notifications': [],
           'notificationClickEvent': 'FEED_NOTIFICATIONS_OPEN',
+          'searchEvent': 'FEED_SEARCH',
+          'notifications': [],
+          'contentTrait': '@trait.FeedCatalog',
+          'appName': 'App',
         },
         'events': {
-          'NOTIFY_CLICK': 'FEED_NOTIFICATIONS_OPEN',
           'SEARCH': 'FEED_SEARCH',
+          'NOTIFY_CLICK': 'FEED_NOTIFICATIONS_OPEN',
         },
       }),
       rebindInlineTraitEntity({
@@ -5871,14 +5871,15 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
-                    'direction': 'vertical',
                     'children': [
                       {
                         'justify': 'between',
-                        'align': 'center',
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'md',
                         'children': [
                           {
+                            'gap': 'sm',
                             'type': 'stack',
                             'children': [
                               {
@@ -5891,21 +5892,18 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
                                 'type': 'typography',
                               },
                             ],
-                            'gap': 'sm',
                             'align': 'center',
                             'direction': 'horizontal',
                           },
                           {
-                            'label': 'New Post',
-                            'variant': 'primary',
+                            'type': 'button',
                             'action': 'CREATE',
                             'icon': 'plus',
-                            'type': 'button',
+                            'variant': 'primary',
+                            'label': 'New Post',
                           },
                         ],
-                        'direction': 'horizontal',
-                        'gap': 'md',
-                        'type': 'stack',
+                        'align': 'center',
                       },
                       {
                         'type': 'divider',
@@ -5913,7 +5911,9 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
                       '@trait.FeedBrowseList',
                       '@trait.FeedPagination',
                     ],
+                    'direction': 'vertical',
                     'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -5938,22 +5938,22 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
                         'name': 'bell',
                       },
                       {
-                        'content': 'No notifications',
-                        'type': 'typography',
                         'variant': 'h3',
+                        'type': 'typography',
+                        'content': 'No notifications',
                       },
                       {
-                        'label': 'Back',
-                        'variant': 'ghost',
                         'action': 'INIT',
                         'type': 'button',
+                        'variant': 'ghost',
+                        'label': 'Back',
                       },
                     ],
-                    'gap': 'md',
                     'direction': 'vertical',
-                    'className': 'py-8',
                     'align': 'center',
+                    'gap': 'md',
                     'type': 'stack',
+                    'className': 'py-8',
                   },
                 ],
               ],
@@ -5984,46 +5984,46 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
         'name': 'FeedBrowseList',
         'linkedEntity': canonicalName,
         'config': {
+          'itemActions': [
+            {
+              'event': 'VIEW',
+              'label': 'View',
+              'variant': 'ghost',
+            },
+            {
+              'variant': 'ghost',
+              'label': 'Edit',
+              'event': 'EDIT',
+            },
+            {
+              'variant': 'danger',
+              'event': 'DELETE',
+              'label': 'Delete',
+            },
+          ],
+          'cols': 1,
           'fields': [
             {
+              'icon': 'rss',
               'variant': 'h3',
               'name': 'title',
-              'icon': 'rss',
             },
             {
-              'variant': 'body',
               'name': 'body',
+              'variant': 'body',
             },
             {
-              'variant': 'caption',
               'name': 'author',
+              'variant': 'caption',
             },
             {
+              'format': 'date',
               'name': 'postedAt',
               'variant': 'caption',
-              'format': 'date',
             },
             {
               'name': 'tags',
               'variant': 'badge',
-            },
-          ],
-          'cols': 1,
-          'itemActions': [
-            {
-              'label': 'View',
-              'variant': 'ghost',
-              'event': 'VIEW',
-            },
-            {
-              'event': 'EDIT',
-              'variant': 'ghost',
-              'label': 'Edit',
-            },
-            {
-              'label': 'Delete',
-              'variant': 'danger',
-              'event': 'DELETE',
             },
           ],
           'gap': 'sm',
@@ -6060,8 +6060,9 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
         'name': 'FeedCreate',
         'linkedEntity': canonicalName,
         'config': {
-          'mode': 'create',
           'title': 'New Post',
+          'icon': 'plus-circle',
+          'mode': 'create',
           'fields': [
             'title',
             'body',
@@ -6069,7 +6070,6 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
             'postedAt',
             'tags',
           ],
-          'icon': 'plus-circle',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -6090,7 +6090,7 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
         'name': 'FeedEdit',
         'linkedEntity': canonicalName,
         'config': {
-          'icon': 'edit',
+          'title': 'Edit Post',
           'mode': 'edit',
           'fields': [
             'title',
@@ -6099,7 +6099,7 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
             'postedAt',
             'tags',
           ],
-          'title': 'Edit Post',
+          'icon': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -6120,14 +6120,14 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
         'name': 'FeedDelete',
         'linkedEntity': canonicalName,
         'config': {
+          'confirmLabel': 'Delete',
+          'alertMessage': 'This action cannot be undone.',
           'title': 'Delete Post',
           'icon': 'alert-triangle',
-          'alertMessage': 'This action cannot be undone.',
-          'confirmLabel': 'Delete',
         },
         'events': {
-          'REQUEST': 'DELETE',
           'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
         },
         'listens': [
           {
@@ -6598,12 +6598,13 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
         'ref': 'AppShell.traits.AppLayout',
         'name': 'NoteAppLayout',
         'config': {
-          'notificationClickEvent': 'NOTE_NOTIFICATIONS_OPEN',
+          'notifications': [],
+          'appName': 'App',
           'navItems': [
             {
+              'href': '/contacts',
               'icon': 'users',
               'label': 'Contacts',
-              'href': '/contacts',
             },
             {
               'href': '/items',
@@ -6611,14 +6612,14 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
               'icon': 'package',
             },
             {
+              'icon': 'activity',
               'label': 'Activities',
               'href': '/activities',
-              'icon': 'activity',
             },
             {
+              'href': '/tasks',
               'icon': 'check-square',
               'label': 'Tasks',
-              'href': '/tasks',
             },
             {
               'label': 'Calendar',
@@ -6627,13 +6628,13 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
             },
             {
               'icon': 'layout-dashboard',
-              'href': '/widgets',
               'label': 'Dashboard',
+              'href': '/widgets',
             },
             {
               'label': 'Feed',
-              'icon': 'rss',
               'href': '/feed',
+              'icon': 'rss',
             },
             {
               'href': '/notes',
@@ -6641,10 +6642,9 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
               'icon': 'file-text',
             },
           ],
-          'appName': 'App',
-          'searchEvent': 'NOTE_SEARCH',
-          'notifications': [],
           'contentTrait': '@trait.NoteCatalog',
+          'notificationClickEvent': 'NOTE_NOTIFICATIONS_OPEN',
+          'searchEvent': 'NOTE_SEARCH',
         },
         'events': {
           'SEARCH': 'NOTE_SEARCH',
@@ -6747,11 +6747,17 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
                     'gap': 'lg',
                     'children': [
                       {
+                        'gap': 'md',
+                        'type': 'stack',
                         'direction': 'horizontal',
                         'justify': 'between',
+                        'align': 'center',
                         'children': [
                           {
                             'gap': 'sm',
+                            'align': 'center',
+                            'direction': 'horizontal',
+                            'type': 'stack',
                             'children': [
                               {
                                 'type': 'icon',
@@ -6759,25 +6765,19 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
                               },
                               {
                                 'content': 'Notes',
-                                'variant': 'h2',
                                 'type': 'typography',
+                                'variant': 'h2',
                               },
                             ],
-                            'type': 'stack',
-                            'direction': 'horizontal',
-                            'align': 'center',
                           },
                           {
-                            'type': 'button',
-                            'label': 'New Note',
-                            'action': 'CREATE',
-                            'icon': 'plus',
                             'variant': 'primary',
+                            'label': 'New Note',
+                            'icon': 'plus',
+                            'action': 'CREATE',
+                            'type': 'button',
                           },
                         ],
-                        'align': 'center',
-                        'type': 'stack',
-                        'gap': 'md',
                       },
                       {
                         'type': 'divider',
@@ -6808,27 +6808,27 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
                   'main',
                   {
                     'align': 'center',
+                    'className': 'py-8',
+                    'direction': 'vertical',
+                    'gap': 'md',
                     'type': 'stack',
                     'children': [
                       {
-                        'name': 'bell',
                         'type': 'icon',
+                        'name': 'bell',
                       },
                       {
+                        'variant': 'h3',
                         'type': 'typography',
                         'content': 'No notifications',
-                        'variant': 'h3',
                       },
                       {
-                        'action': 'INIT',
+                        'label': 'Back',
                         'type': 'button',
                         'variant': 'ghost',
-                        'label': 'Back',
+                        'action': 'INIT',
                       },
                     ],
-                    'direction': 'vertical',
-                    'className': 'py-8',
-                    'gap': 'md',
                   },
                 ],
               ],
@@ -6850,32 +6850,13 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
         'name': 'NoteBrowseList',
         'linkedEntity': canonicalName,
         'config': {
-          'fields': [
-            {
-              'name': 'title',
-              'icon': 'file-text',
-              'variant': 'h4',
-            },
-            {
-              'name': 'body',
-              'variant': 'body',
-            },
-            {
-              'variant': 'badge',
-              'name': 'tags',
-            },
-            {
-              'variant': 'caption',
-              'name': 'updatedAt',
-              'format': 'date',
-            },
-          ],
           'gap': 'sm',
+          'cols': 1,
           'itemActions': [
             {
               'event': 'VIEW',
-              'variant': 'ghost',
               'label': 'View',
+              'variant': 'ghost',
             },
             {
               'label': 'Edit',
@@ -6883,12 +6864,31 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
               'variant': 'ghost',
             },
             {
-              'event': 'DELETE',
-              'variant': 'danger',
               'label': 'Delete',
+              'variant': 'danger',
+              'event': 'DELETE',
             },
           ],
-          'cols': 1,
+          'fields': [
+            {
+              'icon': 'file-text',
+              'name': 'title',
+              'variant': 'h4',
+            },
+            {
+              'variant': 'body',
+              'name': 'body',
+            },
+            {
+              'name': 'tags',
+              'variant': 'badge',
+            },
+            {
+              'format': 'date',
+              'name': 'updatedAt',
+              'variant': 'caption',
+            },
+          ],
         },
         'listens': [
           {
@@ -6930,7 +6930,9 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
         'name': 'NoteCreate',
         'linkedEntity': canonicalName,
         'config': {
+          'title': 'New Note',
           'mode': 'create',
+          'icon': 'plus-circle',
           'fields': [
             'title',
             'body',
@@ -6938,8 +6940,6 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
             'createdAt',
             'updatedAt',
           ],
-          'title': 'New Note',
-          'icon': 'plus-circle',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -6962,6 +6962,7 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
         'config': {
           'mode': 'edit',
           'icon': 'edit',
+          'title': 'Edit Note',
           'fields': [
             'title',
             'body',
@@ -6969,7 +6970,6 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
             'createdAt',
             'updatedAt',
           ],
-          'title': 'Edit Note',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -6991,8 +6991,6 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
         'linkedEntity': canonicalName,
         'config': {
           'title': 'View Note',
-          'icon': 'eye',
-          'mode': 'edit',
           'fields': [
             'title',
             'body',
@@ -7000,6 +6998,8 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
             'createdAt',
             'updatedAt',
           ],
+          'mode': 'edit',
+          'icon': 'eye',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -7022,12 +7022,12 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
         'config': {
           'alertMessage': 'This action cannot be undone.',
           'icon': 'alert-triangle',
-          'title': 'Delete Note',
           'confirmLabel': 'Delete',
+          'title': 'Delete Note',
         },
         'events': {
-          'CONFIRM': 'CONFIRM_DELETE',
           'REQUEST': 'DELETE',
+          'CONFIRM': 'CONFIRM_DELETE',
         },
         'listens': [
           {
