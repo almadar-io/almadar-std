@@ -1,6 +1,6 @@
 {
   "name": "std-notify-on-event",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "std-notify-on-event — cross-orbital wiring atom. Subscribes to events from another orbital (e.g. CheckoutOrbital emits OrderPlaced, OrderRecordOrbital reacts via this atom) and dispatches a notification. Use when one orbital needs to react to or be notified about events that happen in another orbital — the wiring goes through this atom's `EventOccurred` listener which the molecule renames via traitOverrides.events to the upstream event name. Resolves recipient from `recipients` (first entry; multi-recipient fan-out is a future extension) or falls back to `@user.id`. Skips dispatch when the recipient is in `suppressionList`. Emits in-app `notify` when `notifyChannel` is `\"in-app\"`, or persists a `NotificationRecord` row for out-of-band delivery when channel is `\"email\"` or `\"sms\"`.",
   "orbitals": [
     {
@@ -103,6 +103,10 @@
                   {
                     "name": "data",
                     "type": "object"
+                  },
+                  {
+                    "name": "status",
+                    "type": "string"
                   }
                 ]
               },
@@ -134,6 +138,19 @@
                 "from": "idle",
                 "to": "idle",
                 "event": "EventOccurred",
+                "guard": [
+                  "or",
+                  [
+                    "=",
+                    "@config.triggerStatus",
+                    ""
+                  ],
+                  [
+                    "=",
+                    "@payload.status",
+                    "@config.triggerStatus"
+                  ]
+                ],
                 "effects": [
                   [
                     "set",
@@ -222,12 +239,12 @@
                         "create",
                         "NotificationRecord",
                         {
-                          "dispatched": false,
                           "channel": "@config.notifyChannel",
-                          "recordedAt": 0.0,
                           "recipient": "@entity.recipient",
-                          "message": "@config.template",
-                          "severity": "@config.severity"
+                          "severity": "@config.severity",
+                          "recordedAt": 0.0,
+                          "dispatched": false,
+                          "message": "@config.template"
                         }
                       ]
                     ]
@@ -236,10 +253,10 @@
                     "emit",
                     "NotificationDispatched",
                     {
+                      "recipient": "@entity.recipient",
                       "channel": "@config.notifyChannel",
                       "severity": "@config.severity",
-                      "message": "@config.template",
-                      "recipient": "@entity.recipient"
+                      "message": "@config.template"
                     }
                   ]
                 ]
@@ -247,61 +264,13 @@
             ]
           },
           "config": {
-            "suppressionList": {
-              "type": "[string]",
-              "default": [],
-              "label": "Suppression list",
-              "description": "Recipient ids/addresses to skip (e.g. unsubscribed users). Suppression check runs before dispatch.",
-              "synonyms": "block list, unsubscribed, opt-out list",
-              "tier": "policy",
-              "items": {
-                "type": "string"
-              }
-            },
-            "listensFor": {
-              "type": "[string]",
-              "default": [],
-              "label": "Trigger events",
-              "description": "Event names that should fire a notification. Set this to the upstream event name (e.g. OrderPlaced, CheckoutCompleted) so this atom listens for events from the orbital that emits them. The orbital owning this trait reacts whenever the named event fires anywhere in the schema.",
-              "synonyms": "subscribe to event, listen for event, react to event, watch for, wire upstream event, observe event from another orbital, cross-orbital subscription, on-event trigger",
-              "tier": "internal",
-              "items": {
-                "type": "string"
-              }
-            },
-            "template": {
+            "triggerStatus": {
               "type": "string",
               "default": "",
-              "label": "Message template",
-              "description": "Text shown to the recipient; supports payload interpolation",
-              "synonyms": "notification text, message body, alert text",
-              "tier": "presentation"
-            },
-            "notifyChannel": {
-              "type": "string",
-              "default": "in-app",
-              "label": "Channel",
-              "description": "Delivery channel: in-app, email, or sms",
-              "synonyms": "delivery method, notification channel, send via, dispatch through",
+              "label": "Trigger status",
+              "description": "When set, dispatch only when the upstream event's `status` field equals this value (e.g. fire only when a record becomes 'approved'). Empty = fire on every subscribed event.",
+              "synonyms": "on status, when status, status filter, only when, fire on, react on status",
               "tier": "policy"
-            },
-            "frequencyCapPerWeek": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Frequency cap (per week)",
-              "description": "Max sends per (channel, recipient) per rolling 7-day window. 0 = uncapped. WIRING DEFERRED: needs stateful history query (gap — docs/Almadar_Std_Factories.md).",
-              "tier": "policy"
-            },
-            "recipients": {
-              "type": "[string]",
-              "default": [],
-              "label": "Recipients",
-              "description": "Recipient ids/addresses. v1.1 uses the first entry; multi-recipient fan-out lands in v1.2 (gap). When empty, falls back to the authenticated user.",
-              "synonyms": "targets, addressees, notify to",
-              "tier": "policy",
-              "items": {
-                "type": "string"
-              }
             },
             "quietHours": {
               "type": "QuietHoursSpec",
@@ -323,6 +292,62 @@
                   "type": "string",
                   "required": false
                 }
+              }
+            },
+            "frequencyCapPerWeek": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Frequency cap (per week)",
+              "description": "Max sends per (channel, recipient) per rolling 7-day window. 0 = uncapped. WIRING DEFERRED: needs stateful history query (gap — docs/Almadar_Std_Factories.md).",
+              "tier": "policy"
+            },
+            "recipients": {
+              "type": "[string]",
+              "default": [],
+              "label": "Recipients",
+              "description": "Recipient ids/addresses. v1.1 uses the first entry; multi-recipient fan-out lands in v1.2 (gap). When empty, falls back to the authenticated user.",
+              "synonyms": "targets, addressees, notify to",
+              "tier": "policy",
+              "items": {
+                "type": "string"
+              }
+            },
+            "suppressionList": {
+              "type": "[string]",
+              "default": [],
+              "label": "Suppression list",
+              "description": "Recipient ids/addresses to skip (e.g. unsubscribed users). Suppression check runs before dispatch.",
+              "synonyms": "block list, unsubscribed, opt-out list",
+              "tier": "policy",
+              "items": {
+                "type": "string"
+              }
+            },
+            "notifyChannel": {
+              "type": "string",
+              "default": "in-app",
+              "label": "Channel",
+              "description": "Delivery channel: in-app, email, or sms",
+              "synonyms": "delivery method, notification channel, send via, dispatch through",
+              "tier": "policy"
+            },
+            "template": {
+              "type": "string",
+              "default": "",
+              "label": "Message template",
+              "description": "Text shown to the recipient; supports payload interpolation",
+              "synonyms": "notification text, message body, alert text",
+              "tier": "presentation"
+            },
+            "listensFor": {
+              "type": "[string]",
+              "default": [],
+              "label": "Trigger events",
+              "description": "Event names that should fire a notification. Set this to the upstream event name (e.g. OrderPlaced, CheckoutCompleted) so this atom listens for events from the orbital that emits them. The orbital owning this trait reacts whenever the named event fires anywhere in the schema.",
+              "synonyms": "subscribe to event, listen for event, react to event, watch for, wire upstream event, observe event from another orbital, cross-orbital subscription, on-event trigger",
+              "tier": "internal",
+              "items": {
+                "type": "string"
               }
             },
             "severity": {

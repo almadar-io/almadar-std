@@ -1,8 +1,8 @@
-app std-notify-on-event "1.2.0"
+app std-notify-on-event "1.3.0"
 "std-notify-on-event — cross-orbital wiring atom. Subscribes to events from another orbital (e.g. CheckoutOrbital emits OrderPlaced, OrderRecordOrbital reacts via this atom) and dispatches a notification. Use when one orbital needs to react to or be notified about events that happen in another orbital — the wiring goes through this atom's `EventOccurred` listener which the molecule renames via traitOverrides.events to the upstream event name. Resolves recipient from `recipients` (first entry; multi-recipient fan-out is a future extension) or falls back to `@user.id`. Skips dispatch when the recipient is in `suppressionList`. Emits in-app `notify` when `notifyChannel` is `\"in-app\"`, or persists a `NotificationRecord` row for out-of-band delivery when channel is `\"email\"` or `\"sms\"`."
 type QuietHoursSpec = { start : string, end : string }
 orbital NotifyOnEventOrbital {
-    type EventOccurred = Event { data : object } "Rename via traitOverrides.events to the upstream event (e.g. ContactSaved). The atom listens on this sentinel and dispatches a notification."
+    type EventOccurred = Event { data : object, status : string } "Rename via traitOverrides.events to the upstream event (e.g. ContactSaved). The atom listens on this sentinel and dispatches a notification. The optional `status` field lets `triggerStatus` gate dispatch to a single status-change value."
 
     type NotificationDispatched = Event { recipient : string, channel : string, message : string, severity : string } "Re-emitted after dispatch; rename to wire downstream observers (e.g. NotificationLogAppended)."
 
@@ -20,7 +20,7 @@ orbital NotifyOnEventOrbital {
     initial: idle
 
     state idle {
-      EventOccurred -> idle
+      EventOccurred -> idle when (or ["=", @config.triggerStatus, ""] ["=", ?status, @config.triggerStatus])
         (set @entity.recipient (if ["=", (array/len @config.recipients), 0] @user.id (array/first @config.recipients)))
         (set @entity.channel @config.notifyChannel)
         (set @entity.message @config.template)
@@ -55,10 +55,16 @@ orbital NotifyOnEventOrbital {
     listens {
       EventOccurred {
         data : object
+        status : string
       }
     }
 
     config {
+      triggerStatus : string = ""
+        @label "Trigger status"
+        @description "When set, dispatch only when the upstream event's `status` field equals this value (e.g. fire only when a record becomes 'approved'). Empty = fire on every subscribed event."
+        @synonyms "on status, when status, status filter, only when, fire on, react on status"
+        @tier "policy"
       listensFor : [string] = []
         @label "Trigger events"
         @description "Event names that should fire a notification. Set this to the upstream event name (e.g. OrderPlaced, CheckoutCompleted) so this atom listens for events from the orbital that emits them. The orbital owning this trait reacts whenever the named event fires anywhere in the schema."

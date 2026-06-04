@@ -1,0 +1,127 @@
+app std-autocomplete "1.0.0"
+"std-autocomplete — reusable inline typeahead: as the user types (AUTO_QUERY), fetches the linked entity filtered by @config.searchField and shows a compact suggestions list; picking one emits AUTO_SELECTED { id } for the consumer to open the record or fill a field. Rebind to any entity; configure searchField + the label field shown per suggestion."
+type AutoSuggestSpec = { name : string!, label : string, variant : string, icon : string }
+orbital AutocompleteOrbital {
+  type AutoLoaded = Event { data : [AutoTarget] } "Suggestion matches loaded"
+  type AutoFailed = Event { error : string } "Suggestion fetch failed"
+
+  entity AutoTarget [runtime] {
+    id : string!
+    name : string @description "The primary label matched + shown per suggestion." @synonyms "title, label, productName"
+    searchTerm : string @intrinsic @description "The current typed query." @synonyms "query, term, q" = ""
+  }
+
+  trait Autocomplete -> @rebindable AutoTarget [interaction, collection] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch AutoTarget {})
+        (render-ui main {
+          type: search-input
+          event: AUTO_QUERY
+          placeholder: @config.placeholder
+          query: @entity.searchTerm
+        })
+      AUTO_QUERY -> idle
+        (set @entity.searchTerm ?value)
+        (fetch AutoTarget {
+          filter: (or ["=", ?value, ""] (str/includes (object/get @entity @config.searchField) ?value))
+          emit: { success: AutoLoaded, failure: AutoFailed }
+        })
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: xs
+          children: [{
+            type: search-input
+            event: AUTO_QUERY
+            placeholder: @config.placeholder
+            query: @entity.searchTerm
+          }, { type: spinner, size: sm }]
+        })
+      AutoLoaded -> idle
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: xs
+          children: [{
+            type: search-input
+            event: AUTO_QUERY
+            placeholder: @config.placeholder
+            query: @entity.searchTerm
+          }, {
+            type: data-list
+            entity: @payload.data
+            fields: @config.suggestionFields
+            itemActions: [{ label: Open, event: AUTO_SELECT, variant: ghost }]
+          }]
+        })
+      AUTO_SELECT -> idle
+        (emit AUTO_SELECTED { id: "@payload.id" })
+        (render-ui main {
+          type: search-input
+          event: AUTO_QUERY
+          placeholder: @config.placeholder
+          query: @entity.searchTerm
+        })
+      AutoFailed -> idle
+        (render-ui main {
+          type: search-input
+          event: AUTO_QUERY
+          placeholder: @config.placeholder
+          query: @entity.searchTerm
+        })
+    }
+
+    emits {
+      AutoLoaded
+      AutoFailed
+      AUTO_SELECTED -> external {
+        id : string!
+      }
+        @description "A suggestion was picked; carries the chosen record id for the consumer to open or bind."
+        @synonyms "select, choose, pick"
+        @tier "essential"
+    }
+
+    listens {
+      AUTO_QUERY {
+        value : string
+      }
+        @description "The user typed/submitted a query in the typeahead input."
+        @synonyms "type, query, search"
+        @tier "essential"
+      AUTO_SELECT {
+        id : string!
+      }
+        @description "The user clicked a suggestion."
+        @synonyms "pick, choose, open"
+        @tier "essential"
+      AutoFailed {
+        error : string
+      }
+    }
+
+    config {
+      searchField : string = name
+        @label "Search field"
+        @description "Entity field matched against the typed query (case-insensitive substring)."
+        @tier "presentation"
+      placeholder : string = "Search…"
+        @label "Placeholder"
+        @description "Hint text in the empty typeahead input."
+        @tier "presentation"
+      suggestionFields : [AutoSuggestSpec] = [{
+        label: Name
+        name: name
+        variant: body
+      }]
+        @label "Suggestion fields"
+        @description "Fields shown per suggestion row."
+        @tier "presentation"
+    }
+  }
+
+  page "/autocomplete" as AutocompletePage -> Autocomplete
+}
