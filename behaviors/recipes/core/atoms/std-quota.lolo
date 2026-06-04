@@ -22,7 +22,7 @@ orbital QuotaOrbital {
   type QuotaThrottled = Event { actorId : string, used : number, cap : number }
   type QuotaReset     = Event { actorId : string }
 
-  trait BudgetLimit -> Budget [interaction, collection] {
+  trait BudgetLimit -> Budget [lifecycle, collection] {
     initial: under
     state under {
       INIT  -> under
@@ -30,17 +30,32 @@ orbital QuotaOrbital {
         ;; consumer increments used += cost; transition triggered when
         ;; used > cap.
       OVER  -> over
-        (emit QuotaThrottled { actorId: "@payload.actorId", used: "@payload.used", cap: "@row.cap" })
+        (emit QuotaThrottled { actorId: "@payload.actorId", used: "@payload.used", cap: "@payload.cap" })
     }
     state over {
       HIT   -> over
-        (emit QuotaThrottled { actorId: "@payload.actorId", used: "@payload.used", cap: "@row.cap" })
+        (emit QuotaThrottled { actorId: "@payload.actorId", used: "@payload.used", cap: "@payload.cap" })
       RESET -> under
         (emit QuotaReset { actorId: "@payload.actorId" })
     }
+    listens {
+      OVER {
+        actorId : string
+        used    : number
+        cap     : number
+      }
+      HIT {
+        actorId : string
+        used    : number
+        cap     : number
+      }
+      RESET {
+        actorId : string
+      }
+    }
     emits {
-      QuotaThrottled external { actorId : string, used : number, cap : number }
-      QuotaReset     external { actorId : string }
+      QuotaThrottled -> external { actorId : string, used : number, cap : number }
+      QuotaReset     -> external { actorId : string }
     }
   }
 

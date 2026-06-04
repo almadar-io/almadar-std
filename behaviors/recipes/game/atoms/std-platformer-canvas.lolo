@@ -22,6 +22,9 @@ orbital PlatformerWorldOrbital {
         (render-ui main { type: "platformer-canvas", platforms: "@entity.platforms", player: "@entity.player", canvasWidth: 800, canvasHeight: 400, worldWidth: 2400, worldHeight: 400, followCamera: true, bgColor: "#1a1a2e", leftEvent: "LEFT", rightEvent: "RIGHT", jumpEvent: "JUMP", stopEvent: "STOP" })
       START -> running
         (render-ui main { type: "platformer-canvas", platforms: "@entity.platforms", player: "@entity.player", canvasWidth: 800, canvasHeight: 400, worldWidth: 2400, worldHeight: 400, followCamera: true, bgColor: "#1a1a2e", leftEvent: "LEFT", rightEvent: "RIGHT", jumpEvent: "JUMP", stopEvent: "STOP" })
+      PlatformerWorldLoaded -> idle
+        (set @entity.platforms @payload.platforms)
+        (set @entity.player @payload.player)
     }
     state running {
       LEFT -> running
@@ -30,7 +33,10 @@ orbital PlatformerWorldOrbital {
       STOP -> idle
         (render-ui main { type: "platformer-canvas", platforms: "@entity.platforms", player: "@entity.player", canvasWidth: 800, canvasHeight: 400, worldWidth: 2400, worldHeight: 400, followCamera: true, bgColor: "#1a1a2e", leftEvent: "LEFT", rightEvent: "RIGHT", jumpEvent: "JUMP", stopEvent: "STOP" })
     }
-    emits: [PlatformerWorldLoaded, PlatformerWorldLoadFailed]
+    emits {
+      PlatformerWorldLoaded
+      PlatformerWorldLoadFailed
+    }
     listens {
       PlatformerWorldLoadFailed { message : string }
     }

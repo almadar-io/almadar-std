@@ -20,25 +20,32 @@ orbital InventorySlotOrbital {
       INIT -> idle
         (fetch InventorySlot { emit: { success: "InventorySlotLoaded", failure: "InventorySlotLoadFailed" } })
         (render-ui main { type: "inventory-panel", items: "@entity.items", slots: 16, columns: 4, selectSlotEvent: "SELECT_SLOT", useItemEvent: "USE_ITEM", dropItemEvent: "DROP_ITEM", showTooltips: true })
+      InventorySlotLoaded -> idle
+        (set @entity.items @payload.items)
       SELECT_SLOT -> idle
         (render-ui main { type: "inventory-panel", items: "@entity.items", slots: 16, columns: 4, selectSlotEvent: "SELECT_SLOT", useItemEvent: "USE_ITEM", dropItemEvent: "DROP_ITEM", showTooltips: true })
       USE_ITEM -> idle
         (fetch InventorySlot { emit: { success: "InventorySlotLoaded", failure: "InventorySlotLoadFailed" } })
         (render-ui main { type: "inventory-panel", items: "@entity.items", slots: 16, columns: 4, selectSlotEvent: "SELECT_SLOT", useItemEvent: "USE_ITEM", dropItemEvent: "DROP_ITEM", showTooltips: true })
       DROP_ITEM -> idle
-        (persist delete InventorySlot @payload.id { emit: { success: "InventorySlotDeleted", failure: "InventorySlotDeleteFailed" } })
+        (persist delete InventorySlot @payload.item.id { emit: { success: "InventorySlotDeleted", failure: "InventorySlotDeleteFailed" } })
         (fetch InventorySlot { emit: { success: "InventorySlotLoaded", failure: "InventorySlotLoadFailed" } })
         (render-ui main { type: "inventory-panel", items: "@entity.items", slots: 16, columns: 4, selectSlotEvent: "SELECT_SLOT", useItemEvent: "USE_ITEM", dropItemEvent: "DROP_ITEM", showTooltips: true })
     }
     listens {
-      SELECT_SLOT { slotId : string! }
-      USE_ITEM { id : string! }
-      DROP_ITEM { id : string! }
+      SELECT_SLOT { index : number! }
+      USE_ITEM { item : object! }
+      DROP_ITEM { item : object! }
           InventorySlotLoadFailed { message : string }
     
       InventorySlotDeleteFailed { error : string, code : string }
     }
-    emits: [InventorySlotLoaded, InventorySlotLoadFailed, InventorySlotDeleted, InventorySlotDeleteFailed]
+    emits {
+      InventorySlotLoaded
+      InventorySlotLoadFailed
+      InventorySlotDeleted
+      InventorySlotDeleteFailed
+    }
   }
   page "/inventoryslots" as InventorySlotInventoryPage -> InventorySlotInventoryPanel
 }

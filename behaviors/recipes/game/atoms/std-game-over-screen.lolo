@@ -19,6 +19,9 @@ orbital GameOverStateOrbital {
       INIT -> idle
         (fetch GameOverState { emit: { success: "GameOverStateLoaded", failure: "GameOverStateLoadFailed" } })
         (render-ui main { type: "game-over-screen", title: "Game Over", message: "Better luck next time!", currentScore: "@entity.currentScore", highScore: "@entity.highScore", menuItems: [{ label: "Play Again", action: "RETRY" }, { label: "Main Menu", action: "QUIT" }] })
+      GameOverStateLoaded -> idle
+        (set @entity.currentScore @payload.currentScore)
+        (set @entity.highScore @payload.highScore)
       NAVIGATE -> idle
       RESTART -> idle
       RETRY -> idle
@@ -26,7 +29,10 @@ orbital GameOverStateOrbital {
       QUIT -> idle
         (render-ui main { type: "game-over-screen", title: "Game Over", message: "Better luck next time!", currentScore: "@entity.currentScore", highScore: "@entity.highScore", menuItems: [{ label: "Play Again", action: "RETRY" }, { label: "Main Menu", action: "QUIT" }] })
     }
-    emits: [GameOverStateLoaded, GameOverStateLoadFailed]
+    emits {
+      GameOverStateLoaded
+      GameOverStateLoadFailed
+    }
     listens {
       GameOverStateLoadFailed { message : string }
     }

@@ -20,7 +20,7 @@ orbital BulkheadOrbital {
 
   type RequestRejected = Event { tenantId : string, reason : string }
 
-  trait PerTenantQueue -> TenantPool [interaction, collection] {
+  trait PerTenantQueue -> TenantPool [lifecycle, collection] {
     initial: open
     state open {
       INIT -> open
@@ -34,8 +34,16 @@ orbital BulkheadOrbital {
         (emit RequestRejected { tenantId: "@payload.tenantId", reason: "capacity" })
       DRAIN    -> open
     }
+    listens {
+      OVERFLOW {
+        tenantId : string
+      }
+      HIT {
+        tenantId : string
+      }
+    }
     emits {
-      RequestRejected external { tenantId : string, reason : string }
+      RequestRejected -> external { tenantId : string, reason : string }
     }
   }
 

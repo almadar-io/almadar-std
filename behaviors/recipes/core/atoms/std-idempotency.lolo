@@ -22,7 +22,7 @@ orbital IdempotencyOrbital {
   type ReplayDropped = Event { keyValue : string }
   type EventForwarded = Event { keyValue : string }
 
-  trait KeyedDedupe -> SeenKey [interaction, collection] {
+  trait KeyedDedupe -> SeenKey [lifecycle, collection] {
     initial: idle
     state idle {
       INIT -> idle
@@ -42,9 +42,19 @@ orbital IdempotencyOrbital {
          })
         (emit EventForwarded { keyValue: "@payload.keyValue" })
     }
+    listens {
+      SEEN {
+        keyValue : string!
+      }
+      DONE {
+        keyValue : string!
+        result   : string
+        seenAt   : datetime!
+      }
+    }
     emits {
-      ReplayDropped  external { keyValue : string }
-      EventForwarded external { keyValue : string }
+      ReplayDropped  -> external { keyValue : string }
+      EventForwarded -> external { keyValue : string }
     }
   }
 

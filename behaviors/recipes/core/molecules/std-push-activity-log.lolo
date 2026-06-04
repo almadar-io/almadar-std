@@ -21,8 +21,8 @@ orbital PushActivityLogOrbital {
   trait PushActivityPush = Push.traits.PushSubscriberIndicator    -> PushActivityItem {}
   trait PushActivityLog  = ActivityLog.traits.AgentActivityLogLog -> PushActivityItem {
     listens {
-      PushActivityPush PUSH_RECEIVED     -> LOG_ENTRY
-      PushActivityPush PUSH_DISCONNECTED -> LOG_ENTRY
+      PushActivityPush.PUSH_RECEIVED     -> LOG_ENTRY
+      PushActivityPush.PUSH_DISCONNECTED -> LOG_ENTRY
     
       PushActivityItemLoadFailed { error : string, code : string }
     }
@@ -42,7 +42,10 @@ orbital PushActivityLogOrbital {
           ]
         })
     }
-    emits: [PushActivityItemLoadFailed, PushActivityItemLoaded]
+    emits {
+      PushActivityItemLoadFailed
+      PushActivityItemLoaded
+    }
   }
 
   page "/push-activity" as PushActivity -> PushActivityLayout

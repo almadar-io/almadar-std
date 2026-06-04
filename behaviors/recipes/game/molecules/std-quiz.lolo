@@ -24,6 +24,16 @@ orbital QuizItemOrbital {
   trait QuizItemQuiz -> QuizItem [interaction, collection] {
     initial: question
     state question {
+      QuizItemLoaded -> question
+        (set @entity.name @payload.name)
+        (set @entity.description @payload.description)
+        (set @entity.optionA @payload.optionA)
+        (set @entity.optionB @payload.optionB)
+        (set @entity.optionC @payload.optionC)
+        (set @entity.optionD @payload.optionD)
+        (set @entity.difficulty @payload.difficulty)
+        (set @entity.currentIndex @payload.currentIndex)
+        (set @entity.totalQuestions @payload.totalQuestions)
       INIT -> question
         (fetch QuizItem { emit: { success: "QuizItemLoaded", failure: "QuizItemLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "help-circle" }, { type: "typography", content: "Quiz", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", align: "center", children: [{ type: "icon", name: "help-circle" }, { type: "typography", variant: "h3", content: "@entity.name" }] }] }, { type: "simple-grid", cols: 2, children: [{ type: "button", label: "@entity.optionA", action: "ANSWER", variant: "secondary", actionPayload: { answer: "A" } }, { type: "button", label: "@entity.optionB", action: "ANSWER", variant: "secondary", actionPayload: { answer: "B" } }, { type: "button", label: "@entity.optionC", action: "ANSWER", variant: "secondary", actionPayload: { answer: "C" } }, { type: "button", label: "@entity.optionD", action: "ANSWER", variant: "secondary", actionPayload: { answer: "D" } }] }, { type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "signal" }, { type: "typography", variant: "caption", color: "muted", content: "Difficulty:" }, { type: "badge", label: "@entity.difficulty" }] }, { type: "stack", direction: "horizontal", gap: "xs", align: "center", children: [{ type: "typography", variant: "caption", color: "muted", content: "Question" }, { type: "typography", variant: "caption", content: ["+", ["or", "@entity.currentIndex", 0], 1] }, { type: "typography", variant: "caption", color: "muted", content: "of" }, { type: "typography", variant: "caption", content: ["or", "@entity.totalQuestions", 0] }] }] }] })
@@ -47,7 +57,10 @@ orbital QuizItemOrbital {
       ANSWER { answer : string! }
           QuizItemLoadFailed { message : string }
     }
-    emits: [QuizItemLoaded, QuizItemLoadFailed]
+    emits {
+      QuizItemLoaded
+      QuizItemLoadFailed
+    }
   }
   page "/quizitems/quiz" as QuizItemQuizPage -> QuizItemQuiz
 }

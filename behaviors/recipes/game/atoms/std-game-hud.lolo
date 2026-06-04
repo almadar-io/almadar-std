@@ -20,8 +20,15 @@ orbital HudStateOrbital {
       REFRESH -> idle
         (fetch HudState { emit: { success: "HudStateLoaded", failure: "HudStateLoadFailed" } })
         (render-ui main { type: "game-hud", position: "top-left", transparent: false, stats: [{ label: "Name", value: "@entity.name" }, { label: "Description", value: "@entity.description" }, { label: "Status", value: "@entity.status" }, { label: "CreatedAt", value: "@entity.createdAt" }] })
+      HudStateLoaded -> idle
+        (set @entity.name @payload.name)
+        (set @entity.description @payload.description)
+        (set @entity.status @payload.status)
     }
-    emits: [HudStateLoaded, HudStateLoadFailed]
+    emits {
+      HudStateLoaded
+      HudStateLoadFailed
+    }
     listens {
       HudStateLoadFailed { message : string }
     }

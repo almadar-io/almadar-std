@@ -28,6 +28,10 @@ orbital ServiceNotificationHubOrbital {
       INIT -> idle
         (fetch ServiceNotificationHub { emit: { success: "ServiceNotificationHubLoaded", failure: "ServiceNotificationHubLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "stretch", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "bell" }, { type: "typography", content: "ServiceNotificationHub Notification Hub", variant: "h2" }] }, { type: "divider" }, { type: "input", placeholder: "Email or phone number" }, { type: "input", placeholder: "Notification subject" }, { type: "textarea", placeholder: "Write your message..." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Email", action: "SEND_EMAIL", variant: "primary", icon: "mail" }, { type: "button", label: "SMS", action: "SEND_SMS", variant: "secondary", icon: "message-circle" }, { type: "button", label: "WhatsApp", action: "SEND_WHATSAPP", variant: "secondary", icon: "phone" }] }] })
+      ServiceNotificationHubLoaded -> idle
+        (set @entity.recipient @payload.recipient)
+        (set @entity.subject @payload.subject)
+        (set @entity.messageBody @payload.messageBody)
       SEND_EMAIL -> sending
         (set @entity.channel email)
         (render-ui main { type: "loading-state", title: "Sending notification...", message: "Delivering servicenotificationhub notification..." })
@@ -69,7 +73,14 @@ orbital ServiceNotificationHubOrbital {
       ServiceNotificationHubEmailFailed { error : string, code : string }
       ServiceNotificationHubTwilioFailed { error : string, code : string }
     }
-    emits: [ServiceNotificationHubLoaded, ServiceNotificationHubLoadFailed, ServiceNotificationHubEmailCompleted, ServiceNotificationHubEmailFailed, ServiceNotificationHubTwilioCompleted, ServiceNotificationHubTwilioFailed]
+    emits {
+      ServiceNotificationHubLoaded
+      ServiceNotificationHubLoadFailed
+      ServiceNotificationHubEmailCompleted
+      ServiceNotificationHubEmailFailed
+      ServiceNotificationHubTwilioCompleted
+      ServiceNotificationHubTwilioFailed
+    }
   }
   page "/servicenotificationhubs" as ServiceNotificationHubPage -> ServiceNotificationHubNotificationHub
 }

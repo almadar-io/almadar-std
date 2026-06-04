@@ -45,12 +45,18 @@ orbital InventoryItemOrbital {
         (fetch InventoryItem { emit: { success: "InventoryItemLoaded", failure: "InventoryItemLoadFailed" } })
         (render-ui main { type: "spinner" })
     }
-    emits: [InventoryItemLoaded, InventoryItemLoadFailed]
+    emits {
+      ADD_ITEM
+      USE_ITEM
+      DROP
+      InventoryItemLoaded
+      InventoryItemLoadFailed
+    }
     listens {
       InventoryItemLoadFailed { error : string, code : string }
-      InventoryItemPersistor ITEM_ADDED  -> INIT
-      InventoryItemPersistor ITEM_USED   -> INIT
-      InventoryItemPersistor ITEM_DROPPED -> INIT
+      InventoryItemPersistor.ITEM_ADDED  -> INIT
+      InventoryItemPersistor.ITEM_USED   -> INIT
+      InventoryItemPersistor.ITEM_DROPPED -> INIT
     }
   }
 
@@ -114,17 +120,17 @@ orbital InventoryItemOrbital {
         (emit ITEM_DROPPED { id: "@payload.id" })
     }
     emits {
-      ITEM_ADDED   external { id : string! }
-      ITEM_USED    external { id : string! }
-      ITEM_DROPPED external { id : string! }
+      ITEM_ADDED   -> external { id : string! }
+      ITEM_USED    -> external { id : string! }
+      ITEM_DROPPED -> external { id : string! }
     }
     listens {
       DO_ADD  { data : InventoryItem }
       DO_USE  { id   : string! }
       DO_DROP { id   : string! }
-      InventoryItemAdd  ITEM_ADDED   -> DO_ADD
-      InventoryItemUse  ITEM_USED    -> DO_USE
-      InventoryItemDrop ITEM_DROPPED -> DO_DROP
+      InventoryItemAdd.ITEM_ADDED   -> DO_ADD
+      InventoryItemUse.ITEM_USED    -> DO_USE
+      InventoryItemDrop.ITEM_DROPPED -> DO_DROP
     }
   }
 

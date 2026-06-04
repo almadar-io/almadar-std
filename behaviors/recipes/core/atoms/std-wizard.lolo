@@ -47,6 +47,10 @@ orbital WizardEntryOrbital {
       NEXT -> step2
         (fetch WizardEntry { emit: { success: "WizardEntryLoaded", failure: "WizardEntryLoadFailed" } })
         (render-ui main { type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clipboard" }, { type: "typography", content: "Setup Wizard", variant: "h2" }] }, { type: "progress-dots", count: 3, currentIndex: 1 }, { type: "wizard-progress", steps: ["Personal Info", "Settings", "Review"], currentStep: 1 }, { type: "divider" }, { type: "typography", content: "Settings", variant: "h3" }, { type: "form-section", mode: "create", submitEvent: "NEXT", cancelEvent: "PREV", fields: ["status"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Back", action: "PREV", variant: "ghost", icon: "arrow-left" }, { type: "button", label: "Next", action: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] })
+      WizardEntryLoaded -> step1
+        (set @entity.name @payload.name)
+        (set @entity.description @payload.description)
+        (set @entity.status @payload.status)
     }
     state step2 {
       NEXT -> step3
@@ -88,7 +92,12 @@ orbital WizardEntryOrbital {
     
       WizardEntrySaveFailed { error : string, code : string }
     }
-    emits: [WizardEntryLoaded, WizardEntryLoadFailed, WizardEntrySaved, WizardEntrySaveFailed]
+    emits {
+      WizardEntryLoaded
+      WizardEntryLoadFailed
+      WizardEntrySaved
+      WizardEntrySaveFailed
+    }
   }
   page "/wizard" as WizardEntryPage -> WizardEntryWizard
 }

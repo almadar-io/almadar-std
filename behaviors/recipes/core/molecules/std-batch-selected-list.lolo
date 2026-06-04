@@ -22,13 +22,17 @@ orbital BatchListItemOrbital {
 
   trait BatchItemBrowse       = Browse.traits.BrowseItemBrowse             -> BatchListItem {
     listens {
-      BatchItemConfirmation CONFIRM -> INIT
+      BatchItemConfirmation.CONFIRM -> INIT
     
       BatchListItemLoadFailed { error : string, code : string }
     }
   }
   trait BatchItemSelection    = Selection.traits.SelectableItemSelection   -> BatchListItem {}
-  trait BatchItemConfirmation = Confirmation.traits.ConfirmActionConfirmation -> BatchListItem {}
+  trait BatchItemConfirmation = Confirmation.traits.ConfirmActionConfirmation -> BatchListItem {
+    listens {
+      BatchListLayout.REQUEST -> REQUEST
+    }
+  }
 
   trait BatchListLayout -> BatchListItem [interaction, instance] {
     state composing {
@@ -53,7 +57,11 @@ orbital BatchListItemOrbital {
           ]
         })
     }
-    emits: [BatchListItemLoadFailed, BatchListItemLoaded]
+    emits {
+      REQUEST
+      BatchListItemLoadFailed
+      BatchListItemLoaded
+    }
   }
 
   page "/batch-list" as BatchList -> BatchListLayout

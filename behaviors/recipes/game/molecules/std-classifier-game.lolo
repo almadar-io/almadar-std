@@ -8,8 +8,8 @@ orbital ClassifierGameOrbital {
     description : string
     status : "active" | "inactive" | "pending" = "active"
     createdAt : string
-    score : number = 0
-    level : number = 1
+    score : number @intrinsic = 0
+    level : number @intrinsic = 1
   }
 
   type ClassifierGameLoaded     = Event ClassifierGame                  "Fired when ClassifierGame finishes loading"
@@ -32,7 +32,10 @@ orbital ClassifierGameOrbital {
       RESTART -> menu
         (render-ui main { type: "game-menu", title: "Sort & Classify", menuItems: [{ label: "Start", event: "START", variant: "primary" }] })
     }
-    emits: [ClassifierGameLoaded, ClassifierGameLoadFailed]
+    emits {
+      ClassifierGameLoaded
+      ClassifierGameLoadFailed
+    }
     listens {
       ClassifierGameLoadFailed { message : string }
     }

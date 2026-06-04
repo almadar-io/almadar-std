@@ -22,7 +22,7 @@ orbital AuthorizerOrbital {
   type ActionAllowed = Event { event : string }
   type ActionDenied  = Event { event : string, reason : string }
 
-  trait RoleGate -> AuthorizationRequest [interaction, instance] {
+  trait RoleGate -> AuthorizationRequest [lifecycle, instance] {
     initial: idle
     state idle {
       REQUEST -> checking
@@ -33,9 +33,13 @@ orbital AuthorizerOrbital {
       DENIED -> idle
         (emit ActionDenied { event: "@payload.event", reason: "@payload.reason" })
     }
+    listens {
+      ALLOWED { event : string! }
+      DENIED  { event : string!, reason : string! }
+    }
     emits {
-      ActionAllowed external { event: string }
-      ActionDenied  external { event: string, reason: string }
+      ActionAllowed -> external { event: string }
+      ActionDenied  -> external { event: string, reason: string }
     }
   }
 

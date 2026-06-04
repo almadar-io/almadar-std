@@ -23,7 +23,7 @@ orbital LockOrbital {
   type LockDenied   = Event { keyValue : string, ownerId : string }
   type LockReleased = Event { keyValue : string }
 
-  trait EntityMutex -> Lease [interaction, collection] {
+  trait EntityMutex -> Lease [lifecycle, collection] {
     initial: unlocked
     state unlocked {
       INIT    -> unlocked
@@ -38,10 +38,22 @@ orbital LockOrbital {
       EXPIRE  -> unlocked
         (emit LockReleased { keyValue: "@payload.keyValue" })
     }
+    listens {
+      ACQUIRE {
+        keyValue : string!
+        ownerId  : string
+      }
+      RELEASE {
+        keyValue : string!
+      }
+      EXPIRE {
+        keyValue : string!
+      }
+    }
     emits {
-      LockAcquired external { keyValue : string, ownerId : string }
-      LockDenied   external { keyValue : string, ownerId : string }
-      LockReleased external { keyValue : string }
+      LockAcquired -> external { keyValue : string, ownerId : string }
+      LockDenied   -> external { keyValue : string, ownerId : string }
+      LockReleased -> external { keyValue : string }
     }
   }
 

@@ -21,8 +21,8 @@ orbital BookingOrbital {
 
   trait BookingCalendar     = Calendar.traits.CalendarEventCalendar        -> Booking {
     listens {
-      BookingModal SAVE -> INIT
-      BookingConfirmation CONFIRM -> INIT
+      BookingModal.SAVE -> INIT
+      BookingConfirmation.CONFIRM -> INIT
     
       BookingLoadFailed { error : string, code : string }
     }
@@ -43,7 +43,10 @@ orbital BookingOrbital {
           ]
         })
     }
-    emits: [BookingLoadFailed, BookingLoaded]
+    emits {
+      BookingLoadFailed
+      BookingLoaded
+    }
   }
 
   page "/calendar" as Calendar -> BookingLayout

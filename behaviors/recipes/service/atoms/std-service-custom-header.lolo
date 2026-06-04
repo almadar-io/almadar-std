@@ -30,6 +30,10 @@ orbital ServiceCustomHeaderOrbital {
       CALL_API -> calling
         (render-ui main { type: "loading-state", title: "Calling API...", message: "Sending request to servicecustomheader endpoint..." })
         (call-service custom-header-api execute { endpoint: "@entity.endpoint", method: "@entity.method", body: "@entity.requestBody" } { emit: { success: "ServiceCustomHeaderCustomHeaderApiCompleted", failure: "ServiceCustomHeaderCustomHeaderApiFailed" } })
+      ServiceCustomHeaderLoaded -> idle
+        (set @entity.endpoint @payload.endpoint)
+        (set @entity.method @payload.method)
+        (set @entity.requestBody @payload.requestBody)
     }
     state calling {
       API_RESPONSE -> complete
@@ -57,7 +61,12 @@ orbital ServiceCustomHeaderOrbital {
     
       ServiceCustomHeaderCustomHeaderApiFailed { error : string, code : string }
     }
-    emits: [ServiceCustomHeaderLoaded, ServiceCustomHeaderLoadFailed, ServiceCustomHeaderCustomHeaderApiCompleted, ServiceCustomHeaderCustomHeaderApiFailed]
+    emits {
+      ServiceCustomHeaderLoaded
+      ServiceCustomHeaderLoadFailed
+      ServiceCustomHeaderCustomHeaderApiCompleted
+      ServiceCustomHeaderCustomHeaderApiFailed
+    }
   }
   page "/servicecustomheaders" as ServiceCustomHeaderPage -> ServiceCustomHeaderCustomHeader
 }

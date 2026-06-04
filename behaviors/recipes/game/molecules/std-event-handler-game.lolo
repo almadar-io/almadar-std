@@ -8,8 +8,8 @@ orbital EventHandlerGameOrbital {
     description : string
     status : "active" | "inactive" | "pending" = "active"
     createdAt : string
-    score : number = 0
-    level : number = 1
+    score : number @intrinsic = 0
+    level : number @intrinsic = 1
   }
 
   type EventHandlerGameLoaded     = Event EventHandlerGame                  "Fired when EventHandlerGame finishes loading"
@@ -32,7 +32,10 @@ orbital EventHandlerGameOrbital {
       RESTART -> menu
         (render-ui main { type: "game-menu", title: "Event Handler", menuItems: [{ label: "Start", event: "START", variant: "primary" }] })
     }
-    emits: [EventHandlerGameLoaded, EventHandlerGameLoadFailed]
+    emits {
+      EventHandlerGameLoaded
+      EventHandlerGameLoadFailed
+    }
     listens {
       EventHandlerGameLoadFailed { message : string }
     }
