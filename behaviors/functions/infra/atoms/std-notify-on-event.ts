@@ -49,20 +49,22 @@ export interface StdNotifyOnEventNotificationDispatchedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdNotifyOnEventConfig {
-  /** Default: `[]` */
-  suppressionList?: string[];
-  /** Default: `[]` */
-  listensFor?: string[];
   /** Default: `""` */
-  template?: string;
-  /** Default: `"in-app"` */
-  notifyChannel?: string;
+  triggerStatus?: string;
+  /** Default: `{"start":"","end":""}` */
+  quietHours?: EntityRow;
   /** Default: `0` */
   frequencyCapPerWeek?: number;
   /** Default: `[]` */
   recipients?: string[];
-  /** Default: `{"start":"","end":""}` */
-  quietHours?: EntityRow;
+  /** Default: `[]` */
+  suppressionList?: string[];
+  /** Default: `"in-app"` */
+  notifyChannel?: string;
+  /** Default: `""` */
+  template?: string;
+  /** Default: `[]` */
+  listensFor?: string[];
   /** Default: `"info"` */
   severity?: string;
 }

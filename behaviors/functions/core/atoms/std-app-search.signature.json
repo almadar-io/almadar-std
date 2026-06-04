@@ -1,0 +1,195 @@
+[
+  {
+    "organism": "std-app-search",
+    "orbital": "AppSearchOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/core/atoms/std-app-search.ts",
+    "entities": [
+      {
+        "name": "AppSearchTarget",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string",
+            "required": false,
+            "description": "The primary human-readable label matched by search.",
+            "synonyms": "title, label, productName"
+          },
+          {
+            "name": "searchTerm",
+            "type": "string",
+            "required": false,
+            "intrinsic": true,
+            "description": "The current search query the user submitted.",
+            "synonyms": "query, term, q"
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "AppSearch",
+        "emittedEvents": [
+          "AppSearchLoaded",
+          "AppSearchFailed"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "AppSearchLoaded",
+            "direction": "emit",
+            "description": "Filtered search results loaded"
+          },
+          {
+            "name": "AppSearchFailed",
+            "direction": "emit",
+            "description": "Search fetch failed"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "APP_SEARCH",
+            "direction": "listen",
+            "description": "A search query was submitted (e.g. from the AppLayout top-bar search).",
+            "synonyms": "query, find, lookup",
+            "tier": "essential"
+          },
+          {
+            "name": "CLEAR_SEARCH",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "idleContent",
+            "type": "trait",
+            "label": "Idle content",
+            "description": "The normal content view (e.g. the data ledger/browse trait) shown when no search is active.",
+            "tier": "presentation"
+          },
+          {
+            "key": "resultActions",
+            "type": "[AppSearchFieldSpec]",
+            "default": [],
+            "label": "Result row actions",
+            "description": "Optional per-row actions on a result (e.g. open).",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "resultFields",
+            "type": "[AppSearchFieldSpec]",
+            "default": [
+              {
+                "label": "Name",
+                "variant": "h4",
+                "name": "name"
+              }
+            ],
+            "label": "Result columns",
+            "description": "Columns shown in the search-results grid; maps entity fields to display cells.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                },
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "resultsTitle",
+            "type": "string",
+            "default": "Search results",
+            "label": "Results title",
+            "description": "Heading shown above the search-results grid.",
+            "tier": "presentation"
+          },
+          {
+            "key": "searchField",
+            "type": "string",
+            "default": "name",
+            "label": "Search field",
+            "description": "Entity field matched against the query (case-insensitive substring).",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "searchTerm"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "AppSearchPage",
+        "defaultPath": "/app-search",
+        "primaryEntity": "AppSearchTarget"
+      }
+    ],
+    "emittedEvents": [
+      "AppSearchFailed",
+      "AppSearchLoaded"
+    ],
+    "listenedEvents": []
+  }
+]

@@ -1,0 +1,165 @@
+[
+  {
+    "organism": "std-status-lifecycle",
+    "orbital": "StatusLifecycleOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/infra/atoms/std-status-lifecycle.ts",
+    "entities": [
+      {
+        "name": "StatusRecord",
+        "fields": [
+          {
+            "name": "status",
+            "type": "string",
+            "required": false,
+            "description": "Current lifecycle status of the record.",
+            "synonyms": "state, stage, phase"
+          }
+        ],
+        "persistence": "persistent"
+      }
+    ],
+    "traits": [
+      {
+        "name": "StatusMachine",
+        "emittedEvents": [
+          "StatusChanged",
+          "StatusChangeFailed"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "StatusChanged",
+            "direction": "emit"
+          },
+          {
+            "name": "StatusChangeFailed",
+            "direction": "emit"
+          },
+          {
+            "name": "ChangeStatusRequested",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "enabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Enforce status lifecycle",
+            "description": "Validate and apply status transitions against the configured table. Off by default.",
+            "synonyms": "lifecycle, statuses, states, stages, workflow, status transitions, enforce, enable, apply",
+            "tier": "infra"
+          },
+          {
+            "key": "initialStatus",
+            "type": "string",
+            "default": "draft",
+            "label": "Initial status",
+            "description": "The status a new record starts in.",
+            "synonyms": "starting state, default status, first stage",
+            "tier": "domain"
+          },
+          {
+            "key": "states",
+            "type": "[string]",
+            "default": [
+              "draft",
+              "active",
+              "archived"
+            ],
+            "label": "Statuses",
+            "description": "The closed set of statuses a record can hold.",
+            "synonyms": "states, stages, phases, statuses, lifecycle, workflow steps",
+            "tier": "domain",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "statusField",
+            "type": "string",
+            "default": "status",
+            "label": "Status field",
+            "description": "Which entity field this lifecycle drives. Defaults to 'status'; set it to bind any field (e.g. 'state', 'stage', 'phase').",
+            "synonyms": "state field, stage field, status column, lifecycle field",
+            "tier": "domain"
+          },
+          {
+            "key": "targetEntity",
+            "type": "string",
+            "default": "StatusRecord",
+            "label": "Target entity",
+            "description": "Entity name whose status field this lifecycle drives (e.g. 'Contract'). Defaults to the atom's own record so the standalone validates; rebind per composition.",
+            "tier": "internal"
+          },
+          {
+            "key": "transitions",
+            "type": "[TransitionSpec]",
+            "default": [
+              {
+                "to": "active",
+                "from": "draft",
+                "event": "ACTIVATE",
+                "label": "Activate"
+              },
+              {
+                "from": "active",
+                "label": "Archive",
+                "event": "ARCHIVE",
+                "to": "archived"
+              }
+            ],
+            "label": "Allowed transitions",
+            "description": "The legal moves: each row is { from, to, event, label }. A requested move is applied only if it matches a row.",
+            "synonyms": "edges, allowed moves, status flow, workflow transitions",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "event": {
+                  "name": "event",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "to": {
+                  "name": "to",
+                  "required": true,
+                  "type": "string"
+                },
+                "from": {
+                  "name": "from",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "StatusLifecyclePage",
+        "defaultPath": "/status-lifecycle",
+        "primaryEntity": "StatusRecord"
+      }
+    ],
+    "emittedEvents": [
+      "StatusChangeFailed",
+      "StatusChanged"
+    ],
+    "listenedEvents": []
+  }
+]
