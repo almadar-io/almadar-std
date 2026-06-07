@@ -1,0 +1,58 @@
+app ui-rich-block-editor "1.0.0"
+"RichBlockEditor — UI factory (1:1 with the @almadar/ui rich-block-editor pattern)."
+orbital RichBlockEditorOrbital {
+  entity RichBlockEditorItem [runtime] {
+    id : string!
+  }
+
+  trait RichBlockEditorRender -> @rebindable RichBlockEditorItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          initialBlocks: @config.initialBlocks
+          onChange: CHANGE
+          changeEvent: CHANGE
+          readOnly: @config.readOnly
+          placeholder: @config.placeholder
+          showToolbar: @config.showToolbar
+          className: @config.className
+          type: rich-block-editor
+        })
+    }
+
+    emits {
+      CHANGE -> external {
+        blocks : [object]
+      }
+        @description "onChange prop"
+        @tier "essential"
+    }
+
+    config {
+      initialBlocks : [json] = []
+        @label "Initial Blocks"
+        @description "Initial block payload. Accepts strongly-typed RichBlock[] from native callers and the wider EntityRow[] shape that orb-bound traits emit (orb `[object]` lowers to `Record<string, FieldValue | undefined>[]`, which is structurally EntityRow[]). Items missing id/type are normalized into paragraph blocks at mount."
+        @tier "presentation"
+      readOnly : boolean = false
+        @label "Read Only"
+        @description "readOnly prop"
+        @tier "presentation"
+      placeholder : string = ""
+        @label "Placeholder"
+        @description "placeholder prop"
+        @tier "presentation"
+      showToolbar : boolean = true
+        @label "Show Toolbar"
+        @description "showToolbar prop"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/rich-block-editor" as RichBlockEditorPage -> RichBlockEditorRender
+}

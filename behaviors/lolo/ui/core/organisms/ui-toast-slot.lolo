@@ -1,0 +1,60 @@
+app ui-toast-slot "1.0.0"
+"ToastSlot — UI factory (1:1 with the @almadar/ui toast-slot pattern)."
+orbital ToastSlotOrbital {
+  entity ToastSlotItem [runtime] {
+    id : string!
+  }
+
+  trait ToastSlotRender -> @rebindable ToastSlotItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch ToastSlotItem {})
+        (render-ui main {
+          children: @config.children
+          variant: @config.variant
+          title: @config.title
+          duration: @config.duration
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          entity: ToastSlotItem
+          type: toast-slot
+        })
+    }
+
+    config {
+      children : node
+        @label "Children"
+        @description "Content to display in the toast (message or ReactNode)"
+        @tier "presentation"
+      variant : "success" | "error" | "info" | "warning" = success
+        @label "Variant"
+        @description "Toast variant"
+        @tier "presentation"
+      title : string = ""
+        @label "Title"
+        @description "Toast title"
+        @tier "presentation"
+      duration : number = 5000
+        @label "Duration"
+        @description "Auto-dismiss duration in ms (0 = no auto-dismiss)"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Custom class name"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : json
+        @label "Error"
+        @description "Error state"
+        @tier "presentation"
+    }
+  }
+
+  page "/toast-slot" as ToastSlotPage -> ToastSlotRender
+}

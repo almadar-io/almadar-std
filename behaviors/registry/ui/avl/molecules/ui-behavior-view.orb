@@ -1,0 +1,236 @@
+{
+  "name": "ui-behavior-view",
+  "version": "1.0.0",
+  "description": "BehaviorView — UI factory (1:1 with the @almadar/ui behavior-view pattern).",
+  "orbitals": [
+    {
+      "name": "BehaviorViewOrbital",
+      "entity": {
+        "name": "BehaviorViewItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "BehaviorViewRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "BehaviorViewItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "behavior-view",
+                      "data": "@config.data"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "data": {
+              "type": "BehaviorViewData",
+              "label": "Data",
+              "description": "data prop",
+              "tier": "presentation",
+              "properties": {
+                "traits": {
+                  "name": "traits",
+                  "type": "array",
+                  "required": true,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "name": "name",
+                        "type": "string",
+                        "required": true
+                      },
+                      "listens": {
+                        "name": "listens",
+                        "type": "array",
+                        "required": true,
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "eventCount": {
+                        "name": "eventCount",
+                        "type": "number",
+                        "required": true
+                      },
+                      "stateCount": {
+                        "name": "stateCount",
+                        "type": "number",
+                        "required": true
+                      },
+                      "transitionCount": {
+                        "name": "transitionCount",
+                        "type": "number",
+                        "required": true
+                      },
+                      "emits": {
+                        "name": "emits",
+                        "type": "array",
+                        "required": true,
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                },
+                "entityName": {
+                  "name": "entityName",
+                  "type": "string",
+                  "required": true
+                },
+                "orbitalName": {
+                  "name": "orbitalName",
+                  "type": "string",
+                  "required": true
+                },
+                "fields": {
+                  "name": "fields",
+                  "type": "array",
+                  "required": true,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "required": {
+                        "name": "required",
+                        "type": "boolean",
+                        "required": true
+                      },
+                      "hasDefault": {
+                        "name": "hasDefault",
+                        "type": "boolean",
+                        "required": true
+                      },
+                      "type": {
+                        "name": "type",
+                        "type": "string",
+                        "required": true
+                      },
+                      "name": {
+                        "name": "name",
+                        "type": "string",
+                        "required": true
+                      }
+                    }
+                  }
+                },
+                "externalLinks": {
+                  "name": "externalLinks",
+                  "type": "array",
+                  "required": true,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "eventName": {
+                        "name": "eventName",
+                        "type": "string",
+                        "required": true
+                      },
+                      "traitName": {
+                        "name": "traitName",
+                        "type": "string",
+                        "required": true
+                      },
+                      "targetOrbital": {
+                        "name": "targetOrbital",
+                        "type": "string",
+                        "required": true
+                      },
+                      "direction": {
+                        "name": "direction",
+                        "type": "string",
+                        "required": true,
+                        "values": [
+                          "out",
+                          "in"
+                        ]
+                      }
+                    }
+                  }
+                },
+                "traitDetails": {
+                  "name": "traitDetails",
+                  "type": "string",
+                  "required": true
+                },
+                "pages": {
+                  "name": "pages",
+                  "type": "array",
+                  "required": true,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "name": "name",
+                        "type": "string",
+                        "required": true
+                      },
+                      "route": {
+                        "name": "route",
+                        "type": "string",
+                        "required": true
+                      }
+                    }
+                  }
+                },
+                "persistence": {
+                  "name": "persistence",
+                  "type": "string",
+                  "required": true
+                }
+              }
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "BehaviorViewPage",
+          "path": "/behavior-view",
+          "traits": [
+            {
+              "ref": "BehaviorViewRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

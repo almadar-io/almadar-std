@@ -1,0 +1,118 @@
+{
+  "name": "ui-divider",
+  "version": "1.0.0",
+  "description": "Divider — UI factory (1:1 with the @almadar/ui divider pattern).",
+  "orbitals": [
+    {
+      "name": "DividerOrbital",
+      "entity": {
+        "name": "DividerItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "DividerRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "DividerItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "divider",
+                      "variant": "@config.variant",
+                      "label": "@config.label",
+                      "className": "@config.className",
+                      "orientation": "@config.orientation"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "label": {
+              "type": "string",
+              "default": "",
+              "label": "Label",
+              "description": "Text label to display in the divider",
+              "tier": "presentation"
+            },
+            "orientation": {
+              "type": "string",
+              "default": "horizontal",
+              "label": "Orientation",
+              "description": "Orientation of the divider",
+              "tier": "presentation",
+              "values": [
+                "horizontal",
+                "vertical"
+              ]
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "variant": {
+              "type": "string",
+              "default": "solid",
+              "label": "Variant",
+              "description": "Line style variant",
+              "tier": "presentation",
+              "values": [
+                "solid",
+                "dashed",
+                "dotted"
+              ]
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "DividerPage",
+          "path": "/divider",
+          "traits": [
+            {
+              "ref": "DividerRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

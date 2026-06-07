@@ -1,0 +1,91 @@
+{
+  "name": "ui-feature-detail-page-template",
+  "version": "1.0.0",
+  "description": "FeatureDetailPageTemplate — UI factory (1:1 with the @almadar/ui feature-detail-page-template pattern).",
+  "orbitals": [
+    {
+      "name": "FeatureDetailPageTemplateOrbital",
+      "entity": {
+        "name": "FeatureDetailPageTemplateItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "FeatureDetailPageTemplateRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "FeatureDetailPageTemplateItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "FeatureDetailPageTemplateItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "entity": "@entity",
+                      "className": "@config.className",
+                      "type": "feature-detail-page-template"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "External styling override",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "FeatureDetailPageTemplatePage",
+          "path": "/feature-detail-page-template",
+          "traits": [
+            {
+              "ref": "FeatureDetailPageTemplateRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

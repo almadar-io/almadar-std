@@ -1,0 +1,142 @@
+{
+  "name": "ui-wizard-progress",
+  "version": "1.0.0",
+  "description": "WizardProgress — UI factory (1:1 with the @almadar/ui wizard-progress pattern).",
+  "orbitals": [
+    {
+      "name": "WizardProgressOrbital",
+      "entity": {
+        "name": "WizardProgressItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "WizardProgressRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "WizardProgressItem",
+          "emits": [
+            {
+              "event": "STEP_CLICK",
+              "description": "Callback when a completed step is clicked",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "stepIndex",
+                  "type": "number"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "STEP_CLICK",
+                "name": "Step Click",
+                "description": "Callback when a completed step is clicked",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "type": "wizard-progress",
+                      "stepClickEvent": "STEP_CLICK",
+                      "onStepClick": "STEP_CLICK",
+                      "steps": "@config.steps",
+                      "allowNavigation": "@config.allowNavigation",
+                      "compact": "@config.compact",
+                      "currentStep": "@config.currentStep"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "compact": {
+              "type": "boolean",
+              "default": false,
+              "label": "Compact",
+              "description": "Compact mode (smaller, no titles)",
+              "tier": "presentation"
+            },
+            "steps": {
+              "type": "[json]",
+              "default": [],
+              "label": "Steps",
+              "description": "Step definitions (compatible with WizardContainer's WizardStep). A string is shorthand for `{ id: str, title: str }`.",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "currentStep": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Current Step",
+              "description": "Current step index (0-based)",
+              "tier": "presentation"
+            },
+            "allowNavigation": {
+              "type": "boolean",
+              "default": true,
+              "label": "Allow Navigation",
+              "description": "Allow clicking on completed steps to navigate back",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "WizardProgressPage",
+          "path": "/wizard-progress",
+          "traits": [
+            {
+              "ref": "WizardProgressRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

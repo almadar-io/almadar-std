@@ -1,0 +1,96 @@
+app ui-signature-pad "1.0.0"
+"SignaturePad — UI factory (1:1 with the @almadar/ui signature-pad pattern)."
+orbital SignaturePadOrbital {
+  entity SignaturePadItem [runtime] {
+    id : string!
+  }
+
+  trait SignaturePadRender -> @rebindable SignaturePadItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch SignaturePadItem {})
+        (render-ui main {
+          label: @config.label
+          helperText: @config.helperText
+          strokeColor: @config.strokeColor
+          strokeWidth: @config.strokeWidth
+          height: @config.height
+          readOnly: @config.readOnly
+          value: @config.value
+          onChange: CHANGE
+          signEvent: SIGN
+          clearEvent: CLEAR
+          entity: SignaturePadItem
+          isLoading: @config.isLoading
+          error: @config.error
+          className: @config.className
+          type: signature-pad
+        })
+    }
+
+    emits {
+      CHANGE -> external {
+        dataUrl : string
+      }
+        @description "Callback when signature changes"
+        @tier "essential"
+      SIGN -> external {
+        signature : string!
+      }
+        @description "Event to emit on sign"
+        @tier "essential"
+      CLEAR -> external {
+        id : string
+      }
+        @description "Event to emit on clear"
+        @tier "essential"
+    }
+
+    config {
+      label : string = Signature
+        @label "Label"
+        @description "Label above the pad"
+        @tier "presentation"
+      helperText : string = "Draw your signature above"
+        @label "Helper Text"
+        @description "Helper text"
+        @tier "presentation"
+      strokeColor : string = ""
+        @label "Stroke Color"
+        @description "Stroke color"
+        @tier "presentation"
+      strokeWidth : number = 2
+        @label "Stroke Width"
+        @description "Stroke width"
+        @tier "presentation"
+      height : number = 200
+        @label "Height"
+        @description "Pad height"
+        @tier "presentation"
+      readOnly : boolean = false
+        @label "Read Only"
+        @description "Whether the pad is read-only"
+        @tier "presentation"
+      value : string = ""
+        @label "Value"
+        @description "Existing signature image URL"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state"
+        @tier "presentation"
+      error : json
+        @label "Error"
+        @description "Error state"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/signature-pad" as SignaturePadPage -> SignaturePadRender
+}

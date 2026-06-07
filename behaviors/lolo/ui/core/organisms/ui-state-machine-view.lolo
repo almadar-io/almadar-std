@@ -1,0 +1,53 @@
+app ui-state-machine-view "1.0.0"
+"StateMachineView — UI factory (1:1 with the @almadar/ui state-machine-view pattern)."
+orbital StateMachineViewOrbital {
+  entity StateMachineViewItem [runtime] {
+    id : string!
+  }
+
+  trait StateMachineViewRender -> @rebindable StateMachineViewItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          layoutData: @config.layoutData
+          renderStateNode: RENDER_STATE_NODE
+          type: state-machine-view
+        })
+    }
+
+    emits {
+      RENDER_STATE_NODE -> external {
+        state : object
+        config : object
+      }
+        @description "Custom state node renderer — when provided, replaces the default circle nodes"
+        @tier "essential"
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : json
+        @label "Error"
+        @description "Error state"
+        @tier "presentation"
+      layoutData : json
+        @label "Layout Data"
+        @description "layoutData prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/state-machine-view" as StateMachineViewPage -> StateMachineViewRender
+}

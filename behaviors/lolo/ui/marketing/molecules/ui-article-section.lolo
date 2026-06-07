@@ -1,0 +1,43 @@
+app ui-article-section "1.0.0"
+"ArticleSection — UI factory (1:1 with the @almadar/ui article-section pattern)."
+orbital ArticleSectionOrbital {
+  entity ArticleSectionItem [runtime] {
+    id : string!
+  }
+
+  trait ArticleSectionRender -> @rebindable ArticleSectionItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          title: @config.title
+          children: @config.children
+          maxWidth: @config.maxWidth
+          className: @config.className
+          type: article-section
+        })
+    }
+
+    config {
+      title : string = ""
+        @label "Title"
+        @description "Section title"
+        @tier "presentation"
+      children : node
+        @label "Children"
+        @description "Section content"
+        @tier "presentation"
+      maxWidth : "sm" | "md" | "lg" = md
+        @label "Max Width"
+        @description "Maximum width constraint"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional class names"
+        @tier "presentation"
+    }
+  }
+
+  page "/article-section" as ArticleSectionPage -> ArticleSectionRender
+}

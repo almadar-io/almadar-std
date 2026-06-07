@@ -1,0 +1,48 @@
+app ui-pattern-tile "1.0.0"
+"PatternTile — UI factory (1:1 with the @almadar/ui pattern-tile pattern)."
+orbital PatternTileOrbital {
+  entity PatternTileItem [runtime] {
+    id : string!
+  }
+
+  trait PatternTileRender -> @rebindable PatternTileItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          variant: @config.variant
+          size: @config.size
+          color: @config.color
+          strokeWidth: @config.strokeWidth
+          className: @config.className
+          type: pattern-tile
+        })
+    }
+
+    config {
+      variant : "star8" | "star6" | "khatam" | "star10" | "star12" | "rosette-double" | "rosette-filled" | "seigaiha" | "greek-key" | "celtic-knot" | "kolam" | "arch" | "arabesque-vine" | "arabesque-net" = star8
+        @label "Variant"
+        @description "Which geometric pattern to render"
+        @tier "presentation"
+      size : number = 60
+        @label "Size"
+        @description "Tile unit size in SVG units"
+        @tier "presentation"
+      color : string = "var(--color-primary)"
+        @label "Color"
+        @description "Stroke color (CSS variable or hex)"
+        @tier "presentation"
+      strokeWidth : number = 0.5
+        @label "Stroke Width"
+        @description "Line thickness"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/pattern-tile" as PatternTilePage -> PatternTileRender
+}

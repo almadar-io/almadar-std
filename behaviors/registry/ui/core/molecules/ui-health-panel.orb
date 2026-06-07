@@ -1,0 +1,149 @@
+{
+  "name": "ui-health-panel",
+  "version": "1.0.0",
+  "description": "HealthPanel — UI factory (1:1 with the @almadar/ui health-panel pattern).",
+  "orbitals": [
+    {
+      "name": "HealthPanelOrbital",
+      "entity": {
+        "name": "HealthPanelItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "HealthPanelRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "HealthPanelItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "current": "@config.current",
+                      "label": "@config.label",
+                      "shield": "@config.shield",
+                      "size": "@config.size",
+                      "max": "@config.max",
+                      "type": "health-panel",
+                      "className": "@config.className",
+                      "showNumbers": "@config.showNumbers",
+                      "effects": "@config.effects"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "max": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Max",
+              "description": "Maximum health value",
+              "tier": "presentation"
+            },
+            "current": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Current",
+              "description": "Current health value",
+              "tier": "presentation"
+            },
+            "shield": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Shield",
+              "description": "Shield/armor points",
+              "tier": "presentation"
+            },
+            "label": {
+              "type": "string",
+              "default": "",
+              "label": "Label",
+              "description": "Label shown above the bar",
+              "tier": "presentation"
+            },
+            "effects": {
+              "type": "[json]",
+              "default": [],
+              "label": "Effects",
+              "description": "Active status effects displayed as small badges",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "size": {
+              "type": "string",
+              "default": "md",
+              "label": "Size",
+              "description": "Size variant",
+              "tier": "presentation",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "showNumbers": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Numbers",
+              "description": "Whether to display numeric HP values",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "HealthPanelPage",
+          "path": "/health-panel",
+          "traits": [
+            {
+              "ref": "HealthPanelRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,89 @@
+app ui-castle-board "1.0.0"
+"CastleBoard — UI factory (1:1 with the @almadar/ui castle-board pattern)."
+orbital CastleBoardOrbital {
+  entity CastleBoardItem [runtime] {
+    id : string!
+  }
+
+  trait CastleBoardRender -> @rebindable CastleBoardItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch CastleBoardItem {})
+        (render-ui main {
+          entity: @entity
+          scale: @config.scale
+          header: HEADER
+          sidePanel: SIDE_PANEL
+          overlay: OVERLAY
+          footer: FOOTER
+          onFeatureClick: FEATURE_CLICK
+          onUnitClick: UNIT_CLICK
+          onTileClick: TILE_CLICK
+          featureClickEvent: FEATURE_CLICK
+          unitClickEvent: UNIT_CLICK
+          tileClickEvent: TILE_CLICK
+          className: @config.className
+          type: castle-board
+        })
+    }
+
+    emits {
+      HEADER -> external {
+        ctx : object
+      }
+        @description "-- Render-prop slots --"
+        @tier "essential"
+      SIDE_PANEL -> external {
+        ctx : object
+      }
+        @description "Side panel content (buildings list, recruit tab, garrison tab)"
+        @tier "essential"
+      OVERLAY -> external {
+        ctx : object
+      }
+        @description "Canvas overlay (hover tooltips, etc.)"
+        @tier "essential"
+      FOOTER -> external {
+        ctx : object
+      }
+        @description "Bottom bar (income summary, etc.)"
+        @tier "essential"
+      FEATURE_CLICK -> external {
+        feature : object
+        featureId : string!
+        featureType : string!
+        x : number!
+        y : number!
+      }
+        @description "-- Callback overrides --"
+        @tier "essential"
+      UNIT_CLICK -> external {
+        unit : object
+        unitId : string!
+      }
+        @description "Called when a unit is clicked"
+        @tier "essential"
+      TILE_CLICK -> external {
+        x : number
+        y : number
+      }
+        @description "Called when any tile is clicked"
+        @tier "essential"
+    }
+
+    config {
+      scale : number = 0.45
+        @label "Scale"
+        @description "Canvas render scale"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/castle-board" as CastleBoardPage -> CastleBoardRender
+}

@@ -1,0 +1,52 @@
+app ui-time-slot-cell "1.0.0"
+"TimeSlotCell — UI factory (1:1 with the @almadar/ui time-slot-cell pattern)."
+orbital TimeSlotCellOrbital {
+  entity TimeSlotCellItem [runtime] {
+    id : string!
+  }
+
+  trait TimeSlotCellRender -> @rebindable TimeSlotCellItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          time: @config.time
+          onClick: CLICK
+          className: @config.className
+          children: @config.children
+          isOccupied: @config.isOccupied
+          type: time-slot-cell
+        })
+    }
+
+    emits {
+      CLICK -> external {
+        time : string
+      }
+        @description "Called when the slot is clicked"
+        @tier "essential"
+    }
+
+    config {
+      time : string = ""
+        @label "Time"
+        @description "Time label for this slot (e.g. '09:00')"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      children : node
+        @label "Children"
+        @description "Event content placed inside the slot"
+        @tier "presentation"
+      isOccupied : boolean = false
+        @label "Is Occupied"
+        @description "Whether this slot contains an event"
+        @tier "presentation"
+    }
+  }
+
+  page "/time-slot-cell" as TimeSlotCellPage -> TimeSlotCellRender
+}

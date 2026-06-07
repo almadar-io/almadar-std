@@ -1,0 +1,154 @@
+{
+  "name": "ui-svg-ring",
+  "version": "1.0.0",
+  "description": "SvgRing — UI factory (1:1 with the @almadar/ui svg-ring pattern).",
+  "orbitals": [
+    {
+      "name": "SvgRingOrbital",
+      "entity": {
+        "name": "SvgRingItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "SvgRingRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "SvgRingItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "label": "@config.label",
+                      "color": "@config.color",
+                      "cy": "@config.cy",
+                      "strokeWidth": "@config.strokeWidth",
+                      "r": "@config.r",
+                      "className": "@config.className",
+                      "type": "svg-ring",
+                      "cx": "@config.cx",
+                      "variant": "@config.variant",
+                      "opacity": "@config.opacity"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "label": {
+              "type": "string",
+              "default": "",
+              "label": "Label",
+              "description": "label prop",
+              "tier": "presentation"
+            },
+            "cx": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Cx",
+              "description": "cx prop",
+              "tier": "presentation"
+            },
+            "cy": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Cy",
+              "description": "cy prop",
+              "tier": "presentation"
+            },
+            "opacity": {
+              "type": "number",
+              "default": 1.0,
+              "label": "Opacity",
+              "description": "opacity prop",
+              "tier": "presentation"
+            },
+            "strokeWidth": {
+              "type": "number",
+              "default": 1.5,
+              "label": "Stroke Width",
+              "description": "strokeWidth prop",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "className prop",
+              "tier": "presentation"
+            },
+            "r": {
+              "type": "number",
+              "default": 40.0,
+              "label": "R",
+              "description": "r prop",
+              "tier": "presentation"
+            },
+            "variant": {
+              "type": "string",
+              "default": "solid",
+              "label": "Variant",
+              "description": "variant prop",
+              "tier": "presentation",
+              "values": [
+                "solid",
+                "dashed",
+                "glow"
+              ]
+            },
+            "color": {
+              "type": "string",
+              "default": "var(--color-primary)",
+              "label": "Color",
+              "description": "color prop",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "SvgRingPage",
+          "path": "/svg-ring",
+          "traits": [
+            {
+              "ref": "SvgRingRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

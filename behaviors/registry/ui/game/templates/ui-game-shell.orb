@@ -1,0 +1,115 @@
+{
+  "name": "ui-game-shell",
+  "version": "1.0.0",
+  "description": "GameShell — UI factory (1:1 with the @almadar/ui game-shell pattern).",
+  "orbitals": [
+    {
+      "name": "GameShellOrbital",
+      "entity": {
+        "name": "GameShellItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "GameShellRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "GameShellItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "game-shell",
+                      "hud": "@config.hud",
+                      "className": "@config.className",
+                      "children": "@config.children",
+                      "appName": "@config.appName",
+                      "showTopBar": "@config.showTopBar"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Extra class name on the root container",
+              "tier": "presentation"
+            },
+            "showTopBar": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Top Bar",
+              "description": "Whether to show the minimal top bar (default: true)",
+              "tier": "presentation"
+            },
+            "appName": {
+              "type": "string",
+              "default": "Game",
+              "label": "App Name",
+              "description": "Application / game title shown in the HUD bar",
+              "tier": "presentation"
+            },
+            "hud": {
+              "type": "node",
+              "label": "Hud",
+              "description": "Optional HUD content rendered above the main area",
+              "tier": "presentation"
+            },
+            "children": {
+              "type": "node",
+              "label": "Children",
+              "description": "Game content rendered inside the full-screen area",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "GameShellPage",
+          "path": "/game-shell",
+          "traits": [
+            {
+              "ref": "GameShellRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

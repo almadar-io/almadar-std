@@ -1,0 +1,129 @@
+{
+  "name": "ui-book-cover-page",
+  "version": "1.0.0",
+  "description": "BookCoverPage — UI factory (1:1 with the @almadar/ui book-cover-page pattern).",
+  "orbitals": [
+    {
+      "name": "BookCoverPageOrbital",
+      "entity": {
+        "name": "BookCoverPageItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "BookCoverPageRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "BookCoverPageItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "@config.direction",
+                      "title": "@config.title",
+                      "type": "book-cover-page",
+                      "author": "@config.author",
+                      "className": "@config.className",
+                      "coverImageUrl": "@config.coverImageUrl",
+                      "subtitle": "@config.subtitle"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "title": {
+              "type": "string",
+              "default": "",
+              "label": "Title",
+              "description": "title prop",
+              "tier": "presentation"
+            },
+            "subtitle": {
+              "type": "string",
+              "default": "",
+              "label": "Subtitle",
+              "description": "subtitle prop",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "author": {
+              "type": "string",
+              "default": "",
+              "label": "Author",
+              "description": "author prop",
+              "tier": "presentation"
+            },
+            "coverImageUrl": {
+              "type": "string",
+              "default": "",
+              "label": "Cover Image Url",
+              "description": "coverImageUrl prop",
+              "tier": "presentation"
+            },
+            "direction": {
+              "type": "string",
+              "default": "rtl",
+              "label": "Direction",
+              "description": "direction prop",
+              "tier": "presentation",
+              "values": [
+                "rtl",
+                "ltr"
+              ]
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "BookCoverPagePage",
+          "path": "/book-cover-page",
+          "traits": [
+            {
+              "ref": "BookCoverPageRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

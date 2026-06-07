@@ -1,0 +1,33 @@
+app ui-dialog "1.0.0"
+"Dialog — UI factory (1:1 with the @almadar/ui dialog pattern)."
+orbital DialogOrbital {
+  entity DialogItem [runtime] {
+    id : string!
+  }
+
+  trait DialogRender -> @rebindable DialogItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          className: @config.className
+          children: @config.children
+          type: dialog
+        })
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      children : node
+        @label "Children"
+        @description "Dialog contents"
+        @tier "presentation"
+    }
+  }
+
+  page "/dialog" as DialogPage -> DialogRender
+}

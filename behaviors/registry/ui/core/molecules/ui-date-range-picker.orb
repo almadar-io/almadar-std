@@ -1,0 +1,175 @@
+{
+  "name": "ui-date-range-picker",
+  "version": "1.0.0",
+  "description": "DateRangePicker — UI factory (1:1 with the @almadar/ui date-range-picker pattern).",
+  "orbitals": [
+    {
+      "name": "DateRangePickerOrbital",
+      "entity": {
+        "name": "DateRangePickerItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "DateRangePickerRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "DateRangePickerItem",
+          "emits": [
+            {
+              "event": "EVENT",
+              "description": "Event name emitted as `UI:{event}` with payload `{ from, to }`. Optional — when omitted, only the `onChange` callback fires.",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "from",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "to",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "CHANGE",
+              "description": "Callback fired alongside the bus emit.",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "range",
+                  "type": "object"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "EVENT",
+                "name": "Event",
+                "description": "Event name emitted as `UI:{event}` with payload `{ from, to }`. Optional — when omitted, only the `onChange` callback fires.",
+                "tier": "essential"
+              },
+              {
+                "key": "CHANGE",
+                "name": "Change",
+                "description": "Callback fired alongside the bus emit.",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "onChange": "CHANGE",
+                      "type": "date-range-picker",
+                      "presets": "@config.presets",
+                      "fromLabel": "@config.fromLabel",
+                      "className": "@config.className",
+                      "event": "EVENT",
+                      "toLabel": "@config.toLabel"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "presets": {
+              "type": "[DateRangePickerPresetsItem]",
+              "default": [],
+              "label": "Presets",
+              "description": "Preset shortcuts. Defaults to the standard finance set (Last 7d / Last 30d / This Month / This Quarter / YTD). Pass an empty array to hide presets entirely.",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "value": {
+                    "name": "value",
+                    "type": "string",
+                    "required": true
+                  },
+                  "range": {
+                    "name": "range",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "fromLabel": {
+              "type": "string",
+              "default": "From",
+              "label": "From Label",
+              "description": "From-input label.",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes.",
+              "tier": "presentation"
+            },
+            "toLabel": {
+              "type": "string",
+              "default": "To",
+              "label": "To Label",
+              "description": "To-input label.",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "DateRangePickerPage",
+          "path": "/date-range-picker",
+          "traits": [
+            {
+              "ref": "DateRangePickerRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

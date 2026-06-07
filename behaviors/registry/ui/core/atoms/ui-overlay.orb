@@ -1,0 +1,141 @@
+{
+  "name": "ui-overlay",
+  "version": "1.0.0",
+  "description": "Overlay — UI factory (1:1 with the @almadar/ui overlay pattern).",
+  "orbitals": [
+    {
+      "name": "OverlayOrbital",
+      "entity": {
+        "name": "OverlayItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "OverlayRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "OverlayItem",
+          "emits": [
+            {
+              "event": "CLICK",
+              "description": "onClick prop",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "e",
+                  "type": "object"
+                }
+              ]
+            },
+            {
+              "event": "ACTION",
+              "description": "Declarative event name — emits UI:{action} via eventBus on click",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "CLICK",
+                "name": "Click",
+                "description": "onClick prop",
+                "tier": "essential"
+              },
+              {
+                "key": "ACTION",
+                "name": "Action",
+                "description": "Declarative event name — emits UI:{action} via eventBus on click",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "onClick": "CLICK",
+                      "action": "ACTION",
+                      "isVisible": "@config.isVisible",
+                      "blur": "@config.blur",
+                      "type": "overlay",
+                      "className": "@config.className"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "className prop",
+              "tier": "presentation"
+            },
+            "isVisible": {
+              "type": "boolean",
+              "default": true,
+              "label": "Is Visible",
+              "description": "isVisible prop",
+              "tier": "presentation"
+            },
+            "blur": {
+              "type": "boolean",
+              "default": false,
+              "label": "Blur",
+              "description": "blur prop",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "OverlayPage",
+          "path": "/overlay",
+          "traits": [
+            {
+              "ref": "OverlayRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

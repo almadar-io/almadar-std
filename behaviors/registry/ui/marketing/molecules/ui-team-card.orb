@@ -1,0 +1,124 @@
+{
+  "name": "ui-team-card",
+  "version": "1.0.0",
+  "description": "TeamCard — UI factory (1:1 with the @almadar/ui team-card pattern).",
+  "orbitals": [
+    {
+      "name": "TeamCardOrbital",
+      "entity": {
+        "name": "TeamCardItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "TeamCardRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "TeamCardItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "name": "@config.name",
+                      "className": "@config.className",
+                      "role": "@config.role",
+                      "bio": "@config.bio",
+                      "avatar": "@config.avatar",
+                      "type": "team-card",
+                      "nameAr": "@config.nameAr"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "nameAr": {
+              "type": "string",
+              "default": "",
+              "label": "Name Ar",
+              "description": "nameAr prop",
+              "tier": "presentation"
+            },
+            "name": {
+              "type": "string",
+              "default": "",
+              "label": "Name",
+              "description": "name prop",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "className prop",
+              "tier": "presentation"
+            },
+            "role": {
+              "type": "string",
+              "default": "",
+              "label": "Role",
+              "description": "role prop",
+              "tier": "presentation"
+            },
+            "bio": {
+              "type": "string",
+              "default": "",
+              "label": "Bio",
+              "description": "bio prop",
+              "tier": "presentation"
+            },
+            "avatar": {
+              "type": "json",
+              "label": "Avatar",
+              "description": "avatar prop",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "TeamCardPage",
+          "path": "/team-card",
+          "traits": [
+            {
+              "ref": "TeamCardRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

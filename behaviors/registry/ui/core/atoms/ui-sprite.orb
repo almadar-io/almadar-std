@@ -1,0 +1,229 @@
+{
+  "name": "ui-sprite",
+  "version": "1.0.0",
+  "description": "Sprite — UI factory (1:1 with the @almadar/ui sprite pattern).",
+  "orbitals": [
+    {
+      "name": "SpriteOrbital",
+      "entity": {
+        "name": "SpriteItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "SpriteRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "SpriteItem",
+          "emits": [
+            {
+              "event": "CLICK",
+              "description": "Optional onClick handler",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "ACTION",
+              "description": "Declarative event name emitted on click via useEventBus",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "CLICK",
+                "name": "Click",
+                "description": "Optional onClick handler",
+                "tier": "essential"
+              },
+              {
+                "key": "ACTION",
+                "name": "Action",
+                "description": "Declarative event name emitted on click via useEventBus",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "frameWidth": "@config.frameWidth",
+                      "scale": "@config.scale",
+                      "flipX": "@config.flipX",
+                      "flipY": "@config.flipY",
+                      "columns": "@config.columns",
+                      "onClick": "CLICK",
+                      "action": "ACTION",
+                      "frame": "@config.frame",
+                      "frameHeight": "@config.frameHeight",
+                      "zIndex": "@config.zIndex",
+                      "opacity": "@config.opacity",
+                      "rotation": "@config.rotation",
+                      "spritesheet": "@config.spritesheet",
+                      "type": "sprite",
+                      "x": "@config.x",
+                      "y": "@config.y",
+                      "className": "@config.className"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "scale": {
+              "type": "number",
+              "default": 1.0,
+              "label": "Scale",
+              "description": "Scale factor (default: 1)",
+              "tier": "presentation"
+            },
+            "frameHeight": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Frame Height",
+              "description": "Height of each frame in pixels",
+              "tier": "presentation"
+            },
+            "flipY": {
+              "type": "boolean",
+              "default": false,
+              "label": "Flip Y",
+              "description": "Flip vertically",
+              "tier": "presentation"
+            },
+            "opacity": {
+              "type": "number",
+              "default": 1.0,
+              "label": "Opacity",
+              "description": "Opacity (0-1)",
+              "tier": "presentation"
+            },
+            "columns": {
+              "type": "number",
+              "default": 16.0,
+              "label": "Columns",
+              "description": "Number of columns in spritesheet (for frame calculation)",
+              "tier": "presentation"
+            },
+            "frame": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Frame",
+              "description": "Frame index to display (0-based, left-to-right, top-to-bottom)",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Optional className",
+              "tier": "presentation"
+            },
+            "rotation": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Rotation",
+              "description": "Rotation in degrees",
+              "tier": "presentation"
+            },
+            "frameWidth": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Frame Width",
+              "description": "Width of each frame in pixels",
+              "tier": "presentation"
+            },
+            "zIndex": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Z Index",
+              "description": "Z-index for layering",
+              "tier": "presentation"
+            },
+            "spritesheet": {
+              "type": "string",
+              "default": "",
+              "label": "Spritesheet",
+              "description": "Spritesheet image URL",
+              "tier": "presentation"
+            },
+            "x": {
+              "type": "number",
+              "default": 0.0,
+              "label": "X",
+              "description": "X position in pixels",
+              "tier": "presentation"
+            },
+            "y": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Y",
+              "description": "Y position in pixels",
+              "tier": "presentation"
+            },
+            "flipX": {
+              "type": "boolean",
+              "default": false,
+              "label": "Flip X",
+              "description": "Flip horizontally",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "SpritePage",
+          "path": "/sprite",
+          "traits": [
+            {
+              "ref": "SpriteRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

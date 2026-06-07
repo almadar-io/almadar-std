@@ -1,0 +1,471 @@
+{
+  "name": "ui-battle-board",
+  "version": "1.0.0",
+  "description": "BattleBoard — UI factory (1:1 with the @almadar/ui battle-board pattern).",
+  "orbitals": [
+    {
+      "name": "BattleBoardOrbital",
+      "entity": {
+        "name": "BattleBoardItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "BattleBoardRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "BattleBoardItem",
+          "emits": [
+            {
+              "event": "HEADER",
+              "description": "-- Slots --",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "ctx",
+                  "type": "object"
+                }
+              ]
+            },
+            {
+              "event": "SIDEBAR",
+              "description": "Sidebar content (combat log, unit roster, etc.)",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "ctx",
+                  "type": "object"
+                }
+              ]
+            },
+            {
+              "event": "ACTIONS",
+              "description": "Floating action buttons",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "ctx",
+                  "type": "object"
+                }
+              ]
+            },
+            {
+              "event": "OVERLAY",
+              "description": "Floating overlays above the canvas (damage popups, tooltips)",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "ctx",
+                  "type": "object"
+                }
+              ]
+            },
+            {
+              "event": "GAME_OVER_OVERLAY",
+              "description": "Game-over screen overlay",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "ctx",
+                  "type": "object"
+                }
+              ]
+            },
+            {
+              "event": "ATTACK",
+              "description": "-- Callbacks --",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "attacker",
+                  "type": "object"
+                },
+                {
+                  "name": "target",
+                  "type": "object"
+                },
+                {
+                  "name": "damage",
+                  "type": "number"
+                },
+                {
+                  "name": "attackerId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "targetId",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "GAME_END",
+              "description": "Called when battle ends",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "result",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "UNIT_MOVE",
+              "description": "Called after a unit moves",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "unit",
+                  "type": "object"
+                },
+                {
+                  "name": "to",
+                  "type": "object"
+                }
+              ]
+            },
+            {
+              "event": "CALCULATE_DAMAGE",
+              "description": "Custom combat damage calculator",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "attacker",
+                  "type": "object"
+                },
+                {
+                  "name": "target",
+                  "type": "object"
+                }
+              ]
+            },
+            {
+              "event": "DRAW_EFFECTS",
+              "description": "-- Canvas pass-through --",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "ctx",
+                  "type": "object"
+                },
+                {
+                  "name": "timestamp",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "RESOLVE_UNIT_FRAME",
+              "description": "resolveUnitFrame prop",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "unitId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "TILE_CLICK",
+              "description": "-- Declarative event props --",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "x",
+                  "type": "number",
+                  "required": true
+                },
+                {
+                  "name": "y",
+                  "type": "number",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "UNIT_CLICK",
+              "description": "Emits UI:{unitClickEvent} with { unitId } on unit click",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "unitId",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "END_TURN",
+              "description": "Emits UI:{endTurnEvent} with {} on end turn",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CANCEL",
+              "description": "Emits UI:{cancelEvent} with {} on cancel",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "PLAY_AGAIN",
+              "description": "Emits UI:{playAgainEvent} with {} on play again / reset",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "HEADER",
+                "name": "Header",
+                "description": "-- Slots --",
+                "tier": "essential"
+              },
+              {
+                "key": "SIDEBAR",
+                "name": "Sidebar",
+                "description": "Sidebar content (combat log, unit roster, etc.)",
+                "tier": "essential"
+              },
+              {
+                "key": "ACTIONS",
+                "name": "Actions",
+                "description": "Floating action buttons",
+                "tier": "essential"
+              },
+              {
+                "key": "OVERLAY",
+                "name": "Overlay",
+                "description": "Floating overlays above the canvas (damage popups, tooltips)",
+                "tier": "essential"
+              },
+              {
+                "key": "GAME_OVER_OVERLAY",
+                "name": "Game Over Overlay",
+                "description": "Game-over screen overlay",
+                "tier": "essential"
+              },
+              {
+                "key": "ATTACK",
+                "name": "Attack",
+                "description": "-- Callbacks --",
+                "tier": "essential"
+              },
+              {
+                "key": "GAME_END",
+                "name": "Game End",
+                "description": "Called when battle ends",
+                "tier": "essential"
+              },
+              {
+                "key": "UNIT_MOVE",
+                "name": "Unit Move",
+                "description": "Called after a unit moves",
+                "tier": "essential"
+              },
+              {
+                "key": "CALCULATE_DAMAGE",
+                "name": "Calculate Damage",
+                "description": "Custom combat damage calculator",
+                "tier": "essential"
+              },
+              {
+                "key": "DRAW_EFFECTS",
+                "name": "Draw Effects",
+                "description": "-- Canvas pass-through --",
+                "tier": "essential"
+              },
+              {
+                "key": "RESOLVE_UNIT_FRAME",
+                "name": "Resolve Unit Frame",
+                "description": "resolveUnitFrame prop",
+                "tier": "essential"
+              },
+              {
+                "key": "TILE_CLICK",
+                "name": "Tile Click",
+                "description": "-- Declarative event props --",
+                "tier": "essential"
+              },
+              {
+                "key": "UNIT_CLICK",
+                "name": "Unit Click",
+                "description": "Emits UI:{unitClickEvent} with { unitId } on unit click",
+                "tier": "essential"
+              },
+              {
+                "key": "END_TURN",
+                "name": "End Turn",
+                "description": "Emits UI:{endTurnEvent} with {} on end turn",
+                "tier": "essential"
+              },
+              {
+                "key": "CANCEL",
+                "name": "Cancel",
+                "description": "Emits UI:{cancelEvent} with {} on cancel",
+                "tier": "essential"
+              },
+              {
+                "key": "PLAY_AGAIN",
+                "name": "Play Again",
+                "description": "Emits UI:{playAgainEvent} with {} on play again / reset",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "BattleBoardItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "header": "HEADER",
+                      "scale": "@config.scale",
+                      "gameOverOverlay": "GAME_OVER_OVERLAY",
+                      "resolveUnitFrame": "RESOLVE_UNIT_FRAME",
+                      "overlay": "OVERLAY",
+                      "endTurnEvent": "END_TURN",
+                      "sidebar": "SIDEBAR",
+                      "cancelEvent": "CANCEL",
+                      "hasActiveEffects": "@config.hasActiveEffects",
+                      "gameEndEvent": "GAME_END",
+                      "className": "@config.className",
+                      "onDrawEffects": "DRAW_EFFECTS",
+                      "actions": "ACTIONS",
+                      "calculateDamage": "CALCULATE_DAMAGE",
+                      "onUnitMove": "UNIT_MOVE",
+                      "unitClickEvent": "UNIT_CLICK",
+                      "onGameEnd": "GAME_END",
+                      "attackEvent": "ATTACK",
+                      "type": "battle-board",
+                      "effectSpriteUrls": "@config.effectSpriteUrls",
+                      "onAttack": "ATTACK",
+                      "unitScale": "@config.unitScale",
+                      "entity": "@entity",
+                      "tileClickEvent": "TILE_CLICK",
+                      "playAgainEvent": "PLAY_AGAIN"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "scale": {
+              "type": "number",
+              "default": 0.45,
+              "label": "Scale",
+              "description": "Canvas render scale",
+              "tier": "presentation"
+            },
+            "effectSpriteUrls": {
+              "type": "[string]",
+              "default": [],
+              "label": "Effect Sprite Urls",
+              "description": "effectSpriteUrls prop",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "unitScale": {
+              "type": "number",
+              "default": 1.0,
+              "label": "Unit Scale",
+              "description": "Unit draw-size multiplier",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "className prop",
+              "tier": "presentation"
+            },
+            "hasActiveEffects": {
+              "type": "boolean",
+              "default": false,
+              "label": "Has Active Effects",
+              "description": "hasActiveEffects prop",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "BattleBoardPage",
+          "path": "/battle-board",
+          "traits": [
+            {
+              "ref": "BattleBoardRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

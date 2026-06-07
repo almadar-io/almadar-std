@@ -1,0 +1,195 @@
+{
+  "name": "ui-content-renderer",
+  "version": "1.0.0",
+  "description": "ContentRenderer — UI factory (1:1 with the @almadar/ui content-renderer pattern).",
+  "orbitals": [
+    {
+      "name": "ContentRendererOrbital",
+      "entity": {
+        "name": "ContentRendererItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ContentRendererRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "ContentRendererItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "ContentRendererItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "content": "@config.content",
+                      "sortDirection": "@config.sortDirection",
+                      "error": "@config.error",
+                      "sortBy": "@config.sortBy",
+                      "pageSize": "@config.pageSize",
+                      "className": "@config.className",
+                      "entity": "@entity",
+                      "searchValue": "@config.searchValue",
+                      "direction": "@config.direction",
+                      "selectedIds": "@config.selectedIds",
+                      "isLoading": "@config.isLoading",
+                      "segments": "@config.segments",
+                      "type": "content-renderer",
+                      "totalCount": "@config.totalCount",
+                      "activeFilters": "@config.activeFilters"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "direction": {
+              "type": "string",
+              "default": "rtl",
+              "label": "Direction",
+              "description": "Text direction for markdown",
+              "tier": "presentation",
+              "values": [
+                "rtl",
+                "ltr"
+              ]
+            },
+            "segments": {
+              "type": "[json]",
+              "default": [],
+              "label": "Segments",
+              "description": "Pre-parsed segments (overrides content)",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "pageSize": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Page Size",
+              "description": "Number of items per page",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
+              "tier": "presentation"
+            },
+            "sortBy": {
+              "type": "string",
+              "default": "",
+              "label": "Sort By",
+              "description": "Current sort field",
+              "tier": "presentation"
+            },
+            "content": {
+              "type": "string",
+              "default": "",
+              "label": "Content",
+              "description": "Raw content string — auto-parsed into segments",
+              "tier": "presentation"
+            },
+            "sortDirection": {
+              "type": "string",
+              "default": "",
+              "label": "Sort Direction",
+              "description": "Current sort direction",
+              "tier": "presentation"
+            },
+            "searchValue": {
+              "type": "string",
+              "default": "",
+              "label": "Search Value",
+              "description": "Current search query value",
+              "tier": "presentation"
+            },
+            "activeFilters": {
+              "type": "json",
+              "label": "Active Filters",
+              "description": "Active filters",
+              "tier": "presentation"
+            },
+            "selectedIds": {
+              "type": "[json]",
+              "default": [],
+              "label": "Selected Ids",
+              "description": "Currently selected item IDs",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "totalCount": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Total Count",
+              "description": "Total number of items",
+              "tier": "presentation"
+            },
+            "error": {
+              "type": "json",
+              "label": "Error",
+              "description": "Error state",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "ContentRendererPage",
+          "path": "/content-renderer",
+          "traits": [
+            {
+              "ref": "ContentRendererRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

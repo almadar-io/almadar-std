@@ -1,0 +1,186 @@
+{
+  "name": "ui-filter-pill",
+  "version": "1.0.0",
+  "description": "FilterPill — UI factory (1:1 with the @almadar/ui filter-pill pattern).",
+  "orbitals": [
+    {
+      "name": "FilterPillOrbital",
+      "entity": {
+        "name": "FilterPillItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "FilterPillRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "FilterPillItem",
+          "emits": [
+            {
+              "event": "REMOVE",
+              "description": "Called when the user clicks the remove (×) button",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "label",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "CLICK",
+              "description": "Click handler for the body of the pill (filter toggle)",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "label",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "REMOVE",
+                "name": "Remove",
+                "description": "Called when the user clicks the remove (×) button",
+                "tier": "essential"
+              },
+              {
+                "key": "CLICK",
+                "name": "Click",
+                "description": "Click handler for the body of the pill (filter toggle)",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "label": "@config.label",
+                      "removable": "@config.removable",
+                      "type": "filter-pill",
+                      "removeEvent": "REMOVE",
+                      "className": "@config.className",
+                      "onClick": "CLICK",
+                      "icon": "@config.icon",
+                      "variant": "@config.variant",
+                      "size": "@config.size",
+                      "clickEvent": "CLICK",
+                      "onRemove": "REMOVE"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "label": {
+              "type": "string",
+              "label": "Label",
+              "description": "Pill label text (alternative to children for schema-driven rendering).",
+              "tier": "presentation",
+              "values": [
+                "string",
+                "number"
+              ]
+            },
+            "icon": {
+              "type": "node",
+              "label": "Icon",
+              "description": "Optional icon name (Lucide icon string) or React node",
+              "tier": "presentation"
+            },
+            "variant": {
+              "type": "string",
+              "default": "default",
+              "label": "Variant",
+              "description": "variant prop",
+              "tier": "presentation",
+              "values": [
+                "default",
+                "primary",
+                "secondary",
+                "success",
+                "warning",
+                "danger",
+                "info",
+                "neutral"
+              ]
+            },
+            "size": {
+              "type": "string",
+              "default": "sm",
+              "label": "Size",
+              "description": "size prop",
+              "tier": "presentation",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes applied to the root element.",
+              "tier": "presentation"
+            },
+            "removable": {
+              "type": "boolean",
+              "default": true,
+              "label": "Removable",
+              "description": "Disable the remove button (renders without × control)",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "FilterPillPage",
+          "path": "/filter-pill",
+          "traits": [
+            {
+              "ref": "FilterPillRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+app ui-pull-to-refresh "1.0.0"
+"PullToRefresh — UI factory (1:1 with the @almadar/ui pull-to-refresh pattern)."
+orbital PullToRefreshOrbital {
+  entity PullToRefreshItem [runtime] {
+    id : string!
+  }
+
+  trait PullToRefreshRender -> @rebindable PullToRefreshItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          refreshEvent: REFRESH
+          refreshPayload: @config.refreshPayload
+          threshold: @config.threshold
+          children: @config.children
+          className: @config.className
+          type: pull-to-refresh
+        })
+    }
+
+    emits {
+      REFRESH -> external {
+        id : string
+      }
+        @description "Event name to emit on refresh (emitted as UI:{refreshEvent})"
+        @tier "essential"
+    }
+
+    config {
+      refreshPayload : json
+        @label "Refresh Payload"
+        @description "Payload to include with the refresh event"
+        @tier "presentation"
+      threshold : number = 60
+        @label "Threshold"
+        @description "Pull distance threshold to trigger refresh in px (default: 60)"
+        @tier "presentation"
+      children : node
+        @label "Children"
+        @description "Content to wrap"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/pull-to-refresh" as PullToRefreshPage -> PullToRefreshRender
+}

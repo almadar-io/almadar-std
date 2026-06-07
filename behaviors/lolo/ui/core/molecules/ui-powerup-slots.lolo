@@ -1,0 +1,45 @@
+app ui-powerup-slots "1.0.0"
+"PowerupSlots — UI factory (1:1 with the @almadar/ui powerup-slots pattern)."
+orbital PowerupSlotsOrbital {
+  type PowerupSlotsActiveItem = {
+    id : string!
+    icon : node
+    label : string!
+    remainingTime : number
+  }
+
+  entity PowerupSlotsItem [runtime] {
+    id : string!
+  }
+
+  trait PowerupSlotsRender -> @rebindable PowerupSlotsItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          active: @config.active
+          maxSlots: @config.maxSlots
+          className: @config.className
+          type: powerup-slots
+        })
+    }
+
+    config {
+      active : [PowerupSlotsActiveItem] = []
+        @label "Active"
+        @description "Array of active powerups"
+        @tier "presentation"
+      maxSlots : number = 4
+        @label "Max Slots"
+        @description "Maximum number of powerup slots"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/powerup-slots" as PowerupSlotsPage -> PowerupSlotsRender
+}

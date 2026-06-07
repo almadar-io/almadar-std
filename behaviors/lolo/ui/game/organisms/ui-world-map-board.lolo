@@ -1,0 +1,151 @@
+app ui-world-map-board "1.0.0"
+"WorldMapBoard — UI factory (1:1 with the @almadar/ui world-map-board pattern)."
+orbital WorldMapBoardOrbital {
+  entity WorldMapBoardItem [runtime] {
+    id : string!
+  }
+
+  trait WorldMapBoardRender -> @rebindable WorldMapBoardItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch WorldMapBoardItem {})
+        (render-ui main {
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          entity: @entity
+          scale: @config.scale
+          unitScale: @config.unitScale
+          allowMoveAllHeroes: @config.allowMoveAllHeroes
+          isInRange: IS_IN_RANGE
+          heroSelectEvent: HERO_SELECT
+          heroMoveEvent: HERO_MOVE
+          battleEncounterEvent: BATTLE_ENCOUNTER
+          featureEnterEvent: FEATURE_ENTER
+          tileClickEvent: TILE_CLICK
+          header: HEADER
+          sidePanel: SIDE_PANEL
+          overlay: OVERLAY
+          footer: FOOTER
+          onHeroSelect: HERO_SELECT
+          onHeroMove: HERO_MOVE
+          onBattleEncounter: BATTLE_ENCOUNTER
+          onFeatureEnter: FEATURE_ENTER
+          diamondTopY: @config.diamondTopY
+          enableCamera: @config.enableCamera
+          effectSpriteUrls: @config.effectSpriteUrls
+          resolveUnitFrame: RESOLVE_UNIT_FRAME
+          type: world-map-board
+        })
+    }
+
+    emits {
+      IS_IN_RANGE -> external {
+        from : object
+        to : object
+        range : number
+      }
+        @description "Custom movement range validator"
+        @tier "essential"
+      HERO_SELECT -> external {
+        heroId : string!
+      }
+        @description "-- Declarative event props --"
+        @tier "essential"
+      HERO_MOVE -> external {
+        heroId : string!
+        toX : number!
+        toY : number!
+      }
+        @description "Emits UI:{heroMoveEvent} with { heroId, toX, toY }"
+        @tier "essential"
+      BATTLE_ENCOUNTER -> external {
+        attackerId : string!
+        defenderId : string!
+      }
+        @description "Emits UI:{battleEncounterEvent} with { attackerId, defenderId }"
+        @tier "essential"
+      FEATURE_ENTER -> external {
+        heroId : string!
+        feature : string!
+        hex : object!
+      }
+        @description "Emits UI:{featureEnterEvent} with { heroId, feature, hex }"
+        @tier "essential"
+      TILE_CLICK -> external {
+        x : number!
+        y : number!
+      }
+        @description "Emits UI:{tileClickEvent} with { x, y }"
+        @tier "essential"
+      HEADER -> external {
+        ctx : object
+      }
+        @description "-- Slots --"
+        @tier "essential"
+      SIDE_PANEL -> external {
+        ctx : object
+      }
+        @description "Side panel (hero detail, hero lists, etc.)"
+        @tier "essential"
+      OVERLAY -> external {
+        ctx : object
+      }
+        @description "Canvas overlay (tooltips, popups)"
+        @tier "essential"
+      FOOTER -> external {
+        ctx : object
+      }
+        @description "Footer"
+        @tier "essential"
+      RESOLVE_UNIT_FRAME -> external {
+        unitId : string
+      }
+        @description "resolveUnitFrame prop"
+        @tier "essential"
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : json
+        @label "Error"
+        @description "Error state"
+        @tier "presentation"
+      scale : number = 0.4
+        @label "Scale"
+        @description "Canvas render scale"
+        @tier "presentation"
+      unitScale : number = 2.5
+        @label "Unit Scale"
+        @description "Unit draw-size multiplier"
+        @tier "presentation"
+      allowMoveAllHeroes : boolean = false
+        @label "Allow Move All Heroes"
+        @description "Allow selecting / moving ALL heroes (including enemy). For testing."
+        @tier "presentation"
+      diamondTopY : number = 0
+        @label "Diamond Top Y"
+        @description "-- Canvas pass-through --"
+        @tier "presentation"
+      enableCamera : boolean = false
+        @label "Enable Camera"
+        @description "Disable pan/zoom camera (default: true). Set false for fixed maps where overlay labels need stable positions."
+        @tier "presentation"
+      effectSpriteUrls : [string] = []
+        @label "Effect Sprite Urls"
+        @description "effectSpriteUrls prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/world-map-board" as WorldMapBoardPage -> WorldMapBoardRender
+}

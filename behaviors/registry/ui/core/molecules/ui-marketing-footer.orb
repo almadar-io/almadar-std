@@ -1,0 +1,138 @@
+{
+  "name": "ui-marketing-footer",
+  "version": "1.0.0",
+  "description": "MarketingFooter — UI factory (1:1 with the @almadar/ui marketing-footer pattern).",
+  "orbitals": [
+    {
+      "name": "MarketingFooterOrbital",
+      "entity": {
+        "name": "MarketingFooterItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "MarketingFooterRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "MarketingFooterItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "columns": "@config.columns",
+                      "logo": "@config.logo",
+                      "copyright": "@config.copyright",
+                      "className": "@config.className",
+                      "type": "marketing-footer"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "columns": {
+              "type": "[MarketingFooterColumnsItem]",
+              "default": [],
+              "label": "Columns",
+              "description": "columns prop",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "items": {
+                    "name": "items",
+                    "type": "array",
+                    "required": true,
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "label": {
+                          "name": "label",
+                          "type": "string",
+                          "required": true
+                        },
+                        "href": {
+                          "name": "href",
+                          "type": "string",
+                          "required": true
+                        }
+                      }
+                    }
+                  },
+                  "title": {
+                    "name": "title",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "logo": {
+              "type": "json",
+              "label": "Logo",
+              "description": "logo prop",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "className prop",
+              "tier": "presentation"
+            },
+            "copyright": {
+              "type": "string",
+              "default": "",
+              "label": "Copyright",
+              "description": "copyright prop",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "MarketingFooterPage",
+          "path": "/marketing-footer",
+          "traits": [
+            {
+              "ref": "MarketingFooterRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

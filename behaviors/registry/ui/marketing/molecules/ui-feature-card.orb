@@ -1,0 +1,152 @@
+{
+  "name": "ui-feature-card",
+  "version": "1.0.0",
+  "description": "FeatureCard — UI factory (1:1 with the @almadar/ui feature-card pattern).",
+  "orbitals": [
+    {
+      "name": "FeatureCardOrbital",
+      "entity": {
+        "name": "FeatureCardItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "FeatureCardRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "FeatureCardItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "description": "@config.description",
+                      "variant": "@config.variant",
+                      "linkLabel": "@config.linkLabel",
+                      "size": "@config.size",
+                      "type": "feature-card",
+                      "icon": "@config.icon",
+                      "title": "@config.title",
+                      "href": "@config.href",
+                      "className": "@config.className"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "variant": {
+              "type": "string",
+              "default": "bordered",
+              "label": "Variant",
+              "description": "Card visual variant",
+              "tier": "presentation",
+              "values": [
+                "default",
+                "bordered",
+                "elevated",
+                "interactive"
+              ]
+            },
+            "icon": {
+              "type": "string",
+              "default": "circle",
+              "label": "Icon",
+              "description": "Icon name (Lucide string) or ReactNode",
+              "tier": "presentation"
+            },
+            "href": {
+              "type": "string",
+              "default": "",
+              "label": "Href",
+              "description": "Optional link URL",
+              "tier": "presentation"
+            },
+            "size": {
+              "type": "string",
+              "default": "md",
+              "label": "Size",
+              "description": "Card size affecting icon and spacing",
+              "tier": "presentation",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            },
+            "title": {
+              "type": "string",
+              "default": "",
+              "label": "Title",
+              "description": "Feature title",
+              "tier": "presentation"
+            },
+            "description": {
+              "type": "string",
+              "default": "",
+              "label": "Description",
+              "description": "Feature description",
+              "tier": "presentation"
+            },
+            "linkLabel": {
+              "type": "string",
+              "default": "Learn more",
+              "label": "Link Label",
+              "description": "Label for the link button",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional class names",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "FeatureCardPage",
+          "path": "/feature-card",
+          "traits": [
+            {
+              "ref": "FeatureCardRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

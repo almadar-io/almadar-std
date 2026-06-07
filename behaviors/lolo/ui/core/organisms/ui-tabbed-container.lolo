@@ -1,0 +1,66 @@
+app ui-tabbed-container "1.0.0"
+"TabbedContainer — UI factory (1:1 with the @almadar/ui tabbed-container pattern)."
+orbital TabbedContainerOrbital {
+  type TabbedContainerTabsItem = {
+    id : string!
+    label : string!
+    content : node
+    sectionId : string
+    badge : string | number
+    disabled : boolean
+  }
+
+  entity TabbedContainerItem [runtime] {
+    id : string!
+  }
+
+  trait TabbedContainerRender -> @rebindable TabbedContainerItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          tabs: @config.tabs
+          defaultTab: @config.defaultTab
+          activeTab: @config.activeTab
+          onTabChange: TAB_CHANGE
+          position: @config.position
+          className: @config.className
+          type: tabbed-container
+        })
+    }
+
+    emits {
+      TAB_CHANGE -> external {
+        tabId : string
+      }
+        @description "Callback when tab changes"
+        @tier "essential"
+    }
+
+    config {
+      tabs : [TabbedContainerTabsItem] = []
+        @label "Tabs"
+        @description "Tab definitions"
+        @tier "presentation"
+      defaultTab : string = ""
+        @label "Default Tab"
+        @description "Default active tab ID"
+        @tier "presentation"
+      activeTab : string = ""
+        @label "Active Tab"
+        @description "Controlled active tab"
+        @tier "presentation"
+      position : "top" | "left" = top
+        @label "Position"
+        @description "Tab position"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/tabbed-container" as TabbedContainerPage -> TabbedContainerRender
+}

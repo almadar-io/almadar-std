@@ -1,0 +1,52 @@
+app ui-typewriter-text "1.0.0"
+"TypewriterText — UI factory (1:1 with the @almadar/ui typewriter-text pattern)."
+orbital TypewriterTextOrbital {
+  entity TypewriterTextItem [runtime] {
+    id : string!
+  }
+
+  trait TypewriterTextRender -> @rebindable TypewriterTextItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          text: @config.text
+          speed: @config.speed
+          startDelay: @config.startDelay
+          className: @config.className
+          onComplete: COMPLETE
+          type: typewriter-text
+        })
+    }
+
+    emits {
+      COMPLETE -> external {
+        id : string
+      }
+        @description "Called when the entire text has been revealed"
+        @tier "essential"
+    }
+
+    config {
+      text : string = ""
+        @label "Text"
+        @description "The full text to reveal"
+        @tier "presentation"
+      speed : number = 40
+        @label "Speed"
+        @description "Milliseconds per character"
+        @tier "presentation"
+      startDelay : number = 0
+        @label "Start Delay"
+        @description "Delay before typing starts (ms)"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional class names"
+        @tier "presentation"
+    }
+  }
+
+  page "/typewriter-text" as TypewriterTextPage -> TypewriterTextRender
+}

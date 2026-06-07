@@ -1,0 +1,133 @@
+{
+  "name": "ui-doc-pagination",
+  "version": "1.0.0",
+  "description": "DocPagination — UI factory (1:1 with the @almadar/ui doc-pagination pattern).",
+  "orbitals": [
+    {
+      "name": "DocPaginationOrbital",
+      "entity": {
+        "name": "DocPaginationItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "DocPaginationRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "DocPaginationItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "prev": "@config.prev",
+                      "next": "@config.next",
+                      "className": "@config.className",
+                      "type": "doc-pagination"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "prev": {
+              "type": "DocPaginationPrev",
+              "label": "Prev",
+              "description": "Previous page link",
+              "tier": "presentation",
+              "properties": {
+                "href": {
+                  "name": "href",
+                  "type": "string",
+                  "required": true
+                },
+                "category": {
+                  "name": "category",
+                  "type": "string",
+                  "required": false
+                },
+                "label": {
+                  "name": "label",
+                  "type": "string",
+                  "required": true
+                }
+              }
+            },
+            "next": {
+              "type": "DocPaginationNext",
+              "label": "Next",
+              "description": "Next page link",
+              "tier": "presentation",
+              "properties": {
+                "href": {
+                  "name": "href",
+                  "type": "string",
+                  "required": true
+                },
+                "label": {
+                  "name": "label",
+                  "type": "string",
+                  "required": true
+                },
+                "category": {
+                  "name": "category",
+                  "type": "string",
+                  "required": false
+                }
+              }
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional class names",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "DocPaginationPage",
+          "path": "/doc-pagination",
+          "traits": [
+            {
+              "ref": "DocPaginationRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

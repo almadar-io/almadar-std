@@ -1,0 +1,179 @@
+{
+  "name": "ui-menu",
+  "version": "1.0.0",
+  "description": "Menu — UI factory (1:1 with the @almadar/ui menu pattern).",
+  "orbitals": [
+    {
+      "name": "MenuOrbital",
+      "entity": {
+        "name": "MenuItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "MenuRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "MenuItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "position": "@config.position",
+                      "trigger": "@config.trigger",
+                      "className": "@config.className",
+                      "type": "menu",
+                      "items": "@config.items"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "trigger": {
+              "type": "node",
+              "label": "Trigger",
+              "description": "Menu trigger element",
+              "tier": "presentation"
+            },
+            "position": {
+              "type": "string",
+              "default": "bottom-left",
+              "label": "Position",
+              "description": "Menu position",
+              "tier": "presentation",
+              "values": [
+                "top-left",
+                "top-right",
+                "bottom-left",
+                "bottom-right",
+                "top-start",
+                "top-end",
+                "bottom-start",
+                "bottom-end"
+              ]
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "items": {
+              "type": "[MenuItemsItem]",
+              "default": [],
+              "label": "Items",
+              "description": "Menu items",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "badge": {
+                    "name": "badge",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "string",
+                      "number"
+                    ]
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "default",
+                      "danger"
+                    ]
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": false
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "subMenu": {
+                    "name": "subMenu",
+                    "type": "array",
+                    "required": false,
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "onClick": {
+                    "name": "onClick",
+                    "type": "string",
+                    "required": false
+                  },
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "disabled": {
+                    "name": "disabled",
+                    "type": "boolean",
+                    "required": false
+                  }
+                }
+              }
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "MenuPage",
+          "path": "/menu",
+          "traits": [
+            {
+              "ref": "MenuRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

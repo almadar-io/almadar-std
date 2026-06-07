@@ -1,0 +1,63 @@
+app ui-mini-map "1.0.0"
+"MiniMap — UI factory (1:1 with the @almadar/ui mini-map pattern)."
+orbital MiniMapOrbital {
+  entity MiniMapItem [runtime] {
+    id : string!
+  }
+
+  trait MiniMapRender -> @rebindable MiniMapItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          tiles: @config.tiles
+          units: @config.units
+          width: @config.width
+          height: @config.height
+          mapWidth: @config.mapWidth
+          mapHeight: @config.mapHeight
+          viewportRect: @config.viewportRect
+          className: @config.className
+          type: mini-map
+        })
+    }
+
+    config {
+      tiles : [json] = []
+        @label "Tiles"
+        @description "Tile data: each tile renders as a 1px dot at (x,y) with the given color"
+        @tier "presentation"
+      units : [json] = []
+        @label "Units"
+        @description "Unit positions: each unit renders as a 2px dot"
+        @tier "presentation"
+      width : number = 150
+        @label "Width"
+        @description "Canvas display width in pixels"
+        @tier "presentation"
+      height : number = 150
+        @label "Height"
+        @description "Canvas display height in pixels"
+        @tier "presentation"
+      mapWidth : number = 100
+        @label "Map Width"
+        @description "Logical map width (for coordinate scaling)"
+        @tier "presentation"
+      mapHeight : number = 100
+        @label "Map Height"
+        @description "Logical map height (for coordinate scaling)"
+        @tier "presentation"
+      viewportRect : json
+        @label "Viewport Rect"
+        @description "Viewport rectangle outline"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/mini-map" as MiniMapPage -> MiniMapRender
+}

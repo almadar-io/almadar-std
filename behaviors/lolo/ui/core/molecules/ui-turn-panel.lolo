@@ -1,0 +1,60 @@
+app ui-turn-panel "1.0.0"
+"TurnPanel — UI factory (1:1 with the @almadar/ui turn-panel pattern)."
+orbital TurnPanelOrbital {
+  type TurnPanelActionsItem = {
+    label : string!
+    icon : node
+    event : string
+    disabled : boolean
+  }
+
+  entity TurnPanelItem [runtime] {
+    id : string!
+  }
+
+  trait TurnPanelRender -> @rebindable TurnPanelItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          currentTurn: @config.currentTurn
+          maxTurns: @config.maxTurns
+          phase: @config.phase
+          activeTeam: @config.activeTeam
+          actions: @config.actions
+          className: @config.className
+          type: turn-panel
+        })
+    }
+
+    config {
+      currentTurn : number = 0
+        @label "Current Turn"
+        @description "Current turn number"
+        @tier "presentation"
+      maxTurns : number = 0
+        @label "Max Turns"
+        @description "Maximum number of turns"
+        @tier "presentation"
+      phase : string = ""
+        @label "Phase"
+        @description "Current phase label"
+        @tier "presentation"
+      activeTeam : string = ""
+        @label "Active Team"
+        @description "Active team name"
+        @tier "presentation"
+      actions : [TurnPanelActionsItem] = []
+        @label "Actions"
+        @description "Action buttons to display"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/turn-panel" as TurnPanelPage -> TurnPanelRender
+}

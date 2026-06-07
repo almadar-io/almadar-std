@@ -1,0 +1,60 @@
+app ui-crafting-recipe "1.0.0"
+"CraftingRecipe — UI factory (1:1 with the @almadar/ui crafting-recipe pattern)."
+orbital CraftingRecipeOrbital {
+  type CraftingRecipeInputsItem = {
+    icon : node
+    label : string!
+    required : number!
+    available : number!
+  }
+
+  entity CraftingRecipeItem [runtime] {
+    id : string!
+  }
+
+  trait CraftingRecipeRender -> @rebindable CraftingRecipeItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          inputs: @config.inputs
+          output: @config.output
+          canCraft: @config.canCraft
+          onCraft: CRAFT
+          craftEvent: CRAFT
+          className: @config.className
+          type: crafting-recipe
+        })
+    }
+
+    emits {
+      CRAFT -> external {
+        output : string!
+      }
+        @description "Callback when the craft button is clicked"
+        @tier "essential"
+    }
+
+    config {
+      inputs : [CraftingRecipeInputsItem] = []
+        @label "Inputs"
+        @description "Input ingredients for the recipe"
+        @tier "presentation"
+      output : json
+        @label "Output"
+        @description "Output item produced by the recipe"
+        @tier "presentation"
+      canCraft : boolean = false
+        @label "Can Craft"
+        @description "Whether the player has enough ingredients to craft"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/crafting-recipe" as CraftingRecipePage -> CraftingRecipeRender
+}

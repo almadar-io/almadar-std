@@ -1,0 +1,74 @@
+app ui-line-chart "1.0.0"
+"LineChart — UI factory (1:1 with the @almadar/ui line-chart pattern)."
+orbital LineChartOrbital {
+  type LineChartDataItem = {
+    date : json!
+    value : number!
+    label : string
+  }
+
+  entity LineChartItem [runtime] {
+    id : string!
+  }
+
+  trait LineChartRender -> @rebindable LineChartItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          data: @config.data
+          width: @config.width
+          height: @config.height
+          showGrid: @config.showGrid
+          showValues: @config.showValues
+          showArea: @config.showArea
+          lineColor: @config.lineColor
+          areaColor: @config.areaColor
+          className: @config.className
+          type: line-chart
+        })
+    }
+
+    config {
+      data : [LineChartDataItem] = []
+        @label "Data"
+        @description "Data points to plot"
+        @tier "presentation"
+      width : number = 400
+        @label "Width"
+        @description "SVG viewBox width"
+        @tier "presentation"
+      height : number = 200
+        @label "Height"
+        @description "SVG viewBox height"
+        @tier "presentation"
+      showGrid : boolean = true
+        @label "Show Grid"
+        @description "Show horizontal grid lines at 25/50/75%"
+        @tier "presentation"
+      showValues : boolean = false
+        @label "Show Values"
+        @description "Show value labels near data points"
+        @tier "presentation"
+      showArea : boolean = true
+        @label "Show Area"
+        @description "Fill area under line with gradient"
+        @tier "presentation"
+      lineColor : string = "var(--color-primary)"
+        @label "Line Color"
+        @description "Line stroke color"
+        @tier "presentation"
+      areaColor : string = "var(--color-primary)"
+        @label "Area Color"
+        @description "Area fill color (used for gradient)"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/line-chart" as LineChartPage -> LineChartRender
+}

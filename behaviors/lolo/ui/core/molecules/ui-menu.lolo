@@ -1,0 +1,55 @@
+app ui-menu "1.0.0"
+"Menu — UI factory (1:1 with the @almadar/ui menu pattern)."
+orbital MenuOrbital {
+  type MenuItemsItem = {
+    id : string
+    label : string!
+    icon : json
+    badge : string | number
+    disabled : boolean
+    onClick : any
+    event : string
+    variant : "default" | "danger"
+    subMenu : [json]
+  }
+
+  entity MenuItem [runtime] {
+    id : string!
+  }
+
+  trait MenuRender -> @rebindable MenuItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          trigger: @config.trigger
+          items: @config.items
+          position: @config.position
+          className: @config.className
+          type: menu
+        })
+    }
+
+    config {
+      trigger : node
+        @label "Trigger"
+        @description "Menu trigger element"
+        @tier "presentation"
+      items : [MenuItemsItem] = []
+        @label "Items"
+        @description "Menu items"
+        @tier "presentation"
+      position : "top-left" | "top-right" | "bottom-left" | "bottom-right" | "top-start" | "top-end" | "bottom-start" | "bottom-end" = "bottom-left"
+        @label "Position"
+        @description "Menu position"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/menu" as MenuPage -> MenuRender
+}

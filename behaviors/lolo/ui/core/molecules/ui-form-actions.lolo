@@ -1,0 +1,72 @@
+app ui-form-actions "1.0.0"
+"FormActions — UI factory (1:1 with the @almadar/ui form-actions pattern)."
+orbital FormActionsOrbital {
+  type FormActionsFiltersItem = {
+    field : string!
+    label : string!
+    type : "checkbox" | "select" | "toggle"
+    options : [string]
+  }
+
+  entity FormActionsItem [runtime] {
+    id : string!
+  }
+
+  trait FormActionsRender -> @rebindable FormActionsItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch FormActionsItem {})
+        (render-ui main {
+          children: @config.children
+          primary: @config.primary
+          secondary: @config.secondary
+          variant: @config.variant
+          orientation: @config.orientation
+          className: @config.className
+          entity: FormActionsItem
+          filters: @config.filters
+          look: @config.look
+          type: form-actions
+        })
+    }
+
+    config {
+      children : node
+        @label "Children"
+        @description "Button group content (Button components) - use this OR primary/secondary"
+        @tier "presentation"
+      primary : json
+        @label "Primary"
+        @description "Primary action button config (for form-actions pattern) Accepts Readonly for compatibility with generated const objects"
+        @tier "presentation"
+      secondary : [json] = []
+        @label "Secondary"
+        @description "Secondary action buttons config (for form-actions pattern) Accepts readonly array for compatibility with generated const arrays"
+        @tier "presentation"
+      variant : "default" | "segmented" | "toggle" = default
+        @label "Variant"
+        @description "Visual variant"
+        @tier "presentation"
+      orientation : "horizontal" | "vertical" = horizontal
+        @label "Orientation"
+        @description "Orientation"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      filters : [FormActionsFiltersItem] = []
+        @label "Filters"
+        @description "Filter definitions for filter-group pattern"
+        @tier "presentation"
+      look : "right-aligned-buttons" | "floating-bar" | "inline-row" | "dropdown-menu" | "command-palette-trigger" = "right-aligned-buttons"
+        @label "Look"
+        @description "Layer 2 visual treatment for the action-cluster (form-actions) pattern."
+        @tier "presentation"
+    }
+  }
+
+  page "/form-actions" as FormActionsPage -> FormActionsRender
+}

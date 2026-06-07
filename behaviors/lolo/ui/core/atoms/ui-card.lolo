@@ -1,0 +1,63 @@
+app ui-card "1.0.0"
+"Card — UI factory (1:1 with the @almadar/ui card pattern)."
+orbital CardOrbital {
+  entity CardItem [runtime] {
+    id : string!
+  }
+
+  trait CardRender -> @rebindable CardItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          className: @config.className
+          variant: @config.variant
+          padding: @config.padding
+          title: @config.title
+          subtitle: @config.subtitle
+          shadow: @config.shadow
+          look: @config.look
+          children: @config.children
+          type: card
+        })
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes applied to the root element."
+        @tier "presentation"
+      variant : "default" | "bordered" | "elevated" | "interactive" = bordered
+        @label "Variant"
+        @description "variant prop"
+        @tier "presentation"
+      padding : "none" | "sm" | "md" | "lg" = md
+        @label "Padding"
+        @description "padding prop"
+        @tier "presentation"
+      title : string = ""
+        @label "Title"
+        @description "Card title - renders in header if provided"
+        @tier "presentation"
+      subtitle : string = ""
+        @label "Subtitle"
+        @description "Card subtitle - renders below title"
+        @tier "presentation"
+      shadow : "none" | "sm" | "md" | "lg" = none
+        @label "Shadow"
+        @description "Shadow size override"
+        @tier "presentation"
+      look : "elevated" | "flat-bordered" | "borderless-divider" | "ticket" | "invoice" | "chip" | "tile-image-first" = elevated
+        @label "Look"
+        @description "Layer 2 visual treatment — orthogonal to the semantic variant."
+        @tier "presentation"
+      children : node
+        @label "Children"
+        @description "Card content"
+        @tier "presentation"
+    }
+  }
+
+  page "/card" as CardPage -> CardRender
+}

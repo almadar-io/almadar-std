@@ -1,0 +1,108 @@
+{
+  "name": "ui-code-view",
+  "version": "1.0.0",
+  "description": "CodeView — UI factory (1:1 with the @almadar/ui code-view pattern).",
+  "orbitals": [
+    {
+      "name": "CodeViewOrbital",
+      "entity": {
+        "name": "CodeViewItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "CodeViewRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "CodeViewItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "defaultExpanded": "@config.defaultExpanded",
+                      "type": "code-view",
+                      "data": "@config.data",
+                      "label": "@config.label"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "defaultExpanded": {
+              "type": "boolean",
+              "default": false,
+              "label": "Default Expanded",
+              "description": "Whether the code is expanded by default",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "data": {
+              "type": "json",
+              "label": "Data",
+              "description": "JSON data to display",
+              "tier": "presentation"
+            },
+            "label": {
+              "type": "string",
+              "default": "",
+              "label": "Label",
+              "description": "Label",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "CodeViewPage",
+          "path": "/code-view",
+          "traits": [
+            {
+              "ref": "CodeViewRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

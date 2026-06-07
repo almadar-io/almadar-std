@@ -1,0 +1,145 @@
+{
+  "name": "ui-sparkline",
+  "version": "1.0.0",
+  "description": "Sparkline — UI factory (1:1 with the @almadar/ui sparkline pattern).",
+  "orbitals": [
+    {
+      "name": "SparklineOrbital",
+      "entity": {
+        "name": "SparklineItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "SparklineRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "SparklineItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "color": "@config.color",
+                      "data": "@config.data",
+                      "height": "@config.height",
+                      "strokeWidth": "@config.strokeWidth",
+                      "width": "@config.width",
+                      "fill": "@config.fill",
+                      "type": "sparkline",
+                      "className": "@config.className"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "data": {
+              "type": "[number]",
+              "default": [],
+              "label": "Data",
+              "description": "Numeric series to plot. Length < 2 renders nothing.",
+              "tier": "presentation",
+              "items": {
+                "type": "number"
+              }
+            },
+            "color": {
+              "type": "string",
+              "default": "auto",
+              "label": "Color",
+              "description": "Stroke color. `auto` (default): success when the series trends up (last ≥ first), error when it trends down.",
+              "tier": "presentation",
+              "values": [
+                "auto",
+                "primary",
+                "success",
+                "warning",
+                "error",
+                "info",
+                "muted"
+              ]
+            },
+            "width": {
+              "type": "number",
+              "default": 80.0,
+              "label": "Width",
+              "description": "SVG width in px. Default 80.",
+              "tier": "presentation"
+            },
+            "fill": {
+              "type": "boolean",
+              "default": false,
+              "label": "Fill",
+              "description": "Fill the area under the line with the stroke color at low opacity.",
+              "tier": "presentation"
+            },
+            "height": {
+              "type": "number",
+              "default": 32.0,
+              "label": "Height",
+              "description": "SVG height in px. Default 32.",
+              "tier": "presentation"
+            },
+            "strokeWidth": {
+              "type": "number",
+              "default": 2.0,
+              "label": "Stroke Width",
+              "description": "Stroke width in px. Default 2.",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes.",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "SparklinePage",
+          "path": "/sparkline",
+          "traits": [
+            {
+              "ref": "SparklineRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

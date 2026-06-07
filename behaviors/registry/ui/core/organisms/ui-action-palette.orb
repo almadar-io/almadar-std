@@ -1,0 +1,235 @@
+{
+  "name": "ui-action-palette",
+  "version": "1.0.0",
+  "description": "ActionPalette — UI factory (1:1 with the @almadar/ui action-palette pattern).",
+  "orbitals": [
+    {
+      "name": "ActionPaletteOrbital",
+      "entity": {
+        "name": "ActionPaletteItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ActionPaletteRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "ActionPaletteItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "usedActionIds": "@config.usedActionIds",
+                      "size": "@config.size",
+                      "label": "@config.label",
+                      "actions": "@config.actions",
+                      "allowDuplicates": "@config.allowDuplicates",
+                      "type": "action-palette",
+                      "categoryColors": "@config.categoryColors",
+                      "className": "@config.className"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "label": {
+              "type": "string",
+              "default": "",
+              "label": "Label",
+              "description": "Label above the palette",
+              "tier": "presentation"
+            },
+            "usedActionIds": {
+              "type": "[string]",
+              "default": [],
+              "label": "Used Action Ids",
+              "description": "IDs of actions that are already used (shown as disabled)",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "actions": {
+              "type": "[ActionPaletteActionsItem]",
+              "default": [],
+              "label": "Actions",
+              "description": "Available actions",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  "iconEmoji": {
+                    "name": "iconEmoji",
+                    "type": "string",
+                    "required": false
+                  },
+                  "iconUrl": {
+                    "name": "iconUrl",
+                    "type": "string",
+                    "required": false
+                  },
+                  "category": {
+                    "name": "category",
+                    "type": "string",
+                    "required": true
+                  },
+                  "description": {
+                    "name": "description",
+                    "type": "string",
+                    "required": false
+                  },
+                  "stateMachine": {
+                    "name": "stateMachine",
+                    "type": "object",
+                    "required": false,
+                    "properties": {
+                      "transitions": {
+                        "name": "transitions",
+                        "type": "array",
+                        "required": true,
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "to": {
+                              "name": "to",
+                              "type": "string",
+                              "required": true
+                            },
+                            "from": {
+                              "name": "from",
+                              "type": "string",
+                              "required": true
+                            },
+                            "event": {
+                              "name": "event",
+                              "type": "string",
+                              "required": true
+                            },
+                            "guardHint": {
+                              "name": "guardHint",
+                              "type": "string",
+                              "required": false
+                            }
+                          }
+                        }
+                      },
+                      "states": {
+                        "name": "states",
+                        "type": "array",
+                        "required": true,
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "currentState": {
+                        "name": "currentState",
+                        "type": "string",
+                        "required": true
+                      },
+                      "name": {
+                        "name": "name",
+                        "type": "string",
+                        "required": true
+                      },
+                      "description": {
+                        "name": "description",
+                        "type": "string",
+                        "required": false
+                      }
+                    }
+                  },
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "allowDuplicates": {
+              "type": "boolean",
+              "default": true,
+              "label": "Allow Duplicates",
+              "description": "Whether each action can be used multiple times",
+              "tier": "presentation"
+            },
+            "categoryColors": {
+              "type": "json",
+              "label": "Category Colors",
+              "description": "Category → color mapping",
+              "tier": "presentation"
+            },
+            "size": {
+              "type": "string",
+              "default": "md",
+              "label": "Size",
+              "description": "Size variant",
+              "tier": "presentation",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "ActionPalettePage",
+          "path": "/action-palette",
+          "traits": [
+            {
+              "ref": "ActionPaletteRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

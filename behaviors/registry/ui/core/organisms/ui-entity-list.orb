@@ -1,0 +1,281 @@
+{
+  "name": "ui-entity-list",
+  "version": "1.0.0",
+  "description": "EntityList — UI factory (1:1 with the @almadar/ui entity-list pattern).",
+  "orbitals": [
+    {
+      "name": "EntityListOrbital",
+      "entity": {
+        "name": "EntityListItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "EntityListRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "EntityListItem",
+          "emits": [
+            {
+              "event": "ITEM_ACTIONS",
+              "description": "Item actions - schema-driven or function-based",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "RENDER_ITEM",
+              "description": "renderItem prop",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "item",
+                  "type": "object"
+                },
+                {
+                  "name": "index",
+                  "type": "number"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "ITEM_ACTIONS",
+                "name": "Item Actions",
+                "description": "Item actions - schema-driven or function-based",
+                "tier": "essential"
+              },
+              {
+                "key": "RENDER_ITEM",
+                "name": "Render Item",
+                "description": "renderItem prop",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "EntityListItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "entityType": "@config.entityType",
+                      "error": "@config.error",
+                      "itemActions": "ITEM_ACTIONS",
+                      "pageSize": "@config.pageSize",
+                      "showDividers": "@config.showDividers",
+                      "selectable": "@config.selectable",
+                      "children": "@config.children",
+                      "entity": "@entity",
+                      "totalCount": "@config.totalCount",
+                      "selectedIds": "@config.selectedIds",
+                      "renderItem": "RENDER_ITEM",
+                      "searchValue": "@config.searchValue",
+                      "emptyMessage": "@config.emptyMessage",
+                      "fields": "@config.fields",
+                      "sortDirection": "@config.sortDirection",
+                      "className": "@config.className",
+                      "isLoading": "@config.isLoading",
+                      "sortBy": "@config.sortBy",
+                      "activeFilters": "@config.activeFilters",
+                      "fieldNames": "@config.fieldNames",
+                      "type": "entity-list",
+                      "variant": "@config.variant"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "sortDirection": {
+              "type": "string",
+              "default": "",
+              "label": "Sort Direction",
+              "description": "Current sort direction",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "fields": {
+              "type": "[json]",
+              "default": [],
+              "label": "Fields",
+              "description": "Fields to display - accepts string[] or {key, header}[] for unified interface",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "error": {
+              "type": "json",
+              "label": "Error",
+              "description": "Error state",
+              "tier": "presentation"
+            },
+            "selectable": {
+              "type": "boolean",
+              "default": false,
+              "label": "Selectable",
+              "description": "selectable prop",
+              "tier": "presentation"
+            },
+            "showDividers": {
+              "type": "boolean",
+              "default": false,
+              "label": "Show Dividers",
+              "description": "showDividers prop",
+              "tier": "presentation"
+            },
+            "fieldNames": {
+              "type": "[string]",
+              "default": [],
+              "label": "Field Names",
+              "description": "Alias for fields - backwards compatibility",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "variant": {
+              "type": "string",
+              "default": "default",
+              "label": "Variant",
+              "description": "variant prop",
+              "tier": "presentation",
+              "values": [
+                "default",
+                "card"
+              ]
+            },
+            "entityType": {
+              "type": "string",
+              "default": "",
+              "label": "Entity Type",
+              "description": "Entity type name for display",
+              "tier": "presentation"
+            },
+            "totalCount": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Total Count",
+              "description": "Total number of items",
+              "tier": "presentation"
+            },
+            "selectedIds": {
+              "type": "[json]",
+              "default": [],
+              "label": "Selected Ids",
+              "description": "Currently selected item IDs",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "pageSize": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Page Size",
+              "description": "Number of items per page",
+              "tier": "presentation"
+            },
+            "activeFilters": {
+              "type": "json",
+              "label": "Active Filters",
+              "description": "Active filters",
+              "tier": "presentation"
+            },
+            "emptyMessage": {
+              "type": "string",
+              "default": "",
+              "label": "Empty Message",
+              "description": "emptyMessage prop",
+              "tier": "presentation"
+            },
+            "searchValue": {
+              "type": "string",
+              "default": "",
+              "label": "Search Value",
+              "description": "Current search query value",
+              "tier": "presentation"
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
+              "tier": "presentation"
+            },
+            "children": {
+              "type": "node",
+              "label": "Children",
+              "description": "children prop",
+              "tier": "presentation"
+            },
+            "sortBy": {
+              "type": "string",
+              "default": "",
+              "label": "Sort By",
+              "description": "Current sort field",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "EntityListPage",
+          "path": "/entity-list",
+          "traits": [
+            {
+              "ref": "EntityListRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

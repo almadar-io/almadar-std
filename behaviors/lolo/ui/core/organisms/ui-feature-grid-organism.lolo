@@ -1,0 +1,90 @@
+app ui-feature-grid-organism "1.0.0"
+"FeatureGridOrganism — UI factory (1:1 with the @almadar/ui feature-grid-organism pattern)."
+orbital FeatureGridOrganismOrbital {
+  entity FeatureGridOrganismItem [runtime] {
+    id : string!
+  }
+
+  trait FeatureGridOrganismRender -> @rebindable FeatureGridOrganismItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch FeatureGridOrganismItem {})
+        (render-ui main {
+          entity: @entity
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          sortBy: @config.sortBy
+          sortDirection: @config.sortDirection
+          searchValue: @config.searchValue
+          pageSize: @config.pageSize
+          totalCount: @config.totalCount
+          activeFilters: @config.activeFilters
+          selectedIds: @config.selectedIds
+          columns: @config.columns
+          heading: @config.heading
+          subtitle: @config.subtitle
+          type: feature-grid-organism
+        })
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : json
+        @label "Error"
+        @description "Error state"
+        @tier "presentation"
+      sortBy : string = ""
+        @label "Sort By"
+        @description "Current sort field"
+        @tier "presentation"
+      sortDirection : string = ""
+        @label "Sort Direction"
+        @description "Current sort direction"
+        @tier "presentation"
+      searchValue : string = ""
+        @label "Search Value"
+        @description "Current search query value"
+        @tier "presentation"
+      pageSize : number = 0
+        @label "Page Size"
+        @description "Number of items per page"
+        @tier "presentation"
+      totalCount : number = 0
+        @label "Total Count"
+        @description "Total number of items"
+        @tier "presentation"
+      activeFilters : json
+        @label "Active Filters"
+        @description "Active filters"
+        @tier "presentation"
+      selectedIds : [json] = []
+        @label "Selected Ids"
+        @description "Currently selected item IDs"
+        @tier "presentation"
+      columns : number = 3
+        @label "Columns"
+        @description "columns prop"
+        @tier "presentation"
+      heading : string = ""
+        @label "Heading"
+        @description "heading prop"
+        @tier "presentation"
+      subtitle : string = ""
+        @label "Subtitle"
+        @description "subtitle prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/feature-grid-organism" as FeatureGridOrganismPage -> FeatureGridOrganismRender
+}

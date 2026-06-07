@@ -1,0 +1,60 @@
+app ui-ui-slot-renderer "1.0.0"
+"UiSlotRenderer — UI factory (1:1 with the @almadar/ui ui-slot-renderer pattern)."
+orbital UiSlotRendererOrbital {
+  entity UiSlotRendererItem [runtime] {
+    id : string!
+  }
+
+  trait UiSlotRendererRender -> @rebindable UiSlotRendererItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch UiSlotRendererItem {})
+        (render-ui main {
+          includeHud: @config.includeHud
+          hudMode: @config.hudMode
+          includeFloating: @config.includeFloating
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          entity: UiSlotRendererItem
+          suspense: @config.suspense
+          type: ui-slot-renderer
+        })
+    }
+
+    config {
+      includeHud : boolean = false
+        @label "Include Hud"
+        @description "Include HUD slots"
+        @tier "presentation"
+      hudMode : "fixed" | "inline" = fixed
+        @label "Hud Mode"
+        @description "HUD positioning mode: 'fixed' (default, viewport-relative) or 'inline' (container-relative, uses sticky)"
+        @tier "presentation"
+      includeFloating : boolean = false
+        @label "Include Floating"
+        @description "Include floating slot"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional class name for the container"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : json
+        @label "Error"
+        @description "Error state"
+        @tier "presentation"
+      suspense : json
+        @label "Suspense"
+        @description "Enable Suspense boundaries around each slot. When true, each inline slot is wrapped in `<ErrorBoundary><Suspense>` with Skeleton fallbacks. Opt-in — existing isLoading prop pattern still works."
+        @tier "presentation"
+    }
+  }
+
+  page "/ui-slot-renderer" as UiSlotRendererPage -> UiSlotRendererRender
+}

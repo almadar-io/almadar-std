@@ -1,0 +1,91 @@
+app ui-pagination "1.0.0"
+"Pagination — UI factory (1:1 with the @almadar/ui pagination pattern)."
+orbital PaginationOrbital {
+  entity PaginationItem [runtime] {
+    id : string!
+  }
+
+  trait PaginationRender -> @rebindable PaginationItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          currentPage: @config.currentPage
+          totalPages: @config.totalPages
+          onPageChange: PAGE_CHANGE
+          showPageSize: @config.showPageSize
+          pageSizeOptions: @config.pageSizeOptions
+          pageSize: @config.pageSize
+          onPageSizeChange: PAGE_SIZE_CHANGE
+          showJumpToPage: @config.showJumpToPage
+          showTotal: @config.showTotal
+          totalItems: @config.totalItems
+          maxVisiblePages: @config.maxVisiblePages
+          className: @config.className
+          pageChangeEvent: PAGE_CHANGE
+          pageSizeChangeEvent: PAGE_SIZE_CHANGE
+          type: pagination
+        })
+    }
+
+    emits {
+      PAGE_CHANGE -> external {
+        page : number
+      }
+        @description "Callback when page changes (optional - can be a no-op if not interactive)"
+        @tier "essential"
+      PAGE_SIZE_CHANGE -> external {
+        size : number
+        pageSize : number!
+      }
+        @description "Callback when page size changes"
+        @tier "essential"
+    }
+
+    config {
+      currentPage : number = 0
+        @label "Current Page"
+        @description "Current page (1-indexed)"
+        @tier "presentation"
+      totalPages : number = 0
+        @label "Total Pages"
+        @description "Total number of pages"
+        @tier "presentation"
+      showPageSize : boolean = false
+        @label "Show Page Size"
+        @description "Show page size selector"
+        @tier "presentation"
+      pageSizeOptions : [number] = []
+        @label "Page Size Options"
+        @description "Page size options"
+        @tier "presentation"
+      pageSize : number = 0
+        @label "Page Size"
+        @description "Current page size"
+        @tier "presentation"
+      showJumpToPage : boolean = false
+        @label "Show Jump To Page"
+        @description "Show jump to page input"
+        @tier "presentation"
+      showTotal : boolean = false
+        @label "Show Total"
+        @description "Show total count"
+        @tier "presentation"
+      totalItems : number = 0
+        @label "Total Items"
+        @description "Total items count"
+        @tier "presentation"
+      maxVisiblePages : number = 7
+        @label "Max Visible Pages"
+        @description "Maximum number of page buttons to show"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/pagination" as PaginationPage -> PaginationRender
+}

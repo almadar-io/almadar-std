@@ -1,0 +1,58 @@
+app ui-progress-dots "1.0.0"
+"ProgressDots — UI factory (1:1 with the @almadar/ui progress-dots pattern)."
+orbital ProgressDotsOrbital {
+  entity ProgressDotsItem [runtime] {
+    id : string!
+  }
+
+  trait ProgressDotsRender -> @rebindable ProgressDotsItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          count: @config.count
+          currentIndex: @config.currentIndex
+          getState: GET_STATE
+          onDotClick: DOT_CLICK
+          className: @config.className
+          size: @config.size
+          type: progress-dots
+        })
+    }
+
+    emits {
+      GET_STATE -> external {
+        index : number
+      }
+        @description "Custom state resolver per dot index"
+        @tier "essential"
+      DOT_CLICK -> external {
+        index : number
+      }
+        @description "Callback when a dot is clicked"
+        @tier "essential"
+    }
+
+    config {
+      count : number = 0
+        @label "Count"
+        @description "Total number of dots"
+        @tier "presentation"
+      currentIndex : number = 0
+        @label "Current Index"
+        @description "Current active index (0-based)"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      size : "sm" | "md" | "lg" = md
+        @label "Size"
+        @description "Dot size"
+        @tier "presentation"
+    }
+  }
+
+  page "/progress-dots" as ProgressDotsPage -> ProgressDotsRender
+}

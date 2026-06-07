@@ -1,0 +1,53 @@
+app ui-popover "1.0.0"
+"Popover — UI factory (1:1 with the @almadar/ui popover pattern)."
+orbital PopoverOrbital {
+  entity PopoverItem [runtime] {
+    id : string!
+  }
+
+  trait PopoverRender -> @rebindable PopoverItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          content: @config.content
+          children: @config.children
+          position: @config.position
+          trigger: @config.trigger
+          showArrow: @config.showArrow
+          className: @config.className
+          type: popover
+        })
+    }
+
+    config {
+      content : node
+        @label "Content"
+        @description "Popover content"
+        @tier "presentation"
+      children : node
+        @label "Children"
+        @description "Popover trigger element (ReactElement or ReactNode that will be wrapped in span)"
+        @tier "presentation"
+      position : "top" | "bottom" | "left" | "right" = bottom
+        @label "Position"
+        @description "Popover position"
+        @tier "presentation"
+      trigger : "click" | "hover" = click
+        @label "Trigger"
+        @description "Trigger type"
+        @tier "presentation"
+      showArrow : boolean = true
+        @label "Show Arrow"
+        @description "Show arrow"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/popover" as PopoverPage -> PopoverRender
+}

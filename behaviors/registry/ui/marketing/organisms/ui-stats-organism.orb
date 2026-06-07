@@ -1,0 +1,172 @@
+{
+  "name": "ui-stats-organism",
+  "version": "1.0.0",
+  "description": "StatsOrganism — UI factory (1:1 with the @almadar/ui stats-organism pattern).",
+  "orbitals": [
+    {
+      "name": "StatsOrganismOrbital",
+      "entity": {
+        "name": "StatsOrganismItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "StatsOrganismRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "StatsOrganismItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "StatsOrganismItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "sortDirection": "@config.sortDirection",
+                      "error": "@config.error",
+                      "activeFilters": "@config.activeFilters",
+                      "searchValue": "@config.searchValue",
+                      "columns": "@config.columns",
+                      "type": "stats-organism",
+                      "sortBy": "@config.sortBy",
+                      "className": "@config.className",
+                      "pageSize": "@config.pageSize",
+                      "entity": "@entity",
+                      "selectedIds": "@config.selectedIds",
+                      "isLoading": "@config.isLoading",
+                      "totalCount": "@config.totalCount"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "activeFilters": {
+              "type": "json",
+              "label": "Active Filters",
+              "description": "Active filters",
+              "tier": "presentation"
+            },
+            "error": {
+              "type": "json",
+              "label": "Error",
+              "description": "Error state",
+              "tier": "presentation"
+            },
+            "columns": {
+              "type": "number",
+              "default": 3.0,
+              "label": "Columns",
+              "description": "columns prop",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "pageSize": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Page Size",
+              "description": "Number of items per page",
+              "tier": "presentation"
+            },
+            "searchValue": {
+              "type": "string",
+              "default": "",
+              "label": "Search Value",
+              "description": "Current search query value",
+              "tier": "presentation"
+            },
+            "totalCount": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Total Count",
+              "description": "Total number of items",
+              "tier": "presentation"
+            },
+            "sortBy": {
+              "type": "string",
+              "default": "",
+              "label": "Sort By",
+              "description": "Current sort field",
+              "tier": "presentation"
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
+              "tier": "presentation"
+            },
+            "sortDirection": {
+              "type": "string",
+              "default": "",
+              "label": "Sort Direction",
+              "description": "Current sort direction",
+              "tier": "presentation"
+            },
+            "selectedIds": {
+              "type": "[json]",
+              "default": [],
+              "label": "Selected Ids",
+              "description": "Currently selected item IDs",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "StatsOrganismPage",
+          "path": "/stats-organism",
+          "traits": [
+            {
+              "ref": "StatsOrganismRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

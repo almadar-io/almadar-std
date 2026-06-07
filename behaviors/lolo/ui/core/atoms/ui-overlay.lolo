@@ -1,0 +1,53 @@
+app ui-overlay "1.0.0"
+"Overlay — UI factory (1:1 with the @almadar/ui overlay pattern)."
+orbital OverlayOrbital {
+  entity OverlayItem [runtime] {
+    id : string!
+  }
+
+  trait OverlayRender -> @rebindable OverlayItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          isVisible: @config.isVisible
+          onClick: CLICK
+          className: @config.className
+          blur: @config.blur
+          action: ACTION
+          type: overlay
+        })
+    }
+
+    emits {
+      CLICK -> external {
+        e : object
+      }
+        @description "onClick prop"
+        @tier "essential"
+      ACTION -> external {
+        id : string
+      }
+        @description "Declarative event name — emits UI:{action} via eventBus on click"
+        @tier "essential"
+    }
+
+    config {
+      isVisible : boolean = true
+        @label "Is Visible"
+        @description "isVisible prop"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+      blur : boolean = false
+        @label "Blur"
+        @description "blur prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/overlay" as OverlayPage -> OverlayRender
+}

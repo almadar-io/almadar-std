@@ -1,0 +1,272 @@
+{
+  "name": "ui-tabs",
+  "version": "1.0.0",
+  "description": "Tabs — UI factory (1:1 with the @almadar/ui tabs pattern).",
+  "orbitals": [
+    {
+      "name": "TabsOrbital",
+      "entity": {
+        "name": "TabsItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "TabsRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "TabsItem",
+          "emits": [
+            {
+              "event": "TAB_CHANGE",
+              "description": "Callback when tab changes",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "tabId",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "TAB_CHANGE",
+                "name": "Tab Change",
+                "description": "Callback when tab changes",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "type": "tabs",
+                      "items": "@config.items",
+                      "variant": "@config.variant",
+                      "defaultActiveTab": "@config.defaultActiveTab",
+                      "orientation": "@config.orientation",
+                      "activeTab": "@config.activeTab",
+                      "onTabChange": "TAB_CHANGE",
+                      "tabs": "@config.tabs",
+                      "tabChangeEvent": "TAB_CHANGE"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "defaultActiveTab": {
+              "type": "string",
+              "default": "",
+              "label": "Default Active Tab",
+              "description": "Default active tab ID",
+              "tier": "presentation"
+            },
+            "tabs": {
+              "type": "[TabsTabsItem]",
+              "default": [],
+              "label": "Tabs",
+              "description": "Tab items (alias for items - used by generated code)",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "badge": {
+                    "name": "badge",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "string",
+                      "number"
+                    ]
+                  },
+                  "disabled": {
+                    "name": "disabled",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "active": {
+                    "name": "active",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "value": {
+                    "name": "value",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": false
+                  },
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": false
+                  },
+                  "content": {
+                    "name": "content",
+                    "type": "string",
+                    "required": false
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "items": {
+              "type": "[TabsItemsItem]",
+              "default": [],
+              "label": "Items",
+              "description": "Tab items",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "disabled": {
+                    "name": "disabled",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": false
+                  },
+                  "badge": {
+                    "name": "badge",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "string",
+                      "number"
+                    ]
+                  },
+                  "active": {
+                    "name": "active",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "value": {
+                    "name": "value",
+                    "type": "string",
+                    "required": false
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "content": {
+                    "name": "content",
+                    "type": "string",
+                    "required": false
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "variant": {
+              "type": "string",
+              "default": "default",
+              "label": "Variant",
+              "description": "Tab variant",
+              "tier": "presentation",
+              "values": [
+                "default",
+                "pills",
+                "underline"
+              ]
+            },
+            "activeTab": {
+              "type": "string",
+              "default": "",
+              "label": "Active Tab",
+              "description": "Controlled active tab ID",
+              "tier": "presentation"
+            },
+            "orientation": {
+              "type": "string",
+              "default": "horizontal",
+              "label": "Orientation",
+              "description": "Tab orientation",
+              "tier": "presentation",
+              "values": [
+                "horizontal",
+                "vertical"
+              ]
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "TabsPage",
+          "path": "/tabs",
+          "traits": [
+            {
+              "ref": "TabsRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

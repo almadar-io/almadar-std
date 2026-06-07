@@ -1,0 +1,114 @@
+app ui-stack "1.0.0"
+"Stack — UI factory (1:1 with the @almadar/ui stack pattern)."
+orbital StackOrbital {
+  entity StackItem [runtime] {
+    id : string!
+  }
+
+  trait StackRender -> @rebindable StackItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          direction: @config.direction
+          gap: @config.gap
+          align: @config.align
+          justify: @config.justify
+          wrap: @config.wrap
+          reverse: @config.reverse
+          flex: @config.flex
+          className: @config.className
+          style: @config.style
+          children: @config.children
+          onClick: CLICK
+          onKeyDown: KEY_DOWN
+          role: @config.role
+          tabIndex: @config.tabIndex
+          action: ACTION
+          actionPayload: @config.actionPayload
+          responsive: @config.responsive
+          type: stack
+        })
+    }
+
+    emits {
+      CLICK -> external {
+        e : object
+      }
+        @description "Click handler"
+        @tier "essential"
+      KEY_DOWN -> external {
+        e : object
+      }
+        @description "Keyboard handler"
+        @tier "essential"
+      ACTION -> external {
+        id : string
+      }
+        @description "Declarative event name — emits UI:{action} via eventBus on click"
+        @tier "essential"
+    }
+
+    config {
+      direction : "horizontal" | "vertical" = vertical
+        @label "Direction"
+        @description "Stack direction"
+        @tier "presentation"
+      gap : "none" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" = md
+        @label "Gap"
+        @description "Gap between children"
+        @tier "presentation"
+      align : "start" | "center" | "end" | "stretch" | "baseline" = stretch
+        @label "Align"
+        @description "Align items on the cross axis"
+        @tier "presentation"
+      justify : "start" | "center" | "end" | "between" | "around" | "evenly" = start
+        @label "Justify"
+        @description "Justify items on the main axis"
+        @tier "presentation"
+      wrap : boolean = false
+        @label "Wrap"
+        @description "Allow items to wrap"
+        @tier "presentation"
+      reverse : boolean = false
+        @label "Reverse"
+        @description "Reverse the order of children"
+        @tier "presentation"
+      flex : boolean = false
+        @label "Flex"
+        @description "Fill available space (flex: 1)"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Custom class name"
+        @tier "presentation"
+      style : json
+        @label "Style"
+        @description "Inline styles"
+        @tier "presentation"
+      children : node
+        @label "Children"
+        @description "Children elements"
+        @tier "presentation"
+      role : string = ""
+        @label "Role"
+        @description "Role for accessibility"
+        @tier "presentation"
+      tabIndex : number = 0
+        @label "Tab Index"
+        @description "Tab index for focus management"
+        @tier "presentation"
+      actionPayload : json
+        @label "Action Payload"
+        @description "Payload to include with the action event"
+        @tier "presentation"
+      responsive : boolean = false
+        @label "Responsive"
+        @description "When true, horizontal stacks flip to vertical below the md breakpoint (768px)"
+        @tier "presentation"
+    }
+  }
+
+  page "/stack" as StackPage -> StackRender
+}

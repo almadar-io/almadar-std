@@ -1,0 +1,107 @@
+app ui-document-viewer "1.0.0"
+"DocumentViewer — UI factory (1:1 with the @almadar/ui document-viewer pattern)."
+orbital DocumentViewerOrbital {
+  type DocumentViewerActionsItem = {
+    label : string!
+    event : string
+    navigatesTo : string
+    variant : "primary" | "secondary" | "ghost"
+  }
+
+  entity DocumentViewerItem [runtime] {
+    id : string!
+  }
+
+  trait DocumentViewerRender -> @rebindable DocumentViewerItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch DocumentViewerItem {})
+        (render-ui main {
+          title: @config.title
+          src: @config.src
+          content: @config.content
+          documentType: @config.documentType
+          currentPage: @config.currentPage
+          totalPages: @config.totalPages
+          height: @config.height
+          showToolbar: @config.showToolbar
+          showDownload: @config.showDownload
+          showPrint: @config.showPrint
+          actions: @config.actions
+          documents: @config.documents
+          entity: DocumentViewerItem
+          isLoading: @config.isLoading
+          error: @config.error
+          className: @config.className
+          type: document-viewer
+        })
+    }
+
+    config {
+      title : string = ""
+        @label "Title"
+        @description "Document title"
+        @tier "presentation"
+      src : string = ""
+        @label "Src"
+        @description "Document URL (for PDF/external documents)"
+        @tier "presentation"
+      content : string = ""
+        @label "Content"
+        @description "Document content (for text/html/markdown)"
+        @tier "presentation"
+      documentType : "pdf" | "text" | "html" | "markdown" = pdf
+        @label "Document Type"
+        @description "Document type"
+        @tier "presentation"
+      currentPage : number = 0
+        @label "Current Page"
+        @description "Current page (for multi-page documents)"
+        @tier "presentation"
+      totalPages : number = 0
+        @label "Total Pages"
+        @description "Total pages"
+        @tier "presentation"
+      height : number | string
+        @label "Height"
+        @description "Viewer height"
+        @tier "presentation"
+      showToolbar : boolean = true
+        @label "Show Toolbar"
+        @description "Show toolbar"
+        @tier "presentation"
+      showDownload : boolean = false
+        @label "Show Download"
+        @description "Show download button"
+        @tier "presentation"
+      showPrint : boolean = false
+        @label "Show Print"
+        @description "Show print button"
+        @tier "presentation"
+      actions : [DocumentViewerActionsItem] = []
+        @label "Actions"
+        @description "Actions"
+        @tier "presentation"
+      documents : [json] = []
+        @label "Documents"
+        @description "Multiple documents (tabbed view)"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state"
+        @tier "presentation"
+      error : json
+        @label "Error"
+        @description "Error state"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/document-viewer" as DocumentViewerPage -> DocumentViewerRender
+}

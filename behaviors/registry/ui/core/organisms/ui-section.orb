@@ -1,0 +1,189 @@
+{
+  "name": "ui-section",
+  "version": "1.0.0",
+  "description": "Section — UI factory (1:1 with the @almadar/ui section pattern).",
+  "orbitals": [
+    {
+      "name": "SectionOrbital",
+      "entity": {
+        "name": "SectionItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "SectionRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "SectionItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "SectionItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "divider": "@config.divider",
+                      "title": "@config.title",
+                      "variant": "@config.variant",
+                      "description": "@config.description",
+                      "padding": "@config.padding",
+                      "className": "@config.className",
+                      "headerClassName": "@config.headerClassName",
+                      "contentClassName": "@config.contentClassName",
+                      "entity": "SectionItem",
+                      "children": "@config.children",
+                      "error": "@config.error",
+                      "action": "@config.action",
+                      "type": "section",
+                      "isLoading": "@config.isLoading"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
+              "tier": "presentation"
+            },
+            "title": {
+              "type": "string",
+              "default": "",
+              "label": "Title",
+              "description": "Section title",
+              "tier": "presentation"
+            },
+            "children": {
+              "type": "node",
+              "label": "Children",
+              "description": "Children elements",
+              "tier": "presentation"
+            },
+            "variant": {
+              "type": "string",
+              "default": "default",
+              "label": "Variant",
+              "description": "Visual variant",
+              "tier": "presentation",
+              "values": [
+                "default",
+                "card",
+                "bordered",
+                "filled"
+              ]
+            },
+            "headerClassName": {
+              "type": "string",
+              "default": "",
+              "label": "Header Class Name",
+              "description": "Header custom class name",
+              "tier": "presentation"
+            },
+            "error": {
+              "type": "json",
+              "label": "Error",
+              "description": "Error state",
+              "tier": "presentation"
+            },
+            "description": {
+              "type": "string",
+              "default": "",
+              "label": "Description",
+              "description": "Section subtitle/description",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Custom class name",
+              "tier": "presentation"
+            },
+            "contentClassName": {
+              "type": "string",
+              "default": "",
+              "label": "Content Class Name",
+              "description": "Content custom class name",
+              "tier": "presentation"
+            },
+            "divider": {
+              "type": "boolean",
+              "default": false,
+              "label": "Divider",
+              "description": "Show divider below header",
+              "tier": "presentation"
+            },
+            "padding": {
+              "type": "string",
+              "default": "md",
+              "label": "Padding",
+              "description": "Padding amount",
+              "tier": "presentation",
+              "values": [
+                "none",
+                "sm",
+                "md",
+                "lg",
+                "xl"
+              ]
+            },
+            "action": {
+              "type": "node",
+              "label": "Action",
+              "description": "Action element (e.g., button, link)",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "SectionPage",
+          "path": "/section",
+          "traits": [
+            {
+              "ref": "SectionRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

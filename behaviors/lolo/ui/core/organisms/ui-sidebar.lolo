@@ -1,0 +1,121 @@
+app ui-sidebar "1.0.0"
+"Sidebar — UI factory (1:1 with the @almadar/ui sidebar pattern)."
+orbital SidebarOrbital {
+  type SidebarItemsItem = {
+    id : string!
+    label : string!
+    icon : string
+    badge : string | number
+    href : string
+    onClick : any
+    active : boolean
+    isActive : boolean
+    subItems : [json]
+  }
+
+  entity SidebarItem [runtime] {
+    id : string!
+  }
+
+  trait SidebarRender -> @rebindable SidebarItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          logo: @config.logo
+          logoSrc: @config.logoSrc
+          brandName: @config.brandName
+          items: @config.items
+          userSection: @config.userSection
+          footerContent: @config.footerContent
+          collapsed: @config.collapsed
+          defaultCollapsed: @config.defaultCollapsed
+          collapseChangeEvent: COLLAPSE_CHANGE
+          hideCollapseButton: @config.hideCollapseButton
+          showCloseButton: @config.showCloseButton
+          closeEvent: CLOSE
+          logoClickEvent: LOGO_CLICK
+          type: sidebar
+        })
+    }
+
+    emits {
+      COLLAPSE_CHANGE -> external {
+        collapsed : boolean!
+      }
+        @description "Event emitted when collapse state changes, payload: { collapsed: boolean }"
+        @tier "essential"
+      CLOSE -> external {
+        id : string
+      }
+        @description "Event emitted when close button is clicked"
+        @tier "essential"
+      LOGO_CLICK -> external {
+        id : string
+      }
+        @description "Event emitted when logo/brand is clicked"
+        @tier "essential"
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : json
+        @label "Error"
+        @description "Error state"
+        @tier "presentation"
+      logo : node
+        @label "Logo"
+        @description "Logo/Brand content - can be a ReactNode or logo config"
+        @tier "presentation"
+      logoSrc : string = ""
+        @label "Logo Src"
+        @description "Logo image source"
+        @tier "presentation"
+      brandName : string = KFlow
+        @label "Brand Name"
+        @description "Brand/App name"
+        @tier "presentation"
+      items : [SidebarItemsItem] = []
+        @label "Items"
+        @description "Navigation items"
+        @tier "presentation"
+      userSection : node
+        @label "User Section"
+        @description "User section content"
+        @tier "presentation"
+      footerContent : node
+        @label "Footer Content"
+        @description "Footer content (e.g., theme toggle)"
+        @tier "presentation"
+      collapsed : boolean = false
+        @label "Collapsed"
+        @description "Collapsed state (controlled)"
+        @tier "presentation"
+      defaultCollapsed : boolean = false
+        @label "Default Collapsed"
+        @description "Default collapsed state"
+        @tier "presentation"
+      hideCollapseButton : boolean = false
+        @label "Hide Collapse Button"
+        @description "Hide the collapse/expand button"
+        @tier "presentation"
+      showCloseButton : boolean = false
+        @label "Show Close Button"
+        @description "Show a close button (for mobile)"
+        @tier "presentation"
+    }
+  }
+
+  page "/sidebar" as SidebarPage -> SidebarRender
+}

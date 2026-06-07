@@ -1,0 +1,53 @@
+app ui-score-board "1.0.0"
+"ScoreBoard — UI factory (1:1 with the @almadar/ui score-board pattern)."
+orbital ScoreBoardOrbital {
+  entity ScoreBoardItem [runtime] {
+    id : string!
+  }
+
+  trait ScoreBoardRender -> @rebindable ScoreBoardItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          score: @config.score
+          highScore: @config.highScore
+          combo: @config.combo
+          multiplier: @config.multiplier
+          level: @config.level
+          className: @config.className
+          type: score-board
+        })
+    }
+
+    config {
+      score : number = 0
+        @label "Score"
+        @description "Current score"
+        @tier "presentation"
+      highScore : number = 0
+        @label "High Score"
+        @description "All-time high score"
+        @tier "presentation"
+      combo : number = 0
+        @label "Combo"
+        @description "Current combo count"
+        @tier "presentation"
+      multiplier : number = 0
+        @label "Multiplier"
+        @description "Score multiplier"
+        @tier "presentation"
+      level : number = 0
+        @label "Level"
+        @description "Current level"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/score-board" as ScoreBoardPage -> ScoreBoardRender
+}

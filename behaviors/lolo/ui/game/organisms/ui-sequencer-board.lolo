@@ -1,0 +1,51 @@
+app ui-sequencer-board "1.0.0"
+"SequencerBoard — UI factory (1:1 with the @almadar/ui sequencer-board pattern)."
+orbital SequencerBoardOrbital {
+  entity SequencerBoardItem [runtime] {
+    id : string!
+  }
+
+  trait SequencerBoardRender -> @rebindable SequencerBoardItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch SequencerBoardItem {})
+        (render-ui main {
+          entity: @entity
+          categoryColors: @config.categoryColors
+          stepDurationMs: @config.stepDurationMs
+          playEvent: PLAY
+          completeEvent: COMPLETE
+          type: sequencer-board
+        })
+    }
+
+    emits {
+      PLAY -> external {
+        sequence : [object]!
+      }
+        @description "Emits UI:{playEvent} with { sequence: string[] }"
+        @tier "essential"
+      COMPLETE -> external {
+        success : boolean!
+        sequence : [object]!
+      }
+        @description "Emits UI:{completeEvent} with { success: boolean }"
+        @tier "essential"
+    }
+
+    config {
+      categoryColors : json
+        @label "Category Colors"
+        @description "Category → color mapping"
+        @tier "presentation"
+      stepDurationMs : number = 1000
+        @label "Step Duration Ms"
+        @description "Playback speed in ms per step"
+        @tier "presentation"
+    }
+  }
+
+  page "/sequencer-board" as SequencerBoardPage -> SequencerBoardRender
+}

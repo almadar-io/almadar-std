@@ -1,0 +1,62 @@
+app ui-state-node "1.0.0"
+"StateNode — UI factory (1:1 with the @almadar/ui state-node pattern)."
+orbital StateNodeOrbital {
+  entity StateNodeItem [runtime] {
+    id : string!
+  }
+
+  trait StateNodeRender -> @rebindable StateNodeItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          name: @config.name
+          isCurrent: @config.isCurrent
+          isSelected: @config.isSelected
+          isInitial: @config.isInitial
+          position: @config.position
+          onClick: CLICK
+          className: @config.className
+          type: state-node
+        })
+    }
+
+    emits {
+      CLICK -> external {
+        id : string
+      }
+        @description "Click handler"
+        @tier "essential"
+    }
+
+    config {
+      name : string = ""
+        @label "Name"
+        @description "State name"
+        @tier "presentation"
+      isCurrent : boolean = false
+        @label "Is Current"
+        @description "Whether this is the current active state"
+        @tier "presentation"
+      isSelected : boolean = false
+        @label "Is Selected"
+        @description "Whether this node is selected for editing"
+        @tier "presentation"
+      isInitial : boolean = false
+        @label "Is Initial"
+        @description "Whether this is the initial state"
+        @tier "presentation"
+      position : json
+        @label "Position"
+        @description "Position on the graph canvas"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/state-node" as StateNodePage -> StateNodeRender
+}

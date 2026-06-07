@@ -1,0 +1,168 @@
+{
+  "name": "ui-trait-state-viewer",
+  "version": "1.0.0",
+  "description": "TraitStateViewer — UI factory (1:1 with the @almadar/ui trait-state-viewer pattern).",
+  "orbitals": [
+    {
+      "name": "TraitStateViewerOrbital",
+      "entity": {
+        "name": "TraitStateViewerItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "TraitStateViewerRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "TraitStateViewerItem",
+          "emits": [
+            {
+              "event": "STATE_CLICK",
+              "description": "Click handler for states",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "state",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "STATE_CLICK",
+                "name": "State Click",
+                "description": "Click handler for states",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "TraitStateViewerItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "size": "@config.size",
+                      "variant": "@config.variant",
+                      "isLoading": "@config.isLoading",
+                      "className": "@config.className",
+                      "error": "@config.error",
+                      "showTransitions": "@config.showTransitions",
+                      "onStateClick": "STATE_CLICK",
+                      "type": "trait-state-viewer",
+                      "stateStyles": "@config.stateStyles",
+                      "entity": "TraitStateViewerItem"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "variant": {
+              "type": "string",
+              "default": "compact",
+              "label": "Variant",
+              "description": "Display variant",
+              "tier": "presentation",
+              "values": [
+                "linear",
+                "compact",
+                "full"
+              ]
+            },
+            "size": {
+              "type": "string",
+              "default": "md",
+              "label": "Size",
+              "description": "Size variant",
+              "tier": "presentation",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            },
+            "stateStyles": {
+              "type": "json",
+              "label": "State Styles",
+              "description": "Custom state styles passed to StateIndicator",
+              "tier": "presentation"
+            },
+            "showTransitions": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Transitions",
+              "description": "Whether to show transition labels",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "error": {
+              "type": "json",
+              "label": "Error",
+              "description": "Error state",
+              "tier": "presentation"
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "TraitStateViewerPage",
+          "path": "/trait-state-viewer",
+          "traits": [
+            {
+              "ref": "TraitStateViewerRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

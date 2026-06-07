@@ -1,0 +1,133 @@
+app ui-box "1.0.0"
+"Box — UI factory (1:1 with the @almadar/ui box pattern)."
+orbital BoxOrbital {
+  entity BoxItem [runtime] {
+    id : string!
+  }
+
+  trait BoxRender -> @rebindable BoxItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          className: @config.className
+          padding: @config.padding
+          paddingX: @config.paddingX
+          paddingY: @config.paddingY
+          margin: @config.margin
+          marginX: @config.marginX
+          marginY: @config.marginY
+          bg: @config.bg
+          border: @config.border
+          rounded: @config.rounded
+          shadow: @config.shadow
+          display: @config.display
+          fullWidth: @config.fullWidth
+          fullHeight: @config.fullHeight
+          overflow: @config.overflow
+          position: @config.position
+          action: ACTION
+          actionPayload: @config.actionPayload
+          hoverEvent: HOVER
+          maxWidth: @config.maxWidth
+          children: @config.children
+          type: box
+        })
+    }
+
+    emits {
+      ACTION -> external {
+        id : string
+      }
+        @description "Declarative event name — emits UI:{action} via eventBus on click"
+        @tier "essential"
+      HOVER -> external {
+        id : string
+      }
+        @description "Declarative hover event — emits UI:{hoverEvent} with { hovered: true/false } on mouseEnter/mouseLeave"
+        @tier "essential"
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes applied to the root element."
+        @tier "presentation"
+      padding : "none" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" = none
+        @label "Padding"
+        @description "Padding on all sides"
+        @tier "presentation"
+      paddingX : "none" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" = none
+        @label "Padding X"
+        @description "Horizontal padding (overrides padding for x-axis)"
+        @tier "presentation"
+      paddingY : "none" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" = none
+        @label "Padding Y"
+        @description "Vertical padding (overrides padding for y-axis)"
+        @tier "presentation"
+      margin : "none" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "auto" = none
+        @label "Margin"
+        @description "Margin on all sides"
+        @tier "presentation"
+      marginX : "none" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "auto" = none
+        @label "Margin X"
+        @description "Horizontal margin"
+        @tier "presentation"
+      marginY : "none" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "auto" = none
+        @label "Margin Y"
+        @description "Vertical margin"
+        @tier "presentation"
+      bg : "transparent" | "primary" | "secondary" | "muted" | "accent" | "surface" | "overlay" = transparent
+        @label "Bg"
+        @description "Background color"
+        @tier "presentation"
+      border : boolean = false
+        @label "Border"
+        @description "Show border"
+        @tier "presentation"
+      rounded : "none" | "sm" | "md" | "lg" | "xl" | "2xl" | "full" = none
+        @label "Rounded"
+        @description "Border radius"
+        @tier "presentation"
+      shadow : "none" | "sm" | "md" | "lg" | "xl" = none
+        @label "Shadow"
+        @description "Box shadow"
+        @tier "presentation"
+      display : "block" | "inline" | "inline-block" | "flex" | "inline-flex" | "grid" = block
+        @label "Display"
+        @description "Display type"
+        @tier "presentation"
+      fullWidth : boolean = false
+        @label "Full Width"
+        @description "Fill available width"
+        @tier "presentation"
+      fullHeight : boolean = false
+        @label "Full Height"
+        @description "Fill available height"
+        @tier "presentation"
+      overflow : "auto" | "hidden" | "visible" | "scroll" = auto
+        @label "Overflow"
+        @description "Overflow behavior"
+        @tier "presentation"
+      position : "relative" | "absolute" | "fixed" | "sticky" = relative
+        @label "Position"
+        @description "Position"
+        @tier "presentation"
+      actionPayload : json
+        @label "Action Payload"
+        @description "Payload to include with the action event"
+        @tier "presentation"
+      maxWidth : string = ""
+        @label "Max Width"
+        @description "Maximum width (CSS value, e.g., '550px', '80rem')"
+        @tier "presentation"
+      children : node
+        @label "Children"
+        @description "Children elements"
+        @tier "presentation"
+    }
+  }
+
+  page "/box" as BoxPage -> BoxRender
+}

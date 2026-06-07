@@ -1,0 +1,43 @@
+app ui-content-section "1.0.0"
+"ContentSection — UI factory (1:1 with the @almadar/ui content-section pattern)."
+orbital ContentSectionOrbital {
+  entity ContentSectionItem [runtime] {
+    id : string!
+  }
+
+  trait ContentSectionRender -> @rebindable ContentSectionItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          children: @config.children
+          background: @config.background
+          padding: @config.padding
+          className: @config.className
+          type: content-section
+        })
+    }
+
+    config {
+      children : node
+        @label "Children"
+        @description "Section content"
+        @tier "presentation"
+      background : "default" | "alt" | "dark" | "gradient" = default
+        @label "Background"
+        @description "Background style"
+        @tier "presentation"
+      padding : "sm" | "md" | "lg" = lg
+        @label "Padding"
+        @description "Vertical padding size"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional class names"
+        @tier "presentation"
+    }
+  }
+
+  page "/content-section" as ContentSectionPage -> ContentSectionRender
+}

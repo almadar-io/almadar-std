@@ -1,0 +1,109 @@
+{
+  "name": "ui-tag-cloud",
+  "version": "1.0.0",
+  "description": "TagCloud — UI factory (1:1 with the @almadar/ui tag-cloud pattern).",
+  "orbitals": [
+    {
+      "name": "TagCloudOrbital",
+      "entity": {
+        "name": "TagCloudItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "TagCloudRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "TagCloudItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "type": "tag-cloud",
+                      "tags": "@config.tags",
+                      "variant": "@config.variant"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "variant": {
+              "type": "string",
+              "default": "default",
+              "label": "Variant",
+              "description": "variant prop",
+              "tier": "presentation",
+              "values": [
+                "default",
+                "primary",
+                "accent"
+              ]
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "className prop",
+              "tier": "presentation"
+            },
+            "tags": {
+              "type": "[json]",
+              "default": [],
+              "label": "Tags",
+              "description": "tags prop",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "TagCloudPage",
+          "path": "/tag-cloud",
+          "traits": [
+            {
+              "ref": "TagCloudRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

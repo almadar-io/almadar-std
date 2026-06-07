@@ -1,0 +1,70 @@
+app ui-filter-pill "1.0.0"
+"FilterPill — UI factory (1:1 with the @almadar/ui filter-pill pattern)."
+orbital FilterPillOrbital {
+  entity FilterPillItem [runtime] {
+    id : string!
+  }
+
+  trait FilterPillRender -> @rebindable FilterPillItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          className: @config.className
+          variant: @config.variant
+          size: @config.size
+          label: @config.label
+          icon: @config.icon
+          onRemove: REMOVE
+          removable: @config.removable
+          onClick: CLICK
+          clickEvent: CLICK
+          removeEvent: REMOVE
+          type: filter-pill
+        })
+    }
+
+    emits {
+      REMOVE -> external {
+        label : string!
+      }
+        @description "Called when the user clicks the remove (×) button"
+        @tier "essential"
+      CLICK -> external {
+        label : string!
+      }
+        @description "Click handler for the body of the pill (filter toggle)"
+        @tier "essential"
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes applied to the root element."
+        @tier "presentation"
+      variant : "default" | "primary" | "secondary" | "success" | "warning" | "danger" | "info" | "neutral" = default
+        @label "Variant"
+        @description "variant prop"
+        @tier "presentation"
+      size : "sm" | "md" | "lg" = sm
+        @label "Size"
+        @description "size prop"
+        @tier "presentation"
+      label : string | number
+        @label "Label"
+        @description "Pill label text (alternative to children for schema-driven rendering)."
+        @tier "presentation"
+      icon : node
+        @label "Icon"
+        @description "Optional icon name (Lucide icon string) or React node"
+        @tier "presentation"
+      removable : boolean = true
+        @label "Removable"
+        @description "Disable the remove button (renders without × control)"
+        @tier "presentation"
+    }
+  }
+
+  page "/filter-pill" as FilterPillPage -> FilterPillRender
+}

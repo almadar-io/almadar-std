@@ -1,0 +1,73 @@
+app ui-svg-grid "1.0.0"
+"SvgGrid — UI factory (1:1 with the @almadar/ui svg-grid pattern)."
+orbital SvgGridOrbital {
+  entity SvgGridItem [runtime] {
+    id : string!
+  }
+
+  trait SvgGridRender -> @rebindable SvgGridItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          x: @config.x
+          y: @config.y
+          cols: @config.cols
+          rows: @config.rows
+          spacing: @config.spacing
+          nodeRadius: @config.nodeRadius
+          color: @config.color
+          opacity: @config.opacity
+          className: @config.className
+          highlights: @config.highlights
+          type: svg-grid
+        })
+    }
+
+    config {
+      x : number = 0
+        @label "X"
+        @description "x prop"
+        @tier "presentation"
+      y : number = 0
+        @label "Y"
+        @description "y prop"
+        @tier "presentation"
+      cols : number = 4
+        @label "Cols"
+        @description "cols prop"
+        @tier "presentation"
+      rows : number = 3
+        @label "Rows"
+        @description "rows prop"
+        @tier "presentation"
+      spacing : number = 20
+        @label "Spacing"
+        @description "spacing prop"
+        @tier "presentation"
+      nodeRadius : number = 3
+        @label "Node Radius"
+        @description "nodeRadius prop"
+        @tier "presentation"
+      color : string = "var(--color-primary)"
+        @label "Color"
+        @description "color prop"
+        @tier "presentation"
+      opacity : number = 1
+        @label "Opacity"
+        @description "opacity prop"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+      highlights : [number] = []
+        @label "Highlights"
+        @description "highlights prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/svg-grid" as SvgGridPage -> SvgGridRender
+}

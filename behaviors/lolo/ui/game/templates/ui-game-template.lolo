@@ -1,0 +1,60 @@
+app ui-game-template "1.0.0"
+"GameTemplate — UI factory (1:1 with the @almadar/ui game-template pattern)."
+orbital GameTemplateOrbital {
+  entity GameTemplateItem [runtime] {
+    id : string!
+  }
+
+  trait GameTemplateRender -> @rebindable GameTemplateItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch GameTemplateItem {})
+        (render-ui main {
+          entity: @entity
+          className: @config.className
+          title: @config.title
+          children: @config.children
+          hud: @config.hud
+          debugPanel: @config.debugPanel
+          showDebugPanel: @config.showDebugPanel
+          controls: @config.controls
+          type: game-template
+        })
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "Additional class name"
+        @tier "presentation"
+      title : string = Game
+        @label "Title"
+        @description "Title of the game"
+        @tier "presentation"
+      children : node
+        @label "Children"
+        @description "The main game canvas or content"
+        @tier "presentation"
+      hud : node
+        @label "Hud"
+        @description "HUD overlay content (scores, health, etc.)"
+        @tier "presentation"
+      debugPanel : node
+        @label "Debug Panel"
+        @description "Debug panel content"
+        @tier "presentation"
+      showDebugPanel : boolean = false
+        @label "Show Debug Panel"
+        @description "Whether the debug panel is visible"
+        @tier "presentation"
+      controls : json
+        @label "Controls"
+        @description "Game controls"
+        @tier "presentation"
+    }
+  }
+
+  page "/game-template" as GameTemplatePage -> GameTemplateRender
+}

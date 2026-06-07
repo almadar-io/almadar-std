@@ -1,0 +1,63 @@
+app ui-master-detail-layout "1.0.0"
+"MasterDetailLayout — UI factory (1:1 with the @almadar/ui master-detail-layout pattern)."
+orbital MasterDetailLayoutOrbital {
+  entity MasterDetailLayoutItem [runtime] {
+    id : string!
+  }
+
+  trait MasterDetailLayoutRender -> @rebindable MasterDetailLayoutItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          master: @config.master
+          detail: @config.detail
+          emptyDetail: @config.emptyDetail
+          hasSelection: @config.hasSelection
+          masterWidth: @config.masterWidth
+          className: @config.className
+          masterClassName: @config.masterClassName
+          detailClassName: @config.detailClassName
+          type: master-detail-layout
+        })
+    }
+
+    config {
+      master : node
+        @label "Master"
+        @description "Master panel content (usually a list)"
+        @tier "presentation"
+      detail : node
+        @label "Detail"
+        @description "Detail panel content"
+        @tier "presentation"
+      emptyDetail : node
+        @label "Empty Detail"
+        @description "Content shown when nothing is selected"
+        @tier "presentation"
+      hasSelection : boolean = false
+        @label "Has Selection"
+        @description "Whether an item is currently selected"
+        @tier "presentation"
+      masterWidth : string = "350px"
+        @label "Master Width"
+        @description "Width of master panel (e.g., '350px', '30%')"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      masterClassName : string = ""
+        @label "Master Class Name"
+        @description "Class for master pane"
+        @tier "presentation"
+      detailClassName : string = ""
+        @label "Detail Class Name"
+        @description "Class for detail pane"
+        @tier "presentation"
+    }
+  }
+
+  page "/master-detail-layout" as MasterDetailLayoutPage -> MasterDetailLayoutRender
+}

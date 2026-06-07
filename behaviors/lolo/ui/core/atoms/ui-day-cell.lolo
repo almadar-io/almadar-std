@@ -1,0 +1,47 @@
+app ui-day-cell "1.0.0"
+"DayCell — UI factory (1:1 with the @almadar/ui day-cell pattern)."
+orbital DayCellOrbital {
+  entity DayCellItem [runtime] {
+    id : string!
+  }
+
+  trait DayCellRender -> @rebindable DayCellItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          date: @config.date
+          isToday: @config.isToday
+          onClick: CLICK
+          className: @config.className
+          type: day-cell
+        })
+    }
+
+    emits {
+      CLICK -> external {
+        date : object
+      }
+        @description "Called when the day is clicked"
+        @tier "essential"
+    }
+
+    config {
+      date : json
+        @label "Date"
+        @description "The date this cell represents"
+        @tier "presentation"
+      isToday : boolean = false
+        @label "Is Today"
+        @description "Whether this date is today"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/day-cell" as DayCellPage -> DayCellRender
+}

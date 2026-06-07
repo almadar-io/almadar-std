@@ -1,0 +1,74 @@
+app ui-lightbox "1.0.0"
+"Lightbox — UI factory (1:1 with the @almadar/ui lightbox pattern)."
+orbital LightboxOrbital {
+  type LightboxImagesItem = {
+    src : string
+    alt : string
+    caption : string
+  }
+
+  entity LightboxItem [runtime] {
+    id : string!
+  }
+
+  trait LightboxRender -> @rebindable LightboxItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          images: @config.images
+          currentIndex: @config.currentIndex
+          isOpen: @config.isOpen
+          showCounter: @config.showCounter
+          closeAction: @config.closeAction
+          onClose: CLOSE
+          onIndexChange: INDEX_CHANGE
+          className: @config.className
+          type: lightbox
+        })
+    }
+
+    emits {
+      CLOSE -> external {
+        id : string
+      }
+        @description "Direct onClose callback"
+        @tier "essential"
+      INDEX_CHANGE -> external {
+        index : number
+      }
+        @description "Direct onIndexChange callback"
+        @tier "essential"
+    }
+
+    config {
+      images : [LightboxImagesItem] = []
+        @label "Images"
+        @description "Array of images to display"
+        @tier "presentation"
+      currentIndex : number = 0
+        @label "Current Index"
+        @description "Current image index"
+        @tier "presentation"
+      isOpen : boolean = false
+        @label "Is Open"
+        @description "Whether the lightbox is open"
+        @tier "presentation"
+      showCounter : boolean = true
+        @label "Show Counter"
+        @description "Show image counter (e.g., '3 of 12')"
+        @tier "presentation"
+      closeAction : string = ""
+        @label "Close Action"
+        @description "Declarative close event name"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/lightbox" as LightboxPage -> LightboxRender
+}

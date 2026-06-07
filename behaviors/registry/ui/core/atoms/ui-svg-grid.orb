@@ -1,0 +1,160 @@
+{
+  "name": "ui-svg-grid",
+  "version": "1.0.0",
+  "description": "SvgGrid — UI factory (1:1 with the @almadar/ui svg-grid pattern).",
+  "orbitals": [
+    {
+      "name": "SvgGridOrbital",
+      "entity": {
+        "name": "SvgGridItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "SvgGridRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "SvgGridItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "nodeRadius": "@config.nodeRadius",
+                      "highlights": "@config.highlights",
+                      "className": "@config.className",
+                      "type": "svg-grid",
+                      "rows": "@config.rows",
+                      "cols": "@config.cols",
+                      "spacing": "@config.spacing",
+                      "opacity": "@config.opacity",
+                      "y": "@config.y",
+                      "x": "@config.x",
+                      "color": "@config.color"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "color": {
+              "type": "string",
+              "default": "var(--color-primary)",
+              "label": "Color",
+              "description": "color prop",
+              "tier": "presentation"
+            },
+            "cols": {
+              "type": "number",
+              "default": 4.0,
+              "label": "Cols",
+              "description": "cols prop",
+              "tier": "presentation"
+            },
+            "highlights": {
+              "type": "[number]",
+              "default": [],
+              "label": "Highlights",
+              "description": "highlights prop",
+              "tier": "presentation",
+              "items": {
+                "type": "number"
+              }
+            },
+            "opacity": {
+              "type": "number",
+              "default": 1.0,
+              "label": "Opacity",
+              "description": "opacity prop",
+              "tier": "presentation"
+            },
+            "rows": {
+              "type": "number",
+              "default": 3.0,
+              "label": "Rows",
+              "description": "rows prop",
+              "tier": "presentation"
+            },
+            "x": {
+              "type": "number",
+              "default": 0.0,
+              "label": "X",
+              "description": "x prop",
+              "tier": "presentation"
+            },
+            "y": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Y",
+              "description": "y prop",
+              "tier": "presentation"
+            },
+            "nodeRadius": {
+              "type": "number",
+              "default": 3.0,
+              "label": "Node Radius",
+              "description": "nodeRadius prop",
+              "tier": "presentation"
+            },
+            "spacing": {
+              "type": "number",
+              "default": 20.0,
+              "label": "Spacing",
+              "description": "spacing prop",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "className prop",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "SvgGridPage",
+          "path": "/svg-grid",
+          "traits": [
+            {
+              "ref": "SvgGridRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

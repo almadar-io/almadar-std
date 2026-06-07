@@ -1,0 +1,48 @@
+app ui-auth-layout "1.0.0"
+"AuthLayout — UI factory (1:1 with the @almadar/ui auth-layout pattern)."
+orbital AuthLayoutOrbital {
+  entity AuthLayoutItem [runtime] {
+    id : string!
+  }
+
+  trait AuthLayoutRender -> @rebindable AuthLayoutItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          appName: @config.appName
+          logo: @config.logo
+          backgroundImage: @config.backgroundImage
+          showBranding: @config.showBranding
+          brandingContent: @config.brandingContent
+          type: auth-layout
+        })
+    }
+
+    config {
+      appName : string = "{{APP_TITLE}}"
+        @label "App Name"
+        @description "App name"
+        @tier "presentation"
+      logo : node
+        @label "Logo"
+        @description "Logo component or URL"
+        @tier "presentation"
+      backgroundImage : string = ""
+        @label "Background Image"
+        @description "Background image URL"
+        @tier "presentation"
+      showBranding : boolean = true
+        @label "Show Branding"
+        @description "Show branding panel on the side"
+        @tier "presentation"
+      brandingContent : node
+        @label "Branding Content"
+        @description "Branding panel content"
+        @tier "presentation"
+    }
+  }
+
+  page "/auth-layout" as AuthLayoutPage -> AuthLayoutRender
+}

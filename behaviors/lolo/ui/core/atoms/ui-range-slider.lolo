@@ -1,0 +1,99 @@
+app ui-range-slider "1.0.0"
+"RangeSlider — UI factory (1:1 with the @almadar/ui range-slider pattern)."
+orbital RangeSliderOrbital {
+  entity RangeSliderItem [runtime] {
+    id : string!
+  }
+
+  trait RangeSliderRender -> @rebindable RangeSliderItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          className: @config.className
+          min: @config.min
+          max: @config.max
+          value: @config.value
+          step: @config.step
+          showTooltip: @config.showTooltip
+          showTicks: @config.showTicks
+          buffered: @config.buffered
+          size: @config.size
+          disabled: @config.disabled
+          action: ACTION
+          actionPayload: @config.actionPayload
+          onChange: CHANGE
+          formatValue: FORMAT_VALUE
+          type: range-slider
+        })
+    }
+
+    emits {
+      ACTION -> external {
+        id : string
+      }
+        @description "Declarative event name for value changes"
+        @tier "essential"
+      CHANGE -> external {
+        value : number
+      }
+        @description "Direct onChange callback"
+        @tier "essential"
+      FORMAT_VALUE -> external {
+        value : number
+      }
+        @description "Format function for tooltip display"
+        @tier "essential"
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes applied to the root element."
+        @tier "presentation"
+      min : number = 0
+        @label "Min"
+        @description "Minimum value"
+        @tier "presentation"
+      max : number = 100
+        @label "Max"
+        @description "Maximum value"
+        @tier "presentation"
+      value : number = 0
+        @label "Value"
+        @description "Current value"
+        @tier "presentation"
+      step : number = 1
+        @label "Step"
+        @description "Step increment"
+        @tier "presentation"
+      showTooltip : boolean = false
+        @label "Show Tooltip"
+        @description "Show tooltip with current value on drag"
+        @tier "presentation"
+      showTicks : boolean = false
+        @label "Show Ticks"
+        @description "Show tick marks at step intervals"
+        @tier "presentation"
+      buffered : number = 0
+        @label "Buffered"
+        @description "Buffered range (0-100), for media seek bars"
+        @tier "presentation"
+      size : "sm" | "md" | "lg" = md
+        @label "Size"
+        @description "Slider size"
+        @tier "presentation"
+      disabled : boolean = false
+        @label "Disabled"
+        @description "Disabled state"
+        @tier "presentation"
+      actionPayload : json
+        @label "Action Payload"
+        @description "Payload to include with the action event"
+        @tier "presentation"
+    }
+  }
+
+  page "/range-slider" as RangeSliderPage -> RangeSliderRender
+}

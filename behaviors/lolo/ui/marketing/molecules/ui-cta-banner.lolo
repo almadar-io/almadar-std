@@ -1,0 +1,58 @@
+app ui-cta-banner "1.0.0"
+"CtaBanner — UI factory (1:1 with the @almadar/ui cta-banner pattern)."
+orbital CtaBannerOrbital {
+  entity CtaBannerItem [runtime] {
+    id : string!
+  }
+
+  trait CtaBannerRender -> @rebindable CtaBannerItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          title: @config.title
+          subtitle: @config.subtitle
+          primaryAction: @config.primaryAction
+          secondaryAction: @config.secondaryAction
+          background: @config.background
+          align: @config.align
+          className: @config.className
+          type: cta-banner
+        })
+    }
+
+    config {
+      title : string = ""
+        @label "Title"
+        @description "Banner headline"
+        @tier "presentation"
+      subtitle : string = ""
+        @label "Subtitle"
+        @description "Supporting text below the title"
+        @tier "presentation"
+      primaryAction : json
+        @label "Primary Action"
+        @description "Primary action button config"
+        @tier "presentation"
+      secondaryAction : json
+        @label "Secondary Action"
+        @description "Secondary action button config"
+        @tier "presentation"
+      background : "default" | "alt" | "dark" | "gradient" | "primary" = alt
+        @label "Background"
+        @description "Background style"
+        @tier "presentation"
+      align : "center" | "left" = center
+        @label "Align"
+        @description "Content alignment"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional class names"
+        @tier "presentation"
+    }
+  }
+
+  page "/cta-banner" as CtaBannerPage -> CtaBannerRender
+}

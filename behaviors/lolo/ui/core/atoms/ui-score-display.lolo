@@ -1,0 +1,58 @@
+app ui-score-display "1.0.0"
+"ScoreDisplay — UI factory (1:1 with the @almadar/ui score-display pattern)."
+orbital ScoreDisplayOrbital {
+  entity ScoreDisplayItem [runtime] {
+    id : string!
+  }
+
+  trait ScoreDisplayRender -> @rebindable ScoreDisplayItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          value: @config.value
+          label: @config.label
+          icon: @config.icon
+          size: @config.size
+          className: @config.className
+          animated: @config.animated
+          locale: @config.locale
+          type: score-display
+        })
+    }
+
+    config {
+      value : number = 0
+        @label "Value"
+        @description "Current score value"
+        @tier "presentation"
+      label : string = ""
+        @label "Label"
+        @description "Label to display before score"
+        @tier "presentation"
+      icon : node
+        @label "Icon"
+        @description "Icon component or emoji"
+        @tier "presentation"
+      size : "sm" | "md" | "lg" | "xl" = md
+        @label "Size"
+        @description "Size variant"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      animated : boolean = true
+        @label "Animated"
+        @description "Animation on value change"
+        @tier "presentation"
+      locale : string = "en-US"
+        @label "Locale"
+        @description "Number formatting locale"
+        @tier "presentation"
+    }
+  }
+
+  page "/score-display" as ScoreDisplayPage -> ScoreDisplayRender
+}

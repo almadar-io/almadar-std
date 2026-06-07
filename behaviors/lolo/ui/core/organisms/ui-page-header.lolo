@@ -1,0 +1,105 @@
+app ui-page-header "1.0.0"
+"PageHeader — UI factory (1:1 with the @almadar/ui page-header pattern)."
+orbital PageHeaderOrbital {
+  type PageHeaderBreadcrumbsItem = {
+    label : string!
+    href : string
+  }
+
+  entity PageHeaderItem [runtime] {
+    id : string!
+  }
+
+  trait PageHeaderRender -> @rebindable PageHeaderItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch PageHeaderItem {})
+        (render-ui main {
+          title: @config.title
+          subtitle: @config.subtitle
+          showBack: @config.showBack
+          backEvent: BACK
+          breadcrumbs: @config.breadcrumbs
+          status: @config.status
+          actions: @config.actions
+          isLoading: @config.isLoading
+          error: @config.error
+          entity: PageHeaderItem
+          tabs: @config.tabs
+          activeTab: @config.activeTab
+          onTabChange: TAB_CHANGE
+          children: @config.children
+          className: @config.className
+          type: page-header
+        })
+    }
+
+    emits {
+      BACK -> external {
+        id : string
+      }
+        @description "Event to emit when back is clicked (default: BACK)"
+        @tier "essential"
+      TAB_CHANGE -> external {
+        value : string
+      }
+        @description "onTabChange prop"
+        @tier "essential"
+    }
+
+    config {
+      title : json
+        @label "Title"
+        @description "Page title - accepts unknown to handle generated code accessing dynamic entity data"
+        @tier "presentation"
+      subtitle : json
+        @label "Subtitle"
+        @description "Optional subtitle/description"
+        @tier "presentation"
+      showBack : boolean = false
+        @label "Show Back"
+        @description "Show back button"
+        @tier "presentation"
+      breadcrumbs : [PageHeaderBreadcrumbsItem] = []
+        @label "Breadcrumbs"
+        @description "Breadcrumbs"
+        @tier "presentation"
+      status : json
+        @label "Status"
+        @description "Status badge"
+        @tier "presentation"
+      actions : [json] = []
+        @label "Actions"
+        @description "Actions array - first action with variant='primary' (or first action) is the main action"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : json
+        @label "Error"
+        @description "Error state"
+        @tier "presentation"
+      tabs : [json] = []
+        @label "Tabs"
+        @description "Tabs for sub-navigation"
+        @tier "presentation"
+      activeTab : string = ""
+        @label "Active Tab"
+        @description "activeTab prop"
+        @tier "presentation"
+      children : node
+        @label "Children"
+        @description "Custom content in the header"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/page-header" as PageHeaderPage -> PageHeaderRender
+}

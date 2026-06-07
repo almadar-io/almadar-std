@@ -1,0 +1,425 @@
+[
+  {
+    "organism": "ui-data-grid",
+    "orbital": "DataGridOrbital",
+    "tier": "molecules",
+    "factoryPath": "behaviors/functions/ui/core/molecules/ui-data-grid.ts",
+    "entities": [
+      {
+        "name": "DataGridItem",
+        "fields": [],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "DataGridRender",
+        "emittedEvents": [
+          "SELECTION",
+          "LOAD_MORE",
+          "CHILDREN",
+          "RENDER_ITEM"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "SELECTION",
+            "direction": "emit",
+            "description": "Selection change event name (emits UI:{selectionEvent} with { selectedIds: string[] })",
+            "tier": "essential"
+          },
+          {
+            "name": "LOAD_MORE",
+            "direction": "emit",
+            "description": "Event emitted when more items needed: UI:{loadMoreEvent}",
+            "tier": "essential"
+          },
+          {
+            "name": "CHILDREN",
+            "direction": "emit",
+            "description": "Render prop for custom per-card content, typed to the grid's entity shape `T`. When provided, `fields` and `itemActions` are ignored.",
+            "tier": "essential"
+          },
+          {
+            "name": "RENDER_ITEM",
+            "direction": "emit",
+            "description": "Per-item render function (schema-level alias for children render prop). In .orb schemas: ['fn', 'item', { pattern tree with @item.field bindings }] The compiler converts this to the children render prop.",
+            "tier": "essential"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "accepts",
+            "type": "string",
+            "default": "",
+            "label": "Accepts",
+            "description": "When set, the container accepts drops whose dragGroup matches this value (or '*' for any group)",
+            "tier": "presentation"
+          },
+          {
+            "key": "className",
+            "type": "string",
+            "default": "",
+            "label": "Class Name",
+            "description": "Additional CSS classes",
+            "tier": "presentation"
+          },
+          {
+            "key": "cols",
+            "type": "number",
+            "default": 0,
+            "label": "Cols",
+            "description": "Number of columns (uses auto-fit if omitted)",
+            "tier": "presentation"
+          },
+          {
+            "key": "columns",
+            "type": "[DataGridColumnsItem]",
+            "default": [],
+            "label": "Columns",
+            "description": "Alias for `fields` — the compiler emits `columns` for field defs.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "date",
+                    "currency",
+                    "number",
+                    "boolean",
+                    "percent"
+                  ]
+                },
+                "colorMap": {
+                  "name": "colorMap",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "h3",
+                    "h4",
+                    "body",
+                    "caption",
+                    "badge",
+                    "small",
+                    "progress"
+                  ]
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "dndItemIdField",
+            "type": "string",
+            "default": "",
+            "label": "Dnd Item Id Field",
+            "description": "Row field used as the @dnd-kit draggable id (default 'id')",
+            "tier": "presentation"
+          },
+          {
+            "key": "dndRoot",
+            "type": "boolean",
+            "default": false,
+            "label": "Dnd Root",
+            "description": "Mark this container as the DnD root for its subtree — descendant zones share one DndContext (cross-container drag). Use on an outer container whose own items are not draggable.",
+            "tier": "presentation"
+          },
+          {
+            "key": "dragGroup",
+            "type": "string",
+            "default": "",
+            "label": "Drag Group",
+            "description": "When set, items in this container are draggable and announce this group as their source",
+            "tier": "presentation"
+          },
+          {
+            "key": "dropEvent",
+            "type": "string",
+            "default": "",
+            "label": "Drop Event",
+            "description": "Bus event fired on cross-container drop. Payload: { id, sourceGroup, targetGroup, newIndex }",
+            "tier": "presentation"
+          },
+          {
+            "key": "error",
+            "type": "json",
+            "label": "Error",
+            "description": "Error state",
+            "tier": "presentation"
+          },
+          {
+            "key": "fields",
+            "type": "[DataGridFieldsItem]",
+            "default": [],
+            "label": "Fields",
+            "description": "Field definitions for rendering each card. The pattern contract in `@almadar/patterns` documents `columns` as the wire-format alias the compiler emits — both names resolve to the same shape here. Pass either.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "h3",
+                    "h4",
+                    "body",
+                    "caption",
+                    "badge",
+                    "small",
+                    "progress"
+                  ]
+                },
+                "colorMap": {
+                  "name": "colorMap",
+                  "required": false,
+                  "type": "string"
+                },
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "date",
+                    "currency",
+                    "number",
+                    "boolean",
+                    "percent"
+                  ]
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "gap",
+            "type": "string",
+            "default": "md",
+            "label": "Gap",
+            "description": "Gap between cards",
+            "tier": "presentation",
+            "enumValues": [
+              "none",
+              "sm",
+              "md",
+              "lg",
+              "xl"
+            ]
+          },
+          {
+            "key": "hasMore",
+            "type": "boolean",
+            "default": false,
+            "label": "Has More",
+            "description": "Whether more items are available for infinite scroll",
+            "tier": "presentation"
+          },
+          {
+            "key": "imageField",
+            "type": "string",
+            "default": "",
+            "label": "Image Field",
+            "description": "Entity field name containing an image URL for card thumbnails",
+            "tier": "presentation"
+          },
+          {
+            "key": "infiniteScroll",
+            "type": "boolean",
+            "default": false,
+            "label": "Infinite Scroll",
+            "description": "Enable infinite scroll loading",
+            "tier": "presentation"
+          },
+          {
+            "key": "isLoading",
+            "type": "boolean",
+            "default": false,
+            "label": "Is Loading",
+            "description": "Loading state",
+            "tier": "presentation"
+          },
+          {
+            "key": "itemActions",
+            "type": "[DataGridItemActionsItem]",
+            "default": [],
+            "label": "Item Actions",
+            "description": "Per-item action buttons",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "primary",
+                    "secondary",
+                    "ghost",
+                    "danger"
+                  ]
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "event": {
+                  "name": "event",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "look",
+            "type": "string",
+            "default": "dense",
+            "label": "Look",
+            "description": "Layer 2 visual treatment — mirrors the `entity-table` look enum so data-grid / data-list / entity-table share one knob name from authors.",
+            "tier": "presentation",
+            "enumValues": [
+              "dense",
+              "spacious",
+              "striped",
+              "borderless",
+              "card-rows"
+            ]
+          },
+          {
+            "key": "maxInlineActions",
+            "type": "number",
+            "default": 0,
+            "label": "Max Inline Actions",
+            "description": "Max inline primary action buttons before the rest collapse into a '⋯' overflow menu. Omit = all inline.",
+            "tier": "presentation"
+          },
+          {
+            "key": "minCardWidth",
+            "type": "number",
+            "default": 280,
+            "label": "Min Card Width",
+            "description": "Minimum card width in pixels (used when cols is not set, default 280)",
+            "tier": "presentation"
+          },
+          {
+            "key": "pageSize",
+            "type": "number",
+            "default": 0,
+            "label": "Page Size",
+            "description": "Max items to show before 'Show More' button. Defaults to 0 (disabled).",
+            "tier": "presentation"
+          },
+          {
+            "key": "positionEvent",
+            "type": "string",
+            "default": "",
+            "label": "Position Event",
+            "description": "Bus event fired N times per drop (one per item in affected zones) so the trait can persist new positions for the WHOLE zone, not just the moved item. Payload: { id, position }",
+            "tier": "presentation"
+          },
+          {
+            "key": "reorderEvent",
+            "type": "string",
+            "default": "",
+            "label": "Reorder Event",
+            "description": "Bus event fired on in-container reorder. Payload: { id, oldIndex, newIndex }",
+            "tier": "presentation"
+          },
+          {
+            "key": "scrollX",
+            "type": "boolean",
+            "default": false,
+            "label": "Scroll X",
+            "description": "Lay items in a single horizontally-scrolling row (kanban columns) sized to `minCardWidth` instead of a wrapping grid.",
+            "tier": "presentation"
+          },
+          {
+            "key": "selectable",
+            "type": "boolean",
+            "default": false,
+            "label": "Selectable",
+            "description": "Enable multi-select with checkboxes",
+            "tier": "presentation"
+          },
+          {
+            "key": "sortable",
+            "type": "boolean",
+            "default": false,
+            "label": "Sortable",
+            "description": "Enable in-container reorder; items can be dragged to new positions among siblings",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "DataGridPage",
+        "defaultPath": "/data-grid",
+        "primaryEntity": "DataGridItem"
+      }
+    ],
+    "emittedEvents": [
+      "CHILDREN",
+      "LOAD_MORE",
+      "RENDER_ITEM",
+      "SELECTION"
+    ],
+    "listenedEvents": []
+  }
+]

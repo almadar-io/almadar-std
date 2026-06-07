@@ -1,0 +1,63 @@
+app ui-geometric-pattern "1.0.0"
+"GeometricPattern — UI factory (1:1 with the @almadar/ui geometric-pattern pattern)."
+orbital GeometricPatternOrbital {
+  entity GeometricPatternItem [runtime] {
+    id : string!
+  }
+
+  trait GeometricPatternRender -> @rebindable GeometricPatternItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          variant: @config.variant
+          mode: @config.mode
+          opacity: @config.opacity
+          color: @config.color
+          scale: @config.scale
+          strokeWidth: @config.strokeWidth
+          children: @config.children
+          className: @config.className
+          type: geometric-pattern
+        })
+    }
+
+    config {
+      variant : "star8" | "star6" | "khatam" | "star10" | "star12" | "rosette-double" | "rosette-filled" | "seigaiha" | "greek-key" | "celtic-knot" | "kolam" | "arch" | "arabesque-vine" | "arabesque-net" = star8
+        @label "Variant"
+        @description "Which geometric tile design"
+        @tier "presentation"
+      mode : "background" | "left" | "right" | "dual" | "around" | "frame" = background
+        @label "Mode"
+        @description "Layout mode"
+        @tier "presentation"
+      opacity : number = 0.06
+        @label "Opacity"
+        @description "Overall opacity (default: 0.06)"
+        @tier "presentation"
+      color : string = "var(--color-primary)"
+        @label "Color"
+        @description "Stroke color passed to PatternTile"
+        @tier "presentation"
+      scale : number = 1
+        @label "Scale"
+        @description "Tile scale multiplier (default: 1)"
+        @tier "presentation"
+      strokeWidth : number = 0.5
+        @label "Stroke Width"
+        @description "Stroke width passed to PatternTile"
+        @tier "presentation"
+      children : node
+        @label "Children"
+        @description "Content to wrap (used in frame mode)"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/geometric-pattern" as GeometricPatternPage -> GeometricPatternRender
+}

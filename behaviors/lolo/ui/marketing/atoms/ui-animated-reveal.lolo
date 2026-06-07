@@ -1,0 +1,77 @@
+app ui-animated-reveal "1.0.0"
+"AnimatedReveal — UI factory (1:1 with the @almadar/ui animated-reveal pattern)."
+orbital AnimatedRevealOrbital {
+  entity AnimatedRevealItem [runtime] {
+    id : string!
+  }
+
+  trait AnimatedRevealRender -> @rebindable AnimatedRevealItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          className: @config.className
+          trigger: @config.trigger
+          animation: @config.animation
+          duration: @config.duration
+          delay: @config.delay
+          threshold: @config.threshold
+          once: @config.once
+          animate: @config.animate
+          easing: @config.easing
+          children: CHILDREN
+          type: animated-reveal
+        })
+    }
+
+    emits {
+      CHILDREN -> external {
+        id : string
+      }
+        @description "Children: ReactNode or render function receiving animated state"
+        @tier "essential"
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes applied to the root element."
+        @tier "presentation"
+      trigger : "scroll" | "hover" | "manual" = scroll
+        @label "Trigger"
+        @description "What triggers the animation"
+        @tier "presentation"
+      animation : "fade-up" | "fade-down" | "fade-in" | "fade-left" | "fade-right" | "scale" | "scale-up" | "none" = "fade-up"
+        @label "Animation"
+        @description "Built-in animation preset"
+        @tier "presentation"
+      duration : number = 600
+        @label "Duration"
+        @description "Animation duration in ms (default: 600)"
+        @tier "presentation"
+      delay : number = 0
+        @label "Delay"
+        @description "Delay before animation starts in ms (default: 0)"
+        @tier "presentation"
+      threshold : number = 0.15
+        @label "Threshold"
+        @description "How much of the element must be visible before triggering, 0-1 (default: 0.15)"
+        @tier "presentation"
+      once : boolean = true
+        @label "Once"
+        @description "Animate only the first time the element enters the viewport (default: true)"
+        @tier "presentation"
+      animate : boolean = false
+        @label "Animate"
+        @description "Manual control: when trigger='manual', set this to true to animate"
+        @tier "presentation"
+      easing : string = "cubic-bezier(0.16, 1, 0.3, 1)"
+        @label "Easing"
+        @description "Easing function (default: cubic-bezier(0.16, 1, 0.3, 1))"
+        @tier "presentation"
+    }
+  }
+
+  page "/animated-reveal" as AnimatedRevealPage -> AnimatedRevealRender
+}

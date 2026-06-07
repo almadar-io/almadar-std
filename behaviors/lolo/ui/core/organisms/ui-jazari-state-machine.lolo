@@ -1,0 +1,58 @@
+app ui-jazari-state-machine "1.0.0"
+"JazariStateMachine — UI factory (1:1 with the @almadar/ui jazari-state-machine pattern)."
+orbital JazariStateMachineOrbital {
+  entity JazariStateMachineItem [runtime] {
+    id : string!
+  }
+
+  trait JazariStateMachineRender -> @rebindable JazariStateMachineItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          schema: @config.schema
+          traitIndex: @config.traitIndex
+          entityFields: @config.entityFields
+          direction: @config.direction
+          type: jazari-state-machine
+        })
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : json
+        @label "Error"
+        @description "Error state"
+        @tier "presentation"
+      schema : json
+        @label "Schema"
+        @description "Full schema — extracts first trait's state machine"
+        @tier "presentation"
+      traitIndex : number = 0
+        @label "Trait Index"
+        @description "Which trait to visualize (default: 0)"
+        @tier "presentation"
+      entityFields : [string] = []
+        @label "Entity Fields"
+        @description "Override entity field labels"
+        @tier "presentation"
+      direction : "ltr" | "rtl" = ltr
+        @label "Direction"
+        @description "Text direction (default: 'ltr')"
+        @tier "presentation"
+    }
+  }
+
+  page "/jazari-state-machine" as JazariStateMachinePage -> JazariStateMachineRender
+}

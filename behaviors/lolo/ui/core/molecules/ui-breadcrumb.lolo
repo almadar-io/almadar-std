@@ -1,0 +1,53 @@
+app ui-breadcrumb "1.0.0"
+"Breadcrumb — UI factory (1:1 with the @almadar/ui breadcrumb pattern)."
+orbital BreadcrumbOrbital {
+  type BreadcrumbItemsItem = {
+    label : string!
+    href : string
+    path : string
+    icon : json
+    onClick : any
+    isCurrent : boolean
+    event : string
+  }
+
+  entity BreadcrumbItem [runtime] {
+    id : string!
+  }
+
+  trait BreadcrumbRender -> @rebindable BreadcrumbItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          items: @config.items
+          separator: @config.separator
+          maxItems: @config.maxItems
+          className: @config.className
+          type: breadcrumb
+        })
+    }
+
+    config {
+      items : [BreadcrumbItemsItem] = []
+        @label "Items"
+        @description "Breadcrumb items"
+        @tier "presentation"
+      separator : json
+        @label "Separator"
+        @description "Separator icon (canonical kebab-case name or LucideIcon component)"
+        @tier "presentation"
+      maxItems : number = 0
+        @label "Max Items"
+        @description "Maximum items to show (truncates with ellipsis)"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/breadcrumb" as BreadcrumbPage -> BreadcrumbRender
+}

@@ -1,0 +1,52 @@
+app ui-transition-arrow "1.0.0"
+"TransitionArrow — UI factory (1:1 with the @almadar/ui transition-arrow pattern)."
+orbital TransitionArrowOrbital {
+  entity TransitionArrowItem [runtime] {
+    id : string!
+  }
+
+  trait TransitionArrowRender -> @rebindable TransitionArrowItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          eventLabel: @config.eventLabel
+          guardHint: @config.guardHint
+          isActive: @config.isActive
+          onClick: CLICK
+          className: @config.className
+          type: transition-arrow
+        })
+    }
+
+    emits {
+      CLICK -> external {
+        id : string
+      }
+        @description "Click handler"
+        @tier "essential"
+    }
+
+    config {
+      eventLabel : string = ""
+        @label "Event Label"
+        @description "Event label shown on the arrow"
+        @tier "presentation"
+      guardHint : string = ""
+        @label "Guard Hint"
+        @description "Guard hint shown below event"
+        @tier "presentation"
+      isActive : boolean = false
+        @label "Is Active"
+        @description "Whether this transition is currently active"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes for the SVG group"
+        @tier "presentation"
+    }
+  }
+
+  page "/transition-arrow" as TransitionArrowPage -> TransitionArrowRender
+}

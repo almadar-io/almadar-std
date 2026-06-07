@@ -1,0 +1,46 @@
+app ui-variable-panel "1.0.0"
+"VariablePanel — UI factory (1:1 with the @almadar/ui variable-panel pattern)."
+orbital VariablePanelOrbital {
+  type VariablePanelVariablesItem = {
+    name : string!
+    value : number!
+    min : number
+    max : number
+    unit : string
+  }
+
+  entity VariablePanelItem [runtime] {
+    id : string!
+  }
+
+  trait VariablePanelRender -> @rebindable VariablePanelItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          entityName: @config.entityName
+          variables: @config.variables
+          className: @config.className
+          type: variable-panel
+        })
+    }
+
+    config {
+      entityName : string = ""
+        @label "Entity Name"
+        @description "Entity name"
+        @tier "presentation"
+      variables : [VariablePanelVariablesItem] = []
+        @label "Variables"
+        @description "Variables to display"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/variable-panel" as VariablePanelPage -> VariablePanelRender
+}

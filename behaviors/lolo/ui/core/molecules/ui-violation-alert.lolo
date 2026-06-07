@@ -1,0 +1,75 @@
+app ui-violation-alert "1.0.0"
+"ViolationAlert — UI factory (1:1 with the @almadar/ui violation-alert pattern)."
+orbital ViolationAlertOrbital {
+  type ViolationAlertViolation = {
+    id : string!
+    law : string!
+    article : string!
+    message : string!
+    actionType : "measure" | "admin" | "penalty"!
+    adminAction : string
+    penaltyAction : string
+    fieldId : string
+    tabId : string
+  }
+
+  entity ViolationAlertItem [runtime] {
+    id : string!
+  }
+
+  trait ViolationAlertRender -> @rebindable ViolationAlertItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          violation: @config.violation
+          severity: @config.severity
+          dismissible: @config.dismissible
+          onDismiss: DISMISS
+          onNavigateToField: NAVIGATE_TO_FIELD
+          compact: @config.compact
+          className: @config.className
+          type: violation-alert
+        })
+    }
+
+    emits {
+      DISMISS -> external {
+        id : string
+      }
+        @description "Dismiss handler"
+        @tier "essential"
+      NAVIGATE_TO_FIELD -> external {
+        fieldId : string
+      }
+        @description "Navigate to the field that caused violation"
+        @tier "essential"
+    }
+
+    config {
+      violation : ViolationAlertViolation
+        @label "Violation"
+        @description "Violation data"
+        @tier "presentation"
+      severity : "warning" | "error" = warning
+        @label "Severity"
+        @description "Visual severity (derived from actionType if not specified)"
+        @tier "presentation"
+      dismissible : boolean = false
+        @label "Dismissible"
+        @description "Dismissible alert"
+        @tier "presentation"
+      compact : boolean = false
+        @label "Compact"
+        @description "Compact display mode"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/violation-alert" as ViolationAlertPage -> ViolationAlertRender
+}

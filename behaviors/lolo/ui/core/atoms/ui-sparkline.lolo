@@ -1,0 +1,58 @@
+app ui-sparkline "1.0.0"
+"Sparkline — UI factory (1:1 with the @almadar/ui sparkline pattern)."
+orbital SparklineOrbital {
+  entity SparklineItem [runtime] {
+    id : string!
+  }
+
+  trait SparklineRender -> @rebindable SparklineItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          data: @config.data
+          color: @config.color
+          width: @config.width
+          height: @config.height
+          strokeWidth: @config.strokeWidth
+          fill: @config.fill
+          className: @config.className
+          type: sparkline
+        })
+    }
+
+    config {
+      data : [number] = []
+        @label "Data"
+        @description "Numeric series to plot. Length < 2 renders nothing."
+        @tier "presentation"
+      color : "auto" | "primary" | "success" | "warning" | "error" | "info" | "muted" = auto
+        @label "Color"
+        @description "Stroke color. `auto` (default): success when the series trends up (last ≥ first), error when it trends down."
+        @tier "presentation"
+      width : number = 80
+        @label "Width"
+        @description "SVG width in px. Default 80."
+        @tier "presentation"
+      height : number = 32
+        @label "Height"
+        @description "SVG height in px. Default 32."
+        @tier "presentation"
+      strokeWidth : number = 2
+        @label "Stroke Width"
+        @description "Stroke width in px. Default 2."
+        @tier "presentation"
+      fill : boolean = false
+        @label "Fill"
+        @description "Fill the area under the line with the stroke color at low opacity."
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes."
+        @tier "presentation"
+    }
+  }
+
+  page "/sparkline" as SparklinePage -> SparklineRender
+}

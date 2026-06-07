@@ -1,0 +1,68 @@
+app ui-svg-lobe "1.0.0"
+"SvgLobe — UI factory (1:1 with the @almadar/ui svg-lobe pattern)."
+orbital SvgLobeOrbital {
+  entity SvgLobeItem [runtime] {
+    id : string!
+  }
+
+  trait SvgLobeRender -> @rebindable SvgLobeItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          cx: @config.cx
+          cy: @config.cy
+          rx: @config.rx
+          ry: @config.ry
+          rotation: @config.rotation
+          shells: @config.shells
+          color: @config.color
+          opacity: @config.opacity
+          className: @config.className
+          type: svg-lobe
+        })
+    }
+
+    config {
+      cx : number = 0
+        @label "Cx"
+        @description "cx prop"
+        @tier "presentation"
+      cy : number = 0
+        @label "Cy"
+        @description "cy prop"
+        @tier "presentation"
+      rx : number = 14
+        @label "Rx"
+        @description "rx prop"
+        @tier "presentation"
+      ry : number = 20
+        @label "Ry"
+        @description "ry prop"
+        @tier "presentation"
+      rotation : number = 0
+        @label "Rotation"
+        @description "rotation prop"
+        @tier "presentation"
+      shells : number = 2
+        @label "Shells"
+        @description "shells prop"
+        @tier "presentation"
+      color : string = "var(--color-primary)"
+        @label "Color"
+        @description "color prop"
+        @tier "presentation"
+      opacity : number = 1
+        @label "Opacity"
+        @description "opacity prop"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/svg-lobe" as SvgLobePage -> SvgLobeRender
+}

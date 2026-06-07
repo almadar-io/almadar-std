@@ -1,0 +1,45 @@
+app ui-resource-bar "1.0.0"
+"ResourceBar — UI factory (1:1 with the @almadar/ui resource-bar pattern)."
+orbital ResourceBarOrbital {
+  type ResourceBarResourcesItem = {
+    icon : node
+    label : string!
+    value : number
+    max : number
+  }
+
+  entity ResourceBarItem [runtime] {
+    id : string!
+  }
+
+  trait ResourceBarRender -> @rebindable ResourceBarItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          resources: @config.resources
+          size: @config.size
+          className: @config.className
+          type: resource-bar
+        })
+    }
+
+    config {
+      resources : [ResourceBarResourcesItem] = []
+        @label "Resources"
+        @description "Resources to display"
+        @tier "presentation"
+      size : "sm" | "md" | "lg" = md
+        @label "Size"
+        @description "Size variant"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/resource-bar" as ResourceBarPage -> ResourceBarRender
+}

@@ -1,0 +1,77 @@
+app ui-form-section-header "1.0.0"
+"FormSectionHeader — UI factory (1:1 with the @almadar/ui form-section-header pattern)."
+orbital FormSectionHeaderOrbital {
+  entity FormSectionHeaderItem [runtime] {
+    id : string!
+  }
+
+  trait FormSectionHeaderRender -> @rebindable FormSectionHeaderItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          title: @config.title
+          subtitle: @config.subtitle
+          isCollapsed: @config.isCollapsed
+          onToggle: TOGGLE
+          badge: @config.badge
+          badgeVariant: @config.badgeVariant
+          icon: @config.icon
+          hasErrors: @config.hasErrors
+          isComplete: @config.isComplete
+          className: @config.className
+          type: form-section-header
+        })
+    }
+
+    emits {
+      TOGGLE -> external {
+        id : string
+      }
+        @description "Toggle collapse handler (makes header clickable)"
+        @tier "essential"
+    }
+
+    config {
+      title : string = ""
+        @label "Title"
+        @description "Section title"
+        @tier "presentation"
+      subtitle : string = ""
+        @label "Subtitle"
+        @description "Section subtitle"
+        @tier "presentation"
+      isCollapsed : boolean = false
+        @label "Is Collapsed"
+        @description "Whether section is collapsed"
+        @tier "presentation"
+      badge : string = ""
+        @label "Badge"
+        @description "Badge text (e.g., '3 fields', 'Required', 'Complete')"
+        @tier "presentation"
+      badgeVariant : "default" | "primary" | "success" | "warning" | "danger" = default
+        @label "Badge Variant"
+        @description "Badge variant"
+        @tier "presentation"
+      icon : string = "circle"
+        @label "Icon"
+        @description "Icon name to show before title"
+        @tier "presentation"
+      hasErrors : boolean = false
+        @label "Has Errors"
+        @description "Whether section has validation errors"
+        @tier "presentation"
+      isComplete : boolean = false
+        @label "Is Complete"
+        @description "Whether section is complete"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/form-section-header" as FormSectionHeaderPage -> FormSectionHeaderRender
+}

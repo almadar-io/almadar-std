@@ -1,0 +1,125 @@
+{
+  "name": "ui-score-board",
+  "version": "1.0.0",
+  "description": "ScoreBoard — UI factory (1:1 with the @almadar/ui score-board pattern).",
+  "orbitals": [
+    {
+      "name": "ScoreBoardOrbital",
+      "entity": {
+        "name": "ScoreBoardItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ScoreBoardRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "ScoreBoardItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "combo": "@config.combo",
+                      "multiplier": "@config.multiplier",
+                      "className": "@config.className",
+                      "level": "@config.level",
+                      "score": "@config.score",
+                      "highScore": "@config.highScore",
+                      "type": "score-board"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "multiplier": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Multiplier",
+              "description": "Score multiplier",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "score": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Score",
+              "description": "Current score",
+              "tier": "presentation"
+            },
+            "combo": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Combo",
+              "description": "Current combo count",
+              "tier": "presentation"
+            },
+            "level": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Level",
+              "description": "Current level",
+              "tier": "presentation"
+            },
+            "highScore": {
+              "type": "number",
+              "default": 0.0,
+              "label": "High Score",
+              "description": "All-time high score",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "ScoreBoardPage",
+          "path": "/score-board",
+          "traits": [
+            {
+              "ref": "ScoreBoardRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

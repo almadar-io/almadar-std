@@ -1,0 +1,38 @@
+app ui-damage-number "1.0.0"
+"DamageNumber — UI factory (1:1 with the @almadar/ui damage-number pattern)."
+orbital DamageNumberOrbital {
+  entity DamageNumberItem [runtime] {
+    id : string!
+  }
+
+  trait DamageNumberRender -> @rebindable DamageNumberItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          value: @config.value
+          size: @config.size
+          className: @config.className
+          type: damage-number
+        })
+    }
+
+    config {
+      value : number = 0
+        @label "Value"
+        @description "The damage/heal value to display"
+        @tier "presentation"
+      size : "sm" | "md" | "lg" = md
+        @label "Size"
+        @description "Size variant"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/damage-number" as DamageNumberPage -> DamageNumberRender
+}

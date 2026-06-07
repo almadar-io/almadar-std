@@ -1,0 +1,63 @@
+app ui-feature-card "1.0.0"
+"FeatureCard — UI factory (1:1 with the @almadar/ui feature-card pattern)."
+orbital FeatureCardOrbital {
+  entity FeatureCardItem [runtime] {
+    id : string!
+  }
+
+  trait FeatureCardRender -> @rebindable FeatureCardItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          icon: @config.icon
+          title: @config.title
+          description: @config.description
+          href: @config.href
+          linkLabel: @config.linkLabel
+          variant: @config.variant
+          size: @config.size
+          className: @config.className
+          type: feature-card
+        })
+    }
+
+    config {
+      icon : string = "circle"
+        @label "Icon"
+        @description "Icon name (Lucide string) or ReactNode"
+        @tier "presentation"
+      title : string = ""
+        @label "Title"
+        @description "Feature title"
+        @tier "presentation"
+      description : string = ""
+        @label "Description"
+        @description "Feature description"
+        @tier "presentation"
+      href : string = ""
+        @label "Href"
+        @description "Optional link URL"
+        @tier "presentation"
+      linkLabel : string = "Learn more"
+        @label "Link Label"
+        @description "Label for the link button"
+        @tier "presentation"
+      variant : "default" | "bordered" | "elevated" | "interactive" = bordered
+        @label "Variant"
+        @description "Card visual variant"
+        @tier "presentation"
+      size : "sm" | "md" | "lg" = md
+        @label "Size"
+        @description "Card size affecting icon and spacing"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional class names"
+        @tier "presentation"
+    }
+  }
+
+  page "/feature-card" as FeatureCardPage -> FeatureCardRender
+}

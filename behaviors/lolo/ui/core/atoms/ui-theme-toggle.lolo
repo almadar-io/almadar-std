@@ -1,0 +1,38 @@
+app ui-theme-toggle "1.0.0"
+"ThemeToggle — UI factory (1:1 with the @almadar/ui theme-toggle pattern)."
+orbital ThemeToggleOrbital {
+  entity ThemeToggleItem [runtime] {
+    id : string!
+  }
+
+  trait ThemeToggleRender -> @rebindable ThemeToggleItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          className: @config.className
+          size: @config.size
+          showLabel: @config.showLabel
+          type: theme-toggle
+        })
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      size : "sm" | "md" | "lg" = md
+        @label "Size"
+        @description "Size variant"
+        @tier "presentation"
+      showLabel : boolean = false
+        @label "Show Label"
+        @description "Show label text"
+        @tier "presentation"
+    }
+  }
+
+  page "/theme-toggle" as ThemeTogglePage -> ThemeToggleRender
+}

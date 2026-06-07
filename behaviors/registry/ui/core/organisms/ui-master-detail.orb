@@ -1,0 +1,194 @@
+{
+  "name": "ui-master-detail",
+  "version": "1.0.0",
+  "description": "MasterDetail — UI factory (1:1 with the @almadar/ui master-detail pattern).",
+  "orbitals": [
+    {
+      "name": "MasterDetailOrbital",
+      "entity": {
+        "name": "MasterDetailItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "MasterDetailRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "MasterDetailItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "MasterDetailItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "error": "@config.error",
+                      "detailFields": "@config.detailFields",
+                      "className": "@config.className",
+                      "masterFields": "@config.masterFields",
+                      "loading": "@config.loading",
+                      "entity": "@entity",
+                      "sortDirection": "@config.sortDirection",
+                      "activeFilters": "@config.activeFilters",
+                      "searchValue": "@config.searchValue",
+                      "sortBy": "@config.sortBy",
+                      "isLoading": "@config.isLoading",
+                      "pageSize": "@config.pageSize",
+                      "selectedIds": "@config.selectedIds",
+                      "type": "master-detail",
+                      "totalCount": "@config.totalCount"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "activeFilters": {
+              "type": "json",
+              "label": "Active Filters",
+              "description": "Active filters",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
+              "tier": "presentation"
+            },
+            "sortDirection": {
+              "type": "string",
+              "default": "",
+              "label": "Sort Direction",
+              "description": "Current sort direction",
+              "tier": "presentation"
+            },
+            "error": {
+              "type": "json",
+              "label": "Error",
+              "description": "Error state",
+              "tier": "presentation"
+            },
+            "sortBy": {
+              "type": "string",
+              "default": "",
+              "label": "Sort By",
+              "description": "Current sort field",
+              "tier": "presentation"
+            },
+            "detailFields": {
+              "type": "[string]",
+              "default": [],
+              "label": "Detail Fields",
+              "description": "Fields for detail view (passed through but typically handled by separate render_ui)",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "searchValue": {
+              "type": "string",
+              "default": "",
+              "label": "Search Value",
+              "description": "Current search query value",
+              "tier": "presentation"
+            },
+            "loading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Loading",
+              "description": "Loading state (alias for isLoading)",
+              "tier": "presentation"
+            },
+            "masterFields": {
+              "type": "[string]",
+              "default": [],
+              "label": "Master Fields",
+              "description": "Fields to show in the master list (maps to DataTable columns)",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "pageSize": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Page Size",
+              "description": "Number of items per page",
+              "tier": "presentation"
+            },
+            "totalCount": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Total Count",
+              "description": "Total number of items",
+              "tier": "presentation"
+            },
+            "selectedIds": {
+              "type": "[json]",
+              "default": [],
+              "label": "Selected Ids",
+              "description": "Currently selected item IDs",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "MasterDetailPage",
+          "path": "/master-detail",
+          "traits": [
+            {
+              "ref": "MasterDetailRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

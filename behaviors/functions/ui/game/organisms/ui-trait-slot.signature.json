@@ -1,0 +1,289 @@
+[
+  {
+    "organism": "ui-trait-slot",
+    "orbital": "TraitSlotOrbital",
+    "tier": "organisms",
+    "factoryPath": "behaviors/functions/ui/game/organisms/ui-trait-slot.ts",
+    "entities": [
+      {
+        "name": "TraitSlotItem",
+        "fields": [],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "TraitSlotRender",
+        "emittedEvents": [
+          "ITEM_DROP",
+          "DRAG_START",
+          "CLICK",
+          "REMOVE"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "ITEM_DROP",
+            "direction": "emit",
+            "description": "-- Drag and drop --",
+            "tier": "essential"
+          },
+          {
+            "name": "DRAG_START",
+            "direction": "emit",
+            "description": "Called when drag starts from this slot",
+            "tier": "essential"
+          },
+          {
+            "name": "CLICK",
+            "direction": "emit",
+            "description": "-- Callbacks --",
+            "tier": "essential"
+          },
+          {
+            "name": "REMOVE",
+            "direction": "emit",
+            "description": "Remove handler",
+            "tier": "essential"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "categoryColors",
+            "type": "json",
+            "label": "Category Colors",
+            "description": "Category → color mapping",
+            "tier": "presentation"
+          },
+          {
+            "key": "className",
+            "type": "string",
+            "default": "",
+            "label": "Class Name",
+            "description": "Additional CSS classes",
+            "tier": "presentation"
+          },
+          {
+            "key": "draggable",
+            "type": "boolean",
+            "default": false,
+            "label": "Draggable",
+            "description": "Whether this slot's equipped item is draggable",
+            "tier": "presentation"
+          },
+          {
+            "key": "equippedItem",
+            "type": "TraitSlotEquippedItem",
+            "label": "Equipped Item",
+            "description": "Currently equipped item, if any",
+            "tier": "presentation",
+            "properties": {
+              "id": {
+                "name": "id",
+                "required": true,
+                "type": "string"
+              },
+              "name": {
+                "name": "name",
+                "required": true,
+                "type": "string"
+              },
+              "category": {
+                "name": "category",
+                "required": true,
+                "type": "string"
+              },
+              "description": {
+                "name": "description",
+                "required": false,
+                "type": "string"
+              },
+              "iconEmoji": {
+                "name": "iconEmoji",
+                "required": false,
+                "type": "string"
+              },
+              "stateMachine": {
+                "name": "stateMachine",
+                "required": false,
+                "properties": {
+                  "description": {
+                    "name": "description",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "transitions": {
+                    "name": "transitions",
+                    "required": true,
+                    "type": "array",
+                    "items": {
+                      "properties": {
+                        "from": {
+                          "name": "from",
+                          "required": true,
+                          "type": "string"
+                        },
+                        "event": {
+                          "name": "event",
+                          "required": true,
+                          "type": "string"
+                        },
+                        "to": {
+                          "name": "to",
+                          "required": true,
+                          "type": "string"
+                        },
+                        "guardHint": {
+                          "name": "guardHint",
+                          "required": false,
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "currentState": {
+                    "name": "currentState",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "name": {
+                    "name": "name",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "states": {
+                    "name": "states",
+                    "required": true,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "type": "object"
+              },
+              "iconUrl": {
+                "name": "iconUrl",
+                "required": false,
+                "type": "string"
+              }
+            }
+          },
+          {
+            "key": "error",
+            "type": "json",
+            "label": "Error",
+            "description": "Error state",
+            "tier": "presentation"
+          },
+          {
+            "key": "feedback",
+            "type": "string",
+            "default": "correct",
+            "label": "Feedback",
+            "description": "Per-slot correctness feedback after a failed attempt",
+            "tier": "presentation",
+            "enumValues": [
+              "correct",
+              "wrong"
+            ]
+          },
+          {
+            "key": "isLoading",
+            "type": "boolean",
+            "default": false,
+            "label": "Is Loading",
+            "description": "Loading state",
+            "tier": "presentation"
+          },
+          {
+            "key": "lockLabel",
+            "type": "string",
+            "default": "",
+            "label": "Lock Label",
+            "description": "Label shown when locked",
+            "tier": "presentation"
+          },
+          {
+            "key": "locked",
+            "type": "boolean",
+            "default": false,
+            "label": "Locked",
+            "description": "Whether slot is locked",
+            "tier": "presentation"
+          },
+          {
+            "key": "selected",
+            "type": "boolean",
+            "default": false,
+            "label": "Selected",
+            "description": "Whether slot is selected",
+            "tier": "presentation"
+          },
+          {
+            "key": "showTooltip",
+            "type": "boolean",
+            "default": true,
+            "label": "Show Tooltip",
+            "description": "Show tooltip on hover",
+            "tier": "presentation"
+          },
+          {
+            "key": "size",
+            "type": "string",
+            "default": "md",
+            "label": "Size",
+            "description": "Size variant",
+            "tier": "presentation",
+            "enumValues": [
+              "sm",
+              "md",
+              "lg"
+            ]
+          },
+          {
+            "key": "slotNumber",
+            "type": "number",
+            "default": 0,
+            "label": "Slot Number",
+            "description": "Slot index (1-based)",
+            "tier": "presentation"
+          },
+          {
+            "key": "tooltipFrameUrl",
+            "type": "string",
+            "default": "",
+            "label": "Tooltip Frame Url",
+            "description": "Optional tooltip frame image URL",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "TraitSlotPage",
+        "defaultPath": "/trait-slot",
+        "primaryEntity": "TraitSlotItem"
+      }
+    ],
+    "emittedEvents": [
+      "CLICK",
+      "DRAG_START",
+      "ITEM_DROP",
+      "REMOVE"
+    ],
+    "listenedEvents": []
+  }
+]

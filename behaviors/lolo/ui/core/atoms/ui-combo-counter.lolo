@@ -1,0 +1,48 @@
+app ui-combo-counter "1.0.0"
+"ComboCounter — UI factory (1:1 with the @almadar/ui combo-counter pattern)."
+orbital ComboCounterOrbital {
+  entity ComboCounterItem [runtime] {
+    id : string!
+  }
+
+  trait ComboCounterRender -> @rebindable ComboCounterItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          combo: @config.combo
+          multiplier: @config.multiplier
+          streak: @config.streak
+          size: @config.size
+          className: @config.className
+          type: combo-counter
+        })
+    }
+
+    config {
+      combo : number = 0
+        @label "Combo"
+        @description "Current combo count"
+        @tier "presentation"
+      multiplier : number = 0
+        @label "Multiplier"
+        @description "Score multiplier"
+        @tier "presentation"
+      streak : number = 0
+        @label "Streak"
+        @description "Current streak"
+        @tier "presentation"
+      size : "sm" | "md" | "lg" = md
+        @label "Size"
+        @description "Size variant"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/combo-counter" as ComboCounterPage -> ComboCounterRender
+}

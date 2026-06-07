@@ -1,0 +1,66 @@
+app ui-action-tile "1.0.0"
+"ActionTile — UI factory (1:1 with the @almadar/ui action-tile pattern)."
+orbital ActionTileOrbital {
+  type ActionTileAction = {
+    id : string!
+    name : string!
+    category : string!
+    description : string
+    iconEmoji : string
+    iconUrl : string
+    stateMachine : ActionTileActionStateMachine
+  }
+  type ActionTileActionStateMachine = {
+    name : string!
+    states : [string]!
+    currentState : string!
+    transitions : [ActionTileActionStateMachineTransitionsItem]!
+    description : string
+  }
+  type ActionTileActionStateMachineTransitionsItem = {
+    from : string!
+    to : string!
+    event : string!
+    guardHint : string
+  }
+
+  entity ActionTileItem [runtime] {
+    id : string!
+  }
+
+  trait ActionTileRender -> @rebindable ActionTileItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          action: @config.action
+          size: @config.size
+          disabled: @config.disabled
+          categoryColors: @config.categoryColors
+          type: action-tile
+        })
+    }
+
+    config {
+      action : ActionTileAction
+        @label "Action"
+        @description "The action data"
+        @tier "presentation"
+      size : "sm" | "md" | "lg" = md
+        @label "Size"
+        @description "Size variant"
+        @tier "presentation"
+      disabled : boolean = false
+        @label "Disabled"
+        @description "Whether the tile is disabled / already used"
+        @tier "presentation"
+      categoryColors : json
+        @label "Category Colors"
+        @description "Category → color mapping"
+        @tier "presentation"
+    }
+  }
+
+  page "/action-tile" as ActionTilePage -> ActionTileRender
+}

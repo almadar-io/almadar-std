@@ -1,0 +1,58 @@
+app ui-tooltip "1.0.0"
+"Tooltip — UI factory (1:1 with the @almadar/ui tooltip pattern)."
+orbital TooltipOrbital {
+  entity TooltipItem [runtime] {
+    id : string!
+  }
+
+  trait TooltipRender -> @rebindable TooltipItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          content: @config.content
+          children: @config.children
+          position: @config.position
+          delay: @config.delay
+          hideDelay: @config.hideDelay
+          showArrow: @config.showArrow
+          className: @config.className
+          type: tooltip
+        })
+    }
+
+    config {
+      content : node
+        @label "Content"
+        @description "Tooltip content"
+        @tier "presentation"
+      children : node
+        @label "Children"
+        @description "Tooltip trigger element (ReactElement or ReactNode that will be wrapped in span)"
+        @tier "presentation"
+      position : "top" | "bottom" | "left" | "right" = top
+        @label "Position"
+        @description "Tooltip position"
+        @tier "presentation"
+      delay : number = 200
+        @label "Delay"
+        @description "Show delay in milliseconds"
+        @tier "presentation"
+      hideDelay : number = 0
+        @label "Hide Delay"
+        @description "Hide delay in milliseconds"
+        @tier "presentation"
+      showArrow : boolean = true
+        @label "Show Arrow"
+        @description "Show arrow"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/tooltip" as TooltipPage -> TooltipRender
+}

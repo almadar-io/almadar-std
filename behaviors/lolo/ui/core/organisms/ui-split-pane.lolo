@@ -1,0 +1,68 @@
+app ui-split-pane "1.0.0"
+"SplitPane — UI factory (1:1 with the @almadar/ui split-pane pattern)."
+orbital SplitPaneOrbital {
+  entity SplitPaneItem [runtime] {
+    id : string!
+  }
+
+  trait SplitPaneRender -> @rebindable SplitPaneItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          direction: @config.direction
+          ratio: @config.ratio
+          minSize: @config.minSize
+          resizable: @config.resizable
+          left: @config.left
+          right: @config.right
+          className: @config.className
+          leftClassName: @config.leftClassName
+          rightClassName: @config.rightClassName
+          type: split-pane
+        })
+    }
+
+    config {
+      direction : "horizontal" | "vertical" = horizontal
+        @label "Direction"
+        @description "Direction of the split"
+        @tier "presentation"
+      ratio : number = 0
+        @label "Ratio"
+        @description "Initial ratio (0-100, percentage of first pane)"
+        @tier "presentation"
+      minSize : number = 100
+        @label "Min Size"
+        @description "Minimum size of either pane in pixels"
+        @tier "presentation"
+      resizable : boolean = true
+        @label "Resizable"
+        @description "Allow user resizing"
+        @tier "presentation"
+      left : node
+        @label "Left"
+        @description "Content for the left/top pane"
+        @tier "presentation"
+      right : node
+        @label "Right"
+        @description "Content for the right/bottom pane"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      leftClassName : string = ""
+        @label "Left Class Name"
+        @description "Class for left/top pane"
+        @tier "presentation"
+      rightClassName : string = ""
+        @label "Right Class Name"
+        @description "Class for right/bottom pane"
+        @tier "presentation"
+    }
+  }
+
+  page "/split-pane" as SplitPanePage -> SplitPaneRender
+}

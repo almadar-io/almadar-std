@@ -1,0 +1,51 @@
+app ui-law-reference-tooltip "1.0.0"
+"LawReferenceTooltip — UI factory (1:1 with the @almadar/ui law-reference-tooltip pattern)."
+orbital LawReferenceTooltipOrbital {
+  type LawReferenceTooltipReference = {
+    law : string!
+    lawName : string
+    article : string!
+    clause : string
+    link : string
+  }
+
+  entity LawReferenceTooltipItem [runtime] {
+    id : string!
+  }
+
+  trait LawReferenceTooltipRender -> @rebindable LawReferenceTooltipItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          reference: @config.reference
+          children: @config.children
+          position: @config.position
+          className: @config.className
+          type: law-reference-tooltip
+        })
+    }
+
+    config {
+      reference : LawReferenceTooltipReference
+        @label "Reference"
+        @description "The law reference to display"
+        @tier "presentation"
+      children : node
+        @label "Children"
+        @description "Children element that triggers the tooltip"
+        @tier "presentation"
+      position : "top" | "bottom" | "left" | "right" = top
+        @label "Position"
+        @description "Tooltip position"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/law-reference-tooltip" as LawReferenceTooltipPage -> LawReferenceTooltipRender
+}

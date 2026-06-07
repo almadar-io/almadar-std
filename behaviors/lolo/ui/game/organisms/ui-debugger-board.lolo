@@ -1,0 +1,32 @@
+app ui-debugger-board "1.0.0"
+"DebuggerBoard — UI factory (1:1 with the @almadar/ui debugger-board pattern)."
+orbital DebuggerBoardOrbital {
+  entity DebuggerBoardItem [runtime] {
+    id : string!
+  }
+
+  trait DebuggerBoardRender -> @rebindable DebuggerBoardItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch DebuggerBoardItem {})
+        (render-ui main {
+          entity: @entity
+          completeEvent: COMPLETE
+          type: debugger-board
+        })
+    }
+
+    emits {
+      COMPLETE -> external {
+        success : boolean!
+        attempts : number!
+      }
+        @description "completeEvent prop"
+        @tier "essential"
+    }
+  }
+
+  page "/debugger-board" as DebuggerBoardPage -> DebuggerBoardRender
+}

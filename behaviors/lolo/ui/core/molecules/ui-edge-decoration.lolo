@@ -1,0 +1,58 @@
+app ui-edge-decoration "1.0.0"
+"EdgeDecoration — UI factory (1:1 with the @almadar/ui edge-decoration pattern)."
+orbital EdgeDecorationOrbital {
+  entity EdgeDecorationItem [runtime] {
+    id : string!
+  }
+
+  trait EdgeDecorationRender -> @rebindable EdgeDecorationItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          variant: @config.variant
+          side: @config.side
+          opacity: @config.opacity
+          color: @config.color
+          strokeWidth: @config.strokeWidth
+          width: @config.width
+          className: @config.className
+          type: edge-decoration
+        })
+    }
+
+    config {
+      variant : "arch" | "vine" | "lattice" = arch
+        @label "Variant"
+        @description "Which decorative element"
+        @tier "presentation"
+      side : "left" | "right" | "both" = both
+        @label "Side"
+        @description "Which side(s) to place the decoration"
+        @tier "presentation"
+      opacity : number = 0.15
+        @label "Opacity"
+        @description "Overall opacity (default: 0.15)"
+        @tier "presentation"
+      color : string = "var(--color-primary)"
+        @label "Color"
+        @description "Stroke color"
+        @tier "presentation"
+      strokeWidth : number = 0.5
+        @label "Stroke Width"
+        @description "Stroke width"
+        @tier "presentation"
+      width : number = 15
+        @label "Width"
+        @description "Width of the decoration area as percentage of container (default: 15)"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/edge-decoration" as EdgeDecorationPage -> EdgeDecorationRender
+}

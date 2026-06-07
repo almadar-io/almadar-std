@@ -1,0 +1,99 @@
+app ui-relation-select "1.0.0"
+"RelationSelect — UI factory (1:1 with the @almadar/ui relation-select pattern)."
+orbital RelationSelectOrbital {
+  type RelationSelectOptionsItem = {
+    value : string!
+    label : string!
+    description : string
+    disabled : boolean
+  }
+
+  entity RelationSelectItem [runtime] {
+    id : string!
+  }
+
+  trait RelationSelectRender -> @rebindable RelationSelectItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          value: @config.value
+          onChange: CHANGE
+          options: @config.options
+          placeholder: @config.placeholder
+          required: @config.required
+          disabled: @config.disabled
+          isLoading: @config.isLoading
+          error: @config.error
+          clearable: @config.clearable
+          name: @config.name
+          className: @config.className
+          searchPlaceholder: @config.searchPlaceholder
+          emptyMessage: @config.emptyMessage
+          type: relation-select
+        })
+    }
+
+    emits {
+      CHANGE -> external {
+        value : string
+      }
+        @description "Callback when value changes"
+        @tier "essential"
+    }
+
+    config {
+      value : string = ""
+        @label "Value"
+        @description "Current value (ID)"
+        @tier "presentation"
+      options : [RelationSelectOptionsItem] = []
+        @label "Options"
+        @description "Available options - accepts readonly for compatibility with generated const arrays"
+        @tier "presentation"
+      placeholder : string = "Select..."
+        @label "Placeholder"
+        @description "Placeholder text"
+        @tier "presentation"
+      required : boolean = false
+        @label "Required"
+        @description "Whether the field is required"
+        @tier "presentation"
+      disabled : boolean = false
+        @label "Disabled"
+        @description "Whether the field is disabled"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Whether data is loading"
+        @tier "presentation"
+      error : string = ""
+        @label "Error"
+        @description "Error message"
+        @tier "presentation"
+      clearable : boolean = true
+        @label "Clearable"
+        @description "Allow clearing the selection"
+        @tier "presentation"
+      name : string = ""
+        @label "Name"
+        @description "Name attribute for forms"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      searchPlaceholder : string = ""
+        @label "Search Placeholder"
+        @description "Search placeholder"
+        @tier "presentation"
+      emptyMessage : string = ""
+        @label "Empty Message"
+        @description "Empty state message"
+        @tier "presentation"
+    }
+  }
+
+  page "/relation-select" as RelationSelectPage -> RelationSelectRender
+}

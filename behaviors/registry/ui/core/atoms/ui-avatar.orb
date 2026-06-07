@@ -1,0 +1,212 @@
+{
+  "name": "ui-avatar",
+  "version": "1.0.0",
+  "description": "Avatar — UI factory (1:1 with the @almadar/ui avatar pattern).",
+  "orbitals": [
+    {
+      "name": "AvatarOrbital",
+      "entity": {
+        "name": "AvatarItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "AvatarRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "AvatarItem",
+          "emits": [
+            {
+              "event": "CLICK",
+              "description": "Click handler",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "ACTION",
+              "description": "Declarative event name — emits UI:{action} via eventBus on click",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "CLICK",
+                "name": "Click",
+                "description": "Click handler",
+                "tier": "essential"
+              },
+              {
+                "key": "ACTION",
+                "name": "Action",
+                "description": "Declarative event name — emits UI:{action} via eventBus on click",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "icon": "@config.icon",
+                      "action": "ACTION",
+                      "type": "avatar",
+                      "onClick": "CLICK",
+                      "alt": "@config.alt",
+                      "className": "@config.className",
+                      "actionPayload": "@config.actionPayload",
+                      "name": "@config.name",
+                      "src": "@config.src",
+                      "status": "@config.status",
+                      "badge": "@config.badge",
+                      "size": "@config.size",
+                      "initials": "@config.initials"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "size": {
+              "type": "string",
+              "default": "md",
+              "label": "Size",
+              "description": "Size of the avatar",
+              "tier": "presentation",
+              "values": [
+                "xs",
+                "sm",
+                "md",
+                "lg",
+                "xl"
+              ]
+            },
+            "icon": {
+              "type": "string",
+              "default": "circle",
+              "label": "Icon",
+              "description": "Icon to display when no image or initials",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "name": {
+              "type": "string",
+              "default": "",
+              "label": "Name",
+              "description": "Full name - initials will be generated automatically",
+              "tier": "presentation"
+            },
+            "alt": {
+              "type": "string",
+              "default": "",
+              "label": "Alt",
+              "description": "Alt text for the image",
+              "tier": "presentation"
+            },
+            "src": {
+              "type": "string",
+              "default": "",
+              "label": "Src",
+              "description": "Image source URL",
+              "tier": "presentation"
+            },
+            "status": {
+              "type": "string",
+              "default": "online",
+              "label": "Status",
+              "description": "Status indicator",
+              "tier": "presentation",
+              "values": [
+                "online",
+                "offline",
+                "away",
+                "busy"
+              ]
+            },
+            "badge": {
+              "type": "string",
+              "label": "Badge",
+              "description": "Badge content (e.g., notification count)",
+              "tier": "presentation",
+              "values": [
+                "string",
+                "number"
+              ]
+            },
+            "actionPayload": {
+              "type": "json",
+              "label": "Action Payload",
+              "description": "Payload to include with the action event",
+              "tier": "presentation"
+            },
+            "initials": {
+              "type": "string",
+              "default": "",
+              "label": "Initials",
+              "description": "Initials to display (e.g., 'JD' for John Doe) If not provided but name is, initials will be auto-generated",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "AvatarPage",
+          "path": "/avatar",
+          "traits": [
+            {
+              "ref": "AvatarRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

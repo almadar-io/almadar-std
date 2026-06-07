@@ -1,0 +1,43 @@
+app ui-checkbox "1.0.0"
+"Checkbox — UI factory (1:1 with the @almadar/ui checkbox pattern)."
+orbital CheckboxOrbital {
+  entity CheckboxItem [runtime] {
+    id : string!
+  }
+
+  trait CheckboxRender -> @rebindable CheckboxItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          className: @config.className
+          checked: @config.checked
+          defaultChecked: @config.defaultChecked
+          label: @config.label
+          type: checkbox
+        })
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes applied to the root element."
+        @tier "presentation"
+      checked : boolean = false
+        @label "Checked"
+        @description "Whether the checkbox is checked"
+        @tier "presentation"
+      defaultChecked : boolean = false
+        @label "Default Checked"
+        @description "Default checked state (uncontrolled)"
+        @tier "presentation"
+      label : string = ""
+        @label "Label"
+        @description "label prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/checkbox" as CheckboxPage -> CheckboxRender
+}

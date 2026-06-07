@@ -1,0 +1,77 @@
+app ui-game-hud "1.0.0"
+"GameHud — UI factory (1:1 with the @almadar/ui game-hud pattern)."
+orbital GameHudOrbital {
+  type GameHudStatsItem = {
+    source : string
+    field : string
+  }
+  type GameHudItemsItem = {
+    source : string
+    field : string
+  }
+  type GameHudElementsItem = {
+    type : string
+    bind : string
+    position : string
+    label : string
+    value : number | string
+    icon : node
+    format : string
+    max : number
+  }
+
+  entity GameHudItem [runtime] {
+    id : string!
+  }
+
+  trait GameHudRender -> @rebindable GameHudItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          position: @config.position
+          stats: @config.stats
+          items: @config.items
+          elements: @config.elements
+          size: @config.size
+          className: @config.className
+          transparent: @config.transparent
+          type: game-hud
+        })
+    }
+
+    config {
+      position : string = ""
+        @label "Position"
+        @description "Position of the HUD"
+        @tier "presentation"
+      stats : [GameHudStatsItem] = []
+        @label "Stats"
+        @description "Stats to display - accepts readonly for compatibility with generated const arrays"
+        @tier "presentation"
+      items : [GameHudItemsItem] = []
+        @label "Items"
+        @description "Alias for stats (schema compatibility)"
+        @tier "presentation"
+      elements : [GameHudElementsItem] = []
+        @label "Elements"
+        @description "Schema-style elements array (alternative to stats). Converted to stats internally for backwards compatibility."
+        @tier "presentation"
+      size : "sm" | "md" | "lg" = md
+        @label "Size"
+        @description "Size variant"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      transparent : boolean = true
+        @label "Transparent"
+        @description "Whether to use a semi-transparent background"
+        @tier "presentation"
+    }
+  }
+
+  page "/game-hud" as GameHudPage -> GameHudRender
+}

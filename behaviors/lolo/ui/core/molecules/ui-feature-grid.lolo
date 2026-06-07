@@ -1,0 +1,54 @@
+app ui-feature-grid "1.0.0"
+"FeatureGrid — UI factory (1:1 with the @almadar/ui feature-grid pattern)."
+orbital FeatureGridOrbital {
+  type FeatureGridItemsItem = {
+    icon : json
+    title : string!
+    description : string!
+    href : string
+    linkLabel : string
+    variant : "default" | "bordered" | "elevated" | "interactive"
+    size : "sm" | "md" | "lg"
+    className : string
+  }
+
+  entity FeatureGridItem [runtime] {
+    id : string!
+  }
+
+  trait FeatureGridRender -> @rebindable FeatureGridItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          items: @config.items
+          columns: @config.columns
+          gap: @config.gap
+          className: @config.className
+          type: feature-grid
+        })
+    }
+
+    config {
+      items : [FeatureGridItemsItem] = []
+        @label "Items"
+        @description "Array of feature card configurations"
+        @tier "presentation"
+      columns : number = 3
+        @label "Columns"
+        @description "Number of grid columns"
+        @tier "presentation"
+      gap : "sm" | "md" | "lg" = md
+        @label "Gap"
+        @description "Gap between grid items"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional class names"
+        @tier "presentation"
+    }
+  }
+
+  page "/feature-grid" as FeatureGridPage -> FeatureGridRender
+}

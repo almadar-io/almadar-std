@@ -1,0 +1,56 @@
+app ui-sortable-list "1.0.0"
+"SortableList — UI factory (1:1 with the @almadar/ui sortable-list pattern)."
+orbital SortableListOrbital {
+  entity SortableListItem [runtime] {
+    id : string!
+  }
+
+  trait SortableListRender -> @rebindable SortableListItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch SortableListItem {})
+        (render-ui main {
+          items: @entity
+          renderItem: RENDER_ITEM
+          reorderEvent: REORDER
+          reorderPayload: @config.reorderPayload
+          dragHandlePosition: @config.dragHandlePosition
+          className: @config.className
+          type: sortable-list
+        })
+    }
+
+    emits {
+      RENDER_ITEM -> external {
+        item : object
+        index : number
+      }
+        @description "renderItem prop"
+        @tier "essential"
+      REORDER -> external {
+        id : string
+      }
+        @description "reorderEvent prop"
+        @tier "essential"
+    }
+
+    config {
+      reorderPayload : json
+        @label "Reorder Payload"
+        @description "reorderPayload prop"
+        @tier "presentation"
+      dragHandlePosition : "left" | "right" = left
+        @label "Drag Handle Position"
+        @description "dragHandlePosition prop"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/sortable-list" as SortableListPage -> SortableListRender
+}

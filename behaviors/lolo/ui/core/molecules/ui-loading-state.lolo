@@ -1,0 +1,38 @@
+app ui-loading-state "1.0.0"
+"LoadingState — UI factory (1:1 with the @almadar/ui loading-state pattern)."
+orbital LoadingStateOrbital {
+  entity LoadingStateItem [runtime] {
+    id : string!
+  }
+
+  trait LoadingStateRender -> @rebindable LoadingStateItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          title: @config.title
+          message: @config.message
+          className: @config.className
+          type: loading-state
+        })
+    }
+
+    config {
+      title : string = ""
+        @label "Title"
+        @description "title prop"
+        @tier "presentation"
+      message : string = ""
+        @label "Message"
+        @description "message prop"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/loading-state" as LoadingStatePage -> LoadingStateRender
+}

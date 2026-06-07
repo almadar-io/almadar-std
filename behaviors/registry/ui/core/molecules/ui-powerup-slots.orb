@@ -1,0 +1,126 @@
+{
+  "name": "ui-powerup-slots",
+  "version": "1.0.0",
+  "description": "PowerupSlots — UI factory (1:1 with the @almadar/ui powerup-slots pattern).",
+  "orbitals": [
+    {
+      "name": "PowerupSlotsOrbital",
+      "entity": {
+        "name": "PowerupSlotsItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "PowerupSlotsRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "PowerupSlotsItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "powerup-slots",
+                      "className": "@config.className",
+                      "active": "@config.active",
+                      "maxSlots": "@config.maxSlots"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "maxSlots": {
+              "type": "number",
+              "default": 4.0,
+              "label": "Max Slots",
+              "description": "Maximum number of powerup slots",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "active": {
+              "type": "[PowerupSlotsActiveItem]",
+              "default": [],
+              "label": "Active",
+              "description": "Array of active powerups",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "remainingTime": {
+                    "name": "remainingTime",
+                    "type": "number",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "PowerupSlotsPage",
+          "path": "/powerup-slots",
+          "traits": [
+            {
+              "ref": "PowerupSlotsRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

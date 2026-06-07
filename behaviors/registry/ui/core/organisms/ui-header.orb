@@ -1,0 +1,307 @@
+{
+  "name": "ui-header",
+  "version": "1.0.0",
+  "description": "Header — UI factory (1:1 with the @almadar/ui header pattern).",
+  "orbitals": [
+    {
+      "name": "HeaderOrbital",
+      "entity": {
+        "name": "HeaderItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "HeaderRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "HeaderItem",
+          "emits": [
+            {
+              "event": "MENU_TOGGLE",
+              "description": "Menu toggle callback",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "SEARCH",
+              "description": "Search callback",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "value",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "USER_CLICK",
+              "description": "Callback when user avatar is clicked",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "LOGO_CLICK",
+              "description": "Callback when logo/brand is clicked",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "MENU_TOGGLE",
+                "name": "Menu Toggle",
+                "description": "Menu toggle callback",
+                "tier": "essential"
+              },
+              {
+                "key": "SEARCH",
+                "name": "Search",
+                "description": "Search callback",
+                "tier": "essential"
+              },
+              {
+                "key": "USER_CLICK",
+                "name": "User Click",
+                "description": "Callback when user avatar is clicked",
+                "tier": "essential"
+              },
+              {
+                "key": "LOGO_CLICK",
+                "name": "Logo Click",
+                "description": "Callback when logo/brand is clicked",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "HeaderItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "@config.variant",
+                      "sticky": "@config.sticky",
+                      "type": "header",
+                      "brandName": "@config.brandName",
+                      "navigationItems": "@config.navigationItems",
+                      "onUserClick": "USER_CLICK",
+                      "showMenuToggle": "@config.showMenuToggle",
+                      "isMenuOpen": "@config.isMenuOpen",
+                      "error": "@config.error",
+                      "userAvatar": "@config.userAvatar",
+                      "actions": "@config.actions",
+                      "onMenuToggle": "MENU_TOGGLE",
+                      "searchPlaceholder": "@config.searchPlaceholder",
+                      "isLoading": "@config.isLoading",
+                      "logo": "@config.logo",
+                      "onSearch": "SEARCH",
+                      "userName": "@config.userName",
+                      "look": "@config.look",
+                      "className": "@config.className",
+                      "showSearch": "@config.showSearch",
+                      "entity": "HeaderItem",
+                      "logoSrc": "@config.logoSrc",
+                      "onLogoClick": "LOGO_CLICK"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "isMenuOpen": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Menu Open",
+              "description": "Is menu open (for toggle icon)",
+              "tier": "presentation"
+            },
+            "navigationItems": {
+              "type": "[json]",
+              "default": [],
+              "label": "Navigation Items",
+              "description": "Navigation items (for desktop header variant)",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "showMenuToggle": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Menu Toggle",
+              "description": "Show menu toggle button",
+              "tier": "presentation"
+            },
+            "userName": {
+              "type": "string",
+              "default": "",
+              "label": "User Name",
+              "description": "User name (display name or email)",
+              "tier": "presentation"
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator (closed circuit)",
+              "tier": "presentation"
+            },
+            "actions": {
+              "type": "node",
+              "label": "Actions",
+              "description": "Action buttons (right side)",
+              "tier": "presentation"
+            },
+            "variant": {
+              "type": "string",
+              "default": "mobile",
+              "label": "Variant",
+              "description": "Variant - mobile shows menu toggle, desktop shows full nav",
+              "tier": "presentation",
+              "values": [
+                "mobile",
+                "desktop"
+              ]
+            },
+            "logo": {
+              "type": "node",
+              "label": "Logo",
+              "description": "Logo/Brand content",
+              "tier": "presentation"
+            },
+            "searchPlaceholder": {
+              "type": "string",
+              "default": "",
+              "label": "Search Placeholder",
+              "description": "Search placeholder",
+              "tier": "presentation"
+            },
+            "brandName": {
+              "type": "string",
+              "default": "KFlow",
+              "label": "Brand Name",
+              "description": "Brand/App name",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "sticky": {
+              "type": "boolean",
+              "default": true,
+              "label": "Sticky",
+              "description": "Sticky header",
+              "tier": "presentation"
+            },
+            "look": {
+              "type": "string",
+              "default": "compact-bar",
+              "label": "Look",
+              "description": "Layer 2 visual treatment — orthogonal to the structural variant (which currently flips mobile vs desktop).",
+              "tier": "presentation",
+              "values": [
+                "hero",
+                "compact-bar",
+                "breadcrumb",
+                "contextual",
+                "editorial-banner"
+              ]
+            },
+            "showSearch": {
+              "type": "boolean",
+              "default": false,
+              "label": "Show Search",
+              "description": "Show search input",
+              "tier": "presentation"
+            },
+            "error": {
+              "type": "json",
+              "label": "Error",
+              "description": "Error state (closed circuit)",
+              "tier": "presentation"
+            },
+            "logoSrc": {
+              "type": "string",
+              "default": "",
+              "label": "Logo Src",
+              "description": "Logo image source",
+              "tier": "presentation"
+            },
+            "userAvatar": {
+              "type": "json",
+              "label": "User Avatar",
+              "description": "User avatar configuration",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "HeaderPage",
+          "path": "/header",
+          "traits": [
+            {
+              "ref": "HeaderRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

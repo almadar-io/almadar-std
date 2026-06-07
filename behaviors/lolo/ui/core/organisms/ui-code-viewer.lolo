@@ -1,0 +1,118 @@
+app ui-code-viewer "1.0.0"
+"CodeViewer — UI factory (1:1 with the @almadar/ui code-viewer pattern)."
+orbital CodeViewerOrbital {
+  type CodeViewerDiffItem = {
+    type : "added" | "removed" | "unchanged" | "context"!
+    beforeLineNumber : number
+    afterLineNumber : number
+    content : string!
+  }
+  type CodeViewerActionsItem = {
+    label : string!
+    event : string
+    navigatesTo : string
+    variant : "primary" | "secondary" | "ghost"
+  }
+
+  entity CodeViewerItem [runtime] {
+    id : string!
+  }
+
+  trait CodeViewerRender -> @rebindable CodeViewerItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch CodeViewerItem {})
+        (render-ui main {
+          title: @config.title
+          code: @config.code
+          language: @config.language
+          diff: @config.diff
+          oldValue: @config.oldValue
+          newValue: @config.newValue
+          mode: @config.mode
+          showLineNumbers: @config.showLineNumbers
+          showCopy: @config.showCopy
+          wordWrap: @config.wordWrap
+          maxHeight: @config.maxHeight
+          files: @config.files
+          actions: @config.actions
+          entity: CodeViewerItem
+          isLoading: @config.isLoading
+          error: @config.error
+          className: @config.className
+          type: code-viewer
+        })
+    }
+
+    config {
+      title : string = ""
+        @label "Title"
+        @description "Viewer title"
+        @tier "presentation"
+      code : string = ""
+        @label "Code"
+        @description "Code content"
+        @tier "presentation"
+      language : string = ""
+        @label "Language"
+        @description "Language for display label"
+        @tier "presentation"
+      diff : [CodeViewerDiffItem] = []
+        @label "Diff"
+        @description "Diff lines (for diff mode)"
+        @tier "presentation"
+      oldValue : string = ""
+        @label "Old Value"
+        @description "Old value (for generating diff)"
+        @tier "presentation"
+      newValue : string = ""
+        @label "New Value"
+        @description "New value (for generating diff)"
+        @tier "presentation"
+      mode : "code" | "diff" = code
+        @label "Mode"
+        @description "Display mode"
+        @tier "presentation"
+      showLineNumbers : boolean = true
+        @label "Show Line Numbers"
+        @description "Show line numbers"
+        @tier "presentation"
+      showCopy : boolean = true
+        @label "Show Copy"
+        @description "Show copy button"
+        @tier "presentation"
+      wordWrap : boolean = false
+        @label "Word Wrap"
+        @description "Enable word wrap"
+        @tier "presentation"
+      maxHeight : number | string
+        @label "Max Height"
+        @description "Max height before scrolling"
+        @tier "presentation"
+      files : [json] = []
+        @label "Files"
+        @description "Multiple files (tabbed view)"
+        @tier "presentation"
+      actions : [CodeViewerActionsItem] = []
+        @label "Actions"
+        @description "Actions"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state"
+        @tier "presentation"
+      error : json
+        @label "Error"
+        @description "Error state"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/code-viewer" as CodeViewerPage -> CodeViewerRender
+}

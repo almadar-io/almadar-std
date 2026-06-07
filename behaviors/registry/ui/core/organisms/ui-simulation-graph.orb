@@ -1,0 +1,156 @@
+{
+  "name": "ui-simulation-graph",
+  "version": "1.0.0",
+  "description": "SimulationGraph — UI factory (1:1 with the @almadar/ui simulation-graph pattern).",
+  "orbitals": [
+    {
+      "name": "SimulationGraphOrbital",
+      "entity": {
+        "name": "SimulationGraphItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "SimulationGraphRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "SimulationGraphItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "unit": "@config.unit",
+                      "className": "@config.className",
+                      "height": "@config.height",
+                      "data": "@config.data",
+                      "maxPoints": "@config.maxPoints",
+                      "type": "simulation-graph",
+                      "color": "@config.color",
+                      "width": "@config.width",
+                      "label": "@config.label"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "unit": {
+              "type": "string",
+              "default": "",
+              "label": "Unit",
+              "description": "unit prop",
+              "tier": "presentation"
+            },
+            "label": {
+              "type": "string",
+              "default": "",
+              "label": "Label",
+              "description": "label prop",
+              "tier": "presentation"
+            },
+            "data": {
+              "type": "[SimulationGraphDataItem]",
+              "default": [],
+              "label": "Data",
+              "description": "data prop",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "time": {
+                    "name": "time",
+                    "type": "number",
+                    "required": true
+                  },
+                  "value": {
+                    "name": "value",
+                    "type": "number",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "className prop",
+              "tier": "presentation"
+            },
+            "height": {
+              "type": "number",
+              "default": 120.0,
+              "label": "Height",
+              "description": "height prop",
+              "tier": "presentation"
+            },
+            "maxPoints": {
+              "type": "number",
+              "default": 200.0,
+              "label": "Max Points",
+              "description": "maxPoints prop",
+              "tier": "presentation"
+            },
+            "color": {
+              "type": "string",
+              "default": "#e94560",
+              "label": "Color",
+              "description": "color prop",
+              "tier": "presentation"
+            },
+            "width": {
+              "type": "number",
+              "default": 300.0,
+              "label": "Width",
+              "description": "width prop",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "SimulationGraphPage",
+          "path": "/simulation-graph",
+          "traits": [
+            {
+              "ref": "SimulationGraphRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

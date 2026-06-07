@@ -1,0 +1,44 @@
+app ui-social-proof "1.0.0"
+"SocialProof — UI factory (1:1 with the @almadar/ui social-proof pattern)."
+orbital SocialProofOrbital {
+  type SocialProofItemsItem = {
+    logo : string
+    name : string!
+    quote : string
+  }
+
+  entity SocialProofItem [runtime] {
+    id : string!
+  }
+
+  trait SocialProofRender -> @rebindable SocialProofItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          items: @config.items
+          variant: @config.variant
+          className: @config.className
+          type: social-proof
+        })
+    }
+
+    config {
+      items : [SocialProofItemsItem] = []
+        @label "Items"
+        @description "List of social proof items"
+        @tier "presentation"
+      variant : "logos" | "quotes" | "badges" = logos
+        @label "Variant"
+        @description "Display variant"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional class names"
+        @tier "presentation"
+    }
+  }
+
+  page "/social-proof" as SocialProofPage -> SocialProofRender
+}

@@ -1,0 +1,131 @@
+{
+  "name": "ui-variable-panel",
+  "version": "1.0.0",
+  "description": "VariablePanel — UI factory (1:1 with the @almadar/ui variable-panel pattern).",
+  "orbitals": [
+    {
+      "name": "VariablePanelOrbital",
+      "entity": {
+        "name": "VariablePanelItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "VariablePanelRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "VariablePanelItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "variable-panel",
+                      "entityName": "@config.entityName",
+                      "className": "@config.className",
+                      "variables": "@config.variables"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "entityName": {
+              "type": "string",
+              "default": "",
+              "label": "Entity Name",
+              "description": "Entity name",
+              "tier": "presentation"
+            },
+            "variables": {
+              "type": "[VariablePanelVariablesItem]",
+              "default": [],
+              "label": "Variables",
+              "description": "Variables to display",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "unit": {
+                    "name": "unit",
+                    "type": "string",
+                    "required": false
+                  },
+                  "value": {
+                    "name": "value",
+                    "type": "number",
+                    "required": true
+                  },
+                  "min": {
+                    "name": "min",
+                    "type": "number",
+                    "required": false
+                  },
+                  "max": {
+                    "name": "max",
+                    "type": "number",
+                    "required": false
+                  },
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "VariablePanelPage",
+          "path": "/variable-panel",
+          "traits": [
+            {
+              "ref": "VariablePanelRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

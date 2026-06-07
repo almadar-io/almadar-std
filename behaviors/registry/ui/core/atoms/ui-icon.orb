@@ -1,0 +1,152 @@
+{
+  "name": "ui-icon",
+  "version": "1.0.0",
+  "description": "Icon — UI factory (1:1 with the @almadar/ui icon pattern).",
+  "orbitals": [
+    {
+      "name": "IconOrbital",
+      "entity": {
+        "name": "IconItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "IconRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "IconItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "strokeWidth": "@config.strokeWidth",
+                      "name": "@config.name",
+                      "icon": "@config.icon",
+                      "size": "@config.size",
+                      "type": "icon",
+                      "color": "@config.color",
+                      "animation": "@config.animation",
+                      "style": "@config.style",
+                      "className": "@config.className"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "animation": {
+              "type": "string",
+              "default": "none",
+              "label": "Animation",
+              "description": "Animation type",
+              "tier": "presentation",
+              "values": [
+                "spin",
+                "pulse",
+                "none"
+              ]
+            },
+            "name": {
+              "type": "string",
+              "default": "",
+              "label": "Name",
+              "description": "Icon name as string (resolved from iconMap)",
+              "tier": "presentation"
+            },
+            "style": {
+              "type": "json",
+              "label": "Style",
+              "description": "Inline style",
+              "tier": "presentation"
+            },
+            "strokeWidth": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Stroke Width",
+              "description": "Icon stroke width - uses theme default if not specified",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "color": {
+              "type": "string",
+              "default": "",
+              "label": "Color",
+              "description": "Color class (Tailwind color class) or 'inherit' for theme default",
+              "tier": "presentation"
+            },
+            "icon": {
+              "type": "string",
+              "default": "circle",
+              "label": "Icon",
+              "description": "Lucide icon component (preferred for type-safe usage)",
+              "tier": "presentation"
+            },
+            "size": {
+              "type": "string",
+              "default": "md",
+              "label": "Size",
+              "description": "Size of the icon",
+              "tier": "presentation",
+              "values": [
+                "xs",
+                "sm",
+                "md",
+                "lg",
+                "xl"
+              ]
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "IconPage",
+          "path": "/icon",
+          "traits": [
+            {
+              "ref": "IconRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

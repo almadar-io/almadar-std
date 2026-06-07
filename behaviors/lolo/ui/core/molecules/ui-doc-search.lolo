@@ -1,0 +1,42 @@
+app ui-doc-search "1.0.0"
+"DocSearch — UI factory (1:1 with the @almadar/ui doc-search pattern)."
+orbital DocSearchOrbital {
+  entity DocSearchItem [runtime] {
+    id : string!
+  }
+
+  trait DocSearchRender -> @rebindable DocSearchItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          placeholder: @config.placeholder
+          onSearch: SEARCH
+          className: @config.className
+          type: doc-search
+        })
+    }
+
+    emits {
+      SEARCH -> external {
+        query : string
+      }
+        @description "Callback invoked with the search query, returns results"
+        @tier "essential"
+    }
+
+    config {
+      placeholder : string = "Search documentation..."
+        @label "Placeholder"
+        @description "Placeholder text for the input"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional class names"
+        @tier "presentation"
+    }
+  }
+
+  page "/doc-search" as DocSearchPage -> DocSearchRender
+}

@@ -1,0 +1,46 @@
+app ui-state-architect-board "1.0.0"
+"StateArchitectBoard — UI factory (1:1 with the @almadar/ui state-architect-board pattern)."
+orbital StateArchitectBoardOrbital {
+  entity StateArchitectBoardItem [runtime] {
+    id : string!
+  }
+
+  trait StateArchitectBoardRender -> @rebindable StateArchitectBoardItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch StateArchitectBoardItem {})
+        (render-ui main {
+          entity: @entity
+          stepDurationMs: @config.stepDurationMs
+          testEvent: TEST
+          completeEvent: COMPLETE
+          type: state-architect-board
+        })
+    }
+
+    emits {
+      TEST -> external {
+        id : string
+      }
+        @description "Emits UI:{testEvent}"
+        @tier "essential"
+      COMPLETE -> external {
+        success : boolean!
+        passedTests : number!
+      }
+        @description "Emits UI:{completeEvent} with { success, passedTests }"
+        @tier "essential"
+    }
+
+    config {
+      stepDurationMs : number = 600
+        @label "Step Duration Ms"
+        @description "Playback speed"
+        @tier "presentation"
+    }
+  }
+
+  page "/state-architect-board" as StateArchitectBoardPage -> StateArchitectBoardRender
+}

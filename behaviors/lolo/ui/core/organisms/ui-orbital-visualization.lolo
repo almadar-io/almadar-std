@@ -1,0 +1,74 @@
+app ui-orbital-visualization "1.0.0"
+"OrbitalVisualization — UI factory (1:1 with the @almadar/ui orbital-visualization pattern)."
+orbital OrbitalVisualizationOrbital {
+  entity OrbitalVisualizationItem [runtime] {
+    id : string!
+  }
+
+  trait OrbitalVisualizationRender -> @rebindable OrbitalVisualizationItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch OrbitalVisualizationItem {})
+        (render-ui main {
+          schema: @config.schema
+          complexity: @config.complexity
+          size: @config.size
+          showLabel: @config.showLabel
+          animated: @config.animated
+          onClick: CLICK
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          entity: OrbitalVisualizationItem
+          type: orbital-visualization
+        })
+    }
+
+    emits {
+      CLICK -> external {
+        id : string
+      }
+        @description "Click handler"
+        @tier "essential"
+    }
+
+    config {
+      schema : json
+        @label "Schema"
+        @description "Full KFlow schema object"
+        @tier "presentation"
+      complexity : number = 0
+        @label "Complexity"
+        @description "Direct complexity override (1-100+)"
+        @tier "presentation"
+      size : "sm" | "md" | "lg" | "xl" = md
+        @label "Size"
+        @description "Size of the visualization"
+        @tier "presentation"
+      showLabel : boolean = true
+        @label "Show Label"
+        @description "Show complexity label"
+        @tier "presentation"
+      animated : boolean = true
+        @label "Animated"
+        @description "Animation enabled"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : json
+        @label "Error"
+        @description "Error state"
+        @tier "presentation"
+    }
+  }
+
+  page "/orbital-visualization" as OrbitalVisualizationPage -> OrbitalVisualizationRender
+}

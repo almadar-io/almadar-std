@@ -1,0 +1,244 @@
+{
+  "name": "ui-document-viewer",
+  "version": "1.0.0",
+  "description": "DocumentViewer — UI factory (1:1 with the @almadar/ui document-viewer pattern).",
+  "orbitals": [
+    {
+      "name": "DocumentViewerOrbital",
+      "entity": {
+        "name": "DocumentViewerItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "DocumentViewerRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "DocumentViewerItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "DocumentViewerItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "content": "@config.content",
+                      "documentType": "@config.documentType",
+                      "showToolbar": "@config.showToolbar",
+                      "className": "@config.className",
+                      "showPrint": "@config.showPrint",
+                      "error": "@config.error",
+                      "showDownload": "@config.showDownload",
+                      "height": "@config.height",
+                      "documents": "@config.documents",
+                      "title": "@config.title",
+                      "type": "document-viewer",
+                      "currentPage": "@config.currentPage",
+                      "entity": "DocumentViewerItem",
+                      "isLoading": "@config.isLoading",
+                      "actions": "@config.actions",
+                      "src": "@config.src",
+                      "totalPages": "@config.totalPages"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "currentPage": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Current Page",
+              "description": "Current page (for multi-page documents)",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "title": {
+              "type": "string",
+              "default": "",
+              "label": "Title",
+              "description": "Document title",
+              "tier": "presentation"
+            },
+            "totalPages": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Total Pages",
+              "description": "Total pages",
+              "tier": "presentation"
+            },
+            "content": {
+              "type": "string",
+              "default": "",
+              "label": "Content",
+              "description": "Document content (for text/html/markdown)",
+              "tier": "presentation"
+            },
+            "documentType": {
+              "type": "string",
+              "default": "pdf",
+              "label": "Document Type",
+              "description": "Document type",
+              "tier": "presentation",
+              "values": [
+                "pdf",
+                "text",
+                "html",
+                "markdown"
+              ]
+            },
+            "actions": {
+              "type": "[DocumentViewerActionsItem]",
+              "default": [],
+              "label": "Actions",
+              "description": "Actions",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "navigatesTo": {
+                    "name": "navigatesTo",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": false
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "primary",
+                      "secondary",
+                      "ghost"
+                    ]
+                  }
+                }
+              }
+            },
+            "showToolbar": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Toolbar",
+              "description": "Show toolbar",
+              "tier": "presentation"
+            },
+            "height": {
+              "type": "string",
+              "label": "Height",
+              "description": "Viewer height",
+              "tier": "presentation",
+              "values": [
+                "number",
+                "string"
+              ]
+            },
+            "documents": {
+              "type": "[json]",
+              "default": [],
+              "label": "Documents",
+              "description": "Multiple documents (tabbed view)",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "error": {
+              "type": "json",
+              "label": "Error",
+              "description": "Error state",
+              "tier": "presentation"
+            },
+            "src": {
+              "type": "string",
+              "default": "",
+              "label": "Src",
+              "description": "Document URL (for PDF/external documents)",
+              "tier": "presentation"
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state",
+              "tier": "presentation"
+            },
+            "showPrint": {
+              "type": "boolean",
+              "default": false,
+              "label": "Show Print",
+              "description": "Show print button",
+              "tier": "presentation"
+            },
+            "showDownload": {
+              "type": "boolean",
+              "default": false,
+              "label": "Show Download",
+              "description": "Show download button",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "DocumentViewerPage",
+          "path": "/document-viewer",
+          "traits": [
+            {
+              "ref": "DocumentViewerRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

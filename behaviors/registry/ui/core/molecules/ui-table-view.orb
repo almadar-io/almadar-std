@@ -1,0 +1,553 @@
+{
+  "name": "ui-table-view",
+  "version": "1.0.0",
+  "description": "TableView — UI factory (1:1 with the @almadar/ui table-view pattern).",
+  "orbitals": [
+    {
+      "name": "TableViewOrbital",
+      "entity": {
+        "name": "TableViewItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "TableViewRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "TableViewItem",
+          "emits": [
+            {
+              "event": "SELECT",
+              "description": "Event emitted on selection change: UI:{selectEvent} with { ids, rows }.",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "SORT",
+              "description": "Event emitted on sortable-header click: UI:{sortEvent} with { column, direction }.",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CHILDREN",
+              "description": "Custom per-row render. When provided, the whole row content is delegated to this function (columns are ignored for the body; the header still renders). Mirrors DataList's children render prop.",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "item",
+                  "type": "object"
+                },
+                {
+                  "name": "index",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "RENDER_ITEM",
+              "description": "Per-row render function (schema alias). In .orb: ['fn','item',{...}]. The compiler converts this to the children render prop.",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "item",
+                  "type": "object"
+                },
+                {
+                  "name": "index",
+                  "type": "number"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "SELECT",
+                "name": "Select",
+                "description": "Event emitted on selection change: UI:{selectEvent} with { ids, rows }.",
+                "tier": "essential"
+              },
+              {
+                "key": "SORT",
+                "name": "Sort",
+                "description": "Event emitted on sortable-header click: UI:{sortEvent} with { column, direction }.",
+                "tier": "essential"
+              },
+              {
+                "key": "CHILDREN",
+                "name": "Children",
+                "description": "Custom per-row render. When provided, the whole row content is delegated to this function (columns are ignored for the body; the header still renders). Mirrors DataList's children render prop.",
+                "tier": "essential"
+              },
+              {
+                "key": "RENDER_ITEM",
+                "name": "Render Item",
+                "description": "Per-row render function (schema alias). In .orb: ['fn','item',{...}]. The compiler converts this to the children render prop.",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "TableViewItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "columns": "@config.columns",
+                      "sortColumn": "@config.sortColumn",
+                      "pageSize": "@config.pageSize",
+                      "dndRoot": "@config.dndRoot",
+                      "selectEvent": "SELECT",
+                      "error": "@config.error",
+                      "reorderEvent": "@config.reorderEvent",
+                      "children": "CHILDREN",
+                      "sortable": "@config.sortable",
+                      "isLoading": "@config.isLoading",
+                      "accepts": "@config.accepts",
+                      "itemActions": "@config.itemActions",
+                      "sortEvent": "SORT",
+                      "className": "@config.className",
+                      "sortDirection": "@config.sortDirection",
+                      "maxInlineActions": "@config.maxInlineActions",
+                      "selectable": "@config.selectable",
+                      "renderItem": "RENDER_ITEM",
+                      "groupBy": "@config.groupBy",
+                      "look": "@config.look",
+                      "dragGroup": "@config.dragGroup",
+                      "fields": "@config.fields",
+                      "selectedIds": "@config.selectedIds",
+                      "dndItemIdField": "@config.dndItemIdField",
+                      "positionEvent": "@config.positionEvent",
+                      "emptyMessage": "@config.emptyMessage",
+                      "entity": "@entity",
+                      "type": "table-view",
+                      "dropEvent": "@config.dropEvent"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "sortColumn": {
+              "type": "string",
+              "default": "",
+              "label": "Sort Column",
+              "description": "Current sort column (display hint for the active header arrow).",
+              "tier": "presentation"
+            },
+            "columns": {
+              "type": "[TableViewColumnsItem]",
+              "default": [],
+              "label": "Columns",
+              "description": "Column definitions. The compiler emits `columns`; `fields` is the alias.",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
+                  "align": {
+                    "name": "align",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "left",
+                      "center",
+                      "right"
+                    ]
+                  },
+                  "format": {
+                    "name": "format",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "badge",
+                      "date",
+                      "currency",
+                      "number",
+                      "percent",
+                      "boolean"
+                    ]
+                  },
+                  "header": {
+                    "name": "header",
+                    "type": "string",
+                    "required": false
+                  },
+                  "width": {
+                    "name": "width",
+                    "type": "string",
+                    "required": false
+                  },
+                  "className": {
+                    "name": "className",
+                    "type": "string",
+                    "required": false
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "field": {
+                    "name": "field",
+                    "type": "string",
+                    "required": false
+                  },
+                  "sortable": {
+                    "name": "sortable",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "key": {
+                    "name": "key",
+                    "type": "string",
+                    "required": true
+                  },
+                  "weight": {
+                    "name": "weight",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "normal",
+                      "medium",
+                      "semibold"
+                    ]
+                  }
+                }
+              }
+            },
+            "selectable": {
+              "type": "boolean",
+              "default": false,
+              "label": "Selectable",
+              "description": "Render a leading checkbox column. Selection changes emit `selectEvent`.",
+              "tier": "presentation"
+            },
+            "selectedIds": {
+              "type": "[string]",
+              "default": [],
+              "label": "Selected Ids",
+              "description": "Currently-selected ids (controlled). Falls back to local state when omitted.",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "accepts": {
+              "type": "string",
+              "default": "",
+              "label": "Accepts",
+              "description": "When set, the container accepts drops whose dragGroup matches this value (or '*' for any group)",
+              "tier": "presentation"
+            },
+            "sortable": {
+              "type": "boolean",
+              "default": false,
+              "label": "Sortable",
+              "description": "Enable in-container reorder; items can be dragged to new positions among siblings",
+              "tier": "presentation"
+            },
+            "dropEvent": {
+              "type": "string",
+              "default": "",
+              "label": "Drop Event",
+              "description": "Bus event fired on cross-container drop. Payload: { id, sourceGroup, targetGroup, newIndex }",
+              "tier": "presentation"
+            },
+            "dndRoot": {
+              "type": "boolean",
+              "default": false,
+              "label": "Dnd Root",
+              "description": "Mark this container as the DnD root for its subtree — descendant zones share one DndContext (cross-container drag). Use on an outer container whose own items are not draggable.",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes applied to the table root.",
+              "tier": "presentation"
+            },
+            "emptyMessage": {
+              "type": "string",
+              "default": "",
+              "label": "Empty Message",
+              "description": "Message shown when there are no rows.",
+              "tier": "presentation"
+            },
+            "error": {
+              "type": "json",
+              "label": "Error",
+              "description": "Error state.",
+              "tier": "presentation"
+            },
+            "groupBy": {
+              "type": "string",
+              "default": "",
+              "label": "Group By",
+              "description": "Group rows under section headers by a field value.",
+              "tier": "presentation"
+            },
+            "look": {
+              "type": "string",
+              "default": "dense",
+              "label": "Look",
+              "description": "Layer 2 visual treatment — mirrors the data-list / entity-table look enum so authors share one knob name across row renderers.",
+              "tier": "presentation",
+              "values": [
+                "dense",
+                "spacious",
+                "striped",
+                "borderless",
+                "bordered"
+              ]
+            },
+            "reorderEvent": {
+              "type": "string",
+              "default": "",
+              "label": "Reorder Event",
+              "description": "Bus event fired on in-container reorder. Payload: { id, oldIndex, newIndex }",
+              "tier": "presentation"
+            },
+            "positionEvent": {
+              "type": "string",
+              "default": "",
+              "label": "Position Event",
+              "description": "Bus event fired N times per drop (one per item in affected zones) so the trait can persist new positions for the WHOLE zone, not just the moved item. Payload: { id, position }",
+              "tier": "presentation"
+            },
+            "dndItemIdField": {
+              "type": "string",
+              "default": "",
+              "label": "Dnd Item Id Field",
+              "description": "Row field used as the @dnd-kit draggable id (default 'id')",
+              "tier": "presentation"
+            },
+            "dragGroup": {
+              "type": "string",
+              "default": "",
+              "label": "Drag Group",
+              "description": "When set, items in this container are draggable and announce this group as their source",
+              "tier": "presentation"
+            },
+            "fields": {
+              "type": "[TableViewFieldsItem]",
+              "default": [],
+              "label": "Fields",
+              "description": "Alias for `columns`.",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "name": "key",
+                    "type": "string",
+                    "required": true
+                  },
+                  "format": {
+                    "name": "format",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "badge",
+                      "date",
+                      "currency",
+                      "number",
+                      "percent",
+                      "boolean"
+                    ]
+                  },
+                  "width": {
+                    "name": "width",
+                    "type": "string",
+                    "required": false
+                  },
+                  "header": {
+                    "name": "header",
+                    "type": "string",
+                    "required": false
+                  },
+                  "className": {
+                    "name": "className",
+                    "type": "string",
+                    "required": false
+                  },
+                  "align": {
+                    "name": "align",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "left",
+                      "center",
+                      "right"
+                    ]
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
+                  "sortable": {
+                    "name": "sortable",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "field": {
+                    "name": "field",
+                    "type": "string",
+                    "required": false
+                  },
+                  "weight": {
+                    "name": "weight",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "normal",
+                      "medium",
+                      "semibold"
+                    ]
+                  }
+                }
+              }
+            },
+            "itemActions": {
+              "type": "[TableViewItemActionsItem]",
+              "default": [],
+              "label": "Item Actions",
+              "description": "Per-row action buttons (trailing column).",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": true
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "primary",
+                      "secondary",
+                      "ghost",
+                      "danger"
+                    ]
+                  }
+                }
+              }
+            },
+            "sortDirection": {
+              "type": "string",
+              "default": "asc",
+              "label": "Sort Direction",
+              "description": "Current sort direction (display hint).",
+              "tier": "presentation",
+              "values": [
+                "asc",
+                "desc"
+              ]
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state.",
+              "tier": "presentation"
+            },
+            "pageSize": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Page Size",
+              "description": "Max rows before a 'Show More' button. Defaults to 0 (show all).",
+              "tier": "presentation"
+            },
+            "maxInlineActions": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Max Inline Actions",
+              "description": "Max inline action buttons before the rest collapse into a '⋯' overflow menu. Omit = all inline.",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "TableViewPage",
+          "path": "/table-view",
+          "traits": [
+            {
+              "ref": "TableViewRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,189 @@
+{
+  "name": "ui-star-rating",
+  "version": "1.0.0",
+  "description": "StarRating — UI factory (1:1 with the @almadar/ui star-rating pattern).",
+  "orbitals": [
+    {
+      "name": "StarRatingOrbital",
+      "entity": {
+        "name": "StarRatingItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "StarRatingRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "StarRatingItem",
+          "emits": [
+            {
+              "event": "ACTION",
+              "description": "Declarative event name for rating changes",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CHANGE",
+              "description": "Direct onChange callback",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "value",
+                  "type": "number"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "ACTION",
+                "name": "Action",
+                "description": "Declarative event name for rating changes",
+                "tier": "essential"
+              },
+              {
+                "key": "CHANGE",
+                "name": "Change",
+                "description": "Direct onChange callback",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "label": "@config.label",
+                      "action": "ACTION",
+                      "size": "@config.size",
+                      "className": "@config.className",
+                      "onChange": "CHANGE",
+                      "value": "@config.value",
+                      "type": "star-rating",
+                      "max": "@config.max",
+                      "precision": "@config.precision",
+                      "readOnly": "@config.readOnly",
+                      "actionPayload": "@config.actionPayload"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "value": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Value",
+              "description": "Current rating value",
+              "tier": "presentation"
+            },
+            "label": {
+              "type": "string",
+              "default": "",
+              "label": "Label",
+              "description": "Accessible label",
+              "tier": "presentation"
+            },
+            "actionPayload": {
+              "type": "json",
+              "label": "Action Payload",
+              "description": "Payload to include with the action event",
+              "tier": "presentation"
+            },
+            "size": {
+              "type": "string",
+              "default": "md",
+              "label": "Size",
+              "description": "Star size",
+              "tier": "presentation",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            },
+            "max": {
+              "type": "number",
+              "default": 5.0,
+              "label": "Max",
+              "description": "Maximum number of stars",
+              "tier": "presentation"
+            },
+            "readOnly": {
+              "type": "boolean",
+              "default": false,
+              "label": "Read Only",
+              "description": "Read-only display mode",
+              "tier": "presentation"
+            },
+            "precision": {
+              "type": "string",
+              "default": "full",
+              "label": "Precision",
+              "description": "Full or half-star precision",
+              "tier": "presentation",
+              "values": [
+                "full",
+                "half"
+              ]
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "StarRatingPage",
+          "path": "/star-rating",
+          "traits": [
+            {
+              "ref": "StarRatingRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

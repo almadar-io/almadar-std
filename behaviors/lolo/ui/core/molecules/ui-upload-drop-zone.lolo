@@ -1,0 +1,83 @@
+app ui-upload-drop-zone "1.0.0"
+"UploadDropZone — UI factory (1:1 with the @almadar/ui upload-drop-zone pattern)."
+orbital UploadDropZoneOrbital {
+  entity UploadDropZoneItem [runtime] {
+    id : string!
+  }
+
+  trait UploadDropZoneRender -> @rebindable UploadDropZoneItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          accept: @config.accept
+          maxSize: @config.maxSize
+          maxFiles: @config.maxFiles
+          label: @config.label
+          description: @config.description
+          icon: @config.icon
+          disabled: @config.disabled
+          action: ACTION
+          actionPayload: @config.actionPayload
+          onFiles: FILES
+          className: @config.className
+          type: upload-drop-zone
+        })
+    }
+
+    emits {
+      ACTION -> external {
+        id : string
+      }
+        @description "Declarative event name for file selection"
+        @tier "essential"
+      FILES -> external {
+        files : [object]
+      }
+        @description "Direct onFiles callback"
+        @tier "essential"
+    }
+
+    config {
+      accept : string = ""
+        @label "Accept"
+        @description "Accepted MIME types (e.g., 'image/*', 'application/pdf')"
+        @tier "presentation"
+      maxSize : number = 0
+        @label "Max Size"
+        @description "Max file size in bytes"
+        @tier "presentation"
+      maxFiles : number = 1
+        @label "Max Files"
+        @description "Max number of files"
+        @tier "presentation"
+      label : string = "Drop files here or click to browse"
+        @label "Label"
+        @description "Label text"
+        @tier "presentation"
+      description : string = ""
+        @label "Description"
+        @description "Description text below label"
+        @tier "presentation"
+      icon : string = "circle"
+        @label "Icon"
+        @description "Icon name (Lucide string)"
+        @tier "presentation"
+      disabled : boolean = false
+        @label "Disabled"
+        @description "Disabled state"
+        @tier "presentation"
+      actionPayload : json
+        @label "Action Payload"
+        @description "Payload to include with the action event"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/upload-drop-zone" as UploadDropZonePage -> UploadDropZoneRender
+}

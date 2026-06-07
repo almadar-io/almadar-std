@@ -1,0 +1,164 @@
+{
+  "name": "ui-geometric-pattern",
+  "version": "1.0.0",
+  "description": "GeometricPattern — UI factory (1:1 with the @almadar/ui geometric-pattern pattern).",
+  "orbitals": [
+    {
+      "name": "GeometricPatternOrbital",
+      "entity": {
+        "name": "GeometricPatternItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "GeometricPatternRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "GeometricPatternItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "geometric-pattern",
+                      "scale": "@config.scale",
+                      "opacity": "@config.opacity",
+                      "variant": "@config.variant",
+                      "children": "@config.children",
+                      "mode": "@config.mode",
+                      "color": "@config.color",
+                      "className": "@config.className",
+                      "strokeWidth": "@config.strokeWidth"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "opacity": {
+              "type": "number",
+              "default": 0.06,
+              "label": "Opacity",
+              "description": "Overall opacity (default: 0.06)",
+              "tier": "presentation"
+            },
+            "variant": {
+              "type": "string",
+              "default": "star8",
+              "label": "Variant",
+              "description": "Which geometric tile design",
+              "tier": "presentation",
+              "values": [
+                "star8",
+                "star6",
+                "khatam",
+                "star10",
+                "star12",
+                "rosette-double",
+                "rosette-filled",
+                "seigaiha",
+                "greek-key",
+                "celtic-knot",
+                "kolam",
+                "arch",
+                "arabesque-vine",
+                "arabesque-net"
+              ]
+            },
+            "color": {
+              "type": "string",
+              "default": "var(--color-primary)",
+              "label": "Color",
+              "description": "Stroke color passed to PatternTile",
+              "tier": "presentation"
+            },
+            "children": {
+              "type": "node",
+              "label": "Children",
+              "description": "Content to wrap (used in frame mode)",
+              "tier": "presentation"
+            },
+            "scale": {
+              "type": "number",
+              "default": 1.0,
+              "label": "Scale",
+              "description": "Tile scale multiplier (default: 1)",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "className prop",
+              "tier": "presentation"
+            },
+            "mode": {
+              "type": "string",
+              "default": "background",
+              "label": "Mode",
+              "description": "Layout mode",
+              "tier": "presentation",
+              "values": [
+                "background",
+                "left",
+                "right",
+                "dual",
+                "around",
+                "frame"
+              ]
+            },
+            "strokeWidth": {
+              "type": "number",
+              "default": 0.5,
+              "label": "Stroke Width",
+              "description": "Stroke width passed to PatternTile",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "GeometricPatternPage",
+          "path": "/geometric-pattern",
+          "traits": [
+            {
+              "ref": "GeometricPatternRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

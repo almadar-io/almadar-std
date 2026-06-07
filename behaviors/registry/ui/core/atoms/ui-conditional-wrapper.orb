@@ -1,0 +1,135 @@
+{
+  "name": "ui-conditional-wrapper",
+  "version": "1.0.0",
+  "description": "ConditionalWrapper — UI factory (1:1 with the @almadar/ui conditional-wrapper pattern).",
+  "orbitals": [
+    {
+      "name": "ConditionalWrapperOrbital",
+      "entity": {
+        "name": "ConditionalWrapperItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ConditionalWrapperRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "ConditionalWrapperItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "conditional-wrapper",
+                      "condition": "@config.condition",
+                      "context": "@config.context",
+                      "animate": "@config.animate",
+                      "fallback": "@config.fallback",
+                      "children": "@config.children"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "condition": {
+              "type": "json",
+              "label": "Condition",
+              "description": "The S-expression condition to evaluate",
+              "tier": "presentation"
+            },
+            "fallback": {
+              "type": "node",
+              "label": "Fallback",
+              "description": "Optional fallback to render when condition is false",
+              "tier": "presentation"
+            },
+            "context": {
+              "type": "ConditionalWrapperContext",
+              "label": "Context",
+              "description": "Context for evaluating the condition",
+              "tier": "presentation",
+              "properties": {
+                "entity": {
+                  "name": "entity",
+                  "type": "string",
+                  "required": false
+                },
+                "globalVariables": {
+                  "name": "globalVariables",
+                  "type": "string",
+                  "required": true
+                },
+                "formValues": {
+                  "name": "formValues",
+                  "type": "string",
+                  "required": true
+                },
+                "localVariables": {
+                  "name": "localVariables",
+                  "type": "string",
+                  "required": false
+                }
+              }
+            },
+            "animate": {
+              "type": "boolean",
+              "default": false,
+              "label": "Animate",
+              "description": "Whether to animate the transition (uses CSS transitions)",
+              "tier": "presentation"
+            },
+            "children": {
+              "type": "node",
+              "label": "Children",
+              "description": "Children to render when condition is true (or when no condition is provided)",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "ConditionalWrapperPage",
+          "path": "/conditional-wrapper",
+          "traits": [
+            {
+              "ref": "ConditionalWrapperRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

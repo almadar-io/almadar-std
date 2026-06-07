@@ -1,0 +1,74 @@
+app ui-alert "1.0.0"
+"Alert — UI factory (1:1 with the @almadar/ui alert pattern)."
+orbital AlertOrbital {
+  entity AlertItem [runtime] {
+    id : string!
+  }
+
+  trait AlertRender -> @rebindable AlertItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          children: @config.children
+          message: @config.message
+          variant: @config.variant
+          title: @config.title
+          dismissible: @config.dismissible
+          onDismiss: DISMISS
+          onClose: CLOSE
+          actions: @config.actions
+          className: @config.className
+          dismissEvent: DISMISS
+          type: alert
+        })
+    }
+
+    emits {
+      DISMISS -> external {
+        id : string
+      }
+        @description "onDismiss prop"
+        @tier "essential"
+      CLOSE -> external {
+        id : string
+      }
+        @description "onClose prop"
+        @tier "essential"
+    }
+
+    config {
+      children : node
+        @label "Children"
+        @description "Alert content (children or message)"
+        @tier "presentation"
+      message : string = ""
+        @label "Message"
+        @description "Alert message (alias for children)"
+        @tier "presentation"
+      variant : "info" | "success" | "warning" | "error" = info
+        @label "Variant"
+        @description "variant prop"
+        @tier "presentation"
+      title : string = ""
+        @label "Title"
+        @description "title prop"
+        @tier "presentation"
+      dismissible : boolean = false
+        @label "Dismissible"
+        @description "dismissible prop"
+        @tier "presentation"
+      actions : node
+        @label "Actions"
+        @description "actions prop"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/alert" as AlertPage -> AlertRender
+}

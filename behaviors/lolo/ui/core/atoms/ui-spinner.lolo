@@ -1,0 +1,33 @@
+app ui-spinner "1.0.0"
+"Spinner — UI factory (1:1 with the @almadar/ui spinner pattern)."
+orbital SpinnerOrbital {
+  entity SpinnerItem [runtime] {
+    id : string!
+  }
+
+  trait SpinnerRender -> @rebindable SpinnerItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          className: @config.className
+          size: @config.size
+          type: spinner
+        })
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes applied to the root element."
+        @tier "presentation"
+      size : "xs" | "sm" | "md" | "lg" = md
+        @label "Size"
+        @description "size prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/spinner" as SpinnerPage -> SpinnerRender
+}

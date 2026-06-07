@@ -1,0 +1,53 @@
+app ui-svg-flow "1.0.0"
+"SvgFlow — UI factory (1:1 with the @almadar/ui svg-flow pattern)."
+orbital SvgFlowOrbital {
+  entity SvgFlowItem [runtime] {
+    id : string!
+  }
+
+  trait SvgFlowRender -> @rebindable SvgFlowItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          points: @config.points
+          color: @config.color
+          strokeWidth: @config.strokeWidth
+          animated: @config.animated
+          opacity: @config.opacity
+          className: @config.className
+          type: svg-flow
+        })
+    }
+
+    config {
+      points : [[json]] = []
+        @label "Points"
+        @description "points prop"
+        @tier "presentation"
+      color : string = "var(--color-primary)"
+        @label "Color"
+        @description "color prop"
+        @tier "presentation"
+      strokeWidth : number = 1.5
+        @label "Stroke Width"
+        @description "strokeWidth prop"
+        @tier "presentation"
+      animated : boolean = false
+        @label "Animated"
+        @description "animated prop"
+        @tier "presentation"
+      opacity : number = 1
+        @label "Opacity"
+        @description "opacity prop"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/svg-flow" as SvgFlowPage -> SvgFlowRender
+}

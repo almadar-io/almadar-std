@@ -1,0 +1,105 @@
+app ui-confirm-dialog "1.0.0"
+"ConfirmDialog — UI factory (1:1 with the @almadar/ui confirm-dialog pattern)."
+orbital ConfirmDialogOrbital {
+  entity ConfirmDialogItem [runtime] {
+    id : string!
+  }
+
+  trait ConfirmDialogRender -> @rebindable ConfirmDialogItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch ConfirmDialogItem {})
+        (render-ui main {
+          isOpen: @config.isOpen
+          onClose: CLOSE
+          onConfirm: CONFIRM
+          title: @config.title
+          message: @config.message
+          description: @config.description
+          confirmText: @config.confirmText
+          confirmLabel: @config.confirmLabel
+          cancelText: @config.cancelText
+          cancelLabel: @config.cancelLabel
+          variant: @config.variant
+          size: @config.size
+          isLoading: @config.isLoading
+          error: @config.error
+          entity: ConfirmDialogItem
+          className: @config.className
+          type: confirm-dialog
+        })
+    }
+
+    emits {
+      CLOSE -> external {
+        id : string
+      }
+        @description "Callback when dialog is closed (injected by slot wrapper)"
+        @tier "essential"
+      CONFIRM -> external {
+        id : string
+      }
+        @description "Callback when action is confirmed (injected by slot wrapper)"
+        @tier "essential"
+    }
+
+    config {
+      isOpen : boolean = true
+        @label "Is Open"
+        @description "Whether the dialog is open (defaults to true when rendered by slot wrapper)"
+        @tier "presentation"
+      title : string = ""
+        @label "Title"
+        @description "Dialog title"
+        @tier "presentation"
+      message : json
+        @label "Message"
+        @description "Dialog message/description"
+        @tier "presentation"
+      description : json
+        @label "Description"
+        @description "Alias for message (schema compatibility)"
+        @tier "presentation"
+      confirmText : string = ""
+        @label "Confirm Text"
+        @description "Confirm button text"
+        @tier "presentation"
+      confirmLabel : string = ""
+        @label "Confirm Label"
+        @description "Alias for confirmText (schema compatibility)"
+        @tier "presentation"
+      cancelText : string = ""
+        @label "Cancel Text"
+        @description "Cancel button text"
+        @tier "presentation"
+      cancelLabel : string = ""
+        @label "Cancel Label"
+        @description "Alias for cancelText (schema compatibility)"
+        @tier "presentation"
+      variant : "danger" | "warning" | "info" | "default" = danger
+        @label "Variant"
+        @description "Dialog variant"
+        @tier "presentation"
+      size : "sm" | "md" | "lg" | "xl" | "full" = sm
+        @label "Size"
+        @description "Dialog size"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state for confirm button"
+        @tier "presentation"
+      error : json
+        @label "Error"
+        @description "Error state"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/confirm-dialog" as ConfirmDialogPage -> ConfirmDialogRender
+}

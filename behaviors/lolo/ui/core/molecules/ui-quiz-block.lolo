@@ -1,0 +1,38 @@
+app ui-quiz-block "1.0.0"
+"QuizBlock — UI factory (1:1 with the @almadar/ui quiz-block pattern)."
+orbital QuizBlockOrbital {
+  entity QuizBlockItem [runtime] {
+    id : string!
+  }
+
+  trait QuizBlockRender -> @rebindable QuizBlockItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          question: @config.question
+          answer: @config.answer
+          className: @config.className
+          type: quiz-block
+        })
+    }
+
+    config {
+      question : string = ""
+        @label "Question"
+        @description "The quiz question"
+        @tier "presentation"
+      answer : string = ""
+        @label "Answer"
+        @description "The quiz answer (revealed on toggle)"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/quiz-block" as QuizBlockPage -> QuizBlockRender
+}

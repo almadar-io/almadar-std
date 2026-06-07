@@ -1,0 +1,38 @@
+app ui-markdown-content "1.0.0"
+"MarkdownContent — UI factory (1:1 with the @almadar/ui markdown-content pattern)."
+orbital MarkdownContentOrbital {
+  entity MarkdownContentItem [runtime] {
+    id : string!
+  }
+
+  trait MarkdownContentRender -> @rebindable MarkdownContentItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          content: @config.content
+          direction: @config.direction
+          className: @config.className
+          type: markdown-content
+        })
+    }
+
+    config {
+      content : string = ""
+        @label "Content"
+        @description "The markdown content to render"
+        @tier "presentation"
+      direction : "rtl" | "ltr" = rtl
+        @label "Direction"
+        @description "Text direction"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/markdown-content" as MarkdownContentPage -> MarkdownContentRender
+}

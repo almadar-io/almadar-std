@@ -1,0 +1,108 @@
+{
+  "name": "ui-builder-board",
+  "version": "1.0.0",
+  "description": "BuilderBoard — UI factory (1:1 with the @almadar/ui builder-board pattern).",
+  "orbitals": [
+    {
+      "name": "BuilderBoardOrbital",
+      "entity": {
+        "name": "BuilderBoardItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "BuilderBoardRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "BuilderBoardItem",
+          "emits": [
+            {
+              "event": "COMPLETE",
+              "description": "completeEvent prop",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "success",
+                  "type": "boolean",
+                  "required": true
+                },
+                {
+                  "name": "attempts",
+                  "type": "number",
+                  "required": true
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "COMPLETE",
+                "name": "Complete",
+                "description": "completeEvent prop",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "BuilderBoardItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "entity": "@entity",
+                      "type": "builder-board",
+                      "completeEvent": "COMPLETE"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "BuilderBoardPage",
+          "path": "/builder-board",
+          "traits": [
+            {
+              "ref": "BuilderBoardRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

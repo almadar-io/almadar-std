@@ -1,0 +1,149 @@
+{
+  "name": "ui-svg-lobe",
+  "version": "1.0.0",
+  "description": "SvgLobe — UI factory (1:1 with the @almadar/ui svg-lobe pattern).",
+  "orbitals": [
+    {
+      "name": "SvgLobeOrbital",
+      "entity": {
+        "name": "SvgLobeItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "SvgLobeRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "SvgLobeItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "color": "@config.color",
+                      "shells": "@config.shells",
+                      "opacity": "@config.opacity",
+                      "cx": "@config.cx",
+                      "ry": "@config.ry",
+                      "rx": "@config.rx",
+                      "rotation": "@config.rotation",
+                      "className": "@config.className",
+                      "type": "svg-lobe",
+                      "cy": "@config.cy"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "shells": {
+              "type": "number",
+              "default": 2.0,
+              "label": "Shells",
+              "description": "shells prop",
+              "tier": "presentation"
+            },
+            "rx": {
+              "type": "number",
+              "default": 14.0,
+              "label": "Rx",
+              "description": "rx prop",
+              "tier": "presentation"
+            },
+            "ry": {
+              "type": "number",
+              "default": 20.0,
+              "label": "Ry",
+              "description": "ry prop",
+              "tier": "presentation"
+            },
+            "color": {
+              "type": "string",
+              "default": "var(--color-primary)",
+              "label": "Color",
+              "description": "color prop",
+              "tier": "presentation"
+            },
+            "cx": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Cx",
+              "description": "cx prop",
+              "tier": "presentation"
+            },
+            "cy": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Cy",
+              "description": "cy prop",
+              "tier": "presentation"
+            },
+            "rotation": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Rotation",
+              "description": "rotation prop",
+              "tier": "presentation"
+            },
+            "opacity": {
+              "type": "number",
+              "default": 1.0,
+              "label": "Opacity",
+              "description": "opacity prop",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "className prop",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "SvgLobePage",
+          "path": "/svg-lobe",
+          "traits": [
+            {
+              "ref": "SvgLobeRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,178 @@
+{
+  "name": "ui-alert",
+  "version": "1.0.0",
+  "description": "Alert — UI factory (1:1 with the @almadar/ui alert pattern).",
+  "orbitals": [
+    {
+      "name": "AlertOrbital",
+      "entity": {
+        "name": "AlertItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "AlertRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "AlertItem",
+          "emits": [
+            {
+              "event": "DISMISS",
+              "description": "onDismiss prop",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CLOSE",
+              "description": "onClose prop",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DISMISS",
+                "name": "Dismiss",
+                "description": "onDismiss prop",
+                "tier": "essential"
+              },
+              {
+                "key": "CLOSE",
+                "name": "Close",
+                "description": "onClose prop",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "@config.variant",
+                      "onClose": "CLOSE",
+                      "actions": "@config.actions",
+                      "title": "@config.title",
+                      "className": "@config.className",
+                      "type": "alert",
+                      "children": "@config.children",
+                      "onDismiss": "DISMISS",
+                      "dismissible": "@config.dismissible",
+                      "message": "@config.message",
+                      "dismissEvent": "DISMISS"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "title": {
+              "type": "string",
+              "default": "",
+              "label": "Title",
+              "description": "title prop",
+              "tier": "presentation"
+            },
+            "variant": {
+              "type": "string",
+              "default": "info",
+              "label": "Variant",
+              "description": "variant prop",
+              "tier": "presentation",
+              "values": [
+                "info",
+                "success",
+                "warning",
+                "error"
+              ]
+            },
+            "actions": {
+              "type": "node",
+              "label": "Actions",
+              "description": "actions prop",
+              "tier": "presentation"
+            },
+            "children": {
+              "type": "node",
+              "label": "Children",
+              "description": "Alert content (children or message)",
+              "tier": "presentation"
+            },
+            "dismissible": {
+              "type": "boolean",
+              "default": false,
+              "label": "Dismissible",
+              "description": "dismissible prop",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "className prop",
+              "tier": "presentation"
+            },
+            "message": {
+              "type": "string",
+              "default": "",
+              "label": "Message",
+              "description": "Alert message (alias for children)",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "AlertPage",
+          "path": "/alert",
+          "traits": [
+            {
+              "ref": "AlertRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

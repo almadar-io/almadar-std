@@ -1,0 +1,120 @@
+app ui-wizard-navigation "1.0.0"
+"WizardNavigation — UI factory (1:1 with the @almadar/ui wizard-navigation pattern)."
+orbital WizardNavigationOrbital {
+  entity WizardNavigationItem [runtime] {
+    id : string!
+  }
+
+  trait WizardNavigationRender -> @rebindable WizardNavigationItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          currentStep: @config.currentStep
+          totalSteps: @config.totalSteps
+          isValid: @config.isValid
+          showBack: @config.showBack
+          showNext: @config.showNext
+          showComplete: @config.showComplete
+          backLabel: @config.backLabel
+          nextLabel: @config.nextLabel
+          completeLabel: @config.completeLabel
+          onBack: BACK
+          onNext: NEXT
+          onComplete: COMPLETE
+          onBackClick: BACK_CLICK
+          onNextClick: NEXT_CLICK
+          onCompleteClick: COMPLETE_CLICK
+          compact: @config.compact
+          className: @config.className
+          type: wizard-navigation
+        })
+    }
+
+    emits {
+      BACK -> external {
+        currentStep : number!
+        totalSteps : number!
+      }
+        @description "Event to emit on Back click — emits UI:{onBack} with { currentStep, totalSteps }"
+        @tier "essential"
+      NEXT -> external {
+        currentStep : number!
+        totalSteps : number!
+      }
+        @description "Event to emit on Next click — emits UI:{onNext} with { currentStep, totalSteps }"
+        @tier "essential"
+      COMPLETE -> external {
+        currentStep : number!
+        totalSteps : number!
+      }
+        @description "Event to emit on Complete click — emits UI:{onComplete} with { currentStep, totalSteps }"
+        @tier "essential"
+      BACK_CLICK -> external {
+        id : string
+      }
+        @description "Direct callback for Back (alternative to event)"
+        @tier "essential"
+      NEXT_CLICK -> external {
+        id : string
+      }
+        @description "Direct callback for Next (alternative to event)"
+        @tier "essential"
+      COMPLETE_CLICK -> external {
+        id : string
+      }
+        @description "Direct callback for Complete (alternative to event)"
+        @tier "essential"
+    }
+
+    config {
+      currentStep : number = 0
+        @label "Current Step"
+        @description "Current step index (0-based)"
+        @tier "presentation"
+      totalSteps : number = 0
+        @label "Total Steps"
+        @description "Total number of steps"
+        @tier "presentation"
+      isValid : boolean = true
+        @label "Is Valid"
+        @description "Whether the current step is valid (enables Next/Complete)"
+        @tier "presentation"
+      showBack : boolean = true
+        @label "Show Back"
+        @description "Show the Back button"
+        @tier "presentation"
+      showNext : boolean = true
+        @label "Show Next"
+        @description "Show the Next button"
+        @tier "presentation"
+      showComplete : boolean = true
+        @label "Show Complete"
+        @description "Show the Complete button (on last step)"
+        @tier "presentation"
+      backLabel : string = ""
+        @label "Back Label"
+        @description "Custom label for Back button"
+        @tier "presentation"
+      nextLabel : string = ""
+        @label "Next Label"
+        @description "Custom label for Next button"
+        @tier "presentation"
+      completeLabel : string = ""
+        @label "Complete Label"
+        @description "Custom label for Complete button"
+        @tier "presentation"
+      compact : boolean = false
+        @label "Compact"
+        @description "Compact mode (smaller padding)"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/wizard-navigation" as WizardNavigationPage -> WizardNavigationRender
+}

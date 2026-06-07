@@ -1,0 +1,73 @@
+app ui-reply-tree "1.0.0"
+"ReplyTree — UI factory (1:1 with the @almadar/ui reply-tree pattern)."
+orbital ReplyTreeOrbital {
+  entity ReplyTreeItem [runtime] {
+    id : string!
+  }
+
+  trait ReplyTreeRender -> @rebindable ReplyTreeItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch ReplyTreeItem {})
+        (render-ui main {
+          nodes: @entity
+          maxDepth: @config.maxDepth
+          onVote: VOTE
+          onReply: REPLY
+          onFlag: FLAG
+          onContinueThread: CONTINUE_THREAD
+          voteEvent: VOTE
+          replyEvent: REPLY
+          flagEvent: FLAG
+          continueThreadEvent: CONTINUE_THREAD
+          showActions: @config.showActions
+          className: @config.className
+          type: reply-tree
+        })
+    }
+
+    emits {
+      VOTE -> external {
+        nodeId : string
+        vote : string
+      }
+        @description "onVote prop"
+        @tier "essential"
+      REPLY -> external {
+        parentNodeId : string
+        content : string!
+      }
+        @description "onReply prop"
+        @tier "essential"
+      FLAG -> external {
+        nodeId : string
+      }
+        @description "onFlag prop"
+        @tier "essential"
+      CONTINUE_THREAD -> external {
+        nodeId : string
+      }
+        @description "onContinueThread prop"
+        @tier "essential"
+    }
+
+    config {
+      maxDepth : number = 6
+        @label "Max Depth"
+        @description "maxDepth prop"
+        @tier "presentation"
+      showActions : boolean = true
+        @label "Show Actions"
+        @description "showActions prop"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/reply-tree" as ReplyTreePage -> ReplyTreeRender
+}

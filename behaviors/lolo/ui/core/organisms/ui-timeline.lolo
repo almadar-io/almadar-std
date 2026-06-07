@@ -1,0 +1,81 @@
+app ui-timeline "1.0.0"
+"Timeline — UI factory (1:1 with the @almadar/ui timeline pattern)."
+orbital TimelineOrbital {
+  type TimelineItemsItem = {
+    id : string!
+    title : string!
+    description : string
+    date : string
+    status : "complete" | "active" | "pending" | "error"
+    icon : string
+    tags : [string]
+  }
+  type TimelineItemActionsItem = {
+    label : string!
+    event : string
+    navigatesTo : string
+    variant : "primary" | "secondary" | "ghost"
+  }
+
+  entity TimelineItem [runtime] {
+    id : string!
+  }
+
+  trait TimelineRender -> @rebindable TimelineItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch TimelineItem {})
+        (render-ui main {
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          entity: @entity
+          title: @config.title
+          items: @config.items
+          fields: @config.fields
+          itemActions: @config.itemActions
+          look: @config.look
+          type: timeline
+        })
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : json
+        @label "Error"
+        @description "Error state"
+        @tier "presentation"
+      title : string = ""
+        @label "Title"
+        @description "Timeline title"
+        @tier "presentation"
+      items : [TimelineItemsItem] = []
+        @label "Items"
+        @description "Timeline items"
+        @tier "presentation"
+      fields : [string] = []
+        @label "Fields"
+        @description "Fields to display"
+        @tier "presentation"
+      itemActions : [TimelineItemActionsItem] = []
+        @label "Item Actions"
+        @description "Actions per item"
+        @tier "presentation"
+      look : "vertical-compact" | "vertical-spacious" | "horizontal" | "swimlane" = "vertical-spacious"
+        @label "Look"
+        @description "Layer 2 visual treatment."
+        @tier "presentation"
+    }
+  }
+
+  page "/timeline" as TimelinePage -> TimelineRender
+}

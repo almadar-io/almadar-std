@@ -1,0 +1,49 @@
+app ui-doc-pagination "1.0.0"
+"DocPagination — UI factory (1:1 with the @almadar/ui doc-pagination pattern)."
+orbital DocPaginationOrbital {
+  type DocPaginationPrev = {
+    label : string!
+    href : string!
+    category : string
+  }
+  type DocPaginationNext = {
+    label : string!
+    href : string!
+    category : string
+  }
+
+  entity DocPaginationItem [runtime] {
+    id : string!
+  }
+
+  trait DocPaginationRender -> @rebindable DocPaginationItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          prev: @config.prev
+          next: @config.next
+          className: @config.className
+          type: doc-pagination
+        })
+    }
+
+    config {
+      prev : DocPaginationPrev
+        @label "Prev"
+        @description "Previous page link"
+        @tier "presentation"
+      next : DocPaginationNext
+        @label "Next"
+        @description "Next page link"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional class names"
+        @tier "presentation"
+    }
+  }
+
+  page "/doc-pagination" as DocPaginationPage -> DocPaginationRender
+}

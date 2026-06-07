@@ -1,0 +1,30 @@
+app ui-about-page-template "1.0.0"
+"AboutPageTemplate — UI factory (1:1 with the @almadar/ui about-page-template pattern)."
+orbital AboutPageTemplateOrbital {
+  entity AboutPageTemplateItem [runtime] {
+    id : string!
+  }
+
+  trait AboutPageTemplateRender -> @rebindable AboutPageTemplateItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch AboutPageTemplateItem {})
+        (render-ui main {
+          entity: @entity
+          className: @config.className
+          type: about-page-template
+        })
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "External styling override"
+        @tier "presentation"
+    }
+  }
+
+  page "/about-page-template" as AboutPageTemplatePage -> AboutPageTemplateRender
+}

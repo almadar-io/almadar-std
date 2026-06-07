@@ -1,0 +1,88 @@
+app ui-avatar "1.0.0"
+"Avatar — UI factory (1:1 with the @almadar/ui avatar pattern)."
+orbital AvatarOrbital {
+  entity AvatarItem [runtime] {
+    id : string!
+  }
+
+  trait AvatarRender -> @rebindable AvatarItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          src: @config.src
+          alt: @config.alt
+          name: @config.name
+          initials: @config.initials
+          icon: @config.icon
+          size: @config.size
+          status: @config.status
+          badge: @config.badge
+          className: @config.className
+          onClick: CLICK
+          action: ACTION
+          actionPayload: @config.actionPayload
+          type: avatar
+        })
+    }
+
+    emits {
+      CLICK -> external {
+        id : string
+      }
+        @description "Click handler"
+        @tier "essential"
+      ACTION -> external {
+        id : string
+      }
+        @description "Declarative event name — emits UI:{action} via eventBus on click"
+        @tier "essential"
+    }
+
+    config {
+      src : string = ""
+        @label "Src"
+        @description "Image source URL"
+        @tier "presentation"
+      alt : string = ""
+        @label "Alt"
+        @description "Alt text for the image"
+        @tier "presentation"
+      name : string = ""
+        @label "Name"
+        @description "Full name - initials will be generated automatically"
+        @tier "presentation"
+      initials : string = ""
+        @label "Initials"
+        @description "Initials to display (e.g., 'JD' for John Doe) If not provided but name is, initials will be auto-generated"
+        @tier "presentation"
+      icon : string = "circle"
+        @label "Icon"
+        @description "Icon to display when no image or initials"
+        @tier "presentation"
+      size : "xs" | "sm" | "md" | "lg" | "xl" = md
+        @label "Size"
+        @description "Size of the avatar"
+        @tier "presentation"
+      status : "online" | "offline" | "away" | "busy" = online
+        @label "Status"
+        @description "Status indicator"
+        @tier "presentation"
+      badge : string | number
+        @label "Badge"
+        @description "Badge content (e.g., notification count)"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      actionPayload : json
+        @label "Action Payload"
+        @description "Payload to include with the action event"
+        @tier "presentation"
+    }
+  }
+
+  page "/avatar" as AvatarPage -> AvatarRender
+}

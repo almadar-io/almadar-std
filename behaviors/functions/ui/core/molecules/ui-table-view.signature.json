@@ -1,0 +1,463 @@
+[
+  {
+    "organism": "ui-table-view",
+    "orbital": "TableViewOrbital",
+    "tier": "molecules",
+    "factoryPath": "behaviors/functions/ui/core/molecules/ui-table-view.ts",
+    "entities": [
+      {
+        "name": "TableViewItem",
+        "fields": [],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "TableViewRender",
+        "emittedEvents": [
+          "SELECT",
+          "SORT",
+          "CHILDREN",
+          "RENDER_ITEM"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "SELECT",
+            "direction": "emit",
+            "description": "Event emitted on selection change: UI:{selectEvent} with { ids, rows }.",
+            "tier": "essential"
+          },
+          {
+            "name": "SORT",
+            "direction": "emit",
+            "description": "Event emitted on sortable-header click: UI:{sortEvent} with { column, direction }.",
+            "tier": "essential"
+          },
+          {
+            "name": "CHILDREN",
+            "direction": "emit",
+            "description": "Custom per-row render. When provided, the whole row content is delegated to this function (columns are ignored for the body; the header still renders). Mirrors DataList's children render prop.",
+            "tier": "essential"
+          },
+          {
+            "name": "RENDER_ITEM",
+            "direction": "emit",
+            "description": "Per-row render function (schema alias). In .orb: ['fn','item',{...}]. The compiler converts this to the children render prop.",
+            "tier": "essential"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "accepts",
+            "type": "string",
+            "default": "",
+            "label": "Accepts",
+            "description": "When set, the container accepts drops whose dragGroup matches this value (or '*' for any group)",
+            "tier": "presentation"
+          },
+          {
+            "key": "className",
+            "type": "string",
+            "default": "",
+            "label": "Class Name",
+            "description": "Additional CSS classes applied to the table root.",
+            "tier": "presentation"
+          },
+          {
+            "key": "columns",
+            "type": "[TableViewColumnsItem]",
+            "default": [],
+            "label": "Columns",
+            "description": "Column definitions. The compiler emits `columns`; `fields` is the alias.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "align": {
+                  "name": "align",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "left",
+                    "center",
+                    "right"
+                  ]
+                },
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "badge",
+                    "date",
+                    "currency",
+                    "number",
+                    "percent",
+                    "boolean"
+                  ]
+                },
+                "header": {
+                  "name": "header",
+                  "required": false,
+                  "type": "string"
+                },
+                "width": {
+                  "name": "width",
+                  "required": false,
+                  "type": "string"
+                },
+                "className": {
+                  "name": "className",
+                  "required": false,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "field": {
+                  "name": "field",
+                  "required": false,
+                  "type": "string"
+                },
+                "sortable": {
+                  "name": "sortable",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "key": {
+                  "name": "key",
+                  "required": true,
+                  "type": "string"
+                },
+                "weight": {
+                  "name": "weight",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "normal",
+                    "medium",
+                    "semibold"
+                  ]
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "dndItemIdField",
+            "type": "string",
+            "default": "",
+            "label": "Dnd Item Id Field",
+            "description": "Row field used as the @dnd-kit draggable id (default 'id')",
+            "tier": "presentation"
+          },
+          {
+            "key": "dndRoot",
+            "type": "boolean",
+            "default": false,
+            "label": "Dnd Root",
+            "description": "Mark this container as the DnD root for its subtree — descendant zones share one DndContext (cross-container drag). Use on an outer container whose own items are not draggable.",
+            "tier": "presentation"
+          },
+          {
+            "key": "dragGroup",
+            "type": "string",
+            "default": "",
+            "label": "Drag Group",
+            "description": "When set, items in this container are draggable and announce this group as their source",
+            "tier": "presentation"
+          },
+          {
+            "key": "dropEvent",
+            "type": "string",
+            "default": "",
+            "label": "Drop Event",
+            "description": "Bus event fired on cross-container drop. Payload: { id, sourceGroup, targetGroup, newIndex }",
+            "tier": "presentation"
+          },
+          {
+            "key": "emptyMessage",
+            "type": "string",
+            "default": "",
+            "label": "Empty Message",
+            "description": "Message shown when there are no rows.",
+            "tier": "presentation"
+          },
+          {
+            "key": "error",
+            "type": "json",
+            "label": "Error",
+            "description": "Error state.",
+            "tier": "presentation"
+          },
+          {
+            "key": "fields",
+            "type": "[TableViewFieldsItem]",
+            "default": [],
+            "label": "Fields",
+            "description": "Alias for `columns`.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "key": {
+                  "name": "key",
+                  "required": true,
+                  "type": "string"
+                },
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "badge",
+                    "date",
+                    "currency",
+                    "number",
+                    "percent",
+                    "boolean"
+                  ]
+                },
+                "width": {
+                  "name": "width",
+                  "required": false,
+                  "type": "string"
+                },
+                "header": {
+                  "name": "header",
+                  "required": false,
+                  "type": "string"
+                },
+                "className": {
+                  "name": "className",
+                  "required": false,
+                  "type": "string"
+                },
+                "align": {
+                  "name": "align",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "left",
+                    "center",
+                    "right"
+                  ]
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "sortable": {
+                  "name": "sortable",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "field": {
+                  "name": "field",
+                  "required": false,
+                  "type": "string"
+                },
+                "weight": {
+                  "name": "weight",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "normal",
+                    "medium",
+                    "semibold"
+                  ]
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "groupBy",
+            "type": "string",
+            "default": "",
+            "label": "Group By",
+            "description": "Group rows under section headers by a field value.",
+            "tier": "presentation"
+          },
+          {
+            "key": "isLoading",
+            "type": "boolean",
+            "default": false,
+            "label": "Is Loading",
+            "description": "Loading state.",
+            "tier": "presentation"
+          },
+          {
+            "key": "itemActions",
+            "type": "[TableViewItemActionsItem]",
+            "default": [],
+            "label": "Item Actions",
+            "description": "Per-row action buttons (trailing column).",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "event": {
+                  "name": "event",
+                  "required": true,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "primary",
+                    "secondary",
+                    "ghost",
+                    "danger"
+                  ]
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "look",
+            "type": "string",
+            "default": "dense",
+            "label": "Look",
+            "description": "Layer 2 visual treatment — mirrors the data-list / entity-table look enum so authors share one knob name across row renderers.",
+            "tier": "presentation",
+            "enumValues": [
+              "dense",
+              "spacious",
+              "striped",
+              "borderless",
+              "bordered"
+            ]
+          },
+          {
+            "key": "maxInlineActions",
+            "type": "number",
+            "default": 0,
+            "label": "Max Inline Actions",
+            "description": "Max inline action buttons before the rest collapse into a '⋯' overflow menu. Omit = all inline.",
+            "tier": "presentation"
+          },
+          {
+            "key": "pageSize",
+            "type": "number",
+            "default": 0,
+            "label": "Page Size",
+            "description": "Max rows before a 'Show More' button. Defaults to 0 (show all).",
+            "tier": "presentation"
+          },
+          {
+            "key": "positionEvent",
+            "type": "string",
+            "default": "",
+            "label": "Position Event",
+            "description": "Bus event fired N times per drop (one per item in affected zones) so the trait can persist new positions for the WHOLE zone, not just the moved item. Payload: { id, position }",
+            "tier": "presentation"
+          },
+          {
+            "key": "reorderEvent",
+            "type": "string",
+            "default": "",
+            "label": "Reorder Event",
+            "description": "Bus event fired on in-container reorder. Payload: { id, oldIndex, newIndex }",
+            "tier": "presentation"
+          },
+          {
+            "key": "selectable",
+            "type": "boolean",
+            "default": false,
+            "label": "Selectable",
+            "description": "Render a leading checkbox column. Selection changes emit `selectEvent`.",
+            "tier": "presentation"
+          },
+          {
+            "key": "selectedIds",
+            "type": "[string]",
+            "default": [],
+            "label": "Selected Ids",
+            "description": "Currently-selected ids (controlled). Falls back to local state when omitted.",
+            "tier": "presentation",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "sortColumn",
+            "type": "string",
+            "default": "",
+            "label": "Sort Column",
+            "description": "Current sort column (display hint for the active header arrow).",
+            "tier": "presentation"
+          },
+          {
+            "key": "sortDirection",
+            "type": "string",
+            "default": "asc",
+            "label": "Sort Direction",
+            "description": "Current sort direction (display hint).",
+            "tier": "presentation",
+            "enumValues": [
+              "asc",
+              "desc"
+            ]
+          },
+          {
+            "key": "sortable",
+            "type": "boolean",
+            "default": false,
+            "label": "Sortable",
+            "description": "Enable in-container reorder; items can be dragged to new positions among siblings",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "TableViewPage",
+        "defaultPath": "/table-view",
+        "primaryEntity": "TableViewItem"
+      }
+    ],
+    "emittedEvents": [
+      "CHILDREN",
+      "RENDER_ITEM",
+      "SELECT",
+      "SORT"
+    ],
+    "listenedEvents": []
+  }
+]

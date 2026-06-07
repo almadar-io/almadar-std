@@ -1,0 +1,63 @@
+app ui-module-card "1.0.0"
+"ModuleCard — UI factory (1:1 with the @almadar/ui module-card pattern)."
+orbital ModuleCardOrbital {
+  type ModuleCardData = {
+    orbitalName : string!
+    entityName : string!
+    persistence : string!
+    fields : [ModuleCardDataFieldsItem]!
+    traits : [ModuleCardDataTraitsItem]!
+    pages : [ModuleCardDataPagesItem]!
+    traitDetails : json!
+    externalLinks : [ModuleCardDataExternalLinksItem]!
+  }
+  type ModuleCardDataFieldsItem = {
+    name : string!
+    type : string!
+    required : boolean!
+    hasDefault : boolean!
+  }
+  type ModuleCardDataTraitsItem = {
+    name : string!
+    stateCount : number!
+    eventCount : number!
+    transitionCount : number!
+    emits : [string]!
+    listens : [string]!
+  }
+  type ModuleCardDataPagesItem = {
+    name : string!
+    route : string!
+  }
+  type ModuleCardDataExternalLinksItem = {
+    targetOrbital : string!
+    eventName : string!
+    direction : "out" | "in"!
+    traitName : string!
+  }
+
+  entity ModuleCardItem [runtime] {
+    id : string!
+  }
+
+  trait ModuleCardRender -> @rebindable ModuleCardItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          data: @config.data
+          type: module-card
+        })
+    }
+
+    config {
+      data : ModuleCardData
+        @label "Data"
+        @description "data prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/module-card" as ModuleCardPage -> ModuleCardRender
+}

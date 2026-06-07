@@ -1,0 +1,53 @@
+app ui-simple-grid "1.0.0"
+"SimpleGrid — UI factory (1:1 with the @almadar/ui simple-grid pattern)."
+orbital SimpleGridOrbital {
+  entity SimpleGridItem [runtime] {
+    id : string!
+  }
+
+  trait SimpleGridRender -> @rebindable SimpleGridItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          minChildWidth: @config.minChildWidth
+          maxCols: @config.maxCols
+          cols: @config.cols
+          gap: @config.gap
+          className: @config.className
+          children: @config.children
+          type: simple-grid
+        })
+    }
+
+    config {
+      minChildWidth : number | string
+        @label "Min Child Width"
+        @description "Minimum width of each child (e.g., 200, '200px', '15rem')"
+        @tier "presentation"
+      maxCols : number = 0
+        @label "Max Cols"
+        @description "Maximum number of columns"
+        @tier "presentation"
+      cols : number = 0
+        @label "Cols"
+        @description "Exact number of columns (disables auto-fit)"
+        @tier "presentation"
+      gap : "none" | "xs" | "sm" | "md" | "lg" | "xl" = md
+        @label "Gap"
+        @description "Gap between items"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Custom class name"
+        @tier "presentation"
+      children : node
+        @label "Children"
+        @description "Children elements"
+        @tier "presentation"
+    }
+  }
+
+  page "/simple-grid" as SimpleGridPage -> SimpleGridRender
+}

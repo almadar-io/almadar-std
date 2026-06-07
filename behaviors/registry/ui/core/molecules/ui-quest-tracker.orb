@@ -1,0 +1,136 @@
+{
+  "name": "ui-quest-tracker",
+  "version": "1.0.0",
+  "description": "QuestTracker — UI factory (1:1 with the @almadar/ui quest-tracker pattern).",
+  "orbitals": [
+    {
+      "name": "QuestTrackerOrbital",
+      "entity": {
+        "name": "QuestTrackerItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "QuestTrackerRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "QuestTrackerItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "activeQuestId": "@config.activeQuestId",
+                      "quests": "@config.quests",
+                      "type": "quest-tracker"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "activeQuestId": {
+              "type": "string",
+              "default": "",
+              "label": "Active Quest Id",
+              "description": "ID of the currently active quest",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "quests": {
+              "type": "[QuestTrackerQuestsItem]",
+              "default": [],
+              "label": "Quests",
+              "description": "Array of quests to display",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "progress": {
+                    "name": "progress",
+                    "type": "number",
+                    "required": true
+                  },
+                  "title": {
+                    "name": "title",
+                    "type": "string",
+                    "required": true
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  "active": {
+                    "name": "active",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "completed": {
+                    "name": "completed",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "maxProgress": {
+                    "name": "maxProgress",
+                    "type": "number",
+                    "required": true
+                  }
+                }
+              }
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "QuestTrackerPage",
+          "path": "/quest-tracker",
+          "traits": [
+            {
+              "ref": "QuestTrackerRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

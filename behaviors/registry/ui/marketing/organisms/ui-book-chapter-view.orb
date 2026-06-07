@@ -1,0 +1,126 @@
+{
+  "name": "ui-book-chapter-view",
+  "version": "1.0.0",
+  "description": "BookChapterView — UI factory (1:1 with the @almadar/ui book-chapter-view pattern).",
+  "orbitals": [
+    {
+      "name": "BookChapterViewOrbital",
+      "entity": {
+        "name": "BookChapterViewItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "BookChapterViewRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "BookChapterViewItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "chapter": "@config.chapter",
+                      "type": "book-chapter-view",
+                      "direction": "@config.direction"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "direction": {
+              "type": "string",
+              "default": "rtl",
+              "label": "Direction",
+              "description": "direction prop",
+              "tier": "presentation",
+              "values": [
+                "rtl",
+                "ltr"
+              ]
+            },
+            "chapter": {
+              "type": "BookChapterViewChapter",
+              "label": "Chapter",
+              "description": "chapter prop",
+              "tier": "presentation",
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                "content": {
+                  "name": "content",
+                  "type": "string",
+                  "required": true
+                },
+                "title": {
+                  "name": "title",
+                  "type": "string",
+                  "required": true
+                },
+                "orbitalSchema": {
+                  "name": "orbitalSchema",
+                  "type": "string",
+                  "required": false
+                }
+              }
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "BookChapterViewPage",
+          "path": "/book-chapter-view",
+          "traits": [
+            {
+              "ref": "BookChapterViewRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

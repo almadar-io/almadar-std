@@ -1,0 +1,369 @@
+{
+  "name": "ui-box",
+  "version": "1.0.0",
+  "description": "Box — UI factory (1:1 with the @almadar/ui box pattern).",
+  "orbitals": [
+    {
+      "name": "BoxOrbital",
+      "entity": {
+        "name": "BoxItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "BoxRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "BoxItem",
+          "emits": [
+            {
+              "event": "ACTION",
+              "description": "Declarative event name — emits UI:{action} via eventBus on click",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "HOVER",
+              "description": "Declarative hover event — emits UI:{hoverEvent} with { hovered: true/false } on mouseEnter/mouseLeave",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "ACTION",
+                "name": "Action",
+                "description": "Declarative event name — emits UI:{action} via eventBus on click",
+                "tier": "essential"
+              },
+              {
+                "key": "HOVER",
+                "name": "Hover",
+                "description": "Declarative hover event — emits UI:{hoverEvent} with { hovered: true/false } on mouseEnter/mouseLeave",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "paddingX": "@config.paddingX",
+                      "rounded": "@config.rounded",
+                      "maxWidth": "@config.maxWidth",
+                      "marginX": "@config.marginX",
+                      "shadow": "@config.shadow",
+                      "border": "@config.border",
+                      "fullWidth": "@config.fullWidth",
+                      "padding": "@config.padding",
+                      "paddingY": "@config.paddingY",
+                      "margin": "@config.margin",
+                      "display": "@config.display",
+                      "marginY": "@config.marginY",
+                      "overflow": "@config.overflow",
+                      "action": "ACTION",
+                      "actionPayload": "@config.actionPayload",
+                      "children": "@config.children",
+                      "className": "@config.className",
+                      "position": "@config.position",
+                      "hoverEvent": "HOVER",
+                      "type": "box",
+                      "fullHeight": "@config.fullHeight",
+                      "bg": "@config.bg"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "margin": {
+              "type": "string",
+              "default": "none",
+              "label": "Margin",
+              "description": "Margin on all sides",
+              "tier": "presentation",
+              "values": [
+                "none",
+                "xs",
+                "sm",
+                "md",
+                "lg",
+                "xl",
+                "2xl",
+                "auto"
+              ]
+            },
+            "display": {
+              "type": "string",
+              "default": "block",
+              "label": "Display",
+              "description": "Display type",
+              "tier": "presentation",
+              "values": [
+                "block",
+                "inline",
+                "inline-block",
+                "flex",
+                "inline-flex",
+                "grid"
+              ]
+            },
+            "position": {
+              "type": "string",
+              "default": "relative",
+              "label": "Position",
+              "description": "Position",
+              "tier": "presentation",
+              "values": [
+                "relative",
+                "absolute",
+                "fixed",
+                "sticky"
+              ]
+            },
+            "marginX": {
+              "type": "string",
+              "default": "none",
+              "label": "Margin X",
+              "description": "Horizontal margin",
+              "tier": "presentation",
+              "values": [
+                "none",
+                "xs",
+                "sm",
+                "md",
+                "lg",
+                "xl",
+                "2xl",
+                "auto"
+              ]
+            },
+            "children": {
+              "type": "node",
+              "label": "Children",
+              "description": "Children elements",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes applied to the root element.",
+              "tier": "presentation"
+            },
+            "shadow": {
+              "type": "string",
+              "default": "none",
+              "label": "Shadow",
+              "description": "Box shadow",
+              "tier": "presentation",
+              "values": [
+                "none",
+                "sm",
+                "md",
+                "lg",
+                "xl"
+              ]
+            },
+            "overflow": {
+              "type": "string",
+              "default": "auto",
+              "label": "Overflow",
+              "description": "Overflow behavior",
+              "tier": "presentation",
+              "values": [
+                "auto",
+                "hidden",
+                "visible",
+                "scroll"
+              ]
+            },
+            "marginY": {
+              "type": "string",
+              "default": "none",
+              "label": "Margin Y",
+              "description": "Vertical margin",
+              "tier": "presentation",
+              "values": [
+                "none",
+                "xs",
+                "sm",
+                "md",
+                "lg",
+                "xl",
+                "2xl",
+                "auto"
+              ]
+            },
+            "bg": {
+              "type": "string",
+              "default": "transparent",
+              "label": "Bg",
+              "description": "Background color",
+              "tier": "presentation",
+              "values": [
+                "transparent",
+                "primary",
+                "secondary",
+                "muted",
+                "accent",
+                "surface",
+                "overlay"
+              ]
+            },
+            "padding": {
+              "type": "string",
+              "default": "none",
+              "label": "Padding",
+              "description": "Padding on all sides",
+              "tier": "presentation",
+              "values": [
+                "none",
+                "xs",
+                "sm",
+                "md",
+                "lg",
+                "xl",
+                "2xl"
+              ]
+            },
+            "border": {
+              "type": "boolean",
+              "default": false,
+              "label": "Border",
+              "description": "Show border",
+              "tier": "presentation"
+            },
+            "fullHeight": {
+              "type": "boolean",
+              "default": false,
+              "label": "Full Height",
+              "description": "Fill available height",
+              "tier": "presentation"
+            },
+            "paddingY": {
+              "type": "string",
+              "default": "none",
+              "label": "Padding Y",
+              "description": "Vertical padding (overrides padding for y-axis)",
+              "tier": "presentation",
+              "values": [
+                "none",
+                "xs",
+                "sm",
+                "md",
+                "lg",
+                "xl",
+                "2xl"
+              ]
+            },
+            "rounded": {
+              "type": "string",
+              "default": "none",
+              "label": "Rounded",
+              "description": "Border radius",
+              "tier": "presentation",
+              "values": [
+                "none",
+                "sm",
+                "md",
+                "lg",
+                "xl",
+                "2xl",
+                "full"
+              ]
+            },
+            "paddingX": {
+              "type": "string",
+              "default": "none",
+              "label": "Padding X",
+              "description": "Horizontal padding (overrides padding for x-axis)",
+              "tier": "presentation",
+              "values": [
+                "none",
+                "xs",
+                "sm",
+                "md",
+                "lg",
+                "xl",
+                "2xl"
+              ]
+            },
+            "fullWidth": {
+              "type": "boolean",
+              "default": false,
+              "label": "Full Width",
+              "description": "Fill available width",
+              "tier": "presentation"
+            },
+            "actionPayload": {
+              "type": "json",
+              "label": "Action Payload",
+              "description": "Payload to include with the action event",
+              "tier": "presentation"
+            },
+            "maxWidth": {
+              "type": "string",
+              "default": "",
+              "label": "Max Width",
+              "description": "Maximum width (CSS value, e.g., '550px', '80rem')",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "BoxPage",
+          "path": "/box",
+          "traits": [
+            {
+              "ref": "BoxRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

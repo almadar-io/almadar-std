@@ -1,0 +1,48 @@
+app ui-skeleton "1.0.0"
+"Skeleton — UI factory (1:1 with the @almadar/ui skeleton pattern)."
+orbital SkeletonOrbital {
+  entity SkeletonItem [runtime] {
+    id : string!
+  }
+
+  trait SkeletonRender -> @rebindable SkeletonItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          variant: @config.variant
+          rows: @config.rows
+          columns: @config.columns
+          fields: @config.fields
+          className: @config.className
+          type: skeleton
+        })
+    }
+
+    config {
+      variant : "header" | "table" | "form" | "card" | "text" = text
+        @label "Variant"
+        @description "The skeleton variant to render"
+        @tier "presentation"
+      rows : number = 5
+        @label "Rows"
+        @description "Number of rows for table/text variants"
+        @tier "presentation"
+      columns : number = 4
+        @label "Columns"
+        @description "Number of columns for table variant"
+        @tier "presentation"
+      fields : number = 4
+        @label "Fields"
+        @description "Number of fields for form variant"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/skeleton" as SkeletonPage -> SkeletonRender
+}

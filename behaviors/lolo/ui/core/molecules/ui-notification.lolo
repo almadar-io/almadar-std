@@ -1,0 +1,80 @@
+app ui-notification "1.0.0"
+"Notification — UI factory (1:1 with the @almadar/ui notification pattern)."
+orbital NotificationOrbital {
+  entity NotificationItem [runtime] {
+    id : string!
+  }
+
+  trait NotificationRender -> @rebindable NotificationItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          variant: @config.variant
+          message: @config.message
+          title: @config.title
+          duration: @config.duration
+          dismissible: @config.dismissible
+          onDismiss: DISMISS
+          actionLabel: @config.actionLabel
+          onAction: ACTION
+          badge: @config.badge
+          className: @config.className
+          dismissEvent: DISMISS
+          actionEvent: ACTION
+          type: notification
+        })
+    }
+
+    emits {
+      DISMISS -> external {
+        id : string
+      }
+        @description "Callback when toast is dismissed"
+        @tier "essential"
+      ACTION -> external {
+        id : string
+      }
+        @description "Action button click handler"
+        @tier "essential"
+    }
+
+    config {
+      variant : "success" | "error" | "info" | "warning" = info
+        @label "Variant"
+        @description "Toast variant"
+        @tier "presentation"
+      message : string = ""
+        @label "Message"
+        @description "Toast message"
+        @tier "presentation"
+      title : string = ""
+        @label "Title"
+        @description "Toast title (optional)"
+        @tier "presentation"
+      duration : number = 5000
+        @label "Duration"
+        @description "Auto-dismiss duration in milliseconds (0 = no auto-dismiss)"
+        @tier "presentation"
+      dismissible : boolean = true
+        @label "Dismissible"
+        @description "Show dismiss button"
+        @tier "presentation"
+      actionLabel : string = ""
+        @label "Action Label"
+        @description "Action button label"
+        @tier "presentation"
+      badge : string | number
+        @label "Badge"
+        @description "Badge count (optional)"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/notification" as NotificationPage -> NotificationRender
+}

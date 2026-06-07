@@ -1,0 +1,47 @@
+app ui-flip-container "1.0.0"
+"FlipContainer — UI factory (1:1 with the @almadar/ui flip-container pattern)."
+orbital FlipContainerOrbital {
+  entity FlipContainerItem [runtime] {
+    id : string!
+  }
+
+  trait FlipContainerRender -> @rebindable FlipContainerItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          flipped: @config.flipped
+          className: @config.className
+          children: @config.children
+          onClick: CLICK
+          type: flip-container
+        })
+    }
+
+    emits {
+      CLICK -> external {
+        id : string
+      }
+        @description "Click handler on the outer wrapper"
+        @tier "essential"
+    }
+
+    config {
+      flipped : boolean = false
+        @label "Flipped"
+        @description "Whether the container is flipped (rotateY 180deg)"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Optional className for the outer wrapper"
+        @tier "presentation"
+      children : node
+        @label "Children"
+        @description "The two face elements (front and back)"
+        @tier "presentation"
+    }
+  }
+
+  page "/flip-container" as FlipContainerPage -> FlipContainerRender
+}

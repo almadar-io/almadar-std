@@ -1,0 +1,135 @@
+{
+  "name": "ui-simple-grid",
+  "version": "1.0.0",
+  "description": "SimpleGrid — UI factory (1:1 with the @almadar/ui simple-grid pattern).",
+  "orbitals": [
+    {
+      "name": "SimpleGridOrbital",
+      "entity": {
+        "name": "SimpleGridItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "SimpleGridRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "SimpleGridItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "maxCols": "@config.maxCols",
+                      "gap": "@config.gap",
+                      "className": "@config.className",
+                      "children": "@config.children",
+                      "cols": "@config.cols",
+                      "type": "simple-grid",
+                      "minChildWidth": "@config.minChildWidth"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "gap": {
+              "type": "string",
+              "default": "md",
+              "label": "Gap",
+              "description": "Gap between items",
+              "tier": "presentation",
+              "values": [
+                "none",
+                "xs",
+                "sm",
+                "md",
+                "lg",
+                "xl"
+              ]
+            },
+            "maxCols": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Max Cols",
+              "description": "Maximum number of columns",
+              "tier": "presentation"
+            },
+            "children": {
+              "type": "node",
+              "label": "Children",
+              "description": "Children elements",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Custom class name",
+              "tier": "presentation"
+            },
+            "cols": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Cols",
+              "description": "Exact number of columns (disables auto-fit)",
+              "tier": "presentation"
+            },
+            "minChildWidth": {
+              "type": "string",
+              "label": "Min Child Width",
+              "description": "Minimum width of each child (e.g., 200, '200px', '15rem')",
+              "tier": "presentation",
+              "values": [
+                "number",
+                "string"
+              ]
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "SimpleGridPage",
+          "path": "/simple-grid",
+          "traits": [
+            {
+              "ref": "SimpleGridRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

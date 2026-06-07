@@ -1,0 +1,150 @@
+{
+  "name": "ui-center",
+  "version": "1.0.0",
+  "description": "Center — UI factory (1:1 with the @almadar/ui center pattern).",
+  "orbitals": [
+    {
+      "name": "CenterOrbital",
+      "entity": {
+        "name": "CenterItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "CenterRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "CenterItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "vertical": "@config.vertical",
+                      "horizontal": "@config.horizontal",
+                      "inline": "@config.inline",
+                      "fullHeight": "@config.fullHeight",
+                      "minHeight": "@config.minHeight",
+                      "type": "center",
+                      "fullWidth": "@config.fullWidth",
+                      "className": "@config.className",
+                      "children": "@config.children",
+                      "style": "@config.style"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Custom class name",
+              "tier": "presentation"
+            },
+            "fullWidth": {
+              "type": "boolean",
+              "default": false,
+              "label": "Full Width",
+              "description": "Fill available width",
+              "tier": "presentation"
+            },
+            "inline": {
+              "type": "boolean",
+              "default": false,
+              "label": "Inline",
+              "description": "Center inline (width fits content) vs block (full width)",
+              "tier": "presentation"
+            },
+            "children": {
+              "type": "node",
+              "label": "Children",
+              "description": "Children elements",
+              "tier": "presentation"
+            },
+            "horizontal": {
+              "type": "boolean",
+              "default": true,
+              "label": "Horizontal",
+              "description": "Center only horizontally",
+              "tier": "presentation"
+            },
+            "style": {
+              "type": "json",
+              "label": "Style",
+              "description": "Inline styles",
+              "tier": "presentation"
+            },
+            "fullHeight": {
+              "type": "boolean",
+              "default": false,
+              "label": "Full Height",
+              "description": "Fill available height",
+              "tier": "presentation"
+            },
+            "vertical": {
+              "type": "boolean",
+              "default": true,
+              "label": "Vertical",
+              "description": "Center only vertically",
+              "tier": "presentation"
+            },
+            "minHeight": {
+              "type": "string",
+              "label": "Min Height",
+              "description": "Minimum height (useful for vertical centering)",
+              "tier": "presentation",
+              "values": [
+                "string",
+                "number"
+              ]
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "CenterPage",
+          "path": "/center",
+          "traits": [
+            {
+              "ref": "CenterRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

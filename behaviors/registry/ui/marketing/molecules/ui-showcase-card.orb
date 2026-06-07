@@ -1,0 +1,132 @@
+{
+  "name": "ui-showcase-card",
+  "version": "1.0.0",
+  "description": "ShowcaseCard — UI factory (1:1 with the @almadar/ui showcase-card pattern).",
+  "orbitals": [
+    {
+      "name": "ShowcaseCardOrbital",
+      "entity": {
+        "name": "ShowcaseCardItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ShowcaseCardRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "ShowcaseCardItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "title": "@config.title",
+                      "description": "@config.description",
+                      "image": "@config.image",
+                      "accentColor": "@config.accentColor",
+                      "href": "@config.href",
+                      "type": "showcase-card",
+                      "badge": "@config.badge"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "accentColor": {
+              "type": "string",
+              "default": "",
+              "label": "Accent Color",
+              "description": "accentColor prop",
+              "tier": "presentation"
+            },
+            "title": {
+              "type": "string",
+              "default": "",
+              "label": "Title",
+              "description": "title prop",
+              "tier": "presentation"
+            },
+            "description": {
+              "type": "string",
+              "default": "",
+              "label": "Description",
+              "description": "description prop",
+              "tier": "presentation"
+            },
+            "image": {
+              "type": "json",
+              "label": "Image",
+              "description": "image prop",
+              "tier": "presentation"
+            },
+            "href": {
+              "type": "string",
+              "default": "",
+              "label": "Href",
+              "description": "href prop",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "className prop",
+              "tier": "presentation"
+            },
+            "badge": {
+              "type": "string",
+              "default": "",
+              "label": "Badge",
+              "description": "badge prop",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "ShowcaseCardPage",
+          "path": "/showcase-card",
+          "traits": [
+            {
+              "ref": "ShowcaseCardRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

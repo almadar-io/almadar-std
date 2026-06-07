@@ -1,0 +1,234 @@
+{
+  "name": "ui-timeline",
+  "version": "1.0.0",
+  "description": "Timeline — UI factory (1:1 with the @almadar/ui timeline pattern).",
+  "orbitals": [
+    {
+      "name": "TimelineOrbital",
+      "entity": {
+        "name": "TimelineItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "TimelineRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "TimelineItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "TimelineItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "error": "@config.error",
+                      "fields": "@config.fields",
+                      "itemActions": "@config.itemActions",
+                      "type": "timeline",
+                      "className": "@config.className",
+                      "isLoading": "@config.isLoading",
+                      "items": "@config.items",
+                      "look": "@config.look",
+                      "entity": "@entity",
+                      "title": "@config.title"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "fields": {
+              "type": "[string]",
+              "default": [],
+              "label": "Fields",
+              "description": "Fields to display",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "error": {
+              "type": "json",
+              "label": "Error",
+              "description": "Error state",
+              "tier": "presentation"
+            },
+            "title": {
+              "type": "string",
+              "default": "",
+              "label": "Title",
+              "description": "Timeline title",
+              "tier": "presentation"
+            },
+            "look": {
+              "type": "string",
+              "default": "vertical-spacious",
+              "label": "Look",
+              "description": "Layer 2 visual treatment.",
+              "tier": "presentation",
+              "values": [
+                "vertical-compact",
+                "vertical-spacious",
+                "horizontal",
+                "swimlane"
+              ]
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
+              "tier": "presentation"
+            },
+            "itemActions": {
+              "type": "[TimelineItemActionsItem]",
+              "default": [],
+              "label": "Item Actions",
+              "description": "Actions per item",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": false
+                  },
+                  "navigatesTo": {
+                    "name": "navigatesTo",
+                    "type": "string",
+                    "required": false
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "primary",
+                      "secondary",
+                      "ghost"
+                    ]
+                  }
+                }
+              }
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "items": {
+              "type": "[TimelineItemsItem]",
+              "default": [],
+              "label": "Items",
+              "description": "Timeline items",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "tags": {
+                    "name": "tags",
+                    "type": "array",
+                    "required": false,
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "title": {
+                    "name": "title",
+                    "type": "string",
+                    "required": true
+                  },
+                  "description": {
+                    "name": "description",
+                    "type": "string",
+                    "required": false
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  "date": {
+                    "name": "date",
+                    "type": "string",
+                    "required": false
+                  },
+                  "status": {
+                    "name": "status",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "complete",
+                      "active",
+                      "pending",
+                      "error"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "TimelinePage",
+          "path": "/timeline",
+          "traits": [
+            {
+              "ref": "TimelineRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

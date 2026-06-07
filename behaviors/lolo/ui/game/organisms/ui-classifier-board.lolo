@@ -1,0 +1,32 @@
+app ui-classifier-board "1.0.0"
+"ClassifierBoard — UI factory (1:1 with the @almadar/ui classifier-board pattern)."
+orbital ClassifierBoardOrbital {
+  entity ClassifierBoardItem [runtime] {
+    id : string!
+  }
+
+  trait ClassifierBoardRender -> @rebindable ClassifierBoardItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch ClassifierBoardItem {})
+        (render-ui main {
+          entity: @entity
+          completeEvent: COMPLETE
+          type: classifier-board
+        })
+    }
+
+    emits {
+      COMPLETE -> external {
+        success : boolean!
+        attempts : number!
+      }
+        @description "completeEvent prop"
+        @tier "essential"
+    }
+  }
+
+  page "/classifier-board" as ClassifierBoardPage -> ClassifierBoardRender
+}

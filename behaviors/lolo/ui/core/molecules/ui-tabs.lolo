@@ -1,0 +1,91 @@
+app ui-tabs "1.0.0"
+"Tabs — UI factory (1:1 with the @almadar/ui tabs pattern)."
+orbital TabsOrbital {
+  type TabsItemsItem = {
+    id : string
+    value : string
+    label : string!
+    content : node
+    icon : json
+    badge : string | number
+    disabled : boolean
+    event : string
+    active : boolean
+  }
+  type TabsTabsItem = {
+    id : string
+    value : string
+    label : string!
+    content : node
+    icon : json
+    badge : string | number
+    disabled : boolean
+    event : string
+    active : boolean
+  }
+
+  entity TabsItem [runtime] {
+    id : string!
+  }
+
+  trait TabsRender -> @rebindable TabsItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          items: @config.items
+          tabs: @config.tabs
+          defaultActiveTab: @config.defaultActiveTab
+          activeTab: @config.activeTab
+          onTabChange: TAB_CHANGE
+          tabChangeEvent: TAB_CHANGE
+          variant: @config.variant
+          orientation: @config.orientation
+          className: @config.className
+          type: tabs
+        })
+    }
+
+    emits {
+      TAB_CHANGE -> external {
+        tabId : string
+      }
+        @description "Callback when tab changes"
+        @tier "essential"
+    }
+
+    config {
+      items : [TabsItemsItem] = []
+        @label "Items"
+        @description "Tab items"
+        @tier "presentation"
+      tabs : [TabsTabsItem] = []
+        @label "Tabs"
+        @description "Tab items (alias for items - used by generated code)"
+        @tier "presentation"
+      defaultActiveTab : string = ""
+        @label "Default Active Tab"
+        @description "Default active tab ID"
+        @tier "presentation"
+      activeTab : string = ""
+        @label "Active Tab"
+        @description "Controlled active tab ID"
+        @tier "presentation"
+      variant : "default" | "pills" | "underline" = default
+        @label "Variant"
+        @description "Tab variant"
+        @tier "presentation"
+      orientation : "horizontal" | "vertical" = horizontal
+        @label "Orientation"
+        @description "Tab orientation"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/tabs" as TabsPage -> TabsRender
+}

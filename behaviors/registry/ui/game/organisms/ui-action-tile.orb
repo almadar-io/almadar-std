@@ -1,0 +1,204 @@
+{
+  "name": "ui-action-tile",
+  "version": "1.0.0",
+  "description": "ActionTile — UI factory (1:1 with the @almadar/ui action-tile pattern).",
+  "orbitals": [
+    {
+      "name": "ActionTileOrbital",
+      "entity": {
+        "name": "ActionTileItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ActionTileRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "ActionTileItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "action": "@config.action",
+                      "categoryColors": "@config.categoryColors",
+                      "disabled": "@config.disabled",
+                      "size": "@config.size",
+                      "type": "action-tile"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "action": {
+              "type": "ActionTileAction",
+              "label": "Action",
+              "description": "The action data",
+              "tier": "presentation",
+              "properties": {
+                "stateMachine": {
+                  "name": "stateMachine",
+                  "type": "object",
+                  "required": false,
+                  "properties": {
+                    "currentState": {
+                      "name": "currentState",
+                      "type": "string",
+                      "required": true
+                    },
+                    "description": {
+                      "name": "description",
+                      "type": "string",
+                      "required": false
+                    },
+                    "states": {
+                      "name": "states",
+                      "type": "array",
+                      "required": true,
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "name": {
+                      "name": "name",
+                      "type": "string",
+                      "required": true
+                    },
+                    "transitions": {
+                      "name": "transitions",
+                      "type": "array",
+                      "required": true,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "to": {
+                            "name": "to",
+                            "type": "string",
+                            "required": true
+                          },
+                          "from": {
+                            "name": "from",
+                            "type": "string",
+                            "required": true
+                          },
+                          "guardHint": {
+                            "name": "guardHint",
+                            "type": "string",
+                            "required": false
+                          },
+                          "event": {
+                            "name": "event",
+                            "type": "string",
+                            "required": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": true
+                },
+                "iconEmoji": {
+                  "name": "iconEmoji",
+                  "type": "string",
+                  "required": false
+                },
+                "id": {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                "category": {
+                  "name": "category",
+                  "type": "string",
+                  "required": true
+                },
+                "description": {
+                  "name": "description",
+                  "type": "string",
+                  "required": false
+                },
+                "iconUrl": {
+                  "name": "iconUrl",
+                  "type": "string",
+                  "required": false
+                }
+              }
+            },
+            "size": {
+              "type": "string",
+              "default": "md",
+              "label": "Size",
+              "description": "Size variant",
+              "tier": "presentation",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            },
+            "categoryColors": {
+              "type": "json",
+              "label": "Category Colors",
+              "description": "Category → color mapping",
+              "tier": "presentation"
+            },
+            "disabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Disabled",
+              "description": "Whether the tile is disabled / already used",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "ActionTilePage",
+          "path": "/action-tile",
+          "traits": [
+            {
+              "ref": "ActionTileRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,91 @@
+{
+  "name": "ui-about-page-template",
+  "version": "1.0.0",
+  "description": "AboutPageTemplate — UI factory (1:1 with the @almadar/ui about-page-template pattern).",
+  "orbitals": [
+    {
+      "name": "AboutPageTemplateOrbital",
+      "entity": {
+        "name": "AboutPageTemplateItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "AboutPageTemplateRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "AboutPageTemplateItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "AboutPageTemplateItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "entity": "@entity",
+                      "type": "about-page-template",
+                      "className": "@config.className"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "External styling override",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "AboutPageTemplatePage",
+          "path": "/about-page-template",
+          "traits": [
+            {
+              "ref": "AboutPageTemplateRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

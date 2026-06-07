@@ -1,0 +1,53 @@
+app ui-form-field "1.0.0"
+"FormField — UI factory (1:1 with the @almadar/ui form-field pattern)."
+orbital FormFieldOrbital {
+  entity FormFieldItem [runtime] {
+    id : string!
+  }
+
+  trait FormFieldRender -> @rebindable FormFieldItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          label: @config.label
+          required: @config.required
+          error: @config.error
+          hint: @config.hint
+          className: @config.className
+          children: @config.children
+          type: form-field
+        })
+    }
+
+    config {
+      label : string = ""
+        @label "Label"
+        @description "label prop"
+        @tier "presentation"
+      required : boolean = false
+        @label "Required"
+        @description "required prop"
+        @tier "presentation"
+      error : string = ""
+        @label "Error"
+        @description "error prop"
+        @tier "presentation"
+      hint : string = ""
+        @label "Hint"
+        @description "hint prop"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+      children : node
+        @label "Children"
+        @description "children prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/form-field" as FormFieldPage -> FormFieldRender
+}

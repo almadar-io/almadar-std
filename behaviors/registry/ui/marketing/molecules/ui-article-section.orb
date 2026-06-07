@@ -1,0 +1,113 @@
+{
+  "name": "ui-article-section",
+  "version": "1.0.0",
+  "description": "ArticleSection — UI factory (1:1 with the @almadar/ui article-section pattern).",
+  "orbitals": [
+    {
+      "name": "ArticleSectionOrbital",
+      "entity": {
+        "name": "ArticleSectionItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ArticleSectionRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "ArticleSectionItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "article-section",
+                      "children": "@config.children",
+                      "maxWidth": "@config.maxWidth",
+                      "title": "@config.title",
+                      "className": "@config.className"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "title": {
+              "type": "string",
+              "default": "",
+              "label": "Title",
+              "description": "Section title",
+              "tier": "presentation"
+            },
+            "children": {
+              "type": "node",
+              "label": "Children",
+              "description": "Section content",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional class names",
+              "tier": "presentation"
+            },
+            "maxWidth": {
+              "type": "string",
+              "default": "md",
+              "label": "Max Width",
+              "description": "Maximum width constraint",
+              "tier": "presentation",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "ArticleSectionPage",
+          "path": "/article-section",
+          "traits": [
+            {
+              "ref": "ArticleSectionRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

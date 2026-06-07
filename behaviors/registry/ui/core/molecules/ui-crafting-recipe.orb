@@ -1,0 +1,156 @@
+{
+  "name": "ui-crafting-recipe",
+  "version": "1.0.0",
+  "description": "CraftingRecipe — UI factory (1:1 with the @almadar/ui crafting-recipe pattern).",
+  "orbitals": [
+    {
+      "name": "CraftingRecipeOrbital",
+      "entity": {
+        "name": "CraftingRecipeItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "CraftingRecipeRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "CraftingRecipeItem",
+          "emits": [
+            {
+              "event": "CRAFT",
+              "description": "Callback when the craft button is clicked",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "output",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "CRAFT",
+                "name": "Craft",
+                "description": "Callback when the craft button is clicked",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "crafting-recipe",
+                      "canCraft": "@config.canCraft",
+                      "className": "@config.className",
+                      "inputs": "@config.inputs",
+                      "onCraft": "CRAFT",
+                      "output": "@config.output",
+                      "craftEvent": "CRAFT"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "inputs": {
+              "type": "[CraftingRecipeInputsItem]",
+              "default": [],
+              "label": "Inputs",
+              "description": "Input ingredients for the recipe",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "available": {
+                    "name": "available",
+                    "type": "number",
+                    "required": true
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "required": {
+                    "name": "required",
+                    "type": "number",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "output": {
+              "type": "json",
+              "label": "Output",
+              "description": "Output item produced by the recipe",
+              "tier": "presentation"
+            },
+            "canCraft": {
+              "type": "boolean",
+              "default": false,
+              "label": "Can Craft",
+              "description": "Whether the player has enough ingredients to craft",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "CraftingRecipePage",
+          "path": "/crafting-recipe",
+          "traits": [
+            {
+              "ref": "CraftingRecipeRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

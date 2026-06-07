@@ -1,0 +1,248 @@
+{
+  "name": "ui-meter",
+  "version": "1.0.0",
+  "description": "Meter — UI factory (1:1 with the @almadar/ui meter pattern).",
+  "orbitals": [
+    {
+      "name": "MeterOrbital",
+      "entity": {
+        "name": "MeterItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "MeterRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "MeterItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "@config.variant",
+                      "actions": "@config.actions",
+                      "value": "@config.value",
+                      "unit": "@config.unit",
+                      "thresholds": "@config.thresholds",
+                      "isLoading": "@config.isLoading",
+                      "size": "@config.size",
+                      "error": "@config.error",
+                      "max": "@config.max",
+                      "label": "@config.label",
+                      "min": "@config.min",
+                      "className": "@config.className",
+                      "segments": "@config.segments",
+                      "showValue": "@config.showValue",
+                      "type": "meter"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state",
+              "tier": "presentation"
+            },
+            "showValue": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Value",
+              "description": "Show value text",
+              "tier": "presentation"
+            },
+            "thresholds": {
+              "type": "[MeterThresholdsItem]",
+              "default": [],
+              "label": "Thresholds",
+              "description": "Color thresholds",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
+                  "value": {
+                    "name": "value",
+                    "type": "number",
+                    "required": true
+                  },
+                  "color": {
+                    "name": "color",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "label": {
+              "type": "string",
+              "default": "",
+              "label": "Label",
+              "description": "Display label",
+              "tier": "presentation"
+            },
+            "segments": {
+              "type": "number",
+              "default": 5.0,
+              "label": "Segments",
+              "description": "Number of segments (for segmented variant)",
+              "tier": "presentation"
+            },
+            "actions": {
+              "type": "[MeterActionsItem]",
+              "default": [],
+              "label": "Actions",
+              "description": "Actions",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "primary",
+                      "secondary",
+                      "ghost"
+                    ]
+                  },
+                  "navigatesTo": {
+                    "name": "navigatesTo",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "variant": {
+              "type": "string",
+              "default": "linear",
+              "label": "Variant",
+              "description": "Display variant",
+              "tier": "presentation",
+              "values": [
+                "linear",
+                "radial",
+                "segmented"
+              ]
+            },
+            "min": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Min",
+              "description": "Minimum value",
+              "tier": "presentation"
+            },
+            "size": {
+              "type": "string",
+              "default": "md",
+              "label": "Size",
+              "description": "Size (for radial variant)",
+              "tier": "presentation",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            },
+            "max": {
+              "type": "number",
+              "default": 100.0,
+              "label": "Max",
+              "description": "Maximum value",
+              "tier": "presentation"
+            },
+            "error": {
+              "type": "json",
+              "label": "Error",
+              "description": "Error state",
+              "tier": "presentation"
+            },
+            "unit": {
+              "type": "string",
+              "default": "",
+              "label": "Unit",
+              "description": "Unit suffix (e.g., '%', 'MB', 'credits')",
+              "tier": "presentation"
+            },
+            "value": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Value",
+              "description": "Current value",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "MeterPage",
+          "path": "/meter",
+          "traits": [
+            {
+              "ref": "MeterRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,138 @@
+{
+  "name": "ui-jazari-state-machine",
+  "version": "1.0.0",
+  "description": "JazariStateMachine — UI factory (1:1 with the @almadar/ui jazari-state-machine pattern).",
+  "orbitals": [
+    {
+      "name": "JazariStateMachineOrbital",
+      "entity": {
+        "name": "JazariStateMachineItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "JazariStateMachineRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "JazariStateMachineItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "isLoading": "@config.isLoading",
+                      "schema": "@config.schema",
+                      "error": "@config.error",
+                      "entityFields": "@config.entityFields",
+                      "traitIndex": "@config.traitIndex",
+                      "className": "@config.className",
+                      "direction": "@config.direction",
+                      "type": "jazari-state-machine"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "traitIndex": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Trait Index",
+              "description": "Which trait to visualize (default: 0)",
+              "tier": "presentation"
+            },
+            "entityFields": {
+              "type": "[string]",
+              "default": [],
+              "label": "Entity Fields",
+              "description": "Override entity field labels",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
+              "tier": "presentation"
+            },
+            "error": {
+              "type": "json",
+              "label": "Error",
+              "description": "Error state",
+              "tier": "presentation"
+            },
+            "schema": {
+              "type": "json",
+              "label": "Schema",
+              "description": "Full schema — extracts first trait's state machine",
+              "tier": "presentation"
+            },
+            "direction": {
+              "type": "string",
+              "default": "ltr",
+              "label": "Direction",
+              "description": "Text direction (default: 'ltr')",
+              "tier": "presentation",
+              "values": [
+                "ltr",
+                "rtl"
+              ]
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "JazariStateMachinePage",
+          "path": "/jazari-state-machine",
+          "traits": [
+            {
+              "ref": "JazariStateMachineRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

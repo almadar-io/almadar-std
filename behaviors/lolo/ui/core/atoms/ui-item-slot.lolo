@@ -1,0 +1,72 @@
+app ui-item-slot "1.0.0"
+"ItemSlot — UI factory (1:1 with the @almadar/ui item-slot pattern)."
+orbital ItemSlotOrbital {
+  entity ItemSlotItem [runtime] {
+    id : string!
+  }
+
+  trait ItemSlotRender -> @rebindable ItemSlotItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          icon: @config.icon
+          label: @config.label
+          quantity: @config.quantity
+          rarity: @config.rarity
+          empty: @config.empty
+          size: @config.size
+          selected: @config.selected
+          onClick: CLICK
+          className: @config.className
+          type: item-slot
+        })
+    }
+
+    emits {
+      CLICK -> external {
+        id : string
+      }
+        @description "Click handler"
+        @tier "essential"
+    }
+
+    config {
+      icon : node
+        @label "Icon"
+        @description "Icon component or emoji"
+        @tier "presentation"
+      label : string = ""
+        @label "Label"
+        @description "Item label"
+        @tier "presentation"
+      quantity : number = 0
+        @label "Quantity"
+        @description "Stack quantity"
+        @tier "presentation"
+      rarity : "common" | "uncommon" | "rare" | "epic" | "legendary" = common
+        @label "Rarity"
+        @description "Rarity tier affecting border color"
+        @tier "presentation"
+      empty : boolean = false
+        @label "Empty"
+        @description "Whether the slot is empty"
+        @tier "presentation"
+      size : "sm" | "md" | "lg" = md
+        @label "Size"
+        @description "Size variant"
+        @tier "presentation"
+      selected : boolean = false
+        @label "Selected"
+        @description "Whether the slot is selected"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/item-slot" as ItemSlotPage -> ItemSlotRender
+}

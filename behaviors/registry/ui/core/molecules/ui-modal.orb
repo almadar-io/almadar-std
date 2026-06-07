@@ -1,0 +1,198 @@
+{
+  "name": "ui-modal",
+  "version": "1.0.0",
+  "description": "Modal — UI factory (1:1 with the @almadar/ui modal pattern).",
+  "orbitals": [
+    {
+      "name": "ModalOrbital",
+      "entity": {
+        "name": "ModalItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ModalRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "ModalItem",
+          "emits": [
+            {
+              "event": "CLOSE",
+              "description": "Callback when modal should close (injected by slot wrapper)",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "CLOSE",
+                "name": "Close",
+                "description": "Callback when modal should close (injected by slot wrapper)",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "isOpen": "@config.isOpen",
+                      "className": "@config.className",
+                      "closeOnOverlayClick": "@config.closeOnOverlayClick",
+                      "children": "@config.children",
+                      "footer": "@config.footer",
+                      "size": "@config.size",
+                      "closeEvent": "CLOSE",
+                      "showCloseButton": "@config.showCloseButton",
+                      "onClose": "CLOSE",
+                      "title": "@config.title",
+                      "closeOnEscape": "@config.closeOnEscape",
+                      "swipeDownToClose": "@config.swipeDownToClose",
+                      "type": "modal",
+                      "look": "@config.look"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "children": {
+              "type": "node",
+              "label": "Children",
+              "description": "Modal content (can be empty if using slot content)",
+              "tier": "presentation"
+            },
+            "footer": {
+              "type": "node",
+              "label": "Footer",
+              "description": "footer prop",
+              "tier": "presentation"
+            },
+            "closeOnEscape": {
+              "type": "boolean",
+              "default": true,
+              "label": "Close On Escape",
+              "description": "closeOnEscape prop",
+              "tier": "presentation"
+            },
+            "isOpen": {
+              "type": "boolean",
+              "default": true,
+              "label": "Is Open",
+              "description": "Whether the modal is open (defaults to true when rendered by slot wrapper)",
+              "tier": "presentation"
+            },
+            "size": {
+              "type": "string",
+              "default": "md",
+              "label": "Size",
+              "description": "size prop",
+              "tier": "presentation",
+              "values": [
+                "sm",
+                "md",
+                "lg",
+                "xl",
+                "full"
+              ]
+            },
+            "look": {
+              "type": "string",
+              "default": "centered-card",
+              "label": "Look",
+              "description": "Layer 2 visual treatment — orthogonal to the semantic variant.",
+              "tier": "presentation",
+              "values": [
+                "centered-card",
+                "top-sheet",
+                "side-drawer",
+                "full-screen"
+              ]
+            },
+            "swipeDownToClose": {
+              "type": "boolean",
+              "default": true,
+              "label": "Swipe Down To Close",
+              "description": "Enable swipe-down-to-close on mobile bottom sheet (default: true)",
+              "tier": "presentation"
+            },
+            "showCloseButton": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Close Button",
+              "description": "showCloseButton prop",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "className prop",
+              "tier": "presentation"
+            },
+            "title": {
+              "type": "string",
+              "default": "",
+              "label": "Title",
+              "description": "title prop",
+              "tier": "presentation"
+            },
+            "closeOnOverlayClick": {
+              "type": "boolean",
+              "default": true,
+              "label": "Close On Overlay Click",
+              "description": "closeOnOverlayClick prop",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "ModalPage",
+          "path": "/modal",
+          "traits": [
+            {
+              "ref": "ModalRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

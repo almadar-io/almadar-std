@@ -1,0 +1,32 @@
+app ui-builder-board "1.0.0"
+"BuilderBoard — UI factory (1:1 with the @almadar/ui builder-board pattern)."
+orbital BuilderBoardOrbital {
+  entity BuilderBoardItem [runtime] {
+    id : string!
+  }
+
+  trait BuilderBoardRender -> @rebindable BuilderBoardItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch BuilderBoardItem {})
+        (render-ui main {
+          entity: @entity
+          completeEvent: COMPLETE
+          type: builder-board
+        })
+    }
+
+    emits {
+      COMPLETE -> external {
+        success : boolean!
+        attempts : number!
+      }
+        @description "completeEvent prop"
+        @tier "essential"
+    }
+  }
+
+  page "/builder-board" as BuilderBoardPage -> BuilderBoardRender
+}

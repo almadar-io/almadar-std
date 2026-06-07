@@ -1,0 +1,140 @@
+{
+  "name": "ui-d-pad",
+  "version": "1.0.0",
+  "description": "DPad — UI factory (1:1 with the @almadar/ui d-pad pattern).",
+  "orbitals": [
+    {
+      "name": "DPadOrbital",
+      "entity": {
+        "name": "DPadItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "DPadRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "DPadItem",
+          "emits": [
+            {
+              "event": "DIRECTION",
+              "description": "Called when a direction is pressed/released",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "direction",
+                  "type": "string"
+                },
+                {
+                  "name": "pressed",
+                  "type": "boolean"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DIRECTION",
+                "name": "Direction",
+                "description": "Called when a direction is pressed/released",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "directionEvent": "DIRECTION",
+                      "disabled": "@config.disabled",
+                      "includeDiagonals": "@config.includeDiagonals",
+                      "size": "@config.size",
+                      "className": "@config.className",
+                      "onDirection": "DIRECTION",
+                      "type": "d-pad"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "size": {
+              "type": "string",
+              "default": "md",
+              "label": "Size",
+              "description": "Size variant",
+              "tier": "presentation",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            },
+            "includeDiagonals": {
+              "type": "boolean",
+              "default": false,
+              "label": "Include Diagonals",
+              "description": "Whether to include diagonal buttons",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "disabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Disabled",
+              "description": "Disabled state",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "DPadPage",
+          "path": "/d-pad",
+          "traits": [
+            {
+              "ref": "DPadRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

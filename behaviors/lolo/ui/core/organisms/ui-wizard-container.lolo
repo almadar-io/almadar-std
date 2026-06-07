@@ -1,0 +1,156 @@
+app ui-wizard-container "1.0.0"
+"WizardContainer — UI factory (1:1 with the @almadar/ui wizard-container pattern)."
+orbital WizardContainerOrbital {
+  type WizardContainerStepsItem = {
+    id : string
+    tabId : string
+    title : string
+    name : string
+    description : string
+    content : node
+    optional : boolean
+    isValid : any
+    sections : [WizardContainerStepsItemSectionsItem]
+    globalVariablesRequired : [string]
+    globalVariablesSet : [string]
+    localVariables : [string]
+    entityMapping : WizardContainerStepsItemEntityMapping
+    validationRules : [WizardContainerStepsItemValidationRulesItem]
+    lawReferences : [WizardContainerStepsItemLawReferencesItem]
+    phase : string
+    contextMenu : [string]
+  }
+  type WizardContainerStepsItemSectionsItem = {
+    id : string!
+    title : string
+    description : string
+    fields : [WizardContainerStepsItemSectionsItemFieldsItem]
+    subsections : [json]
+    condition : [json]
+    repeatable : boolean
+    minItems : number
+    addButtonLabel : string
+    hiddenCalculations : [json]
+    dataSource : json
+    readOnly : boolean
+  }
+  type WizardContainerStepsItemSectionsItemFieldsItem = {
+    id : string!
+    type : string!
+    label : string
+    required : boolean
+    repeatable : boolean
+    options : [json]
+    defaultValue : json
+    condition : [json]
+    placeholder : string
+    entityField : string
+    minLength : number
+    maxLength : number
+    dataSource : json
+    displayFields : [string]
+    searchConfig : json
+    hiddenCalculations : [json]
+    signatureConfig : json
+    displayTemplate : json
+    lawReference : json
+    contextMenu : [string]
+    calculated : json
+    readOnly : boolean
+    minDate : json
+    stats : [json]
+    items : [json]
+  }
+  type WizardContainerStepsItemEntityMapping = {
+    entity : string!
+    mode : string!
+    parentField : string
+    idField : string
+  }
+  type WizardContainerStepsItemValidationRulesItem = {
+    condition : [json]!
+    message : string!
+  }
+  type WizardContainerStepsItemLawReferencesItem = {
+    law : string!
+    article : string!
+    description : string
+  }
+
+  entity WizardContainerItem [runtime] {
+    id : string!
+  }
+
+  trait WizardContainerRender -> @rebindable WizardContainerItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch WizardContainerItem {})
+        (render-ui main {
+          steps: @config.steps
+          currentStep: @config.currentStep
+          onStepChange: STEP_CHANGE
+          onComplete: COMPLETE
+          showProgress: @config.showProgress
+          allowBack: @config.allowBack
+          compact: @config.compact
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          entity: WizardContainerItem
+          type: wizard-container
+        })
+    }
+
+    emits {
+      STEP_CHANGE -> external {
+        stepIndex : number
+      }
+        @description "Callback when step changes"
+        @tier "essential"
+      COMPLETE -> external {
+        id : string
+      }
+        @description "Callback when wizard is completed"
+        @tier "essential"
+    }
+
+    config {
+      steps : [WizardContainerStepsItem] = []
+        @label "Steps"
+        @description "Wizard steps"
+        @tier "presentation"
+      currentStep : json
+        @label "Current Step"
+        @description "Current step index (controlled) - accepts unknown for generated code compatibility"
+        @tier "presentation"
+      showProgress : boolean = true
+        @label "Show Progress"
+        @description "Show progress indicator"
+        @tier "presentation"
+      allowBack : boolean = true
+        @label "Allow Back"
+        @description "Allow navigation to previous steps"
+        @tier "presentation"
+      compact : boolean = false
+        @label "Compact"
+        @description "Modal mode (compact header, no padding)"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : json
+        @label "Error"
+        @description "Error state"
+        @tier "presentation"
+    }
+  }
+
+  page "/wizard-container" as WizardContainerPage -> WizardContainerRender
+}

@@ -1,0 +1,33 @@
+app ui-gradient-divider "1.0.0"
+"GradientDivider — UI factory (1:1 with the @almadar/ui gradient-divider pattern)."
+orbital GradientDividerOrbital {
+  entity GradientDividerItem [runtime] {
+    id : string!
+  }
+
+  trait GradientDividerRender -> @rebindable GradientDividerItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          color: @config.color
+          className: @config.className
+          type: gradient-divider
+        })
+    }
+
+    config {
+      color : string = ""
+        @label "Color"
+        @description "Override the center color (CSS value). Defaults to var(--color-primary)."
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional class names"
+        @tier "presentation"
+    }
+  }
+
+  page "/gradient-divider" as GradientDividerPage -> GradientDividerRender
+}

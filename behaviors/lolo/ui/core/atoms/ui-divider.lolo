@@ -1,0 +1,43 @@
+app ui-divider "1.0.0"
+"Divider — UI factory (1:1 with the @almadar/ui divider pattern)."
+orbital DividerOrbital {
+  entity DividerItem [runtime] {
+    id : string!
+  }
+
+  trait DividerRender -> @rebindable DividerItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          orientation: @config.orientation
+          label: @config.label
+          variant: @config.variant
+          className: @config.className
+          type: divider
+        })
+    }
+
+    config {
+      orientation : "horizontal" | "vertical" = horizontal
+        @label "Orientation"
+        @description "Orientation of the divider"
+        @tier "presentation"
+      label : string = ""
+        @label "Label"
+        @description "Text label to display in the divider"
+        @tier "presentation"
+      variant : "solid" | "dashed" | "dotted" = solid
+        @label "Variant"
+        @description "Line style variant"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/divider" as DividerPage -> DividerRender
+}

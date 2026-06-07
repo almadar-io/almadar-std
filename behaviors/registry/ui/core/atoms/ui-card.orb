@@ -1,0 +1,167 @@
+{
+  "name": "ui-card",
+  "version": "1.0.0",
+  "description": "Card — UI factory (1:1 with the @almadar/ui card pattern).",
+  "orbitals": [
+    {
+      "name": "CardOrbital",
+      "entity": {
+        "name": "CardItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "CardRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "CardItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "title": "@config.title",
+                      "look": "@config.look",
+                      "padding": "@config.padding",
+                      "subtitle": "@config.subtitle",
+                      "children": "@config.children",
+                      "type": "card",
+                      "variant": "@config.variant",
+                      "shadow": "@config.shadow"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "padding": {
+              "type": "string",
+              "default": "md",
+              "label": "Padding",
+              "description": "padding prop",
+              "tier": "presentation",
+              "values": [
+                "none",
+                "sm",
+                "md",
+                "lg"
+              ]
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes applied to the root element.",
+              "tier": "presentation"
+            },
+            "children": {
+              "type": "node",
+              "label": "Children",
+              "description": "Card content",
+              "tier": "presentation"
+            },
+            "shadow": {
+              "type": "string",
+              "default": "none",
+              "label": "Shadow",
+              "description": "Shadow size override",
+              "tier": "presentation",
+              "values": [
+                "none",
+                "sm",
+                "md",
+                "lg"
+              ]
+            },
+            "look": {
+              "type": "string",
+              "default": "elevated",
+              "label": "Look",
+              "description": "Layer 2 visual treatment — orthogonal to the semantic variant.",
+              "tier": "presentation",
+              "values": [
+                "elevated",
+                "flat-bordered",
+                "borderless-divider",
+                "ticket",
+                "invoice",
+                "chip",
+                "tile-image-first"
+              ]
+            },
+            "title": {
+              "type": "string",
+              "default": "",
+              "label": "Title",
+              "description": "Card title - renders in header if provided",
+              "tier": "presentation"
+            },
+            "subtitle": {
+              "type": "string",
+              "default": "",
+              "label": "Subtitle",
+              "description": "Card subtitle - renders below title",
+              "tier": "presentation"
+            },
+            "variant": {
+              "type": "string",
+              "default": "bordered",
+              "label": "Variant",
+              "description": "variant prop",
+              "tier": "presentation",
+              "values": [
+                "default",
+                "bordered",
+                "elevated",
+                "interactive"
+              ]
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "CardPage",
+          "path": "/card",
+          "traits": [
+            {
+              "ref": "CardRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

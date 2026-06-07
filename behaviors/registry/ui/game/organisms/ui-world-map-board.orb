@@ -1,0 +1,415 @@
+{
+  "name": "ui-world-map-board",
+  "version": "1.0.0",
+  "description": "WorldMapBoard — UI factory (1:1 with the @almadar/ui world-map-board pattern).",
+  "orbitals": [
+    {
+      "name": "WorldMapBoardOrbital",
+      "entity": {
+        "name": "WorldMapBoardItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "WorldMapBoardRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "WorldMapBoardItem",
+          "emits": [
+            {
+              "event": "IS_IN_RANGE",
+              "description": "Custom movement range validator",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "from",
+                  "type": "object"
+                },
+                {
+                  "name": "to",
+                  "type": "object"
+                },
+                {
+                  "name": "range",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "HERO_SELECT",
+              "description": "-- Declarative event props --",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "heroId",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "HERO_MOVE",
+              "description": "Emits UI:{heroMoveEvent} with { heroId, toX, toY }",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "heroId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "toX",
+                  "type": "number",
+                  "required": true
+                },
+                {
+                  "name": "toY",
+                  "type": "number",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "BATTLE_ENCOUNTER",
+              "description": "Emits UI:{battleEncounterEvent} with { attackerId, defenderId }",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "attackerId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "defenderId",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "FEATURE_ENTER",
+              "description": "Emits UI:{featureEnterEvent} with { heroId, feature, hex }",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "heroId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "feature",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "hex",
+                  "type": "object",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "TILE_CLICK",
+              "description": "Emits UI:{tileClickEvent} with { x, y }",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "x",
+                  "type": "number",
+                  "required": true
+                },
+                {
+                  "name": "y",
+                  "type": "number",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "HEADER",
+              "description": "-- Slots --",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "ctx",
+                  "type": "object"
+                }
+              ]
+            },
+            {
+              "event": "SIDE_PANEL",
+              "description": "Side panel (hero detail, hero lists, etc.)",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "ctx",
+                  "type": "object"
+                }
+              ]
+            },
+            {
+              "event": "OVERLAY",
+              "description": "Canvas overlay (tooltips, popups)",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "ctx",
+                  "type": "object"
+                }
+              ]
+            },
+            {
+              "event": "FOOTER",
+              "description": "Footer",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "ctx",
+                  "type": "object"
+                }
+              ]
+            },
+            {
+              "event": "RESOLVE_UNIT_FRAME",
+              "description": "resolveUnitFrame prop",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "unitId",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "IS_IN_RANGE",
+                "name": "Is In Range",
+                "description": "Custom movement range validator",
+                "tier": "essential"
+              },
+              {
+                "key": "HERO_SELECT",
+                "name": "Hero Select",
+                "description": "-- Declarative event props --",
+                "tier": "essential"
+              },
+              {
+                "key": "HERO_MOVE",
+                "name": "Hero Move",
+                "description": "Emits UI:{heroMoveEvent} with { heroId, toX, toY }",
+                "tier": "essential"
+              },
+              {
+                "key": "BATTLE_ENCOUNTER",
+                "name": "Battle Encounter",
+                "description": "Emits UI:{battleEncounterEvent} with { attackerId, defenderId }",
+                "tier": "essential"
+              },
+              {
+                "key": "FEATURE_ENTER",
+                "name": "Feature Enter",
+                "description": "Emits UI:{featureEnterEvent} with { heroId, feature, hex }",
+                "tier": "essential"
+              },
+              {
+                "key": "TILE_CLICK",
+                "name": "Tile Click",
+                "description": "Emits UI:{tileClickEvent} with { x, y }",
+                "tier": "essential"
+              },
+              {
+                "key": "HEADER",
+                "name": "Header",
+                "description": "-- Slots --",
+                "tier": "essential"
+              },
+              {
+                "key": "SIDE_PANEL",
+                "name": "Side Panel",
+                "description": "Side panel (hero detail, hero lists, etc.)",
+                "tier": "essential"
+              },
+              {
+                "key": "OVERLAY",
+                "name": "Overlay",
+                "description": "Canvas overlay (tooltips, popups)",
+                "tier": "essential"
+              },
+              {
+                "key": "FOOTER",
+                "name": "Footer",
+                "description": "Footer",
+                "tier": "essential"
+              },
+              {
+                "key": "RESOLVE_UNIT_FRAME",
+                "name": "Resolve Unit Frame",
+                "description": "resolveUnitFrame prop",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "WorldMapBoardItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "isLoading": "@config.isLoading",
+                      "sidePanel": "SIDE_PANEL",
+                      "footer": "FOOTER",
+                      "entity": "@entity",
+                      "onHeroSelect": "HERO_SELECT",
+                      "className": "@config.className",
+                      "heroSelectEvent": "HERO_SELECT",
+                      "battleEncounterEvent": "BATTLE_ENCOUNTER",
+                      "unitScale": "@config.unitScale",
+                      "enableCamera": "@config.enableCamera",
+                      "effectSpriteUrls": "@config.effectSpriteUrls",
+                      "overlay": "OVERLAY",
+                      "allowMoveAllHeroes": "@config.allowMoveAllHeroes",
+                      "tileClickEvent": "TILE_CLICK",
+                      "onHeroMove": "HERO_MOVE",
+                      "scale": "@config.scale",
+                      "header": "HEADER",
+                      "resolveUnitFrame": "RESOLVE_UNIT_FRAME",
+                      "type": "world-map-board",
+                      "error": "@config.error",
+                      "featureEnterEvent": "FEATURE_ENTER",
+                      "diamondTopY": "@config.diamondTopY",
+                      "isInRange": "IS_IN_RANGE",
+                      "heroMoveEvent": "HERO_MOVE",
+                      "onFeatureEnter": "FEATURE_ENTER",
+                      "onBattleEncounter": "BATTLE_ENCOUNTER"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "allowMoveAllHeroes": {
+              "type": "boolean",
+              "default": false,
+              "label": "Allow Move All Heroes",
+              "description": "Allow selecting / moving ALL heroes (including enemy). For testing.",
+              "tier": "presentation"
+            },
+            "scale": {
+              "type": "number",
+              "default": 0.4,
+              "label": "Scale",
+              "description": "Canvas render scale",
+              "tier": "presentation"
+            },
+            "unitScale": {
+              "type": "number",
+              "default": 2.5,
+              "label": "Unit Scale",
+              "description": "Unit draw-size multiplier",
+              "tier": "presentation"
+            },
+            "enableCamera": {
+              "type": "boolean",
+              "default": false,
+              "label": "Enable Camera",
+              "description": "Disable pan/zoom camera (default: true). Set false for fixed maps where overlay labels need stable positions.",
+              "tier": "presentation"
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
+              "tier": "presentation"
+            },
+            "diamondTopY": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Diamond Top Y",
+              "description": "-- Canvas pass-through --",
+              "tier": "presentation"
+            },
+            "error": {
+              "type": "json",
+              "label": "Error",
+              "description": "Error state",
+              "tier": "presentation"
+            },
+            "effectSpriteUrls": {
+              "type": "[string]",
+              "default": [],
+              "label": "Effect Sprite Urls",
+              "description": "effectSpriteUrls prop",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "WorldMapBoardPage",
+          "path": "/world-map-board",
+          "traits": [
+            {
+              "ref": "WorldMapBoardRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

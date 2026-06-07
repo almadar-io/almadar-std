@@ -1,0 +1,33 @@
+app ui-pull-quote "1.0.0"
+"PullQuote — UI factory (1:1 with the @almadar/ui pull-quote pattern)."
+orbital PullQuoteOrbital {
+  entity PullQuoteItem [runtime] {
+    id : string!
+  }
+
+  trait PullQuoteRender -> @rebindable PullQuoteItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          children: @config.children
+          className: @config.className
+          type: pull-quote
+        })
+    }
+
+    config {
+      children : string = ""
+        @label "Children"
+        @description "The quote text"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional class names"
+        @tier "presentation"
+    }
+  }
+
+  page "/pull-quote" as PullQuotePage -> PullQuoteRender
+}

@@ -1,0 +1,517 @@
+[
+  {
+    "organism": "ui-isometric-canvas",
+    "orbital": "IsometricCanvasOrbital",
+    "tier": "molecules",
+    "factoryPath": "behaviors/functions/ui/core/molecules/ui-isometric-canvas.ts",
+    "entities": [
+      {
+        "name": "IsometricCanvasItem",
+        "fields": [],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "IsometricCanvasRender",
+        "emittedEvents": [
+          "TILE_CLICK",
+          "UNIT_CLICK",
+          "TILE_HOVER",
+          "TILE_LEAVE",
+          "GET_TERRAIN_SPRITE",
+          "GET_FEATURE_SPRITE",
+          "GET_UNIT_SPRITE",
+          "RESOLVE_UNIT_FRAME",
+          "DRAW_EFFECTS"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "TILE_CLICK",
+            "direction": "emit",
+            "description": "--- Event handlers (legacy callbacks — prefer declarative event string props below) ---",
+            "tier": "essential"
+          },
+          {
+            "name": "UNIT_CLICK",
+            "direction": "emit",
+            "description": "onUnitClick prop",
+            "tier": "essential"
+          },
+          {
+            "name": "TILE_HOVER",
+            "direction": "emit",
+            "description": "onTileHover prop",
+            "tier": "essential"
+          },
+          {
+            "name": "TILE_LEAVE",
+            "direction": "emit",
+            "description": "onTileLeave prop",
+            "tier": "essential"
+          },
+          {
+            "name": "GET_TERRAIN_SPRITE",
+            "direction": "emit",
+            "description": "--- Asset resolution (project-agnostic) ---",
+            "tier": "essential"
+          },
+          {
+            "name": "GET_FEATURE_SPRITE",
+            "direction": "emit",
+            "description": "Resolve feature sprite URL from feature type key",
+            "tier": "essential"
+          },
+          {
+            "name": "GET_UNIT_SPRITE",
+            "direction": "emit",
+            "description": "Resolve unit static sprite URL",
+            "tier": "essential"
+          },
+          {
+            "name": "RESOLVE_UNIT_FRAME",
+            "direction": "emit",
+            "description": "Resolve animated sprite sheet frame for a unit",
+            "tier": "essential"
+          },
+          {
+            "name": "DRAW_EFFECTS",
+            "direction": "emit",
+            "description": "Callback to draw canvas effects after units (canvas-specific: cannot be declarative)",
+            "tier": "essential"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "assetBaseUrl",
+            "type": "string",
+            "default": "",
+            "label": "Asset Base Url",
+            "description": "--- Remote asset loading ---",
+            "tier": "presentation"
+          },
+          {
+            "key": "assetManifest",
+            "type": "json",
+            "label": "Asset Manifest",
+            "description": "Manifest mapping entity keys to relative sprite paths. Combined with assetBaseUrl to produce full URLs. Used as a fallback when inline URLs and callbacks don't resolve.",
+            "tier": "presentation"
+          },
+          {
+            "key": "attackTargets",
+            "type": "[json]",
+            "default": [],
+            "label": "Attack Targets",
+            "description": "Attack target positions (shown as pulsing red highlights)",
+            "tier": "presentation",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "backgroundImage",
+            "type": "string",
+            "default": "",
+            "label": "Background Image",
+            "description": "Background image URL tiled behind the isometric grid",
+            "tier": "presentation"
+          },
+          {
+            "key": "boardHeight",
+            "type": "number",
+            "default": 0,
+            "label": "Board Height",
+            "description": "Board height in tiles (overrides tile-derived size)",
+            "tier": "presentation"
+          },
+          {
+            "key": "boardWidth",
+            "type": "number",
+            "default": 0,
+            "label": "Board Width",
+            "description": "Board width in tiles (overrides tile-derived size)",
+            "tier": "presentation"
+          },
+          {
+            "key": "className",
+            "type": "string",
+            "default": "",
+            "label": "Class Name",
+            "description": "Additional CSS classes",
+            "tier": "presentation"
+          },
+          {
+            "key": "debug",
+            "type": "boolean",
+            "default": false,
+            "label": "Debug",
+            "description": "Show debug grid lines and coordinates",
+            "tier": "presentation"
+          },
+          {
+            "key": "diamondTopY",
+            "type": "number",
+            "default": 0,
+            "label": "Diamond Top Y",
+            "description": "Override for the diamond-top Y offset within the tile sprite (default: 374). This controls where the flat diamond face sits vertically inside the tile image.",
+            "tier": "presentation"
+          },
+          {
+            "key": "effectSpriteUrls",
+            "type": "[string]",
+            "default": [],
+            "label": "Effect Sprite Urls",
+            "description": "Additional sprite URLs to preload (e.g., effect sprites)",
+            "tier": "presentation",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "enableCamera",
+            "type": "boolean",
+            "default": true,
+            "label": "Enable Camera",
+            "description": "Enable camera pan/zoom controls",
+            "tier": "presentation"
+          },
+          {
+            "key": "error",
+            "type": "json",
+            "label": "Error",
+            "description": "Error state",
+            "tier": "presentation"
+          },
+          {
+            "key": "features",
+            "type": "[IsometricCanvasFeaturesItem]",
+            "default": [],
+            "label": "Features",
+            "description": "Array of features (resources, portals, buildings, etc.)",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                },
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "elevation": {
+                  "name": "elevation",
+                  "required": false,
+                  "type": "number"
+                },
+                "sprite": {
+                  "name": "sprite",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "assetUrl": {
+                  "name": "assetUrl",
+                  "required": false,
+                  "type": "string"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "hasActiveEffects",
+            "type": "boolean",
+            "default": false,
+            "label": "Has Active Effects",
+            "description": "Whether there are active effects — keeps RAF loop alive",
+            "tier": "presentation"
+          },
+          {
+            "key": "hoveredTile",
+            "type": "json",
+            "label": "Hovered Tile",
+            "description": "Hovered tile position",
+            "tier": "presentation"
+          },
+          {
+            "key": "isLoading",
+            "type": "boolean",
+            "default": false,
+            "label": "Is Loading",
+            "description": "Loading state indicator",
+            "tier": "presentation"
+          },
+          {
+            "key": "scale",
+            "type": "number",
+            "default": 0.4,
+            "label": "Scale",
+            "description": "--- Rendering options ---",
+            "tier": "presentation"
+          },
+          {
+            "key": "selectedUnitId",
+            "type": "string",
+            "default": "",
+            "label": "Selected Unit Id",
+            "description": "--- Interaction state ---",
+            "tier": "presentation"
+          },
+          {
+            "key": "showMinimap",
+            "type": "boolean",
+            "default": true,
+            "label": "Show Minimap",
+            "description": "Toggle minimap overlay",
+            "tier": "presentation"
+          },
+          {
+            "key": "tiles",
+            "type": "[IsometricCanvasTilesItem]",
+            "default": [],
+            "label": "Tiles",
+            "description": "--- Grid data ---",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "movementCost": {
+                  "name": "movementCost",
+                  "required": false,
+                  "type": "number"
+                },
+                "tileType": {
+                  "name": "tileType",
+                  "required": false,
+                  "type": "string"
+                },
+                "passable": {
+                  "name": "passable",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "type": {
+                  "name": "type",
+                  "required": false,
+                  "type": "string"
+                },
+                "terrainSprite": {
+                  "name": "terrainSprite",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                },
+                "terrain": {
+                  "name": "terrain",
+                  "required": false,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "elevation": {
+                  "name": "elevation",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "unitScale",
+            "type": "number",
+            "default": 1,
+            "label": "Unit Scale",
+            "description": "Extra scale multiplier for unit draw size. 1 = default.",
+            "tier": "presentation"
+          },
+          {
+            "key": "units",
+            "type": "[IsometricCanvasUnitsItem]",
+            "default": [],
+            "label": "Units",
+            "description": "Array of units on the board",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                },
+                "maxHealth": {
+                  "name": "maxHealth",
+                  "required": false,
+                  "type": "number"
+                },
+                "team": {
+                  "name": "team",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "player",
+                    "enemy",
+                    "neutral"
+                  ]
+                },
+                "faction": {
+                  "name": "faction",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "player",
+                    "enemy",
+                    "neutral"
+                  ]
+                },
+                "elevation": {
+                  "name": "elevation",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": false,
+                  "type": "number"
+                },
+                "previousPosition": {
+                  "name": "previousPosition",
+                  "required": false,
+                  "type": "string"
+                },
+                "traits": {
+                  "name": "traits",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "unitType": {
+                  "name": "unitType",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "sprite": {
+                  "name": "sprite",
+                  "required": false,
+                  "type": "string"
+                },
+                "heroId": {
+                  "name": "heroId",
+                  "required": false,
+                  "type": "string"
+                },
+                "position": {
+                  "name": "position",
+                  "required": false,
+                  "type": "string"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "health": {
+                  "name": "health",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "validMoves",
+            "type": "[json]",
+            "default": [],
+            "label": "Valid Moves",
+            "description": "Valid move positions (shown as pulsing green highlights)",
+            "tier": "presentation",
+            "items": {
+              "type": "string"
+            }
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "IsometricCanvasPage",
+        "defaultPath": "/isometric-canvas",
+        "primaryEntity": "IsometricCanvasItem"
+      }
+    ],
+    "emittedEvents": [
+      "DRAW_EFFECTS",
+      "GET_FEATURE_SPRITE",
+      "GET_TERRAIN_SPRITE",
+      "GET_UNIT_SPRITE",
+      "RESOLVE_UNIT_FRAME",
+      "TILE_CLICK",
+      "TILE_HOVER",
+      "TILE_LEAVE",
+      "UNIT_CLICK"
+    ],
+    "listenedEvents": []
+  }
+]

@@ -1,0 +1,202 @@
+app ui-table-view "1.0.0"
+"TableView — UI factory (1:1 with the @almadar/ui table-view pattern)."
+orbital TableViewOrbital {
+  type TableViewColumnsItem = {
+    key : string!
+    field : string
+    header : string
+    label : string
+    width : string
+    align : "left" | "center" | "right"
+    className : string
+    weight : "normal" | "medium" | "semibold"
+    format : "badge" | "date" | "currency" | "number" | "percent" | "boolean"
+    icon : string
+    sortable : boolean
+  }
+  type TableViewFieldsItem = {
+    key : string!
+    field : string
+    header : string
+    label : string
+    width : string
+    align : "left" | "center" | "right"
+    className : string
+    weight : "normal" | "medium" | "semibold"
+    format : "badge" | "date" | "currency" | "number" | "percent" | "boolean"
+    icon : string
+    sortable : boolean
+  }
+  type TableViewItemActionsItem = {
+    label : string!
+    event : string!
+    icon : string
+    variant : "primary" | "secondary" | "ghost" | "danger"
+  }
+
+  entity TableViewItem [runtime] {
+    id : string!
+  }
+
+  trait TableViewRender -> @rebindable TableViewItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch TableViewItem {})
+        (render-ui main {
+          dragGroup: @config.dragGroup
+          accepts: @config.accepts
+          sortable: @config.sortable
+          dropEvent: @config.dropEvent
+          reorderEvent: @config.reorderEvent
+          positionEvent: @config.positionEvent
+          dndItemIdField: @config.dndItemIdField
+          dndRoot: @config.dndRoot
+          entity: @entity
+          columns: @config.columns
+          fields: @config.fields
+          itemActions: @config.itemActions
+          maxInlineActions: @config.maxInlineActions
+          selectable: @config.selectable
+          selectEvent: SELECT
+          selectedIds: @config.selectedIds
+          sortEvent: SORT
+          sortColumn: @config.sortColumn
+          sortDirection: @config.sortDirection
+          className: @config.className
+          emptyMessage: @config.emptyMessage
+          isLoading: @config.isLoading
+          error: @config.error
+          groupBy: @config.groupBy
+          pageSize: @config.pageSize
+          children: CHILDREN
+          renderItem: RENDER_ITEM
+          look: @config.look
+          type: table-view
+        })
+    }
+
+    emits {
+      SELECT -> external {
+        id : string
+      }
+        @description "Event emitted on selection change: UI:{selectEvent} with { ids, rows }."
+        @tier "essential"
+      SORT -> external {
+        id : string
+      }
+        @description "Event emitted on sortable-header click: UI:{sortEvent} with { column, direction }."
+        @tier "essential"
+      CHILDREN -> external {
+        item : object
+        index : number
+      }
+        @description "Custom per-row render. When provided, the whole row content is delegated to this function (columns are ignored for the body; the header still renders). Mirrors DataList's children render prop."
+        @tier "essential"
+      RENDER_ITEM -> external {
+        item : object
+        index : number
+      }
+        @description "Per-row render function (schema alias). In .orb: ['fn','item',{...}]. The compiler converts this to the children render prop."
+        @tier "essential"
+    }
+
+    config {
+      dragGroup : string = ""
+        @label "Drag Group"
+        @description "When set, items in this container are draggable and announce this group as their source"
+        @tier "presentation"
+      accepts : string = ""
+        @label "Accepts"
+        @description "When set, the container accepts drops whose dragGroup matches this value (or '*' for any group)"
+        @tier "presentation"
+      sortable : boolean = false
+        @label "Sortable"
+        @description "Enable in-container reorder; items can be dragged to new positions among siblings"
+        @tier "presentation"
+      dropEvent : string = ""
+        @label "Drop Event"
+        @description "Bus event fired on cross-container drop. Payload: { id, sourceGroup, targetGroup, newIndex }"
+        @tier "presentation"
+      reorderEvent : string = ""
+        @label "Reorder Event"
+        @description "Bus event fired on in-container reorder. Payload: { id, oldIndex, newIndex }"
+        @tier "presentation"
+      positionEvent : string = ""
+        @label "Position Event"
+        @description "Bus event fired N times per drop (one per item in affected zones) so the trait can persist new positions for the WHOLE zone, not just the moved item. Payload: { id, position }"
+        @tier "presentation"
+      dndItemIdField : string = ""
+        @label "Dnd Item Id Field"
+        @description "Row field used as the @dnd-kit draggable id (default 'id')"
+        @tier "presentation"
+      dndRoot : boolean = false
+        @label "Dnd Root"
+        @description "Mark this container as the DnD root for its subtree — descendant zones share one DndContext (cross-container drag). Use on an outer container whose own items are not draggable."
+        @tier "presentation"
+      columns : [TableViewColumnsItem] = []
+        @label "Columns"
+        @description "Column definitions. The compiler emits `columns`; `fields` is the alias."
+        @tier "presentation"
+      fields : [TableViewFieldsItem] = []
+        @label "Fields"
+        @description "Alias for `columns`."
+        @tier "presentation"
+      itemActions : [TableViewItemActionsItem] = []
+        @label "Item Actions"
+        @description "Per-row action buttons (trailing column)."
+        @tier "presentation"
+      maxInlineActions : number = 0
+        @label "Max Inline Actions"
+        @description "Max inline action buttons before the rest collapse into a '⋯' overflow menu. Omit = all inline."
+        @tier "presentation"
+      selectable : boolean = false
+        @label "Selectable"
+        @description "Render a leading checkbox column. Selection changes emit `selectEvent`."
+        @tier "presentation"
+      selectedIds : [string] = []
+        @label "Selected Ids"
+        @description "Currently-selected ids (controlled). Falls back to local state when omitted."
+        @tier "presentation"
+      sortColumn : string = ""
+        @label "Sort Column"
+        @description "Current sort column (display hint for the active header arrow)."
+        @tier "presentation"
+      sortDirection : "asc" | "desc" = asc
+        @label "Sort Direction"
+        @description "Current sort direction (display hint)."
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes applied to the table root."
+        @tier "presentation"
+      emptyMessage : string = ""
+        @label "Empty Message"
+        @description "Message shown when there are no rows."
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state."
+        @tier "presentation"
+      error : json
+        @label "Error"
+        @description "Error state."
+        @tier "presentation"
+      groupBy : string = ""
+        @label "Group By"
+        @description "Group rows under section headers by a field value."
+        @tier "presentation"
+      pageSize : number = 0
+        @label "Page Size"
+        @description "Max rows before a 'Show More' button. Defaults to 0 (show all)."
+        @tier "presentation"
+      look : "dense" | "spacious" | "striped" | "borderless" | "bordered" = dense
+        @label "Look"
+        @description "Layer 2 visual treatment — mirrors the data-list / entity-table look enum so authors share one knob name across row renderers."
+        @tier "presentation"
+    }
+  }
+
+  page "/table-view" as TableViewPage -> TableViewRender
+}

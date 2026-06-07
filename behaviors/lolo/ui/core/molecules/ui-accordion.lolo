@@ -1,0 +1,79 @@
+app ui-accordion "1.0.0"
+"Accordion — UI factory (1:1 with the @almadar/ui accordion pattern)."
+orbital AccordionOrbital {
+  type AccordionItemsItem = {
+    id : string
+    header : node
+    title : node
+    content : node!
+    disabled : boolean
+    defaultOpen : boolean
+  }
+
+  entity AccordionItem [runtime] {
+    id : string!
+  }
+
+  trait AccordionRender -> @rebindable AccordionItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          items: @config.items
+          multiple: @config.multiple
+          defaultOpenItems: @config.defaultOpenItems
+          defaultOpen: @config.defaultOpen
+          openItems: @config.openItems
+          onItemToggle: ITEM_TOGGLE
+          className: @config.className
+          toggleEvent: TOGGLE
+          type: accordion
+        })
+    }
+
+    emits {
+      ITEM_TOGGLE -> external {
+        itemId : string
+        isOpen : boolean
+      }
+        @description "Callback when item opens/closes"
+        @tier "essential"
+      TOGGLE -> external {
+        itemId : string!
+        isOpen : boolean!
+      }
+        @description "Declarative toggle event — emits UI:{toggleEvent} with { itemId, isOpen }"
+        @tier "essential"
+    }
+
+    config {
+      items : [AccordionItemsItem] = []
+        @label "Items"
+        @description "Accordion items"
+        @tier "presentation"
+      multiple : boolean = false
+        @label "Multiple"
+        @description "Allow multiple items open at once"
+        @tier "presentation"
+      defaultOpenItems : [string] = []
+        @label "Default Open Items"
+        @description "Default open items (IDs)"
+        @tier "presentation"
+      defaultOpen : [number] = []
+        @label "Default Open"
+        @description "Default open items by index (pattern compatibility)"
+        @tier "presentation"
+      openItems : [string] = []
+        @label "Open Items"
+        @description "Controlled open items (IDs)"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/accordion" as AccordionPage -> AccordionRender
+}

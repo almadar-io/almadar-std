@@ -1,0 +1,192 @@
+{
+  "name": "ui-counter-template",
+  "version": "1.0.0",
+  "description": "CounterTemplate — UI factory (1:1 with the @almadar/ui counter-template pattern).",
+  "orbitals": [
+    {
+      "name": "CounterTemplateOrbital",
+      "entity": {
+        "name": "CounterTemplateItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "CounterTemplateRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "CounterTemplateItem",
+          "emits": [
+            {
+              "event": "INCREMENT",
+              "description": "Called when increment is clicked",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "DECREMENT",
+              "description": "Called when decrement is clicked",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "RESET",
+              "description": "Called when reset is clicked",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "INCREMENT",
+                "name": "Increment",
+                "description": "Called when increment is clicked",
+                "tier": "essential"
+              },
+              {
+                "key": "DECREMENT",
+                "name": "Decrement",
+                "description": "Called when decrement is clicked",
+                "tier": "essential"
+              },
+              {
+                "key": "RESET",
+                "name": "Reset",
+                "description": "Called when reset is clicked",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "CounterTemplateItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "title": "@config.title",
+                      "onReset": "RESET",
+                      "entity": "@entity",
+                      "onDecrement": "DECREMENT",
+                      "type": "counter-template",
+                      "showReset": "@config.showReset",
+                      "size": "@config.size",
+                      "onIncrement": "INCREMENT",
+                      "variant": "@config.variant"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "variant": {
+              "type": "string",
+              "default": "minimal",
+              "label": "Variant",
+              "description": "Template variant",
+              "tier": "presentation",
+              "values": [
+                "minimal",
+                "standard",
+                "full"
+              ]
+            },
+            "showReset": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Reset",
+              "description": "Show reset button",
+              "tier": "presentation"
+            },
+            "title": {
+              "type": "string",
+              "default": "Counter",
+              "label": "Title",
+              "description": "Title displayed above the counter",
+              "tier": "presentation"
+            },
+            "size": {
+              "type": "string",
+              "default": "md",
+              "label": "Size",
+              "description": "Counter display size",
+              "tier": "presentation",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "External styling override",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "CounterTemplatePage",
+          "path": "/counter-template",
+          "traits": [
+            {
+              "ref": "CounterTemplateRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

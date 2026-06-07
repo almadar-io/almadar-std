@@ -1,0 +1,179 @@
+{
+  "name": "ui-combat-log",
+  "version": "1.0.0",
+  "description": "CombatLog — UI factory (1:1 with the @almadar/ui combat-log pattern).",
+  "orbitals": [
+    {
+      "name": "CombatLogOrbital",
+      "entity": {
+        "name": "CombatLogItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "CombatLogRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "CombatLogItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "showTimestamps": "@config.showTimestamps",
+                      "className": "@config.className",
+                      "type": "combat-log",
+                      "title": "@config.title",
+                      "autoScroll": "@config.autoScroll",
+                      "maxVisible": "@config.maxVisible",
+                      "events": "@config.events"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "autoScroll": {
+              "type": "boolean",
+              "default": true,
+              "label": "Auto Scroll",
+              "description": "autoScroll prop",
+              "tier": "presentation"
+            },
+            "maxVisible": {
+              "type": "number",
+              "default": 50.0,
+              "label": "Max Visible",
+              "description": "maxVisible prop",
+              "tier": "presentation"
+            },
+            "events": {
+              "type": "[CombatLogEventsItem]",
+              "default": [],
+              "label": "Events",
+              "description": "events prop",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  "timestamp": {
+                    "name": "timestamp",
+                    "type": "number",
+                    "required": true
+                  },
+                  "actorName": {
+                    "name": "actorName",
+                    "type": "string",
+                    "required": false
+                  },
+                  "targetName": {
+                    "name": "targetName",
+                    "type": "string",
+                    "required": false
+                  },
+                  "type": {
+                    "name": "type",
+                    "type": "string",
+                    "required": true,
+                    "values": [
+                      "attack",
+                      "defend",
+                      "heal",
+                      "move",
+                      "special",
+                      "death",
+                      "spawn"
+                    ]
+                  },
+                  "value": {
+                    "name": "value",
+                    "type": "number",
+                    "required": false
+                  },
+                  "message": {
+                    "name": "message",
+                    "type": "string",
+                    "required": true
+                  },
+                  "turn": {
+                    "name": "turn",
+                    "type": "number",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "showTimestamps": {
+              "type": "boolean",
+              "default": false,
+              "label": "Show Timestamps",
+              "description": "showTimestamps prop",
+              "tier": "presentation"
+            },
+            "title": {
+              "type": "string",
+              "default": "Combat Log",
+              "label": "Title",
+              "description": "title prop",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "className prop",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "CombatLogPage",
+          "path": "/combat-log",
+          "traits": [
+            {
+              "ref": "CombatLogRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

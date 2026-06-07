@@ -1,0 +1,92 @@
+{
+  "name": "ui-dialog",
+  "version": "1.0.0",
+  "description": "Dialog — UI factory (1:1 with the @almadar/ui dialog pattern).",
+  "orbitals": [
+    {
+      "name": "DialogOrbital",
+      "entity": {
+        "name": "DialogItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "DialogRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "DialogItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": "@config.children",
+                      "className": "@config.className",
+                      "type": "dialog"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "children": {
+              "type": "node",
+              "label": "Children",
+              "description": "Dialog contents",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "DialogPage",
+          "path": "/dialog",
+          "traits": [
+            {
+              "ref": "DialogRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

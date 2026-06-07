@@ -1,0 +1,78 @@
+app ui-matrix-question "1.0.0"
+"MatrixQuestion — UI factory (1:1 with the @almadar/ui matrix-question pattern)."
+orbital MatrixQuestionOrbital {
+  type MatrixQuestionRowsItem = {
+    id : string!
+    label : string!
+  }
+  type MatrixQuestionColumnsItem = {
+    value : number | string!
+    label : string!
+  }
+
+  entity MatrixQuestionItem [runtime] {
+    id : string!
+  }
+
+  trait MatrixQuestionRender -> @rebindable MatrixQuestionItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          title: @config.title
+          rows: @config.rows
+          columns: @config.columns
+          values: @config.values
+          onChange: CHANGE
+          changeEvent: CHANGE
+          disabled: @config.disabled
+          size: @config.size
+          className: @config.className
+          type: matrix-question
+        })
+    }
+
+    emits {
+      CHANGE -> external {
+        rowId : string
+        value : number
+      }
+        @description "Change handler invoked with rowId and selected column value"
+        @tier "essential"
+    }
+
+    config {
+      title : string = ""
+        @label "Title"
+        @description "Optional title rendered above the matrix"
+        @tier "presentation"
+      rows : [MatrixQuestionRowsItem] = []
+        @label "Rows"
+        @description "Question rows"
+        @tier "presentation"
+      columns : [MatrixQuestionColumnsItem] = []
+        @label "Columns"
+        @description "Column definitions; defaults to 5-point Likert"
+        @tier "presentation"
+      values : json
+        @label "Values"
+        @description "Selected value per row, keyed by rowId"
+        @tier "presentation"
+      disabled : boolean = false
+        @label "Disabled"
+        @description "Disable all inputs"
+        @tier "presentation"
+      size : "sm" | "md" = md
+        @label "Size"
+        @description "Visual size"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/matrix-question" as MatrixQuestionPage -> MatrixQuestionRender
+}

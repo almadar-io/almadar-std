@@ -1,0 +1,58 @@
+app ui-status-effect "1.0.0"
+"StatusEffect — UI factory (1:1 with the @almadar/ui status-effect pattern)."
+orbital StatusEffectOrbital {
+  entity StatusEffectItem [runtime] {
+    id : string!
+  }
+
+  trait StatusEffectRender -> @rebindable StatusEffectItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          icon: @config.icon
+          label: @config.label
+          duration: @config.duration
+          stacks: @config.stacks
+          variant: @config.variant
+          size: @config.size
+          className: @config.className
+          type: status-effect
+        })
+    }
+
+    config {
+      icon : node
+        @label "Icon"
+        @description "Icon to display for the effect"
+        @tier "presentation"
+      label : string = ""
+        @label "Label"
+        @description "Label describing the effect"
+        @tier "presentation"
+      duration : number = 0
+        @label "Duration"
+        @description "Remaining duration in seconds"
+        @tier "presentation"
+      stacks : number = 0
+        @label "Stacks"
+        @description "Number of stacks"
+        @tier "presentation"
+      variant : "buff" | "debuff" | "neutral" = neutral
+        @label "Variant"
+        @description "Effect type"
+        @tier "presentation"
+      size : "sm" | "md" | "lg" = md
+        @label "Size"
+        @description "Size variant"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/status-effect" as StatusEffectPage -> StatusEffectRender
+}

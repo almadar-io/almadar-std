@@ -1,0 +1,58 @@
+app ui-wizard-progress "1.0.0"
+"WizardProgress — UI factory (1:1 with the @almadar/ui wizard-progress pattern)."
+orbital WizardProgressOrbital {
+  entity WizardProgressItem [runtime] {
+    id : string!
+  }
+
+  trait WizardProgressRender -> @rebindable WizardProgressItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          steps: @config.steps
+          currentStep: @config.currentStep
+          onStepClick: STEP_CLICK
+          allowNavigation: @config.allowNavigation
+          compact: @config.compact
+          className: @config.className
+          stepClickEvent: STEP_CLICK
+          type: wizard-progress
+        })
+    }
+
+    emits {
+      STEP_CLICK -> external {
+        stepIndex : number
+      }
+        @description "Callback when a completed step is clicked"
+        @tier "essential"
+    }
+
+    config {
+      steps : [json] = []
+        @label "Steps"
+        @description "Step definitions (compatible with WizardContainer's WizardStep). A string is shorthand for `{ id: str, title: str }`."
+        @tier "presentation"
+      currentStep : number = 0
+        @label "Current Step"
+        @description "Current step index (0-based)"
+        @tier "presentation"
+      allowNavigation : boolean = true
+        @label "Allow Navigation"
+        @description "Allow clicking on completed steps to navigate back"
+        @tier "presentation"
+      compact : boolean = false
+        @label "Compact"
+        @description "Compact mode (smaller, no titles)"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/wizard-progress" as WizardProgressPage -> WizardProgressRender
+}
