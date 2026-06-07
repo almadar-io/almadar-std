@@ -39,15 +39,15 @@ export type StdUiFormFieldEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiFormFieldConfig {
-  /** Default: `""` */
-  error?: string;
-  /** Default: `""` */
-  hint?: string;
   children?: unknown;
   /** Default: `false` */
   required?: boolean;
   /** Default: `""` */
   label?: string;
+  /** Default: `""` */
+  hint?: string;
+  /** Default: `""` */
+  error?: string;
   /** Default: `""` */
   className?: string;
 }

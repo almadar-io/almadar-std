@@ -7,11 +7,22 @@ orbital CodeViewerOrbital {
     afterLineNumber : number
     content : string!
   }
+  type CodeViewerFilesItem = {
+    label : string!
+    code : string!
+    language : string
+  }
   type CodeViewerActionsItem = {
     label : string!
     event : string
     navigatesTo : string
     variant : "primary" | "secondary" | "ghost"
+  }
+  type CodeViewerError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
   }
 
   entity CodeViewerItem [runtime] {
@@ -91,7 +102,7 @@ orbital CodeViewerOrbital {
         @label "Max Height"
         @description "Max height before scrolling"
         @tier "presentation"
-      files : [json] = []
+      files : [CodeViewerFilesItem] = []
         @label "Files"
         @description "Multiple files (tabbed view)"
         @tier "presentation"
@@ -103,7 +114,7 @@ orbital CodeViewerOrbital {
         @label "Is Loading"
         @description "Loading state"
         @tier "presentation"
-      error : json
+      error : CodeViewerError
         @label "Error"
         @description "Error state"
         @tier "presentation"

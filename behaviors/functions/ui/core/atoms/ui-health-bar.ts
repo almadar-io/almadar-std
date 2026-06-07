@@ -39,18 +39,18 @@ export type StdUiHealthBarEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiHealthBarConfig {
-  /** Default: `"hearts"` */
-  format?: 'hearts' | 'bar' | 'numeric';
+  /** Default: `true` */
+  animated?: boolean;
   /** Default: `0` */
   current?: number;
+  /** Default: `"hearts"` */
+  format?: 'hearts' | 'bar' | 'numeric';
   /** Default: `0` */
   max?: number;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
   /** Default: `""` */
   className?: string;
-  /** Default: `true` */
-  animated?: boolean;
 }
 
 /**

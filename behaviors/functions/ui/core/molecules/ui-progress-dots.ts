@@ -53,10 +53,10 @@ export interface StdUiProgressDotsDotClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiProgressDotsConfig {
-  /** Default: `""` */
-  className?: string;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
+  /** Default: `""` */
+  className?: string;
   /** Default: `0` */
   count?: number;
   /** Default: `0` */

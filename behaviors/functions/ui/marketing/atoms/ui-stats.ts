@@ -40,13 +40,13 @@ export type StdUiStatsEventKey = 'INIT';
  */
 export interface StdUiStatsConfig {
   /** Default: `""` */
+  className?: string;
+  /** Default: `""` */
   label?: string;
   /** Default: `""` */
-  className?: string;
+  value?: string;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
-  /** Default: `""` */
-  value?: string;
 }
 
 /**

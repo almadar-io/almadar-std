@@ -41,16 +41,16 @@ export type StdUiScoreBoardEventKey = 'INIT';
 export interface StdUiScoreBoardConfig {
   /** Default: `0` */
   level?: number;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `0` */
-  highScore?: number;
-  /** Default: `0` */
-  score?: number;
   /** Default: `0` */
   combo?: number;
   /** Default: `0` */
+  score?: number;
+  /** Default: `0` */
+  highScore?: number;
+  /** Default: `0` */
   multiplier?: number;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

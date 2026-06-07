@@ -39,14 +39,14 @@ export type StdUiEventLogEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiEventLogConfig {
-  /** Default: `[]` */
-  entries?: EntityRow[];
   /** Default: `""` */
   className?: string;
-  /** Default: `200` */
-  maxHeight?: number;
   /** Default: `""` */
   label?: string;
+  /** Default: `200` */
+  maxHeight?: number;
+  /** Default: `[]` */
+  entries?: EntityRow[];
 }
 
 /**
@@ -150,11 +150,11 @@ export function stdUiEventLogEventLogOrbital(params: StdUiEventLogEventLogOrbita
                   'render-ui',
                   'main',
                   {
-                    'className': '@config.className',
-                    'maxHeight': '@config.maxHeight',
                     'type': 'event-log',
-                    'label': '@config.label',
                     'entries': '@config.entries',
+                    'maxHeight': '@config.maxHeight',
+                    'label': '@config.label',
+                    'className': '@config.className',
                   },
                 ],
               ],
@@ -162,6 +162,27 @@ export function stdUiEventLogEventLogOrbital(params: StdUiEventLogEventLogOrbita
           ],
         },
         'config': {
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'label': {
+            'type': 'string',
+            'default': '',
+            'label': 'Label',
+            'description': 'Title label',
+            'tier': 'presentation',
+          },
+          'maxHeight': {
+            'type': 'number',
+            'default': 200,
+            'label': 'Max Height',
+            'description': 'Max visible height before scroll',
+            'tier': 'presentation',
+          },
           'entries': {
             'type': '[EventLogEntriesItem]',
             'default': [],
@@ -171,9 +192,19 @@ export function stdUiEventLogEventLogOrbital(params: StdUiEventLogEventLogOrbita
             'items': {
               'type': 'object',
               'properties': {
-                'icon': {
-                  'name': 'icon',
+                'id': {
+                  'name': 'id',
                   'type': 'string',
+                  'required': true,
+                },
+                'message': {
+                  'name': 'message',
+                  'type': 'string',
+                  'required': true,
+                },
+                'timestamp': {
+                  'name': 'timestamp',
+                  'type': 'number',
                   'required': true,
                 },
                 'status': {
@@ -187,44 +218,13 @@ export function stdUiEventLogEventLogOrbital(params: StdUiEventLogEventLogOrbita
                     'error',
                   ],
                 },
-                'timestamp': {
-                  'name': 'timestamp',
-                  'type': 'number',
-                  'required': true,
-                },
-                'message': {
-                  'name': 'message',
-                  'type': 'string',
-                  'required': true,
-                },
-                'id': {
-                  'name': 'id',
+                'icon': {
+                  'name': 'icon',
                   'type': 'string',
                   'required': true,
                 },
               },
             },
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'maxHeight': {
-            'type': 'number',
-            'default': 200,
-            'label': 'Max Height',
-            'description': 'Max visible height before scroll',
-            'tier': 'presentation',
-          },
-          'label': {
-            'type': 'string',
-            'default': '',
-            'label': 'Label',
-            'description': 'Title label',
-            'tier': 'presentation',
           },
         },
         'scope': 'instance',

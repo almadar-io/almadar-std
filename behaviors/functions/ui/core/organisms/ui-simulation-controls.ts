@@ -84,9 +84,9 @@ export interface StdUiSimulationControlsParameterChangePayload {
 export interface StdUiSimulationControlsConfig {
   /** Default: `0` */
   speed?: number;
-  parameters?: unknown;
   /** Default: `""` */
   className?: string;
+  parameters?: unknown;
   /** Default: `false` */
   running?: boolean;
 }
@@ -306,17 +306,17 @@ export function stdUiSimulationControlsSimulationControlsOrbital(params: StdUiSi
                   'render-ui',
                   'main',
                   {
-                    'parameters': '@config.parameters',
-                    'speed': '@config.speed',
-                    'onStep': 'STEP',
-                    'onParameterChange': 'PARAMETER_CHANGE',
-                    'onSpeedChange': 'SPEED_CHANGE',
-                    'onPlay': 'PLAY',
-                    'className': '@config.className',
-                    'type': 'simulation-controls',
-                    'onPause': 'PAUSE',
                     'running': '@config.running',
+                    'onPause': 'PAUSE',
+                    'type': 'simulation-controls',
+                    'speed': '@config.speed',
+                    'onPlay': 'PLAY',
+                    'onParameterChange': 'PARAMETER_CHANGE',
                     'onReset': 'RESET',
+                    'onStep': 'STEP',
+                    'onSpeedChange': 'SPEED_CHANGE',
+                    'parameters': '@config.parameters',
+                    'className': '@config.className',
                   },
                 ],
               ],
@@ -331,17 +331,17 @@ export function stdUiSimulationControlsSimulationControlsOrbital(params: StdUiSi
             'description': 'speed prop',
             'tier': 'presentation',
           },
-          'parameters': {
-            'type': 'json',
-            'label': 'Parameters',
-            'description': 'parameters prop',
-            'tier': 'presentation',
-          },
           'className': {
             'type': 'string',
             'default': '',
             'label': 'Class Name',
             'description': 'className prop',
+            'tier': 'presentation',
+          },
+          'parameters': {
+            'type': 'json',
+            'label': 'Parameters',
+            'description': 'parameters prop',
             'tier': 'presentation',
           },
           'running': {

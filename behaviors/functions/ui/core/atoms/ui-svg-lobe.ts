@@ -41,22 +41,22 @@ export type StdUiSvgLobeEventKey = 'INIT';
 export interface StdUiSvgLobeConfig {
   /** Default: `0` */
   cy?: number;
+  /** Default: `20` */
+  ry?: number;
+  /** Default: `14` */
+  rx?: number;
+  /** Default: `0` */
+  rotation?: number;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `0` */
+  cx?: number;
   /** Default: `"var(--color-primary)"` */
   color?: string;
   /** Default: `2` */
   shells?: number;
-  /** Default: `0` */
-  cx?: number;
   /** Default: `1` */
   opacity?: number;
-  /** Default: `14` */
-  rx?: number;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `0` */
-  rotation?: number;
-  /** Default: `20` */
-  ry?: number;
 }
 
 /**

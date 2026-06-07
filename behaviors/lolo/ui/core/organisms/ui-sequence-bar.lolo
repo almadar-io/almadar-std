@@ -1,6 +1,29 @@
 app ui-sequence-bar "1.0.0"
 "SequenceBar — UI factory (1:1 with the @almadar/ui sequence-bar pattern)."
 orbital SequenceBarOrbital {
+  type SequenceBarSlotsItem = {
+    id : string!
+    name : string!
+    category : string!
+    description : string
+    iconEmoji : string
+    iconUrl : string
+    stateMachine : SequenceBarSlotsItemStateMachine
+  }
+  type SequenceBarSlotsItemStateMachine = {
+    name : string!
+    states : [string]!
+    currentState : string!
+    transitions : [SequenceBarSlotsItemStateMachineTransitionsItem]!
+    description : string
+  }
+  type SequenceBarSlotsItemStateMachineTransitionsItem = {
+    from : string!
+    to : string!
+    event : string!
+    guardHint : string
+  }
+
   entity SequenceBarItem [runtime] {
     id : string!
   }
@@ -40,7 +63,7 @@ orbital SequenceBarOrbital {
     }
 
     config {
-      slots : [json] = []
+      slots : [SequenceBarSlotsItem] = []
         @label "Slots"
         @description "The current sequence (sparse — undefined means empty slot)"
         @tier "presentation"

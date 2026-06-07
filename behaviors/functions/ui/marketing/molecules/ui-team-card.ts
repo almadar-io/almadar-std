@@ -40,16 +40,16 @@ export type StdUiTeamCardEventKey = 'INIT';
  */
 export interface StdUiTeamCardConfig {
   /** Default: `""` */
-  nameAr?: string;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `""` */
-  bio?: string;
-  /** Default: `""` */
   name?: string;
   /** Default: `""` */
   role?: string;
-  avatar?: unknown;
+  /** Default: `""` */
+  bio?: string;
+  avatar?: EntityRow;
+  /** Default: `""` */
+  nameAr?: string;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

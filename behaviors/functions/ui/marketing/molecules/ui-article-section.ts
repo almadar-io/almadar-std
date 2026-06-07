@@ -41,11 +41,11 @@ export type StdUiArticleSectionEventKey = 'INIT';
 export interface StdUiArticleSectionConfig {
   /** Default: `""` */
   title?: string;
+  /** Default: `""` */
+  className?: string;
   children?: unknown;
   /** Default: `"md"` */
   maxWidth?: 'sm' | 'md' | 'lg';
-  /** Default: `""` */
-  className?: string;
 }
 
 /**

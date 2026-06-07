@@ -106,49 +106,49 @@ export interface StdUiIsometricCanvasDrawEffectsPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiIsometricCanvasConfig {
-  error?: unknown;
   /** Default: `[]` */
   features?: EntityRow[];
+  hoveredTile?: EntityRow;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `false` */
+  hasActiveEffects?: boolean;
   /** Default: `0` */
-  boardWidth?: number;
+  boardHeight?: number;
   /** Default: `[]` */
   effectSpriteUrls?: string[];
   /** Default: `""` */
-  selectedUnitId?: string;
-  /** Default: `true` */
-  enableCamera?: boolean;
-  /** Default: `""` */
   assetBaseUrl?: string;
-  assetManifest?: unknown;
-  /** Default: `false` */
-  debug?: boolean;
   /** Default: `[]` */
   units?: EntityRow[];
-  /** Default: `false` */
-  hasActiveEffects?: boolean;
-  /** Default: `true` */
-  showMinimap?: boolean;
-  /** Default: `0` */
-  boardHeight?: number;
-  /** Default: `0.4` */
-  scale?: number;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `0` */
-  diamondTopY?: number;
   /** Default: `[]` */
   tiles?: EntityRow[];
+  /** Default: `0.4` */
+  scale?: number;
+  /** Default: `true` */
+  enableCamera?: boolean;
+  /** Default: `[]` */
+  validMoves?: EntityRow[];
+  error?: EntityRow;
+  /** Default: `true` */
+  showMinimap?: boolean;
+  /** Default: `false` */
+  debug?: boolean;
   /** Default: `""` */
   className?: string;
   /** Default: `""` */
   backgroundImage?: string;
   /** Default: `[]` */
-  validMoves?: EntityRow[];
-  /** Default: `[]` */
   attackTargets?: EntityRow[];
-  hoveredTile?: unknown;
+  /** Default: `0` */
+  boardWidth?: number;
   /** Default: `1` */
   unitScale?: number;
+  /** Default: `0` */
+  diamondTopY?: number;
+  assetManifest?: EntityRow;
+  /** Default: `""` */
+  selectedUnitId?: string;
 }
 
 /**

@@ -41,15 +41,15 @@ export type StdUiRuntimeDebuggerEventKey = 'INIT';
 export interface StdUiRuntimeDebuggerConfig {
   /** Default: `"bottom-right"` */
   position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
-  /** Default: `""` */
-  defaultTab?: string;
-  /** Default: `""` */
-  className?: string;
-  schema?: unknown;
-  /** Default: `"floating"` */
-  mode?: 'floating' | 'inline' | 'verify';
   /** Default: `true` */
   defaultCollapsed?: boolean;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"floating"` */
+  mode?: 'floating' | 'inline' | 'verify';
+  /** Default: `""` */
+  defaultTab?: string;
+  schema?: unknown;
 }
 
 /**
@@ -153,13 +153,13 @@ export function stdUiRuntimeDebuggerRuntimeDebuggerOrbital(params: StdUiRuntimeD
                   'render-ui',
                   'main',
                   {
+                    'defaultTab': '@config.defaultTab',
+                    'defaultCollapsed': '@config.defaultCollapsed',
+                    'className': '@config.className',
+                    'position': '@config.position',
                     'mode': '@config.mode',
                     'schema': '@config.schema',
                     'type': 'runtime-debugger',
-                    'position': '@config.position',
-                    'defaultCollapsed': '@config.defaultCollapsed',
-                    'className': '@config.className',
-                    'defaultTab': '@config.defaultTab',
                   },
                 ],
               ],
@@ -180,11 +180,11 @@ export function stdUiRuntimeDebuggerRuntimeDebuggerOrbital(params: StdUiRuntimeD
               'top-left',
             ],
           },
-          'defaultTab': {
-            'type': 'string',
-            'default': '',
-            'label': 'Default Tab',
-            'description': 'Default active tab id',
+          'defaultCollapsed': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Default Collapsed',
+            'description': 'Initial collapsed state',
             'tier': 'presentation',
           },
           'className': {
@@ -192,12 +192,6 @@ export function stdUiRuntimeDebuggerRuntimeDebuggerOrbital(params: StdUiRuntimeD
             'default': '',
             'label': 'Class Name',
             'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'schema': {
-            'type': 'json',
-            'label': 'Schema',
-            'description': 'Raw schema for EventDispatcherTab payload extraction',
             'tier': 'presentation',
           },
           'mode': {
@@ -212,11 +206,17 @@ export function stdUiRuntimeDebuggerRuntimeDebuggerOrbital(params: StdUiRuntimeD
               'verify',
             ],
           },
-          'defaultCollapsed': {
-            'type': 'boolean',
-            'default': true,
-            'label': 'Default Collapsed',
-            'description': 'Initial collapsed state',
+          'defaultTab': {
+            'type': 'string',
+            'default': '',
+            'label': 'Default Tab',
+            'description': 'Default active tab id',
+            'tier': 'presentation',
+          },
+          'schema': {
+            'type': 'json',
+            'label': 'Schema',
+            'description': 'Raw schema for EventDispatcherTab payload extraction',
             'tier': 'presentation',
           },
         },

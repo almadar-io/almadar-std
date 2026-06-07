@@ -41,16 +41,16 @@ export type StdUiSvgShieldEventKey = 'INIT';
 export interface StdUiSvgShieldConfig {
   /** Default: `"var(--color-primary)"` */
   color?: string;
-  /** Default: `0` */
-  y?: number;
   /** Default: `1` */
   opacity?: number;
   /** Default: `""` */
   className?: string;
   /** Default: `0` */
-  x?: number;
+  y?: number;
   /** Default: `1` */
   size?: number;
+  /** Default: `0` */
+  x?: number;
   /** Default: `"outline"` */
   variant?: 'outline' | 'filled' | 'check';
 }

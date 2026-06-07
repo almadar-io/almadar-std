@@ -41,22 +41,22 @@ export type StdUiSvgStackEventKey = 'INIT';
 export interface StdUiSvgStackConfig {
   /** Default: `1` */
   opacity?: number;
-  /** Default: `0` */
-  x?: number;
   /** Default: `[]` */
   labels?: string[];
+  /** Default: `0` */
+  x?: number;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `40` */
+  height?: number;
   /** Default: `60` */
   width?: number;
   /** Default: `0` */
-  layers?: number;
-  /** Default: `0` */
   y?: number;
-  /** Default: `""` */
-  className?: string;
   /** Default: `"var(--color-primary)"` */
   color?: string;
-  /** Default: `40` */
-  height?: number;
+  /** Default: `0` */
+  layers?: number;
 }
 
 /**

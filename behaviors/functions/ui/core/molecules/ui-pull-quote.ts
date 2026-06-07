@@ -40,9 +40,9 @@ export type StdUiPullQuoteEventKey = 'INIT';
  */
 export interface StdUiPullQuoteConfig {
   /** Default: `""` */
-  className?: string;
-  /** Default: `""` */
   children?: string;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

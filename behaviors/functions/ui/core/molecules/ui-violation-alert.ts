@@ -53,15 +53,15 @@ export interface StdUiViolationAlertNavigateToFieldPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiViolationAlertConfig {
-  violation?: EntityRow;
   /** Default: `false` */
   compact?: boolean;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `false` */
-  dismissible?: boolean;
   /** Default: `"warning"` */
   severity?: 'warning' | 'error';
+  /** Default: `false` */
+  dismissible?: boolean;
+  violation?: EntityRow;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

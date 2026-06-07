@@ -39,39 +39,39 @@ export type StdUiChartEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiChartConfig {
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `"none"` */
-  stack?: 'none' | 'stack' | 'normalize';
-  /** Default: `""` */
-  drillEvent?: string;
-  /** Default: `"bar"` */
-  chartType?: 'bar' | 'line' | 'pie' | 'area' | 'donut' | 'scatter' | 'histogram';
-  /** Default: `[]` */
-  series?: EntityRow[];
-  /** Default: `false` */
-  showValues?: boolean;
-  error?: unknown;
-  /** Default: `""` */
-  subtitle?: string;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"bar-vertical"` */
-  look?: 'bar-vertical' | 'bar-horizontal' | 'line' | 'area' | 'pie' | 'donut' | 'scatter' | 'histogram';
   /** Default: `[]` */
   actions?: EntityRow[];
-  /** Default: `""` */
-  title?: string;
+  /** Default: `"bar"` */
+  chartType?: 'bar' | 'line' | 'pie' | 'area' | 'donut' | 'scatter' | 'histogram';
   /** Default: `false` */
-  timeAxis?: boolean;
-  /** Default: `200` */
-  height?: number;
-  /** Default: `true` */
-  showLegend?: boolean;
-  /** Default: `[]` */
-  data?: EntityRow[];
+  isLoading?: boolean;
   /** Default: `[]` */
   scatterData?: EntityRow[];
+  /** Default: `"bar-vertical"` */
+  look?: 'bar-vertical' | 'bar-horizontal' | 'line' | 'area' | 'pie' | 'donut' | 'scatter' | 'histogram';
+  /** Default: `200` */
+  height?: number;
+  /** Default: `false` */
+  timeAxis?: boolean;
+  /** Default: `""` */
+  drillEvent?: string;
+  error?: EntityRow;
+  /** Default: `""` */
+  subtitle?: string;
+  /** Default: `[]` */
+  data?: EntityRow[];
+  /** Default: `""` */
+  className?: string;
+  /** Default: `""` */
+  title?: string;
+  /** Default: `[]` */
+  series?: EntityRow[];
+  /** Default: `true` */
+  showLegend?: boolean;
+  /** Default: `false` */
+  showValues?: boolean;
+  /** Default: `"none"` */
+  stack?: 'none' | 'stack' | 'normalize';
 }
 
 /**
@@ -180,25 +180,25 @@ export function stdUiChartChartOrbital(params: StdUiChartChartOrbitalParams = {}
                   'render-ui',
                   'main',
                   {
-                    'isLoading': '@config.isLoading',
-                    'showValues': '@config.showValues',
-                    'timeAxis': '@config.timeAxis',
-                    'chartType': '@config.chartType',
-                    'className': '@config.className',
-                    'drillEvent': '@config.drillEvent',
-                    'subtitle': '@config.subtitle',
-                    'height': '@config.height',
-                    'actions': '@config.actions',
-                    'stack': '@config.stack',
-                    'look': '@config.look',
-                    'scatterData': '@config.scatterData',
-                    'type': 'chart',
-                    'data': '@config.data',
                     'series': '@config.series',
+                    'data': '@config.data',
                     'error': '@config.error',
-                    'showLegend': '@config.showLegend',
+                    'height': '@config.height',
+                    'type': 'chart',
+                    'scatterData': '@config.scatterData',
+                    'look': '@config.look',
+                    'showValues': '@config.showValues',
+                    'isLoading': '@config.isLoading',
+                    'stack': '@config.stack',
                     'entity': 'ChartItem',
+                    'subtitle': '@config.subtitle',
+                    'className': '@config.className',
+                    'timeAxis': '@config.timeAxis',
+                    'showLegend': '@config.showLegend',
                     'title': '@config.title',
+                    'drillEvent': '@config.drillEvent',
+                    'chartType': '@config.chartType',
+                    'actions': '@config.actions',
                   },
                 ],
               ],
@@ -206,31 +206,42 @@ export function stdUiChartChartOrbital(params: StdUiChartChartOrbitalParams = {}
           ],
         },
         'config': {
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state',
+          'actions': {
+            'type': '[ChartActionsItem]',
+            'default': [],
+            'label': 'Actions',
+            'description': 'Top-level chart actions (export, refresh, etc.)',
             'tier': 'presentation',
-          },
-          'stack': {
-            'type': 'string',
-            'default': 'none',
-            'label': 'Stack',
-            'description': 'Stack mode for bar / area',
-            'tier': 'presentation',
-            'values': [
-              'none',
-              'stack',
-              'normalize',
-            ],
-          },
-          'drillEvent': {
-            'type': 'string',
-            'default': '',
-            'label': 'Drill Event',
-            'description': 'Event name emitted as `UI:{drillEvent}` with `{ label, value, seriesLabel? }` on data-point click',
-            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': true,
+                },
+                'navigatesTo': {
+                  'name': 'navigatesTo',
+                  'type': 'string',
+                  'required': false,
+                },
+                'variant': {
+                  'name': 'variant',
+                  'type': 'string',
+                  'required': false,
+                  'values': [
+                    'primary',
+                    'secondary',
+                    'ghost',
+                  ],
+                },
+                'event': {
+                  'name': 'event',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
           },
           'chartType': {
             'type': 'string',
@@ -249,84 +260,49 @@ export function stdUiChartChartOrbital(params: StdUiChartChartOrbitalParams = {}
               'histogram',
             ],
           },
-          'series': {
-            'type': '[ChartSeriesItem]',
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state',
+            'tier': 'presentation',
+          },
+          'scatterData': {
+            'type': '[ChartScatterDataItem]',
             'default': [],
-            'label': 'Series',
-            'description': 'Multi-series data',
+            'label': 'Scatter Data',
+            'description': 'Raw {x,y} points for scatter',
             'tier': 'presentation',
             'items': {
               'type': 'object',
               'properties': {
-                'data': {
-                  'name': 'data',
-                  'type': 'array',
+                'x': {
+                  'name': 'x',
+                  'type': 'number',
                   'required': true,
-                  'items': {
-                    'type': 'object',
-                    'properties': {
-                      'date': {
-                        'name': 'date',
-                        'type': 'string',
-                        'required': true,
-                      },
-                      'value': {
-                        'name': 'value',
-                        'type': 'number',
-                        'required': true,
-                      },
-                      'label': {
-                        'name': 'label',
-                        'type': 'string',
-                        'required': false,
-                      },
-                    },
-                  },
                 },
-                'name': {
-                  'name': 'name',
-                  'type': 'string',
+                'y': {
+                  'name': 'y',
+                  'type': 'number',
                   'required': true,
+                },
+                'size': {
+                  'name': 'size',
+                  'type': 'number',
+                  'required': false,
                 },
                 'color': {
                   'name': 'color',
                   'type': 'string',
                   'required': false,
                 },
-                'dashed': {
-                  'name': 'dashed',
-                  'type': 'boolean',
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
                   'required': false,
                 },
               },
             },
-          },
-          'showValues': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Show Values',
-            'description': 'Show values on chart',
-            'tier': 'presentation',
-          },
-          'error': {
-            'type': 'json',
-            'label': 'Error',
-            'description': 'Error state',
-            'tier': 'presentation',
-          },
-          'subtitle': {
-            'type': 'string',
-            'default': '',
-            'label': 'Subtitle',
-            'description': 'Chart subtitle / description',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
           },
           'look': {
             'type': 'string',
@@ -346,48 +322,11 @@ export function stdUiChartChartOrbital(params: StdUiChartChartOrbitalParams = {}
               'histogram',
             ],
           },
-          'actions': {
-            'type': '[ChartActionsItem]',
-            'default': [],
-            'label': 'Actions',
-            'description': 'Top-level chart actions (export, refresh, etc.)',
-            'tier': 'presentation',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'label': {
-                  'name': 'label',
-                  'type': 'string',
-                  'required': true,
-                },
-                'event': {
-                  'name': 'event',
-                  'type': 'string',
-                  'required': false,
-                },
-                'variant': {
-                  'name': 'variant',
-                  'type': 'string',
-                  'required': false,
-                  'values': [
-                    'primary',
-                    'secondary',
-                    'ghost',
-                  ],
-                },
-                'navigatesTo': {
-                  'name': 'navigatesTo',
-                  'type': 'string',
-                  'required': false,
-                },
-              },
-            },
-          },
-          'title': {
-            'type': 'string',
-            'default': '',
-            'label': 'Title',
-            'description': 'Chart title',
+          'height': {
+            'type': 'number',
+            'default': 200,
+            'label': 'Height',
+            'description': 'Chart height in px',
             'tier': 'presentation',
           },
           'timeAxis': {
@@ -397,18 +336,46 @@ export function stdUiChartChartOrbital(params: StdUiChartChartOrbitalParams = {}
             'description': 'Format X-axis labels as time (ISO date in → \'Mar 2026\'-style label out)',
             'tier': 'presentation',
           },
-          'height': {
-            'type': 'number',
-            'default': 200,
-            'label': 'Height',
-            'description': 'Chart height in px',
+          'drillEvent': {
+            'type': 'string',
+            'default': '',
+            'label': 'Drill Event',
+            'description': 'Event name emitted as `UI:{drillEvent}` with `{ label, value, seriesLabel? }` on data-point click',
             'tier': 'presentation',
           },
-          'showLegend': {
-            'type': 'boolean',
-            'default': true,
-            'label': 'Show Legend',
-            'description': 'Show legend',
+          'error': {
+            'type': 'ChartError',
+            'label': 'Error',
+            'description': 'Error state',
+            'tier': 'presentation',
+            'properties': {
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+            },
+          },
+          'subtitle': {
+            'type': 'string',
+            'default': '',
+            'label': 'Subtitle',
+            'description': 'Chart subtitle / description',
             'tier': 'presentation',
           },
           'data': {
@@ -420,36 +387,80 @@ export function stdUiChartChartOrbital(params: StdUiChartChartOrbitalParams = {}
             'items': {
               'type': 'object',
               'properties': {
-                'label': {
-                  'name': 'label',
+                'date': {
+                  'name': 'date',
                   'type': 'string',
-                  'required': false,
+                  'required': true,
                 },
                 'value': {
                   'name': 'value',
                   'type': 'number',
                   'required': true,
                 },
-                'date': {
-                  'name': 'date',
+                'label': {
+                  'name': 'label',
                   'type': 'string',
-                  'required': true,
+                  'required': false,
                 },
               },
             },
           },
-          'scatterData': {
-            'type': '[ChartScatterDataItem]',
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'title': {
+            'type': 'string',
+            'default': '',
+            'label': 'Title',
+            'description': 'Chart title',
+            'tier': 'presentation',
+          },
+          'series': {
+            'type': '[ChartSeriesItem]',
             'default': [],
-            'label': 'Scatter Data',
-            'description': 'Raw {x,y} points for scatter',
+            'label': 'Series',
+            'description': 'Multi-series data',
             'tier': 'presentation',
             'items': {
               'type': 'object',
               'properties': {
-                'label': {
-                  'name': 'label',
+                'name': {
+                  'name': 'name',
                   'type': 'string',
+                  'required': true,
+                },
+                'data': {
+                  'name': 'data',
+                  'type': 'array',
+                  'required': true,
+                  'items': {
+                    'type': 'object',
+                    'properties': {
+                      'label': {
+                        'name': 'label',
+                        'type': 'string',
+                        'required': false,
+                      },
+                      'value': {
+                        'name': 'value',
+                        'type': 'number',
+                        'required': true,
+                      },
+                      'date': {
+                        'name': 'date',
+                        'type': 'string',
+                        'required': true,
+                      },
+                    },
+                  },
+                },
+                'dashed': {
+                  'name': 'dashed',
+                  'type': 'boolean',
                   'required': false,
                 },
                 'color': {
@@ -457,23 +468,34 @@ export function stdUiChartChartOrbital(params: StdUiChartChartOrbitalParams = {}
                   'type': 'string',
                   'required': false,
                 },
-                'size': {
-                  'name': 'size',
-                  'type': 'number',
-                  'required': false,
-                },
-                'x': {
-                  'name': 'x',
-                  'type': 'number',
-                  'required': true,
-                },
-                'y': {
-                  'name': 'y',
-                  'type': 'number',
-                  'required': true,
-                },
               },
             },
+          },
+          'showLegend': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Show Legend',
+            'description': 'Show legend',
+            'tier': 'presentation',
+          },
+          'showValues': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Show Values',
+            'description': 'Show values on chart',
+            'tier': 'presentation',
+          },
+          'stack': {
+            'type': 'string',
+            'default': 'none',
+            'label': 'Stack',
+            'description': 'Stack mode for bar / area',
+            'tier': 'presentation',
+            'values': [
+              'none',
+              'stack',
+              'normalize',
+            ],
           },
         },
         'scope': 'instance',

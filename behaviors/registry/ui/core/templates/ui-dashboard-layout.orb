@@ -125,24 +125,24 @@
                     "main",
                     {
                       "navItems": "@config.navItems",
+                      "notifications": "@config.notifications",
+                      "onSignOut": "SIGN_OUT",
+                      "headerActions": "@config.headerActions",
                       "user": "@config.user",
-                      "appName": "@config.appName",
-                      "notificationClickEvent": "NOTIFICATION_CLICK",
+                      "topBarActions": "@config.topBarActions",
                       "showThemeToggle": "@config.showThemeToggle",
                       "currentPath": "@config.currentPath",
-                      "onSignOut": "SIGN_OUT",
+                      "appName": "@config.appName",
                       "onSearchSubmit": "SEARCH_SUBMIT",
-                      "showSearch": "@config.showSearch",
-                      "topBarActions": "@config.topBarActions",
-                      "notifications": "@config.notifications",
+                      "notificationClickEvent": "NOTIFICATION_CLICK",
+                      "sidebarFooter": "@config.sidebarFooter",
                       "layoutMode": "@config.layoutMode",
+                      "type": "dashboard-layout",
+                      "showSearch": "@config.showSearch",
                       "searchEvent": "SEARCH",
                       "logo": "@config.logo",
-                      "headerActions": "@config.headerActions",
-                      "onNotificationClick": "NOTIFICATION_CLICK",
                       "children": "@config.children",
-                      "type": "dashboard-layout",
-                      "sidebarFooter": "@config.sidebarFooter"
+                      "onNotificationClick": "NOTIFICATION_CLICK"
                     }
                   ]
                 ]
@@ -150,24 +150,101 @@
             ]
           },
           "config": {
-            "headerActions": {
-              "type": "node",
-              "label": "Header Actions",
-              "description": "Header actions (extra slots beyond bell/search/theme).",
-              "tier": "presentation"
-            },
-            "currentPath": {
+            "appName": {
               "type": "string",
-              "default": "",
-              "label": "Current Path",
-              "description": "Active path used to highlight the matching nav item. Falls back to `useCurrentPagePath()` (set by `CurrentPagePathProvider`), then to `useLocation().pathname`. Production deploys can omit it; the studio preview passes the in-frame `?page=` value so highlighting works inside the embedded playground where `pathname` would be the studio route.",
+              "default": "{{APP_TITLE}}",
+              "label": "App Name",
+              "description": "App name shown in sidebar",
               "tier": "presentation"
             },
-            "children": {
-              "type": "node",
-              "label": "Children",
-              "description": "Page content rendered inside the main area",
+            "showSearch": {
+              "type": "boolean",
+              "default": false,
+              "label": "Show Search",
+              "description": "Show the top-bar search box. Default `false` — opt in by setting `searchEvent` (any truthy value implies showSearch) or this flag.",
               "tier": "presentation"
+            },
+            "navItems": {
+              "type": "[DashboardLayoutNavItemsItem]",
+              "default": [],
+              "label": "Nav Items",
+              "description": "Navigation items. Apps that need a Settings page should add it as a navItems entry, not depend on baked-in chrome.",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "href": {
+                    "name": "href",
+                    "type": "string",
+                    "required": true
+                  },
+                  "badge": {
+                    "name": "badge",
+                    "type": "string",
+                    "required": false
+                  },
+                  "children": {
+                    "name": "children",
+                    "type": "array",
+                    "required": false,
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "topBarActions": {
+              "type": "[DashboardLayoutTopBarActionsItem]",
+              "default": [],
+              "label": "Top Bar Actions",
+              "description": "Generic top-bar action buttons rendered between the search bar and the notifications bell. Each entry: `{icon, label?, event, badge?, variant?}`. Domain-agnostic — consumers add a cart icon, profile button, help-bubble, or any other top-bar action by appending entries. Empty array (default) renders nothing.",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": true
+                  },
+                  "badge": {
+                    "name": "badge",
+                    "type": "string",
+                    "required": false
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "default",
+                      "primary",
+                      "danger"
+                    ]
+                  },
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": true
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
             },
             "sidebarFooter": {
               "type": "node",
@@ -188,6 +265,43 @@
                 "minimal"
               ]
             },
+            "notifications": {
+              "type": "[DashboardLayoutNotificationsItem]",
+              "default": [],
+              "label": "Notifications",
+              "description": "Notification list. Pass an empty array to show the bell with no badge; omit / pass null to hide the bell entirely.",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "message": {
+                    "name": "message",
+                    "type": "string",
+                    "required": true
+                  },
+                  "read": {
+                    "name": "read",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  "description": {
+                    "name": "description",
+                    "type": "string",
+                    "required": false
+                  },
+                  "createdAt": {
+                    "name": "createdAt",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
             "showThemeToggle": {
               "type": "boolean",
               "default": true,
@@ -195,103 +309,12 @@
               "description": "Show the theme toggle button in the header. Default `true` — universally useful for a11y / dark mode.",
               "tier": "presentation"
             },
-            "logo": {
-              "type": "node",
-              "label": "Logo",
-              "description": "Logo component or URL",
+            "currentPath": {
+              "type": "string",
+              "default": "",
+              "label": "Current Path",
+              "description": "Active path used to highlight the matching nav item. Falls back to `useCurrentPagePath()` (set by `CurrentPagePathProvider`), then to `useLocation().pathname`. Production deploys can omit it; the studio preview passes the in-frame `?page=` value so highlighting works inside the embedded playground where `pathname` would be the studio route.",
               "tier": "presentation"
-            },
-            "topBarActions": {
-              "type": "[DashboardLayoutTopBarActionsItem]",
-              "default": [],
-              "label": "Top Bar Actions",
-              "description": "Generic top-bar action buttons rendered between the search bar and the notifications bell. Each entry: `{icon, label?, event, badge?, variant?}`. Domain-agnostic — consumers add a cart icon, profile button, help-bubble, or any other top-bar action by appending entries. Empty array (default) renders nothing.",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "default",
-                      "primary",
-                      "danger"
-                    ]
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": true
-                  },
-                  "badge": {
-                    "name": "badge",
-                    "type": "string",
-                    "required": false
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            },
-            "notifications": {
-              "type": "[json]",
-              "default": [],
-              "label": "Notifications",
-              "description": "Notification list. Pass an empty array to show the bell with no badge; omit / pass null to hide the bell entirely.",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
-            },
-            "navItems": {
-              "type": "[DashboardLayoutNavItemsItem]",
-              "default": [],
-              "label": "Nav Items",
-              "description": "Navigation items. Apps that need a Settings page should add it as a navItems entry, not depend on baked-in chrome.",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "href": {
-                    "name": "href",
-                    "type": "string",
-                    "required": true
-                  },
-                  "badge": {
-                    "name": "badge",
-                    "type": "string",
-                    "required": false
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "children": {
-                    "name": "children",
-                    "type": "array",
-                    "required": false,
-                    "items": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
             },
             "user": {
               "type": "DashboardLayoutUser",
@@ -304,30 +327,34 @@
                   "type": "string",
                   "required": true
                 },
-                "email": {
-                  "name": "email",
-                  "type": "string",
-                  "required": true
-                },
                 "avatar": {
                   "name": "avatar",
                   "type": "string",
                   "required": false
+                },
+                "email": {
+                  "name": "email",
+                  "type": "string",
+                  "required": true
                 }
               }
             },
-            "appName": {
-              "type": "string",
-              "default": "{{APP_TITLE}}",
-              "label": "App Name",
-              "description": "App name shown in sidebar",
+            "headerActions": {
+              "type": "node",
+              "label": "Header Actions",
+              "description": "Header actions (extra slots beyond bell/search/theme).",
               "tier": "presentation"
             },
-            "showSearch": {
-              "type": "boolean",
-              "default": false,
-              "label": "Show Search",
-              "description": "Show the top-bar search box. Default `false` — opt in by setting `searchEvent` (any truthy value implies showSearch) or this flag.",
+            "logo": {
+              "type": "node",
+              "label": "Logo",
+              "description": "Logo component or URL",
+              "tier": "presentation"
+            },
+            "children": {
+              "type": "node",
+              "label": "Children",
+              "description": "Page content rendered inside the main area",
               "tier": "presentation"
             }
           },

@@ -46,9 +46,9 @@ export interface StdUiDayCellClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiDayCellConfig {
-  date?: unknown;
   /** Default: `""` */
   className?: string;
+  date?: unknown;
   /** Default: `false` */
   isToday?: boolean;
 }

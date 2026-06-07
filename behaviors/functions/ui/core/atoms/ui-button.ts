@@ -46,24 +46,24 @@ export interface StdUiButtonActionPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiButtonConfig {
-  /** Default: `"circle"` */
-  icon?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
   /** Default: `""` */
   label?: string;
   /** Default: `false` */
   disabled?: boolean;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
-  actionPayload?: unknown;
   rightIcon?: unknown;
-  iconRight?: unknown;
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
+  /** Default: `"circle"` */
+  icon?: string;
+  actionPayload?: unknown;
   leftIcon?: unknown;
+  iconRight?: unknown;
   /** Default: `"primary"` */
   variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'success' | 'warning' | 'default';
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
 }
 
 /**

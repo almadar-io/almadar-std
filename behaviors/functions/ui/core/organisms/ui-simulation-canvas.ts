@@ -39,17 +39,17 @@ export type StdUiSimulationCanvasEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiSimulationCanvasConfig {
-  /** Default: `600` */
-  width?: number;
-  /** Default: `false` */
-  running?: boolean;
-  preset?: unknown;
   /** Default: `400` */
   height?: number;
-  /** Default: `1` */
-  speed?: number;
+  /** Default: `600` */
+  width?: number;
   /** Default: `""` */
   className?: string;
+  /** Default: `false` */
+  running?: boolean;
+  preset?: EntityRow;
+  /** Default: `1` */
+  speed?: number;
 }
 
 /**
@@ -153,13 +153,13 @@ export function stdUiSimulationCanvasSimulationCanvasOrbital(params: StdUiSimula
                   'render-ui',
                   'main',
                   {
-                    'className': '@config.className',
-                    'speed': '@config.speed',
-                    'height': '@config.height',
-                    'preset': '@config.preset',
                     'type': 'simulation-canvas',
+                    'preset': '@config.preset',
                     'width': '@config.width',
+                    'speed': '@config.speed',
+                    'className': '@config.className',
                     'running': '@config.running',
+                    'height': '@config.height',
                   },
                 ],
               ],
@@ -167,11 +167,25 @@ export function stdUiSimulationCanvasSimulationCanvasOrbital(params: StdUiSimula
           ],
         },
         'config': {
+          'height': {
+            'type': 'number',
+            'default': 400,
+            'label': 'Height',
+            'description': 'height prop',
+            'tier': 'presentation',
+          },
           'width': {
             'type': 'number',
             'default': 600,
             'label': 'Width',
             'description': 'width prop',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'className prop',
             'tier': 'presentation',
           },
           'running': {
@@ -182,30 +196,155 @@ export function stdUiSimulationCanvasSimulationCanvasOrbital(params: StdUiSimula
             'tier': 'presentation',
           },
           'preset': {
-            'type': 'json',
+            'type': 'SimulationCanvasPreset',
             'label': 'Preset',
             'description': 'preset prop',
             'tier': 'presentation',
-          },
-          'height': {
-            'type': 'number',
-            'default': 400,
-            'label': 'Height',
-            'description': 'height prop',
-            'tier': 'presentation',
+            'properties': {
+              'backgroundColor': {
+                'name': 'backgroundColor',
+                'type': 'string',
+                'required': false,
+              },
+              'domain': {
+                'name': 'domain',
+                'type': 'string',
+                'required': true,
+              },
+              'gravity': {
+                'name': 'gravity',
+                'type': 'object',
+                'required': false,
+                'properties': {
+                  'y': {
+                    'name': 'y',
+                    'type': 'number',
+                    'required': true,
+                  },
+                  'x': {
+                    'name': 'x',
+                    'type': 'number',
+                    'required': true,
+                  },
+                },
+              },
+              'showVelocity': {
+                'name': 'showVelocity',
+                'type': 'boolean',
+                'required': false,
+              },
+              'id': {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              'description': {
+                'name': 'description',
+                'type': 'string',
+                'required': true,
+              },
+              'constraints': {
+                'name': 'constraints',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'length': {
+                      'name': 'length',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'bodyA': {
+                      'name': 'bodyA',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'stiffness': {
+                      'name': 'stiffness',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'bodyB': {
+                      'name': 'bodyB',
+                      'type': 'number',
+                      'required': true,
+                    },
+                  },
+                },
+              },
+              'parameters': {
+                'name': 'parameters',
+                'type': 'string',
+                'required': true,
+              },
+              'bodies': {
+                'name': 'bodies',
+                'type': 'array',
+                'required': true,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'x': {
+                      'name': 'x',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'vy': {
+                      'name': 'vy',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'radius': {
+                      'name': 'radius',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'y': {
+                      'name': 'y',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'vx': {
+                      'name': 'vx',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'mass': {
+                      'name': 'mass',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'fixed': {
+                      'name': 'fixed',
+                      'type': 'boolean',
+                      'required': true,
+                    },
+                    'color': {
+                      'name': 'color',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'id': {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  },
+                },
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': true,
+              },
+            },
           },
           'speed': {
             'type': 'number',
             'default': 1,
             'label': 'Speed',
             'description': 'speed prop',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'className prop',
             'tier': 'presentation',
           },
         },

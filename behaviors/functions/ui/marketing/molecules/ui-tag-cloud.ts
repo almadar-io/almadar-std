@@ -39,12 +39,12 @@ export type StdUiTagCloudEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiTagCloudConfig {
-  /** Default: `"default"` */
-  variant?: 'default' | 'primary' | 'accent';
   /** Default: `""` */
   className?: string;
   /** Default: `[]` */
   tags?: EntityRow[];
+  /** Default: `"default"` */
+  variant?: 'default' | 'primary' | 'accent';
 }
 
 /**

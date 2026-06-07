@@ -32,13 +32,13 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "icon": {
-                  "name": "icon",
+                "event": {
+                  "name": "event",
                   "required": false,
                   "type": "string"
                 },
-                "event": {
-                  "name": "event",
+                "icon": {
+                  "name": "icon",
                   "required": false,
                   "type": "string"
                 },
@@ -120,13 +120,35 @@
           },
           {
             "key": "fields",
-            "type": "[json]",
+            "type": "[DetailPanelFieldsItem]",
             "default": [],
             "label": "Fields",
             "description": "Fields to display - accepts string[], {key, header}[], or DetailField[]",
             "tier": "presentation",
             "items": {
-              "type": "string"
+              "properties": {
+                "key": {
+                  "name": "key",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "header": {
+                  "name": "header",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
             }
           },
           {
@@ -205,18 +227,40 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "title": {
-                  "name": "title",
-                  "required": true,
-                  "type": "string"
-                },
                 "fields": {
                   "name": "fields",
                   "required": true,
                   "type": "array",
                   "items": {
-                    "type": "string"
+                    "properties": {
+                      "icon": {
+                        "name": "icon",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "label": {
+                        "name": "label",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "value": {
+                        "name": "value",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "copyable": {
+                        "name": "copyable",
+                        "required": false,
+                        "type": "boolean"
+                      }
+                    },
+                    "type": "object"
                   }
+                },
+                "title": {
+                  "name": "title",
+                  "required": true,
+                  "type": "string"
                 }
               },
               "type": "object"
@@ -224,7 +268,7 @@
           },
           {
             "key": "selectedIds",
-            "type": "[json]",
+            "type": "[string]",
             "default": [],
             "label": "Selected Ids",
             "description": "Currently selected item IDs",
@@ -267,10 +311,29 @@
           },
           {
             "key": "status",
-            "type": "json",
+            "type": "DetailPanelStatus",
             "label": "Status",
             "description": "status prop",
-            "tier": "presentation"
+            "tier": "presentation",
+            "properties": {
+              "label": {
+                "name": "label",
+                "required": true,
+                "type": "string"
+              },
+              "variant": {
+                "name": "variant",
+                "required": false,
+                "type": "string",
+                "values": [
+                  "default",
+                  "success",
+                  "warning",
+                  "danger",
+                  "info"
+                ]
+              }
+            }
           },
           {
             "key": "subtitle",

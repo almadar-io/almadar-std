@@ -39,19 +39,19 @@ export type StdUiJazariStateMachineEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiJazariStateMachineConfig {
-  /** Default: `""` */
-  className?: string;
+  /** Default: `0` */
+  traitIndex?: number;
+  /** Default: `"ltr"` */
+  direction?: 'ltr' | 'rtl';
+  error?: EntityRow;
   /** Default: `[]` */
   entityFields?: string[];
   /** Default: `false` */
   isLoading?: boolean;
-  error?: unknown;
+  /** Default: `""` */
+  className?: string;
   traitProp?: unknown;
-  /** Default: `"ltr"` */
-  direction?: 'ltr' | 'rtl';
   schema?: unknown;
-  /** Default: `0` */
-  traitIndex?: number;
 }
 
 /**
@@ -156,14 +156,14 @@ export function stdUiJazariStateMachineJazariStateMachineOrbital(params: StdUiJa
                   'main',
                   {
                     'trait': '@config.traitProp',
+                    'schema': '@config.schema',
+                    'className': '@config.className',
                     'direction': '@config.direction',
-                    'error': '@config.error',
                     'traitIndex': '@config.traitIndex',
                     'isLoading': '@config.isLoading',
                     'entityFields': '@config.entityFields',
                     'type': 'jazari-state-machine',
-                    'className': '@config.className',
-                    'schema': '@config.schema',
+                    'error': '@config.error',
                   },
                 ],
               ],
@@ -171,12 +171,51 @@ export function stdUiJazariStateMachineJazariStateMachineOrbital(params: StdUiJa
           ],
         },
         'config': {
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
+          'traitIndex': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Trait Index',
+            'description': 'Which trait to visualize (default: 0)',
             'tier': 'presentation',
+          },
+          'direction': {
+            'type': 'string',
+            'default': 'ltr',
+            'label': 'Direction',
+            'description': 'Text direction (default: \'ltr\')',
+            'tier': 'presentation',
+            'values': [
+              'ltr',
+              'rtl',
+            ],
+          },
+          'error': {
+            'type': 'JazariStateMachineError',
+            'label': 'Error',
+            'description': 'Error state',
+            'tier': 'presentation',
+            'properties': {
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+            },
           },
           'entityFields': {
             'type': '[string]',
@@ -195,10 +234,11 @@ export function stdUiJazariStateMachineJazariStateMachineOrbital(params: StdUiJa
             'description': 'Loading state indicator',
             'tier': 'presentation',
           },
-          'error': {
-            'type': 'json',
-            'label': 'Error',
-            'description': 'Error state',
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
           'traitProp': {
@@ -208,28 +248,10 @@ export function stdUiJazariStateMachineJazariStateMachineOrbital(params: StdUiJa
             'synonyms': 'trait',
             'tier': 'presentation',
           },
-          'direction': {
-            'type': 'string',
-            'default': 'ltr',
-            'label': 'Direction',
-            'description': 'Text direction (default: \'ltr\')',
-            'tier': 'presentation',
-            'values': [
-              'ltr',
-              'rtl',
-            ],
-          },
           'schema': {
             'type': 'json',
             'label': 'Schema',
             'description': 'Full schema — extracts first trait\'s state machine',
-            'tier': 'presentation',
-          },
-          'traitIndex': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Trait Index',
-            'description': 'Which trait to visualize (default: 0)',
             'tier': 'presentation',
           },
         },

@@ -40,24 +40,24 @@ export type StdUiStatBadgeEventKey = 'INIT';
  */
 export interface StdUiStatBadgeConfig {
   /** Default: `""` */
+  label?: string;
+  /** Default: `""` */
   value?: string;
-  /** Default: `"number"` */
-  format?: string;
+  icon?: unknown;
   /** Default: `""` */
   field?: string;
-  /** Default: `""` */
-  label?: string;
-  /** Default: `"default"` */
-  variant?: string;
+  /** Default: `0` */
+  max?: number;
   /** Default: `""` */
   source?: string;
-  icon?: unknown;
+  /** Default: `"number"` */
+  format?: string;
   /** Default: `"md"` */
   size?: string;
   /** Default: `""` */
   className?: string;
-  /** Default: `0` */
-  max?: number;
+  /** Default: `"default"` */
+  variant?: string;
 }
 
 /**

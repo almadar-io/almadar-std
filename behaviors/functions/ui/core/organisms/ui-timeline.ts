@@ -39,21 +39,21 @@ export type StdUiTimelineEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiTimelineConfig {
+  /** Default: `""` */
+  title?: string;
+  /** Default: `[]` */
+  items?: EntityRow[];
+  /** Default: `[]` */
+  fields?: string[];
   /** Default: `"vertical-spacious"` */
   look?: 'vertical-compact' | 'vertical-spacious' | 'horizontal' | 'swimlane';
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `[]` */
-  fields?: string[];
-  /** Default: `""` */
-  title?: string;
   /** Default: `""` */
   className?: string;
   /** Default: `[]` */
   itemActions?: EntityRow[];
-  /** Default: `[]` */
-  items?: EntityRow[];
-  error?: unknown;
+  error?: EntityRow;
 }
 
 /**
@@ -162,15 +162,15 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
                   'render-ui',
                   'main',
                   {
-                    'itemActions': '@config.itemActions',
-                    'look': '@config.look',
                     'className': '@config.className',
-                    'fields': '@config.fields',
-                    'isLoading': '@config.isLoading',
+                    'title': '@config.title',
+                    'look': '@config.look',
+                    'itemActions': '@config.itemActions',
                     'entity': '@entity',
                     'error': '@config.error',
-                    'title': '@config.title',
                     'items': '@config.items',
+                    'fields': '@config.fields',
+                    'isLoading': '@config.isLoading',
                     'type': 'timeline',
                   },
                 ],
@@ -179,6 +179,79 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
           ],
         },
         'config': {
+          'title': {
+            'type': 'string',
+            'default': '',
+            'label': 'Title',
+            'description': 'Timeline title',
+            'tier': 'presentation',
+          },
+          'items': {
+            'type': '[TimelineItemsItem]',
+            'default': [],
+            'label': 'Items',
+            'description': 'Timeline items',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                'date': {
+                  'name': 'date',
+                  'type': 'string',
+                  'required': false,
+                },
+                'description': {
+                  'name': 'description',
+                  'type': 'string',
+                  'required': false,
+                },
+                'status': {
+                  'name': 'status',
+                  'type': 'string',
+                  'required': false,
+                  'values': [
+                    'complete',
+                    'active',
+                    'pending',
+                    'error',
+                  ],
+                },
+                'icon': {
+                  'name': 'icon',
+                  'type': 'string',
+                  'required': false,
+                },
+                'title': {
+                  'name': 'title',
+                  'type': 'string',
+                  'required': true,
+                },
+                'tags': {
+                  'name': 'tags',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
+                    'type': 'string',
+                  },
+                },
+              },
+            },
+          },
+          'fields': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Fields',
+            'description': 'Fields to display',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
+          },
           'look': {
             'type': 'string',
             'default': 'vertical-spacious',
@@ -199,23 +272,6 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
             'description': 'Loading state indicator',
             'tier': 'presentation',
           },
-          'fields': {
-            'type': '[string]',
-            'default': [],
-            'label': 'Fields',
-            'description': 'Fields to display',
-            'tier': 'presentation',
-            'items': {
-              'type': 'string',
-            },
-          },
-          'title': {
-            'type': 'string',
-            'default': '',
-            'label': 'Title',
-            'description': 'Timeline title',
-            'tier': 'presentation',
-          },
           'className': {
             'type': 'string',
             'default': '',
@@ -232,6 +288,11 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
             'items': {
               'type': 'object',
               'properties': {
+                'event': {
+                  'name': 'event',
+                  'type': 'string',
+                  'required': false,
+                },
                 'label': {
                   'name': 'label',
                   'type': 'string',
@@ -252,75 +313,36 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
                     'ghost',
                   ],
                 },
-                'event': {
-                  'name': 'event',
-                  'type': 'string',
-                  'required': false,
-                },
-              },
-            },
-          },
-          'items': {
-            'type': '[TimelineItemsItem]',
-            'default': [],
-            'label': 'Items',
-            'description': 'Timeline items',
-            'tier': 'presentation',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'id': {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': true,
-                },
-                'icon': {
-                  'name': 'icon',
-                  'type': 'string',
-                  'required': false,
-                },
-                'title': {
-                  'name': 'title',
-                  'type': 'string',
-                  'required': true,
-                },
-                'date': {
-                  'name': 'date',
-                  'type': 'string',
-                  'required': false,
-                },
-                'status': {
-                  'name': 'status',
-                  'type': 'string',
-                  'required': false,
-                  'values': [
-                    'complete',
-                    'active',
-                    'pending',
-                    'error',
-                  ],
-                },
-                'tags': {
-                  'name': 'tags',
-                  'type': 'array',
-                  'required': false,
-                  'items': {
-                    'type': 'string',
-                  },
-                },
-                'description': {
-                  'name': 'description',
-                  'type': 'string',
-                  'required': false,
-                },
               },
             },
           },
           'error': {
-            'type': 'json',
+            'type': 'TimelineError',
             'label': 'Error',
             'description': 'Error state',
             'tier': 'presentation',
+            'properties': {
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+            },
           },
         },
         'scope': 'instance',

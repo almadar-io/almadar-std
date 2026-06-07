@@ -53,15 +53,15 @@ export interface StdUiFeatureRendererFeatureHoverPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiFeatureRendererConfig {
-  /** Default: `[]` */
-  selectedFeatureIds?: string[];
-  featureColors?: unknown;
-  /** Default: `0` */
-  offsetZ?: number;
   /** Default: `0` */
   offsetX?: number;
+  /** Default: `[]` */
+  selectedFeatureIds?: string[];
+  /** Default: `0` */
+  offsetZ?: number;
   /** Default: `1` */
   cellSize?: number;
+  featureColors?: unknown;
   /** Default: `[]` */
   features?: EntityRow[];
 }
@@ -205,14 +205,14 @@ export function stdUiFeatureRendererFeatureRendererOrbital(params: StdUiFeatureR
                   'render-ui',
                   'main',
                   {
+                    'offsetZ': '@config.offsetZ',
+                    'onFeatureClick': 'FEATURE_CLICK',
                     'selectedFeatureIds': '@config.selectedFeatureIds',
-                    'type': 'feature-renderer',
                     'offsetX': '@config.offsetX',
                     'onFeatureHover': 'FEATURE_HOVER',
-                    'offsetZ': '@config.offsetZ',
-                    'features': '@config.features',
                     'featureColors': '@config.featureColors',
-                    'onFeatureClick': 'FEATURE_CLICK',
+                    'features': '@config.features',
+                    'type': 'feature-renderer',
                     'cellSize': '@config.cellSize',
                   },
                 ],
@@ -221,6 +221,13 @@ export function stdUiFeatureRendererFeatureRendererOrbital(params: StdUiFeatureR
           ],
         },
         'config': {
+          'offsetX': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Offset X',
+            'description': 'Grid offset X',
+            'tier': 'presentation',
+          },
           'selectedFeatureIds': {
             'type': '[string]',
             'default': [],
@@ -231,12 +238,6 @@ export function stdUiFeatureRendererFeatureRendererOrbital(params: StdUiFeatureR
               'type': 'string',
             },
           },
-          'featureColors': {
-            'type': 'json',
-            'label': 'Feature Colors',
-            'description': 'Feature color overrides',
-            'tier': 'presentation',
-          },
           'offsetZ': {
             'type': 'number',
             'default': 0,
@@ -244,18 +245,17 @@ export function stdUiFeatureRendererFeatureRendererOrbital(params: StdUiFeatureR
             'description': 'Grid offset Z',
             'tier': 'presentation',
           },
-          'offsetX': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Offset X',
-            'description': 'Grid offset X',
-            'tier': 'presentation',
-          },
           'cellSize': {
             'type': 'number',
             'default': 1,
             'label': 'Cell Size',
             'description': 'Grid cell size',
+            'tier': 'presentation',
+          },
+          'featureColors': {
+            'type': 'json',
+            'label': 'Feature Colors',
+            'description': 'Feature color overrides',
             'tier': 'presentation',
           },
           'features': {
@@ -267,25 +267,25 @@ export function stdUiFeatureRendererFeatureRendererOrbital(params: StdUiFeatureR
             'items': {
               'type': 'object',
               'properties': {
-                'elevation': {
-                  'name': 'elevation',
+                'y': {
+                  'name': 'y',
                   'type': 'number',
-                  'required': false,
+                  'required': true,
                 },
                 'assetUrl': {
                   'name': 'assetUrl',
                   'type': 'string',
                   'required': false,
                 },
-                'y': {
-                  'name': 'y',
-                  'type': 'number',
-                  'required': true,
-                },
-                'type': {
-                  'name': 'type',
+                'sprite': {
+                  'name': 'sprite',
                   'type': 'string',
-                  'required': true,
+                  'required': false,
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': false,
                 },
                 'z': {
                   'name': 'z',
@@ -302,14 +302,14 @@ export function stdUiFeatureRendererFeatureRendererOrbital(params: StdUiFeatureR
                   'type': 'string',
                   'required': false,
                 },
-                'sprite': {
-                  'name': 'sprite',
+                'type': {
+                  'name': 'type',
                   'type': 'string',
-                  'required': false,
+                  'required': true,
                 },
-                'id': {
-                  'name': 'id',
-                  'type': 'string',
+                'elevation': {
+                  'name': 'elevation',
+                  'type': 'number',
                   'required': false,
                 },
               },

@@ -47,11 +47,11 @@ export interface StdUiObjectRulePanelRulesChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiObjectRulePanelConfig {
-  /** Default: `false` */
-  disabled?: boolean;
   /** Default: `""` */
   className?: string;
   object?: EntityRow;
+  /** Default: `false` */
+  disabled?: boolean;
 }
 
 /**
@@ -179,11 +179,11 @@ export function stdUiObjectRulePanelObjectRulePanelOrbital(params: StdUiObjectRu
                   'render-ui',
                   'main',
                   {
-                    'object': '@config.object',
-                    'disabled': '@config.disabled',
-                    'onRulesChange': 'RULES_CHANGE',
                     'className': '@config.className',
                     'type': 'object-rule-panel',
+                    'object': '@config.object',
+                    'onRulesChange': 'RULES_CHANGE',
+                    'disabled': '@config.disabled',
                   },
                 ],
               ],
@@ -191,13 +191,6 @@ export function stdUiObjectRulePanelObjectRulePanelOrbital(params: StdUiObjectRu
           ],
         },
         'config': {
-          'disabled': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Disabled',
-            'description': 'Whether editing is disabled',
-            'tier': 'presentation',
-          },
           'className': {
             'type': 'string',
             'default': '',
@@ -211,6 +204,64 @@ export function stdUiObjectRulePanelObjectRulePanelOrbital(params: StdUiObjectRu
             'description': 'The selected object',
             'tier': 'presentation',
             'properties': {
+              'states': {
+                'name': 'states',
+                'type': 'array',
+                'required': true,
+                'items': {
+                  'type': 'string',
+                },
+              },
+              'currentState': {
+                'name': 'currentState',
+                'type': 'string',
+                'required': true,
+              },
+              'availableEvents': {
+                'name': 'availableEvents',
+                'type': 'array',
+                'required': true,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'value': {
+                      'name': 'value',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'label': {
+                      'name': 'label',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  },
+                },
+              },
+              'icon': {
+                'name': 'icon',
+                'type': 'string',
+                'required': true,
+              },
+              'maxRules': {
+                'name': 'maxRules',
+                'type': 'number',
+                'required': false,
+              },
+              'id': {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': true,
+              },
+              'initialState': {
+                'name': 'initialState',
+                'type': 'string',
+                'required': true,
+              },
               'rules': {
                 'name': 'rules',
                 'type': 'array',
@@ -223,74 +274,47 @@ export function stdUiObjectRulePanelObjectRulePanelOrbital(params: StdUiObjectRu
                       'type': 'string',
                       'required': true,
                     },
-                    'whenEvent': {
-                      'name': 'whenEvent',
+                    'thenAction': {
+                      'name': 'thenAction',
                       'type': 'string',
                       'required': true,
                     },
-                    'thenAction': {
-                      'name': 'thenAction',
+                    'whenEvent': {
+                      'name': 'whenEvent',
                       'type': 'string',
                       'required': true,
                     },
                   },
                 },
               },
-              'maxRules': {
-                'name': 'maxRules',
-                'type': 'number',
-                'required': false,
-              },
-              'currentState': {
-                'name': 'currentState',
-                'type': 'string',
-                'required': true,
-              },
               'availableActions': {
                 'name': 'availableActions',
                 'type': 'array',
                 'required': true,
                 'items': {
-                  'type': 'string',
-                },
-              },
-              'id': {
-                'name': 'id',
-                'type': 'string',
-                'required': true,
-              },
-              'initialState': {
-                'name': 'initialState',
-                'type': 'string',
-                'required': true,
-              },
-              'icon': {
-                'name': 'icon',
-                'type': 'string',
-                'required': true,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': true,
-              },
-              'states': {
-                'name': 'states',
-                'type': 'array',
-                'required': true,
-                'items': {
-                  'type': 'string',
-                },
-              },
-              'availableEvents': {
-                'name': 'availableEvents',
-                'type': 'array',
-                'required': true,
-                'items': {
-                  'type': 'string',
+                  'type': 'object',
+                  'properties': {
+                    'label': {
+                      'name': 'label',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'value': {
+                      'name': 'value',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  },
                 },
               },
             },
+          },
+          'disabled': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Disabled',
+            'description': 'Whether editing is disabled',
+            'tier': 'presentation',
           },
         },
         'scope': 'instance',

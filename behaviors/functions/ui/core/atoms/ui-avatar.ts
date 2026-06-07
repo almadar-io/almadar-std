@@ -54,24 +54,24 @@ export interface StdUiAvatarActionPayload {
  */
 export interface StdUiAvatarConfig {
   /** Default: `""` */
-  alt?: string;
-  actionPayload?: unknown;
+  src?: string;
   /** Default: `""` */
-  badge?: string;
-  /** Default: `"md"` */
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  name?: string;
   /** Default: `""` */
   initials?: string;
+  actionPayload?: unknown;
+  /** Default: `"online"` */
+  status?: 'online' | 'offline' | 'away' | 'busy';
+  /** Default: `"md"` */
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   /** Default: `"circle"` */
   icon?: string;
   /** Default: `""` */
   className?: string;
   /** Default: `""` */
-  name?: string;
-  /** Default: `"online"` */
-  status?: 'online' | 'offline' | 'away' | 'busy';
+  alt?: string;
   /** Default: `""` */
-  src?: string;
+  badge?: string;
 }
 
 /**

@@ -1,6 +1,12 @@
 app ui-isometric-canvas "1.0.0"
 "IsometricCanvas — UI factory (1:1 with the @almadar/ui isometric-canvas pattern)."
 orbital IsometricCanvasOrbital {
+  type IsometricCanvasError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
+  }
   type IsometricCanvasTilesItem = {
     id : string
     x : number!
@@ -16,7 +22,7 @@ orbital IsometricCanvasOrbital {
   }
   type IsometricCanvasUnitsItem = {
     id : string!
-    position : json
+    position : IsometricCanvasUnitsItemPosition
     x : number
     y : number
     z : number
@@ -28,9 +34,23 @@ orbital IsometricCanvasOrbital {
     faction : "player" | "enemy" | "neutral"
     health : number
     maxHealth : number
-    traits : [json]
-    previousPosition : json
+    traits : [IsometricCanvasUnitsItemTraitsItem]
+    previousPosition : IsometricCanvasUnitsItemPreviousPosition
     elevation : number
+  }
+  type IsometricCanvasUnitsItemPosition = {
+    x : number!
+    y : number!
+  }
+  type IsometricCanvasUnitsItemTraitsItem = {
+    name : string!
+    currentState : string!
+    states : [string]!
+    cooldown : number!
+  }
+  type IsometricCanvasUnitsItemPreviousPosition = {
+    x : number!
+    y : number!
   }
   type IsometricCanvasFeaturesItem = {
     id : string
@@ -42,6 +62,24 @@ orbital IsometricCanvasOrbital {
     assetUrl : string
     color : string
     elevation : number
+  }
+  type IsometricCanvasValidMovesItem = {
+    x : number!
+    y : number!
+  }
+  type IsometricCanvasAttackTargetsItem = {
+    x : number!
+    y : number!
+  }
+  type IsometricCanvasHoveredTile = {
+    x : number!
+    y : number!
+  }
+  type IsometricCanvasAssetManifest = {
+    terrains : json
+    units : json
+    features : json
+    effects : json
   }
 
   entity IsometricCanvasItem [runtime] {
@@ -155,7 +193,7 @@ orbital IsometricCanvasOrbital {
         @label "Is Loading"
         @description "Loading state indicator"
         @tier "presentation"
-      error : json
+      error : IsometricCanvasError
         @label "Error"
         @description "Error state"
         @tier "presentation"
@@ -175,15 +213,15 @@ orbital IsometricCanvasOrbital {
         @label "Selected Unit Id"
         @description "--- Interaction state ---"
         @tier "presentation"
-      validMoves : [json] = []
+      validMoves : [IsometricCanvasValidMovesItem] = []
         @label "Valid Moves"
         @description "Valid move positions (shown as pulsing green highlights)"
         @tier "presentation"
-      attackTargets : [json] = []
+      attackTargets : [IsometricCanvasAttackTargetsItem] = []
         @label "Attack Targets"
         @description "Attack target positions (shown as pulsing red highlights)"
         @tier "presentation"
-      hoveredTile : json
+      hoveredTile : IsometricCanvasHoveredTile
         @label "Hovered Tile"
         @description "Hovered tile position"
         @tier "presentation"
@@ -235,7 +273,7 @@ orbital IsometricCanvasOrbital {
         @label "Asset Base Url"
         @description "--- Remote asset loading ---"
         @tier "presentation"
-      assetManifest : json
+      assetManifest : IsometricCanvasAssetManifest
         @label "Asset Manifest"
         @description "Manifest mapping entity keys to relative sprite paths. Combined with assetBaseUrl to produce full URLs. Used as a fallback when inline URLs and callbacks don't resolve."
         @tier "presentation"

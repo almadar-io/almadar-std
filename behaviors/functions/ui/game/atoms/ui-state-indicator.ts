@@ -40,16 +40,16 @@ export type StdUiStateIndicatorEventKey = 'INIT';
  */
 export interface StdUiStateIndicatorConfig {
   /** Default: `""` */
+  className?: string;
+  /** Default: `""` */
+  stateProp?: string;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
+  /** Default: `""` */
   label?: string;
   /** Default: `true` */
   animated?: boolean;
   stateStyles?: unknown;
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
-  /** Default: `""` */
-  className?: string;
-  /** Default: `""` */
-  stateProp?: string;
 }
 
 /**

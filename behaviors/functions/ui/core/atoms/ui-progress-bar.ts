@@ -41,26 +41,26 @@ export type StdUiProgressBarEventKey = 'INIT';
 export interface StdUiProgressBarConfig {
   /** Default: `0` */
   value?: number;
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
-  /** Default: `5` */
-  steps?: number;
   /** Default: `false` */
   showLabel?: boolean;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `100` */
+  max?: number;
+  /** Default: `"default"` */
+  color?: 'default' | 'primary' | 'success' | 'warning' | 'danger';
   /** Default: `false` */
   showPercentage?: boolean;
   /** Default: `"linear"` */
   progressType?: 'linear' | 'circular' | 'stepped';
   /** Default: `""` */
-  className?: string;
-  /** Default: `100` */
-  max?: number;
+  label?: string;
+  /** Default: `5` */
+  steps?: number;
   /** Default: `"primary"` */
   variant?: 'default' | 'primary' | 'success' | 'warning' | 'danger';
-  /** Default: `"default"` */
-  color?: 'default' | 'primary' | 'success' | 'warning' | 'danger';
-  /** Default: `""` */
-  label?: string;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
 }
 
 /**

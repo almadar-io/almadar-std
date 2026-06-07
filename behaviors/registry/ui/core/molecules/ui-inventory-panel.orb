@@ -105,20 +105,20 @@
                     "render-ui",
                     "main",
                     {
-                      "onDropItem": "DROP_ITEM",
-                      "dropItemEvent": "DROP_ITEM",
-                      "onSelectSlot": "SELECT_SLOT",
-                      "items": "@config.items",
-                      "slots": "@config.slots",
-                      "selectSlotEvent": "SELECT_SLOT",
-                      "showTooltips": "@config.showTooltips",
-                      "className": "@config.className",
-                      "type": "inventory-panel",
-                      "columns": "@config.columns",
-                      "onUseItem": "USE_ITEM",
                       "useItemEvent": "USE_ITEM",
+                      "items": "@config.items",
+                      "columns": "@config.columns",
+                      "slots": "@config.slots",
+                      "type": "inventory-panel",
+                      "dropItemEvent": "DROP_ITEM",
+                      "onDropItem": "DROP_ITEM",
+                      "onSelectSlot": "SELECT_SLOT",
+                      "showTooltips": "@config.showTooltips",
+                      "selectSlotEvent": "SELECT_SLOT",
+                      "className": "@config.className",
+                      "selectedSlot": "@config.selectedSlot",
                       "slotSize": "@config.slotSize",
-                      "selectedSlot": "@config.selectedSlot"
+                      "onUseItem": "USE_ITEM"
                     }
                   ]
                 ]
@@ -126,26 +126,47 @@
             ]
           },
           "config": {
-            "showTooltips": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Tooltips",
-              "description": "Show item tooltips on hover",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Optional className",
-              "tier": "presentation"
-            },
-            "slotSize": {
-              "type": "number",
-              "default": 48.0,
-              "label": "Slot Size",
-              "description": "Slot size in pixels",
-              "tier": "presentation"
+            "items": {
+              "type": "[InventoryPanelItemsItem]",
+              "default": [],
+              "label": "Items",
+              "description": "Array of items in inventory",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": false
+                  },
+                  "description": {
+                    "name": "description",
+                    "type": "string",
+                    "required": false
+                  },
+                  "type": {
+                    "name": "type",
+                    "type": "string",
+                    "required": true
+                  },
+                  "sprite": {
+                    "name": "sprite",
+                    "type": "string",
+                    "required": false
+                  },
+                  "quantity": {
+                    "name": "quantity",
+                    "type": "number",
+                    "required": true
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
             },
             "columns": {
               "type": "number",
@@ -154,15 +175,12 @@
               "description": "Number of columns in grid",
               "tier": "presentation"
             },
-            "items": {
-              "type": "[json]",
-              "default": [],
-              "label": "Items",
-              "description": "Array of items in inventory",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Optional className",
+              "tier": "presentation"
             },
             "slots": {
               "type": "number",
@@ -176,6 +194,20 @@
               "default": 0.0,
               "label": "Selected Slot",
               "description": "Currently selected slot index",
+              "tier": "presentation"
+            },
+            "showTooltips": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Tooltips",
+              "description": "Show item tooltips on hover",
+              "tier": "presentation"
+            },
+            "slotSize": {
+              "type": "number",
+              "default": 48.0,
+              "label": "Slot Size",
+              "description": "Slot size in pixels",
               "tier": "presentation"
             }
           },

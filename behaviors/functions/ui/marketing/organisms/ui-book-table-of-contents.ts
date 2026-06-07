@@ -39,14 +39,14 @@ export type StdUiBookTableOfContentsEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiBookTableOfContentsConfig {
-  /** Default: `"rtl"` */
-  direction?: 'rtl' | 'ltr';
   /** Default: `[]` */
   parts?: EntityRow[];
   /** Default: `""` */
   currentChapterId?: string;
   /** Default: `""` */
   className?: string;
+  /** Default: `"rtl"` */
+  direction?: 'rtl' | 'ltr';
 }
 
 /**
@@ -150,8 +150,8 @@ export function stdUiBookTableOfContentsBookTableOfContentsOrbital(params: StdUi
                   'render-ui',
                   'main',
                   {
-                    'parts': '@config.parts',
                     'currentChapterId': '@config.currentChapterId',
+                    'parts': '@config.parts',
                     'className': '@config.className',
                     'direction': '@config.direction',
                     'type': 'book-table-of-contents',
@@ -162,17 +162,6 @@ export function stdUiBookTableOfContentsBookTableOfContentsOrbital(params: StdUi
           ],
         },
         'config': {
-          'direction': {
-            'type': 'string',
-            'default': 'rtl',
-            'label': 'Direction',
-            'description': 'direction prop',
-            'tier': 'presentation',
-            'values': [
-              'rtl',
-              'ltr',
-            ],
-          },
           'parts': {
             'type': '[BookTableOfContentsPartsItem]',
             'default': [],
@@ -182,11 +171,6 @@ export function stdUiBookTableOfContentsBookTableOfContentsOrbital(params: StdUi
             'items': {
               'type': 'object',
               'properties': {
-                'title': {
-                  'name': 'title',
-                  'type': 'string',
-                  'required': true,
-                },
                 'chapters': {
                   'name': 'chapters',
                   'type': 'array',
@@ -194,18 +178,13 @@ export function stdUiBookTableOfContentsBookTableOfContentsOrbital(params: StdUi
                   'items': {
                     'type': 'object',
                     'properties': {
-                      'title': {
-                        'name': 'title',
-                        'type': 'string',
-                        'required': true,
-                      },
                       'id': {
                         'name': 'id',
                         'type': 'string',
                         'required': true,
                       },
-                      'content': {
-                        'name': 'content',
+                      'title': {
+                        'name': 'title',
                         'type': 'string',
                         'required': true,
                       },
@@ -214,8 +193,18 @@ export function stdUiBookTableOfContentsBookTableOfContentsOrbital(params: StdUi
                         'type': 'string',
                         'required': false,
                       },
+                      'content': {
+                        'name': 'content',
+                        'type': 'string',
+                        'required': true,
+                      },
                     },
                   },
+                },
+                'title': {
+                  'name': 'title',
+                  'type': 'string',
+                  'required': true,
                 },
               },
             },
@@ -233,6 +222,17 @@ export function stdUiBookTableOfContentsBookTableOfContentsOrbital(params: StdUi
             'label': 'Class Name',
             'description': 'Additional CSS classes',
             'tier': 'presentation',
+          },
+          'direction': {
+            'type': 'string',
+            'default': 'rtl',
+            'label': 'Direction',
+            'description': 'direction prop',
+            'tier': 'presentation',
+            'values': [
+              'rtl',
+              'ltr',
+            ],
           },
         },
         'scope': 'instance',

@@ -43,10 +43,10 @@ export interface StdUiStatusDotConfig {
   status?: 'online' | 'offline' | 'away' | 'busy' | 'warning' | 'critical';
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
-  /** Default: `""` */
-  className?: string;
   /** Default: `false` */
   pulse?: boolean;
+  /** Default: `""` */
+  className?: string;
   /** Default: `""` */
   label?: string;
 }

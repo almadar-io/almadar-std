@@ -46,16 +46,16 @@ export interface StdUiChoiceButtonClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiChoiceButtonConfig {
+  /** Default: `0` */
+  index?: number;
+  /** Default: `""` */
+  text?: string;
   /** Default: `false` */
   selected?: boolean;
   /** Default: `""` */
   className?: string;
-  /** Default: `0` */
-  index?: number;
   /** Default: `false` */
   disabled?: boolean;
-  /** Default: `""` */
-  text?: string;
 }
 
 /**

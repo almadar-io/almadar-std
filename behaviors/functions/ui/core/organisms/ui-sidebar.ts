@@ -60,28 +60,28 @@ export interface StdUiSidebarLogoClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiSidebarConfig {
+  error?: EntityRow;
+  /** Default: `""` */
+  logoSrc?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `"KFlow"` */
+  brandName?: string;
+  footerContent?: unknown;
+  /** Default: `[]` */
+  items?: EntityRow[];
+  userSection?: unknown;
   /** Default: `""` */
   className?: string;
   /** Default: `false` */
-  isLoading?: boolean;
-  error?: unknown;
-  /** Default: `""` */
-  logoSrc?: string;
-  logo?: unknown;
-  /** Default: `"KFlow"` */
-  brandName?: string;
-  userSection?: unknown;
-  /** Default: `false` */
-  defaultCollapsed?: boolean;
-  /** Default: `[]` */
-  items?: EntityRow[];
-  /** Default: `false` */
-  showCloseButton?: boolean;
-  footerContent?: unknown;
-  /** Default: `false` */
   collapsed?: boolean;
   /** Default: `false` */
+  defaultCollapsed?: boolean;
+  /** Default: `false` */
   hideCollapseButton?: boolean;
+  /** Default: `false` */
+  showCloseButton?: boolean;
+  logo?: unknown;
 }
 
 /**
@@ -242,23 +242,23 @@ export function stdUiSidebarSidebarOrbital(params: StdUiSidebarSidebarOrbitalPar
                   'render-ui',
                   'main',
                   {
-                    'brandName': '@config.brandName',
-                    'items': '@config.items',
-                    'logoClickEvent': 'LOGO_CLICK',
-                    'defaultCollapsed': '@config.defaultCollapsed',
-                    'error': '@config.error',
-                    'closeEvent': 'CLOSE',
-                    'hideCollapseButton': '@config.hideCollapseButton',
-                    'logo': '@config.logo',
-                    'isLoading': '@config.isLoading',
-                    'className': '@config.className',
-                    'collapseChangeEvent': 'COLLAPSE_CHANGE',
                     'userSection': '@config.userSection',
+                    'items': '@config.items',
+                    'logoSrc': '@config.logoSrc',
+                    'isLoading': '@config.isLoading',
+                    'closeEvent': 'CLOSE',
+                    'collapseChangeEvent': 'COLLAPSE_CHANGE',
+                    'hideCollapseButton': '@config.hideCollapseButton',
                     'collapsed': '@config.collapsed',
                     'type': 'sidebar',
-                    'logoSrc': '@config.logoSrc',
-                    'showCloseButton': '@config.showCloseButton',
                     'footerContent': '@config.footerContent',
+                    'logo': '@config.logo',
+                    'defaultCollapsed': '@config.defaultCollapsed',
+                    'className': '@config.className',
+                    'logoClickEvent': 'LOGO_CLICK',
+                    'error': '@config.error',
+                    'showCloseButton': '@config.showCloseButton',
+                    'brandName': '@config.brandName',
                   },
                 ],
               ],
@@ -266,11 +266,39 @@ export function stdUiSidebarSidebarOrbital(params: StdUiSidebarSidebarOrbitalPar
           ],
         },
         'config': {
-          'className': {
+          'error': {
+            'type': 'SidebarError',
+            'label': 'Error',
+            'description': 'Error state',
+            'tier': 'presentation',
+            'properties': {
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+            },
+          },
+          'logoSrc': {
             'type': 'string',
             'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
+            'label': 'Logo Src',
+            'description': 'Logo image source',
             'tier': 'presentation',
           },
           'isLoading': {
@@ -280,25 +308,6 @@ export function stdUiSidebarSidebarOrbital(params: StdUiSidebarSidebarOrbitalPar
             'description': 'Loading state indicator',
             'tier': 'presentation',
           },
-          'error': {
-            'type': 'json',
-            'label': 'Error',
-            'description': 'Error state',
-            'tier': 'presentation',
-          },
-          'logoSrc': {
-            'type': 'string',
-            'default': '',
-            'label': 'Logo Src',
-            'description': 'Logo image source',
-            'tier': 'presentation',
-          },
-          'logo': {
-            'type': 'node',
-            'label': 'Logo',
-            'description': 'Logo/Brand content - can be a ReactNode or logo config',
-            'tier': 'presentation',
-          },
           'brandName': {
             'type': 'string',
             'default': 'KFlow',
@@ -306,17 +315,10 @@ export function stdUiSidebarSidebarOrbital(params: StdUiSidebarSidebarOrbitalPar
             'description': 'Brand/App name',
             'tier': 'presentation',
           },
-          'userSection': {
+          'footerContent': {
             'type': 'node',
-            'label': 'User Section',
-            'description': 'User section content',
-            'tier': 'presentation',
-          },
-          'defaultCollapsed': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Default Collapsed',
-            'description': 'Default collapsed state',
+            'label': 'Footer Content',
+            'description': 'Footer content (e.g., theme toggle)',
             'tier': 'presentation',
           },
           'items': {
@@ -328,26 +330,6 @@ export function stdUiSidebarSidebarOrbital(params: StdUiSidebarSidebarOrbitalPar
             'items': {
               'type': 'object',
               'properties': {
-                'badge': {
-                  'name': 'badge',
-                  'type': 'string',
-                  'required': false,
-                },
-                'id': {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': true,
-                },
-                'href': {
-                  'name': 'href',
-                  'type': 'string',
-                  'required': false,
-                },
-                'isActive': {
-                  'name': 'isActive',
-                  'type': 'boolean',
-                  'required': false,
-                },
                 'active': {
                   'name': 'active',
                   'type': 'boolean',
@@ -361,30 +343,50 @@ export function stdUiSidebarSidebarOrbital(params: StdUiSidebarSidebarOrbitalPar
                     'type': 'string',
                   },
                 },
+                'icon': {
+                  'name': 'icon',
+                  'type': 'string',
+                  'required': false,
+                },
+                'badge': {
+                  'name': 'badge',
+                  'type': 'string',
+                  'required': false,
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                'isActive': {
+                  'name': 'isActive',
+                  'type': 'boolean',
+                  'required': false,
+                },
                 'label': {
                   'name': 'label',
                   'type': 'string',
                   'required': true,
                 },
-                'icon': {
-                  'name': 'icon',
+                'href': {
+                  'name': 'href',
                   'type': 'string',
                   'required': false,
                 },
               },
             },
           },
-          'showCloseButton': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Show Close Button',
-            'description': 'Show a close button (for mobile)',
+          'userSection': {
+            'type': 'node',
+            'label': 'User Section',
+            'description': 'User section content',
             'tier': 'presentation',
           },
-          'footerContent': {
-            'type': 'node',
-            'label': 'Footer Content',
-            'description': 'Footer content (e.g., theme toggle)',
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
           'collapsed': {
@@ -394,11 +396,31 @@ export function stdUiSidebarSidebarOrbital(params: StdUiSidebarSidebarOrbitalPar
             'description': 'Collapsed state (controlled)',
             'tier': 'presentation',
           },
+          'defaultCollapsed': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Default Collapsed',
+            'description': 'Default collapsed state',
+            'tier': 'presentation',
+          },
           'hideCollapseButton': {
             'type': 'boolean',
             'default': false,
             'label': 'Hide Collapse Button',
             'description': 'Hide the collapse/expand button',
+            'tier': 'presentation',
+          },
+          'showCloseButton': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Show Close Button',
+            'description': 'Show a close button (for mobile)',
+            'tier': 'presentation',
+          },
+          'logo': {
+            'type': 'node',
+            'label': 'Logo',
+            'description': 'Logo/Brand content - can be a ReactNode or logo config',
             'tier': 'presentation',
           },
         },

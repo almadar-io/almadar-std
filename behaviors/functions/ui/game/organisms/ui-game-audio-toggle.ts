@@ -39,13 +39,13 @@ export type StdUiGameAudioToggleEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiGameAudioToggleConfig {
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"sm"` */
-  size?: 'sm' | 'md' | 'lg';
   /** Default: `false` */
   isLoading?: boolean;
-  error?: unknown;
+  /** Default: `"sm"` */
+  size?: 'sm' | 'md' | 'lg';
+  error?: EntityRow;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**
@@ -154,12 +154,12 @@ export function stdUiGameAudioToggleGameAudioToggleOrbital(params: StdUiGameAudi
                   'render-ui',
                   'main',
                   {
+                    'error': '@config.error',
                     'size': '@config.size',
+                    'className': '@config.className',
+                    'entity': 'GameAudioToggleItem',
                     'type': 'game-audio-toggle',
                     'isLoading': '@config.isLoading',
-                    'error': '@config.error',
-                    'entity': 'GameAudioToggleItem',
-                    'className': '@config.className',
                   },
                 ],
               ],
@@ -167,11 +167,11 @@ export function stdUiGameAudioToggleGameAudioToggleOrbital(params: StdUiGameAudi
           ],
         },
         'config': {
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state (passed through)',
             'tier': 'presentation',
           },
           'size': {
@@ -186,17 +186,39 @@ export function stdUiGameAudioToggleGameAudioToggleOrbital(params: StdUiGameAudi
               'lg',
             ],
           },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state (passed through)',
-            'tier': 'presentation',
-          },
           'error': {
-            'type': 'json',
+            'type': 'GameAudioToggleError',
             'label': 'Error',
             'description': 'Error state (passed through)',
+            'tier': 'presentation',
+            'properties': {
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+            },
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
         },

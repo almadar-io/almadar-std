@@ -39,31 +39,31 @@ export type StdUiMeterEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiMeterConfig {
-  /** Default: `5` */
-  segments?: number;
-  /** Default: `0` */
-  min?: number;
-  /** Default: `true` */
-  showValue?: boolean;
-  /** Default: `[]` */
-  thresholds?: EntityRow[];
   /** Default: `""` */
   label?: string;
+  /** Default: `0` */
+  min?: number;
+  /** Default: `5` */
+  segments?: number;
+  /** Default: `true` */
+  showValue?: boolean;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
   /** Default: `[]` */
   actions?: EntityRow[];
-  /** Default: `false` */
-  isLoading?: boolean;
-  error?: unknown;
+  error?: EntityRow;
   /** Default: `""` */
   unit?: string;
   /** Default: `""` */
   className?: string;
   /** Default: `0` */
   value?: number;
+  /** Default: `false` */
+  isLoading?: boolean;
   /** Default: `100` */
   max?: number;
+  /** Default: `[]` */
+  thresholds?: EntityRow[];
   /** Default: `"linear"` */
   variant?: 'linear' | 'radial' | 'segmented';
 }

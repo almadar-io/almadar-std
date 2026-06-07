@@ -7,6 +7,18 @@ orbital DocumentViewerOrbital {
     navigatesTo : string
     variant : "primary" | "secondary" | "ghost"
   }
+  type DocumentViewerDocumentsItem = {
+    label : string!
+    src : string
+    content : string
+    documentType : "pdf" | "text" | "html" | "markdown"
+  }
+  type DocumentViewerError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
+  }
 
   entity DocumentViewerItem [runtime] {
     id : string!
@@ -84,7 +96,7 @@ orbital DocumentViewerOrbital {
         @label "Actions"
         @description "Actions"
         @tier "presentation"
-      documents : [json] = []
+      documents : [DocumentViewerDocumentsItem] = []
         @label "Documents"
         @description "Multiple documents (tabbed view)"
         @tier "presentation"
@@ -92,7 +104,7 @@ orbital DocumentViewerOrbital {
         @label "Is Loading"
         @description "Loading state"
         @tier "presentation"
-      error : json
+      error : DocumentViewerError
         @label "Error"
         @description "Error state"
         @tier "presentation"

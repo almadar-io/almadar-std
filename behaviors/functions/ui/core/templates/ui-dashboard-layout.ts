@@ -67,27 +67,27 @@ export interface StdUiDashboardLayoutSignOutPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiDashboardLayoutConfig {
-  headerActions?: unknown;
-  /** Default: `""` */
-  currentPath?: string;
-  children?: unknown;
-  sidebarFooter?: unknown;
-  /** Default: `"sidebar"` */
-  layoutMode?: 'sidebar' | 'topnav' | 'bottomnav' | 'minimal';
-  /** Default: `true` */
-  showThemeToggle?: boolean;
-  logo?: unknown;
-  /** Default: `[]` */
-  topBarActions?: EntityRow[];
-  /** Default: `[]` */
-  notifications?: EntityRow[];
-  /** Default: `[]` */
-  navItems?: EntityRow[];
-  user?: EntityRow;
   /** Default: `"{{APP_TITLE}}"` */
   appName?: string;
   /** Default: `false` */
   showSearch?: boolean;
+  /** Default: `[]` */
+  navItems?: EntityRow[];
+  /** Default: `[]` */
+  topBarActions?: EntityRow[];
+  sidebarFooter?: unknown;
+  /** Default: `"sidebar"` */
+  layoutMode?: 'sidebar' | 'topnav' | 'bottomnav' | 'minimal';
+  /** Default: `[]` */
+  notifications?: EntityRow[];
+  /** Default: `true` */
+  showThemeToggle?: boolean;
+  /** Default: `""` */
+  currentPath?: string;
+  user?: EntityRow;
+  headerActions?: unknown;
+  logo?: unknown;
+  children?: unknown;
 }
 
 /**

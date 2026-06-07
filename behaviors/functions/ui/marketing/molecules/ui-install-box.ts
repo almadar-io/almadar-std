@@ -42,9 +42,9 @@ export interface StdUiInstallBoxConfig {
   /** Default: `""` */
   className?: string;
   /** Default: `""` */
-  label?: string;
-  /** Default: `""` */
   command?: string;
+  /** Default: `""` */
+  label?: string;
 }
 
 /**

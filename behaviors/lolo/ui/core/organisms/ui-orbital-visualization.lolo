@@ -1,6 +1,24 @@
 app ui-orbital-visualization "1.0.0"
 "OrbitalVisualization — UI factory (1:1 with the @almadar/ui orbital-visualization pattern)."
 orbital OrbitalVisualizationOrbital {
+  type OrbitalVisualizationSchema = {
+    dataEntities : [json]
+    ui : OrbitalVisualizationSchemaUi
+    traits : [json]
+  }
+  type OrbitalVisualizationSchemaUi = {
+    pages : [OrbitalVisualizationSchemaUiPagesItem]
+  }
+  type OrbitalVisualizationSchemaUiPagesItem = {
+    sections : [json]
+  }
+  type OrbitalVisualizationError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
+  }
+
   entity OrbitalVisualizationItem [runtime] {
     id : string!
   }
@@ -35,7 +53,7 @@ orbital OrbitalVisualizationOrbital {
     }
 
     config {
-      schema : json
+      schema : OrbitalVisualizationSchema
         @label "Schema"
         @description "Full KFlow schema object"
         @tier "presentation"
@@ -63,7 +81,7 @@ orbital OrbitalVisualizationOrbital {
         @label "Is Loading"
         @description "Loading state indicator"
         @tier "presentation"
-      error : json
+      error : OrbitalVisualizationError
         @label "Error"
         @description "Error state"
         @tier "presentation"

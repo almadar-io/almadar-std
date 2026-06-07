@@ -39,29 +39,29 @@ export type StdUiSplitEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiSplitConfig {
-  /** Default: `"1:1"` */
-  ratio?: '1:1' | '1:2' | '2:1' | '1:3' | '3:1' | '1:4' | '4:1' | '2:3' | '3:2';
   /** Default: `true` */
   stackOnMobile?: boolean;
   /** Default: `""` */
   className?: string;
+  error?: EntityRow;
+  /** Default: `false` */
+  reverse?: boolean;
+  /** Default: `"1:1"` */
+  ratio?: '1:1' | '1:2' | '2:1' | '1:3' | '3:1' | '1:4' | '4:1' | '2:3' | '3:2';
   /** Default: `"md"` */
   gap?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
-  /** Default: `[]` */
-  children?: EntityRow[];
+  /** Default: `"md"` */
+  stackBreakpoint?: 'sm' | 'md' | 'lg' | 'xl';
   /** Default: `"stretch"` */
   align?: 'start' | 'center' | 'end' | 'stretch';
   /** Default: `""` */
+  leftClassName?: string;
+  /** Default: `[]` */
+  children?: EntityRow[];
+  /** Default: `""` */
   rightClassName?: string;
   /** Default: `false` */
-  reverse?: boolean;
-  /** Default: `""` */
-  leftClassName?: string;
-  /** Default: `false` */
   isLoading?: boolean;
-  error?: unknown;
-  /** Default: `"md"` */
-  stackBreakpoint?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
 /**
@@ -170,20 +170,20 @@ export function stdUiSplitSplitOrbital(params: StdUiSplitSplitOrbitalParams = {}
                   'render-ui',
                   'main',
                   {
-                    'reverse': '@config.reverse',
-                    'ratio': '@config.ratio',
-                    'stackBreakpoint': '@config.stackBreakpoint',
-                    'align': '@config.align',
-                    'stackOnMobile': '@config.stackOnMobile',
-                    'className': '@config.className',
                     'gap': '@config.gap',
-                    'leftClassName': '@config.leftClassName',
+                    'ratio': '@config.ratio',
+                    'reverse': '@config.reverse',
+                    'stackOnMobile': '@config.stackOnMobile',
                     'rightClassName': '@config.rightClassName',
                     'children': '@config.children',
                     'isLoading': '@config.isLoading',
-                    'error': '@config.error',
                     'entity': 'SplitItem',
+                    'align': '@config.align',
+                    'className': '@config.className',
                     'type': 'split',
+                    'leftClassName': '@config.leftClassName',
+                    'error': '@config.error',
+                    'stackBreakpoint': '@config.stackBreakpoint',
                   },
                 ],
               ],
@@ -191,6 +191,55 @@ export function stdUiSplitSplitOrbital(params: StdUiSplitSplitOrbitalParams = {}
           ],
         },
         'config': {
+          'stackOnMobile': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Stack On Mobile',
+            'description': 'Stack vertically on mobile',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Custom class name',
+            'tier': 'presentation',
+          },
+          'error': {
+            'type': 'SplitError',
+            'label': 'Error',
+            'description': 'Error state',
+            'tier': 'presentation',
+            'properties': {
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+            },
+          },
+          'reverse': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Reverse',
+            'description': 'Reverse the order (right first)',
+            'tier': 'presentation',
+          },
           'ratio': {
             'type': 'string',
             'default': '1:1',
@@ -209,20 +258,6 @@ export function stdUiSplitSplitOrbital(params: StdUiSplitSplitOrbitalParams = {}
               '3:2',
             ],
           },
-          'stackOnMobile': {
-            'type': 'boolean',
-            'default': true,
-            'label': 'Stack On Mobile',
-            'description': 'Stack vertically on mobile',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Custom class name',
-            'tier': 'presentation',
-          },
           'gap': {
             'type': 'string',
             'default': 'md',
@@ -237,15 +272,18 @@ export function stdUiSplitSplitOrbital(params: StdUiSplitSplitOrbitalParams = {}
               'xl',
             ],
           },
-          'children': {
-            'type': '[json]',
-            'default': [],
-            'label': 'Children',
-            'description': 'Exactly two children: [left, right]',
+          'stackBreakpoint': {
+            'type': 'string',
+            'default': 'md',
+            'label': 'Stack Breakpoint',
+            'description': 'Breakpoint to switch from stacked to side-by-side',
             'tier': 'presentation',
-            'items': {
-              'type': 'string',
-            },
+            'values': [
+              'sm',
+              'md',
+              'lg',
+              'xl',
+            ],
           },
           'align': {
             'type': 'string',
@@ -260,25 +298,28 @@ export function stdUiSplitSplitOrbital(params: StdUiSplitSplitOrbitalParams = {}
               'stretch',
             ],
           },
-          'rightClassName': {
-            'type': 'string',
-            'default': '',
-            'label': 'Right Class Name',
-            'description': 'Right/second panel class name',
-            'tier': 'presentation',
-          },
-          'reverse': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Reverse',
-            'description': 'Reverse the order (right first)',
-            'tier': 'presentation',
-          },
           'leftClassName': {
             'type': 'string',
             'default': '',
             'label': 'Left Class Name',
             'description': 'Left/first panel class name',
+            'tier': 'presentation',
+          },
+          'children': {
+            'type': '[json]',
+            'default': [],
+            'label': 'Children',
+            'description': 'Exactly two children: [left, right]',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'rightClassName': {
+            'type': 'string',
+            'default': '',
+            'label': 'Right Class Name',
+            'description': 'Right/second panel class name',
             'tier': 'presentation',
           },
           'isLoading': {
@@ -287,25 +328,6 @@ export function stdUiSplitSplitOrbital(params: StdUiSplitSplitOrbitalParams = {}
             'label': 'Is Loading',
             'description': 'Loading state indicator',
             'tier': 'presentation',
-          },
-          'error': {
-            'type': 'json',
-            'label': 'Error',
-            'description': 'Error state',
-            'tier': 'presentation',
-          },
-          'stackBreakpoint': {
-            'type': 'string',
-            'default': 'md',
-            'label': 'Stack Breakpoint',
-            'description': 'Breakpoint to switch from stacked to side-by-side',
-            'tier': 'presentation',
-            'values': [
-              'sm',
-              'md',
-              'lg',
-              'xl',
-            ],
           },
         },
         'scope': 'instance',

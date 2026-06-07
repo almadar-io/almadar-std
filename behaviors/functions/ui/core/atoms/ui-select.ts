@@ -47,11 +47,11 @@ export interface StdUiSelectActionPayload {
  */
 export interface StdUiSelectConfig {
   /** Default: `""` */
-  placeholder?: string;
+  error?: string;
   /** Default: `[]` */
   options?: EntityRow[];
   /** Default: `""` */
-  error?: string;
+  placeholder?: string;
   /** Default: `""` */
   className?: string;
   /** Default: `""` */
