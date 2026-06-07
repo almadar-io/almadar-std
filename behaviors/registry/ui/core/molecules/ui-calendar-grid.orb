@@ -63,7 +63,32 @@
               "payloadSchema": [
                 {
                   "name": "event",
-                  "type": "object"
+                  "type": "object",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "type": "string",
+                      "required": true
+                    },
+                    {
+                      "name": "title",
+                      "type": "string",
+                      "required": true
+                    },
+                    {
+                      "name": "startTime",
+                      "type": "date",
+                      "required": true
+                    },
+                    {
+                      "name": "endTime",
+                      "type": "date"
+                    },
+                    {
+                      "name": "color",
+                      "type": "string"
+                    }
+                  ]
                 }
               ]
             },
@@ -125,37 +150,107 @@
                 "key": "SLOT_CLICK",
                 "name": "Slot Click",
                 "description": "Called when a time slot is clicked",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "day",
+                    "type": "date"
+                  },
+                  {
+                    "name": "time",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "DAY_CLICK",
                 "name": "Day Click",
                 "description": "Called when a day header is clicked",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "day",
+                    "type": "date"
+                  }
+                ]
               },
               {
                 "key": "EVENT_CLICK",
                 "name": "Event Click",
                 "description": "Called when an event is clicked",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "event",
+                    "type": "object",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "title",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "startTime",
+                        "type": "date",
+                        "required": true
+                      },
+                      {
+                        "name": "endTime",
+                        "type": "date"
+                      },
+                      {
+                        "name": "color",
+                        "type": "string"
+                      }
+                    ]
+                  }
+                ]
               },
               {
                 "key": "LONG_PRESS",
                 "name": "Long Press",
                 "description": "Event emitted on long-press of a time slot: UI:{longPressEvent} with { date, time, ...longPressPayload }",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "date",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "time",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "SWIPE_LEFT",
                 "name": "Swipe Left",
                 "description": "Event emitted on swipe left (next week): UI:{swipeLeftEvent}",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "SWIPE_RIGHT",
                 "name": "Swipe Right",
                 "description": "Event emitted on swipe right (prev week): UI:{swipeRightEvent}",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -173,19 +268,19 @@
                     "render-ui",
                     "main",
                     {
-                      "onEventClick": "EVENT_CLICK",
-                      "longPressPayload": "@config.longPressPayload",
-                      "swipeRightEvent": "SWIPE_RIGHT",
-                      "dayWindow": "@config.dayWindow",
-                      "onSlotClick": "SLOT_CLICK",
-                      "onDayClick": "DAY_CLICK",
-                      "className": "@config.className",
-                      "timeSlots": "@config.timeSlots",
-                      "events": "@entity",
-                      "swipeLeftEvent": "SWIPE_LEFT",
-                      "type": "calendar-grid",
                       "longPressEvent": "LONG_PRESS",
-                      "weekStart": "@config.weekStart"
+                      "swipeLeftEvent": "SWIPE_LEFT",
+                      "dayWindow": "@config.dayWindow",
+                      "events": "@entity",
+                      "timeSlots": "@config.timeSlots",
+                      "weekStart": "@config.weekStart",
+                      "type": "calendar-grid",
+                      "onEventClick": "EVENT_CLICK",
+                      "onDayClick": "DAY_CLICK",
+                      "swipeRightEvent": "SWIPE_RIGHT",
+                      "className": "@config.className",
+                      "longPressPayload": "@config.longPressPayload",
+                      "onSlotClick": "SLOT_CLICK"
                     }
                   ]
                 ]
@@ -198,19 +293,6 @@
               "default": "auto",
               "label": "Day Window",
               "description": "Override the viewport-driven day window. `'auto'` (default) tracks `window.innerWidth` — 1 day on mobile, 3 on tablet, 7 on laptop+. Pass an explicit number to force a fixed window (useful for print layouts or screenshot tests).",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "longPressPayload": {
-              "type": "json",
-              "label": "Long Press Payload",
-              "description": "Additional payload for long-press events",
               "tier": "presentation"
             },
             "weekStart": {
@@ -228,6 +310,19 @@
               "items": {
                 "type": "string"
               }
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "longPressPayload": {
+              "type": "json",
+              "label": "Long Press Payload",
+              "description": "Additional payload for long-press events",
+              "tier": "presentation"
             }
           },
           "scope": "instance"

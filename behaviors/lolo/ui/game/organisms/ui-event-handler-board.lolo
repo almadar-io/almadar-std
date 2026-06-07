@@ -1,6 +1,50 @@
 app ui-event-handler-board "1.0.0"
 "EventHandlerBoard — UI factory (1:1 with the @almadar/ui event-handler-board pattern)."
 orbital EventHandlerBoardOrbital {
+  type EventHandlerBoardEntity = {
+    id : string!
+    title : string!
+    description : string!
+    objects : [EventHandlerBoardEntityObjectsItem]!
+    goalCondition : string!
+    goalEvent : string!
+    triggerEvents : [string]
+    successMessage : string
+    failMessage : string
+    hint : string
+    headerImage : string
+    theme : EventHandlerBoardEntityTheme
+  }
+  type EventHandlerBoardEntityObjectsItem = {
+    id : string!
+    name : string!
+    icon : string!
+    states : [string]!
+    initialState : string!
+    currentState : string!
+    availableEvents : [EventHandlerBoardEntityObjectsItemAvailableEventsItem]!
+    availableActions : [EventHandlerBoardEntityObjectsItemAvailableActionsItem]!
+    rules : [EventHandlerBoardEntityObjectsItemRulesItem]!
+    maxRules : number
+  }
+  type EventHandlerBoardEntityObjectsItemAvailableEventsItem = {
+    value : string!
+    label : string!
+  }
+  type EventHandlerBoardEntityObjectsItemAvailableActionsItem = {
+    value : string!
+    label : string!
+  }
+  type EventHandlerBoardEntityObjectsItemRulesItem = {
+    id : string!
+    whenEvent : string!
+    thenAction : string!
+  }
+  type EventHandlerBoardEntityTheme = {
+    background : string
+    accentColor : string
+  }
+
   entity EventHandlerBoardItem [runtime] {
     id : string!
   }
@@ -10,9 +54,8 @@ orbital EventHandlerBoardOrbital {
 
     state idle {
       INIT -> idle
-        (fetch EventHandlerBoardItem {})
         (render-ui main {
-          entity: @entity
+          entity: @config.entityProp
           stepDurationMs: @config.stepDurationMs
           playEvent: PLAY
           completeEvent: COMPLETE
@@ -34,6 +77,11 @@ orbital EventHandlerBoardOrbital {
     }
 
     config {
+      entityProp : EventHandlerBoardEntity
+        @label "Entity"
+        @description "Puzzle data"
+        @synonyms "entity"
+        @tier "presentation"
       stepDurationMs : number = 800
         @label "Step Duration Ms"
         @description "Playback speed in ms per event"

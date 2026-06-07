@@ -23,6 +23,28 @@ orbital SequenceBarOrbital {
     event : string!
     guardHint : string
   }
+  type SequenceBarSLOTDROPItem = {
+    id : string!
+    name : string!
+    category : string!
+    description : string
+    iconEmoji : string
+    iconUrl : string
+    stateMachine : SequenceBarSLOTDROPItemStateMachine
+  }
+  type SequenceBarSLOTDROPItemStateMachine = {
+    name : string!
+    states : [string]!
+    currentState : string!
+    transitions : [SequenceBarSLOTDROPItemStateMachineTransitionsItem]!
+    description : string
+  }
+  type SequenceBarSLOTDROPItemStateMachineTransitionsItem = {
+    from : string!
+    to : string!
+    event : string!
+    guardHint : string
+  }
 
   entity SequenceBarItem [runtime] {
     id : string!
@@ -51,7 +73,7 @@ orbital SequenceBarOrbital {
     emits {
       SLOT_DROP -> external {
         index : number
-        item : object
+        item : SequenceBarSLOTDROPItem
       }
         @description "Called when an item is dropped into slot at index"
         @tier "essential"

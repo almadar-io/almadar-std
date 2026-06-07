@@ -1,6 +1,42 @@
 app ui-uncontrolled-battle-board "1.0.0"
 "UncontrolledBattleBoard — UI factory (1:1 with the @almadar/ui uncontrolled-battle-board pattern)."
 orbital UncontrolledBattleBoardOrbital {
+  type UncontrolledBattleBoardEntity = {
+    initialUnits : [UncontrolledBattleBoardEntityInitialUnitsItem]!
+  }
+  type UncontrolledBattleBoardEntityInitialUnitsItem = {
+    id : string!
+    name : string!
+    unitType : string
+    heroId : string
+    sprite : string
+    spriteSheet : UncontrolledBattleBoardEntityInitialUnitsItemSpriteSheet
+    team : "player" | "enemy"!
+    position : UncontrolledBattleBoardEntityInitialUnitsItemPosition!
+    health : number!
+    maxHealth : number!
+    movement : number!
+    attack : number!
+    defense : number!
+    traits : [UncontrolledBattleBoardEntityInitialUnitsItemTraitsItem]
+  }
+  type UncontrolledBattleBoardEntityInitialUnitsItemSpriteSheet = {
+    se : string!
+    sw : string!
+    frameWidth : number!
+    frameHeight : number!
+  }
+  type UncontrolledBattleBoardEntityInitialUnitsItemPosition = {
+    x : number!
+    y : number!
+  }
+  type UncontrolledBattleBoardEntityInitialUnitsItemTraitsItem = {
+    name : string!
+    currentState : string!
+    states : [string]!
+    cooldown : number
+  }
+
   entity UncontrolledBattleBoardItem [runtime] {
     id : string!
   }
@@ -10,11 +46,18 @@ orbital UncontrolledBattleBoardOrbital {
 
     state idle {
       INIT -> idle
-        (fetch UncontrolledBattleBoardItem {})
         (render-ui main {
-          entity: @entity
+          entity: @config.entityProp
           type: uncontrolled-battle-board
         })
+    }
+
+    config {
+      entityProp : UncontrolledBattleBoardEntity
+        @label "Entity"
+        @description "entity prop"
+        @synonyms "entity"
+        @tier "presentation"
     }
   }
 

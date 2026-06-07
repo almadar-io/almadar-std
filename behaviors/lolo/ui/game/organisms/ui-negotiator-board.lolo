@@ -1,6 +1,37 @@
 app ui-negotiator-board "1.0.0"
 "NegotiatorBoard — UI factory (1:1 with the @almadar/ui negotiator-board pattern)."
 orbital NegotiatorBoardOrbital {
+  type NegotiatorBoardEntity = {
+    id : string!
+    title : string!
+    description : string!
+    actions : [NegotiatorBoardEntityActionsItem]!
+    payoffMatrix : [NegotiatorBoardEntityPayoffMatrixItem]!
+    totalRounds : number!
+    opponentStrategy : string!
+    targetScore : number!
+    successMessage : string
+    failMessage : string
+    hint : string
+    headerImage : string
+    theme : NegotiatorBoardEntityTheme
+  }
+  type NegotiatorBoardEntityActionsItem = {
+    id : string!
+    label : string!
+    description : string
+  }
+  type NegotiatorBoardEntityPayoffMatrixItem = {
+    playerAction : string!
+    opponentAction : string!
+    playerPayoff : number!
+    opponentPayoff : number!
+  }
+  type NegotiatorBoardEntityTheme = {
+    background : string
+    accentColor : string
+  }
+
   entity NegotiatorBoardItem [runtime] {
     id : string!
   }
@@ -10,9 +41,8 @@ orbital NegotiatorBoardOrbital {
 
     state idle {
       INIT -> idle
-        (fetch NegotiatorBoardItem {})
         (render-ui main {
-          entity: @entity
+          entity: @config.entityProp
           completeEvent: COMPLETE
           type: negotiator-board
         })
@@ -25,6 +55,14 @@ orbital NegotiatorBoardOrbital {
       }
         @description "completeEvent prop"
         @tier "essential"
+    }
+
+    config {
+      entityProp : NegotiatorBoardEntity
+        @label "Entity"
+        @description "entity prop"
+        @synonyms "entity"
+        @tier "presentation"
     }
   }
 

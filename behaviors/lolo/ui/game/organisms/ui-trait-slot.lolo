@@ -29,6 +29,50 @@ orbital TraitSlotOrbital {
     code : string
     stack : string
   }
+  type TraitSlotITEMDROPItem = {
+    id : string!
+    name : string!
+    category : string!
+    description : string
+    iconEmoji : string
+    iconUrl : string
+    stateMachine : TraitSlotITEMDROPItemStateMachine
+  }
+  type TraitSlotITEMDROPItemStateMachine = {
+    name : string!
+    states : [string]!
+    currentState : string!
+    transitions : [TraitSlotITEMDROPItemStateMachineTransitionsItem]!
+    description : string
+  }
+  type TraitSlotITEMDROPItemStateMachineTransitionsItem = {
+    from : string!
+    to : string!
+    event : string!
+    guardHint : string
+  }
+  type TraitSlotDRAGSTARTItem = {
+    id : string!
+    name : string!
+    category : string!
+    description : string
+    iconEmoji : string
+    iconUrl : string
+    stateMachine : TraitSlotDRAGSTARTItemStateMachine
+  }
+  type TraitSlotDRAGSTARTItemStateMachine = {
+    name : string!
+    states : [string]!
+    currentState : string!
+    transitions : [TraitSlotDRAGSTARTItemStateMachineTransitionsItem]!
+    description : string
+  }
+  type TraitSlotDRAGSTARTItemStateMachineTransitionsItem = {
+    from : string!
+    to : string!
+    event : string!
+    guardHint : string
+  }
 
   entity TraitSlotItem [runtime] {
     id : string!
@@ -68,12 +112,12 @@ orbital TraitSlotOrbital {
 
     emits {
       ITEM_DROP -> external {
-        item : object
+        item : TraitSlotITEMDROPItem
       }
         @description "-- Drag and drop --"
         @tier "essential"
       DRAG_START -> external {
-        item : object
+        item : TraitSlotDRAGSTARTItem
       }
         @description "Called when drag starts from this slot"
         @tier "essential"

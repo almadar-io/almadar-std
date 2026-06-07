@@ -1,6 +1,52 @@
 app ui-sequencer-board "1.0.0"
 "SequencerBoard — UI factory (1:1 with the @almadar/ui sequencer-board pattern)."
 orbital SequencerBoardOrbital {
+  type SequencerBoardEntity = {
+    id : string!
+    title : string!
+    description : string!
+    availableActions : [SequencerBoardEntityAvailableActionsItem]!
+    maxSlots : number!
+    allowDuplicates : boolean
+    solutions : [[string]]!
+    successMessage : string
+    failMessage : string
+    hint : string
+    path : [SequencerBoardEntityPathItem]
+    headerImage : string
+    theme : SequencerBoardEntityTheme
+  }
+  type SequencerBoardEntityAvailableActionsItem = {
+    id : string!
+    name : string!
+    category : string!
+    description : string
+    iconEmoji : string
+    iconUrl : string
+    stateMachine : SequencerBoardEntityAvailableActionsItemStateMachine
+  }
+  type SequencerBoardEntityAvailableActionsItemStateMachine = {
+    name : string!
+    states : [string]!
+    currentState : string!
+    transitions : [SequencerBoardEntityAvailableActionsItemStateMachineTransitionsItem]!
+    description : string
+  }
+  type SequencerBoardEntityAvailableActionsItemStateMachineTransitionsItem = {
+    from : string!
+    to : string!
+    event : string!
+    guardHint : string
+  }
+  type SequencerBoardEntityPathItem = {
+    x : number!
+    y : number!
+  }
+  type SequencerBoardEntityTheme = {
+    background : string
+    accentColor : string
+  }
+
   entity SequencerBoardItem [runtime] {
     id : string!
   }
@@ -10,9 +56,8 @@ orbital SequencerBoardOrbital {
 
     state idle {
       INIT -> idle
-        (fetch SequencerBoardItem {})
         (render-ui main {
-          entity: @entity
+          entity: @config.entityProp
           categoryColors: @config.categoryColors
           stepDurationMs: @config.stepDurationMs
           playEvent: PLAY
@@ -36,6 +81,11 @@ orbital SequencerBoardOrbital {
     }
 
     config {
+      entityProp : SequencerBoardEntity
+        @label "Entity"
+        @description "Puzzle data"
+        @synonyms "entity"
+        @tier "presentation"
       categoryColors : json
         @label "Category Colors"
         @description "Category → color mapping"

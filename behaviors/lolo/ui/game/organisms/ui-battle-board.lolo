@@ -1,6 +1,958 @@
 app ui-battle-board "1.0.0"
 "BattleBoard — UI factory (1:1 with the @almadar/ui battle-board pattern)."
 orbital BattleBoardOrbital {
+  type BattleBoardEntity = {
+    id : string!
+    tiles : [BattleBoardEntityTilesItem]!
+    features : [BattleBoardEntityFeaturesItem]
+    boardWidth : number
+    boardHeight : number
+    assetManifest : BattleBoardEntityAssetManifest
+    backgroundImage : string
+    units : [BattleBoardEntityUnitsItem]!
+    phase : "observation" | "selection" | "movement" | "action" | "enemy_turn" | "game_over"!
+    turn : number!
+    gameResult : "victory" | "defeat"!
+    selectedUnitId : string!
+  }
+  type BattleBoardEntityTilesItem = {
+    id : string
+    x : number!
+    y : number!
+    z : number
+    terrain : string
+    type : string
+    terrainSprite : string
+    passable : boolean
+    movementCost : number
+    tileType : string
+    elevation : number
+  }
+  type BattleBoardEntityFeaturesItem = {
+    id : string
+    x : number!
+    y : number!
+    z : number
+    type : string!
+    sprite : string
+    assetUrl : string
+    color : string
+    elevation : number
+  }
+  type BattleBoardEntityAssetManifest = {
+    baseUrl : string!
+    terrains : json
+    units : json
+    features : json
+    effects : json
+  }
+  type BattleBoardEntityUnitsItem = {
+    id : string!
+    name : string!
+    unitType : string
+    heroId : string
+    sprite : string
+    spriteSheet : BattleBoardEntityUnitsItemSpriteSheet
+    team : "player" | "enemy"!
+    position : BattleBoardEntityUnitsItemPosition!
+    health : number!
+    maxHealth : number!
+    movement : number!
+    attack : number!
+    defense : number!
+    traits : [BattleBoardEntityUnitsItemTraitsItem]
+  }
+  type BattleBoardEntityUnitsItemSpriteSheet = {
+    se : string!
+    sw : string!
+    frameWidth : number!
+    frameHeight : number!
+  }
+  type BattleBoardEntityUnitsItemPosition = {
+    x : number!
+    y : number!
+  }
+  type BattleBoardEntityUnitsItemTraitsItem = {
+    name : string!
+    currentState : string!
+    states : [string]!
+    cooldown : number
+  }
+  type BattleBoardHEADERCtx = {
+    phase : "observation" | "selection" | "movement" | "action" | "enemy_turn" | "game_over"!
+    turn : number!
+    selectedUnit : BattleBoardHEADERCtxSelectedUnit!
+    hoveredUnit : BattleBoardHEADERCtxHoveredUnit!
+    playerUnits : [BattleBoardHEADERCtxPlayerUnitsItem]!
+    enemyUnits : [BattleBoardHEADERCtxEnemyUnitsItem]!
+    gameResult : "victory" | "defeat"!
+    attackTargets : [BattleBoardHEADERCtxAttackTargetsItem]!
+  }
+  type BattleBoardHEADERCtxSelectedUnit = {
+    id : string!
+    name : string!
+    unitType : string
+    heroId : string
+    sprite : string
+    spriteSheet : BattleBoardHEADERCtxSelectedUnitSpriteSheet
+    team : "player" | "enemy"!
+    position : BattleBoardHEADERCtxSelectedUnitPosition!
+    health : number!
+    maxHealth : number!
+    movement : number!
+    attack : number!
+    defense : number!
+    traits : [BattleBoardHEADERCtxSelectedUnitTraitsItem]
+  }
+  type BattleBoardHEADERCtxSelectedUnitSpriteSheet = {
+    se : string!
+    sw : string!
+    frameWidth : number!
+    frameHeight : number!
+  }
+  type BattleBoardHEADERCtxSelectedUnitPosition = {
+    x : number!
+    y : number!
+  }
+  type BattleBoardHEADERCtxSelectedUnitTraitsItem = {
+    name : string!
+    currentState : string!
+    states : [string]!
+    cooldown : number
+  }
+  type BattleBoardHEADERCtxHoveredUnit = {
+    id : string!
+    name : string!
+    unitType : string
+    heroId : string
+    sprite : string
+    spriteSheet : BattleBoardHEADERCtxHoveredUnitSpriteSheet
+    team : "player" | "enemy"!
+    position : BattleBoardHEADERCtxHoveredUnitPosition!
+    health : number!
+    maxHealth : number!
+    movement : number!
+    attack : number!
+    defense : number!
+    traits : [BattleBoardHEADERCtxHoveredUnitTraitsItem]
+  }
+  type BattleBoardHEADERCtxHoveredUnitSpriteSheet = {
+    se : string!
+    sw : string!
+    frameWidth : number!
+    frameHeight : number!
+  }
+  type BattleBoardHEADERCtxHoveredUnitPosition = {
+    x : number!
+    y : number!
+  }
+  type BattleBoardHEADERCtxHoveredUnitTraitsItem = {
+    name : string!
+    currentState : string!
+    states : [string]!
+    cooldown : number
+  }
+  type BattleBoardHEADERCtxPlayerUnitsItem = {
+    id : string!
+    name : string!
+    unitType : string
+    heroId : string
+    sprite : string
+    spriteSheet : BattleBoardHEADERCtxPlayerUnitsItemSpriteSheet
+    team : "player" | "enemy"!
+    position : BattleBoardHEADERCtxPlayerUnitsItemPosition!
+    health : number!
+    maxHealth : number!
+    movement : number!
+    attack : number!
+    defense : number!
+    traits : [BattleBoardHEADERCtxPlayerUnitsItemTraitsItem]
+  }
+  type BattleBoardHEADERCtxPlayerUnitsItemSpriteSheet = {
+    se : string!
+    sw : string!
+    frameWidth : number!
+    frameHeight : number!
+  }
+  type BattleBoardHEADERCtxPlayerUnitsItemPosition = {
+    x : number!
+    y : number!
+  }
+  type BattleBoardHEADERCtxPlayerUnitsItemTraitsItem = {
+    name : string!
+    currentState : string!
+    states : [string]!
+    cooldown : number
+  }
+  type BattleBoardHEADERCtxEnemyUnitsItem = {
+    id : string!
+    name : string!
+    unitType : string
+    heroId : string
+    sprite : string
+    spriteSheet : BattleBoardHEADERCtxEnemyUnitsItemSpriteSheet
+    team : "player" | "enemy"!
+    position : BattleBoardHEADERCtxEnemyUnitsItemPosition!
+    health : number!
+    maxHealth : number!
+    movement : number!
+    attack : number!
+    defense : number!
+    traits : [BattleBoardHEADERCtxEnemyUnitsItemTraitsItem]
+  }
+  type BattleBoardHEADERCtxEnemyUnitsItemSpriteSheet = {
+    se : string!
+    sw : string!
+    frameWidth : number!
+    frameHeight : number!
+  }
+  type BattleBoardHEADERCtxEnemyUnitsItemPosition = {
+    x : number!
+    y : number!
+  }
+  type BattleBoardHEADERCtxEnemyUnitsItemTraitsItem = {
+    name : string!
+    currentState : string!
+    states : [string]!
+    cooldown : number
+  }
+  type BattleBoardHEADERCtxAttackTargetsItem = {
+    x : number!
+    y : number!
+  }
+  type BattleBoardSIDEBARCtx = {
+    phase : "observation" | "selection" | "movement" | "action" | "enemy_turn" | "game_over"!
+    turn : number!
+    selectedUnit : BattleBoardSIDEBARCtxSelectedUnit!
+    hoveredUnit : BattleBoardSIDEBARCtxHoveredUnit!
+    playerUnits : [BattleBoardSIDEBARCtxPlayerUnitsItem]!
+    enemyUnits : [BattleBoardSIDEBARCtxEnemyUnitsItem]!
+    gameResult : "victory" | "defeat"!
+    attackTargets : [BattleBoardSIDEBARCtxAttackTargetsItem]!
+  }
+  type BattleBoardSIDEBARCtxSelectedUnit = {
+    id : string!
+    name : string!
+    unitType : string
+    heroId : string
+    sprite : string
+    spriteSheet : BattleBoardSIDEBARCtxSelectedUnitSpriteSheet
+    team : "player" | "enemy"!
+    position : BattleBoardSIDEBARCtxSelectedUnitPosition!
+    health : number!
+    maxHealth : number!
+    movement : number!
+    attack : number!
+    defense : number!
+    traits : [BattleBoardSIDEBARCtxSelectedUnitTraitsItem]
+  }
+  type BattleBoardSIDEBARCtxSelectedUnitSpriteSheet = {
+    se : string!
+    sw : string!
+    frameWidth : number!
+    frameHeight : number!
+  }
+  type BattleBoardSIDEBARCtxSelectedUnitPosition = {
+    x : number!
+    y : number!
+  }
+  type BattleBoardSIDEBARCtxSelectedUnitTraitsItem = {
+    name : string!
+    currentState : string!
+    states : [string]!
+    cooldown : number
+  }
+  type BattleBoardSIDEBARCtxHoveredUnit = {
+    id : string!
+    name : string!
+    unitType : string
+    heroId : string
+    sprite : string
+    spriteSheet : BattleBoardSIDEBARCtxHoveredUnitSpriteSheet
+    team : "player" | "enemy"!
+    position : BattleBoardSIDEBARCtxHoveredUnitPosition!
+    health : number!
+    maxHealth : number!
+    movement : number!
+    attack : number!
+    defense : number!
+    traits : [BattleBoardSIDEBARCtxHoveredUnitTraitsItem]
+  }
+  type BattleBoardSIDEBARCtxHoveredUnitSpriteSheet = {
+    se : string!
+    sw : string!
+    frameWidth : number!
+    frameHeight : number!
+  }
+  type BattleBoardSIDEBARCtxHoveredUnitPosition = {
+    x : number!
+    y : number!
+  }
+  type BattleBoardSIDEBARCtxHoveredUnitTraitsItem = {
+    name : string!
+    currentState : string!
+    states : [string]!
+    cooldown : number
+  }
+  type BattleBoardSIDEBARCtxPlayerUnitsItem = {
+    id : string!
+    name : string!
+    unitType : string
+    heroId : string
+    sprite : string
+    spriteSheet : BattleBoardSIDEBARCtxPlayerUnitsItemSpriteSheet
+    team : "player" | "enemy"!
+    position : BattleBoardSIDEBARCtxPlayerUnitsItemPosition!
+    health : number!
+    maxHealth : number!
+    movement : number!
+    attack : number!
+    defense : number!
+    traits : [BattleBoardSIDEBARCtxPlayerUnitsItemTraitsItem]
+  }
+  type BattleBoardSIDEBARCtxPlayerUnitsItemSpriteSheet = {
+    se : string!
+    sw : string!
+    frameWidth : number!
+    frameHeight : number!
+  }
+  type BattleBoardSIDEBARCtxPlayerUnitsItemPosition = {
+    x : number!
+    y : number!
+  }
+  type BattleBoardSIDEBARCtxPlayerUnitsItemTraitsItem = {
+    name : string!
+    currentState : string!
+    states : [string]!
+    cooldown : number
+  }
+  type BattleBoardSIDEBARCtxEnemyUnitsItem = {
+    id : string!
+    name : string!
+    unitType : string
+    heroId : string
+    sprite : string
+    spriteSheet : BattleBoardSIDEBARCtxEnemyUnitsItemSpriteSheet
+    team : "player" | "enemy"!
+    position : BattleBoardSIDEBARCtxEnemyUnitsItemPosition!
+    health : number!
+    maxHealth : number!
+    movement : number!
+    attack : number!
+    defense : number!
+    traits : [BattleBoardSIDEBARCtxEnemyUnitsItemTraitsItem]
+  }
+  type BattleBoardSIDEBARCtxEnemyUnitsItemSpriteSheet = {
+    se : string!
+    sw : string!
+    frameWidth : number!
+    frameHeight : number!
+  }
+  type BattleBoardSIDEBARCtxEnemyUnitsItemPosition = {
+    x : number!
+    y : number!
+  }
+  type BattleBoardSIDEBARCtxEnemyUnitsItemTraitsItem = {
+    name : string!
+    currentState : string!
+    states : [string]!
+    cooldown : number
+  }
+  type BattleBoardSIDEBARCtxAttackTargetsItem = {
+    x : number!
+    y : number!
+  }
+  type BattleBoardACTIONSCtx = {
+    phase : "observation" | "selection" | "movement" | "action" | "enemy_turn" | "game_over"!
+    turn : number!
+    selectedUnit : BattleBoardACTIONSCtxSelectedUnit!
+    hoveredUnit : BattleBoardACTIONSCtxHoveredUnit!
+    playerUnits : [BattleBoardACTIONSCtxPlayerUnitsItem]!
+    enemyUnits : [BattleBoardACTIONSCtxEnemyUnitsItem]!
+    gameResult : "victory" | "defeat"!
+    attackTargets : [BattleBoardACTIONSCtxAttackTargetsItem]!
+  }
+  type BattleBoardACTIONSCtxSelectedUnit = {
+    id : string!
+    name : string!
+    unitType : string
+    heroId : string
+    sprite : string
+    spriteSheet : BattleBoardACTIONSCtxSelectedUnitSpriteSheet
+    team : "player" | "enemy"!
+    position : BattleBoardACTIONSCtxSelectedUnitPosition!
+    health : number!
+    maxHealth : number!
+    movement : number!
+    attack : number!
+    defense : number!
+    traits : [BattleBoardACTIONSCtxSelectedUnitTraitsItem]
+  }
+  type BattleBoardACTIONSCtxSelectedUnitSpriteSheet = {
+    se : string!
+    sw : string!
+    frameWidth : number!
+    frameHeight : number!
+  }
+  type BattleBoardACTIONSCtxSelectedUnitPosition = {
+    x : number!
+    y : number!
+  }
+  type BattleBoardACTIONSCtxSelectedUnitTraitsItem = {
+    name : string!
+    currentState : string!
+    states : [string]!
+    cooldown : number
+  }
+  type BattleBoardACTIONSCtxHoveredUnit = {
+    id : string!
+    name : string!
+    unitType : string
+    heroId : string
+    sprite : string
+    spriteSheet : BattleBoardACTIONSCtxHoveredUnitSpriteSheet
+    team : "player" | "enemy"!
+    position : BattleBoardACTIONSCtxHoveredUnitPosition!
+    health : number!
+    maxHealth : number!
+    movement : number!
+    attack : number!
+    defense : number!
+    traits : [BattleBoardACTIONSCtxHoveredUnitTraitsItem]
+  }
+  type BattleBoardACTIONSCtxHoveredUnitSpriteSheet = {
+    se : string!
+    sw : string!
+    frameWidth : number!
+    frameHeight : number!
+  }
+  type BattleBoardACTIONSCtxHoveredUnitPosition = {
+    x : number!
+    y : number!
+  }
+  type BattleBoardACTIONSCtxHoveredUnitTraitsItem = {
+    name : string!
+    currentState : string!
+    states : [string]!
+    cooldown : number
+  }
+  type BattleBoardACTIONSCtxPlayerUnitsItem = {
+    id : string!
+    name : string!
+    unitType : string
+    heroId : string
+    sprite : string
+    spriteSheet : BattleBoardACTIONSCtxPlayerUnitsItemSpriteSheet
+    team : "player" | "enemy"!
+    position : BattleBoardACTIONSCtxPlayerUnitsItemPosition!
+    health : number!
+    maxHealth : number!
+    movement : number!
+    attack : number!
+    defense : number!
+    traits : [BattleBoardACTIONSCtxPlayerUnitsItemTraitsItem]
+  }
+  type BattleBoardACTIONSCtxPlayerUnitsItemSpriteSheet = {
+    se : string!
+    sw : string!
+    frameWidth : number!
+    frameHeight : number!
+  }
+  type BattleBoardACTIONSCtxPlayerUnitsItemPosition = {
+    x : number!
+    y : number!
+  }
+  type BattleBoardACTIONSCtxPlayerUnitsItemTraitsItem = {
+    name : string!
+    currentState : string!
+    states : [string]!
+    cooldown : number
+  }
+  type BattleBoardACTIONSCtxEnemyUnitsItem = {
+    id : string!
+    name : string!
+    unitType : string
+    heroId : string
+    sprite : string
+    spriteSheet : BattleBoardACTIONSCtxEnemyUnitsItemSpriteSheet
+    team : "player" | "enemy"!
+    position : BattleBoardACTIONSCtxEnemyUnitsItemPosition!
+    health : number!
+    maxHealth : number!
+    movement : number!
+    attack : number!
+    defense : number!
+    traits : [BattleBoardACTIONSCtxEnemyUnitsItemTraitsItem]
+  }
+  type BattleBoardACTIONSCtxEnemyUnitsItemSpriteSheet = {
+    se : string!
+    sw : string!
+    frameWidth : number!
+    frameHeight : number!
+  }
+  type BattleBoardACTIONSCtxEnemyUnitsItemPosition = {
+    x : number!
+    y : number!
+  }
+  type BattleBoardACTIONSCtxEnemyUnitsItemTraitsItem = {
+    name : string!
+    currentState : string!
+    states : [string]!
+    cooldown : number
+  }
+  type BattleBoardACTIONSCtxAttackTargetsItem = {
+    x : number!
+    y : number!
+  }
+  type BattleBoardOVERLAYCtx = {
+    phase : "observation" | "selection" | "movement" | "action" | "enemy_turn" | "game_over"!
+    turn : number!
+    selectedUnit : BattleBoardOVERLAYCtxSelectedUnit!
+    hoveredUnit : BattleBoardOVERLAYCtxHoveredUnit!
+    playerUnits : [BattleBoardOVERLAYCtxPlayerUnitsItem]!
+    enemyUnits : [BattleBoardOVERLAYCtxEnemyUnitsItem]!
+    gameResult : "victory" | "defeat"!
+    attackTargets : [BattleBoardOVERLAYCtxAttackTargetsItem]!
+  }
+  type BattleBoardOVERLAYCtxSelectedUnit = {
+    id : string!
+    name : string!
+    unitType : string
+    heroId : string
+    sprite : string
+    spriteSheet : BattleBoardOVERLAYCtxSelectedUnitSpriteSheet
+    team : "player" | "enemy"!
+    position : BattleBoardOVERLAYCtxSelectedUnitPosition!
+    health : number!
+    maxHealth : number!
+    movement : number!
+    attack : number!
+    defense : number!
+    traits : [BattleBoardOVERLAYCtxSelectedUnitTraitsItem]
+  }
+  type BattleBoardOVERLAYCtxSelectedUnitSpriteSheet = {
+    se : string!
+    sw : string!
+    frameWidth : number!
+    frameHeight : number!
+  }
+  type BattleBoardOVERLAYCtxSelectedUnitPosition = {
+    x : number!
+    y : number!
+  }
+  type BattleBoardOVERLAYCtxSelectedUnitTraitsItem = {
+    name : string!
+    currentState : string!
+    states : [string]!
+    cooldown : number
+  }
+  type BattleBoardOVERLAYCtxHoveredUnit = {
+    id : string!
+    name : string!
+    unitType : string
+    heroId : string
+    sprite : string
+    spriteSheet : BattleBoardOVERLAYCtxHoveredUnitSpriteSheet
+    team : "player" | "enemy"!
+    position : BattleBoardOVERLAYCtxHoveredUnitPosition!
+    health : number!
+    maxHealth : number!
+    movement : number!
+    attack : number!
+    defense : number!
+    traits : [BattleBoardOVERLAYCtxHoveredUnitTraitsItem]
+  }
+  type BattleBoardOVERLAYCtxHoveredUnitSpriteSheet = {
+    se : string!
+    sw : string!
+    frameWidth : number!
+    frameHeight : number!
+  }
+  type BattleBoardOVERLAYCtxHoveredUnitPosition = {
+    x : number!
+    y : number!
+  }
+  type BattleBoardOVERLAYCtxHoveredUnitTraitsItem = {
+    name : string!
+    currentState : string!
+    states : [string]!
+    cooldown : number
+  }
+  type BattleBoardOVERLAYCtxPlayerUnitsItem = {
+    id : string!
+    name : string!
+    unitType : string
+    heroId : string
+    sprite : string
+    spriteSheet : BattleBoardOVERLAYCtxPlayerUnitsItemSpriteSheet
+    team : "player" | "enemy"!
+    position : BattleBoardOVERLAYCtxPlayerUnitsItemPosition!
+    health : number!
+    maxHealth : number!
+    movement : number!
+    attack : number!
+    defense : number!
+    traits : [BattleBoardOVERLAYCtxPlayerUnitsItemTraitsItem]
+  }
+  type BattleBoardOVERLAYCtxPlayerUnitsItemSpriteSheet = {
+    se : string!
+    sw : string!
+    frameWidth : number!
+    frameHeight : number!
+  }
+  type BattleBoardOVERLAYCtxPlayerUnitsItemPosition = {
+    x : number!
+    y : number!
+  }
+  type BattleBoardOVERLAYCtxPlayerUnitsItemTraitsItem = {
+    name : string!
+    currentState : string!
+    states : [string]!
+    cooldown : number
+  }
+  type BattleBoardOVERLAYCtxEnemyUnitsItem = {
+    id : string!
+    name : string!
+    unitType : string
+    heroId : string
+    sprite : string
+    spriteSheet : BattleBoardOVERLAYCtxEnemyUnitsItemSpriteSheet
+    team : "player" | "enemy"!
+    position : BattleBoardOVERLAYCtxEnemyUnitsItemPosition!
+    health : number!
+    maxHealth : number!
+    movement : number!
+    attack : number!
+    defense : number!
+    traits : [BattleBoardOVERLAYCtxEnemyUnitsItemTraitsItem]
+  }
+  type BattleBoardOVERLAYCtxEnemyUnitsItemSpriteSheet = {
+    se : string!
+    sw : string!
+    frameWidth : number!
+    frameHeight : number!
+  }
+  type BattleBoardOVERLAYCtxEnemyUnitsItemPosition = {
+    x : number!
+    y : number!
+  }
+  type BattleBoardOVERLAYCtxEnemyUnitsItemTraitsItem = {
+    name : string!
+    currentState : string!
+    states : [string]!
+    cooldown : number
+  }
+  type BattleBoardOVERLAYCtxAttackTargetsItem = {
+    x : number!
+    y : number!
+  }
+  type BattleBoardGAMEOVEROVERLAYCtx = {
+    phase : "observation" | "selection" | "movement" | "action" | "enemy_turn" | "game_over"!
+    turn : number!
+    selectedUnit : BattleBoardGAMEOVEROVERLAYCtxSelectedUnit!
+    hoveredUnit : BattleBoardGAMEOVEROVERLAYCtxHoveredUnit!
+    playerUnits : [BattleBoardGAMEOVEROVERLAYCtxPlayerUnitsItem]!
+    enemyUnits : [BattleBoardGAMEOVEROVERLAYCtxEnemyUnitsItem]!
+    gameResult : "victory" | "defeat"!
+    attackTargets : [BattleBoardGAMEOVEROVERLAYCtxAttackTargetsItem]!
+  }
+  type BattleBoardGAMEOVEROVERLAYCtxSelectedUnit = {
+    id : string!
+    name : string!
+    unitType : string
+    heroId : string
+    sprite : string
+    spriteSheet : BattleBoardGAMEOVEROVERLAYCtxSelectedUnitSpriteSheet
+    team : "player" | "enemy"!
+    position : BattleBoardGAMEOVEROVERLAYCtxSelectedUnitPosition!
+    health : number!
+    maxHealth : number!
+    movement : number!
+    attack : number!
+    defense : number!
+    traits : [BattleBoardGAMEOVEROVERLAYCtxSelectedUnitTraitsItem]
+  }
+  type BattleBoardGAMEOVEROVERLAYCtxSelectedUnitSpriteSheet = {
+    se : string!
+    sw : string!
+    frameWidth : number!
+    frameHeight : number!
+  }
+  type BattleBoardGAMEOVEROVERLAYCtxSelectedUnitPosition = {
+    x : number!
+    y : number!
+  }
+  type BattleBoardGAMEOVEROVERLAYCtxSelectedUnitTraitsItem = {
+    name : string!
+    currentState : string!
+    states : [string]!
+    cooldown : number
+  }
+  type BattleBoardGAMEOVEROVERLAYCtxHoveredUnit = {
+    id : string!
+    name : string!
+    unitType : string
+    heroId : string
+    sprite : string
+    spriteSheet : BattleBoardGAMEOVEROVERLAYCtxHoveredUnitSpriteSheet
+    team : "player" | "enemy"!
+    position : BattleBoardGAMEOVEROVERLAYCtxHoveredUnitPosition!
+    health : number!
+    maxHealth : number!
+    movement : number!
+    attack : number!
+    defense : number!
+    traits : [BattleBoardGAMEOVEROVERLAYCtxHoveredUnitTraitsItem]
+  }
+  type BattleBoardGAMEOVEROVERLAYCtxHoveredUnitSpriteSheet = {
+    se : string!
+    sw : string!
+    frameWidth : number!
+    frameHeight : number!
+  }
+  type BattleBoardGAMEOVEROVERLAYCtxHoveredUnitPosition = {
+    x : number!
+    y : number!
+  }
+  type BattleBoardGAMEOVEROVERLAYCtxHoveredUnitTraitsItem = {
+    name : string!
+    currentState : string!
+    states : [string]!
+    cooldown : number
+  }
+  type BattleBoardGAMEOVEROVERLAYCtxPlayerUnitsItem = {
+    id : string!
+    name : string!
+    unitType : string
+    heroId : string
+    sprite : string
+    spriteSheet : BattleBoardGAMEOVEROVERLAYCtxPlayerUnitsItemSpriteSheet
+    team : "player" | "enemy"!
+    position : BattleBoardGAMEOVEROVERLAYCtxPlayerUnitsItemPosition!
+    health : number!
+    maxHealth : number!
+    movement : number!
+    attack : number!
+    defense : number!
+    traits : [BattleBoardGAMEOVEROVERLAYCtxPlayerUnitsItemTraitsItem]
+  }
+  type BattleBoardGAMEOVEROVERLAYCtxPlayerUnitsItemSpriteSheet = {
+    se : string!
+    sw : string!
+    frameWidth : number!
+    frameHeight : number!
+  }
+  type BattleBoardGAMEOVEROVERLAYCtxPlayerUnitsItemPosition = {
+    x : number!
+    y : number!
+  }
+  type BattleBoardGAMEOVEROVERLAYCtxPlayerUnitsItemTraitsItem = {
+    name : string!
+    currentState : string!
+    states : [string]!
+    cooldown : number
+  }
+  type BattleBoardGAMEOVEROVERLAYCtxEnemyUnitsItem = {
+    id : string!
+    name : string!
+    unitType : string
+    heroId : string
+    sprite : string
+    spriteSheet : BattleBoardGAMEOVEROVERLAYCtxEnemyUnitsItemSpriteSheet
+    team : "player" | "enemy"!
+    position : BattleBoardGAMEOVEROVERLAYCtxEnemyUnitsItemPosition!
+    health : number!
+    maxHealth : number!
+    movement : number!
+    attack : number!
+    defense : number!
+    traits : [BattleBoardGAMEOVEROVERLAYCtxEnemyUnitsItemTraitsItem]
+  }
+  type BattleBoardGAMEOVEROVERLAYCtxEnemyUnitsItemSpriteSheet = {
+    se : string!
+    sw : string!
+    frameWidth : number!
+    frameHeight : number!
+  }
+  type BattleBoardGAMEOVEROVERLAYCtxEnemyUnitsItemPosition = {
+    x : number!
+    y : number!
+  }
+  type BattleBoardGAMEOVEROVERLAYCtxEnemyUnitsItemTraitsItem = {
+    name : string!
+    currentState : string!
+    states : [string]!
+    cooldown : number
+  }
+  type BattleBoardGAMEOVEROVERLAYCtxAttackTargetsItem = {
+    x : number!
+    y : number!
+  }
+  type BattleBoardATTACKAttacker = {
+    id : string!
+    name : string!
+    unitType : string
+    heroId : string
+    sprite : string
+    spriteSheet : BattleBoardATTACKAttackerSpriteSheet
+    team : "player" | "enemy"!
+    position : BattleBoardATTACKAttackerPosition!
+    health : number!
+    maxHealth : number!
+    movement : number!
+    attack : number!
+    defense : number!
+    traits : [BattleBoardATTACKAttackerTraitsItem]
+  }
+  type BattleBoardATTACKAttackerSpriteSheet = {
+    se : string!
+    sw : string!
+    frameWidth : number!
+    frameHeight : number!
+  }
+  type BattleBoardATTACKAttackerPosition = {
+    x : number!
+    y : number!
+  }
+  type BattleBoardATTACKAttackerTraitsItem = {
+    name : string!
+    currentState : string!
+    states : [string]!
+    cooldown : number
+  }
+  type BattleBoardATTACKTarget = {
+    id : string!
+    name : string!
+    unitType : string
+    heroId : string
+    sprite : string
+    spriteSheet : BattleBoardATTACKTargetSpriteSheet
+    team : "player" | "enemy"!
+    position : BattleBoardATTACKTargetPosition!
+    health : number!
+    maxHealth : number!
+    movement : number!
+    attack : number!
+    defense : number!
+    traits : [BattleBoardATTACKTargetTraitsItem]
+  }
+  type BattleBoardATTACKTargetSpriteSheet = {
+    se : string!
+    sw : string!
+    frameWidth : number!
+    frameHeight : number!
+  }
+  type BattleBoardATTACKTargetPosition = {
+    x : number!
+    y : number!
+  }
+  type BattleBoardATTACKTargetTraitsItem = {
+    name : string!
+    currentState : string!
+    states : [string]!
+    cooldown : number
+  }
+  type BattleBoardUNITMOVEUnit = {
+    id : string!
+    name : string!
+    unitType : string
+    heroId : string
+    sprite : string
+    spriteSheet : BattleBoardUNITMOVEUnitSpriteSheet
+    team : "player" | "enemy"!
+    position : BattleBoardUNITMOVEUnitPosition!
+    health : number!
+    maxHealth : number!
+    movement : number!
+    attack : number!
+    defense : number!
+    traits : [BattleBoardUNITMOVEUnitTraitsItem]
+  }
+  type BattleBoardUNITMOVEUnitSpriteSheet = {
+    se : string!
+    sw : string!
+    frameWidth : number!
+    frameHeight : number!
+  }
+  type BattleBoardUNITMOVEUnitPosition = {
+    x : number!
+    y : number!
+  }
+  type BattleBoardUNITMOVEUnitTraitsItem = {
+    name : string!
+    currentState : string!
+    states : [string]!
+    cooldown : number
+  }
+  type BattleBoardUNITMOVETo = {
+    x : number!
+    y : number!
+  }
+  type BattleBoardCALCULATEDAMAGEAttacker = {
+    id : string!
+    name : string!
+    unitType : string
+    heroId : string
+    sprite : string
+    spriteSheet : BattleBoardCALCULATEDAMAGEAttackerSpriteSheet
+    team : "player" | "enemy"!
+    position : BattleBoardCALCULATEDAMAGEAttackerPosition!
+    health : number!
+    maxHealth : number!
+    movement : number!
+    attack : number!
+    defense : number!
+    traits : [BattleBoardCALCULATEDAMAGEAttackerTraitsItem]
+  }
+  type BattleBoardCALCULATEDAMAGEAttackerSpriteSheet = {
+    se : string!
+    sw : string!
+    frameWidth : number!
+    frameHeight : number!
+  }
+  type BattleBoardCALCULATEDAMAGEAttackerPosition = {
+    x : number!
+    y : number!
+  }
+  type BattleBoardCALCULATEDAMAGEAttackerTraitsItem = {
+    name : string!
+    currentState : string!
+    states : [string]!
+    cooldown : number
+  }
+  type BattleBoardCALCULATEDAMAGETarget = {
+    id : string!
+    name : string!
+    unitType : string
+    heroId : string
+    sprite : string
+    spriteSheet : BattleBoardCALCULATEDAMAGETargetSpriteSheet
+    team : "player" | "enemy"!
+    position : BattleBoardCALCULATEDAMAGETargetPosition!
+    health : number!
+    maxHealth : number!
+    movement : number!
+    attack : number!
+    defense : number!
+    traits : [BattleBoardCALCULATEDAMAGETargetTraitsItem]
+  }
+  type BattleBoardCALCULATEDAMAGETargetSpriteSheet = {
+    se : string!
+    sw : string!
+    frameWidth : number!
+    frameHeight : number!
+  }
+  type BattleBoardCALCULATEDAMAGETargetPosition = {
+    x : number!
+    y : number!
+  }
+  type BattleBoardCALCULATEDAMAGETargetTraitsItem = {
+    name : string!
+    currentState : string!
+    states : [string]!
+    cooldown : number
+  }
+
   entity BattleBoardItem [runtime] {
     id : string!
   }
@@ -10,9 +962,8 @@ orbital BattleBoardOrbital {
 
     state idle {
       INIT -> idle
-        (fetch BattleBoardItem {})
         (render-ui main {
-          entity: @entity
+          entity: @config.entityProp
           scale: @config.scale
           unitScale: @config.unitScale
           header: HEADER
@@ -42,33 +993,33 @@ orbital BattleBoardOrbital {
 
     emits {
       HEADER -> external {
-        ctx : object
+        ctx : BattleBoardHEADERCtx
       }
         @description "-- Slots --"
         @tier "essential"
       SIDEBAR -> external {
-        ctx : object
+        ctx : BattleBoardSIDEBARCtx
       }
         @description "Sidebar content (combat log, unit roster, etc.)"
         @tier "essential"
       ACTIONS -> external {
-        ctx : object
+        ctx : BattleBoardACTIONSCtx
       }
         @description "Floating action buttons"
         @tier "essential"
       OVERLAY -> external {
-        ctx : object
+        ctx : BattleBoardOVERLAYCtx
       }
         @description "Floating overlays above the canvas (damage popups, tooltips)"
         @tier "essential"
       GAME_OVER_OVERLAY -> external {
-        ctx : object
+        ctx : BattleBoardGAMEOVEROVERLAYCtx
       }
         @description "Game-over screen overlay"
         @tier "essential"
       ATTACK -> external {
-        attacker : object
-        target : object
+        attacker : BattleBoardATTACKAttacker
+        target : BattleBoardATTACKTarget
         damage : number
         attackerId : string!
         targetId : string!
@@ -81,14 +1032,14 @@ orbital BattleBoardOrbital {
         @description "Called when battle ends"
         @tier "essential"
       UNIT_MOVE -> external {
-        unit : object
-        to : object
+        unit : BattleBoardUNITMOVEUnit
+        to : BattleBoardUNITMOVETo
       }
         @description "Called after a unit moves"
         @tier "essential"
       CALCULATE_DAMAGE -> external {
-        attacker : object
-        target : object
+        attacker : BattleBoardCALCULATEDAMAGEAttacker
+        target : BattleBoardCALCULATEDAMAGETarget
       }
         @description "Custom combat damage calculator"
         @tier "essential"
@@ -132,6 +1083,11 @@ orbital BattleBoardOrbital {
     }
 
     config {
+      entityProp : BattleBoardEntity
+        @label "Entity"
+        @description "Entity containing all board data"
+        @synonyms "entity"
+        @tier "presentation"
       scale : number = 0.45
         @label "Scale"
         @description "Canvas render scale"
