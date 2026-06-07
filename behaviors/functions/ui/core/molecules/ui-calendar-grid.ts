@@ -36,7 +36,7 @@ export type StdUiCalendarGridEventKey = 'DAY_CLICK' | 'EVENT_CLICK' | 'INIT' | '
  * Payload shape for the `SLOT_CLICK` event.
  */
 export interface StdUiCalendarGridSlotClickPayload {
-  day?: EntityRow;
+  day?: string;
   time?: string;
 }
 
@@ -44,7 +44,7 @@ export interface StdUiCalendarGridSlotClickPayload {
  * Payload shape for the `DAY_CLICK` event.
  */
 export interface StdUiCalendarGridDayClickPayload {
-  day?: EntityRow;
+  day?: string;
 }
 
 /**
@@ -83,12 +83,12 @@ export interface StdUiCalendarGridSwipeRightPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiCalendarGridConfig {
-  weekStart?: unknown;
   /** Default: `"auto"` */
   dayWindow?: string;
   /** Default: `""` */
   className?: string;
   longPressPayload?: unknown;
+  weekStart?: string;
   /** Default: `[]` */
   timeSlots?: string[];
 }
