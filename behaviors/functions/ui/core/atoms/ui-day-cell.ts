@@ -36,7 +36,7 @@ export type StdUiDayCellEventKey = 'CLICK' | 'INIT';
  * Payload shape for the `CLICK` event.
  */
 export interface StdUiDayCellClickPayload {
-  date?: EntityRow;
+  date?: string;
 }
 
 /**
@@ -46,9 +46,9 @@ export interface StdUiDayCellClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiDayCellConfig {
+  date?: string;
   /** Default: `false` */
   isToday?: boolean;
-  date?: unknown;
   /** Default: `""` */
   className?: string;
 }

@@ -15,6 +15,135 @@
 import type { OrbitalDefinition, TraitReference } from '@almadar/core/types';
 
 import {
+  stdAgentAssistantAssistantOrbital,
+  StdAgentAssistantAssistantOrbitalManifest,
+  isStdAgentAssistantAssistantOrbitalParams,
+  stdAgentAssistantMemoryOrbital,
+  StdAgentAssistantMemoryOrbitalManifest,
+  isStdAgentAssistantMemoryOrbitalParams,
+  stdAgentAssistantAssistantContextOrbital,
+  StdAgentAssistantAssistantContextOrbitalManifest,
+  isStdAgentAssistantAssistantContextOrbitalParams,
+  stdAgentAssistantProviderConfigOrbital,
+  StdAgentAssistantProviderConfigOrbitalManifest,
+  isStdAgentAssistantProviderConfigOrbitalParams,
+  stdAgentAssistantAssistantNavOrbital,
+  StdAgentAssistantAssistantNavOrbitalManifest,
+  isStdAgentAssistantAssistantNavOrbitalParams,
+  stdAgentAssistantMemorySidebarOrbital,
+  StdAgentAssistantMemorySidebarOrbitalManifest,
+  isStdAgentAssistantMemorySidebarOrbitalParams,
+} from './agent/organisms/std-agent-assistant.js';
+import {
+  stdAgentBuilderBuildPlanOrbital,
+  StdAgentBuilderBuildPlanOrbitalManifest,
+  isStdAgentBuilderBuildPlanOrbitalParams,
+  stdAgentBuilderBuildLoopOrbital,
+  StdAgentBuilderBuildLoopOrbitalManifest,
+  isStdAgentBuilderBuildLoopOrbitalParams,
+  stdAgentBuilderBuildFixOrbital,
+  StdAgentBuilderBuildFixOrbitalManifest,
+  isStdAgentBuilderBuildFixOrbitalParams,
+  stdAgentBuilderBuildSessionOrbital,
+  StdAgentBuilderBuildSessionOrbitalManifest,
+  isStdAgentBuilderBuildSessionOrbitalParams,
+  stdAgentBuilderBuildTaskOrbital,
+  StdAgentBuilderBuildTaskOrbitalManifest,
+  isStdAgentBuilderBuildTaskOrbitalParams,
+  stdAgentBuilderBuildProgressOrbital,
+  StdAgentBuilderBuildProgressOrbitalManifest,
+  isStdAgentBuilderBuildProgressOrbitalParams,
+} from './agent/organisms/std-agent-builder.js';
+import {
+  stdAgentPipelinePipelinePlanOrbital,
+  StdAgentPipelinePipelinePlanOrbitalManifest,
+  isStdAgentPipelinePipelinePlanOrbitalParams,
+  stdAgentPipelinePipelineExecOrbital,
+  StdAgentPipelinePipelineExecOrbitalManifest,
+  isStdAgentPipelinePipelineExecOrbitalParams,
+  stdAgentPipelinePipelineSessionOrbital,
+  StdAgentPipelinePipelineSessionOrbitalManifest,
+  isStdAgentPipelinePipelineSessionOrbitalParams,
+  stdAgentPipelineExecutionLogOrbital,
+  StdAgentPipelineExecutionLogOrbitalManifest,
+  isStdAgentPipelineExecutionLogOrbitalParams,
+  stdAgentPipelinePipelineProgressOrbital,
+  StdAgentPipelinePipelineProgressOrbitalManifest,
+  isStdAgentPipelinePipelineProgressOrbitalParams,
+  stdAgentPipelineSessionTreeOrbital,
+  StdAgentPipelineSessionTreeOrbitalManifest,
+  isStdAgentPipelineSessionTreeOrbitalParams,
+} from './agent/organisms/std-agent-pipeline.js';
+import {
+  stdAgentReviewerReviewOrbital,
+  StdAgentReviewerReviewOrbitalManifest,
+  isStdAgentReviewerReviewOrbitalParams,
+  stdAgentReviewerReviewRagOrbital,
+  StdAgentReviewerReviewRagOrbitalManifest,
+  isStdAgentReviewerReviewRagOrbitalParams,
+  stdAgentReviewerAnalysisOrbital,
+  StdAgentReviewerAnalysisOrbitalManifest,
+  isStdAgentReviewerAnalysisOrbitalParams,
+  stdAgentReviewerReviewCompletionOrbital,
+  StdAgentReviewerReviewCompletionOrbitalManifest,
+  isStdAgentReviewerReviewCompletionOrbitalParams,
+  stdAgentReviewerReviewNavOrbital,
+  StdAgentReviewerReviewNavOrbitalManifest,
+  isStdAgentReviewerReviewNavOrbitalParams,
+  stdAgentReviewerReviewIssueOrbital,
+  StdAgentReviewerReviewIssueOrbitalManifest,
+  isStdAgentReviewerReviewIssueOrbitalParams,
+} from './agent/organisms/std-agent-reviewer.js';
+import {
+  stdAgentTutorTutorSessionOrbital,
+  StdAgentTutorTutorSessionOrbitalManifest,
+  isStdAgentTutorTutorSessionOrbitalParams,
+  stdAgentTutorQuizQuestionOrbital,
+  StdAgentTutorQuizQuestionOrbitalManifest,
+  isStdAgentTutorQuizQuestionOrbitalParams,
+  stdAgentTutorTutorChatOrbital,
+  StdAgentTutorTutorChatOrbitalManifest,
+  isStdAgentTutorTutorChatOrbitalParams,
+  stdAgentTutorConceptOrbital,
+  StdAgentTutorConceptOrbitalManifest,
+  isStdAgentTutorConceptOrbitalParams,
+  stdAgentTutorStudentAssessmentOrbital,
+  StdAgentTutorStudentAssessmentOrbitalManifest,
+  isStdAgentTutorStudentAssessmentOrbitalParams,
+  stdAgentTutorTutorNavOrbital,
+  StdAgentTutorTutorNavOrbitalManifest,
+  isStdAgentTutorTutorNavOrbitalParams,
+  stdAgentTutorConceptViewOrbital,
+  StdAgentTutorConceptViewOrbitalManifest,
+  isStdAgentTutorConceptViewOrbitalParams,
+} from './agent/organisms/std-agent-tutor.js';
+import {
+  stdGenericAppContactOrbital,
+  StdGenericAppContactOrbitalManifest,
+  isStdGenericAppContactOrbitalParams,
+  stdGenericAppItemOrbital,
+  StdGenericAppItemOrbitalManifest,
+  isStdGenericAppItemOrbitalParams,
+  stdGenericAppActivityOrbital,
+  StdGenericAppActivityOrbitalManifest,
+  isStdGenericAppActivityOrbitalParams,
+  stdGenericAppTaskOrbital,
+  StdGenericAppTaskOrbitalManifest,
+  isStdGenericAppTaskOrbitalParams,
+  stdGenericAppCalendarOrbital,
+  StdGenericAppCalendarOrbitalManifest,
+  isStdGenericAppCalendarOrbitalParams,
+  stdGenericAppWidgetOrbital,
+  StdGenericAppWidgetOrbitalManifest,
+  isStdGenericAppWidgetOrbitalParams,
+  stdGenericAppFeedOrbital,
+  StdGenericAppFeedOrbitalManifest,
+  isStdGenericAppFeedOrbitalParams,
+  stdGenericAppNoteOrbital,
+  StdGenericAppNoteOrbitalManifest,
+  isStdGenericAppNoteOrbitalParams,
+} from './core/organisms/std-generic-app.js';
+import {
   stdUiActionPaletteActionPaletteOrbital,
   StdUiActionPaletteActionPaletteOrbitalManifest,
   isStdUiActionPaletteActionPaletteOrbitalParams,
@@ -435,6 +564,357 @@ interface DispatchEntry {
 }
 
 const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEntry>([
+  ['std-agent-assistant::AssistantOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdAgentAssistantAssistantOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-agent-assistant::AssistantOrbital');
+      }
+      return stdAgentAssistantAssistantOrbital(p);
+    },
+    manifest: StdAgentAssistantAssistantOrbitalManifest,
+  }],
+  ['std-agent-assistant::MemoryOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdAgentAssistantMemoryOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-agent-assistant::MemoryOrbital');
+      }
+      return stdAgentAssistantMemoryOrbital(p);
+    },
+    manifest: StdAgentAssistantMemoryOrbitalManifest,
+  }],
+  ['std-agent-assistant::AssistantContextOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdAgentAssistantAssistantContextOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-agent-assistant::AssistantContextOrbital');
+      }
+      return stdAgentAssistantAssistantContextOrbital(p);
+    },
+    manifest: StdAgentAssistantAssistantContextOrbitalManifest,
+  }],
+  ['std-agent-assistant::ProviderConfigOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdAgentAssistantProviderConfigOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-agent-assistant::ProviderConfigOrbital');
+      }
+      return stdAgentAssistantProviderConfigOrbital(p);
+    },
+    manifest: StdAgentAssistantProviderConfigOrbitalManifest,
+  }],
+  ['std-agent-assistant::AssistantNavOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdAgentAssistantAssistantNavOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-agent-assistant::AssistantNavOrbital');
+      }
+      return stdAgentAssistantAssistantNavOrbital(p);
+    },
+    manifest: StdAgentAssistantAssistantNavOrbitalManifest,
+  }],
+  ['std-agent-assistant::MemorySidebarOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdAgentAssistantMemorySidebarOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-agent-assistant::MemorySidebarOrbital');
+      }
+      return stdAgentAssistantMemorySidebarOrbital(p);
+    },
+    manifest: StdAgentAssistantMemorySidebarOrbitalManifest,
+  }],
+  ['std-agent-builder::BuildPlanOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdAgentBuilderBuildPlanOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-agent-builder::BuildPlanOrbital');
+      }
+      return stdAgentBuilderBuildPlanOrbital(p);
+    },
+    manifest: StdAgentBuilderBuildPlanOrbitalManifest,
+  }],
+  ['std-agent-builder::BuildLoopOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdAgentBuilderBuildLoopOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-agent-builder::BuildLoopOrbital');
+      }
+      return stdAgentBuilderBuildLoopOrbital(p);
+    },
+    manifest: StdAgentBuilderBuildLoopOrbitalManifest,
+  }],
+  ['std-agent-builder::BuildFixOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdAgentBuilderBuildFixOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-agent-builder::BuildFixOrbital');
+      }
+      return stdAgentBuilderBuildFixOrbital(p);
+    },
+    manifest: StdAgentBuilderBuildFixOrbitalManifest,
+  }],
+  ['std-agent-builder::BuildSessionOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdAgentBuilderBuildSessionOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-agent-builder::BuildSessionOrbital');
+      }
+      return stdAgentBuilderBuildSessionOrbital(p);
+    },
+    manifest: StdAgentBuilderBuildSessionOrbitalManifest,
+  }],
+  ['std-agent-builder::BuildTaskOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdAgentBuilderBuildTaskOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-agent-builder::BuildTaskOrbital');
+      }
+      return stdAgentBuilderBuildTaskOrbital(p);
+    },
+    manifest: StdAgentBuilderBuildTaskOrbitalManifest,
+  }],
+  ['std-agent-builder::BuildProgressOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdAgentBuilderBuildProgressOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-agent-builder::BuildProgressOrbital');
+      }
+      return stdAgentBuilderBuildProgressOrbital(p);
+    },
+    manifest: StdAgentBuilderBuildProgressOrbitalManifest,
+  }],
+  ['std-agent-pipeline::PipelinePlanOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdAgentPipelinePipelinePlanOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-agent-pipeline::PipelinePlanOrbital');
+      }
+      return stdAgentPipelinePipelinePlanOrbital(p);
+    },
+    manifest: StdAgentPipelinePipelinePlanOrbitalManifest,
+  }],
+  ['std-agent-pipeline::PipelineExecOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdAgentPipelinePipelineExecOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-agent-pipeline::PipelineExecOrbital');
+      }
+      return stdAgentPipelinePipelineExecOrbital(p);
+    },
+    manifest: StdAgentPipelinePipelineExecOrbitalManifest,
+  }],
+  ['std-agent-pipeline::PipelineSessionOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdAgentPipelinePipelineSessionOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-agent-pipeline::PipelineSessionOrbital');
+      }
+      return stdAgentPipelinePipelineSessionOrbital(p);
+    },
+    manifest: StdAgentPipelinePipelineSessionOrbitalManifest,
+  }],
+  ['std-agent-pipeline::ExecutionLogOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdAgentPipelineExecutionLogOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-agent-pipeline::ExecutionLogOrbital');
+      }
+      return stdAgentPipelineExecutionLogOrbital(p);
+    },
+    manifest: StdAgentPipelineExecutionLogOrbitalManifest,
+  }],
+  ['std-agent-pipeline::PipelineProgressOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdAgentPipelinePipelineProgressOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-agent-pipeline::PipelineProgressOrbital');
+      }
+      return stdAgentPipelinePipelineProgressOrbital(p);
+    },
+    manifest: StdAgentPipelinePipelineProgressOrbitalManifest,
+  }],
+  ['std-agent-pipeline::SessionTreeOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdAgentPipelineSessionTreeOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-agent-pipeline::SessionTreeOrbital');
+      }
+      return stdAgentPipelineSessionTreeOrbital(p);
+    },
+    manifest: StdAgentPipelineSessionTreeOrbitalManifest,
+  }],
+  ['std-agent-reviewer::ReviewOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdAgentReviewerReviewOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-agent-reviewer::ReviewOrbital');
+      }
+      return stdAgentReviewerReviewOrbital(p);
+    },
+    manifest: StdAgentReviewerReviewOrbitalManifest,
+  }],
+  ['std-agent-reviewer::ReviewRagOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdAgentReviewerReviewRagOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-agent-reviewer::ReviewRagOrbital');
+      }
+      return stdAgentReviewerReviewRagOrbital(p);
+    },
+    manifest: StdAgentReviewerReviewRagOrbitalManifest,
+  }],
+  ['std-agent-reviewer::AnalysisOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdAgentReviewerAnalysisOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-agent-reviewer::AnalysisOrbital');
+      }
+      return stdAgentReviewerAnalysisOrbital(p);
+    },
+    manifest: StdAgentReviewerAnalysisOrbitalManifest,
+  }],
+  ['std-agent-reviewer::ReviewCompletionOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdAgentReviewerReviewCompletionOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-agent-reviewer::ReviewCompletionOrbital');
+      }
+      return stdAgentReviewerReviewCompletionOrbital(p);
+    },
+    manifest: StdAgentReviewerReviewCompletionOrbitalManifest,
+  }],
+  ['std-agent-reviewer::ReviewNavOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdAgentReviewerReviewNavOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-agent-reviewer::ReviewNavOrbital');
+      }
+      return stdAgentReviewerReviewNavOrbital(p);
+    },
+    manifest: StdAgentReviewerReviewNavOrbitalManifest,
+  }],
+  ['std-agent-reviewer::ReviewIssueOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdAgentReviewerReviewIssueOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-agent-reviewer::ReviewIssueOrbital');
+      }
+      return stdAgentReviewerReviewIssueOrbital(p);
+    },
+    manifest: StdAgentReviewerReviewIssueOrbitalManifest,
+  }],
+  ['std-agent-tutor::TutorSessionOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdAgentTutorTutorSessionOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-agent-tutor::TutorSessionOrbital');
+      }
+      return stdAgentTutorTutorSessionOrbital(p);
+    },
+    manifest: StdAgentTutorTutorSessionOrbitalManifest,
+  }],
+  ['std-agent-tutor::QuizQuestionOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdAgentTutorQuizQuestionOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-agent-tutor::QuizQuestionOrbital');
+      }
+      return stdAgentTutorQuizQuestionOrbital(p);
+    },
+    manifest: StdAgentTutorQuizQuestionOrbitalManifest,
+  }],
+  ['std-agent-tutor::TutorChatOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdAgentTutorTutorChatOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-agent-tutor::TutorChatOrbital');
+      }
+      return stdAgentTutorTutorChatOrbital(p);
+    },
+    manifest: StdAgentTutorTutorChatOrbitalManifest,
+  }],
+  ['std-agent-tutor::ConceptOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdAgentTutorConceptOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-agent-tutor::ConceptOrbital');
+      }
+      return stdAgentTutorConceptOrbital(p);
+    },
+    manifest: StdAgentTutorConceptOrbitalManifest,
+  }],
+  ['std-agent-tutor::StudentAssessmentOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdAgentTutorStudentAssessmentOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-agent-tutor::StudentAssessmentOrbital');
+      }
+      return stdAgentTutorStudentAssessmentOrbital(p);
+    },
+    manifest: StdAgentTutorStudentAssessmentOrbitalManifest,
+  }],
+  ['std-agent-tutor::TutorNavOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdAgentTutorTutorNavOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-agent-tutor::TutorNavOrbital');
+      }
+      return stdAgentTutorTutorNavOrbital(p);
+    },
+    manifest: StdAgentTutorTutorNavOrbitalManifest,
+  }],
+  ['std-agent-tutor::ConceptViewOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdAgentTutorConceptViewOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-agent-tutor::ConceptViewOrbital');
+      }
+      return stdAgentTutorConceptViewOrbital(p);
+    },
+    manifest: StdAgentTutorConceptViewOrbitalManifest,
+  }],
+  ['std-generic-app::ContactOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdGenericAppContactOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-generic-app::ContactOrbital');
+      }
+      return stdGenericAppContactOrbital(p);
+    },
+    manifest: StdGenericAppContactOrbitalManifest,
+  }],
+  ['std-generic-app::ItemOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdGenericAppItemOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-generic-app::ItemOrbital');
+      }
+      return stdGenericAppItemOrbital(p);
+    },
+    manifest: StdGenericAppItemOrbitalManifest,
+  }],
+  ['std-generic-app::ActivityOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdGenericAppActivityOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-generic-app::ActivityOrbital');
+      }
+      return stdGenericAppActivityOrbital(p);
+    },
+    manifest: StdGenericAppActivityOrbitalManifest,
+  }],
+  ['std-generic-app::TaskOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdGenericAppTaskOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-generic-app::TaskOrbital');
+      }
+      return stdGenericAppTaskOrbital(p);
+    },
+    manifest: StdGenericAppTaskOrbitalManifest,
+  }],
+  ['std-generic-app::CalendarOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdGenericAppCalendarOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-generic-app::CalendarOrbital');
+      }
+      return stdGenericAppCalendarOrbital(p);
+    },
+    manifest: StdGenericAppCalendarOrbitalManifest,
+  }],
+  ['std-generic-app::WidgetOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdGenericAppWidgetOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-generic-app::WidgetOrbital');
+      }
+      return stdGenericAppWidgetOrbital(p);
+    },
+    manifest: StdGenericAppWidgetOrbitalManifest,
+  }],
+  ['std-generic-app::FeedOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdGenericAppFeedOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-generic-app::FeedOrbital');
+      }
+      return stdGenericAppFeedOrbital(p);
+    },
+    manifest: StdGenericAppFeedOrbitalManifest,
+  }],
+  ['std-generic-app::NoteOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdGenericAppNoteOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-generic-app::NoteOrbital');
+      }
+      return stdGenericAppNoteOrbital(p);
+    },
+    manifest: StdGenericAppNoteOrbitalManifest,
+  }],
   ['ui-action-palette::ActionPaletteOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdUiActionPaletteActionPaletteOrbitalParams(p)) {
