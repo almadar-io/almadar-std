@@ -17,6 +17,7 @@
  */
 
 import type { FactorySignatureCatalog } from '@almadar/core';
+import { resolveStdDataDir } from './data-dir.js';
 
 let cache: FactorySignatureCatalog | null = null;
 
@@ -24,9 +25,8 @@ async function loadCatalog(): Promise<FactorySignatureCatalog | null> {
   if (cache) return cache;
   try {
     const { readFileSync } = await import('fs');
-    const { resolve, dirname } = await import('path');
-    const { fileURLToPath } = await import('url');
-    const dir = dirname(fileURLToPath(import.meta.url));
+    const { resolve } = await import('path');
+    const dir = resolveStdDataDir();
     const raw = readFileSync(resolve(dir, 'registry', 'factory-signatures.json'), 'utf-8');
     const parsed = JSON.parse(raw) as FactorySignatureCatalog;
     if (
