@@ -64,16 +64,16 @@ export interface StdUiTagInputConfig {
   placeholder?: string;
   /** Default: `[]` */
   value?: string[];
-  /** Default: `false` */
-  disabled?: boolean;
-  /** Default: `""` */
-  helperText?: string;
+  /** Default: `"default"` */
+  variant?: 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'error' | 'info' | 'neutral';
   /** Default: `true` */
   unique?: boolean;
   /** Default: `""` */
+  helperText?: string;
+  /** Default: `""` */
   className?: string;
-  /** Default: `"default"` */
-  variant?: 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'error' | 'info' | 'neutral';
+  /** Default: `false` */
+  disabled?: boolean;
 }
 
 /**

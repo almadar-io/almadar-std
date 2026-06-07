@@ -90,13 +90,8 @@
             "description": "Error state",
             "tier": "presentation",
             "properties": {
-              "code": {
-                "name": "code",
-                "required": false,
-                "type": "string"
-              },
-              "name": {
-                "name": "name",
+              "stack": {
+                "name": "stack",
                 "required": false,
                 "type": "string"
               },
@@ -105,8 +100,13 @@
                 "required": true,
                 "type": "string"
               },
-              "stack": {
-                "name": "stack",
+              "name": {
+                "name": "name",
+                "required": false,
+                "type": "string"
+              },
+              "code": {
+                "name": "code",
                 "required": false,
                 "type": "string"
               }
@@ -119,14 +119,14 @@
             "description": "Context for S-expression evaluation - accepts flexible types from generated code",
             "tier": "presentation",
             "properties": {
-              "localVariables": {
-                "name": "localVariables",
-                "required": false,
-                "type": "string"
-              },
               "formValues": {
                 "name": "formValues",
                 "required": true,
+                "type": "string"
+              },
+              "entity": {
+                "name": "entity",
+                "required": false,
                 "type": "string"
               },
               "globalVariables": {
@@ -134,8 +134,8 @@
                 "required": true,
                 "type": "string"
               },
-              "entity": {
-                "name": "entity",
+              "localVariables": {
+                "name": "localVariables",
                 "required": false,
                 "type": "string"
               }
@@ -150,13 +150,73 @@
             "tier": "presentation",
             "items": {
               "properties": {
+                "required": {
+                  "name": "required",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "type": {
+                  "name": "type",
+                  "required": false,
+                  "type": "string"
+                },
+                "min": {
+                  "name": "min",
+                  "required": false,
+                  "type": "number"
+                },
+                "field": {
+                  "name": "field",
+                  "required": false,
+                  "type": "string"
+                },
+                "readonly": {
+                  "name": "readonly",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "placeholder": {
+                  "name": "placeholder",
+                  "required": false,
+                  "type": "string"
+                },
+                "options": {
+                  "name": "options",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "properties": {
+                      "label": {
+                        "name": "label",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "value": {
+                        "name": "value",
+                        "required": true,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
                 "validation": {
                   "name": "validation",
                   "required": false,
                   "type": "string"
                 },
-                "field": {
-                  "name": "field",
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "defaultValue": {
+                  "name": "defaultValue",
                   "required": false,
                   "type": "string"
                 },
@@ -186,38 +246,13 @@
                   },
                   "type": "object"
                 },
-                "options": {
-                  "name": "options",
-                  "required": false,
-                  "type": "array",
-                  "items": {
-                    "properties": {
-                      "label": {
-                        "name": "label",
-                        "required": true,
-                        "type": "string"
-                      },
-                      "value": {
-                        "name": "value",
-                        "required": true,
-                        "type": "string"
-                      }
-                    },
-                    "type": "object"
-                  }
-                },
                 "inputType": {
                   "name": "inputType",
                   "required": false,
                   "type": "string"
                 },
-                "label": {
-                  "name": "label",
-                  "required": false,
-                  "type": "string"
-                },
-                "required": {
-                  "name": "required",
+                "disabled": {
+                  "name": "disabled",
                   "required": false,
                   "type": "boolean"
                 },
@@ -225,41 +260,6 @@
                   "name": "pattern",
                   "required": false,
                   "type": "string"
-                },
-                "placeholder": {
-                  "name": "placeholder",
-                  "required": false,
-                  "type": "string"
-                },
-                "defaultValue": {
-                  "name": "defaultValue",
-                  "required": false,
-                  "type": "string"
-                },
-                "max": {
-                  "name": "max",
-                  "required": false,
-                  "type": "number"
-                },
-                "name": {
-                  "name": "name",
-                  "required": false,
-                  "type": "string"
-                },
-                "min": {
-                  "name": "min",
-                  "required": false,
-                  "type": "number"
-                },
-                "readonly": {
-                  "name": "readonly",
-                  "required": false,
-                  "type": "boolean"
-                },
-                "disabled": {
-                  "name": "disabled",
-                  "required": false,
-                  "type": "boolean"
                 },
                 "values": {
                   "name": "values",
@@ -269,10 +269,10 @@
                     "type": "string"
                   }
                 },
-                "type": {
-                  "name": "type",
+                "max": {
+                  "name": "max",
                   "required": false,
-                  "type": "string"
+                  "type": "number"
                 }
               },
               "type": "object"
@@ -293,10 +293,34 @@
           },
           {
             "key": "hiddenCalculations",
-            "type": "json",
+            "type": "[FormHiddenCalculationsItem]",
+            "default": [],
             "label": "Hidden Calculations",
             "description": "Hidden calculations that emit GLOBAL_VARIABLE_SET on field change (boolean true means enabled but config loaded separately)",
-            "tier": "presentation"
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "variableName": {
+                  "name": "variableName",
+                  "required": true,
+                  "type": "string"
+                },
+                "triggerFields": {
+                  "name": "triggerFields",
+                  "required": true,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "expression": {
+                  "name": "expression",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
           },
           {
             "key": "initialData",
@@ -387,40 +411,18 @@
                   "type": "array",
                   "items": {
                     "properties": {
-                      "options": {
-                        "name": "options",
-                        "required": false,
-                        "type": "array",
-                        "items": {
-                          "properties": {
-                            "value": {
-                              "name": "value",
-                              "required": true,
-                              "type": "string"
-                            },
-                            "label": {
-                              "name": "label",
-                              "required": true,
-                              "type": "string"
-                            }
-                          },
-                          "type": "object"
-                        }
-                      },
-                      "label": {
-                        "name": "label",
-                        "required": false,
-                        "type": "string"
-                      },
-                      "readonly": {
-                        "name": "readonly",
-                        "required": false,
-                        "type": "boolean"
-                      },
                       "disabled": {
                         "name": "disabled",
                         "required": false,
                         "type": "boolean"
+                      },
+                      "values": {
+                        "name": "values",
+                        "required": false,
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
                       },
                       "placeholder": {
                         "name": "placeholder",
@@ -432,17 +434,24 @@
                         "required": false,
                         "type": "string"
                       },
-                      "max": {
-                        "name": "max",
-                        "required": false,
-                        "type": "number"
-                      },
-                      "values": {
-                        "name": "values",
+                      "options": {
+                        "name": "options",
                         "required": false,
                         "type": "array",
                         "items": {
-                          "type": "string"
+                          "properties": {
+                            "label": {
+                              "name": "label",
+                              "required": true,
+                              "type": "string"
+                            },
+                            "value": {
+                              "name": "value",
+                              "required": true,
+                              "type": "string"
+                            }
+                          },
+                          "type": "object"
                         }
                       },
                       "validation": {
@@ -450,8 +459,28 @@
                         "required": false,
                         "type": "string"
                       },
+                      "readonly": {
+                        "name": "readonly",
+                        "required": false,
+                        "type": "boolean"
+                      },
                       "type": {
                         "name": "type",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "name": {
+                        "name": "name",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "defaultValue": {
+                        "name": "defaultValue",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "field": {
+                        "name": "field",
                         "required": false,
                         "type": "string"
                       },
@@ -459,11 +488,6 @@
                         "name": "relation",
                         "required": false,
                         "properties": {
-                          "displayField": {
-                            "name": "displayField",
-                            "required": false,
-                            "type": "string"
-                          },
                           "cardinality": {
                             "name": "cardinality",
                             "required": false,
@@ -477,6 +501,11 @@
                             "name": "entity",
                             "required": true,
                             "type": "string"
+                          },
+                          "displayField": {
+                            "name": "displayField",
+                            "required": false,
+                            "type": "string"
                           }
                         },
                         "type": "object"
@@ -486,10 +515,10 @@
                         "required": false,
                         "type": "number"
                       },
-                      "field": {
-                        "name": "field",
+                      "max": {
+                        "name": "max",
                         "required": false,
-                        "type": "string"
+                        "type": "number"
                       },
                       "pattern": {
                         "name": "pattern",
@@ -501,13 +530,8 @@
                         "required": false,
                         "type": "boolean"
                       },
-                      "name": {
-                        "name": "name",
-                        "required": false,
-                        "type": "string"
-                      },
-                      "defaultValue": {
-                        "name": "defaultValue",
+                      "label": {
+                        "name": "label",
                         "required": false,
                         "type": "string"
                       }
@@ -515,23 +539,23 @@
                     "type": "object"
                   }
                 },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
                 "collapsible": {
                   "name": "collapsible",
                   "required": false,
                   "type": "boolean"
-                },
-                "title": {
-                  "name": "title",
-                  "required": true,
-                  "type": "string"
                 },
                 "condition": {
                   "name": "condition",
                   "required": false,
                   "type": "string"
                 },
-                "id": {
-                  "name": "id",
+                "title": {
+                  "name": "title",
                   "required": true,
                   "type": "string"
                 }
@@ -573,10 +597,58 @@
           },
           {
             "key": "violationTriggers",
-            "type": "json",
+            "type": "[FormViolationTriggersItem]",
+            "default": [],
             "label": "Violation Triggers",
             "description": "Violation conditions that emit VIOLATION_DETECTED when met (boolean true means enabled but config loaded separately)",
-            "tier": "presentation"
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "fieldId": {
+                  "name": "fieldId",
+                  "required": false,
+                  "type": "string"
+                },
+                "condition": {
+                  "name": "condition",
+                  "required": true,
+                  "type": "string"
+                },
+                "violation": {
+                  "name": "violation",
+                  "required": true,
+                  "properties": {
+                    "law": {
+                      "name": "law",
+                      "required": true,
+                      "type": "string"
+                    },
+                    "message": {
+                      "name": "message",
+                      "required": true,
+                      "type": "string"
+                    },
+                    "actionType": {
+                      "name": "actionType",
+                      "required": true,
+                      "type": "string",
+                      "values": [
+                        "measure",
+                        "admin",
+                        "penalty"
+                      ]
+                    },
+                    "article": {
+                      "name": "article",
+                      "required": true,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            }
           }
         ],
         "capabilities": [],

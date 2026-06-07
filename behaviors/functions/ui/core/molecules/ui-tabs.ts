@@ -48,18 +48,18 @@ export interface StdUiTabsTabChangePayload {
 export interface StdUiTabsConfig {
   /** Default: `[]` */
   tabs?: EntityRow[];
+  /** Default: `[]` */
+  items?: EntityRow[];
+  /** Default: `"horizontal"` */
+  orientation?: 'horizontal' | 'vertical';
+  /** Default: `"default"` */
+  variant?: 'default' | 'pills' | 'underline';
   /** Default: `""` */
   className?: string;
   /** Default: `""` */
   defaultActiveTab?: string;
   /** Default: `""` */
   activeTab?: string;
-  /** Default: `[]` */
-  items?: EntityRow[];
-  /** Default: `"default"` */
-  variant?: 'default' | 'pills' | 'underline';
-  /** Default: `"horizontal"` */
-  orientation?: 'horizontal' | 'vertical';
 }
 
 /**

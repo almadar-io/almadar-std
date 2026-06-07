@@ -229,43 +229,43 @@
                     "render-ui",
                     "main",
                     {
-                      "onTileLeave": "TILE_LEAVE",
-                      "tiles": "@config.tiles",
-                      "features": "@config.features",
-                      "type": "isometric-canvas",
                       "error": "@config.error",
-                      "selectedUnitId": "@config.selectedUnitId",
-                      "tileHoverEvent": "TILE_HOVER",
                       "onTileClick": "TILE_CLICK",
-                      "getTerrainSprite": "GET_TERRAIN_SPRITE",
-                      "resolveUnitFrame": "RESOLVE_UNIT_FRAME",
+                      "unitClickEvent": "UNIT_CLICK",
+                      "tileLeaveEvent": "TILE_LEAVE",
+                      "scale": "@config.scale",
+                      "validMoves": "@config.validMoves",
+                      "onTileHover": "TILE_HOVER",
+                      "tiles": "@config.tiles",
+                      "boardHeight": "@config.boardHeight",
+                      "diamondTopY": "@config.diamondTopY",
+                      "onTileLeave": "TILE_LEAVE",
                       "getFeatureSprite": "GET_FEATURE_SPRITE",
-                      "hasActiveEffects": "@config.hasActiveEffects",
+                      "enableCamera": "@config.enableCamera",
+                      "onUnitClick": "UNIT_CLICK",
+                      "resolveUnitFrame": "RESOLVE_UNIT_FRAME",
+                      "features": "@config.features",
+                      "assetManifest": "@config.assetManifest",
+                      "tileHoverEvent": "TILE_HOVER",
                       "tileClickEvent": "TILE_CLICK",
+                      "getTerrainSprite": "GET_TERRAIN_SPRITE",
                       "effectSpriteUrls": "@config.effectSpriteUrls",
                       "onDrawEffects": "DRAW_EFFECTS",
-                      "unitScale": "@config.unitScale",
-                      "hoveredTile": "@config.hoveredTile",
-                      "onTileHover": "TILE_HOVER",
-                      "boardHeight": "@config.boardHeight",
-                      "getUnitSprite": "GET_UNIT_SPRITE",
-                      "boardWidth": "@config.boardWidth",
-                      "isLoading": "@config.isLoading",
-                      "onUnitClick": "UNIT_CLICK",
-                      "diamondTopY": "@config.diamondTopY",
-                      "tileLeaveEvent": "TILE_LEAVE",
-                      "enableCamera": "@config.enableCamera",
-                      "validMoves": "@config.validMoves",
-                      "attackTargets": "@config.attackTargets",
-                      "showMinimap": "@config.showMinimap",
-                      "debug": "@config.debug",
-                      "assetBaseUrl": "@config.assetBaseUrl",
-                      "assetManifest": "@config.assetManifest",
+                      "type": "isometric-canvas",
                       "className": "@config.className",
-                      "backgroundImage": "@config.backgroundImage",
+                      "selectedUnitId": "@config.selectedUnitId",
+                      "assetBaseUrl": "@config.assetBaseUrl",
+                      "debug": "@config.debug",
+                      "attackTargets": "@config.attackTargets",
+                      "hoveredTile": "@config.hoveredTile",
+                      "hasActiveEffects": "@config.hasActiveEffects",
                       "units": "@config.units",
-                      "scale": "@config.scale",
-                      "unitClickEvent": "UNIT_CLICK"
+                      "isLoading": "@config.isLoading",
+                      "backgroundImage": "@config.backgroundImage",
+                      "boardWidth": "@config.boardWidth",
+                      "getUnitSprite": "GET_UNIT_SPRITE",
+                      "showMinimap": "@config.showMinimap",
+                      "unitScale": "@config.unitScale"
                     }
                   ]
                 ]
@@ -273,117 +273,53 @@
             ]
           },
           "config": {
-            "features": {
-              "type": "[IsometricCanvasFeaturesItem]",
-              "default": [],
-              "label": "Features",
-              "description": "Array of features (resources, portals, buildings, etc.)",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "type": {
-                    "name": "type",
-                    "type": "string",
-                    "required": true
-                  },
-                  "y": {
-                    "name": "y",
-                    "type": "number",
-                    "required": true
-                  },
-                  "x": {
-                    "name": "x",
-                    "type": "number",
-                    "required": true
-                  },
-                  "assetUrl": {
-                    "name": "assetUrl",
-                    "type": "string",
-                    "required": false
-                  },
-                  "color": {
-                    "name": "color",
-                    "type": "string",
-                    "required": false
-                  },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": false
-                  },
-                  "z": {
-                    "name": "z",
-                    "type": "number",
-                    "required": false
-                  },
-                  "elevation": {
-                    "name": "elevation",
-                    "type": "number",
-                    "required": false
-                  },
-                  "sprite": {
-                    "name": "sprite",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "hoveredTile": {
-              "type": "IsometricCanvasHoveredTile",
-              "label": "Hovered Tile",
-              "description": "Hovered tile position",
-              "tier": "presentation",
-              "properties": {
-                "y": {
-                  "name": "y",
-                  "type": "number",
-                  "required": true
-                },
-                "x": {
-                  "name": "x",
-                  "type": "number",
-                  "required": true
-                }
-              }
-            },
-            "isLoading": {
+            "showMinimap": {
               "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state indicator",
+              "default": true,
+              "label": "Show Minimap",
+              "description": "Toggle minimap overlay",
               "tier": "presentation"
             },
-            "hasActiveEffects": {
-              "type": "boolean",
-              "default": false,
-              "label": "Has Active Effects",
-              "description": "Whether there are active effects — keeps RAF loop alive",
-              "tier": "presentation"
-            },
-            "boardHeight": {
+            "diamondTopY": {
               "type": "number",
               "default": 0.0,
-              "label": "Board Height",
-              "description": "Board height in tiles (overrides tile-derived size)",
+              "label": "Diamond Top Y",
+              "description": "Override for the diamond-top Y offset within the tile sprite (default: 374). This controls where the flat diamond face sits vertically inside the tile image.",
               "tier": "presentation"
             },
-            "effectSpriteUrls": {
-              "type": "[string]",
-              "default": [],
-              "label": "Effect Sprite Urls",
-              "description": "Additional sprite URLs to preload (e.g., effect sprites)",
+            "assetManifest": {
+              "type": "IsometricCanvasAssetManifest",
+              "label": "Asset Manifest",
+              "description": "Manifest mapping entity keys to relative sprite paths. Combined with assetBaseUrl to produce full URLs. Used as a fallback when inline URLs and callbacks don't resolve.",
               "tier": "presentation",
-              "items": {
-                "type": "string"
+              "properties": {
+                "units": {
+                  "name": "units",
+                  "type": "string",
+                  "required": false
+                },
+                "effects": {
+                  "name": "effects",
+                  "type": "string",
+                  "required": false
+                },
+                "terrains": {
+                  "name": "terrains",
+                  "type": "string",
+                  "required": false
+                },
+                "features": {
+                  "name": "features",
+                  "type": "string",
+                  "required": false
+                }
               }
             },
-            "assetBaseUrl": {
+            "className": {
               "type": "string",
               "default": "",
-              "label": "Asset Base Url",
-              "description": "--- Remote asset loading ---",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
               "tier": "presentation"
             },
             "units": {
@@ -395,50 +331,25 @@
               "items": {
                 "type": "object",
                 "properties": {
+                  "maxHealth": {
+                    "name": "maxHealth",
+                    "type": "number",
+                    "required": false
+                  },
                   "unitType": {
                     "name": "unitType",
                     "type": "string",
                     "required": false
                   },
-                  "elevation": {
-                    "name": "elevation",
-                    "type": "number",
+                  "heroId": {
+                    "name": "heroId",
+                    "type": "string",
                     "required": false
                   },
                   "health": {
                     "name": "health",
                     "type": "number",
                     "required": false
-                  },
-                  "z": {
-                    "name": "z",
-                    "type": "number",
-                    "required": false
-                  },
-                  "x": {
-                    "name": "x",
-                    "type": "number",
-                    "required": false
-                  },
-                  "y": {
-                    "name": "y",
-                    "type": "number",
-                    "required": false
-                  },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  "faction": {
-                    "name": "faction",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "player",
-                      "enemy",
-                      "neutral"
-                    ]
                   },
                   "team": {
                     "name": "team",
@@ -450,65 +361,47 @@
                       "neutral"
                     ]
                   },
-                  "maxHealth": {
-                    "name": "maxHealth",
-                    "type": "number",
-                    "required": false
-                  },
-                  "traits": {
-                    "name": "traits",
-                    "type": "array",
-                    "required": false,
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "states": {
-                          "name": "states",
-                          "type": "array",
-                          "required": true,
-                          "items": {
-                            "type": "string"
-                          }
-                        },
-                        "currentState": {
-                          "name": "currentState",
-                          "type": "string",
-                          "required": true
-                        },
-                        "name": {
-                          "name": "name",
-                          "type": "string",
-                          "required": true
-                        },
-                        "cooldown": {
-                          "name": "cooldown",
-                          "type": "number",
-                          "required": true
-                        }
-                      }
-                    }
-                  },
-                  "sprite": {
-                    "name": "sprite",
+                  "id": {
+                    "name": "id",
                     "type": "string",
-                    "required": false
+                    "required": true
                   },
                   "previousPosition": {
                     "name": "previousPosition",
                     "type": "object",
                     "required": false,
                     "properties": {
-                      "y": {
-                        "name": "y",
-                        "type": "number",
-                        "required": true
-                      },
                       "x": {
                         "name": "x",
                         "type": "number",
                         "required": true
+                      },
+                      "y": {
+                        "name": "y",
+                        "type": "number",
+                        "required": true
                       }
                     }
+                  },
+                  "x": {
+                    "name": "x",
+                    "type": "number",
+                    "required": false
+                  },
+                  "z": {
+                    "name": "z",
+                    "type": "number",
+                    "required": false
+                  },
+                  "elevation": {
+                    "name": "elevation",
+                    "type": "number",
+                    "required": false
+                  },
+                  "sprite": {
+                    "name": "sprite",
+                    "type": "string",
+                    "required": false
                   },
                   "position": {
                     "name": "position",
@@ -527,98 +420,169 @@
                       }
                     }
                   },
-                  "name": {
-                    "name": "name",
-                    "type": "string",
+                  "traits": {
+                    "name": "traits",
+                    "type": "array",
+                    "required": false,
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "currentState": {
+                          "name": "currentState",
+                          "type": "string",
+                          "required": true
+                        },
+                        "name": {
+                          "name": "name",
+                          "type": "string",
+                          "required": true
+                        },
+                        "cooldown": {
+                          "name": "cooldown",
+                          "type": "number",
+                          "required": true
+                        },
+                        "states": {
+                          "name": "states",
+                          "type": "array",
+                          "required": true,
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "y": {
+                    "name": "y",
+                    "type": "number",
                     "required": false
                   },
-                  "heroId": {
-                    "name": "heroId",
+                  "faction": {
+                    "name": "faction",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "player",
+                      "enemy",
+                      "neutral"
+                    ]
+                  },
+                  "name": {
+                    "name": "name",
                     "type": "string",
                     "required": false
                   }
                 }
               }
             },
-            "tiles": {
-              "type": "[IsometricCanvasTilesItem]",
+            "attackTargets": {
+              "type": "[IsometricCanvasAttackTargetsItem]",
               "default": [],
-              "label": "Tiles",
-              "description": "--- Grid data ---",
+              "label": "Attack Targets",
+              "description": "Attack target positions (shown as pulsing red highlights)",
               "tier": "presentation",
               "items": {
                 "type": "object",
                 "properties": {
-                  "movementCost": {
-                    "name": "movementCost",
-                    "type": "number",
-                    "required": false
-                  },
-                  "passable": {
-                    "name": "passable",
-                    "type": "boolean",
-                    "required": false
-                  },
-                  "z": {
-                    "name": "z",
-                    "type": "number",
-                    "required": false
-                  },
                   "x": {
                     "name": "x",
                     "type": "number",
                     "required": true
                   },
-                  "type": {
-                    "name": "type",
-                    "type": "string",
-                    "required": false
-                  },
-                  "tileType": {
-                    "name": "tileType",
-                    "type": "string",
-                    "required": false
-                  },
-                  "terrain": {
-                    "name": "terrain",
-                    "type": "string",
-                    "required": false
-                  },
                   "y": {
                     "name": "y",
                     "type": "number",
                     "required": true
-                  },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": false
-                  },
-                  "terrainSprite": {
-                    "name": "terrainSprite",
-                    "type": "string",
-                    "required": false
-                  },
-                  "elevation": {
-                    "name": "elevation",
-                    "type": "number",
-                    "required": false
                   }
                 }
               }
             },
-            "scale": {
-              "type": "number",
-              "default": 0.4,
-              "label": "Scale",
-              "description": "--- Rendering options ---",
+            "backgroundImage": {
+              "type": "string",
+              "default": "",
+              "label": "Background Image",
+              "description": "Background image URL tiled behind the isometric grid",
               "tier": "presentation"
+            },
+            "effectSpriteUrls": {
+              "type": "[string]",
+              "default": [],
+              "label": "Effect Sprite Urls",
+              "description": "Additional sprite URLs to preload (e.g., effect sprites)",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "hasActiveEffects": {
+              "type": "boolean",
+              "default": false,
+              "label": "Has Active Effects",
+              "description": "Whether there are active effects — keeps RAF loop alive",
+              "tier": "presentation"
+            },
+            "boardWidth": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Board Width",
+              "description": "Board width in tiles (overrides tile-derived size)",
+              "tier": "presentation"
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
+              "tier": "presentation"
+            },
+            "debug": {
+              "type": "boolean",
+              "default": false,
+              "label": "Debug",
+              "description": "Show debug grid lines and coordinates",
+              "tier": "presentation"
+            },
+            "error": {
+              "type": "IsometricCanvasError",
+              "label": "Error",
+              "description": "Error state",
+              "tier": "presentation",
+              "properties": {
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": false
+                },
+                "code": {
+                  "name": "code",
+                  "type": "string",
+                  "required": false
+                },
+                "stack": {
+                  "name": "stack",
+                  "type": "string",
+                  "required": false
+                },
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                }
+              }
             },
             "enableCamera": {
               "type": "boolean",
               "default": true,
               "label": "Enable Camera",
               "description": "Enable camera pan/zoom controls",
+              "tier": "presentation"
+            },
+            "selectedUnitId": {
+              "type": "string",
+              "default": "",
+              "label": "Selected Unit Id",
+              "description": "--- Interaction state ---",
               "tier": "presentation"
             },
             "validMoves": {
@@ -643,90 +607,23 @@
                 }
               }
             },
-            "error": {
-              "type": "IsometricCanvasError",
-              "label": "Error",
-              "description": "Error state",
+            "hoveredTile": {
+              "type": "IsometricCanvasHoveredTile",
+              "label": "Hovered Tile",
+              "description": "Hovered tile position",
               "tier": "presentation",
               "properties": {
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                },
-                "message": {
-                  "name": "message",
-                  "type": "string",
+                "y": {
+                  "name": "y",
+                  "type": "number",
                   "required": true
                 },
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
+                "x": {
+                  "name": "x",
+                  "type": "number",
+                  "required": true
                 }
               }
-            },
-            "showMinimap": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Minimap",
-              "description": "Toggle minimap overlay",
-              "tier": "presentation"
-            },
-            "debug": {
-              "type": "boolean",
-              "default": false,
-              "label": "Debug",
-              "description": "Show debug grid lines and coordinates",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "backgroundImage": {
-              "type": "string",
-              "default": "",
-              "label": "Background Image",
-              "description": "Background image URL tiled behind the isometric grid",
-              "tier": "presentation"
-            },
-            "attackTargets": {
-              "type": "[IsometricCanvasAttackTargetsItem]",
-              "default": [],
-              "label": "Attack Targets",
-              "description": "Attack target positions (shown as pulsing red highlights)",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "y": {
-                    "name": "y",
-                    "type": "number",
-                    "required": true
-                  },
-                  "x": {
-                    "name": "x",
-                    "type": "number",
-                    "required": true
-                  }
-                }
-              }
-            },
-            "boardWidth": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Board Width",
-              "description": "Board width in tiles (overrides tile-derived size)",
-              "tier": "presentation"
             },
             "unitScale": {
               "type": "number",
@@ -735,46 +632,149 @@
               "description": "Extra scale multiplier for unit draw size. 1 = default.",
               "tier": "presentation"
             },
-            "diamondTopY": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Diamond Top Y",
-              "description": "Override for the diamond-top Y offset within the tile sprite (default: 374). This controls where the flat diamond face sits vertically inside the tile image.",
-              "tier": "presentation"
-            },
-            "assetManifest": {
-              "type": "IsometricCanvasAssetManifest",
-              "label": "Asset Manifest",
-              "description": "Manifest mapping entity keys to relative sprite paths. Combined with assetBaseUrl to produce full URLs. Used as a fallback when inline URLs and callbacks don't resolve.",
+            "features": {
+              "type": "[IsometricCanvasFeaturesItem]",
+              "default": [],
+              "label": "Features",
+              "description": "Array of features (resources, portals, buildings, etc.)",
               "tier": "presentation",
-              "properties": {
-                "terrains": {
-                  "name": "terrains",
-                  "type": "string",
-                  "required": false
-                },
-                "effects": {
-                  "name": "effects",
-                  "type": "string",
-                  "required": false
-                },
-                "features": {
-                  "name": "features",
-                  "type": "string",
-                  "required": false
-                },
-                "units": {
-                  "name": "units",
-                  "type": "string",
-                  "required": false
+              "items": {
+                "type": "object",
+                "properties": {
+                  "z": {
+                    "name": "z",
+                    "type": "number",
+                    "required": false
+                  },
+                  "y": {
+                    "name": "y",
+                    "type": "number",
+                    "required": true
+                  },
+                  "color": {
+                    "name": "color",
+                    "type": "string",
+                    "required": false
+                  },
+                  "sprite": {
+                    "name": "sprite",
+                    "type": "string",
+                    "required": false
+                  },
+                  "elevation": {
+                    "name": "elevation",
+                    "type": "number",
+                    "required": false
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": false
+                  },
+                  "x": {
+                    "name": "x",
+                    "type": "number",
+                    "required": true
+                  },
+                  "assetUrl": {
+                    "name": "assetUrl",
+                    "type": "string",
+                    "required": false
+                  },
+                  "type": {
+                    "name": "type",
+                    "type": "string",
+                    "required": true
+                  }
                 }
               }
             },
-            "selectedUnitId": {
+            "assetBaseUrl": {
               "type": "string",
               "default": "",
-              "label": "Selected Unit Id",
-              "description": "--- Interaction state ---",
+              "label": "Asset Base Url",
+              "description": "--- Remote asset loading ---",
+              "tier": "presentation"
+            },
+            "boardHeight": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Board Height",
+              "description": "Board height in tiles (overrides tile-derived size)",
+              "tier": "presentation"
+            },
+            "tiles": {
+              "type": "[IsometricCanvasTilesItem]",
+              "default": [],
+              "label": "Tiles",
+              "description": "--- Grid data ---",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "passable": {
+                    "name": "passable",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "x": {
+                    "name": "x",
+                    "type": "number",
+                    "required": true
+                  },
+                  "terrainSprite": {
+                    "name": "terrainSprite",
+                    "type": "string",
+                    "required": false
+                  },
+                  "tileType": {
+                    "name": "tileType",
+                    "type": "string",
+                    "required": false
+                  },
+                  "y": {
+                    "name": "y",
+                    "type": "number",
+                    "required": true
+                  },
+                  "terrain": {
+                    "name": "terrain",
+                    "type": "string",
+                    "required": false
+                  },
+                  "type": {
+                    "name": "type",
+                    "type": "string",
+                    "required": false
+                  },
+                  "movementCost": {
+                    "name": "movementCost",
+                    "type": "number",
+                    "required": false
+                  },
+                  "z": {
+                    "name": "z",
+                    "type": "number",
+                    "required": false
+                  },
+                  "elevation": {
+                    "name": "elevation",
+                    "type": "number",
+                    "required": false
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "scale": {
+              "type": "number",
+              "default": 0.4,
+              "label": "Scale",
+              "description": "--- Rendering options ---",
               "tier": "presentation"
             }
           },

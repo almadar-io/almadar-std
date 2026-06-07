@@ -43,10 +43,10 @@ export interface StdUiConfettiEffectConfig {
   trigger?: boolean;
   /** Default: `""` */
   className?: string;
-  /** Default: `30` */
-  particleCount?: number;
   /** Default: `2000` */
   duration?: number;
+  /** Default: `30` */
+  particleCount?: number;
 }
 
 /**

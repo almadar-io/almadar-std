@@ -40,32 +40,32 @@ export type StdUiDocumentViewerEventKey = 'INIT';
  */
 export interface StdUiDocumentViewerConfig {
   /** Default: `""` */
-  src?: string;
+  height?: string;
   /** Default: `false` */
-  showDownload?: boolean;
-  /** Default: `""` */
-  content?: string;
-  /** Default: `[]` */
-  actions?: EntityRow[];
-  error?: EntityRow;
-  /** Default: `true` */
-  showToolbar?: boolean;
+  showPrint?: boolean;
+  /** Default: `0` */
+  totalPages?: number;
   /** Default: `"pdf"` */
   documentType?: 'pdf' | 'text' | 'html' | 'markdown';
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `0` */
-  currentPage?: number;
   /** Default: `""` */
-  height?: string;
+  title?: string;
+  /** Default: `""` */
+  src?: string;
+  /** Default: `true` */
+  showToolbar?: boolean;
   /** Default: `""` */
   className?: string;
   /** Default: `""` */
-  title?: string;
-  /** Default: `0` */
-  totalPages?: number;
+  content?: string;
   /** Default: `false` */
-  showPrint?: boolean;
+  showDownload?: boolean;
+  /** Default: `false` */
+  isLoading?: boolean;
+  error?: EntityRow;
+  /** Default: `0` */
+  currentPage?: number;
+  /** Default: `[]` */
+  actions?: EntityRow[];
   /** Default: `[]` */
   documents?: EntityRow[];
 }
@@ -176,23 +176,23 @@ export function stdUiDocumentViewerDocumentViewerOrbital(params: StdUiDocumentVi
                   'render-ui',
                   'main',
                   {
-                    'entity': 'DocumentViewerItem',
-                    'isLoading': '@config.isLoading',
-                    'totalPages': '@config.totalPages',
-                    'title': '@config.title',
+                    'documentType': '@config.documentType',
+                    'src': '@config.src',
                     'className': '@config.className',
-                    'showToolbar': '@config.showToolbar',
+                    'currentPage': '@config.currentPage',
+                    'isLoading': '@config.isLoading',
+                    'title': '@config.title',
                     'documents': '@config.documents',
                     'actions': '@config.actions',
-                    'type': 'document-viewer',
                     'showDownload': '@config.showDownload',
-                    'error': '@config.error',
-                    'src': '@config.src',
-                    'showPrint': '@config.showPrint',
                     'height': '@config.height',
-                    'currentPage': '@config.currentPage',
+                    'type': 'document-viewer',
+                    'showPrint': '@config.showPrint',
                     'content': '@config.content',
-                    'documentType': '@config.documentType',
+                    'showToolbar': '@config.showToolbar',
+                    'entity': 'DocumentViewerItem',
+                    'totalPages': '@config.totalPages',
+                    'error': '@config.error',
                   },
                 ],
               ],
@@ -200,11 +200,73 @@ export function stdUiDocumentViewerDocumentViewerOrbital(params: StdUiDocumentVi
           ],
         },
         'config': {
+          'height': {
+            'type': 'string',
+            'default': '',
+            'label': 'Height',
+            'description': 'Viewer height',
+            'tier': 'presentation',
+          },
+          'showPrint': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Show Print',
+            'description': 'Show print button',
+            'tier': 'presentation',
+          },
+          'totalPages': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Total Pages',
+            'description': 'Total pages',
+            'tier': 'presentation',
+          },
+          'documentType': {
+            'type': 'string',
+            'default': 'pdf',
+            'label': 'Document Type',
+            'description': 'Document type',
+            'tier': 'presentation',
+            'values': [
+              'pdf',
+              'text',
+              'html',
+              'markdown',
+            ],
+          },
+          'title': {
+            'type': 'string',
+            'default': '',
+            'label': 'Title',
+            'description': 'Document title',
+            'tier': 'presentation',
+          },
           'src': {
             'type': 'string',
             'default': '',
             'label': 'Src',
             'description': 'Document URL (for PDF/external documents)',
+            'tier': 'presentation',
+          },
+          'showToolbar': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Show Toolbar',
+            'description': 'Show toolbar',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'content': {
+            'type': 'string',
+            'default': '',
+            'label': 'Content',
+            'description': 'Document content (for text/html/markdown)',
             'tier': 'presentation',
           },
           'showDownload': {
@@ -214,11 +276,46 @@ export function stdUiDocumentViewerDocumentViewerOrbital(params: StdUiDocumentVi
             'description': 'Show download button',
             'tier': 'presentation',
           },
-          'content': {
-            'type': 'string',
-            'default': '',
-            'label': 'Content',
-            'description': 'Document content (for text/html/markdown)',
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state',
+            'tier': 'presentation',
+          },
+          'error': {
+            'type': 'DocumentViewerError',
+            'label': 'Error',
+            'description': 'Error state',
+            'tier': 'presentation',
+            'properties': {
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+            },
+          },
+          'currentPage': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Current Page',
+            'description': 'Current page (for multi-page documents)',
             'tier': 'presentation',
           },
           'actions': {
@@ -258,103 +355,6 @@ export function stdUiDocumentViewerDocumentViewerOrbital(params: StdUiDocumentVi
               },
             },
           },
-          'error': {
-            'type': 'DocumentViewerError',
-            'label': 'Error',
-            'description': 'Error state',
-            'tier': 'presentation',
-            'properties': {
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-            },
-          },
-          'showToolbar': {
-            'type': 'boolean',
-            'default': true,
-            'label': 'Show Toolbar',
-            'description': 'Show toolbar',
-            'tier': 'presentation',
-          },
-          'documentType': {
-            'type': 'string',
-            'default': 'pdf',
-            'label': 'Document Type',
-            'description': 'Document type',
-            'tier': 'presentation',
-            'values': [
-              'pdf',
-              'text',
-              'html',
-              'markdown',
-            ],
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state',
-            'tier': 'presentation',
-          },
-          'currentPage': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Current Page',
-            'description': 'Current page (for multi-page documents)',
-            'tier': 'presentation',
-          },
-          'height': {
-            'type': 'string',
-            'default': '',
-            'label': 'Height',
-            'description': 'Viewer height',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'title': {
-            'type': 'string',
-            'default': '',
-            'label': 'Title',
-            'description': 'Document title',
-            'tier': 'presentation',
-          },
-          'totalPages': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Total Pages',
-            'description': 'Total pages',
-            'tier': 'presentation',
-          },
-          'showPrint': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Show Print',
-            'description': 'Show print button',
-            'tier': 'presentation',
-          },
           'documents': {
             'type': '[DocumentViewerDocumentsItem]',
             'default': [],
@@ -364,15 +364,15 @@ export function stdUiDocumentViewerDocumentViewerOrbital(params: StdUiDocumentVi
             'items': {
               'type': 'object',
               'properties': {
-                'label': {
-                  'name': 'label',
-                  'type': 'string',
-                  'required': true,
-                },
                 'content': {
                   'name': 'content',
                   'type': 'string',
                   'required': false,
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': true,
                 },
                 'src': {
                   'name': 'src',

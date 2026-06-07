@@ -40,31 +40,31 @@ export type StdUiAnimatedGraphicEventKey = 'INIT';
  */
 export interface StdUiAnimatedGraphicConfig {
   /** Default: `""` */
-  alt?: string;
+  svgContent?: string;
+  /** Default: `false` */
+  animate?: boolean;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `1200` */
+  duration?: number;
+  /** Default: `""` */
+  height?: string;
+  /** Default: `""` */
+  src?: string;
+  /** Default: `0` */
+  delay?: number;
   /** Default: `"cubic-bezier(0.16, 1, 0.3, 1)"` */
   easing?: string;
   /** Default: `""` */
   width?: string;
   /** Default: `""` */
-  className?: string;
-  /** Default: `""` */
   strokeColor?: string;
   /** Default: `"draw"` */
   animation?: 'draw' | 'fill' | 'pulse' | 'morph';
-  /** Default: `false` */
-  animate?: boolean;
-  /** Default: `0` */
-  delay?: number;
-  /** Default: `""` */
-  svgContent?: string;
-  /** Default: `""` */
-  height?: string;
-  /** Default: `""` */
-  src?: string;
   /** Default: `""` */
   fillColor?: string;
-  /** Default: `1200` */
-  duration?: number;
+  /** Default: `""` */
+  alt?: string;
 }
 
 /**

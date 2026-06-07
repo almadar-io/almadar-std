@@ -172,9 +172,9 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
                   'render-ui',
                   'main',
                   {
-                    'type': 'builder-board',
-                    'completeEvent': 'COMPLETE',
                     'entity': '@entity',
+                    'completeEvent': 'COMPLETE',
+                    'type': 'builder-board',
                   },
                 ],
               ],

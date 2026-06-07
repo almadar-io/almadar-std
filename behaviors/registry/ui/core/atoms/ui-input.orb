@@ -50,6 +50,18 @@
                   "type": "string"
                 }
               ]
+            },
+            {
+              "event": "CHANGE",
+              "description": "onChange handler - accepts events from input, select, or textarea",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
             }
           ],
           "stateMachine": {
@@ -75,6 +87,12 @@
                 "name": "Clear",
                 "description": "Callback when clear button is clicked",
                 "tier": "essential"
+              },
+              {
+                "key": "CHANGE",
+                "name": "Change",
+                "description": "onChange handler - accepts events from input, select, or textarea",
+                "tier": "essential"
               }
             ],
             "transitions": [
@@ -87,22 +105,22 @@
                     "render-ui",
                     "main",
                     {
-                      "options": "@config.options",
-                      "disabled": "@config.disabled",
-                      "clearable": "@config.clearable",
-                      "action": "ACTION",
-                      "placeholder": "@config.placeholder",
-                      "leftIcon": "@config.leftIcon",
-                      "rows": "@config.rows",
-                      "className": "@config.className",
-                      "onChange": "@config.onChange",
                       "type": "input",
-                      "onClear": "CLEAR",
-                      "icon": "@config.icon",
-                      "rightIcon": "@config.rightIcon",
-                      "error": "@config.error",
+                      "action": "ACTION",
+                      "leftIcon": "@config.leftIcon",
                       "value": "@config.value",
-                      "inputType": "@config.inputType"
+                      "inputType": "@config.inputType",
+                      "icon": "@config.icon",
+                      "options": "@config.options",
+                      "clearable": "@config.clearable",
+                      "rightIcon": "@config.rightIcon",
+                      "className": "@config.className",
+                      "onChange": "CHANGE",
+                      "onClear": "CLEAR",
+                      "placeholder": "@config.placeholder",
+                      "disabled": "@config.disabled",
+                      "rows": "@config.rows",
+                      "error": "@config.error"
                     }
                   ]
                 ]
@@ -110,6 +128,47 @@
             ]
           },
           "config": {
+            "placeholder": {
+              "type": "string",
+              "default": "",
+              "label": "Placeholder",
+              "description": "Placeholder text",
+              "tier": "presentation"
+            },
+            "error": {
+              "type": "string",
+              "default": "",
+              "label": "Error",
+              "description": "error prop",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes applied to the root element.",
+              "tier": "presentation"
+            },
+            "disabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Disabled",
+              "description": "Whether input is disabled",
+              "tier": "presentation"
+            },
+            "value": {
+              "type": "string",
+              "default": "",
+              "label": "Value",
+              "description": "Current value",
+              "tier": "presentation"
+            },
+            "leftIcon": {
+              "type": "node",
+              "label": "Left Icon",
+              "description": "leftIcon prop",
+              "tier": "presentation"
+            },
             "inputType": {
               "type": "string",
               "default": "text",
@@ -132,12 +191,6 @@
                 "textarea"
               ]
             },
-            "rightIcon": {
-              "type": "node",
-              "label": "Right Icon",
-              "description": "rightIcon prop",
-              "tier": "presentation"
-            },
             "icon": {
               "type": "string",
               "default": "circle",
@@ -145,30 +198,10 @@
               "description": "Lucide icon component for left side (convenience prop)",
               "tier": "presentation"
             },
-            "onChange": {
-              "type": "json",
-              "label": "On Change",
-              "description": "onChange handler - accepts events from input, select, or textarea",
-              "tier": "presentation"
-            },
-            "error": {
-              "type": "string",
-              "default": "",
-              "label": "Error",
-              "description": "error prop",
-              "tier": "presentation"
-            },
-            "placeholder": {
-              "type": "string",
-              "default": "",
-              "label": "Placeholder",
-              "description": "Placeholder text",
-              "tier": "presentation"
-            },
-            "leftIcon": {
+            "rightIcon": {
               "type": "node",
-              "label": "Left Icon",
-              "description": "leftIcon prop",
+              "label": "Right Icon",
+              "description": "rightIcon prop",
               "tier": "presentation"
             },
             "clearable": {
@@ -176,27 +209,6 @@
               "default": false,
               "label": "Clearable",
               "description": "Show clear button when input has value",
-              "tier": "presentation"
-            },
-            "disabled": {
-              "type": "boolean",
-              "default": false,
-              "label": "Disabled",
-              "description": "Whether input is disabled",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes applied to the root element.",
-              "tier": "presentation"
-            },
-            "value": {
-              "type": "string",
-              "default": "",
-              "label": "Value",
-              "description": "Current value",
               "tier": "presentation"
             },
             "options": {
@@ -208,13 +220,13 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "value": {
-                    "name": "value",
+                  "label": {
+                    "name": "label",
                     "type": "string",
                     "required": true
                   },
-                  "label": {
-                    "name": "label",
+                  "value": {
+                    "name": "value",
                     "type": "string",
                     "required": true
                   }

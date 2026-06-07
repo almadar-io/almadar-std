@@ -39,18 +39,18 @@ export type StdUiDrawerSlotEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiDrawerSlotConfig {
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
   children?: unknown;
-  /** Default: `false` */
-  isLoading?: boolean;
   error?: EntityRow;
   /** Default: `""` */
   className?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
   /** Default: `""` */
   title?: string;
   /** Default: `"right"` */
   position?: 'left' | 'right';
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
 }
 
 /**
@@ -159,15 +159,15 @@ export function stdUiDrawerSlotDrawerSlotOrbital(params: StdUiDrawerSlotDrawerSl
                   'render-ui',
                   'main',
                   {
-                    'size': '@config.size',
                     'children': '@config.children',
-                    'isLoading': '@config.isLoading',
-                    'title': '@config.title',
                     'entity': 'DrawerSlotItem',
-                    'className': '@config.className',
                     'error': '@config.error',
+                    'title': '@config.title',
                     'position': '@config.position',
+                    'className': '@config.className',
+                    'isLoading': '@config.isLoading',
                     'type': 'drawer-slot',
+                    'size': '@config.size',
                   },
                 ],
               ],
@@ -175,31 +175,10 @@ export function stdUiDrawerSlotDrawerSlotOrbital(params: StdUiDrawerSlotDrawerSl
           ],
         },
         'config': {
-          'size': {
-            'type': 'string',
-            'default': 'md',
-            'label': 'Size',
-            'description': 'Drawer size',
-            'tier': 'presentation',
-            'values': [
-              'sm',
-              'md',
-              'lg',
-              'xl',
-              'full',
-            ],
-          },
           'children': {
             'type': 'node',
             'label': 'Children',
             'description': 'Content to display in the drawer',
-            'tier': 'presentation',
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state',
             'tier': 'presentation',
           },
           'error': {
@@ -208,15 +187,15 @@ export function stdUiDrawerSlotDrawerSlotOrbital(params: StdUiDrawerSlotDrawerSl
             'description': 'Error state',
             'tier': 'presentation',
             'properties': {
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
               'name': {
                 'name': 'name',
                 'type': 'string',
                 'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
               },
               'code': {
                 'name': 'code',
@@ -237,6 +216,13 @@ export function stdUiDrawerSlotDrawerSlotOrbital(params: StdUiDrawerSlotDrawerSl
             'description': 'Custom class name',
             'tier': 'presentation',
           },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state',
+            'tier': 'presentation',
+          },
           'title': {
             'type': 'string',
             'default': '',
@@ -253,6 +239,20 @@ export function stdUiDrawerSlotDrawerSlotOrbital(params: StdUiDrawerSlotDrawerSl
             'values': [
               'left',
               'right',
+            ],
+          },
+          'size': {
+            'type': 'string',
+            'default': 'md',
+            'label': 'Size',
+            'description': 'Drawer size',
+            'tier': 'presentation',
+            'values': [
+              'sm',
+              'md',
+              'lg',
+              'xl',
+              'full',
             ],
           },
         },

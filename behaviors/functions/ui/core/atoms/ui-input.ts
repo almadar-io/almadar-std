@@ -30,7 +30,7 @@ const ALIAS = 'UiInput';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiInputEventKey = 'ACTION' | 'CLEAR' | 'INIT';
+export type StdUiInputEventKey = 'ACTION' | 'CHANGE' | 'CLEAR' | 'INIT';
 
 /**
  * Payload shape for the `ACTION` event.
@@ -47,31 +47,37 @@ export interface StdUiInputClearPayload {
 }
 
 /**
+ * Payload shape for the `CHANGE` event.
+ */
+export interface StdUiInputChangePayload {
+  id?: string;
+}
+
+/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait
  * without modifying its state-machine topology.
  */
 export interface StdUiInputConfig {
-  /** Default: `"text"` */
-  inputType?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'search' | 'date' | 'datetime-local' | 'time' | 'checkbox' | 'select' | 'textarea';
-  rightIcon?: unknown;
-  /** Default: `"circle"` */
-  icon?: string;
-  onChange?: unknown;
+  /** Default: `""` */
+  placeholder?: string;
   /** Default: `""` */
   error?: string;
   /** Default: `""` */
-  placeholder?: string;
-  leftIcon?: unknown;
-  /** Default: `false` */
-  clearable?: boolean;
+  className?: string;
   /** Default: `false` */
   disabled?: boolean;
   /** Default: `""` */
-  className?: string;
-  /** Default: `""` */
   value?: string;
+  leftIcon?: unknown;
+  /** Default: `"text"` */
+  inputType?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'search' | 'date' | 'datetime-local' | 'time' | 'checkbox' | 'select' | 'textarea';
+  /** Default: `"circle"` */
+  icon?: string;
+  rightIcon?: unknown;
+  /** Default: `false` */
+  clearable?: boolean;
   /** Default: `[]` */
   options?: EntityRow[];
   /** Default: `3` */

@@ -209,9 +209,9 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                   'main',
                   {
                     'entity': '@entity',
+                    'testEvent': 'TEST',
                     'completeEvent': 'COMPLETE',
                     'stepDurationMs': '@config.stepDurationMs',
-                    'testEvent': 'TEST',
                     'type': 'state-architect-board',
                   },
                 ],

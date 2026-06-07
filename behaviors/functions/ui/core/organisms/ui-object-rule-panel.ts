@@ -47,11 +47,11 @@ export interface StdUiObjectRulePanelRulesChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiObjectRulePanelConfig {
-  /** Default: `""` */
-  className?: string;
   object?: EntityRow;
   /** Default: `false` */
   disabled?: boolean;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**
@@ -179,11 +179,11 @@ export function stdUiObjectRulePanelObjectRulePanelOrbital(params: StdUiObjectRu
                   'render-ui',
                   'main',
                   {
+                    'object': '@config.object',
+                    'disabled': '@config.disabled',
                     'className': '@config.className',
                     'type': 'object-rule-panel',
-                    'object': '@config.object',
                     'onRulesChange': 'RULES_CHANGE',
-                    'disabled': '@config.disabled',
                   },
                 ],
               ],
@@ -191,19 +191,67 @@ export function stdUiObjectRulePanelObjectRulePanelOrbital(params: StdUiObjectRu
           ],
         },
         'config': {
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
           'object': {
             'type': 'ObjectRulePanelObject',
             'label': 'Object',
             'description': 'The selected object',
             'tier': 'presentation',
             'properties': {
+              'availableActions': {
+                'name': 'availableActions',
+                'type': 'array',
+                'required': true,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'label': {
+                      'name': 'label',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'value': {
+                      'name': 'value',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  },
+                },
+              },
+              'id': {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              'currentState': {
+                'name': 'currentState',
+                'type': 'string',
+                'required': true,
+              },
+              'rules': {
+                'name': 'rules',
+                'type': 'array',
+                'required': true,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'thenAction': {
+                      'name': 'thenAction',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'id': {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'whenEvent': {
+                      'name': 'whenEvent',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  },
+                },
+              },
               'states': {
                 'name': 'states',
                 'type': 'array',
@@ -212,8 +260,23 @@ export function stdUiObjectRulePanelObjectRulePanelOrbital(params: StdUiObjectRu
                   'type': 'string',
                 },
               },
-              'currentState': {
-                'name': 'currentState',
+              'maxRules': {
+                'name': 'maxRules',
+                'type': 'number',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': true,
+              },
+              'icon': {
+                'name': 'icon',
+                'type': 'string',
+                'required': true,
+              },
+              'initialState': {
+                'name': 'initialState',
                 'type': 'string',
                 'required': true,
               },
@@ -237,76 +300,6 @@ export function stdUiObjectRulePanelObjectRulePanelOrbital(params: StdUiObjectRu
                   },
                 },
               },
-              'icon': {
-                'name': 'icon',
-                'type': 'string',
-                'required': true,
-              },
-              'maxRules': {
-                'name': 'maxRules',
-                'type': 'number',
-                'required': false,
-              },
-              'id': {
-                'name': 'id',
-                'type': 'string',
-                'required': true,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': true,
-              },
-              'initialState': {
-                'name': 'initialState',
-                'type': 'string',
-                'required': true,
-              },
-              'rules': {
-                'name': 'rules',
-                'type': 'array',
-                'required': true,
-                'items': {
-                  'type': 'object',
-                  'properties': {
-                    'id': {
-                      'name': 'id',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'thenAction': {
-                      'name': 'thenAction',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'whenEvent': {
-                      'name': 'whenEvent',
-                      'type': 'string',
-                      'required': true,
-                    },
-                  },
-                },
-              },
-              'availableActions': {
-                'name': 'availableActions',
-                'type': 'array',
-                'required': true,
-                'items': {
-                  'type': 'object',
-                  'properties': {
-                    'label': {
-                      'name': 'label',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'value': {
-                      'name': 'value',
-                      'type': 'string',
-                      'required': true,
-                    },
-                  },
-                },
-              },
             },
           },
           'disabled': {
@@ -314,6 +307,13 @@ export function stdUiObjectRulePanelObjectRulePanelOrbital(params: StdUiObjectRu
             'default': false,
             'label': 'Disabled',
             'description': 'Whether editing is disabled',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
         },

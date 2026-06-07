@@ -39,32 +39,32 @@ export type StdUiContentRendererEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiContentRendererConfig {
-  error?: unknown;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `"rtl"` */
-  direction?: 'rtl' | 'ltr';
-  activeFilters?: unknown;
+  /** Default: `""` */
+  searchValue?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `0` */
+  totalCount?: number;
   /** Default: `0` */
   pageProp?: number;
   /** Default: `0` */
   pageSize?: number;
   /** Default: `""` */
-  searchValue?: string;
-  /** Default: `""` */
-  sortDirection?: string;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `0` */
-  totalCount?: number;
-  /** Default: `""` */
-  content?: string;
-  /** Default: `[]` */
-  selectedIds?: string[];
-  /** Default: `""` */
   sortBy?: string;
   /** Default: `[]` */
+  selectedIds?: string[];
+  error?: unknown;
+  /** Default: `""` */
+  content?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `[]` */
   segments?: EntityRow[];
+  /** Default: `"rtl"` */
+  direction?: 'rtl' | 'ltr';
+  /** Default: `""` */
+  sortDirection?: string;
+  activeFilters?: unknown;
 }
 
 /**
@@ -173,22 +173,22 @@ export function stdUiContentRendererContentRendererOrbital(params: StdUiContentR
                   'render-ui',
                   'main',
                   {
-                    'page': '@config.pageProp',
-                    'error': '@config.error',
                     'sortDirection': '@config.sortDirection',
-                    'activeFilters': '@config.activeFilters',
-                    'entity': '@entity',
-                    'type': 'content-renderer',
-                    'content': '@config.content',
-                    'pageSize': '@config.pageSize',
-                    'className': '@config.className',
+                    'page': '@config.pageProp',
                     'totalCount': '@config.totalCount',
-                    'segments': '@config.segments',
+                    'activeFilters': '@config.activeFilters',
                     'sortBy': '@config.sortBy',
+                    'type': 'content-renderer',
+                    'entity': '@entity',
                     'searchValue': '@config.searchValue',
-                    'isLoading': '@config.isLoading',
                     'selectedIds': '@config.selectedIds',
+                    'className': '@config.className',
+                    'isLoading': '@config.isLoading',
+                    'pageSize': '@config.pageSize',
+                    'segments': '@config.segments',
+                    'error': '@config.error',
                     'direction': '@config.direction',
+                    'content': '@config.content',
                   },
                 ],
               ],
@@ -196,34 +196,25 @@ export function stdUiContentRendererContentRendererOrbital(params: StdUiContentR
           ],
         },
         'config': {
-          'error': {
-            'type': 'json',
-            'label': 'Error',
-            'description': 'Error state',
-            'tier': 'presentation',
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
-            'tier': 'presentation',
-          },
-          'direction': {
+          'searchValue': {
             'type': 'string',
-            'default': 'rtl',
-            'label': 'Direction',
-            'description': 'Text direction for markdown',
+            'default': '',
+            'label': 'Search Value',
+            'description': 'Current search query value',
             'tier': 'presentation',
-            'values': [
-              'rtl',
-              'ltr',
-            ],
           },
-          'activeFilters': {
-            'type': 'json',
-            'label': 'Active Filters',
-            'description': 'Active filters',
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'totalCount': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Total Count',
+            'description': 'Total number of items',
             'tier': 'presentation',
           },
           'pageProp': {
@@ -241,39 +232,11 @@ export function stdUiContentRendererContentRendererOrbital(params: StdUiContentR
             'description': 'Number of items per page',
             'tier': 'presentation',
           },
-          'searchValue': {
+          'sortBy': {
             'type': 'string',
             'default': '',
-            'label': 'Search Value',
-            'description': 'Current search query value',
-            'tier': 'presentation',
-          },
-          'sortDirection': {
-            'type': 'string',
-            'default': '',
-            'label': 'Sort Direction',
-            'description': 'Current sort direction',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'totalCount': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Total Count',
-            'description': 'Total number of items',
-            'tier': 'presentation',
-          },
-          'content': {
-            'type': 'string',
-            'default': '',
-            'label': 'Content',
-            'description': 'Raw content string — auto-parsed into segments',
+            'label': 'Sort By',
+            'description': 'Current sort field',
             'tier': 'presentation',
           },
           'selectedIds': {
@@ -286,11 +249,24 @@ export function stdUiContentRendererContentRendererOrbital(params: StdUiContentR
               'type': 'string',
             },
           },
-          'sortBy': {
+          'error': {
+            'type': 'json',
+            'label': 'Error',
+            'description': 'Error state',
+            'tier': 'presentation',
+          },
+          'content': {
             'type': 'string',
             'default': '',
-            'label': 'Sort By',
-            'description': 'Current sort field',
+            'label': 'Content',
+            'description': 'Raw content string — auto-parsed into segments',
+            'tier': 'presentation',
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
             'tier': 'presentation',
           },
           'segments': {
@@ -302,6 +278,30 @@ export function stdUiContentRendererContentRendererOrbital(params: StdUiContentR
             'items': {
               'type': 'string',
             },
+          },
+          'direction': {
+            'type': 'string',
+            'default': 'rtl',
+            'label': 'Direction',
+            'description': 'Text direction for markdown',
+            'tier': 'presentation',
+            'values': [
+              'rtl',
+              'ltr',
+            ],
+          },
+          'sortDirection': {
+            'type': 'string',
+            'default': '',
+            'label': 'Sort Direction',
+            'description': 'Current sort direction',
+            'tier': 'presentation',
+          },
+          'activeFilters': {
+            'type': 'json',
+            'label': 'Active Filters',
+            'description': 'Active filters',
+            'tier': 'presentation',
           },
         },
         'scope': 'instance',

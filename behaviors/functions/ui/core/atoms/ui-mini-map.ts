@@ -40,20 +40,20 @@ export type StdUiMiniMapEventKey = 'INIT';
  */
 export interface StdUiMiniMapConfig {
   /** Default: `150` */
-  width?: number;
-  viewportRect?: EntityRow;
-  /** Default: `100` */
-  mapHeight?: number;
+  height?: number;
   /** Default: `""` */
   className?: string;
   /** Default: `100` */
   mapWidth?: number;
+  /** Default: `100` */
+  mapHeight?: number;
+  viewportRect?: EntityRow;
   /** Default: `150` */
-  height?: number;
-  /** Default: `[]` */
-  units?: EntityRow[];
+  width?: number;
   /** Default: `[]` */
   tiles?: EntityRow[];
+  /** Default: `[]` */
+  units?: EntityRow[];
 }
 
 /**

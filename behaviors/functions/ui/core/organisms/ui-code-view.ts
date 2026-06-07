@@ -40,12 +40,12 @@ export type StdUiCodeViewEventKey = 'INIT';
  */
 export interface StdUiCodeViewConfig {
   /** Default: `""` */
-  label?: string;
-  data?: unknown;
-  /** Default: `""` */
   className?: string;
   /** Default: `false` */
   defaultExpanded?: boolean;
+  data?: unknown;
+  /** Default: `""` */
+  label?: string;
 }
 
 /**
@@ -150,9 +150,9 @@ export function stdUiCodeViewCodeViewOrbital(params: StdUiCodeViewCodeViewOrbita
                   'main',
                   {
                     'label': '@config.label',
-                    'className': '@config.className',
-                    'type': 'code-view',
                     'data': '@config.data',
+                    'type': 'code-view',
+                    'className': '@config.className',
                     'defaultExpanded': '@config.defaultExpanded',
                   },
                 ],
@@ -161,19 +161,6 @@ export function stdUiCodeViewCodeViewOrbital(params: StdUiCodeViewCodeViewOrbita
           ],
         },
         'config': {
-          'label': {
-            'type': 'string',
-            'default': '',
-            'label': 'Label',
-            'description': 'Label',
-            'tier': 'presentation',
-          },
-          'data': {
-            'type': 'json',
-            'label': 'Data',
-            'description': 'JSON data to display',
-            'tier': 'presentation',
-          },
           'className': {
             'type': 'string',
             'default': '',
@@ -186,6 +173,19 @@ export function stdUiCodeViewCodeViewOrbital(params: StdUiCodeViewCodeViewOrbita
             'default': false,
             'label': 'Default Expanded',
             'description': 'Whether the code is expanded by default',
+            'tier': 'presentation',
+          },
+          'data': {
+            'type': 'json',
+            'label': 'Data',
+            'description': 'JSON data to display',
+            'tier': 'presentation',
+          },
+          'label': {
+            'type': 'string',
+            'default': '',
+            'label': 'Label',
+            'description': 'Label',
             'tier': 'presentation',
           },
         },

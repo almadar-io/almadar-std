@@ -39,12 +39,12 @@ export type StdUiRuntimeDebuggerEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiRuntimeDebuggerConfig {
-  /** Default: `"bottom-right"` */
-  position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
-  /** Default: `true` */
-  defaultCollapsed?: boolean;
   /** Default: `""` */
   className?: string;
+  /** Default: `true` */
+  defaultCollapsed?: boolean;
+  /** Default: `"bottom-right"` */
+  position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
   /** Default: `"floating"` */
   mode?: 'floating' | 'inline' | 'verify';
   /** Default: `""` */
@@ -153,12 +153,12 @@ export function stdUiRuntimeDebuggerRuntimeDebuggerOrbital(params: StdUiRuntimeD
                   'render-ui',
                   'main',
                   {
-                    'defaultTab': '@config.defaultTab',
-                    'defaultCollapsed': '@config.defaultCollapsed',
-                    'className': '@config.className',
-                    'position': '@config.position',
                     'mode': '@config.mode',
+                    'defaultTab': '@config.defaultTab',
+                    'className': '@config.className',
                     'schema': '@config.schema',
+                    'defaultCollapsed': '@config.defaultCollapsed',
+                    'position': '@config.position',
                     'type': 'runtime-debugger',
                   },
                 ],
@@ -167,6 +167,20 @@ export function stdUiRuntimeDebuggerRuntimeDebuggerOrbital(params: StdUiRuntimeD
           ],
         },
         'config': {
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'defaultCollapsed': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Default Collapsed',
+            'description': 'Initial collapsed state',
+            'tier': 'presentation',
+          },
           'position': {
             'type': 'string',
             'default': 'bottom-right',
@@ -179,20 +193,6 @@ export function stdUiRuntimeDebuggerRuntimeDebuggerOrbital(params: StdUiRuntimeD
               'top-right',
               'top-left',
             ],
-          },
-          'defaultCollapsed': {
-            'type': 'boolean',
-            'default': true,
-            'label': 'Default Collapsed',
-            'description': 'Initial collapsed state',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
           },
           'mode': {
             'type': 'string',

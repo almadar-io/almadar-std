@@ -47,11 +47,11 @@ export interface StdUiErrorStateRetryPayload {
  */
 export interface StdUiErrorStateConfig {
   /** Default: `""` */
-  className?: string;
-  /** Default: `""` */
   title?: string;
   /** Default: `""` */
   description?: string;
+  /** Default: `""` */
+  className?: string;
   /** Default: `""` */
   message?: string;
 }

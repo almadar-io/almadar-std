@@ -61,24 +61,24 @@ export interface StdUiMapViewMapClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiMapViewConfig {
-  /** Default: `13` */
-  zoom?: number;
-  /** Default: `false` */
-  showClickedPin?: boolean;
+  /** Default: `-0.09` */
+  centerLng?: number;
   /** Default: `true` */
   showAttribution?: boolean;
   /** Default: `51.505` */
   centerLat?: number;
   /** Default: `[]` */
   markers?: EntityRow[];
-  /** Default: `-0.09` */
-  centerLng?: number;
-  /** Default: `"400px"` */
-  height?: string;
-  /** Default: `[]` */
-  routes?: EntityRow[];
   /** Default: `""` */
   className?: string;
+  /** Default: `false` */
+  showClickedPin?: boolean;
+  /** Default: `[]` */
+  routes?: EntityRow[];
+  /** Default: `13` */
+  zoom?: number;
+  /** Default: `"400px"` */
+  height?: string;
 }
 
 /**

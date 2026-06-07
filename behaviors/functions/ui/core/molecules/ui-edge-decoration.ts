@@ -39,16 +39,16 @@ export type StdUiEdgeDecorationEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiEdgeDecorationConfig {
-  /** Default: `0.5` */
-  strokeWidth?: number;
-  /** Default: `"var(--color-primary)"` */
-  color?: string;
   /** Default: `"both"` */
   side?: 'left' | 'right' | 'both';
-  /** Default: `""` */
-  className?: string;
+  /** Default: `"var(--color-primary)"` */
+  color?: string;
   /** Default: `"arch"` */
   variant?: 'arch' | 'vine' | 'lattice';
+  /** Default: `0.5` */
+  strokeWidth?: number;
+  /** Default: `""` */
+  className?: string;
   /** Default: `0.15` */
   opacity?: number;
   /** Default: `15` */

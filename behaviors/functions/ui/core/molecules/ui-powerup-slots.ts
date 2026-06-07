@@ -39,12 +39,12 @@ export type StdUiPowerupSlotsEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiPowerupSlotsConfig {
+  /** Default: `""` */
+  className?: string;
   /** Default: `[]` */
   active?: EntityRow[];
   /** Default: `4` */
   maxSlots?: number;
-  /** Default: `""` */
-  className?: string;
 }
 
 /**

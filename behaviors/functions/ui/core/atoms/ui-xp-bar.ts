@@ -40,19 +40,19 @@ export type StdUiXpBarEventKey = 'INIT';
  */
 export interface StdUiXpBarConfig {
   /** Default: `0` */
-  max?: number;
+  current?: number;
+  /** Default: `false` */
+  showLabel?: boolean;
   /** Default: `true` */
   animated?: boolean;
   /** Default: `0` */
   level?: number;
-  /** Default: `false` */
-  showLabel?: boolean;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
   /** Default: `""` */
   className?: string;
   /** Default: `0` */
-  current?: number;
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
+  max?: number;
 }
 
 /**

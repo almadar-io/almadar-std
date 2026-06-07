@@ -42,13 +42,13 @@ export interface StdUiTurnPanelConfig {
   /** Default: `0` */
   currentTurn?: number;
   /** Default: `""` */
+  activeTeam?: string;
+  /** Default: `""` */
   phase?: string;
-  /** Default: `[]` */
-  actions?: EntityRow[];
   /** Default: `0` */
   maxTurns?: number;
-  /** Default: `""` */
-  activeTeam?: string;
+  /** Default: `[]` */
+  actions?: EntityRow[];
   /** Default: `""` */
   className?: string;
 }

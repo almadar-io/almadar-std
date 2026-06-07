@@ -39,12 +39,12 @@ export type StdUiActionTileEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiActionTileConfig {
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
-  categoryColors?: unknown;
   action?: EntityRow;
   /** Default: `false` */
   disabled?: boolean;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
+  categoryColors?: unknown;
 }
 
 /**
@@ -148,11 +148,11 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
                   'render-ui',
                   'main',
                   {
-                    'size': '@config.size',
+                    'action': '@config.action',
                     'categoryColors': '@config.categoryColors',
                     'type': 'action-tile',
-                    'action': '@config.action',
                     'disabled': '@config.disabled',
+                    'size': '@config.size',
                   },
                 ],
               ],
@@ -160,35 +160,42 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
           ],
         },
         'config': {
-          'size': {
-            'type': 'string',
-            'default': 'md',
-            'label': 'Size',
-            'description': 'Size variant',
-            'tier': 'presentation',
-            'values': [
-              'sm',
-              'md',
-              'lg',
-            ],
-          },
-          'categoryColors': {
-            'type': 'json',
-            'label': 'Category Colors',
-            'description': 'Category → color mapping',
-            'tier': 'presentation',
-          },
           'action': {
             'type': 'ActionTileAction',
             'label': 'Action',
             'description': 'The action data',
             'tier': 'presentation',
             'properties': {
+              'iconEmoji': {
+                'name': 'iconEmoji',
+                'type': 'string',
+                'required': false,
+              },
+              'iconUrl': {
+                'name': 'iconUrl',
+                'type': 'string',
+                'required': false,
+              },
               'stateMachine': {
                 'name': 'stateMachine',
                 'type': 'object',
                 'required': false,
                 'properties': {
+                  'currentState': {
+                    'name': 'currentState',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  'description': {
+                    'name': 'description',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'name': {
+                    'name': 'name',
+                    'type': 'string',
+                    'required': true,
+                  },
                   'states': {
                     'name': 'states',
                     'type': 'array',
@@ -209,11 +216,6 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
                           'type': 'string',
                           'required': true,
                         },
-                        'event': {
-                          'name': 'event',
-                          'type': 'string',
-                          'required': true,
-                        },
                         'to': {
                           'name': 'to',
                           'type': 'string',
@@ -224,35 +226,15 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
                           'type': 'string',
                           'required': false,
                         },
+                        'event': {
+                          'name': 'event',
+                          'type': 'string',
+                          'required': true,
+                        },
                       },
                     },
                   },
-                  'description': {
-                    'name': 'description',
-                    'type': 'string',
-                    'required': false,
-                  },
-                  'name': {
-                    'name': 'name',
-                    'type': 'string',
-                    'required': true,
-                  },
-                  'currentState': {
-                    'name': 'currentState',
-                    'type': 'string',
-                    'required': true,
-                  },
                 },
-              },
-              'description': {
-                'name': 'description',
-                'type': 'string',
-                'required': false,
-              },
-              'iconEmoji': {
-                'name': 'iconEmoji',
-                'type': 'string',
-                'required': false,
               },
               'name': {
                 'name': 'name',
@@ -269,8 +251,8 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
                 'type': 'string',
                 'required': true,
               },
-              'iconUrl': {
-                'name': 'iconUrl',
+              'description': {
+                'name': 'description',
                 'type': 'string',
                 'required': false,
               },
@@ -281,6 +263,24 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
             'default': false,
             'label': 'Disabled',
             'description': 'Whether the tile is disabled / already used',
+            'tier': 'presentation',
+          },
+          'size': {
+            'type': 'string',
+            'default': 'md',
+            'label': 'Size',
+            'description': 'Size variant',
+            'tier': 'presentation',
+            'values': [
+              'sm',
+              'md',
+              'lg',
+            ],
+          },
+          'categoryColors': {
+            'type': 'json',
+            'label': 'Category Colors',
+            'description': 'Category → color mapping',
             'tier': 'presentation',
           },
         },

@@ -46,14 +46,14 @@ export interface StdUiFileTreeFileSelectPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiFileTreeConfig {
-  /** Default: `""` */
-  selectedPath?: string;
+  /** Default: `[]` */
+  tree?: EntityRow[];
   /** Default: `16` */
   indent?: number;
   /** Default: `""` */
   className?: string;
-  /** Default: `[]` */
-  tree?: EntityRow[];
+  /** Default: `""` */
+  selectedPath?: string;
 }
 
 /**

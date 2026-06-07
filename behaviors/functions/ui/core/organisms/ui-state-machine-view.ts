@@ -47,11 +47,11 @@ export interface StdUiStateMachineViewRenderStateNodePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiStateMachineViewConfig {
+  /** Default: `false` */
+  isLoading?: boolean;
   /** Default: `""` */
   className?: string;
   layoutData?: unknown;
-  /** Default: `false` */
-  isLoading?: boolean;
   error?: EntityRow;
 }
 
@@ -180,11 +180,11 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
                   'render-ui',
                   'main',
                   {
-                    'error': '@config.error',
-                    'renderStateNode': 'RENDER_STATE_NODE',
                     'className': '@config.className',
-                    'layoutData': '@config.layoutData',
                     'isLoading': '@config.isLoading',
+                    'error': '@config.error',
+                    'layoutData': '@config.layoutData',
+                    'renderStateNode': 'RENDER_STATE_NODE',
                     'type': 'state-machine-view',
                   },
                 ],
@@ -193,6 +193,13 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
           ],
         },
         'config': {
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
           'className': {
             'type': 'string',
             'default': '',
@@ -206,19 +213,17 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
             'description': 'layoutData prop',
             'tier': 'presentation',
           },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
-            'tier': 'presentation',
-          },
           'error': {
             'type': 'StateMachineViewError',
             'label': 'Error',
             'description': 'Error state',
             'tier': 'presentation',
             'properties': {
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
               'code': {
                 'name': 'code',
                 'type': 'string',
@@ -231,11 +236,6 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
               },
               'name': {
                 'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'stack': {
-                'name': 'stack',
                 'type': 'string',
                 'required': false,
               },

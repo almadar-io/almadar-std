@@ -50,16 +50,16 @@ export interface StdUiVoteStackConfig {
   userVote?: 'up' | 'down' | 'none';
   /** Default: `""` */
   className?: string;
-  /** Default: `0` */
-  count?: number;
-  /** Default: `""` */
-  label?: string;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
-  /** Default: `"vertical"` */
-  variant?: 'vertical' | 'horizontal';
+  /** Default: `""` */
+  label?: string;
   /** Default: `false` */
   disabled?: boolean;
+  /** Default: `"vertical"` */
+  variant?: 'vertical' | 'horizontal';
+  /** Default: `0` */
+  count?: number;
 }
 
 /**

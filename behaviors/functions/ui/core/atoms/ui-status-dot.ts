@@ -41,14 +41,14 @@ export type StdUiStatusDotEventKey = 'INIT';
 export interface StdUiStatusDotConfig {
   /** Default: `"offline"` */
   status?: 'online' | 'offline' | 'away' | 'busy' | 'warning' | 'critical';
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
-  /** Default: `false` */
-  pulse?: boolean;
-  /** Default: `""` */
-  className?: string;
   /** Default: `""` */
   label?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `false` */
+  pulse?: boolean;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
 }
 
 /**

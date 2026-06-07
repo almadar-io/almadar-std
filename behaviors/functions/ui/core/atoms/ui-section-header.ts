@@ -39,16 +39,16 @@ export type StdUiSectionHeaderEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiSectionHeaderConfig {
+  /** Default: `"center"` */
+  align?: 'center' | 'left' | 'right';
+  /** Default: `2` */
+  level?: number;
   /** Default: `""` */
   className?: string;
   /** Default: `""` */
   subtitle?: string;
   /** Default: `""` */
   title?: string;
-  /** Default: `2` */
-  level?: number;
-  /** Default: `"center"` */
-  align?: 'center' | 'left' | 'right';
 }
 
 /**

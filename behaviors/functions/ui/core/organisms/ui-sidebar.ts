@@ -60,28 +60,28 @@ export interface StdUiSidebarLogoClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiSidebarConfig {
-  error?: EntityRow;
-  /** Default: `""` */
-  logoSrc?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `"KFlow"` */
-  brandName?: string;
-  footerContent?: unknown;
-  /** Default: `[]` */
-  items?: EntityRow[];
-  userSection?: unknown;
   /** Default: `""` */
   className?: string;
+  userSection?: unknown;
+  /** Default: `false` */
+  showCloseButton?: boolean;
+  footerContent?: unknown;
+  /** Default: `false` */
+  hideCollapseButton?: boolean;
+  /** Default: `"KFlow"` */
+  brandName?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  logo?: unknown;
+  /** Default: `[]` */
+  items?: EntityRow[];
+  error?: EntityRow;
   /** Default: `false` */
   collapsed?: boolean;
   /** Default: `false` */
   defaultCollapsed?: boolean;
-  /** Default: `false` */
-  hideCollapseButton?: boolean;
-  /** Default: `false` */
-  showCloseButton?: boolean;
-  logo?: unknown;
+  /** Default: `""` */
+  logoSrc?: string;
 }
 
 /**
@@ -242,22 +242,22 @@ export function stdUiSidebarSidebarOrbital(params: StdUiSidebarSidebarOrbitalPar
                   'render-ui',
                   'main',
                   {
-                    'userSection': '@config.userSection',
-                    'items': '@config.items',
+                    'collapsed': '@config.collapsed',
                     'logoSrc': '@config.logoSrc',
-                    'isLoading': '@config.isLoading',
-                    'closeEvent': 'CLOSE',
                     'collapseChangeEvent': 'COLLAPSE_CHANGE',
                     'hideCollapseButton': '@config.hideCollapseButton',
-                    'collapsed': '@config.collapsed',
+                    'userSection': '@config.userSection',
+                    'items': '@config.items',
+                    'error': '@config.error',
+                    'className': '@config.className',
+                    'defaultCollapsed': '@config.defaultCollapsed',
+                    'logo': '@config.logo',
+                    'logoClickEvent': 'LOGO_CLICK',
+                    'isLoading': '@config.isLoading',
+                    'showCloseButton': '@config.showCloseButton',
                     'type': 'sidebar',
                     'footerContent': '@config.footerContent',
-                    'logo': '@config.logo',
-                    'defaultCollapsed': '@config.defaultCollapsed',
-                    'className': '@config.className',
-                    'logoClickEvent': 'LOGO_CLICK',
-                    'error': '@config.error',
-                    'showCloseButton': '@config.showCloseButton',
+                    'closeEvent': 'CLOSE',
                     'brandName': '@config.brandName',
                   },
                 ],
@@ -266,46 +266,37 @@ export function stdUiSidebarSidebarOrbital(params: StdUiSidebarSidebarOrbitalPar
           ],
         },
         'config': {
-          'error': {
-            'type': 'SidebarError',
-            'label': 'Error',
-            'description': 'Error state',
-            'tier': 'presentation',
-            'properties': {
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-            },
-          },
-          'logoSrc': {
+          'className': {
             'type': 'string',
             'default': '',
-            'label': 'Logo Src',
-            'description': 'Logo image source',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
-          'isLoading': {
+          'userSection': {
+            'type': 'node',
+            'label': 'User Section',
+            'description': 'User section content',
+            'tier': 'presentation',
+          },
+          'showCloseButton': {
             'type': 'boolean',
             'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
+            'label': 'Show Close Button',
+            'description': 'Show a close button (for mobile)',
+            'tier': 'presentation',
+          },
+          'footerContent': {
+            'type': 'node',
+            'label': 'Footer Content',
+            'description': 'Footer content (e.g., theme toggle)',
+            'tier': 'presentation',
+          },
+          'hideCollapseButton': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Hide Collapse Button',
+            'description': 'Hide the collapse/expand button',
             'tier': 'presentation',
           },
           'brandName': {
@@ -315,10 +306,17 @@ export function stdUiSidebarSidebarOrbital(params: StdUiSidebarSidebarOrbitalPar
             'description': 'Brand/App name',
             'tier': 'presentation',
           },
-          'footerContent': {
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
+          'logo': {
             'type': 'node',
-            'label': 'Footer Content',
-            'description': 'Footer content (e.g., theme toggle)',
+            'label': 'Logo',
+            'description': 'Logo/Brand content - can be a ReactNode or logo config',
             'tier': 'presentation',
           },
           'items': {
@@ -330,11 +328,6 @@ export function stdUiSidebarSidebarOrbital(params: StdUiSidebarSidebarOrbitalPar
             'items': {
               'type': 'object',
               'properties': {
-                'active': {
-                  'name': 'active',
-                  'type': 'boolean',
-                  'required': false,
-                },
                 'subItems': {
                   'name': 'subItems',
                   'type': 'array',
@@ -343,23 +336,8 @@ export function stdUiSidebarSidebarOrbital(params: StdUiSidebarSidebarOrbitalPar
                     'type': 'string',
                   },
                 },
-                'icon': {
-                  'name': 'icon',
-                  'type': 'string',
-                  'required': false,
-                },
-                'badge': {
-                  'name': 'badge',
-                  'type': 'string',
-                  'required': false,
-                },
-                'id': {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': true,
-                },
-                'isActive': {
-                  'name': 'isActive',
+                'active': {
+                  'name': 'active',
                   'type': 'boolean',
                   'required': false,
                 },
@@ -373,21 +351,56 @@ export function stdUiSidebarSidebarOrbital(params: StdUiSidebarSidebarOrbitalPar
                   'type': 'string',
                   'required': false,
                 },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                'badge': {
+                  'name': 'badge',
+                  'type': 'string',
+                  'required': false,
+                },
+                'isActive': {
+                  'name': 'isActive',
+                  'type': 'boolean',
+                  'required': false,
+                },
+                'icon': {
+                  'name': 'icon',
+                  'type': 'string',
+                  'required': false,
+                },
               },
             },
           },
-          'userSection': {
-            'type': 'node',
-            'label': 'User Section',
-            'description': 'User section content',
+          'error': {
+            'type': 'SidebarError',
+            'label': 'Error',
+            'description': 'Error state',
             'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
+            'properties': {
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+            },
           },
           'collapsed': {
             'type': 'boolean',
@@ -403,24 +416,11 @@ export function stdUiSidebarSidebarOrbital(params: StdUiSidebarSidebarOrbitalPar
             'description': 'Default collapsed state',
             'tier': 'presentation',
           },
-          'hideCollapseButton': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Hide Collapse Button',
-            'description': 'Hide the collapse/expand button',
-            'tier': 'presentation',
-          },
-          'showCloseButton': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Show Close Button',
-            'description': 'Show a close button (for mobile)',
-            'tier': 'presentation',
-          },
-          'logo': {
-            'type': 'node',
-            'label': 'Logo',
-            'description': 'Logo/Brand content - can be a ReactNode or logo config',
+          'logoSrc': {
+            'type': 'string',
+            'default': '',
+            'label': 'Logo Src',
+            'description': 'Logo image source',
             'tier': 'presentation',
           },
         },

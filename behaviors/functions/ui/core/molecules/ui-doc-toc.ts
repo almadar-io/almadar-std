@@ -40,11 +40,11 @@ export type StdUiDocTocEventKey = 'INIT';
  */
 export interface StdUiDocTocConfig {
   /** Default: `""` */
-  className?: string;
-  /** Default: `""` */
   activeId?: string;
   /** Default: `[]` */
   items?: EntityRow[];
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

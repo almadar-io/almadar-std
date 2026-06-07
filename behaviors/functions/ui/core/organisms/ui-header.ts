@@ -67,36 +67,36 @@ export interface StdUiHeaderLogoClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiHeaderConfig {
-  /** Default: `true` */
-  sticky?: boolean;
-  /** Default: `true` */
-  showMenuToggle?: boolean;
-  /** Default: `""` */
-  userName?: string;
-  error?: EntityRow;
-  /** Default: `""` */
-  logoSrc?: string;
-  /** Default: `false` */
-  isMenuOpen?: boolean;
-  /** Default: `"mobile"` */
-  variant?: 'mobile' | 'desktop';
   /** Default: `"KFlow"` */
   brandName?: string;
+  /** Default: `false` */
+  isMenuOpen?: boolean;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"mobile"` */
+  variant?: 'mobile' | 'desktop';
+  /** Default: `""` */
+  logoSrc?: string;
   /** Default: `[]` */
   navigationItems?: EntityRow[];
   /** Default: `""` */
   searchPlaceholder?: string;
-  /** Default: `false` */
-  showSearch?: boolean;
-  userAvatar?: EntityRow;
   actions?: unknown;
+  error?: EntityRow;
   /** Default: `"compact-bar"` */
   look?: 'hero' | 'compact-bar' | 'breadcrumb' | 'contextual' | 'editorial-banner';
+  /** Default: `true` */
+  showMenuToggle?: boolean;
   /** Default: `""` */
-  className?: string;
+  userName?: string;
+  logo?: unknown;
+  /** Default: `true` */
+  sticky?: boolean;
+  /** Default: `false` */
+  showSearch?: boolean;
   /** Default: `false` */
   isLoading?: boolean;
-  logo?: unknown;
+  userAvatar?: EntityRow;
 }
 
 /**
@@ -279,29 +279,29 @@ export function stdUiHeaderHeaderOrbital(params: StdUiHeaderHeaderOrbitalParams 
                   'render-ui',
                   'main',
                   {
-                    'onLogoClick': 'LOGO_CLICK',
-                    'className': '@config.className',
-                    'type': 'header',
-                    'searchPlaceholder': '@config.searchPlaceholder',
-                    'entity': 'HeaderItem',
-                    'logoSrc': '@config.logoSrc',
-                    'showMenuToggle': '@config.showMenuToggle',
-                    'onSearch': 'SEARCH',
-                    'isMenuOpen': '@config.isMenuOpen',
-                    'onUserClick': 'USER_CLICK',
-                    'isLoading': '@config.isLoading',
-                    'look': '@config.look',
-                    'logo': '@config.logo',
-                    'variant': '@config.variant',
-                    'error': '@config.error',
-                    'showSearch': '@config.showSearch',
                     'brandName': '@config.brandName',
-                    'userAvatar': '@config.userAvatar',
                     'navigationItems': '@config.navigationItems',
-                    'sticky': '@config.sticky',
+                    'look': '@config.look',
+                    'isLoading': '@config.isLoading',
+                    'logo': '@config.logo',
+                    'searchPlaceholder': '@config.searchPlaceholder',
                     'userName': '@config.userName',
+                    'showMenuToggle': '@config.showMenuToggle',
+                    'isMenuOpen': '@config.isMenuOpen',
+                    'error': '@config.error',
+                    'logoSrc': '@config.logoSrc',
+                    'showSearch': '@config.showSearch',
+                    'variant': '@config.variant',
+                    'onLogoClick': 'LOGO_CLICK',
                     'actions': '@config.actions',
+                    'userAvatar': '@config.userAvatar',
+                    'onUserClick': 'USER_CLICK',
+                    'type': 'header',
                     'onMenuToggle': 'MENU_TOGGLE',
+                    'entity': 'HeaderItem',
+                    'sticky': '@config.sticky',
+                    'className': '@config.className',
+                    'onSearch': 'SEARCH',
                   },
                 ],
               ],
@@ -309,60 +309,11 @@ export function stdUiHeaderHeaderOrbital(params: StdUiHeaderHeaderOrbitalParams 
           ],
         },
         'config': {
-          'sticky': {
-            'type': 'boolean',
-            'default': true,
-            'label': 'Sticky',
-            'description': 'Sticky header',
-            'tier': 'presentation',
-          },
-          'showMenuToggle': {
-            'type': 'boolean',
-            'default': true,
-            'label': 'Show Menu Toggle',
-            'description': 'Show menu toggle button',
-            'tier': 'presentation',
-          },
-          'userName': {
+          'brandName': {
             'type': 'string',
-            'default': '',
-            'label': 'User Name',
-            'description': 'User name (display name or email)',
-            'tier': 'presentation',
-          },
-          'error': {
-            'type': 'HeaderError',
-            'label': 'Error',
-            'description': 'Error state (closed circuit)',
-            'tier': 'presentation',
-            'properties': {
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-            },
-          },
-          'logoSrc': {
-            'type': 'string',
-            'default': '',
-            'label': 'Logo Src',
-            'description': 'Logo image source',
+            'default': 'KFlow',
+            'label': 'Brand Name',
+            'description': 'Brand/App name',
             'tier': 'presentation',
           },
           'isMenuOpen': {
@@ -370,6 +321,13 @@ export function stdUiHeaderHeaderOrbital(params: StdUiHeaderHeaderOrbitalParams 
             'default': false,
             'label': 'Is Menu Open',
             'description': 'Is menu open (for toggle icon)',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
           'variant': {
@@ -383,11 +341,11 @@ export function stdUiHeaderHeaderOrbital(params: StdUiHeaderHeaderOrbitalParams 
               'desktop',
             ],
           },
-          'brandName': {
+          'logoSrc': {
             'type': 'string',
-            'default': 'KFlow',
-            'label': 'Brand Name',
-            'description': 'Brand/App name',
+            'default': '',
+            'label': 'Logo Src',
+            'description': 'Logo image source',
             'tier': 'presentation',
           },
           'navigationItems': {
@@ -404,24 +362,24 @@ export function stdUiHeaderHeaderOrbital(params: StdUiHeaderHeaderOrbitalParams 
                   'type': 'string',
                   'required': false,
                 },
-                'label': {
-                  'name': 'label',
-                  'type': 'string',
-                  'required': true,
-                },
                 'badge': {
                   'name': 'badge',
                   'type': 'string',
                   'required': false,
                 },
-                'icon': {
-                  'name': 'icon',
+                'label': {
+                  'name': 'label',
                   'type': 'string',
-                  'required': false,
+                  'required': true,
                 },
                 'active': {
                   'name': 'active',
                   'type': 'boolean',
+                  'required': false,
+                },
+                'icon': {
+                  'name': 'icon',
+                  'type': 'string',
                   'required': false,
                 },
               },
@@ -434,41 +392,39 @@ export function stdUiHeaderHeaderOrbital(params: StdUiHeaderHeaderOrbitalParams 
             'description': 'Search placeholder',
             'tier': 'presentation',
           },
-          'showSearch': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Show Search',
-            'description': 'Show search input',
-            'tier': 'presentation',
-          },
-          'userAvatar': {
-            'type': 'HeaderUserAvatar',
-            'label': 'User Avatar',
-            'description': 'User avatar configuration',
-            'tier': 'presentation',
-            'properties': {
-              'src': {
-                'name': 'src',
-                'type': 'string',
-                'required': false,
-              },
-              'initials': {
-                'name': 'initials',
-                'type': 'string',
-                'required': false,
-              },
-              'alt': {
-                'name': 'alt',
-                'type': 'string',
-                'required': false,
-              },
-            },
-          },
           'actions': {
             'type': 'node',
             'label': 'Actions',
             'description': 'Action buttons (right side)',
             'tier': 'presentation',
+          },
+          'error': {
+            'type': 'HeaderError',
+            'label': 'Error',
+            'description': 'Error state (closed circuit)',
+            'tier': 'presentation',
+            'properties': {
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+            },
           },
           'look': {
             'type': 'string',
@@ -484,11 +440,38 @@ export function stdUiHeaderHeaderOrbital(params: StdUiHeaderHeaderOrbitalParams 
               'editorial-banner',
             ],
           },
-          'className': {
+          'showMenuToggle': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Show Menu Toggle',
+            'description': 'Show menu toggle button',
+            'tier': 'presentation',
+          },
+          'userName': {
             'type': 'string',
             'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
+            'label': 'User Name',
+            'description': 'User name (display name or email)',
+            'tier': 'presentation',
+          },
+          'logo': {
+            'type': 'node',
+            'label': 'Logo',
+            'description': 'Logo/Brand content',
+            'tier': 'presentation',
+          },
+          'sticky': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Sticky',
+            'description': 'Sticky header',
+            'tier': 'presentation',
+          },
+          'showSearch': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Show Search',
+            'description': 'Show search input',
             'tier': 'presentation',
           },
           'isLoading': {
@@ -498,11 +481,28 @@ export function stdUiHeaderHeaderOrbital(params: StdUiHeaderHeaderOrbitalParams 
             'description': 'Loading state indicator (closed circuit)',
             'tier': 'presentation',
           },
-          'logo': {
-            'type': 'node',
-            'label': 'Logo',
-            'description': 'Logo/Brand content',
+          'userAvatar': {
+            'type': 'HeaderUserAvatar',
+            'label': 'User Avatar',
+            'description': 'User avatar configuration',
             'tier': 'presentation',
+            'properties': {
+              'alt': {
+                'name': 'alt',
+                'type': 'string',
+                'required': false,
+              },
+              'src': {
+                'name': 'src',
+                'type': 'string',
+                'required': false,
+              },
+              'initials': {
+                'name': 'initials',
+                'type': 'string',
+                'required': false,
+              },
+            },
           },
         },
         'scope': 'instance',

@@ -46,12 +46,14 @@ export interface StdUiBranchingLogicBuilderRulesChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiBranchingLogicBuilderConfig {
+  /** Default: `[]` */
+  questions?: EntityRow[];
   /** Default: `false` */
   readOnly?: boolean;
+  /** Default: `[]` */
+  rules?: EntityRow[];
   /** Default: `""` */
   className?: string;
-  rules?: unknown;
-  questions?: unknown;
 }
 
 /**

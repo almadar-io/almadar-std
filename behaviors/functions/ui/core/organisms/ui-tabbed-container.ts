@@ -46,14 +46,14 @@ export interface StdUiTabbedContainerTabChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiTabbedContainerConfig {
-  /** Default: `[]` */
-  tabs?: EntityRow[];
+  /** Default: `""` */
+  activeTab?: string;
   /** Default: `""` */
   className?: string;
   /** Default: `""` */
   defaultTab?: string;
-  /** Default: `""` */
-  activeTab?: string;
+  /** Default: `[]` */
+  tabs?: EntityRow[];
   /** Default: `"top"` */
   position?: 'top' | 'left';
 }
@@ -179,13 +179,13 @@ export function stdUiTabbedContainerTabbedContainerOrbital(params: StdUiTabbedCo
                   'render-ui',
                   'main',
                   {
-                    'type': 'tabbed-container',
+                    'position': '@config.position',
                     'activeTab': '@config.activeTab',
                     'tabs': '@config.tabs',
-                    'position': '@config.position',
-                    'onTabChange': 'TAB_CHANGE',
-                    'className': '@config.className',
                     'defaultTab': '@config.defaultTab',
+                    'className': '@config.className',
+                    'onTabChange': 'TAB_CHANGE',
+                    'type': 'tabbed-container',
                   },
                 ],
               ],
@@ -193,47 +193,12 @@ export function stdUiTabbedContainerTabbedContainerOrbital(params: StdUiTabbedCo
           ],
         },
         'config': {
-          'tabs': {
-            'type': '[TabbedContainerTabsItem]',
-            'default': [],
-            'label': 'Tabs',
-            'description': 'Tab definitions',
+          'activeTab': {
+            'type': 'string',
+            'default': '',
+            'label': 'Active Tab',
+            'description': 'Controlled active tab',
             'tier': 'presentation',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'sectionId': {
-                  'name': 'sectionId',
-                  'type': 'string',
-                  'required': false,
-                },
-                'badge': {
-                  'name': 'badge',
-                  'type': 'string',
-                  'required': false,
-                },
-                'disabled': {
-                  'name': 'disabled',
-                  'type': 'boolean',
-                  'required': false,
-                },
-                'label': {
-                  'name': 'label',
-                  'type': 'string',
-                  'required': true,
-                },
-                'id': {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': true,
-                },
-                'content': {
-                  'name': 'content',
-                  'type': 'string',
-                  'required': false,
-                },
-              },
-            },
           },
           'className': {
             'type': 'string',
@@ -249,12 +214,47 @@ export function stdUiTabbedContainerTabbedContainerOrbital(params: StdUiTabbedCo
             'description': 'Default active tab ID',
             'tier': 'presentation',
           },
-          'activeTab': {
-            'type': 'string',
-            'default': '',
-            'label': 'Active Tab',
-            'description': 'Controlled active tab',
+          'tabs': {
+            'type': '[TabbedContainerTabsItem]',
+            'default': [],
+            'label': 'Tabs',
+            'description': 'Tab definitions',
             'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'sectionId': {
+                  'name': 'sectionId',
+                  'type': 'string',
+                  'required': false,
+                },
+                'disabled': {
+                  'name': 'disabled',
+                  'type': 'boolean',
+                  'required': false,
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                'badge': {
+                  'name': 'badge',
+                  'type': 'string',
+                  'required': false,
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': true,
+                },
+                'content': {
+                  'name': 'content',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
           },
           'position': {
             'type': 'string',

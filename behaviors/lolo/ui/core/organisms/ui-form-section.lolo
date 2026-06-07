@@ -35,6 +35,22 @@ orbital FormSectionOrbital {
     code : string
     stack : string
   }
+  type FormSectionHiddenCalculationsItem = {
+    variableName : string!
+    expression : json!
+    triggerFields : [string]!
+  }
+  type FormSectionViolationTriggersItem = {
+    condition : json!
+    violation : FormSectionViolationTriggersItemViolation!
+    fieldId : string
+  }
+  type FormSectionViolationTriggersItemViolation = {
+    law : string!
+    article : string!
+    actionType : "measure" | "admin" | "penalty"!
+    message : string!
+  }
   type FormSectionEvaluationContext = {
     formValues : json!
     globalVariables : json!
@@ -216,11 +232,11 @@ orbital FormSectionOrbital {
         @label "Conditional Fields"
         @description "Inspection form extensions"
         @tier "presentation"
-      hiddenCalculations : json
+      hiddenCalculations : [FormSectionHiddenCalculationsItem] = []
         @label "Hidden Calculations"
         @description "Hidden calculations that emit GLOBAL_VARIABLE_SET on field change (boolean true means enabled but config loaded separately)"
         @tier "presentation"
-      violationTriggers : json
+      violationTriggers : [FormSectionViolationTriggersItem] = []
         @label "Violation Triggers"
         @description "Violation conditions that emit VIOLATION_DETECTED when met (boolean true means enabled but config loaded separately)"
         @tier "presentation"

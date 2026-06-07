@@ -39,26 +39,26 @@ export type StdUiGridEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiGridConfig {
-  style?: unknown;
-  children?: unknown;
-  asProp?: unknown;
-  /** Default: `"start"` */
-  justifyItems?: 'start' | 'center' | 'end' | 'stretch';
-  /** Default: `"md"` */
-  gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
-  /** Default: `"none"` */
-  rowGap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
-  /** Default: `""` */
-  className?: string;
   /** Default: `0` */
   rows?: number;
+  /** Default: `"md"` */
+  gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   cols?: EntityRow;
-  /** Default: `"start"` */
-  alignItems?: 'start' | 'center' | 'end' | 'stretch' | 'baseline';
-  /** Default: `"none"` */
-  colGap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   /** Default: `"row"` */
   flow?: 'row' | 'col' | 'row-dense' | 'col-dense';
+  /** Default: `"none"` */
+  rowGap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  style?: unknown;
+  children?: unknown;
+  /** Default: `"start"` */
+  alignItems?: 'start' | 'center' | 'end' | 'stretch' | 'baseline';
+  /** Default: `"start"` */
+  justifyItems?: 'start' | 'center' | 'end' | 'stretch';
+  /** Default: `""` */
+  className?: string;
+  asProp?: unknown;
+  /** Default: `"none"` */
+  colGap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
 }
 
 /**

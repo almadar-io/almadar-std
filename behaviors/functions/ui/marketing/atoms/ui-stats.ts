@@ -41,12 +41,12 @@ export type StdUiStatsEventKey = 'INIT';
 export interface StdUiStatsConfig {
   /** Default: `""` */
   className?: string;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
   /** Default: `""` */
   label?: string;
   /** Default: `""` */
   value?: string;
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
 }
 
 /**
