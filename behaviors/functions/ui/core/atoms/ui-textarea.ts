@@ -46,14 +46,14 @@ export interface StdUiTextareaActionPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiTextareaConfig {
-  /** Default: `""` */
-  placeholder?: string;
   /** Default: `0` */
   rows?: number;
   /** Default: `""` */
+  className?: string;
+  /** Default: `""` */
   error?: string;
   /** Default: `""` */
-  className?: string;
+  placeholder?: string;
 }
 
 /**

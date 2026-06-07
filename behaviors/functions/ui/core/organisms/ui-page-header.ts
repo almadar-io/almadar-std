@@ -53,23 +53,23 @@ export interface StdUiPageHeaderTabChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiPageHeaderConfig {
-  /** Default: `""` */
-  className?: string;
-  /** Default: `""` */
-  activeTab?: string;
   /** Default: `false` */
   showBack?: boolean;
-  error?: unknown;
-  children?: unknown;
   /** Default: `[]` */
   tabs?: EntityRow[];
-  /** Default: `false` */
-  isLoading?: boolean;
+  children?: unknown;
   status?: unknown;
-  subtitle?: unknown;
-  title?: unknown;
   /** Default: `[]` */
   breadcrumbs?: EntityRow[];
+  error?: unknown;
+  /** Default: `""` */
+  className?: string;
+  subtitle?: unknown;
+  /** Default: `""` */
+  activeTab?: string;
+  title?: unknown;
+  /** Default: `false` */
+  isLoading?: boolean;
   /** Default: `[]` */
   actions?: EntityRow[];
 }
@@ -218,22 +218,22 @@ export function stdUiPageHeaderPageHeaderOrbital(params: StdUiPageHeaderPageHead
                   'render-ui',
                   'main',
                   {
-                    'status': '@config.status',
-                    'subtitle': '@config.subtitle',
-                    'showBack': '@config.showBack',
-                    'activeTab': '@config.activeTab',
-                    'type': 'page-header',
-                    'isLoading': '@config.isLoading',
                     'tabs': '@config.tabs',
-                    'title': '@config.title',
-                    'onTabChange': 'TAB_CHANGE',
-                    'className': '@config.className',
-                    'children': '@config.children',
                     'entity': 'PageHeaderItem',
-                    'error': '@config.error',
-                    'backEvent': 'BACK',
-                    'actions': '@config.actions',
                     'breadcrumbs': '@config.breadcrumbs',
+                    'subtitle': '@config.subtitle',
+                    'isLoading': '@config.isLoading',
+                    'children': '@config.children',
+                    'className': '@config.className',
+                    'actions': '@config.actions',
+                    'activeTab': '@config.activeTab',
+                    'showBack': '@config.showBack',
+                    'status': '@config.status',
+                    'title': '@config.title',
+                    'backEvent': 'BACK',
+                    'type': 'page-header',
+                    'onTabChange': 'TAB_CHANGE',
+                    'error': '@config.error',
                   },
                 ],
               ],
@@ -241,37 +241,11 @@ export function stdUiPageHeaderPageHeaderOrbital(params: StdUiPageHeaderPageHead
           ],
         },
         'config': {
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'className prop',
-            'tier': 'presentation',
-          },
-          'activeTab': {
-            'type': 'string',
-            'default': '',
-            'label': 'Active Tab',
-            'description': 'activeTab prop',
-            'tier': 'presentation',
-          },
           'showBack': {
             'type': 'boolean',
             'default': false,
             'label': 'Show Back',
             'description': 'Show back button',
-            'tier': 'presentation',
-          },
-          'error': {
-            'type': 'json',
-            'label': 'Error',
-            'description': 'Error state',
-            'tier': 'presentation',
-          },
-          'children': {
-            'type': 'node',
-            'label': 'Children',
-            'description': 'Custom content in the header',
             'tier': 'presentation',
           },
           'tabs': {
@@ -284,29 +258,16 @@ export function stdUiPageHeaderPageHeaderOrbital(params: StdUiPageHeaderPageHead
               'type': 'string',
             },
           },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
+          'children': {
+            'type': 'node',
+            'label': 'Children',
+            'description': 'Custom content in the header',
             'tier': 'presentation',
           },
           'status': {
             'type': 'json',
             'label': 'Status',
             'description': 'Status badge',
-            'tier': 'presentation',
-          },
-          'subtitle': {
-            'type': 'json',
-            'label': 'Subtitle',
-            'description': 'Optional subtitle/description',
-            'tier': 'presentation',
-          },
-          'title': {
-            'type': 'json',
-            'label': 'Title',
-            'description': 'Page title - accepts unknown to handle generated code accessing dynamic entity data',
             'tier': 'presentation',
           },
           'breadcrumbs': {
@@ -330,6 +291,45 @@ export function stdUiPageHeaderPageHeaderOrbital(params: StdUiPageHeaderPageHead
                 },
               },
             },
+          },
+          'error': {
+            'type': 'json',
+            'label': 'Error',
+            'description': 'Error state',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'className prop',
+            'tier': 'presentation',
+          },
+          'subtitle': {
+            'type': 'json',
+            'label': 'Subtitle',
+            'description': 'Optional subtitle/description',
+            'tier': 'presentation',
+          },
+          'activeTab': {
+            'type': 'string',
+            'default': '',
+            'label': 'Active Tab',
+            'description': 'activeTab prop',
+            'tier': 'presentation',
+          },
+          'title': {
+            'type': 'json',
+            'label': 'Title',
+            'description': 'Page title - accepts unknown to handle generated code accessing dynamic entity data',
+            'tier': 'presentation',
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
           },
           'actions': {
             'type': '[json]',

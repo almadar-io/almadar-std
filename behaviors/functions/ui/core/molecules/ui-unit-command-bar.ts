@@ -42,9 +42,9 @@ export interface StdUiUnitCommandBarConfig {
   /** Default: `[]` */
   commands?: EntityRow[];
   /** Default: `""` */
-  selectedUnitId?: string;
-  /** Default: `""` */
   className?: string;
+  /** Default: `""` */
+  selectedUnitId?: string;
 }
 
 /**

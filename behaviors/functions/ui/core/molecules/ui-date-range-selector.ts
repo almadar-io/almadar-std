@@ -48,10 +48,10 @@ export interface StdUiDateRangeSelectorSelectPayload {
 export interface StdUiDateRangeSelectorConfig {
   /** Default: `[]` */
   options?: EntityRow[];
-  /** Default: `""` */
-  className?: string;
   /** Default: `"month"` */
   selected?: string;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

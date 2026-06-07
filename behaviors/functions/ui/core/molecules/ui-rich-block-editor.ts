@@ -46,10 +46,10 @@ export interface StdUiRichBlockEditorChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiRichBlockEditorConfig {
-  /** Default: `[]` */
-  initialBlocks?: EntityRow[];
   /** Default: `false` */
   readOnly?: boolean;
+  /** Default: `[]` */
+  initialBlocks?: EntityRow[];
   /** Default: `""` */
   placeholder?: string;
   /** Default: `true` */

@@ -172,9 +172,9 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
                   'render-ui',
                   'main',
                   {
+                    'type': 'negotiator-board',
                     'entity': '@entity',
                     'completeEvent': 'COMPLETE',
-                    'type': 'negotiator-board',
                   },
                 ],
               ],

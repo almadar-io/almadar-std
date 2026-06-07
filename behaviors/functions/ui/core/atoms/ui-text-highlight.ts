@@ -74,11 +74,11 @@ export interface StdUiTextHighlightHoverPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiTextHighlightConfig {
+  children?: unknown;
   /** Default: `"question"` */
   highlightType?: 'question' | 'note';
   /** Default: `""` */
   annotationId?: string;
-  children?: unknown;
   /** Default: `false` */
   isActive?: boolean;
   /** Default: `""` */

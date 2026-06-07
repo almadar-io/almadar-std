@@ -39,17 +39,17 @@ export type StdUiSimulationCanvasEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiSimulationCanvasConfig {
-  /** Default: `400` */
-  height?: number;
-  preset?: unknown;
-  /** Default: `false` */
-  running?: boolean;
-  /** Default: `""` */
-  className?: string;
   /** Default: `600` */
   width?: number;
+  /** Default: `false` */
+  running?: boolean;
+  preset?: unknown;
+  /** Default: `400` */
+  height?: number;
   /** Default: `1` */
   speed?: number;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**
@@ -153,13 +153,13 @@ export function stdUiSimulationCanvasSimulationCanvasOrbital(params: StdUiSimula
                   'render-ui',
                   'main',
                   {
-                    'speed': '@config.speed',
                     'className': '@config.className',
-                    'running': '@config.running',
-                    'type': 'simulation-canvas',
+                    'speed': '@config.speed',
                     'height': '@config.height',
-                    'width': '@config.width',
                     'preset': '@config.preset',
+                    'type': 'simulation-canvas',
+                    'width': '@config.width',
+                    'running': '@config.running',
                   },
                 ],
               ],
@@ -167,17 +167,11 @@ export function stdUiSimulationCanvasSimulationCanvasOrbital(params: StdUiSimula
           ],
         },
         'config': {
-          'height': {
+          'width': {
             'type': 'number',
-            'default': 400,
-            'label': 'Height',
-            'description': 'height prop',
-            'tier': 'presentation',
-          },
-          'preset': {
-            'type': 'json',
-            'label': 'Preset',
-            'description': 'preset prop',
+            'default': 600,
+            'label': 'Width',
+            'description': 'width prop',
             'tier': 'presentation',
           },
           'running': {
@@ -187,18 +181,17 @@ export function stdUiSimulationCanvasSimulationCanvasOrbital(params: StdUiSimula
             'description': 'running prop',
             'tier': 'presentation',
           },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'className prop',
+          'preset': {
+            'type': 'json',
+            'label': 'Preset',
+            'description': 'preset prop',
             'tier': 'presentation',
           },
-          'width': {
+          'height': {
             'type': 'number',
-            'default': 600,
-            'label': 'Width',
-            'description': 'width prop',
+            'default': 400,
+            'label': 'Height',
+            'description': 'height prop',
             'tier': 'presentation',
           },
           'speed': {
@@ -206,6 +199,13 @@ export function stdUiSimulationCanvasSimulationCanvasOrbital(params: StdUiSimula
             'default': 1,
             'label': 'Speed',
             'description': 'speed prop',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'className prop',
             'tier': 'presentation',
           },
         },

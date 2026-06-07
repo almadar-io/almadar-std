@@ -42,13 +42,13 @@ export interface StdUiTeamCardConfig {
   /** Default: `""` */
   nameAr?: string;
   /** Default: `""` */
-  name?: string;
-  /** Default: `""` */
   className?: string;
   /** Default: `""` */
-  role?: string;
-  /** Default: `""` */
   bio?: string;
+  /** Default: `""` */
+  name?: string;
+  /** Default: `""` */
+  role?: string;
   avatar?: unknown;
 }
 

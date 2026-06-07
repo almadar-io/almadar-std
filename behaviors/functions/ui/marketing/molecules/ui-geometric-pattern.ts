@@ -39,21 +39,21 @@ export type StdUiGeometricPatternEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiGeometricPatternConfig {
-  /** Default: `0.06` */
-  opacity?: number;
+  children?: unknown;
   /** Default: `"star8"` */
   variant?: 'star8' | 'star6' | 'khatam' | 'star10' | 'star12' | 'rosette-double' | 'rosette-filled' | 'seigaiha' | 'greek-key' | 'celtic-knot' | 'kolam' | 'arch' | 'arabesque-vine' | 'arabesque-net';
-  /** Default: `"var(--color-primary)"` */
-  color?: string;
-  children?: unknown;
-  /** Default: `1` */
-  scale?: number;
-  /** Default: `""` */
-  className?: string;
   /** Default: `"background"` */
   mode?: 'background' | 'left' | 'right' | 'dual' | 'around' | 'frame';
+  /** Default: `"var(--color-primary)"` */
+  color?: string;
+  /** Default: `1` */
+  scale?: number;
   /** Default: `0.5` */
   strokeWidth?: number;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `0.06` */
+  opacity?: number;
 }
 
 /**

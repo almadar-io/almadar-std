@@ -39,13 +39,13 @@ export type StdUiCodeViewEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiCodeViewConfig {
-  /** Default: `false` */
-  defaultExpanded?: boolean;
   /** Default: `""` */
   className?: string;
-  data?: unknown;
   /** Default: `""` */
   label?: string;
+  /** Default: `false` */
+  defaultExpanded?: boolean;
+  data?: unknown;
 }
 
 /**
@@ -149,11 +149,11 @@ export function stdUiCodeViewCodeViewOrbital(params: StdUiCodeViewCodeViewOrbita
                   'render-ui',
                   'main',
                   {
-                    'className': '@config.className',
-                    'defaultExpanded': '@config.defaultExpanded',
-                    'type': 'code-view',
                     'data': '@config.data',
                     'label': '@config.label',
+                    'className': '@config.className',
+                    'type': 'code-view',
+                    'defaultExpanded': '@config.defaultExpanded',
                   },
                 ],
               ],
@@ -161,13 +161,6 @@ export function stdUiCodeViewCodeViewOrbital(params: StdUiCodeViewCodeViewOrbita
           ],
         },
         'config': {
-          'defaultExpanded': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Default Expanded',
-            'description': 'Whether the code is expanded by default',
-            'tier': 'presentation',
-          },
           'className': {
             'type': 'string',
             'default': '',
@@ -175,17 +168,24 @@ export function stdUiCodeViewCodeViewOrbital(params: StdUiCodeViewCodeViewOrbita
             'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
-          'data': {
-            'type': 'json',
-            'label': 'Data',
-            'description': 'JSON data to display',
-            'tier': 'presentation',
-          },
           'label': {
             'type': 'string',
             'default': '',
             'label': 'Label',
             'description': 'Label',
+            'tier': 'presentation',
+          },
+          'defaultExpanded': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Default Expanded',
+            'description': 'Whether the code is expanded by default',
+            'tier': 'presentation',
+          },
+          'data': {
+            'type': 'json',
+            'label': 'Data',
+            'description': 'JSON data to display',
             'tier': 'presentation',
           },
         },

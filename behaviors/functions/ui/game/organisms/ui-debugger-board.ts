@@ -173,8 +173,8 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
                   'main',
                   {
                     'type': 'debugger-board',
-                    'completeEvent': 'COMPLETE',
                     'entity': '@entity',
+                    'completeEvent': 'COMPLETE',
                   },
                 ],
               ],

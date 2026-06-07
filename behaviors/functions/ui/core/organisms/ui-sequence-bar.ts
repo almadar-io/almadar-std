@@ -54,21 +54,21 @@ export interface StdUiSequenceBarSlotRemovePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiSequenceBarConfig {
-  /** Default: `"lg"` */
-  size?: 'sm' | 'md' | 'lg';
-  /** Default: `-1` */
-  currentStep?: number;
-  /** Default: `[]` */
-  slotFeedback?: string[];
-  /** Default: `[]` */
-  slots?: EntityRow[];
-  /** Default: `false` */
-  playing?: boolean;
+  categoryColors?: unknown;
   /** Default: `""` */
   className?: string;
-  categoryColors?: unknown;
+  /** Default: `[]` */
+  slots?: EntityRow[];
+  /** Default: `[]` */
+  slotFeedback?: string[];
+  /** Default: `"lg"` */
+  size?: 'sm' | 'md' | 'lg';
   /** Default: `0` */
   maxSlots?: number;
+  /** Default: `false` */
+  playing?: boolean;
+  /** Default: `-1` */
+  currentStep?: number;
 }
 
 /**
@@ -214,17 +214,17 @@ export function stdUiSequenceBarSequenceBarOrbital(params: StdUiSequenceBarSeque
                   'render-ui',
                   'main',
                   {
-                    'slots': '@config.slots',
-                    'categoryColors': '@config.categoryColors',
                     'currentStep': '@config.currentStep',
-                    'onSlotRemove': 'SLOT_REMOVE',
-                    'playing': '@config.playing',
-                    'maxSlots': '@config.maxSlots',
-                    'slotFeedback': '@config.slotFeedback',
-                    'className': '@config.className',
                     'onSlotDrop': 'SLOT_DROP',
+                    'className': '@config.className',
                     'type': 'sequence-bar',
+                    'onSlotRemove': 'SLOT_REMOVE',
                     'size': '@config.size',
+                    'maxSlots': '@config.maxSlots',
+                    'playing': '@config.playing',
+                    'slotFeedback': '@config.slotFeedback',
+                    'categoryColors': '@config.categoryColors',
+                    'slots': '@config.slots',
                   },
                 ],
               ],
@@ -232,24 +232,28 @@ export function stdUiSequenceBarSequenceBarOrbital(params: StdUiSequenceBarSeque
           ],
         },
         'config': {
-          'size': {
-            'type': 'string',
-            'default': 'lg',
-            'label': 'Size',
-            'description': 'Size variant',
+          'categoryColors': {
+            'type': 'json',
+            'label': 'Category Colors',
+            'description': 'Category → color mapping',
             'tier': 'presentation',
-            'values': [
-              'sm',
-              'md',
-              'lg',
-            ],
           },
-          'currentStep': {
-            'type': 'number',
-            'default': -1,
-            'label': 'Current Step',
-            'description': 'Current step index during playback (-1 = not playing)',
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
             'tier': 'presentation',
+          },
+          'slots': {
+            'type': '[json]',
+            'default': [],
+            'label': 'Slots',
+            'description': 'The current sequence (sparse — undefined means empty slot)',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
           },
           'slotFeedback': {
             'type': '[string]',
@@ -265,15 +269,24 @@ export function stdUiSequenceBarSequenceBarOrbital(params: StdUiSequenceBarSeque
               ],
             },
           },
-          'slots': {
-            'type': '[json]',
-            'default': [],
-            'label': 'Slots',
-            'description': 'The current sequence (sparse — undefined means empty slot)',
+          'size': {
+            'type': 'string',
+            'default': 'lg',
+            'label': 'Size',
+            'description': 'Size variant',
             'tier': 'presentation',
-            'items': {
-              'type': 'string',
-            },
+            'values': [
+              'sm',
+              'md',
+              'lg',
+            ],
+          },
+          'maxSlots': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Max Slots',
+            'description': 'Max number of slots',
+            'tier': 'presentation',
           },
           'playing': {
             'type': 'boolean',
@@ -282,24 +295,11 @@ export function stdUiSequenceBarSequenceBarOrbital(params: StdUiSequenceBarSeque
             'description': 'Whether the sequence is currently playing (disable interaction)',
             'tier': 'presentation',
           },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'categoryColors': {
-            'type': 'json',
-            'label': 'Category Colors',
-            'description': 'Category → color mapping',
-            'tier': 'presentation',
-          },
-          'maxSlots': {
+          'currentStep': {
             'type': 'number',
-            'default': 0,
-            'label': 'Max Slots',
-            'description': 'Max number of slots',
+            'default': -1,
+            'label': 'Current Step',
+            'description': 'Current step index during playback (-1 = not playing)',
             'tier': 'presentation',
           },
         },

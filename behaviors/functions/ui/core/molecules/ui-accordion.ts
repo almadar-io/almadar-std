@@ -56,13 +56,13 @@ export interface StdUiAccordionTogglePayload {
  */
 export interface StdUiAccordionConfig {
   /** Default: `[]` */
-  defaultOpen?: number[];
-  /** Default: `""` */
-  className?: string;
-  /** Default: `[]` */
   openItems?: string[];
   /** Default: `false` */
   multiple?: boolean;
+  /** Default: `[]` */
+  defaultOpen?: number[];
+  /** Default: `""` */
+  className?: string;
   /** Default: `[]` */
   defaultOpenItems?: string[];
   /** Default: `[]` */

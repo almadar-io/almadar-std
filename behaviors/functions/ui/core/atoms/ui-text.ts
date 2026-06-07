@@ -39,27 +39,28 @@ export type StdUiTextEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiTextConfig {
-  /** Default: `"xs"` */
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
+  content?: unknown;
   /** Default: `"visible"` */
   overflow?: 'visible' | 'hidden' | 'wrap' | 'clamp-2' | 'clamp-3';
-  /** Default: `false` */
-  truncate?: boolean;
-  /** Default: `2` */
-  level?: number;
+  /** Default: `"body"` */
+  variant?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'heading' | 'subheading' | 'body1' | 'body2' | 'body' | 'caption' | 'overline' | 'small' | 'large' | 'label';
+  asProp?: unknown;
   /** Default: `"light"` */
   weight?: 'light' | 'normal' | 'medium' | 'semibold' | 'bold';
+  /** Default: `"primary"` */
+  color?: 'primary' | 'secondary' | 'muted' | 'error' | 'success' | 'warning' | 'inherit';
+  /** Default: `2` */
+  level?: number;
   /** Default: `"left"` */
   align?: 'left' | 'center' | 'right';
+  /** Default: `false` */
+  truncate?: boolean;
   /** Default: `""` */
   className?: string;
   style?: unknown;
-  content?: unknown;
   children?: unknown;
-  /** Default: `"primary"` */
-  color?: 'primary' | 'secondary' | 'muted' | 'error' | 'success' | 'warning' | 'inherit';
-  /** Default: `"body"` */
-  variant?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'heading' | 'subheading' | 'body1' | 'body2' | 'body' | 'caption' | 'overline' | 'small' | 'large' | 'label';
+  /** Default: `"xs"` */
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
 }
 
 /**

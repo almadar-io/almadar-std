@@ -1,6 +1,20 @@
 app ui-trait-state-viewer "1.0.0"
 "TraitStateViewer — UI factory (1:1 with the @almadar/ui trait-state-viewer pattern)."
 orbital TraitStateViewerOrbital {
+  type TraitStateViewerTrait = {
+    name : string!
+    states : [string]!
+    currentState : string!
+    transitions : [TraitStateViewerTraitTransitionsItem]!
+    description : string
+  }
+  type TraitStateViewerTraitTransitionsItem = {
+    from : string!
+    to : string!
+    event : string!
+    guardHint : string
+  }
+
   entity TraitStateViewerItem [runtime] {
     id : string!
   }
@@ -12,6 +26,7 @@ orbital TraitStateViewerOrbital {
       INIT -> idle
         (fetch TraitStateViewerItem {})
         (render-ui main {
+          trait: @config.traitProp
           variant: @config.variant
           size: @config.size
           showTransitions: @config.showTransitions
@@ -34,6 +49,11 @@ orbital TraitStateViewerOrbital {
     }
 
     config {
+      traitProp : TraitStateViewerTrait
+        @label "Trait"
+        @description "The trait / state machine to visualize"
+        @synonyms "trait"
+        @tier "presentation"
       variant : "linear" | "compact" | "full" = compact
         @label "Variant"
         @description "Display variant"

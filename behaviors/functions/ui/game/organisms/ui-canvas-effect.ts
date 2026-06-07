@@ -46,30 +46,30 @@ export interface StdUiCanvasEffectCompletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiCanvasEffectConfig {
-  /** Default: `""` */
-  assetBaseUrl?: string;
-  /** Default: `"melee"` */
-  actionType?: 'melee' | 'ranged' | 'magic' | 'heal' | 'defend' | 'hit' | 'death' | 'buff' | 'debuff' | 'shield' | 'aoe' | 'critical';
-  error?: unknown;
-  /** Default: `2000` */
-  duration?: number;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `""` */
-  effectSpriteUrl?: string;
-  assetManifest?: EntityRow;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `400` */
-  width?: number;
-  /** Default: `1` */
-  intensity?: number;
-  /** Default: `300` */
-  height?: number;
   /** Default: `0` */
   x?: number;
   /** Default: `0` */
   y?: number;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `2000` */
+  duration?: number;
+  /** Default: `1` */
+  intensity?: number;
+  /** Default: `""` */
+  assetBaseUrl?: string;
+  /** Default: `""` */
+  effectSpriteUrl?: string;
+  /** Default: `"melee"` */
+  actionType?: 'melee' | 'ranged' | 'magic' | 'heal' | 'defend' | 'hit' | 'death' | 'buff' | 'debuff' | 'shield' | 'aoe' | 'critical';
+  assetManifest?: EntityRow;
+  /** Default: `300` */
+  height?: number;
+  /** Default: `400` */
+  width?: number;
+  /** Default: `false` */
+  isLoading?: boolean;
+  error?: unknown;
 }
 
 /**
@@ -193,22 +193,22 @@ export function stdUiCanvasEffectCanvasEffectOrbital(params: StdUiCanvasEffectCa
                   'render-ui',
                   'main',
                   {
-                    'error': '@config.error',
-                    'actionType': '@config.actionType',
                     'x': '@config.x',
-                    'y': '@config.y',
+                    'completeEvent': 'COMPLETE',
                     'duration': '@config.duration',
+                    'y': '@config.y',
+                    'height': '@config.height',
+                    'actionType': '@config.actionType',
+                    'error': '@config.error',
+                    'intensity': '@config.intensity',
                     'className': '@config.className',
+                    'assetBaseUrl': '@config.assetBaseUrl',
                     'isLoading': '@config.isLoading',
+                    'assetManifest': '@config.assetManifest',
+                    'width': '@config.width',
+                    'type': 'canvas-effect',
                     'onComplete': 'COMPLETE',
                     'effectSpriteUrl': '@config.effectSpriteUrl',
-                    'intensity': '@config.intensity',
-                    'assetBaseUrl': '@config.assetBaseUrl',
-                    'completeEvent': 'COMPLETE',
-                    'width': '@config.width',
-                    'height': '@config.height',
-                    'assetManifest': '@config.assetManifest',
-                    'type': 'canvas-effect',
                   },
                 ],
               ],
@@ -216,11 +216,53 @@ export function stdUiCanvasEffectCanvasEffectOrbital(params: StdUiCanvasEffectCa
           ],
         },
         'config': {
+          'x': {
+            'type': 'number',
+            'default': 0,
+            'label': 'X',
+            'description': 'Screen-space X position (center of the effect)',
+            'tier': 'presentation',
+          },
+          'y': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Y',
+            'description': 'Screen-space Y position (center of the effect)',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'duration': {
+            'type': 'number',
+            'default': 2000,
+            'label': 'Duration',
+            'description': 'Duration in ms before auto-dismiss (default 2000 for canvas, 800 for emoji)',
+            'tier': 'presentation',
+          },
+          'intensity': {
+            'type': 'number',
+            'default': 1,
+            'label': 'Intensity',
+            'description': 'Optional intensity multiplier (1 = normal, 2 = double size/brightness)',
+            'tier': 'presentation',
+          },
           'assetBaseUrl': {
             'type': 'string',
             'default': '',
             'label': 'Asset Base Url',
             'description': 'Base URL for remote assets. Prepended to relative effectSpriteUrl paths.',
+            'tier': 'presentation',
+          },
+          'effectSpriteUrl': {
+            'type': 'string',
+            'default': '',
+            'label': 'Effect Sprite Url',
+            'description': '--- Remote asset loading ---',
             'tier': 'presentation',
           },
           'actionType': {
@@ -244,61 +286,34 @@ export function stdUiCanvasEffectCanvasEffectOrbital(params: StdUiCanvasEffectCa
               'critical',
             ],
           },
-          'error': {
-            'type': 'json',
-            'label': 'Error',
-            'description': 'Error state',
-            'tier': 'presentation',
-          },
-          'duration': {
-            'type': 'number',
-            'default': 2000,
-            'label': 'Duration',
-            'description': 'Duration in ms before auto-dismiss (default 2000 for canvas, 800 for emoji)',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'effectSpriteUrl': {
-            'type': 'string',
-            'default': '',
-            'label': 'Effect Sprite Url',
-            'description': '--- Remote asset loading ---',
-            'tier': 'presentation',
-          },
           'assetManifest': {
             'type': 'CanvasEffectAssetManifest',
             'label': 'Asset Manifest',
             'description': 'Full effect asset manifest for the sprite particle engine. When provided, enables the canvas-based particle system.',
             'tier': 'presentation',
             'properties': {
-              'particles': {
-                'name': 'particles',
+              'baseUrl': {
+                'name': 'baseUrl',
                 'type': 'string',
-                'required': false,
+                'required': true,
               },
               'animations': {
                 'name': 'animations',
                 'type': 'string',
                 'required': false,
               },
-              'baseUrl': {
-                'name': 'baseUrl',
+              'particles': {
+                'name': 'particles',
                 'type': 'string',
-                'required': true,
+                'required': false,
               },
             },
           },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
+          'height': {
+            'type': 'number',
+            'default': 300,
+            'label': 'Height',
+            'description': 'Canvas height (default 300)',
             'tier': 'presentation',
           },
           'width': {
@@ -308,32 +323,17 @@ export function stdUiCanvasEffectCanvasEffectOrbital(params: StdUiCanvasEffectCa
             'description': 'Canvas width (default 400)',
             'tier': 'presentation',
           },
-          'intensity': {
-            'type': 'number',
-            'default': 1,
-            'label': 'Intensity',
-            'description': 'Optional intensity multiplier (1 = normal, 2 = double size/brightness)',
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
             'tier': 'presentation',
           },
-          'height': {
-            'type': 'number',
-            'default': 300,
-            'label': 'Height',
-            'description': 'Canvas height (default 300)',
-            'tier': 'presentation',
-          },
-          'x': {
-            'type': 'number',
-            'default': 0,
-            'label': 'X',
-            'description': 'Screen-space X position (center of the effect)',
-            'tier': 'presentation',
-          },
-          'y': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Y',
-            'description': 'Screen-space Y position (center of the effect)',
+          'error': {
+            'type': 'json',
+            'label': 'Error',
+            'description': 'Error state',
             'tier': 'presentation',
           },
         },

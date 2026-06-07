@@ -39,12 +39,12 @@ export type StdUiSpacerEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiSpacerConfig {
-  /** Default: `"auto"` */
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'auto';
-  /** Default: `""` */
-  className?: string;
   /** Default: `"horizontal"` */
   axis?: 'horizontal' | 'vertical';
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"auto"` */
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'auto';
 }
 
 /**

@@ -47,29 +47,29 @@ export interface StdUiGraphCanvasNodeClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiGraphCanvasConfig {
-  /** Default: `""` */
-  className?: string;
-  /** Default: `[]` */
-  nodes?: EntityRow[];
-  /** Default: `""` */
-  title?: string;
-  /** Default: `[]` */
-  edges?: EntityRow[];
   /** Default: `true` */
   draggable?: boolean;
+  /** Default: `[]` */
+  nodes?: EntityRow[];
   /** Default: `400` */
   height?: number;
+  /** Default: `""` */
+  className?: string;
   /** Default: `true` */
   showLabels?: boolean;
   /** Default: `"force"` */
   layout?: 'force' | 'circular' | 'grid';
-  error?: unknown;
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `true` */
-  interactive?: boolean;
+  error?: unknown;
+  /** Default: `[]` */
+  edges?: EntityRow[];
+  /** Default: `""` */
+  title?: string;
   /** Default: `[]` */
   actions?: EntityRow[];
+  /** Default: `true` */
+  interactive?: boolean;
 }
 
 /**
@@ -203,22 +203,22 @@ export function stdUiGraphCanvasGraphCanvasOrbital(params: StdUiGraphCanvasGraph
                   'render-ui',
                   'main',
                   {
-                    'entity': 'GraphCanvasItem',
-                    'onNodeClick': 'NODE_CLICK',
-                    'showLabels': '@config.showLabels',
-                    'type': 'graph-canvas',
-                    'title': '@config.title',
-                    'nodeClickEvent': 'NODE_CLICK',
-                    'isLoading': '@config.isLoading',
                     'draggable': '@config.draggable',
-                    'error': '@config.error',
-                    'interactive': '@config.interactive',
-                    'edges': '@config.edges',
+                    'onNodeClick': 'NODE_CLICK',
                     'layout': '@config.layout',
-                    'nodes': '@config.nodes',
-                    'height': '@config.height',
-                    'actions': '@config.actions',
+                    'edges': '@config.edges',
+                    'nodeClickEvent': 'NODE_CLICK',
                     'className': '@config.className',
+                    'interactive': '@config.interactive',
+                    'nodes': '@config.nodes',
+                    'error': '@config.error',
+                    'isLoading': '@config.isLoading',
+                    'title': '@config.title',
+                    'actions': '@config.actions',
+                    'type': 'graph-canvas',
+                    'entity': 'GraphCanvasItem',
+                    'showLabels': '@config.showLabels',
+                    'height': '@config.height',
                   },
                 ],
               ],
@@ -226,11 +226,11 @@ export function stdUiGraphCanvasGraphCanvasOrbital(params: StdUiGraphCanvasGraph
           ],
         },
         'config': {
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
+          'draggable': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Draggable',
+            'description': 'Enable node dragging',
             'tier': 'presentation',
           },
           'nodes': {
@@ -243,62 +243,18 @@ export function stdUiGraphCanvasGraphCanvasOrbital(params: StdUiGraphCanvasGraph
               'type': 'string',
             },
           },
-          'title': {
-            'type': 'string',
-            'default': '',
-            'label': 'Title',
-            'description': 'Graph title',
-            'tier': 'presentation',
-          },
-          'edges': {
-            'type': '[GraphCanvasEdgesItem]',
-            'default': [],
-            'label': 'Edges',
-            'description': 'Graph edges',
-            'tier': 'presentation',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'label': {
-                  'name': 'label',
-                  'type': 'string',
-                  'required': false,
-                },
-                'source': {
-                  'name': 'source',
-                  'type': 'string',
-                  'required': true,
-                },
-                'target': {
-                  'name': 'target',
-                  'type': 'string',
-                  'required': true,
-                },
-                'weight': {
-                  'name': 'weight',
-                  'type': 'number',
-                  'required': false,
-                },
-                'color': {
-                  'name': 'color',
-                  'type': 'string',
-                  'required': false,
-                },
-              },
-            },
-          },
-          'draggable': {
-            'type': 'boolean',
-            'default': true,
-            'label': 'Draggable',
-            'description': 'Enable node dragging',
-            'tier': 'presentation',
-          },
           'height': {
             'type': 'number',
             'default': 400,
             'label': 'Height',
             'description': 'Canvas height',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
           'showLabels': {
@@ -320,12 +276,6 @@ export function stdUiGraphCanvasGraphCanvasOrbital(params: StdUiGraphCanvasGraph
               'grid',
             ],
           },
-          'error': {
-            'type': 'json',
-            'label': 'Error',
-            'description': 'Error state',
-            'tier': 'presentation',
-          },
           'isLoading': {
             'type': 'boolean',
             'default': false,
@@ -333,11 +283,54 @@ export function stdUiGraphCanvasGraphCanvasOrbital(params: StdUiGraphCanvasGraph
             'description': 'Loading state',
             'tier': 'presentation',
           },
-          'interactive': {
-            'type': 'boolean',
-            'default': true,
-            'label': 'Interactive',
-            'description': 'Enable zoom/pan',
+          'error': {
+            'type': 'json',
+            'label': 'Error',
+            'description': 'Error state',
+            'tier': 'presentation',
+          },
+          'edges': {
+            'type': '[GraphCanvasEdgesItem]',
+            'default': [],
+            'label': 'Edges',
+            'description': 'Graph edges',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'target': {
+                  'name': 'target',
+                  'type': 'string',
+                  'required': true,
+                },
+                'weight': {
+                  'name': 'weight',
+                  'type': 'number',
+                  'required': false,
+                },
+                'color': {
+                  'name': 'color',
+                  'type': 'string',
+                  'required': false,
+                },
+                'source': {
+                  'name': 'source',
+                  'type': 'string',
+                  'required': true,
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'title': {
+            'type': 'string',
+            'default': '',
+            'label': 'Title',
+            'description': 'Graph title',
             'tier': 'presentation',
           },
           'actions': {
@@ -349,21 +342,6 @@ export function stdUiGraphCanvasGraphCanvasOrbital(params: StdUiGraphCanvasGraph
             'items': {
               'type': 'object',
               'properties': {
-                'label': {
-                  'name': 'label',
-                  'type': 'string',
-                  'required': true,
-                },
-                'event': {
-                  'name': 'event',
-                  'type': 'string',
-                  'required': false,
-                },
-                'navigatesTo': {
-                  'name': 'navigatesTo',
-                  'type': 'string',
-                  'required': false,
-                },
                 'variant': {
                   'name': 'variant',
                   'type': 'string',
@@ -374,8 +352,30 @@ export function stdUiGraphCanvasGraphCanvasOrbital(params: StdUiGraphCanvasGraph
                     'ghost',
                   ],
                 },
+                'navigatesTo': {
+                  'name': 'navigatesTo',
+                  'type': 'string',
+                  'required': false,
+                },
+                'event': {
+                  'name': 'event',
+                  'type': 'string',
+                  'required': false,
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': true,
+                },
               },
             },
+          },
+          'interactive': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Interactive',
+            'description': 'Enable zoom/pan',
+            'tier': 'presentation',
           },
         },
         'scope': 'instance',

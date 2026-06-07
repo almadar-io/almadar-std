@@ -97,57 +97,57 @@ export interface StdUiDataListRenderItemPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiDataListConfig {
-  /** Default: `""` */
-  groupBy?: string;
   /** Default: `false` */
-  sortable?: boolean;
-  /** Default: `0` */
-  maxInlineActions?: number;
+  hasMore?: boolean;
+  /** Default: `"none"` */
+  gap?: 'none' | 'sm' | 'md' | 'lg';
+  /** Default: `""` */
+  positionEvent?: string;
+  /** Default: `""` */
+  dropEvent?: string;
+  /** Default: `"default"` */
+  variant?: 'default' | 'card' | 'compact' | 'message';
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `false` */
+  infiniteScroll?: boolean;
+  /** Default: `"dense"` */
+  look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
+  /** Default: `[]` */
+  fields?: EntityRow[];
+  /** Default: `""` */
+  accepts?: string;
+  /** Default: `[]` */
+  swipeLeftActions?: EntityRow[];
   /** Default: `[]` */
   itemActions?: EntityRow[];
   /** Default: `""` */
   dndItemIdField?: string;
   /** Default: `false` */
   dndRoot?: boolean;
-  error?: unknown;
-  /** Default: `false` */
-  reorderable?: boolean;
-  /** Default: `false` */
-  infiniteScroll?: boolean;
-  /** Default: `5` */
-  pageSize?: number;
-  /** Default: `false` */
-  isLoading?: boolean;
   /** Default: `[]` */
   swipeRightActions?: EntityRow[];
+  /** Default: `5` */
+  pageSize?: number;
+  /** Default: `[]` */
+  columns?: EntityRow[];
   /** Default: `false` */
-  hasMore?: boolean;
+  sortable?: boolean;
+  /** Default: `""` */
+  senderField?: string;
   /** Default: `""` */
   currentUser?: string;
   /** Default: `""` */
-  dragGroup?: string;
-  /** Default: `""` */
-  accepts?: string;
-  /** Default: `""` */
-  positionEvent?: string;
-  /** Default: `"default"` */
-  variant?: 'default' | 'card' | 'compact' | 'message';
-  /** Default: `""` */
-  senderField?: string;
-  /** Default: `[]` */
-  swipeLeftActions?: EntityRow[];
-  /** Default: `[]` */
-  fields?: EntityRow[];
-  /** Default: `""` */
   className?: string;
-  /** Default: `"dense"` */
-  look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
-  /** Default: `[]` */
-  columns?: EntityRow[];
   /** Default: `""` */
-  dropEvent?: string;
-  /** Default: `"none"` */
-  gap?: 'none' | 'sm' | 'md' | 'lg';
+  groupBy?: string;
+  /** Default: `0` */
+  maxInlineActions?: number;
+  error?: unknown;
+  /** Default: `false` */
+  reorderable?: boolean;
+  /** Default: `""` */
+  dragGroup?: string;
 }
 
 /**

@@ -39,19 +39,19 @@ export type StdUiScoreDisplayEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiScoreDisplayConfig {
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg' | 'xl';
-  /** Default: `"en-US"` */
-  locale?: string;
-  icon?: unknown;
-  /** Default: `""` */
-  label?: string;
   /** Default: `0` */
   value?: number;
-  /** Default: `true` */
-  animated?: boolean;
+  icon?: unknown;
   /** Default: `""` */
   className?: string;
+  /** Default: `true` */
+  animated?: boolean;
+  /** Default: `"en-US"` */
+  locale?: string;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  /** Default: `""` */
+  label?: string;
 }
 
 /**

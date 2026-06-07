@@ -40,17 +40,17 @@ export type StdUiCodeExampleEventKey = 'INIT';
  */
 export interface StdUiCodeExampleConfig {
   /** Default: `""` */
-  code?: string;
-  /** Default: `""` */
   language?: string;
   /** Default: `""` */
+  code?: string;
+  /** Default: `""` */
   title?: string;
+  /** Default: `""` */
+  className?: string;
   /** Default: `false` */
   copyable?: boolean;
   /** Default: `""` */
   maxHeight?: string;
-  /** Default: `""` */
-  className?: string;
 }
 
 /**

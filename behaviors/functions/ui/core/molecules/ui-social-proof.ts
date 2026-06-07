@@ -39,10 +39,10 @@ export type StdUiSocialProofEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiSocialProofConfig {
-  /** Default: `"logos"` */
-  variant?: 'logos' | 'quotes' | 'badges';
   /** Default: `""` */
   className?: string;
+  /** Default: `"logos"` */
+  variant?: 'logos' | 'quotes' | 'badges';
   /** Default: `[]` */
   items?: EntityRow[];
 }

@@ -60,15 +60,15 @@ export interface StdUiVersionDiffRevertPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiVersionDiffConfig {
-  revisions?: unknown;
-  /** Default: `"side-by-side"` */
-  view?: 'side-by-side' | 'inline';
   /** Default: `""` */
   beforeId?: string;
   /** Default: `""` */
   language?: string;
   /** Default: `""` */
   className?: string;
+  revisions?: unknown;
+  /** Default: `"side-by-side"` */
+  view?: 'side-by-side' | 'inline';
   /** Default: `""` */
   afterId?: string;
 }

@@ -19,13 +19,13 @@ orbital EntityListOrbital {
           sortBy: @config.sortBy
           sortDirection: @config.sortDirection
           searchValue: @config.searchValue
+          page: @config.pageProp
           pageSize: @config.pageSize
           totalCount: @config.totalCount
           activeFilters: @config.activeFilters
           selectedIds: @config.selectedIds
           entityType: @config.entityType
           selectable: @config.selectable
-          itemActions: ITEM_ACTIONS
           showDividers: @config.showDividers
           variant: @config.variant
           emptyMessage: @config.emptyMessage
@@ -33,8 +33,11 @@ orbital EntityListOrbital {
           children: @config.children
           fields: @config.fields
           fieldNames: @config.fieldNames
+          itemActions: [{ label: "View", event: VIEW }]
           type: entity-list
         })
+      VIEW -> idle
+        (emit VIEW {})
     }
 
     emits {
@@ -48,6 +51,11 @@ orbital EntityListOrbital {
         index : number
       }
         @description "renderItem prop"
+        @tier "essential"
+      VIEW -> external {
+        id : string
+      }
+        @description "User opened a record from the list."
         @tier "essential"
     }
 
@@ -75,6 +83,11 @@ orbital EntityListOrbital {
       searchValue : string = ""
         @label "Search Value"
         @description "Current search query value"
+        @tier "presentation"
+      pageProp : number = 0
+        @label "Page"
+        @description "Current page number"
+        @synonyms "page"
         @tier "presentation"
       pageSize : number = 0
         @label "Page Size"

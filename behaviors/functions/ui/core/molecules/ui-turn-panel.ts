@@ -39,18 +39,18 @@ export type StdUiTurnPanelEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiTurnPanelConfig {
-  /** Default: `""` */
-  phase?: string;
-  /** Default: `0` */
-  currentTurn?: number;
-  /** Default: `""` */
-  activeTeam?: string;
   /** Default: `[]` */
   actions?: EntityRow[];
-  /** Default: `""` */
-  className?: string;
+  /** Default: `0` */
+  currentTurn?: number;
   /** Default: `0` */
   maxTurns?: number;
+  /** Default: `""` */
+  activeTeam?: string;
+  /** Default: `""` */
+  phase?: string;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

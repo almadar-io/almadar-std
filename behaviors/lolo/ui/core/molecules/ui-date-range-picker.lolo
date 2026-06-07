@@ -4,7 +4,6 @@ orbital DateRangePickerOrbital {
   type DateRangePickerPresetsItem = {
     label : string!
     value : string!
-    range : any!
   }
 
   entity DateRangePickerItem [runtime] {
@@ -17,6 +16,8 @@ orbital DateRangePickerOrbital {
     state idle {
       INIT -> idle
         (render-ui main {
+          from: @config.fromProp
+          to: @config.toProp
           event: EVENT
           onChange: CHANGE
           presets: @config.presets
@@ -42,6 +43,16 @@ orbital DateRangePickerOrbital {
     }
 
     config {
+      fromProp : string = ""
+        @label "From"
+        @description "Controlled `from` (ISO date YYYY-MM-DD)."
+        @synonyms "from"
+        @tier "presentation"
+      toProp : string = ""
+        @label "To"
+        @description "Controlled `to` (ISO date YYYY-MM-DD)."
+        @synonyms "to"
+        @tier "presentation"
       presets : [DateRangePickerPresetsItem] = []
         @label "Presets"
         @description "Preset shortcuts. Defaults to the standard finance set (Last 7d / Last 30d / This Month / This Quarter / YTD). Pass an empty array to hide presets entirely."

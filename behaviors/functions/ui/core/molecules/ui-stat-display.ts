@@ -39,47 +39,48 @@ export type StdUiStatDisplayEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiStatDisplayConfig {
-  /** Default: `"elevated"` */
-  look?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
-  value?: 'number' | 'string';
-  /** Default: `0` */
-  max?: number;
-  /** Default: `0` */
-  trend?: number;
-  /** Default: `""` */
-  suffix?: string;
-  /** Default: `"bg-muted"` */
-  iconBg?: string;
-  /** Default: `""` */
-  prefix?: string;
-  error?: unknown;
-  /** Default: `"text-foreground"` */
-  iconColor?: string;
-  /** Default: `""` */
-  format?: string;
   /** Default: `0` */
   target?: number;
   /** Default: `""` */
-  className?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
+  format?: string;
+  icon?: unknown;
   /** Default: `false` */
   compact?: boolean;
+  /** Default: `"elevated"` */
+  look?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
   /** Default: `""` */
-  clickEvent?: string;
-  /** Default: `""` */
-  label?: string;
-  /** Default: `"higher-is-better"` */
-  trendPolarity?: 'higher-is-better' | 'lower-is-better';
-  /** Default: `[]` */
-  sparklineData?: number[];
-  icon?: unknown;
-  /** Default: `"default"` */
-  variant?: 'default' | 'primary' | 'success' | 'warning' | 'error' | 'info';
+  value?: string;
+  /** Default: `0` */
+  max?: number;
+  error?: unknown;
+  /** Default: `false` */
+  isLoading?: boolean;
   /** Default: `"absolute"` */
   trendFormat?: 'absolute' | 'percent';
+  /** Default: `"text-foreground"` */
+  iconColor?: string;
+  /** Default: `"default"` */
+  variant?: 'default' | 'primary' | 'success' | 'warning' | 'error' | 'info';
+  /** Default: `"higher-is-better"` */
+  trendPolarity?: 'higher-is-better' | 'lower-is-better';
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
+  /** Default: `""` */
+  suffix?: string;
+  /** Default: `""` */
+  label?: string;
+  /** Default: `"bg-muted"` */
+  iconBg?: string;
+  /** Default: `""` */
+  clickEvent?: string;
+  /** Default: `0` */
+  trend?: number;
+  /** Default: `[]` */
+  sparklineData?: number[];
+  /** Default: `""` */
+  prefix?: string;
 }
 
 /**

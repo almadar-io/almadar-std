@@ -70,50 +70,50 @@ export interface StdUiTableViewRenderItemPayload {
  */
 export interface StdUiTableViewConfig {
   /** Default: `""` */
-  sortColumn?: string;
-  /** Default: `[]` */
-  columns?: EntityRow[];
-  /** Default: `false` */
-  selectable?: boolean;
-  /** Default: `[]` */
-  selectedIds?: string[];
-  /** Default: `""` */
-  accepts?: string;
-  /** Default: `false` */
-  sortable?: boolean;
-  /** Default: `""` */
-  dropEvent?: string;
-  /** Default: `false` */
-  dndRoot?: boolean;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `""` */
   emptyMessage?: string;
-  error?: unknown;
+  /** Default: `""` */
+  positionEvent?: string;
+  /** Default: `0` */
+  maxInlineActions?: number;
   /** Default: `""` */
   groupBy?: string;
+  /** Default: `[]` */
+  fields?: EntityRow[];
+  /** Default: `false` */
+  dndRoot?: boolean;
+  /** Default: `0` */
+  pageSize?: number;
+  /** Default: `[]` */
+  itemActions?: EntityRow[];
+  /** Default: `false` */
+  isLoading?: boolean;
+  error?: unknown;
   /** Default: `"dense"` */
   look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'bordered';
   /** Default: `""` */
-  reorderEvent?: string;
+  dropEvent?: string;
+  /** Default: `[]` */
+  selectedIds?: string[];
+  /** Default: `false` */
+  sortable?: boolean;
   /** Default: `""` */
-  positionEvent?: string;
+  reorderEvent?: string;
+  /** Default: `[]` */
+  columns?: EntityRow[];
   /** Default: `""` */
   dndItemIdField?: string;
   /** Default: `""` */
+  sortColumn?: string;
+  /** Default: `""` */
   dragGroup?: string;
-  /** Default: `[]` */
-  fields?: EntityRow[];
-  /** Default: `[]` */
-  itemActions?: EntityRow[];
+  /** Default: `false` */
+  selectable?: boolean;
   /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `0` */
-  pageSize?: number;
-  /** Default: `0` */
-  maxInlineActions?: number;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `""` */
+  accepts?: string;
 }
 
 /**

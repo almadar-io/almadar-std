@@ -39,22 +39,22 @@ export type StdUiSimulationGraphEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiSimulationGraphConfig {
-  /** Default: `""` */
-  unit?: string;
-  /** Default: `""` */
-  label?: string;
   /** Default: `[]` */
   data?: EntityRow[];
   /** Default: `""` */
+  label?: string;
+  /** Default: `""` */
   className?: string;
-  /** Default: `120` */
-  height?: number;
+  /** Default: `""` */
+  unit?: string;
+  /** Default: `300` */
+  width?: number;
   /** Default: `200` */
   maxPoints?: number;
   /** Default: `"#e94560"` */
   color?: string;
-  /** Default: `300` */
-  width?: number;
+  /** Default: `120` */
+  height?: number;
 }
 
 /**
@@ -158,15 +158,15 @@ export function stdUiSimulationGraphSimulationGraphOrbital(params: StdUiSimulati
                   'render-ui',
                   'main',
                   {
-                    'unit': '@config.unit',
-                    'className': '@config.className',
-                    'height': '@config.height',
                     'data': '@config.data',
-                    'maxPoints': '@config.maxPoints',
-                    'type': 'simulation-graph',
                     'color': '@config.color',
-                    'width': '@config.width',
+                    'type': 'simulation-graph',
                     'label': '@config.label',
+                    'unit': '@config.unit',
+                    'width': '@config.width',
+                    'className': '@config.className',
+                    'maxPoints': '@config.maxPoints',
+                    'height': '@config.height',
                   },
                 ],
               ],
@@ -174,20 +174,6 @@ export function stdUiSimulationGraphSimulationGraphOrbital(params: StdUiSimulati
           ],
         },
         'config': {
-          'unit': {
-            'type': 'string',
-            'default': '',
-            'label': 'Unit',
-            'description': 'unit prop',
-            'tier': 'presentation',
-          },
-          'label': {
-            'type': 'string',
-            'default': '',
-            'label': 'Label',
-            'description': 'label prop',
-            'tier': 'presentation',
-          },
           'data': {
             'type': '[SimulationGraphDataItem]',
             'default': [],
@@ -210,6 +196,13 @@ export function stdUiSimulationGraphSimulationGraphOrbital(params: StdUiSimulati
               },
             },
           },
+          'label': {
+            'type': 'string',
+            'default': '',
+            'label': 'Label',
+            'description': 'label prop',
+            'tier': 'presentation',
+          },
           'className': {
             'type': 'string',
             'default': '',
@@ -217,11 +210,18 @@ export function stdUiSimulationGraphSimulationGraphOrbital(params: StdUiSimulati
             'description': 'className prop',
             'tier': 'presentation',
           },
-          'height': {
+          'unit': {
+            'type': 'string',
+            'default': '',
+            'label': 'Unit',
+            'description': 'unit prop',
+            'tier': 'presentation',
+          },
+          'width': {
             'type': 'number',
-            'default': 120,
-            'label': 'Height',
-            'description': 'height prop',
+            'default': 300,
+            'label': 'Width',
+            'description': 'width prop',
             'tier': 'presentation',
           },
           'maxPoints': {
@@ -238,11 +238,11 @@ export function stdUiSimulationGraphSimulationGraphOrbital(params: StdUiSimulati
             'description': 'color prop',
             'tier': 'presentation',
           },
-          'width': {
+          'height': {
             'type': 'number',
-            'default': 300,
-            'label': 'Width',
-            'description': 'width prop',
+            'default': 120,
+            'label': 'Height',
+            'description': 'height prop',
             'tier': 'presentation',
           },
         },

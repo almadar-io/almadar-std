@@ -60,13 +60,13 @@ export interface StdUiDialogueBoxAdvancePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiDialogueBoxConfig {
-  dialogue?: EntityRow;
   /** Default: `""` */
   className?: string;
   /** Default: `"bottom"` */
   position?: 'top' | 'bottom';
   /** Default: `30` */
   typewriterSpeed?: number;
+  dialogue?: EntityRow;
 }
 
 /**

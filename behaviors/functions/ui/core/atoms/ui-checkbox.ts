@@ -40,13 +40,13 @@ export type StdUiCheckboxEventKey = 'INIT';
  */
 export interface StdUiCheckboxConfig {
   /** Default: `false` */
-  defaultChecked?: boolean;
-  /** Default: `""` */
-  label?: string;
+  checked?: boolean;
   /** Default: `""` */
   className?: string;
+  /** Default: `""` */
+  label?: string;
   /** Default: `false` */
-  checked?: boolean;
+  defaultChecked?: boolean;
 }
 
 /**

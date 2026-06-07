@@ -41,9 +41,9 @@ export type StdUiBookChapterViewEventKey = 'INIT';
 export interface StdUiBookChapterViewConfig {
   /** Default: `""` */
   className?: string;
+  chapter?: EntityRow;
   /** Default: `"rtl"` */
   direction?: 'rtl' | 'ltr';
-  chapter?: EntityRow;
 }
 
 /**
@@ -147,10 +147,10 @@ export function stdUiBookChapterViewBookChapterViewOrbital(params: StdUiBookChap
                   'render-ui',
                   'main',
                   {
-                    'className': '@config.className',
                     'chapter': '@config.chapter',
                     'type': 'book-chapter-view',
                     'direction': '@config.direction',
+                    'className': '@config.className',
                   },
                 ],
               ],
@@ -165,6 +165,34 @@ export function stdUiBookChapterViewBookChapterViewOrbital(params: StdUiBookChap
             'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
+          'chapter': {
+            'type': 'BookChapterViewChapter',
+            'label': 'Chapter',
+            'description': 'chapter prop',
+            'tier': 'presentation',
+            'properties': {
+              'title': {
+                'name': 'title',
+                'type': 'string',
+                'required': true,
+              },
+              'content': {
+                'name': 'content',
+                'type': 'string',
+                'required': true,
+              },
+              'id': {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              'orbitalSchema': {
+                'name': 'orbitalSchema',
+                'type': 'string',
+                'required': false,
+              },
+            },
+          },
           'direction': {
             'type': 'string',
             'default': 'rtl',
@@ -175,34 +203,6 @@ export function stdUiBookChapterViewBookChapterViewOrbital(params: StdUiBookChap
               'rtl',
               'ltr',
             ],
-          },
-          'chapter': {
-            'type': 'BookChapterViewChapter',
-            'label': 'Chapter',
-            'description': 'chapter prop',
-            'tier': 'presentation',
-            'properties': {
-              'id': {
-                'name': 'id',
-                'type': 'string',
-                'required': true,
-              },
-              'content': {
-                'name': 'content',
-                'type': 'string',
-                'required': true,
-              },
-              'title': {
-                'name': 'title',
-                'type': 'string',
-                'required': true,
-              },
-              'orbitalSchema': {
-                'name': 'orbitalSchema',
-                'type': 'string',
-                'required': false,
-              },
-            },
           },
         },
         'scope': 'instance',

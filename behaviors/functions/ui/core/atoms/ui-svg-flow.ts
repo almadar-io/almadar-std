@@ -41,16 +41,16 @@ export type StdUiSvgFlowEventKey = 'INIT';
 export interface StdUiSvgFlowConfig {
   /** Default: `1` */
   opacity?: number;
-  /** Default: `false` */
-  animated?: boolean;
   /** Default: `""` */
   className?: string;
-  /** Default: `[]` */
-  points?: unknown;
   /** Default: `"var(--color-primary)"` */
   color?: string;
   /** Default: `1.5` */
   strokeWidth?: number;
+  /** Default: `[]` */
+  points?: unknown;
+  /** Default: `false` */
+  animated?: boolean;
 }
 
 /**

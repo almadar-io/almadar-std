@@ -43,9 +43,9 @@ export interface StdUiContentSectionConfig {
   className?: string;
   /** Default: `"lg"` */
   padding?: 'sm' | 'md' | 'lg';
+  children?: unknown;
   /** Default: `"default"` */
   background?: 'default' | 'alt' | 'dark' | 'gradient';
-  children?: unknown;
 }
 
 /**

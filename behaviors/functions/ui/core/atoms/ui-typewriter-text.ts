@@ -46,14 +46,14 @@ export interface StdUiTypewriterTextCompletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiTypewriterTextConfig {
-  /** Default: `""` */
-  text?: string;
+  /** Default: `0` */
+  startDelay?: number;
   /** Default: `40` */
   speed?: number;
   /** Default: `""` */
+  text?: string;
+  /** Default: `""` */
   className?: string;
-  /** Default: `0` */
-  startDelay?: number;
 }
 
 /**

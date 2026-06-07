@@ -43,17 +43,17 @@ export interface StdUiPricingCardConfig {
   features?: string[];
   /** Default: `""` */
   price?: string;
+  /** Default: `false` */
+  highlighted?: boolean;
+  /** Default: `""` */
+  badge?: string;
+  action?: EntityRow;
+  /** Default: `""` */
+  className?: string;
   /** Default: `""` */
   description?: string;
   /** Default: `""` */
   name?: string;
-  action?: unknown;
-  /** Default: `""` */
-  badge?: string;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `false` */
-  highlighted?: boolean;
 }
 
 /**

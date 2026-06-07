@@ -47,23 +47,23 @@ export interface StdUiDrawerClosePayload {
  */
 export interface StdUiDrawerConfig {
   /** Default: `true` */
-  isOpen?: boolean;
-  footer?: unknown;
+  closeOnEscape?: boolean;
+  children?: unknown;
   /** Default: `true` */
   closeOnOverlayClick?: boolean;
-  /** Default: `"right"` */
-  position?: 'left' | 'right';
   /** Default: `"md"` */
   width?: string;
-  /** Default: `""` */
-  className?: string;
   /** Default: `true` */
   showCloseButton?: boolean;
   /** Default: `""` */
+  className?: string;
+  footer?: unknown;
+  /** Default: `"right"` */
+  position?: 'left' | 'right';
+  /** Default: `""` */
   title?: string;
   /** Default: `true` */
-  closeOnEscape?: boolean;
-  children?: unknown;
+  isOpen?: boolean;
 }
 
 /**

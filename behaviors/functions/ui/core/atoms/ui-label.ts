@@ -40,11 +40,11 @@ export type StdUiLabelEventKey = 'INIT';
  */
 export interface StdUiLabelConfig {
   /** Default: `""` */
-  text?: string;
+  className?: string;
   /** Default: `""` */
   htmlFor?: string;
   /** Default: `""` */
-  className?: string;
+  text?: string;
   /** Default: `false` */
   required?: boolean;
 }

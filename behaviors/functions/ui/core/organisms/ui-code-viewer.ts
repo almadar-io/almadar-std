@@ -39,36 +39,37 @@ export type StdUiCodeViewerEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiCodeViewerConfig {
-  /** Default: `"code"` */
-  mode?: 'code' | 'diff';
-  /** Default: `true` */
-  showCopy?: boolean;
-  /** Default: `[]` */
-  diff?: EntityRow[];
-  maxHeight?: 'number' | 'string';
   /** Default: `true` */
   showLineNumbers?: boolean;
   /** Default: `""` */
-  newValue?: string;
-  /** Default: `""` */
   code?: string;
+  /** Default: `""` */
+  title?: string;
+  /** Default: `false` */
+  wordWrap?: boolean;
   /** Default: `[]` */
   actions?: EntityRow[];
   /** Default: `""` */
   language?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `""` */
-  title?: string;
-  /** Default: `[]` */
-  files?: EntityRow[];
-  /** Default: `false` */
-  wordWrap?: boolean;
+  /** Default: `true` */
+  showCopy?: boolean;
   /** Default: `""` */
   oldValue?: string;
   error?: unknown;
+  /** Default: `[]` */
+  diff?: EntityRow[];
+  /** Default: `""` */
+  className?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `"code"` */
+  mode?: 'code' | 'diff';
+  /** Default: `[]` */
+  files?: EntityRow[];
+  /** Default: `""` */
+  newValue?: string;
+  /** Default: `""` */
+  maxHeight?: string;
 }
 
 /**
@@ -177,24 +178,24 @@ export function stdUiCodeViewerCodeViewerOrbital(params: StdUiCodeViewerCodeView
                   'render-ui',
                   'main',
                   {
-                    'showLineNumbers': '@config.showLineNumbers',
-                    'newValue': '@config.newValue',
-                    'oldValue': '@config.oldValue',
-                    'mode': '@config.mode',
+                    'error': '@config.error',
+                    'files': '@config.files',
                     'className': '@config.className',
+                    'maxHeight': '@config.maxHeight',
+                    'code': '@config.code',
+                    'diff': '@config.diff',
+                    'oldValue': '@config.oldValue',
+                    'wordWrap': '@config.wordWrap',
+                    'type': 'code-viewer',
+                    'mode': '@config.mode',
                     'title': '@config.title',
+                    'isLoading': '@config.isLoading',
+                    'actions': '@config.actions',
+                    'showCopy': '@config.showCopy',
                     'entity': 'CodeViewerItem',
                     'language': '@config.language',
-                    'actions': '@config.actions',
-                    'error': '@config.error',
-                    'code': '@config.code',
-                    'type': 'code-viewer',
-                    'diff': '@config.diff',
-                    'showCopy': '@config.showCopy',
-                    'maxHeight': '@config.maxHeight',
-                    'wordWrap': '@config.wordWrap',
-                    'files': '@config.files',
-                    'isLoading': '@config.isLoading',
+                    'newValue': '@config.newValue',
+                    'showLineNumbers': '@config.showLineNumbers',
                   },
                 ],
               ],
@@ -202,72 +203,6 @@ export function stdUiCodeViewerCodeViewerOrbital(params: StdUiCodeViewerCodeView
           ],
         },
         'config': {
-          'mode': {
-            'type': 'string',
-            'default': 'code',
-            'label': 'Mode',
-            'description': 'Display mode',
-            'tier': 'presentation',
-            'values': [
-              'code',
-              'diff',
-            ],
-          },
-          'showCopy': {
-            'type': 'boolean',
-            'default': true,
-            'label': 'Show Copy',
-            'description': 'Show copy button',
-            'tier': 'presentation',
-          },
-          'diff': {
-            'type': '[CodeViewerDiffItem]',
-            'default': [],
-            'label': 'Diff',
-            'description': 'Diff lines (for diff mode)',
-            'tier': 'presentation',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'afterLineNumber': {
-                  'name': 'afterLineNumber',
-                  'type': 'number',
-                  'required': false,
-                },
-                'type': {
-                  'name': 'type',
-                  'type': 'string',
-                  'required': true,
-                  'values': [
-                    'added',
-                    'removed',
-                    'unchanged',
-                    'context',
-                  ],
-                },
-                'content': {
-                  'name': 'content',
-                  'type': 'string',
-                  'required': true,
-                },
-                'beforeLineNumber': {
-                  'name': 'beforeLineNumber',
-                  'type': 'number',
-                  'required': false,
-                },
-              },
-            },
-          },
-          'maxHeight': {
-            'type': 'string',
-            'label': 'Max Height',
-            'description': 'Max height before scrolling',
-            'tier': 'presentation',
-            'values': [
-              'number',
-              'string',
-            ],
-          },
           'showLineNumbers': {
             'type': 'boolean',
             'default': true,
@@ -275,18 +210,25 @@ export function stdUiCodeViewerCodeViewerOrbital(params: StdUiCodeViewerCodeView
             'description': 'Show line numbers',
             'tier': 'presentation',
           },
-          'newValue': {
-            'type': 'string',
-            'default': '',
-            'label': 'New Value',
-            'description': 'New value (for generating diff)',
-            'tier': 'presentation',
-          },
           'code': {
             'type': 'string',
             'default': '',
             'label': 'Code',
             'description': 'Code content',
+            'tier': 'presentation',
+          },
+          'title': {
+            'type': 'string',
+            'default': '',
+            'label': 'Title',
+            'description': 'Viewer title',
+            'tier': 'presentation',
+          },
+          'wordWrap': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Word Wrap',
+            'description': 'Enable word wrap',
             'tier': 'presentation',
           },
           'actions': {
@@ -298,6 +240,16 @@ export function stdUiCodeViewerCodeViewerOrbital(params: StdUiCodeViewerCodeView
             'items': {
               'type': 'object',
               'properties': {
+                'navigatesTo': {
+                  'name': 'navigatesTo',
+                  'type': 'string',
+                  'required': false,
+                },
+                'event': {
+                  'name': 'event',
+                  'type': 'string',
+                  'required': false,
+                },
                 'label': {
                   'name': 'label',
                   'type': 'string',
@@ -313,16 +265,6 @@ export function stdUiCodeViewerCodeViewerOrbital(params: StdUiCodeViewerCodeView
                     'ghost',
                   ],
                 },
-                'navigatesTo': {
-                  'name': 'navigatesTo',
-                  'type': 'string',
-                  'required': false,
-                },
-                'event': {
-                  'name': 'event',
-                  'type': 'string',
-                  'required': false,
-                },
               },
             },
           },
@@ -333,42 +275,11 @@ export function stdUiCodeViewerCodeViewerOrbital(params: StdUiCodeViewerCodeView
             'description': 'Language for display label',
             'tier': 'presentation',
           },
-          'isLoading': {
+          'showCopy': {
             'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'title': {
-            'type': 'string',
-            'default': '',
-            'label': 'Title',
-            'description': 'Viewer title',
-            'tier': 'presentation',
-          },
-          'files': {
-            'type': '[json]',
-            'default': [],
-            'label': 'Files',
-            'description': 'Multiple files (tabbed view)',
-            'tier': 'presentation',
-            'items': {
-              'type': 'string',
-            },
-          },
-          'wordWrap': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Word Wrap',
-            'description': 'Enable word wrap',
+            'default': true,
+            'label': 'Show Copy',
+            'description': 'Show copy button',
             'tier': 'presentation',
           },
           'oldValue': {
@@ -382,6 +293,93 @@ export function stdUiCodeViewerCodeViewerOrbital(params: StdUiCodeViewerCodeView
             'type': 'json',
             'label': 'Error',
             'description': 'Error state',
+            'tier': 'presentation',
+          },
+          'diff': {
+            'type': '[CodeViewerDiffItem]',
+            'default': [],
+            'label': 'Diff',
+            'description': 'Diff lines (for diff mode)',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'content': {
+                  'name': 'content',
+                  'type': 'string',
+                  'required': true,
+                },
+                'afterLineNumber': {
+                  'name': 'afterLineNumber',
+                  'type': 'number',
+                  'required': false,
+                },
+                'beforeLineNumber': {
+                  'name': 'beforeLineNumber',
+                  'type': 'number',
+                  'required': false,
+                },
+                'type': {
+                  'name': 'type',
+                  'type': 'string',
+                  'required': true,
+                  'values': [
+                    'added',
+                    'removed',
+                    'unchanged',
+                    'context',
+                  ],
+                },
+              },
+            },
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state',
+            'tier': 'presentation',
+          },
+          'mode': {
+            'type': 'string',
+            'default': 'code',
+            'label': 'Mode',
+            'description': 'Display mode',
+            'tier': 'presentation',
+            'values': [
+              'code',
+              'diff',
+            ],
+          },
+          'files': {
+            'type': '[json]',
+            'default': [],
+            'label': 'Files',
+            'description': 'Multiple files (tabbed view)',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'newValue': {
+            'type': 'string',
+            'default': '',
+            'label': 'New Value',
+            'description': 'New value (for generating diff)',
+            'tier': 'presentation',
+          },
+          'maxHeight': {
+            'type': 'string',
+            'default': '',
+            'label': 'Max Height',
+            'description': 'Max height before scrolling',
             'tier': 'presentation',
           },
         },

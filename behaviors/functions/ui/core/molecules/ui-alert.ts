@@ -53,14 +53,14 @@ export interface StdUiAlertClosePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiAlertConfig {
-  /** Default: `""` */
-  title?: string;
+  children?: unknown;
   /** Default: `"info"` */
   variant?: 'info' | 'success' | 'warning' | 'error';
-  actions?: unknown;
-  children?: unknown;
+  /** Default: `""` */
+  title?: string;
   /** Default: `false` */
   dismissible?: boolean;
+  actions?: unknown;
   /** Default: `""` */
   className?: string;
   /** Default: `""` */

@@ -39,17 +39,17 @@ export type StdUiResourceCounterEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiResourceCounterConfig {
-  /** Default: `0` */
-  value?: number;
   /** Default: `""` */
-  className?: string;
-  icon?: unknown;
+  color?: string;
   /** Default: `0` */
   max?: number;
+  /** Default: `0` */
+  value?: number;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
   /** Default: `""` */
-  color?: string;
+  className?: string;
+  icon?: unknown;
   /** Default: `""` */
   label?: string;
 }

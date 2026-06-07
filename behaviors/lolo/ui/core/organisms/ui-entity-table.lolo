@@ -4,9 +4,7 @@ orbital EntityTableOrbital {
   type EntityTableRowActionsItem = {
     label : string!
     icon : string
-    onClick : any!
     variant : "default" | "danger"
-    show : any
     event : string
   }
 
@@ -28,13 +26,13 @@ orbital EntityTableOrbital {
           sortBy: @config.sortBy
           sortDirection: @config.sortDirection
           searchValue: @config.searchValue
+          page: @config.pageProp
           pageSize: @config.pageSize
           totalCount: @config.totalCount
           activeFilters: @config.activeFilters
           selectedIds: @config.selectedIds
           fields: @config.fields
           columns: @config.columns
-          itemActions: @config.itemActions
           emptyIcon: @config.emptyIcon
           emptyTitle: @config.emptyTitle
           emptyDescription: @config.emptyDescription
@@ -47,8 +45,19 @@ orbital EntityTableOrbital {
           headerActions: @config.headerActions
           showTotal: @config.showTotal
           look: @config.look
+          itemActions: [{ label: "View", event: VIEW }]
           type: entity-table
         })
+      VIEW -> idle
+        (emit VIEW {})
+    }
+
+    emits {
+      VIEW -> external {
+        id : string
+      }
+        @description "User opened a record from the list."
+        @tier "essential"
     }
 
     config {
@@ -75,6 +84,11 @@ orbital EntityTableOrbital {
       searchValue : string = ""
         @label "Search Value"
         @description "Current search query value"
+        @tier "presentation"
+      pageProp : number = 0
+        @label "Page"
+        @description "Current page number"
+        @synonyms "page"
         @tier "presentation"
       pageSize : number = 0
         @label "Page Size"

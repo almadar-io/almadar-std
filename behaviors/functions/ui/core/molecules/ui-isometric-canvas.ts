@@ -96,7 +96,7 @@ export interface StdUiIsometricCanvasResolveUnitFramePayload {
 export interface StdUiIsometricCanvasDrawEffectsPayload {
   ctx?: EntityRow;
   animTime?: number;
-  getImage?: string;
+  getImage?: unknown;
 }
 
 /**
@@ -106,49 +106,49 @@ export interface StdUiIsometricCanvasDrawEffectsPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiIsometricCanvasConfig {
-  hoveredTile?: unknown;
+  error?: unknown;
+  /** Default: `[]` */
+  features?: EntityRow[];
+  /** Default: `0` */
+  boardWidth?: number;
+  /** Default: `[]` */
+  effectSpriteUrls?: string[];
+  /** Default: `""` */
+  selectedUnitId?: string;
+  /** Default: `true` */
+  enableCamera?: boolean;
+  /** Default: `""` */
+  assetBaseUrl?: string;
+  assetManifest?: unknown;
   /** Default: `false` */
   debug?: boolean;
   /** Default: `[]` */
-  features?: EntityRow[];
-  /** Default: `[]` */
-  attackTargets?: EntityRow[];
-  /** Default: `0.4` */
-  scale?: number;
-  /** Default: `[]` */
-  tiles?: EntityRow[];
-  /** Default: `[]` */
-  validMoves?: EntityRow[];
-  /** Default: `true` */
-  enableCamera?: boolean;
+  units?: EntityRow[];
+  /** Default: `false` */
+  hasActiveEffects?: boolean;
   /** Default: `true` */
   showMinimap?: boolean;
   /** Default: `0` */
-  diamondTopY?: number;
-  /** Default: `1` */
-  unitScale?: number;
-  /** Default: `""` */
-  assetBaseUrl?: string;
-  error?: unknown;
-  /** Default: `[]` */
-  effectSpriteUrls?: string[];
-  /** Default: `[]` */
-  units?: EntityRow[];
-  /** Default: `""` */
-  selectedUnitId?: string;
-  /** Default: `false` */
-  hasActiveEffects?: boolean;
-  assetManifest?: unknown;
+  boardHeight?: number;
+  /** Default: `0.4` */
+  scale?: number;
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `""` */
-  backgroundImage?: string;
+  /** Default: `0` */
+  diamondTopY?: number;
+  /** Default: `[]` */
+  tiles?: EntityRow[];
   /** Default: `""` */
   className?: string;
-  /** Default: `0` */
-  boardWidth?: number;
-  /** Default: `0` */
-  boardHeight?: number;
+  /** Default: `""` */
+  backgroundImage?: string;
+  /** Default: `[]` */
+  validMoves?: EntityRow[];
+  /** Default: `[]` */
+  attackTargets?: EntityRow[];
+  hoveredTile?: unknown;
+  /** Default: `1` */
+  unitScale?: number;
 }
 
 /**

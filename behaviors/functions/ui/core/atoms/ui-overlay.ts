@@ -53,10 +53,10 @@ export interface StdUiOverlayActionPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiOverlayConfig {
-  /** Default: `""` */
-  className?: string;
   /** Default: `true` */
   isVisible?: boolean;
+  /** Default: `""` */
+  className?: string;
   /** Default: `false` */
   blur?: boolean;
 }

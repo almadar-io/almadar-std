@@ -46,14 +46,16 @@ export interface StdUiTransitionArrowClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiTransitionArrowConfig {
-  /** Default: `""` */
-  eventLabel?: string;
-  /** Default: `""` */
-  className?: string;
+  toProp?: EntityRow;
   /** Default: `false` */
   isActive?: boolean;
   /** Default: `""` */
+  className?: string;
+  /** Default: `""` */
   guardHint?: string;
+  /** Default: `""` */
+  eventLabel?: string;
+  fromProp?: EntityRow;
 }
 
 /**
@@ -177,12 +179,14 @@ export function stdUiTransitionArrowTransitionArrowOrbital(params: StdUiTransiti
                   'render-ui',
                   'main',
                   {
-                    'type': 'transition-arrow',
+                    'to': '@config.toProp',
                     'isActive': '@config.isActive',
-                    'onClick': 'CLICK',
-                    'guardHint': '@config.guardHint',
-                    'eventLabel': '@config.eventLabel',
+                    'from': '@config.fromProp',
+                    'type': 'transition-arrow',
                     'className': '@config.className',
+                    'onClick': 'CLICK',
+                    'eventLabel': '@config.eventLabel',
+                    'guardHint': '@config.guardHint',
                   },
                 ],
               ],
@@ -190,11 +194,30 @@ export function stdUiTransitionArrowTransitionArrowOrbital(params: StdUiTransiti
           ],
         },
         'config': {
-          'eventLabel': {
-            'type': 'string',
-            'default': '',
-            'label': 'Event Label',
-            'description': 'Event label shown on the arrow',
+          'toProp': {
+            'type': 'TransitionArrowTo',
+            'label': 'To',
+            'description': 'End position (center of to-node)',
+            'synonyms': 'to',
+            'tier': 'presentation',
+            'properties': {
+              'y': {
+                'name': 'y',
+                'type': 'number',
+                'required': true,
+              },
+              'x': {
+                'name': 'x',
+                'type': 'number',
+                'required': true,
+              },
+            },
+          },
+          'isActive': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Active',
+            'description': 'Whether this transition is currently active',
             'tier': 'presentation',
           },
           'className': {
@@ -204,19 +227,38 @@ export function stdUiTransitionArrowTransitionArrowOrbital(params: StdUiTransiti
             'description': 'Additional CSS classes for the SVG group',
             'tier': 'presentation',
           },
-          'isActive': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Active',
-            'description': 'Whether this transition is currently active',
-            'tier': 'presentation',
-          },
           'guardHint': {
             'type': 'string',
             'default': '',
             'label': 'Guard Hint',
             'description': 'Guard hint shown below event',
             'tier': 'presentation',
+          },
+          'eventLabel': {
+            'type': 'string',
+            'default': '',
+            'label': 'Event Label',
+            'description': 'Event label shown on the arrow',
+            'tier': 'presentation',
+          },
+          'fromProp': {
+            'type': 'TransitionArrowFrom',
+            'label': 'From',
+            'description': 'Start position (center of from-node)',
+            'synonyms': 'from',
+            'tier': 'presentation',
+            'properties': {
+              'x': {
+                'name': 'x',
+                'type': 'number',
+                'required': true,
+              },
+              'y': {
+                'name': 'y',
+                'type': 'number',
+                'required': true,
+              },
+            },
           },
         },
         'scope': 'instance',
