@@ -9,6 +9,7 @@
  */
 
 import { loadGoldenOrb } from './exports-reader.js';
+import { resolveStdDataDir } from './data-dir.js';
 
 // Import registry data directly — bundlers inline this at build time.
 // Falls back to fs read for dev mode (unbundled).
@@ -17,11 +18,9 @@ let registryJsonData: { behaviors: Record<string, unknown> } | null = null;
 async function loadRegistryData(): Promise<{ behaviors: Record<string, unknown> }> {
   if (registryJsonData) return registryJsonData;
   try {
-    // Try dynamic import (works in bundled and unbundled ESM)
     const { readFileSync } = await import('fs');
-    const { resolve, dirname } = await import('path');
-    const { fileURLToPath } = await import('url');
-    const dir = dirname(fileURLToPath(import.meta.url));
+    const { resolve } = await import('path');
+    const dir = resolveStdDataDir();
     const raw = readFileSync(resolve(dir, 'behaviors-registry.json'), 'utf-8');
     registryJsonData = JSON.parse(raw);
   } catch {
