@@ -1,0 +1,136 @@
+{
+  "name": "ui-modal-slot",
+  "version": "1.0.0",
+  "description": "ModalSlot — UI factory (1:1 with the @almadar/ui modal-slot pattern).",
+  "orbitals": [
+    {
+      "name": "ModalSlotOrbital",
+      "entity": {
+        "name": "ModalSlotItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ModalSlotRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "ModalSlotItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "ModalSlotItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "entity": "ModalSlotItem",
+                      "title": "@config.title",
+                      "children": "@config.children",
+                      "size": "@config.size",
+                      "className": "@config.className",
+                      "isLoading": "@config.isLoading",
+                      "error": "@config.error",
+                      "type": "modal-slot"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
+              "tier": "presentation"
+            },
+            "error": {
+              "type": "json",
+              "label": "Error",
+              "description": "Error state",
+              "tier": "presentation"
+            },
+            "size": {
+              "type": "string",
+              "default": "md",
+              "label": "Size",
+              "description": "Modal size",
+              "tier": "presentation",
+              "values": [
+                "sm",
+                "md",
+                "lg",
+                "xl",
+                "full"
+              ]
+            },
+            "children": {
+              "type": "node",
+              "label": "Children",
+              "description": "Content to display in the modal",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Custom class name",
+              "tier": "presentation"
+            },
+            "title": {
+              "type": "string",
+              "default": "",
+              "label": "Title",
+              "description": "Override modal title (extracted from children if not provided)",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "ModalSlotPage",
+          "path": "/modal-slot",
+          "traits": [
+            {
+              "ref": "ModalSlotRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

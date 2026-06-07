@@ -1,0 +1,63 @@
+app ui-split-section "1.0.0"
+"SplitSection — UI factory (1:1 with the @almadar/ui split-section pattern)."
+orbital SplitSectionOrbital {
+  entity SplitSectionItem [runtime] {
+    id : string!
+  }
+
+  trait SplitSectionRender -> @rebindable SplitSectionItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          title: @config.title
+          description: @config.description
+          bullets: @config.bullets
+          image: @config.image
+          imagePosition: @config.imagePosition
+          background: @config.background
+          children: @config.children
+          className: @config.className
+          type: split-section
+        })
+    }
+
+    config {
+      title : string = ""
+        @label "Title"
+        @description "title prop"
+        @tier "presentation"
+      description : json
+        @label "Description"
+        @description "description prop"
+        @tier "presentation"
+      bullets : [string] = []
+        @label "Bullets"
+        @description "bullets prop"
+        @tier "presentation"
+      image : json
+        @label "Image"
+        @description "image prop"
+        @tier "presentation"
+      imagePosition : "left" | "right" = right
+        @label "Image Position"
+        @description "imagePosition prop"
+        @tier "presentation"
+      background : "default" | "alt" = default
+        @label "Background"
+        @description "background prop"
+        @tier "presentation"
+      children : node
+        @label "Children"
+        @description "children prop"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/split-section" as SplitSectionPage -> SplitSectionRender
+}

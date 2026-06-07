@@ -1,0 +1,69 @@
+app ui-positioned-canvas "1.0.0"
+"PositionedCanvas — UI factory (1:1 with the @almadar/ui positioned-canvas pattern)."
+orbital PositionedCanvasOrbital {
+  entity PositionedCanvasItem [runtime] {
+    id : string!
+  }
+
+  trait PositionedCanvasRender -> @rebindable PositionedCanvasItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch PositionedCanvasItem {})
+        (render-ui main {
+          items: @entity
+          width: @config.width
+          height: @config.height
+          selectedId: @config.selectedId
+          editable: @config.editable
+          onSelect: SELECT
+          onMove: MOVE
+          selectEvent: SELECT
+          moveEvent: MOVE
+          className: @config.className
+          type: positioned-canvas
+        })
+    }
+
+    emits {
+      SELECT -> external {
+        id : string
+      }
+        @description "onSelect prop"
+        @tier "essential"
+      MOVE -> external {
+        id : string
+        x : number
+        y : number
+      }
+        @description "onMove prop"
+        @tier "essential"
+    }
+
+    config {
+      width : number = 800
+        @label "Width"
+        @description "width prop"
+        @tier "presentation"
+      height : number = 600
+        @label "Height"
+        @description "height prop"
+        @tier "presentation"
+      selectedId : string = ""
+        @label "Selected Id"
+        @description "selectedId prop"
+        @tier "presentation"
+      editable : boolean = false
+        @label "Editable"
+        @description "editable prop"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/positioned-canvas" as PositionedCanvasPage -> PositionedCanvasRender
+}

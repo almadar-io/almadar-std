@@ -1,0 +1,68 @@
+app ui-simulation-graph "1.0.0"
+"SimulationGraph — UI factory (1:1 with the @almadar/ui simulation-graph pattern)."
+orbital SimulationGraphOrbital {
+  type SimulationGraphDataItem = {
+    time : number!
+    value : number!
+  }
+
+  entity SimulationGraphItem [runtime] {
+    id : string!
+  }
+
+  trait SimulationGraphRender -> @rebindable SimulationGraphItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          label: @config.label
+          unit: @config.unit
+          data: @config.data
+          maxPoints: @config.maxPoints
+          width: @config.width
+          height: @config.height
+          color: @config.color
+          className: @config.className
+          type: simulation-graph
+        })
+    }
+
+    config {
+      label : string = ""
+        @label "Label"
+        @description "label prop"
+        @tier "presentation"
+      unit : string = ""
+        @label "Unit"
+        @description "unit prop"
+        @tier "presentation"
+      data : [SimulationGraphDataItem] = []
+        @label "Data"
+        @description "data prop"
+        @tier "presentation"
+      maxPoints : number = 200
+        @label "Max Points"
+        @description "maxPoints prop"
+        @tier "presentation"
+      width : number = 300
+        @label "Width"
+        @description "width prop"
+        @tier "presentation"
+      height : number = 120
+        @label "Height"
+        @description "height prop"
+        @tier "presentation"
+      color : string = "#e94560"
+        @label "Color"
+        @description "color prop"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/simulation-graph" as SimulationGraphPage -> SimulationGraphRender
+}

@@ -1,0 +1,149 @@
+{
+  "name": "ui-split-section",
+  "version": "1.0.0",
+  "description": "SplitSection — UI factory (1:1 with the @almadar/ui split-section pattern).",
+  "orbitals": [
+    {
+      "name": "SplitSectionOrbital",
+      "entity": {
+        "name": "SplitSectionItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "SplitSectionRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "SplitSectionItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "image": "@config.image",
+                      "type": "split-section",
+                      "description": "@config.description",
+                      "imagePosition": "@config.imagePosition",
+                      "background": "@config.background",
+                      "title": "@config.title",
+                      "bullets": "@config.bullets",
+                      "children": "@config.children",
+                      "className": "@config.className"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "image": {
+              "type": "json",
+              "label": "Image",
+              "description": "image prop",
+              "tier": "presentation"
+            },
+            "description": {
+              "type": "json",
+              "label": "Description",
+              "description": "description prop",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "className prop",
+              "tier": "presentation"
+            },
+            "imagePosition": {
+              "type": "string",
+              "default": "right",
+              "label": "Image Position",
+              "description": "imagePosition prop",
+              "tier": "presentation",
+              "values": [
+                "left",
+                "right"
+              ]
+            },
+            "background": {
+              "type": "string",
+              "default": "default",
+              "label": "Background",
+              "description": "background prop",
+              "tier": "presentation",
+              "values": [
+                "default",
+                "alt"
+              ]
+            },
+            "title": {
+              "type": "string",
+              "default": "",
+              "label": "Title",
+              "description": "title prop",
+              "tier": "presentation"
+            },
+            "bullets": {
+              "type": "[string]",
+              "default": [],
+              "label": "Bullets",
+              "description": "bullets prop",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "children": {
+              "type": "node",
+              "label": "Children",
+              "description": "children prop",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "SplitSectionPage",
+          "path": "/split-section",
+          "traits": [
+            {
+              "ref": "SplitSectionRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

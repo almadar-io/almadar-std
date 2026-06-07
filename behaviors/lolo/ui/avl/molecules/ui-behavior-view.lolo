@@ -1,0 +1,63 @@
+app ui-behavior-view "1.0.0"
+"BehaviorView — UI factory (1:1 with the @almadar/ui behavior-view pattern)."
+orbital BehaviorViewOrbital {
+  type BehaviorViewData = {
+    orbitalName : string!
+    entityName : string!
+    persistence : string!
+    fields : [BehaviorViewDataFieldsItem]!
+    traits : [BehaviorViewDataTraitsItem]!
+    pages : [BehaviorViewDataPagesItem]!
+    traitDetails : json!
+    externalLinks : [BehaviorViewDataExternalLinksItem]!
+  }
+  type BehaviorViewDataFieldsItem = {
+    name : string!
+    type : string!
+    required : boolean!
+    hasDefault : boolean!
+  }
+  type BehaviorViewDataTraitsItem = {
+    name : string!
+    stateCount : number!
+    eventCount : number!
+    transitionCount : number!
+    emits : [string]!
+    listens : [string]!
+  }
+  type BehaviorViewDataPagesItem = {
+    name : string!
+    route : string!
+  }
+  type BehaviorViewDataExternalLinksItem = {
+    targetOrbital : string!
+    eventName : string!
+    direction : "out" | "in"!
+    traitName : string!
+  }
+
+  entity BehaviorViewItem [runtime] {
+    id : string!
+  }
+
+  trait BehaviorViewRender -> @rebindable BehaviorViewItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          data: @config.data
+          type: behavior-view
+        })
+    }
+
+    config {
+      data : BehaviorViewData
+        @label "Data"
+        @description "data prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/behavior-view" as BehaviorViewPage -> BehaviorViewRender
+}

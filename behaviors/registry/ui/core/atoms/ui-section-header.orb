@@ -1,0 +1,122 @@
+{
+  "name": "ui-section-header",
+  "version": "1.0.0",
+  "description": "SectionHeader — UI factory (1:1 with the @almadar/ui section-header pattern).",
+  "orbitals": [
+    {
+      "name": "SectionHeaderOrbital",
+      "entity": {
+        "name": "SectionHeaderItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "SectionHeaderRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "SectionHeaderItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "title": "@config.title",
+                      "align": "@config.align",
+                      "level": "@config.level",
+                      "className": "@config.className",
+                      "subtitle": "@config.subtitle",
+                      "type": "section-header"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional class names",
+              "tier": "presentation"
+            },
+            "align": {
+              "type": "string",
+              "default": "center",
+              "label": "Align",
+              "description": "Text alignment",
+              "tier": "presentation",
+              "values": [
+                "center",
+                "left",
+                "right"
+              ]
+            },
+            "subtitle": {
+              "type": "string",
+              "default": "",
+              "label": "Subtitle",
+              "description": "Optional subtitle text",
+              "tier": "presentation"
+            },
+            "title": {
+              "type": "string",
+              "default": "",
+              "label": "Title",
+              "description": "Section title text",
+              "tier": "presentation"
+            },
+            "level": {
+              "type": "number",
+              "default": 2.0,
+              "label": "Level",
+              "description": "Heading level (1, 2, or 3)",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "SectionHeaderPage",
+          "path": "/section-header",
+          "traits": [
+            {
+              "ref": "SectionHeaderRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

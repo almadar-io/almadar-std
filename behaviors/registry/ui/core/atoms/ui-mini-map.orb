@@ -1,0 +1,146 @@
+{
+  "name": "ui-mini-map",
+  "version": "1.0.0",
+  "description": "MiniMap — UI factory (1:1 with the @almadar/ui mini-map pattern).",
+  "orbitals": [
+    {
+      "name": "MiniMapOrbital",
+      "entity": {
+        "name": "MiniMapItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "MiniMapRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "MiniMapItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "tiles": "@config.tiles",
+                      "mapWidth": "@config.mapWidth",
+                      "mapHeight": "@config.mapHeight",
+                      "height": "@config.height",
+                      "units": "@config.units",
+                      "viewportRect": "@config.viewportRect",
+                      "width": "@config.width",
+                      "type": "mini-map",
+                      "className": "@config.className"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "width": {
+              "type": "number",
+              "default": 150.0,
+              "label": "Width",
+              "description": "Canvas display width in pixels",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "tiles": {
+              "type": "[json]",
+              "default": [],
+              "label": "Tiles",
+              "description": "Tile data: each tile renders as a 1px dot at (x,y) with the given color",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "viewportRect": {
+              "type": "json",
+              "label": "Viewport Rect",
+              "description": "Viewport rectangle outline",
+              "tier": "presentation"
+            },
+            "height": {
+              "type": "number",
+              "default": 150.0,
+              "label": "Height",
+              "description": "Canvas display height in pixels",
+              "tier": "presentation"
+            },
+            "mapHeight": {
+              "type": "number",
+              "default": 100.0,
+              "label": "Map Height",
+              "description": "Logical map height (for coordinate scaling)",
+              "tier": "presentation"
+            },
+            "units": {
+              "type": "[json]",
+              "default": [],
+              "label": "Units",
+              "description": "Unit positions: each unit renders as a 2px dot",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "mapWidth": {
+              "type": "number",
+              "default": 100.0,
+              "label": "Map Width",
+              "description": "Logical map width (for coordinate scaling)",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "MiniMapPage",
+          "path": "/mini-map",
+          "traits": [
+            {
+              "ref": "MiniMapRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

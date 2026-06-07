@@ -1,0 +1,135 @@
+{
+  "name": "ui-health-bar",
+  "version": "1.0.0",
+  "description": "HealthBar — UI factory (1:1 with the @almadar/ui health-bar pattern).",
+  "orbitals": [
+    {
+      "name": "HealthBarOrbital",
+      "entity": {
+        "name": "HealthBarItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "HealthBarRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "HealthBarItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "animated": "@config.animated",
+                      "type": "health-bar",
+                      "max": "@config.max",
+                      "className": "@config.className",
+                      "format": "@config.format",
+                      "size": "@config.size",
+                      "current": "@config.current"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "animated": {
+              "type": "boolean",
+              "default": true,
+              "label": "Animated",
+              "description": "Animation on change",
+              "tier": "presentation"
+            },
+            "max": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Max",
+              "description": "Maximum health value",
+              "tier": "presentation"
+            },
+            "current": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Current",
+              "description": "Current health value",
+              "tier": "presentation"
+            },
+            "format": {
+              "type": "string",
+              "default": "hearts",
+              "label": "Format",
+              "description": "Display format",
+              "tier": "presentation",
+              "values": [
+                "hearts",
+                "bar",
+                "numeric"
+              ]
+            },
+            "size": {
+              "type": "string",
+              "default": "md",
+              "label": "Size",
+              "description": "Size variant",
+              "tier": "presentation",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "HealthBarPage",
+          "path": "/health-bar",
+          "traits": [
+            {
+              "ref": "HealthBarRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

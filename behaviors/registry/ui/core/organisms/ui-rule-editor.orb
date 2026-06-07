@@ -1,0 +1,179 @@
+{
+  "name": "ui-rule-editor",
+  "version": "1.0.0",
+  "description": "RuleEditor — UI factory (1:1 with the @almadar/ui rule-editor pattern).",
+  "orbitals": [
+    {
+      "name": "RuleEditorOrbital",
+      "entity": {
+        "name": "RuleEditorItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "RuleEditorRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "RuleEditorItem",
+          "emits": [
+            {
+              "event": "CHANGE",
+              "description": "Called when rule changes",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "rule",
+                  "type": "object"
+                }
+              ]
+            },
+            {
+              "event": "REMOVE",
+              "description": "Called when rule is removed",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "CHANGE",
+                "name": "Change",
+                "description": "Called when rule changes",
+                "tier": "essential"
+              },
+              {
+                "key": "REMOVE",
+                "name": "Remove",
+                "description": "Called when rule is removed",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "rule": "@config.rule",
+                      "availableActions": "@config.availableActions",
+                      "availableEvents": "@config.availableEvents",
+                      "onRemove": "REMOVE",
+                      "onChange": "CHANGE",
+                      "className": "@config.className",
+                      "type": "rule-editor",
+                      "disabled": "@config.disabled"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "rule": {
+              "type": "RuleEditorRule",
+              "label": "Rule",
+              "description": "The current rule",
+              "tier": "presentation",
+              "properties": {
+                "whenEvent": {
+                  "name": "whenEvent",
+                  "type": "string",
+                  "required": true
+                },
+                "thenAction": {
+                  "name": "thenAction",
+                  "type": "string",
+                  "required": true
+                },
+                "id": {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                }
+              }
+            },
+            "availableEvents": {
+              "type": "[json]",
+              "default": [],
+              "label": "Available Events",
+              "description": "Available event triggers to listen for",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "availableActions": {
+              "type": "[json]",
+              "default": [],
+              "label": "Available Actions",
+              "description": "Available actions to perform",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "disabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Disabled",
+              "description": "Whether editing is disabled (during playback)",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "RuleEditorPage",
+          "path": "/rule-editor",
+          "traits": [
+            {
+              "ref": "RuleEditorRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

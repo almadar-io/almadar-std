@@ -1,0 +1,188 @@
+{
+  "name": "ui-showcase-organism",
+  "version": "1.0.0",
+  "description": "ShowcaseOrganism — UI factory (1:1 with the @almadar/ui showcase-organism pattern).",
+  "orbitals": [
+    {
+      "name": "ShowcaseOrganismOrbital",
+      "entity": {
+        "name": "ShowcaseOrganismItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ShowcaseOrganismRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "ShowcaseOrganismItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "ShowcaseOrganismItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "subtitle": "@config.subtitle",
+                      "type": "showcase-organism",
+                      "entity": "@entity",
+                      "sortBy": "@config.sortBy",
+                      "columns": "@config.columns",
+                      "error": "@config.error",
+                      "isLoading": "@config.isLoading",
+                      "heading": "@config.heading",
+                      "pageSize": "@config.pageSize",
+                      "className": "@config.className",
+                      "totalCount": "@config.totalCount",
+                      "sortDirection": "@config.sortDirection",
+                      "activeFilters": "@config.activeFilters",
+                      "searchValue": "@config.searchValue",
+                      "selectedIds": "@config.selectedIds"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
+              "tier": "presentation"
+            },
+            "searchValue": {
+              "type": "string",
+              "default": "",
+              "label": "Search Value",
+              "description": "Current search query value",
+              "tier": "presentation"
+            },
+            "sortBy": {
+              "type": "string",
+              "default": "",
+              "label": "Sort By",
+              "description": "Current sort field",
+              "tier": "presentation"
+            },
+            "totalCount": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Total Count",
+              "description": "Total number of items",
+              "tier": "presentation"
+            },
+            "selectedIds": {
+              "type": "[json]",
+              "default": [],
+              "label": "Selected Ids",
+              "description": "Currently selected item IDs",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "columns": {
+              "type": "number",
+              "default": 3.0,
+              "label": "Columns",
+              "description": "columns prop",
+              "tier": "presentation"
+            },
+            "heading": {
+              "type": "string",
+              "default": "",
+              "label": "Heading",
+              "description": "heading prop",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "error": {
+              "type": "json",
+              "label": "Error",
+              "description": "Error state",
+              "tier": "presentation"
+            },
+            "sortDirection": {
+              "type": "string",
+              "default": "",
+              "label": "Sort Direction",
+              "description": "Current sort direction",
+              "tier": "presentation"
+            },
+            "pageSize": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Page Size",
+              "description": "Number of items per page",
+              "tier": "presentation"
+            },
+            "activeFilters": {
+              "type": "json",
+              "label": "Active Filters",
+              "description": "Active filters",
+              "tier": "presentation"
+            },
+            "subtitle": {
+              "type": "string",
+              "default": "",
+              "label": "Subtitle",
+              "description": "subtitle prop",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "ShowcaseOrganismPage",
+          "path": "/showcase-organism",
+          "traits": [
+            {
+              "ref": "ShowcaseOrganismRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

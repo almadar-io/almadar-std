@@ -1,0 +1,167 @@
+{
+  "name": "ui-game-menu",
+  "version": "1.0.0",
+  "description": "GameMenu — UI factory (1:1 with the @almadar/ui game-menu pattern).",
+  "orbitals": [
+    {
+      "name": "GameMenuOrbital",
+      "entity": {
+        "name": "GameMenuItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "GameMenuRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "GameMenuItem",
+          "emits": [
+            {
+              "event": "SELECT",
+              "description": "Called when an option is selected (legacy callback, prefer event bus)",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "option",
+                  "type": "object"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "SELECT",
+                "name": "Select",
+                "description": "Called when an option is selected (legacy callback, prefer event bus)",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "onSelect": "SELECT",
+                      "eventBus": "@config.eventBus",
+                      "title": "@config.title",
+                      "type": "game-menu",
+                      "menuItems": "@config.menuItems",
+                      "background": "@config.background",
+                      "logo": "@config.logo",
+                      "className": "@config.className",
+                      "options": "@config.options",
+                      "subtitle": "@config.subtitle"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "menuItems": {
+              "type": "[json]",
+              "default": [],
+              "label": "Menu Items",
+              "description": "Alias for options (schema compatibility)",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "eventBus": {
+              "type": "json",
+              "label": "Event Bus",
+              "description": "Event bus for emitting UI events (optional, uses hook if not provided)",
+              "tier": "presentation"
+            },
+            "title": {
+              "type": "string",
+              "default": "",
+              "label": "Title",
+              "description": "Menu title",
+              "tier": "presentation"
+            },
+            "subtitle": {
+              "type": "string",
+              "default": "",
+              "label": "Subtitle",
+              "description": "Optional subtitle or version",
+              "tier": "presentation"
+            },
+            "background": {
+              "type": "string",
+              "default": "",
+              "label": "Background",
+              "description": "Background image or gradient",
+              "tier": "presentation"
+            },
+            "options": {
+              "type": "[json]",
+              "default": [],
+              "label": "Options",
+              "description": "Menu options - accepts readonly for compatibility with generated const arrays",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "logo": {
+              "type": "string",
+              "default": "",
+              "label": "Logo",
+              "description": "Logo image URL",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "GameMenuPage",
+          "path": "/game-menu",
+          "traits": [
+            {
+              "ref": "GameMenuRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

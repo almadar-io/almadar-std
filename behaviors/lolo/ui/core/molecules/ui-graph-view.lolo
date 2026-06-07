@@ -1,0 +1,87 @@
+app ui-graph-view "1.0.0"
+"GraphView — UI factory (1:1 with the @almadar/ui graph-view pattern)."
+orbital GraphViewOrbital {
+  type GraphViewNodesItem = {
+    id : string!
+    label : string
+    color : string
+    size : number
+    group : string
+  }
+  type GraphViewEdgesItem = {
+    source : string!
+    target : string!
+    color : string
+    label : string
+  }
+
+  entity GraphViewItem [runtime] {
+    id : string!
+  }
+
+  trait GraphViewRender -> @rebindable GraphViewItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          nodes: @config.nodes
+          edges: @config.edges
+          onNodeClick: NODE_CLICK
+          onNodeHover: NODE_HOVER
+          width: @config.width
+          height: @config.height
+          className: @config.className
+          showLabels: @config.showLabels
+          zoomToFit: @config.zoomToFit
+          type: graph-view
+        })
+    }
+
+    emits {
+      NODE_CLICK -> external {
+        node : object
+      }
+        @description "Callback when a node is clicked"
+        @tier "essential"
+      NODE_HOVER -> external {
+        node : object
+      }
+        @description "Callback when a node is hovered (null on leave)"
+        @tier "essential"
+    }
+
+    config {
+      nodes : [GraphViewNodesItem] = []
+        @label "Nodes"
+        @description "Graph nodes"
+        @tier "presentation"
+      edges : [GraphViewEdgesItem] = []
+        @label "Edges"
+        @description "Graph edges"
+        @tier "presentation"
+      width : number = 0
+        @label "Width"
+        @description "Width in pixels"
+        @tier "presentation"
+      height : number = 0
+        @label "Height"
+        @description "Height in pixels"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      showLabels : boolean = true
+        @label "Show Labels"
+        @description "Show node labels (default true)"
+        @tier "presentation"
+      zoomToFit : boolean = true
+        @label "Zoom To Fit"
+        @description "Auto zoom-to-fit after layout settles (default true)"
+        @tier "presentation"
+    }
+  }
+
+  page "/graph-view" as GraphViewPage -> GraphViewRender
+}

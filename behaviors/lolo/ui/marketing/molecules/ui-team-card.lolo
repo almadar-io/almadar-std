@@ -1,0 +1,53 @@
+app ui-team-card "1.0.0"
+"TeamCard — UI factory (1:1 with the @almadar/ui team-card pattern)."
+orbital TeamCardOrbital {
+  entity TeamCardItem [runtime] {
+    id : string!
+  }
+
+  trait TeamCardRender -> @rebindable TeamCardItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          name: @config.name
+          nameAr: @config.nameAr
+          role: @config.role
+          bio: @config.bio
+          avatar: @config.avatar
+          className: @config.className
+          type: team-card
+        })
+    }
+
+    config {
+      name : string = ""
+        @label "Name"
+        @description "name prop"
+        @tier "presentation"
+      nameAr : string = ""
+        @label "Name Ar"
+        @description "nameAr prop"
+        @tier "presentation"
+      role : string = ""
+        @label "Role"
+        @description "role prop"
+        @tier "presentation"
+      bio : string = ""
+        @label "Bio"
+        @description "bio prop"
+        @tier "presentation"
+      avatar : json
+        @label "Avatar"
+        @description "avatar prop"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/team-card" as TeamCardPage -> TeamCardRender
+}

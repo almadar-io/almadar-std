@@ -1,0 +1,53 @@
+app ui-community-links "1.0.0"
+"CommunityLinks — UI factory (1:1 with the @almadar/ui community-links pattern)."
+orbital CommunityLinksOrbital {
+  entity CommunityLinksItem [runtime] {
+    id : string!
+  }
+
+  trait CommunityLinksRender -> @rebindable CommunityLinksItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          github: @config.github
+          discord: @config.discord
+          twitter: @config.twitter
+          heading: @config.heading
+          subtitle: @config.subtitle
+          className: @config.className
+          type: community-links
+        })
+    }
+
+    config {
+      github : json
+        @label "Github"
+        @description "github prop"
+        @tier "presentation"
+      discord : json
+        @label "Discord"
+        @description "discord prop"
+        @tier "presentation"
+      twitter : json
+        @label "Twitter"
+        @description "twitter prop"
+        @tier "presentation"
+      heading : string = ""
+        @label "Heading"
+        @description "heading prop"
+        @tier "presentation"
+      subtitle : string = ""
+        @label "Subtitle"
+        @description "subtitle prop"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/community-links" as CommunityLinksPage -> CommunityLinksRender
+}

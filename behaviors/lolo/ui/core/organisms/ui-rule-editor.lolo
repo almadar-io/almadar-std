@@ -1,0 +1,69 @@
+app ui-rule-editor "1.0.0"
+"RuleEditor — UI factory (1:1 with the @almadar/ui rule-editor pattern)."
+orbital RuleEditorOrbital {
+  type RuleEditorRule = {
+    id : string!
+    whenEvent : string!
+    thenAction : string!
+  }
+
+  entity RuleEditorItem [runtime] {
+    id : string!
+  }
+
+  trait RuleEditorRender -> @rebindable RuleEditorItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          rule: @config.rule
+          availableEvents: @config.availableEvents
+          availableActions: @config.availableActions
+          onChange: CHANGE
+          onRemove: REMOVE
+          disabled: @config.disabled
+          className: @config.className
+          type: rule-editor
+        })
+    }
+
+    emits {
+      CHANGE -> external {
+        rule : object
+      }
+        @description "Called when rule changes"
+        @tier "essential"
+      REMOVE -> external {
+        id : string
+      }
+        @description "Called when rule is removed"
+        @tier "essential"
+    }
+
+    config {
+      rule : RuleEditorRule
+        @label "Rule"
+        @description "The current rule"
+        @tier "presentation"
+      availableEvents : [json] = []
+        @label "Available Events"
+        @description "Available event triggers to listen for"
+        @tier "presentation"
+      availableActions : [json] = []
+        @label "Available Actions"
+        @description "Available actions to perform"
+        @tier "presentation"
+      disabled : boolean = false
+        @label "Disabled"
+        @description "Whether editing is disabled (during playback)"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/rule-editor" as RuleEditorPage -> RuleEditorRender
+}

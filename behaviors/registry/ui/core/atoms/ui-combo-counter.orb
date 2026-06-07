@@ -1,0 +1,122 @@
+{
+  "name": "ui-combo-counter",
+  "version": "1.0.0",
+  "description": "ComboCounter — UI factory (1:1 with the @almadar/ui combo-counter pattern).",
+  "orbitals": [
+    {
+      "name": "ComboCounterOrbital",
+      "entity": {
+        "name": "ComboCounterItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ComboCounterRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "ComboCounterItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "combo-counter",
+                      "size": "@config.size",
+                      "combo": "@config.combo",
+                      "multiplier": "@config.multiplier",
+                      "streak": "@config.streak",
+                      "className": "@config.className"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "size": {
+              "type": "string",
+              "default": "md",
+              "label": "Size",
+              "description": "Size variant",
+              "tier": "presentation",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            },
+            "multiplier": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Multiplier",
+              "description": "Score multiplier",
+              "tier": "presentation"
+            },
+            "combo": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Combo",
+              "description": "Current combo count",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "streak": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Streak",
+              "description": "Current streak",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "ComboCounterPage",
+          "path": "/combo-counter",
+          "traits": [
+            {
+              "ref": "ComboCounterRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

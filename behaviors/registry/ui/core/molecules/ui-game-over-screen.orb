@@ -1,0 +1,233 @@
+{
+  "name": "ui-game-over-screen",
+  "version": "1.0.0",
+  "description": "GameOverScreen — UI factory (1:1 with the @almadar/ui game-over-screen pattern).",
+  "orbitals": [
+    {
+      "name": "GameOverScreenOrbital",
+      "entity": {
+        "name": "GameOverScreenItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "GameOverScreenRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "GameOverScreenItem",
+          "emits": [
+            {
+              "event": "ACTION",
+              "description": "Called when an action is selected (legacy callback, prefer event bus)",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "action",
+                  "type": "object"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "ACTION",
+                "name": "Action",
+                "description": "Called when an action is selected (legacy callback, prefer event bus)",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "@config.variant",
+                      "menuItems": "@config.menuItems",
+                      "title": "@config.title",
+                      "eventBus": "@config.eventBus",
+                      "onAction": "ACTION",
+                      "message": "@config.message",
+                      "stats": "@config.stats",
+                      "highScore": "@config.highScore",
+                      "currentScore": "@config.currentScore",
+                      "actions": "@config.actions",
+                      "className": "@config.className",
+                      "type": "game-over-screen"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "message": {
+              "type": "string",
+              "default": "",
+              "label": "Message",
+              "description": "Optional message",
+              "tier": "presentation"
+            },
+            "variant": {
+              "type": "string",
+              "default": "neutral",
+              "label": "Variant",
+              "description": "Victory or defeat variant",
+              "tier": "presentation",
+              "values": [
+                "victory",
+                "defeat",
+                "neutral"
+              ]
+            },
+            "stats": {
+              "type": "[GameOverScreenStatsItem]",
+              "default": [],
+              "label": "Stats",
+              "description": "Stats to display",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "value": {
+                    "name": "value",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "number",
+                      "string"
+                    ]
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "bind": {
+                    "name": "bind",
+                    "type": "string",
+                    "required": false
+                  },
+                  "format": {
+                    "name": "format",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "number",
+                      "time",
+                      "text"
+                    ]
+                  }
+                }
+              }
+            },
+            "actions": {
+              "type": "[json]",
+              "default": [],
+              "label": "Actions",
+              "description": "Action buttons",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "highScore": {
+              "type": "string",
+              "label": "High Score",
+              "description": "High score (optional, shows 'NEW HIGH SCORE!' if exceeded)",
+              "tier": "presentation",
+              "values": [
+                "number",
+                "string"
+              ]
+            },
+            "title": {
+              "type": "string",
+              "default": "",
+              "label": "Title",
+              "description": "Screen title (e.g., 'Game Over', 'Victory!')",
+              "tier": "presentation"
+            },
+            "currentScore": {
+              "type": "string",
+              "label": "Current Score",
+              "description": "Current score for high score comparison (accepts string for schema bindings)",
+              "tier": "presentation",
+              "values": [
+                "number",
+                "string"
+              ]
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "menuItems": {
+              "type": "[json]",
+              "default": [],
+              "label": "Menu Items",
+              "description": "Alias for actions (schema compatibility)",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "eventBus": {
+              "type": "json",
+              "label": "Event Bus",
+              "description": "Event bus for emitting UI events (optional, uses hook if not provided)",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "GameOverScreenPage",
+          "path": "/game-over-screen",
+          "traits": [
+            {
+              "ref": "GameOverScreenRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

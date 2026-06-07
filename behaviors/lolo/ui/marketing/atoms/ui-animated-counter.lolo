@@ -1,0 +1,48 @@
+app ui-animated-counter "1.0.0"
+"AnimatedCounter — UI factory (1:1 with the @almadar/ui animated-counter pattern)."
+orbital AnimatedCounterOrbital {
+  entity AnimatedCounterItem [runtime] {
+    id : string!
+  }
+
+  trait AnimatedCounterRender -> @rebindable AnimatedCounterItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          value: @config.value
+          duration: @config.duration
+          prefix: @config.prefix
+          suffix: @config.suffix
+          className: @config.className
+          type: animated-counter
+        })
+    }
+
+    config {
+      value : number | string
+        @label "Value"
+        @description "The target value to animate to. Strings are parsed numerically (e.g. '500', '99.9')."
+        @tier "presentation"
+      duration : number = 600
+        @label "Duration"
+        @description "Animation duration in milliseconds"
+        @tier "presentation"
+      prefix : string = ""
+        @label "Prefix"
+        @description "Text to display before the number"
+        @tier "presentation"
+      suffix : string = ""
+        @label "Suffix"
+        @description "Text to display after the number"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional class names"
+        @tier "presentation"
+    }
+  }
+
+  page "/animated-counter" as AnimatedCounterPage -> AnimatedCounterRender
+}

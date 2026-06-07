@@ -1,0 +1,61 @@
+app ui-file-tree "1.0.0"
+"FileTree — UI factory (1:1 with the @almadar/ui file-tree pattern)."
+orbital FileTreeOrbital {
+  type FileTreeTreeItem = {
+    name : string!
+    path : string!
+    type : "file" | "dir"!
+    children : [json]
+    size : number
+    language : string
+  }
+
+  entity FileTreeItem [runtime] {
+    id : string!
+  }
+
+  trait FileTreeRender -> @rebindable FileTreeItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          tree: @config.tree
+          selectedPath: @config.selectedPath
+          onFileSelect: FILE_SELECT
+          className: @config.className
+          indent: @config.indent
+          type: file-tree
+        })
+    }
+
+    emits {
+      FILE_SELECT -> external {
+        path : string
+      }
+        @description "Called when a file is clicked"
+        @tier "essential"
+    }
+
+    config {
+      tree : [FileTreeTreeItem] = []
+        @label "Tree"
+        @description "The tree data"
+        @tier "presentation"
+      selectedPath : string = ""
+        @label "Selected Path"
+        @description "Currently selected file path"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "CSS class"
+        @tier "presentation"
+      indent : number = 16
+        @label "Indent"
+        @description "Indent size per level in px (default: 16)"
+        @tier "presentation"
+    }
+  }
+
+  page "/file-tree" as FileTreePage -> FileTreeRender
+}

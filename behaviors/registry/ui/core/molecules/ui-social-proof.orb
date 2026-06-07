@@ -1,0 +1,126 @@
+{
+  "name": "ui-social-proof",
+  "version": "1.0.0",
+  "description": "SocialProof — UI factory (1:1 with the @almadar/ui social-proof pattern).",
+  "orbitals": [
+    {
+      "name": "SocialProofOrbital",
+      "entity": {
+        "name": "SocialProofItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "SocialProofRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "SocialProofItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "items": "@config.items",
+                      "variant": "@config.variant",
+                      "className": "@config.className",
+                      "type": "social-proof"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "variant": {
+              "type": "string",
+              "default": "logos",
+              "label": "Variant",
+              "description": "Display variant",
+              "tier": "presentation",
+              "values": [
+                "logos",
+                "quotes",
+                "badges"
+              ]
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional class names",
+              "tier": "presentation"
+            },
+            "items": {
+              "type": "[SocialProofItemsItem]",
+              "default": [],
+              "label": "Items",
+              "description": "List of social proof items",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "logo": {
+                    "name": "logo",
+                    "type": "string",
+                    "required": false
+                  },
+                  "quote": {
+                    "name": "quote",
+                    "type": "string",
+                    "required": false
+                  },
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "SocialProofPage",
+          "path": "/social-proof",
+          "traits": [
+            {
+              "ref": "SocialProofRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

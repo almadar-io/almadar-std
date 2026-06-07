@@ -1,0 +1,73 @@
+app ui-likert-scale "1.0.0"
+"LikertScale — UI factory (1:1 with the @almadar/ui likert-scale pattern)."
+orbital LikertScaleOrbital {
+  type LikertScaleOptionsItem = {
+    value : number | string!
+    label : string!
+  }
+
+  entity LikertScaleItem [runtime] {
+    id : string!
+  }
+
+  trait LikertScaleRender -> @rebindable LikertScaleItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          question: @config.question
+          options: @config.options
+          value: @config.value
+          onChange: CHANGE
+          changeEvent: CHANGE
+          disabled: @config.disabled
+          size: @config.size
+          variant: @config.variant
+          className: @config.className
+          type: likert-scale
+        })
+    }
+
+    emits {
+      CHANGE -> external {
+        value : number
+      }
+        @description "Change callback"
+        @tier "essential"
+    }
+
+    config {
+      question : string = ""
+        @label "Question"
+        @description "Optional row prompt above the scale"
+        @tier "presentation"
+      options : [LikertScaleOptionsItem] = []
+        @label "Options"
+        @description "Scale points (defaults to a 5-point agree/disagree set)"
+        @tier "presentation"
+      value : number | string
+        @label "Value"
+        @description "Selected value (controlled)"
+        @tier "presentation"
+      disabled : boolean = false
+        @label "Disabled"
+        @description "Disabled state"
+        @tier "presentation"
+      size : "sm" | "md" | "lg" = md
+        @label "Size"
+        @description "Size variant"
+        @tier "presentation"
+      variant : "radios" | "buttons" = radios
+        @label "Variant"
+        @description "Visual variant: classic radios or pill segmented buttons"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/likert-scale" as LikertScalePage -> LikertScaleRender
+}

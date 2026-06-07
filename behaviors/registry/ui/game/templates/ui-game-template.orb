@@ -1,0 +1,135 @@
+{
+  "name": "ui-game-template",
+  "version": "1.0.0",
+  "description": "GameTemplate — UI factory (1:1 with the @almadar/ui game-template pattern).",
+  "orbitals": [
+    {
+      "name": "GameTemplateOrbital",
+      "entity": {
+        "name": "GameTemplateItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "GameTemplateRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "GameTemplateItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "GameTemplateItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "entity": "@entity",
+                      "type": "game-template",
+                      "hud": "@config.hud",
+                      "showDebugPanel": "@config.showDebugPanel",
+                      "children": "@config.children",
+                      "controls": "@config.controls",
+                      "title": "@config.title",
+                      "debugPanel": "@config.debugPanel",
+                      "className": "@config.className"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "showDebugPanel": {
+              "type": "boolean",
+              "default": false,
+              "label": "Show Debug Panel",
+              "description": "Whether the debug panel is visible",
+              "tier": "presentation"
+            },
+            "children": {
+              "type": "node",
+              "label": "Children",
+              "description": "The main game canvas or content",
+              "tier": "presentation"
+            },
+            "controls": {
+              "type": "json",
+              "label": "Controls",
+              "description": "Game controls",
+              "tier": "presentation"
+            },
+            "debugPanel": {
+              "type": "node",
+              "label": "Debug Panel",
+              "description": "Debug panel content",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional class name",
+              "tier": "presentation"
+            },
+            "title": {
+              "type": "string",
+              "default": "Game",
+              "label": "Title",
+              "description": "Title of the game",
+              "tier": "presentation"
+            },
+            "hud": {
+              "type": "node",
+              "label": "Hud",
+              "description": "HUD overlay content (scores, health, etc.)",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "GameTemplatePage",
+          "path": "/game-template",
+          "traits": [
+            {
+              "ref": "GameTemplateRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

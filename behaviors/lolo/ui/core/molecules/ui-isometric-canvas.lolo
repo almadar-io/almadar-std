@@ -1,0 +1,246 @@
+app ui-isometric-canvas "1.0.0"
+"IsometricCanvas — UI factory (1:1 with the @almadar/ui isometric-canvas pattern)."
+orbital IsometricCanvasOrbital {
+  type IsometricCanvasTilesItem = {
+    id : string
+    x : number!
+    y : number!
+    z : number
+    terrain : string
+    type : string
+    terrainSprite : string
+    passable : boolean
+    movementCost : number
+    tileType : string
+    elevation : number
+  }
+  type IsometricCanvasUnitsItem = {
+    id : string!
+    position : json
+    x : number
+    y : number
+    z : number
+    sprite : string
+    unitType : string
+    heroId : string
+    name : string
+    team : "player" | "enemy" | "neutral"
+    faction : "player" | "enemy" | "neutral"
+    health : number
+    maxHealth : number
+    traits : [json]
+    previousPosition : json
+    elevation : number
+  }
+  type IsometricCanvasFeaturesItem = {
+    id : string
+    x : number!
+    y : number!
+    z : number
+    type : string!
+    sprite : string
+    assetUrl : string
+    color : string
+    elevation : number
+  }
+
+  entity IsometricCanvasItem [runtime] {
+    id : string!
+  }
+
+  trait IsometricCanvasRender -> @rebindable IsometricCanvasItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          tiles: @config.tiles
+          units: @config.units
+          features: @config.features
+          selectedUnitId: @config.selectedUnitId
+          validMoves: @config.validMoves
+          attackTargets: @config.attackTargets
+          hoveredTile: @config.hoveredTile
+          onTileClick: TILE_CLICK
+          onUnitClick: UNIT_CLICK
+          onTileHover: TILE_HOVER
+          onTileLeave: TILE_LEAVE
+          tileClickEvent: TILE_CLICK
+          unitClickEvent: UNIT_CLICK
+          tileHoverEvent: TILE_HOVER
+          tileLeaveEvent: TILE_LEAVE
+          scale: @config.scale
+          debug: @config.debug
+          backgroundImage: @config.backgroundImage
+          showMinimap: @config.showMinimap
+          enableCamera: @config.enableCamera
+          unitScale: @config.unitScale
+          boardWidth: @config.boardWidth
+          boardHeight: @config.boardHeight
+          diamondTopY: @config.diamondTopY
+          getTerrainSprite: GET_TERRAIN_SPRITE
+          getFeatureSprite: GET_FEATURE_SPRITE
+          getUnitSprite: GET_UNIT_SPRITE
+          resolveUnitFrame: RESOLVE_UNIT_FRAME
+          effectSpriteUrls: @config.effectSpriteUrls
+          onDrawEffects: DRAW_EFFECTS
+          hasActiveEffects: @config.hasActiveEffects
+          assetBaseUrl: @config.assetBaseUrl
+          assetManifest: @config.assetManifest
+          type: isometric-canvas
+        })
+    }
+
+    emits {
+      TILE_CLICK -> external {
+        x : number
+        y : number
+      }
+        @description "--- Event handlers (legacy callbacks — prefer declarative event string props below) ---"
+        @tier "essential"
+      UNIT_CLICK -> external {
+        unitId : string
+      }
+        @description "onUnitClick prop"
+        @tier "essential"
+      TILE_HOVER -> external {
+        x : number
+        y : number
+      }
+        @description "onTileHover prop"
+        @tier "essential"
+      TILE_LEAVE -> external {
+        id : string
+      }
+        @description "onTileLeave prop"
+        @tier "essential"
+      GET_TERRAIN_SPRITE -> external {
+        terrain : string
+      }
+        @description "--- Asset resolution (project-agnostic) ---"
+        @tier "essential"
+      GET_FEATURE_SPRITE -> external {
+        featureType : string
+      }
+        @description "Resolve feature sprite URL from feature type key"
+        @tier "essential"
+      GET_UNIT_SPRITE -> external {
+        unit : object
+      }
+        @description "Resolve unit static sprite URL"
+        @tier "essential"
+      RESOLVE_UNIT_FRAME -> external {
+        unitId : string
+      }
+        @description "Resolve animated sprite sheet frame for a unit"
+        @tier "essential"
+      DRAW_EFFECTS -> external {
+        ctx : object
+        animTime : number
+        getImage : string
+      }
+        @description "Callback to draw canvas effects after units (canvas-specific: cannot be declarative)"
+        @tier "essential"
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : json
+        @label "Error"
+        @description "Error state"
+        @tier "presentation"
+      tiles : [IsometricCanvasTilesItem] = []
+        @label "Tiles"
+        @description "--- Grid data ---"
+        @tier "presentation"
+      units : [IsometricCanvasUnitsItem] = []
+        @label "Units"
+        @description "Array of units on the board"
+        @tier "presentation"
+      features : [IsometricCanvasFeaturesItem] = []
+        @label "Features"
+        @description "Array of features (resources, portals, buildings, etc.)"
+        @tier "presentation"
+      selectedUnitId : string = ""
+        @label "Selected Unit Id"
+        @description "--- Interaction state ---"
+        @tier "presentation"
+      validMoves : [json] = []
+        @label "Valid Moves"
+        @description "Valid move positions (shown as pulsing green highlights)"
+        @tier "presentation"
+      attackTargets : [json] = []
+        @label "Attack Targets"
+        @description "Attack target positions (shown as pulsing red highlights)"
+        @tier "presentation"
+      hoveredTile : json
+        @label "Hovered Tile"
+        @description "Hovered tile position"
+        @tier "presentation"
+      scale : number = 0.4
+        @label "Scale"
+        @description "--- Rendering options ---"
+        @tier "presentation"
+      debug : boolean = false
+        @label "Debug"
+        @description "Show debug grid lines and coordinates"
+        @tier "presentation"
+      backgroundImage : string = ""
+        @label "Background Image"
+        @description "Background image URL tiled behind the isometric grid"
+        @tier "presentation"
+      showMinimap : boolean = true
+        @label "Show Minimap"
+        @description "Toggle minimap overlay"
+        @tier "presentation"
+      enableCamera : boolean = true
+        @label "Enable Camera"
+        @description "Enable camera pan/zoom controls"
+        @tier "presentation"
+      unitScale : number = 1
+        @label "Unit Scale"
+        @description "Extra scale multiplier for unit draw size. 1 = default."
+        @tier "presentation"
+      boardWidth : number = 0
+        @label "Board Width"
+        @description "Board width in tiles (overrides tile-derived size)"
+        @tier "presentation"
+      boardHeight : number = 0
+        @label "Board Height"
+        @description "Board height in tiles (overrides tile-derived size)"
+        @tier "presentation"
+      diamondTopY : number = 0
+        @label "Diamond Top Y"
+        @description "Override for the diamond-top Y offset within the tile sprite (default: 374). This controls where the flat diamond face sits vertically inside the tile image."
+        @tier "presentation"
+      effectSpriteUrls : [string] = []
+        @label "Effect Sprite Urls"
+        @description "Additional sprite URLs to preload (e.g., effect sprites)"
+        @tier "presentation"
+      hasActiveEffects : boolean = false
+        @label "Has Active Effects"
+        @description "Whether there are active effects — keeps RAF loop alive"
+        @tier "presentation"
+      assetBaseUrl : string = ""
+        @label "Asset Base Url"
+        @description "--- Remote asset loading ---"
+        @tier "presentation"
+      assetManifest : json
+        @label "Asset Manifest"
+        @description "Manifest mapping entity keys to relative sprite paths. Combined with assetBaseUrl to produce full URLs. Used as a fallback when inline URLs and callbacks don't resolve."
+        @tier "presentation"
+    }
+  }
+
+  page "/isometric-canvas" as IsometricCanvasPage -> IsometricCanvasRender
+}

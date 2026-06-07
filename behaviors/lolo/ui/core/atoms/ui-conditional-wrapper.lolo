@@ -1,0 +1,55 @@
+app ui-conditional-wrapper "1.0.0"
+"ConditionalWrapper — UI factory (1:1 with the @almadar/ui conditional-wrapper pattern)."
+orbital ConditionalWrapperOrbital {
+  type ConditionalWrapperContext = {
+    formValues : json!
+    globalVariables : json!
+    localVariables : json
+    entity : json
+  }
+
+  entity ConditionalWrapperItem [runtime] {
+    id : string!
+  }
+
+  trait ConditionalWrapperRender -> @rebindable ConditionalWrapperItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          condition: @config.condition
+          context: @config.context
+          children: @config.children
+          fallback: @config.fallback
+          animate: @config.animate
+          type: conditional-wrapper
+        })
+    }
+
+    config {
+      condition : json
+        @label "Condition"
+        @description "The S-expression condition to evaluate"
+        @tier "presentation"
+      context : ConditionalWrapperContext
+        @label "Context"
+        @description "Context for evaluating the condition"
+        @tier "presentation"
+      children : node
+        @label "Children"
+        @description "Children to render when condition is true (or when no condition is provided)"
+        @tier "presentation"
+      fallback : node
+        @label "Fallback"
+        @description "Optional fallback to render when condition is false"
+        @tier "presentation"
+      animate : boolean = false
+        @label "Animate"
+        @description "Whether to animate the transition (uses CSS transitions)"
+        @tier "presentation"
+    }
+  }
+
+  page "/conditional-wrapper" as ConditionalWrapperPage -> ConditionalWrapperRender
+}

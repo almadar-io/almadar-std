@@ -1,0 +1,78 @@
+app ui-star-rating "1.0.0"
+"StarRating — UI factory (1:1 with the @almadar/ui star-rating pattern)."
+orbital StarRatingOrbital {
+  entity StarRatingItem [runtime] {
+    id : string!
+  }
+
+  trait StarRatingRender -> @rebindable StarRatingItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          value: @config.value
+          max: @config.max
+          readOnly: @config.readOnly
+          precision: @config.precision
+          size: @config.size
+          action: ACTION
+          actionPayload: @config.actionPayload
+          onChange: CHANGE
+          className: @config.className
+          label: @config.label
+          type: star-rating
+        })
+    }
+
+    emits {
+      ACTION -> external {
+        id : string
+      }
+        @description "Declarative event name for rating changes"
+        @tier "essential"
+      CHANGE -> external {
+        value : number
+      }
+        @description "Direct onChange callback"
+        @tier "essential"
+    }
+
+    config {
+      value : number = 0
+        @label "Value"
+        @description "Current rating value"
+        @tier "presentation"
+      max : number = 5
+        @label "Max"
+        @description "Maximum number of stars"
+        @tier "presentation"
+      readOnly : boolean = false
+        @label "Read Only"
+        @description "Read-only display mode"
+        @tier "presentation"
+      precision : "full" | "half" = full
+        @label "Precision"
+        @description "Full or half-star precision"
+        @tier "presentation"
+      size : "sm" | "md" | "lg" = md
+        @label "Size"
+        @description "Star size"
+        @tier "presentation"
+      actionPayload : json
+        @label "Action Payload"
+        @description "Payload to include with the action event"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      label : string = ""
+        @label "Label"
+        @description "Accessible label"
+        @tier "presentation"
+    }
+  }
+
+  page "/star-rating" as StarRatingPage -> StarRatingRender
+}

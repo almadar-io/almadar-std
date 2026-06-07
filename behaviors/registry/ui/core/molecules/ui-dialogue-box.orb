@@ -1,0 +1,209 @@
+{
+  "name": "ui-dialogue-box",
+  "version": "1.0.0",
+  "description": "DialogueBox — UI factory (1:1 with the @almadar/ui dialogue-box pattern).",
+  "orbitals": [
+    {
+      "name": "DialogueBoxOrbital",
+      "entity": {
+        "name": "DialogueBoxItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "DialogueBoxRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "DialogueBoxItem",
+          "emits": [
+            {
+              "event": "COMPLETE",
+              "description": "Called when text animation completes",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CHOICE",
+              "description": "Called when a choice is selected",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "choice",
+                  "type": "object"
+                }
+              ]
+            },
+            {
+              "event": "ADVANCE",
+              "description": "Called when dialogue is advanced (no choices)",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "COMPLETE",
+                "name": "Complete",
+                "description": "Called when text animation completes",
+                "tier": "essential"
+              },
+              {
+                "key": "CHOICE",
+                "name": "Choice",
+                "description": "Called when a choice is selected",
+                "tier": "essential"
+              },
+              {
+                "key": "ADVANCE",
+                "name": "Advance",
+                "description": "Called when dialogue is advanced (no choices)",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "advanceEvent": "ADVANCE",
+                      "onAdvance": "ADVANCE",
+                      "typewriterSpeed": "@config.typewriterSpeed",
+                      "onComplete": "COMPLETE",
+                      "position": "@config.position",
+                      "choiceEvent": "CHOICE",
+                      "className": "@config.className",
+                      "type": "dialogue-box",
+                      "onChoice": "CHOICE",
+                      "completeEvent": "COMPLETE",
+                      "dialogue": "@config.dialogue"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "dialogue": {
+              "type": "DialogueBoxDialogue",
+              "label": "Dialogue",
+              "description": "Current dialogue node to display",
+              "tier": "presentation",
+              "properties": {
+                "portrait": {
+                  "name": "portrait",
+                  "type": "string",
+                  "required": false
+                },
+                "choices": {
+                  "name": "choices",
+                  "type": "array",
+                  "required": false,
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "id": {
+                  "name": "id",
+                  "type": "string",
+                  "required": false
+                },
+                "text": {
+                  "name": "text",
+                  "type": "string",
+                  "required": true
+                },
+                "autoAdvance": {
+                  "name": "autoAdvance",
+                  "type": "number",
+                  "required": false
+                },
+                "speaker": {
+                  "name": "speaker",
+                  "type": "string",
+                  "required": true
+                }
+              }
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Optional className",
+              "tier": "presentation"
+            },
+            "position": {
+              "type": "string",
+              "default": "bottom",
+              "label": "Position",
+              "description": "Position of dialogue box",
+              "tier": "presentation",
+              "values": [
+                "top",
+                "bottom"
+              ]
+            },
+            "typewriterSpeed": {
+              "type": "number",
+              "default": 30.0,
+              "label": "Typewriter Speed",
+              "description": "Typewriter speed in ms per character (0 = instant)",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "DialogueBoxPage",
+          "path": "/dialogue-box",
+          "traits": [
+            {
+              "ref": "DialogueBoxRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

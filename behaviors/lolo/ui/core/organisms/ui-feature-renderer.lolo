@@ -1,0 +1,80 @@
+app ui-feature-renderer "1.0.0"
+"FeatureRenderer — UI factory (1:1 with the @almadar/ui feature-renderer pattern)."
+orbital FeatureRendererOrbital {
+  type FeatureRendererFeaturesItem = {
+    id : string
+    x : number!
+    y : number!
+    z : number
+    type : string!
+    sprite : string
+    assetUrl : string
+    color : string
+    elevation : number
+  }
+
+  entity FeatureRendererItem [runtime] {
+    id : string!
+  }
+
+  trait FeatureRendererRender -> @rebindable FeatureRendererItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          features: @config.features
+          cellSize: @config.cellSize
+          offsetX: @config.offsetX
+          offsetZ: @config.offsetZ
+          onFeatureClick: FEATURE_CLICK
+          onFeatureHover: FEATURE_HOVER
+          selectedFeatureIds: @config.selectedFeatureIds
+          featureColors: @config.featureColors
+          type: feature-renderer
+        })
+    }
+
+    emits {
+      FEATURE_CLICK -> external {
+        feature : object
+      }
+        @description "Called when feature is clicked"
+        @tier "essential"
+      FEATURE_HOVER -> external {
+        feature : object
+      }
+        @description "Called when feature is hovered"
+        @tier "essential"
+    }
+
+    config {
+      features : [FeatureRendererFeaturesItem] = []
+        @label "Features"
+        @description "Array of features to render"
+        @tier "presentation"
+      cellSize : number = 1
+        @label "Cell Size"
+        @description "Grid cell size"
+        @tier "presentation"
+      offsetX : number = 0
+        @label "Offset X"
+        @description "Grid offset X"
+        @tier "presentation"
+      offsetZ : number = 0
+        @label "Offset Z"
+        @description "Grid offset Z"
+        @tier "presentation"
+      selectedFeatureIds : [string] = []
+        @label "Selected Feature Ids"
+        @description "Selected feature IDs"
+        @tier "presentation"
+      featureColors : json
+        @label "Feature Colors"
+        @description "Feature color overrides"
+        @tier "presentation"
+    }
+  }
+
+  page "/feature-renderer" as FeatureRendererPage -> FeatureRendererRender
+}

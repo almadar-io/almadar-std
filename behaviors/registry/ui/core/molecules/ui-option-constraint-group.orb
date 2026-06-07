@@ -1,0 +1,199 @@
+{
+  "name": "ui-option-constraint-group",
+  "version": "1.0.0",
+  "description": "OptionConstraintGroup — UI factory (1:1 with the @almadar/ui option-constraint-group pattern).",
+  "orbitals": [
+    {
+      "name": "OptionConstraintGroupOrbital",
+      "entity": {
+        "name": "OptionConstraintGroupItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "OptionConstraintGroupRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "OptionConstraintGroupItem",
+          "emits": [
+            {
+              "event": "CHANGE",
+              "description": "onChange prop",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "selected",
+                  "type": "[object]"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "CHANGE",
+                "name": "Change",
+                "description": "onChange prop",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "onChange": "CHANGE",
+                      "groupId": "@config.groupId",
+                      "constraint": "@config.constraint",
+                      "selected": "@config.selected",
+                      "size": "@config.size",
+                      "options": "@config.options",
+                      "changeEvent": "CHANGE",
+                      "title": "@config.title",
+                      "description": "@config.description",
+                      "className": "@config.className",
+                      "type": "option-constraint-group"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "constraint": {
+              "type": "json",
+              "label": "Constraint",
+              "description": "constraint prop",
+              "tier": "presentation"
+            },
+            "selected": {
+              "type": "[string]",
+              "default": [],
+              "label": "Selected",
+              "description": "selected prop",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "className prop",
+              "tier": "presentation"
+            },
+            "title": {
+              "type": "string",
+              "default": "",
+              "label": "Title",
+              "description": "title prop",
+              "tier": "presentation"
+            },
+            "description": {
+              "type": "string",
+              "default": "",
+              "label": "Description",
+              "description": "description prop",
+              "tier": "presentation"
+            },
+            "options": {
+              "type": "[OptionConstraintGroupOptionsItem]",
+              "default": [],
+              "label": "Options",
+              "description": "options prop",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "disabled": {
+                    "name": "disabled",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "outOfStock": {
+                    "name": "outOfStock",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "priceDelta": {
+                    "name": "priceDelta",
+                    "type": "number",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "size": {
+              "type": "string",
+              "default": "md",
+              "label": "Size",
+              "description": "size prop",
+              "tier": "presentation",
+              "values": [
+                "sm",
+                "md"
+              ]
+            },
+            "groupId": {
+              "type": "string",
+              "default": "",
+              "label": "Group Id",
+              "description": "groupId prop",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "OptionConstraintGroupPage",
+          "path": "/option-constraint-group",
+          "traits": [
+            {
+              "ref": "OptionConstraintGroupRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

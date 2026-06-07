@@ -1,0 +1,81 @@
+app ui-text-highlight "1.0.0"
+"TextHighlight — UI factory (1:1 with the @almadar/ui text-highlight pattern)."
+orbital TextHighlightOrbital {
+  entity TextHighlightItem [runtime] {
+    id : string!
+  }
+
+  trait TextHighlightRender -> @rebindable TextHighlightItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          highlightType: @config.highlightType
+          isActive: @config.isActive
+          onClick: CLICK
+          onMouseEnter: MOUSE_ENTER
+          onMouseLeave: MOUSE_LEAVE
+          annotationId: @config.annotationId
+          className: @config.className
+          children: @config.children
+          action: ACTION
+          hoverEvent: HOVER
+          type: text-highlight
+        })
+    }
+
+    emits {
+      CLICK -> external {
+        id : string
+      }
+        @description "Callback when highlight is clicked"
+        @tier "essential"
+      MOUSE_ENTER -> external {
+        id : string
+      }
+        @description "Callback when highlight is hovered"
+        @tier "essential"
+      MOUSE_LEAVE -> external {
+        id : string
+      }
+        @description "Callback when hover ends"
+        @tier "essential"
+      ACTION -> external {
+        id : string
+      }
+        @description "Declarative event name — emits UI:{action} via eventBus on click"
+        @tier "essential"
+      HOVER -> external {
+        id : string
+      }
+        @description "Declarative hover event — emits UI:{hoverEvent} with { hovered: true/false }"
+        @tier "essential"
+    }
+
+    config {
+      highlightType : "question" | "note" = question
+        @label "Highlight Type"
+        @description "Type of highlight (determines color)"
+        @tier "presentation"
+      isActive : boolean = false
+        @label "Is Active"
+        @description "Whether the highlight is currently active/focused"
+        @tier "presentation"
+      annotationId : string = ""
+        @label "Annotation Id"
+        @description "Unique ID for the annotation"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      children : node
+        @label "Children"
+        @description "Highlighted text content"
+        @tier "presentation"
+    }
+  }
+
+  page "/text-highlight" as TextHighlightPage -> TextHighlightRender
+}

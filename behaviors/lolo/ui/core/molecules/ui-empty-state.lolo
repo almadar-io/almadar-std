@@ -1,0 +1,78 @@
+app ui-empty-state "1.0.0"
+"EmptyState — UI factory (1:1 with the @almadar/ui empty-state pattern)."
+orbital EmptyStateOrbital {
+  entity EmptyStateItem [runtime] {
+    id : string!
+  }
+
+  trait EmptyStateRender -> @rebindable EmptyStateItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          icon: @config.icon
+          title: @config.title
+          message: @config.message
+          description: @config.description
+          actionLabel: @config.actionLabel
+          onAction: ACTION
+          className: @config.className
+          destructive: @config.destructive
+          variant: @config.variant
+          actionEvent: ACTION
+          look: @config.look
+          type: empty-state
+        })
+    }
+
+    emits {
+      ACTION -> external {
+        id : string
+      }
+        @description "onAction prop"
+        @tier "essential"
+    }
+
+    config {
+      icon : string = "circle"
+        @label "Icon"
+        @description "Icon to display. Accepts either: - A Lucide icon component (LucideIcon) - A string icon name (e.g., 'check-circle', 'x-circle')"
+        @tier "presentation"
+      title : string = ""
+        @label "Title"
+        @description "Primary text to display - use title or message (message is alias for backwards compat)"
+        @tier "presentation"
+      message : string = ""
+        @label "Message"
+        @description "Alias for title - used by schema patterns"
+        @tier "presentation"
+      description : string = ""
+        @label "Description"
+        @description "description prop"
+        @tier "presentation"
+      actionLabel : string = ""
+        @label "Action Label"
+        @description "actionLabel prop"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+      destructive : boolean = false
+        @label "Destructive"
+        @description "Destructive styling for confirmation dialogs"
+        @tier "presentation"
+      variant : "default" | "success" | "error" | "warning" | "info" = default
+        @label "Variant"
+        @description "Variant for color styling"
+        @tier "presentation"
+      look : "illustrated" | "icon-only" | "text-only" | "mascot" = "icon-only"
+        @label "Look"
+        @description "Layer 2 visual treatment — orthogonal to the semantic variant (which carries status color)."
+        @tier "presentation"
+    }
+  }
+
+  page "/empty-state" as EmptyStatePage -> EmptyStateRender
+}

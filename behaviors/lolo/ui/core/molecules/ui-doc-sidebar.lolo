@@ -1,0 +1,40 @@
+app ui-doc-sidebar "1.0.0"
+"DocSidebar — UI factory (1:1 with the @almadar/ui doc-sidebar pattern)."
+orbital DocSidebarOrbital {
+  type DocSidebarItemsItem = {
+    label : string!
+    href : string
+    items : [json]
+    active : boolean
+  }
+
+  entity DocSidebarItem [runtime] {
+    id : string!
+  }
+
+  trait DocSidebarRender -> @rebindable DocSidebarItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          items: @config.items
+          className: @config.className
+          type: doc-sidebar
+        })
+    }
+
+    config {
+      items : [DocSidebarItemsItem] = []
+        @label "Items"
+        @description "Sidebar navigation items"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/doc-sidebar" as DocSidebarPage -> DocSidebarRender
+}

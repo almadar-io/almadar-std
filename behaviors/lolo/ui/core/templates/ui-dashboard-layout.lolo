@@ -1,0 +1,131 @@
+app ui-dashboard-layout "1.0.0"
+"DashboardLayout — UI factory (1:1 with the @almadar/ui dashboard-layout pattern)."
+orbital DashboardLayoutOrbital {
+  type DashboardLayoutNavItemsItem = {
+    label : string!
+    href : string!
+    icon : json
+    badge : string | number
+    children : [json]
+  }
+  type DashboardLayoutTopBarActionsItem = {
+    icon : string!
+    label : string
+    event : string!
+    badge : number | string
+    variant : "default" | "primary" | "danger"
+  }
+
+  entity DashboardLayoutItem [runtime] {
+    id : string!
+  }
+
+  trait DashboardLayoutRender -> @rebindable DashboardLayoutItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          appName: @config.appName
+          logo: @config.logo
+          navItems: @config.navItems
+          user: @config.user
+          headerActions: @config.headerActions
+          showSearch: @config.showSearch
+          searchEvent: SEARCH
+          onSearchSubmit: SEARCH_SUBMIT
+          topBarActions: @config.topBarActions
+          notifications: @config.notifications
+          notificationClickEvent: NOTIFICATION_CLICK
+          onNotificationClick: NOTIFICATION_CLICK
+          showThemeToggle: @config.showThemeToggle
+          sidebarFooter: @config.sidebarFooter
+          currentPath: @config.currentPath
+          onSignOut: SIGN_OUT
+          layoutMode: @config.layoutMode
+          children: @config.children
+          type: dashboard-layout
+        })
+    }
+
+    emits {
+      SEARCH -> external {
+        value : string!
+      }
+        @description "Declarative search event — fires `UI:{searchEvent}` on the bus when the user submits the search box (Enter key). Setting this implies `showSearch=true`. Use `onSearchSubmit` for direct React usage instead."
+        @tier "essential"
+      SEARCH_SUBMIT -> external {
+        value : string
+      }
+        @description "React-side search submit callback. Used when the host wires the layout directly (not via render-ui pattern resolution)."
+        @tier "essential"
+      NOTIFICATION_CLICK -> external {
+        id : string
+      }
+        @description "Declarative bell click event — fires `UI:{notificationClickEvent}` on the bus with an empty payload when the user clicks the bell."
+        @tier "essential"
+      SIGN_OUT -> external {
+        id : string
+      }
+        @description "Callback when user clicks sign out (optional - uses auth context signOut if not provided)"
+        @tier "essential"
+    }
+
+    config {
+      appName : string = "{{APP_TITLE}}"
+        @label "App Name"
+        @description "App name shown in sidebar"
+        @tier "presentation"
+      logo : node
+        @label "Logo"
+        @description "Logo component or URL"
+        @tier "presentation"
+      navItems : [DashboardLayoutNavItemsItem] = []
+        @label "Nav Items"
+        @description "Navigation items. Apps that need a Settings page should add it as a navItems entry, not depend on baked-in chrome."
+        @tier "presentation"
+      user : json
+        @label "User"
+        @description "Current user info (optional - auto-populated from auth context if not provided)"
+        @tier "presentation"
+      headerActions : node
+        @label "Header Actions"
+        @description "Header actions (extra slots beyond bell/search/theme)."
+        @tier "presentation"
+      showSearch : boolean = false
+        @label "Show Search"
+        @description "Show the top-bar search box. Default `false` — opt in by setting `searchEvent` (any truthy value implies showSearch) or this flag."
+        @tier "presentation"
+      topBarActions : [DashboardLayoutTopBarActionsItem] = []
+        @label "Top Bar Actions"
+        @description "Generic top-bar action buttons rendered between the search bar and the notifications bell. Each entry: `{icon, label?, event, badge?, variant?}`. Domain-agnostic — consumers add a cart icon, profile button, help-bubble, or any other top-bar action by appending entries. Empty array (default) renders nothing."
+        @tier "presentation"
+      notifications : [json] = []
+        @label "Notifications"
+        @description "Notification list. Pass an empty array to show the bell with no badge; omit / pass null to hide the bell entirely."
+        @tier "presentation"
+      showThemeToggle : boolean = true
+        @label "Show Theme Toggle"
+        @description "Show the theme toggle button in the header. Default `true` — universally useful for a11y / dark mode."
+        @tier "presentation"
+      sidebarFooter : node
+        @label "Sidebar Footer"
+        @description "Custom sidebar footer (optional). When omitted, the sidebar has no footer — apps that need Settings/etc. add them via navItems."
+        @tier "presentation"
+      currentPath : string = ""
+        @label "Current Path"
+        @description "Active path used to highlight the matching nav item. Falls back to `useCurrentPagePath()` (set by `CurrentPagePathProvider`), then to `useLocation().pathname`. Production deploys can omit it; the studio preview passes the in-frame `?page=` value so highlighting works inside the embedded playground where `pathname` would be the studio route."
+        @tier "presentation"
+      layoutMode : "sidebar" | "topnav" | "bottomnav" | "minimal" = sidebar
+        @label "Layout Mode"
+        @description "Layout mode. Default `'sidebar'`. - `sidebar`: Left sidebar nav + top header (classic dashboard) - `topnav`: Horizontal nav in header, no sidebar - `bottomnav`: Bottom tab bar, no sidebar - `minimal`: No nav chrome, content only"
+        @tier "presentation"
+      children : node
+        @label "Children"
+        @description "Page content rendered inside the main area"
+        @tier "presentation"
+    }
+  }
+
+  page "/dashboard-layout" as DashboardLayoutPage -> DashboardLayoutRender
+}

@@ -1,0 +1,53 @@
+app ui-runtime-debugger "1.0.0"
+"RuntimeDebugger — UI factory (1:1 with the @almadar/ui runtime-debugger pattern)."
+orbital RuntimeDebuggerOrbital {
+  entity RuntimeDebuggerItem [runtime] {
+    id : string!
+  }
+
+  trait RuntimeDebuggerRender -> @rebindable RuntimeDebuggerItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          position: @config.position
+          defaultCollapsed: @config.defaultCollapsed
+          className: @config.className
+          mode: @config.mode
+          defaultTab: @config.defaultTab
+          schema: @config.schema
+          type: runtime-debugger
+        })
+    }
+
+    config {
+      position : "bottom-right" | "bottom-left" | "top-right" | "top-left" = "bottom-right"
+        @label "Position"
+        @description "Initial position"
+        @tier "presentation"
+      defaultCollapsed : boolean = true
+        @label "Default Collapsed"
+        @description "Initial collapsed state"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      mode : "floating" | "inline" | "verify" = floating
+        @label "Mode"
+        @description "Display mode: floating (fixed overlay), inline (block element), or verify (always-visible compact overlay for verification runs)"
+        @tier "presentation"
+      defaultTab : string = ""
+        @label "Default Tab"
+        @description "Default active tab id"
+        @tier "presentation"
+      schema : json
+        @label "Schema"
+        @description "Raw schema for EventDispatcherTab payload extraction"
+        @tier "presentation"
+    }
+  }
+
+  page "/runtime-debugger" as RuntimeDebuggerPage -> RuntimeDebuggerRender
+}

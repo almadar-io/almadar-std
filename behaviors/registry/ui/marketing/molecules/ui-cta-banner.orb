@@ -1,0 +1,142 @@
+{
+  "name": "ui-cta-banner",
+  "version": "1.0.0",
+  "description": "CtaBanner — UI factory (1:1 with the @almadar/ui cta-banner pattern).",
+  "orbitals": [
+    {
+      "name": "CtaBannerOrbital",
+      "entity": {
+        "name": "CtaBannerItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "CtaBannerRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "CtaBannerItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "subtitle": "@config.subtitle",
+                      "primaryAction": "@config.primaryAction",
+                      "secondaryAction": "@config.secondaryAction",
+                      "type": "cta-banner",
+                      "background": "@config.background",
+                      "className": "@config.className",
+                      "align": "@config.align",
+                      "title": "@config.title"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "background": {
+              "type": "string",
+              "default": "alt",
+              "label": "Background",
+              "description": "Background style",
+              "tier": "presentation",
+              "values": [
+                "default",
+                "alt",
+                "dark",
+                "gradient",
+                "primary"
+              ]
+            },
+            "align": {
+              "type": "string",
+              "default": "center",
+              "label": "Align",
+              "description": "Content alignment",
+              "tier": "presentation",
+              "values": [
+                "center",
+                "left"
+              ]
+            },
+            "primaryAction": {
+              "type": "json",
+              "label": "Primary Action",
+              "description": "Primary action button config",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional class names",
+              "tier": "presentation"
+            },
+            "title": {
+              "type": "string",
+              "default": "",
+              "label": "Title",
+              "description": "Banner headline",
+              "tier": "presentation"
+            },
+            "subtitle": {
+              "type": "string",
+              "default": "",
+              "label": "Subtitle",
+              "description": "Supporting text below the title",
+              "tier": "presentation"
+            },
+            "secondaryAction": {
+              "type": "json",
+              "label": "Secondary Action",
+              "description": "Secondary action button config",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "CtaBannerPage",
+          "path": "/cta-banner",
+          "traits": [
+            {
+              "ref": "CtaBannerRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

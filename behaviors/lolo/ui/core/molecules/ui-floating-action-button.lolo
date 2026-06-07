@@ -1,0 +1,82 @@
+app ui-floating-action-button "1.0.0"
+"FloatingActionButton — UI factory (1:1 with the @almadar/ui floating-action-button pattern)."
+orbital FloatingActionButtonOrbital {
+  type FloatingActionButtonActionsItem = {
+    id : string!
+    label : string!
+    icon : string!
+    onClick : any
+    event : string
+    variant : "primary" | "secondary" | "success" | "danger" | "warning"
+  }
+
+  entity FloatingActionButtonItem [runtime] {
+    id : string!
+  }
+
+  trait FloatingActionButtonRender -> @rebindable FloatingActionButtonItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          action: ACTION
+          actionPayload: @config.actionPayload
+          actions: @config.actions
+          icon: @config.icon
+          onClick: CLICK
+          variant: @config.variant
+          label: @config.label
+          position: @config.position
+          className: @config.className
+          type: floating-action-button
+        })
+    }
+
+    emits {
+      ACTION -> external {
+        id : string
+      }
+        @description "Declarative event name. When set, clicking the FAB emits `UI:{action}` via the event bus and (if also provided) calls `onClick`. Mirrors the Button atom's `action` prop so schemas can write `{ type: 'floating-action-button', action: 'INIT' }` uniformly."
+        @tier "essential"
+      CLICK -> external {
+        id : string
+      }
+        @description "Optional direct click handler. Runs after the action emit when both are present."
+        @tier "essential"
+    }
+
+    config {
+      actionPayload : json
+        @label "Action Payload"
+        @description "Payload to include with the dispatched action event."
+        @tier "presentation"
+      actions : [FloatingActionButtonActionsItem] = []
+        @label "Actions"
+        @description "Multiple actions. When provided, the button expands to show all of them."
+        @tier "presentation"
+      icon : string = "circle"
+        @label "Icon"
+        @description "Icon name (resolves to a Lucide icon by PascalCase / kebab-case lookup)."
+        @tier "presentation"
+      variant : "primary" | "secondary" | "success" | "danger" | "warning" = primary
+        @label "Variant"
+        @description "Visual variant."
+        @tier "presentation"
+      label : string = ""
+        @label "Label"
+        @description "Optional label shown via `aria-label` (visually hidden in single-action mode; rendered as a tooltip beside expanded actions in multi-action mode)."
+        @tier "presentation"
+      position : string = "bottom-right"
+        @label "Position"
+        @description "Button position"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/floating-action-button" as FloatingActionButtonPage -> FloatingActionButtonRender
+}

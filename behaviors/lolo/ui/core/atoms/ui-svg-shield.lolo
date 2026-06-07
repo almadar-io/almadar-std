@@ -1,0 +1,58 @@
+app ui-svg-shield "1.0.0"
+"SvgShield — UI factory (1:1 with the @almadar/ui svg-shield pattern)."
+orbital SvgShieldOrbital {
+  entity SvgShieldItem [runtime] {
+    id : string!
+  }
+
+  trait SvgShieldRender -> @rebindable SvgShieldItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          x: @config.x
+          y: @config.y
+          size: @config.size
+          variant: @config.variant
+          color: @config.color
+          opacity: @config.opacity
+          className: @config.className
+          type: svg-shield
+        })
+    }
+
+    config {
+      x : number = 0
+        @label "X"
+        @description "x prop"
+        @tier "presentation"
+      y : number = 0
+        @label "Y"
+        @description "y prop"
+        @tier "presentation"
+      size : number = 1
+        @label "Size"
+        @description "size prop"
+        @tier "presentation"
+      variant : "outline" | "filled" | "check" = outline
+        @label "Variant"
+        @description "variant prop"
+        @tier "presentation"
+      color : string = "var(--color-primary)"
+        @label "Color"
+        @description "color prop"
+        @tier "presentation"
+      opacity : number = 1
+        @label "Opacity"
+        @description "opacity prop"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/svg-shield" as SvgShieldPage -> SvgShieldRender
+}

@@ -1,0 +1,101 @@
+{
+  "name": "ui-loading-state",
+  "version": "1.0.0",
+  "description": "LoadingState — UI factory (1:1 with the @almadar/ui loading-state pattern).",
+  "orbitals": [
+    {
+      "name": "LoadingStateOrbital",
+      "entity": {
+        "name": "LoadingStateItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "LoadingStateRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "LoadingStateItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "message": "@config.message",
+                      "title": "@config.title",
+                      "type": "loading-state"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "title": {
+              "type": "string",
+              "default": "",
+              "label": "Title",
+              "description": "title prop",
+              "tier": "presentation"
+            },
+            "message": {
+              "type": "string",
+              "default": "",
+              "label": "Message",
+              "description": "message prop",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "className prop",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "LoadingStatePage",
+          "path": "/loading-state",
+          "traits": [
+            {
+              "ref": "LoadingStateRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

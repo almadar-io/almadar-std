@@ -1,0 +1,43 @@
+app ui-code-view "1.0.0"
+"CodeView — UI factory (1:1 with the @almadar/ui code-view pattern)."
+orbital CodeViewOrbital {
+  entity CodeViewItem [runtime] {
+    id : string!
+  }
+
+  trait CodeViewRender -> @rebindable CodeViewItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          data: @config.data
+          label: @config.label
+          defaultExpanded: @config.defaultExpanded
+          className: @config.className
+          type: code-view
+        })
+    }
+
+    config {
+      data : json
+        @label "Data"
+        @description "JSON data to display"
+        @tier "presentation"
+      label : string = ""
+        @label "Label"
+        @description "Label"
+        @tier "presentation"
+      defaultExpanded : boolean = false
+        @label "Default Expanded"
+        @description "Whether the code is expanded by default"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/code-view" as CodeViewPage -> CodeViewRender
+}

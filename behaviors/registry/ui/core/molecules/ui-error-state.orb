@@ -1,0 +1,131 @@
+{
+  "name": "ui-error-state",
+  "version": "1.0.0",
+  "description": "ErrorState — UI factory (1:1 with the @almadar/ui error-state pattern).",
+  "orbitals": [
+    {
+      "name": "ErrorStateOrbital",
+      "entity": {
+        "name": "ErrorStateItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ErrorStateRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "ErrorStateItem",
+          "emits": [
+            {
+              "event": "RETRY",
+              "description": "onRetry prop",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "RETRY",
+                "name": "Retry",
+                "description": "onRetry prop",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "title": "@config.title",
+                      "onRetry": "RETRY",
+                      "type": "error-state",
+                      "description": "@config.description",
+                      "className": "@config.className",
+                      "retryEvent": "RETRY",
+                      "message": "@config.message"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "description": {
+              "type": "string",
+              "default": "",
+              "label": "Description",
+              "description": "Alias for message (schema compatibility)",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "className prop",
+              "tier": "presentation"
+            },
+            "message": {
+              "type": "string",
+              "default": "",
+              "label": "Message",
+              "description": "Error message to display",
+              "tier": "presentation"
+            },
+            "title": {
+              "type": "string",
+              "default": "",
+              "label": "Title",
+              "description": "title prop",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "ErrorStatePage",
+          "path": "/error-state",
+          "traits": [
+            {
+              "ref": "ErrorStateRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

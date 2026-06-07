@@ -1,0 +1,159 @@
+app ui-battle-board "1.0.0"
+"BattleBoard — UI factory (1:1 with the @almadar/ui battle-board pattern)."
+orbital BattleBoardOrbital {
+  entity BattleBoardItem [runtime] {
+    id : string!
+  }
+
+  trait BattleBoardRender -> @rebindable BattleBoardItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch BattleBoardItem {})
+        (render-ui main {
+          entity: @entity
+          scale: @config.scale
+          unitScale: @config.unitScale
+          header: HEADER
+          sidebar: SIDEBAR
+          actions: ACTIONS
+          overlay: OVERLAY
+          gameOverOverlay: GAME_OVER_OVERLAY
+          onAttack: ATTACK
+          onGameEnd: GAME_END
+          onUnitMove: UNIT_MOVE
+          calculateDamage: CALCULATE_DAMAGE
+          onDrawEffects: DRAW_EFFECTS
+          hasActiveEffects: @config.hasActiveEffects
+          effectSpriteUrls: @config.effectSpriteUrls
+          resolveUnitFrame: RESOLVE_UNIT_FRAME
+          tileClickEvent: TILE_CLICK
+          unitClickEvent: UNIT_CLICK
+          endTurnEvent: END_TURN
+          cancelEvent: CANCEL
+          gameEndEvent: GAME_END
+          playAgainEvent: PLAY_AGAIN
+          attackEvent: ATTACK
+          className: @config.className
+          type: battle-board
+        })
+    }
+
+    emits {
+      HEADER -> external {
+        ctx : object
+      }
+        @description "-- Slots --"
+        @tier "essential"
+      SIDEBAR -> external {
+        ctx : object
+      }
+        @description "Sidebar content (combat log, unit roster, etc.)"
+        @tier "essential"
+      ACTIONS -> external {
+        ctx : object
+      }
+        @description "Floating action buttons"
+        @tier "essential"
+      OVERLAY -> external {
+        ctx : object
+      }
+        @description "Floating overlays above the canvas (damage popups, tooltips)"
+        @tier "essential"
+      GAME_OVER_OVERLAY -> external {
+        ctx : object
+      }
+        @description "Game-over screen overlay"
+        @tier "essential"
+      ATTACK -> external {
+        attacker : object
+        target : object
+        damage : number
+        attackerId : string!
+        targetId : string!
+      }
+        @description "-- Callbacks --"
+        @tier "essential"
+      GAME_END -> external {
+        result : string
+      }
+        @description "Called when battle ends"
+        @tier "essential"
+      UNIT_MOVE -> external {
+        unit : object
+        to : object
+      }
+        @description "Called after a unit moves"
+        @tier "essential"
+      CALCULATE_DAMAGE -> external {
+        attacker : object
+        target : object
+      }
+        @description "Custom combat damage calculator"
+        @tier "essential"
+      DRAW_EFFECTS -> external {
+        ctx : object
+        timestamp : number
+      }
+        @description "-- Canvas pass-through --"
+        @tier "essential"
+      RESOLVE_UNIT_FRAME -> external {
+        unitId : string
+      }
+        @description "resolveUnitFrame prop"
+        @tier "essential"
+      TILE_CLICK -> external {
+        x : number!
+        y : number!
+      }
+        @description "-- Declarative event props --"
+        @tier "essential"
+      UNIT_CLICK -> external {
+        unitId : string!
+      }
+        @description "Emits UI:{unitClickEvent} with { unitId } on unit click"
+        @tier "essential"
+      END_TURN -> external {
+        id : string
+      }
+        @description "Emits UI:{endTurnEvent} with {} on end turn"
+        @tier "essential"
+      CANCEL -> external {
+        id : string
+      }
+        @description "Emits UI:{cancelEvent} with {} on cancel"
+        @tier "essential"
+      PLAY_AGAIN -> external {
+        id : string
+      }
+        @description "Emits UI:{playAgainEvent} with {} on play again / reset"
+        @tier "essential"
+    }
+
+    config {
+      scale : number = 0.45
+        @label "Scale"
+        @description "Canvas render scale"
+        @tier "presentation"
+      unitScale : number = 1
+        @label "Unit Scale"
+        @description "Unit draw-size multiplier"
+        @tier "presentation"
+      hasActiveEffects : boolean = false
+        @label "Has Active Effects"
+        @description "hasActiveEffects prop"
+        @tier "presentation"
+      effectSpriteUrls : [string] = []
+        @label "Effect Sprite Urls"
+        @description "effectSpriteUrls prop"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/battle-board" as BattleBoardPage -> BattleBoardRender
+}

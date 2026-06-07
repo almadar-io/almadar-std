@@ -1,0 +1,44 @@
+app ui-pricing-grid "1.0.0"
+"PricingGrid — UI factory (1:1 with the @almadar/ui pricing-grid pattern)."
+orbital PricingGridOrbital {
+  type PricingGridPlansItem = {
+    name : string!
+    price : string!
+    description : string
+    features : [string]!
+    action : json!
+    highlighted : boolean
+    badge : string
+    className : string
+  }
+
+  entity PricingGridItem [runtime] {
+    id : string!
+  }
+
+  trait PricingGridRender -> @rebindable PricingGridItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          plans: @config.plans
+          className: @config.className
+          type: pricing-grid
+        })
+    }
+
+    config {
+      plans : [PricingGridPlansItem] = []
+        @label "Plans"
+        @description "plans prop"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/pricing-grid" as PricingGridPage -> PricingGridRender
+}

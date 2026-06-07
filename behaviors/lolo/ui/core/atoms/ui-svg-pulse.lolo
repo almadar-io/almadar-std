@@ -1,0 +1,63 @@
+app ui-svg-pulse "1.0.0"
+"SvgPulse — UI factory (1:1 with the @almadar/ui svg-pulse pattern)."
+orbital SvgPulseOrbital {
+  entity SvgPulseItem [runtime] {
+    id : string!
+  }
+
+  trait SvgPulseRender -> @rebindable SvgPulseItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          cx: @config.cx
+          cy: @config.cy
+          rings: @config.rings
+          maxRadius: @config.maxRadius
+          color: @config.color
+          animated: @config.animated
+          opacity: @config.opacity
+          className: @config.className
+          type: svg-pulse
+        })
+    }
+
+    config {
+      cx : number = 0
+        @label "Cx"
+        @description "cx prop"
+        @tier "presentation"
+      cy : number = 0
+        @label "Cy"
+        @description "cy prop"
+        @tier "presentation"
+      rings : number = 3
+        @label "Rings"
+        @description "rings prop"
+        @tier "presentation"
+      maxRadius : number = 60
+        @label "Max Radius"
+        @description "maxRadius prop"
+        @tier "presentation"
+      color : string = "var(--color-primary)"
+        @label "Color"
+        @description "color prop"
+        @tier "presentation"
+      animated : boolean = true
+        @label "Animated"
+        @description "animated prop"
+        @tier "presentation"
+      opacity : number = 1
+        @label "Opacity"
+        @description "opacity prop"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/svg-pulse" as SvgPulsePage -> SvgPulseRender
+}

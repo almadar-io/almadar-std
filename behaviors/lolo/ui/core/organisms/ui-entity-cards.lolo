@@ -1,0 +1,150 @@
+app ui-entity-cards "1.0.0"
+"EntityCards — UI factory (1:1 with the @almadar/ui entity-cards pattern)."
+orbital EntityCardsOrbital {
+  type EntityCardsItemActionsItem = {
+    label : string!
+    event : string
+    navigatesTo : string
+    onClick : any
+    action : string
+    placement : string
+    variant : string
+  }
+
+  entity EntityCardsItem [runtime] {
+    id : string!
+  }
+
+  trait EntityCardsRender -> @rebindable EntityCardsItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch EntityCardsItem {})
+        (render-ui main {
+          entity: @entity
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          sortBy: @config.sortBy
+          sortDirection: @config.sortDirection
+          searchValue: @config.searchValue
+          pageSize: @config.pageSize
+          totalCount: @config.totalCount
+          activeFilters: @config.activeFilters
+          selectedIds: @config.selectedIds
+          minCardWidth: @config.minCardWidth
+          maxCols: @config.maxCols
+          gap: @config.gap
+          alignItems: @config.alignItems
+          children: @config.children
+          fields: @config.fields
+          fieldNames: @config.fieldNames
+          columns: @config.columns
+          itemActions: @config.itemActions
+          showTotal: @config.showTotal
+          showAvatar: @config.showAvatar
+          variant: @config.variant
+          imageField: @config.imageField
+          type: entity-cards
+        })
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : json
+        @label "Error"
+        @description "Error state"
+        @tier "presentation"
+      sortBy : string = ""
+        @label "Sort By"
+        @description "Current sort field"
+        @tier "presentation"
+      sortDirection : string = ""
+        @label "Sort Direction"
+        @description "Current sort direction"
+        @tier "presentation"
+      searchValue : string = ""
+        @label "Search Value"
+        @description "Current search query value"
+        @tier "presentation"
+      pageSize : number = 0
+        @label "Page Size"
+        @description "Number of items per page"
+        @tier "presentation"
+      totalCount : number = 0
+        @label "Total Count"
+        @description "Total number of items"
+        @tier "presentation"
+      activeFilters : json
+        @label "Active Filters"
+        @description "Active filters"
+        @tier "presentation"
+      selectedIds : [json] = []
+        @label "Selected Ids"
+        @description "Currently selected item IDs"
+        @tier "presentation"
+      minCardWidth : number = 280
+        @label "Min Card Width"
+        @description "Minimum width of each card (default: 280px)"
+        @tier "presentation"
+      maxCols : number = 0
+        @label "Max Cols"
+        @description "Maximum number of columns"
+        @tier "presentation"
+      gap : "none" | "sm" | "md" | "lg" | "xl" = md
+        @label "Gap"
+        @description "Gap between cards"
+        @tier "presentation"
+      alignItems : "start" | "center" | "end" | "stretch" = stretch
+        @label "Align Items"
+        @description "Align cards vertically in their cells"
+        @tier "presentation"
+      children : node
+        @label "Children"
+        @description "Children elements (cards) - optional when using entity prop"
+        @tier "presentation"
+      fields : [json] = []
+        @label "Fields"
+        @description "Fields to display - required for schema-driven rendering"
+        @tier "presentation"
+      fieldNames : [string] = []
+        @label "Field Names"
+        @description "Alias for fields - backwards compatibility"
+        @tier "presentation"
+      columns : [json] = []
+        @label "Columns"
+        @description "Alias for fields - backwards compatibility"
+        @tier "presentation"
+      itemActions : [EntityCardsItemActionsItem] = []
+        @label "Item Actions"
+        @description "Actions for each card item (schema-driven)"
+        @tier "presentation"
+      showTotal : boolean = true
+        @label "Show Total"
+        @description "Show total count in pagination"
+        @tier "presentation"
+      showAvatar : boolean = false
+        @label "Show Avatar"
+        @description "Show avatar/image field on cards"
+        @tier "presentation"
+      variant : string = ""
+        @label "Variant"
+        @description "Visual variant for the card grid"
+        @tier "presentation"
+      imageField : string = ""
+        @label "Image Field"
+        @description "Entity field name containing an image URL to display as card thumbnail"
+        @tier "presentation"
+    }
+  }
+
+  page "/entity-cards" as EntityCardsPage -> EntityCardsRender
+}

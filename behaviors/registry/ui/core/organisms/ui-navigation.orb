@@ -1,0 +1,183 @@
+{
+  "name": "ui-navigation",
+  "version": "1.0.0",
+  "description": "Navigation — UI factory (1:1 with the @almadar/ui navigation pattern).",
+  "orbitals": [
+    {
+      "name": "NavigationOrbital",
+      "entity": {
+        "name": "NavigationItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "NavigationRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "NavigationItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "NavigationItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "orientation": "@config.orientation",
+                      "entity": "NavigationItem",
+                      "type": "navigation",
+                      "items": "@config.items",
+                      "error": "@config.error",
+                      "isLoading": "@config.isLoading",
+                      "className": "@config.className"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "items": {
+              "type": "[NavigationItemsItem]",
+              "default": [],
+              "label": "Items",
+              "description": "Navigation items",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "href": {
+                    "name": "href",
+                    "type": "string",
+                    "required": false
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "isActive": {
+                    "name": "isActive",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "badge": {
+                    "name": "badge",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "string",
+                      "number"
+                    ]
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "onClick": {
+                    "name": "onClick",
+                    "type": "string",
+                    "required": false
+                  },
+                  "disabled": {
+                    "name": "disabled",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "subMenu": {
+                    "name": "subMenu",
+                    "type": "array",
+                    "required": false,
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "orientation": {
+              "type": "string",
+              "default": "horizontal",
+              "label": "Orientation",
+              "description": "Navigation orientation",
+              "tier": "presentation",
+              "values": [
+                "horizontal",
+                "vertical"
+              ]
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "error": {
+              "type": "json",
+              "label": "Error",
+              "description": "Error state",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "NavigationPage",
+          "path": "/navigation",
+          "traits": [
+            {
+              "ref": "NavigationRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

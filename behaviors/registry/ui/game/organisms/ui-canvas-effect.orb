@@ -1,0 +1,232 @@
+{
+  "name": "ui-canvas-effect",
+  "version": "1.0.0",
+  "description": "CanvasEffect — UI factory (1:1 with the @almadar/ui canvas-effect pattern).",
+  "orbitals": [
+    {
+      "name": "CanvasEffectOrbital",
+      "entity": {
+        "name": "CanvasEffectItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "CanvasEffectRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "CanvasEffectItem",
+          "emits": [
+            {
+              "event": "COMPLETE",
+              "description": "Callback when the effect animation completes",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "COMPLETE",
+                "name": "Complete",
+                "description": "Callback when the effect animation completes",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "error": "@config.error",
+                      "actionType": "@config.actionType",
+                      "x": "@config.x",
+                      "y": "@config.y",
+                      "duration": "@config.duration",
+                      "className": "@config.className",
+                      "isLoading": "@config.isLoading",
+                      "onComplete": "COMPLETE",
+                      "effectSpriteUrl": "@config.effectSpriteUrl",
+                      "intensity": "@config.intensity",
+                      "assetBaseUrl": "@config.assetBaseUrl",
+                      "completeEvent": "COMPLETE",
+                      "width": "@config.width",
+                      "height": "@config.height",
+                      "assetManifest": "@config.assetManifest",
+                      "type": "canvas-effect"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "assetBaseUrl": {
+              "type": "string",
+              "default": "",
+              "label": "Asset Base Url",
+              "description": "Base URL for remote assets. Prepended to relative effectSpriteUrl paths.",
+              "tier": "presentation"
+            },
+            "actionType": {
+              "type": "string",
+              "default": "melee",
+              "label": "Action Type",
+              "description": "The type of combat action to visualise",
+              "tier": "presentation",
+              "values": [
+                "melee",
+                "ranged",
+                "magic",
+                "heal",
+                "defend",
+                "hit",
+                "death",
+                "buff",
+                "debuff",
+                "shield",
+                "aoe",
+                "critical"
+              ]
+            },
+            "error": {
+              "type": "json",
+              "label": "Error",
+              "description": "Error state",
+              "tier": "presentation"
+            },
+            "duration": {
+              "type": "number",
+              "default": 2000.0,
+              "label": "Duration",
+              "description": "Duration in ms before auto-dismiss (default 2000 for canvas, 800 for emoji)",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "effectSpriteUrl": {
+              "type": "string",
+              "default": "",
+              "label": "Effect Sprite Url",
+              "description": "--- Remote asset loading ---",
+              "tier": "presentation"
+            },
+            "assetManifest": {
+              "type": "CanvasEffectAssetManifest",
+              "label": "Asset Manifest",
+              "description": "Full effect asset manifest for the sprite particle engine. When provided, enables the canvas-based particle system.",
+              "tier": "presentation",
+              "properties": {
+                "particles": {
+                  "name": "particles",
+                  "type": "string",
+                  "required": false
+                },
+                "animations": {
+                  "name": "animations",
+                  "type": "string",
+                  "required": false
+                },
+                "baseUrl": {
+                  "name": "baseUrl",
+                  "type": "string",
+                  "required": true
+                }
+              }
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
+              "tier": "presentation"
+            },
+            "width": {
+              "type": "number",
+              "default": 400.0,
+              "label": "Width",
+              "description": "Canvas width (default 400)",
+              "tier": "presentation"
+            },
+            "intensity": {
+              "type": "number",
+              "default": 1.0,
+              "label": "Intensity",
+              "description": "Optional intensity multiplier (1 = normal, 2 = double size/brightness)",
+              "tier": "presentation"
+            },
+            "height": {
+              "type": "number",
+              "default": 300.0,
+              "label": "Height",
+              "description": "Canvas height (default 300)",
+              "tier": "presentation"
+            },
+            "x": {
+              "type": "number",
+              "default": 0.0,
+              "label": "X",
+              "description": "Screen-space X position (center of the effect)",
+              "tier": "presentation"
+            },
+            "y": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Y",
+              "description": "Screen-space Y position (center of the effect)",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "CanvasEffectPage",
+          "path": "/canvas-effect",
+          "traits": [
+            {
+              "ref": "CanvasEffectRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

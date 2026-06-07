@@ -1,0 +1,83 @@
+app ui-number-stepper "1.0.0"
+"NumberStepper — UI factory (1:1 with the @almadar/ui number-stepper pattern)."
+orbital NumberStepperOrbital {
+  entity NumberStepperItem [runtime] {
+    id : string!
+  }
+
+  trait NumberStepperRender -> @rebindable NumberStepperItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          value: @config.value
+          min: @config.min
+          max: @config.max
+          step: @config.step
+          size: @config.size
+          disabled: @config.disabled
+          onChange: CHANGE
+          action: ACTION
+          actionPayload: @config.actionPayload
+          className: @config.className
+          label: @config.label
+          type: number-stepper
+        })
+    }
+
+    emits {
+      CHANGE -> external {
+        value : number
+      }
+        @description "Direct onChange callback"
+        @tier "essential"
+      ACTION -> external {
+        id : string
+      }
+        @description "Declarative event name for value changes"
+        @tier "essential"
+    }
+
+    config {
+      value : number = 0
+        @label "Value"
+        @description "Current value"
+        @tier "presentation"
+      min : number = 0
+        @label "Min"
+        @description "Minimum value"
+        @tier "presentation"
+      max : number = 0
+        @label "Max"
+        @description "Maximum value"
+        @tier "presentation"
+      step : number = 1
+        @label "Step"
+        @description "Step increment"
+        @tier "presentation"
+      size : "sm" | "md" | "lg" = md
+        @label "Size"
+        @description "Size variant"
+        @tier "presentation"
+      disabled : boolean = false
+        @label "Disabled"
+        @description "Disabled state"
+        @tier "presentation"
+      actionPayload : json
+        @label "Action Payload"
+        @description "Payload to include with the action event"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      label : string = ""
+        @label "Label"
+        @description "Accessible label"
+        @tier "presentation"
+    }
+  }
+
+  page "/number-stepper" as NumberStepperPage -> NumberStepperRender
+}

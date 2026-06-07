@@ -1,0 +1,137 @@
+{
+  "name": "ui-state-architect-board",
+  "version": "1.0.0",
+  "description": "StateArchitectBoard — UI factory (1:1 with the @almadar/ui state-architect-board pattern).",
+  "orbitals": [
+    {
+      "name": "StateArchitectBoardOrbital",
+      "entity": {
+        "name": "StateArchitectBoardItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "StateArchitectBoardRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "StateArchitectBoardItem",
+          "emits": [
+            {
+              "event": "TEST",
+              "description": "Emits UI:{testEvent}",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "COMPLETE",
+              "description": "Emits UI:{completeEvent} with { success, passedTests }",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "success",
+                  "type": "boolean",
+                  "required": true
+                },
+                {
+                  "name": "passedTests",
+                  "type": "number",
+                  "required": true
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "TEST",
+                "name": "Test",
+                "description": "Emits UI:{testEvent}",
+                "tier": "essential"
+              },
+              {
+                "key": "COMPLETE",
+                "name": "Complete",
+                "description": "Emits UI:{completeEvent} with { success, passedTests }",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "StateArchitectBoardItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "testEvent": "TEST",
+                      "type": "state-architect-board",
+                      "entity": "@entity",
+                      "stepDurationMs": "@config.stepDurationMs",
+                      "completeEvent": "COMPLETE"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "stepDurationMs": {
+              "type": "number",
+              "default": 600.0,
+              "label": "Step Duration Ms",
+              "description": "Playback speed",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "StateArchitectBoardPage",
+          "path": "/state-architect-board",
+          "traits": [
+            {
+              "ref": "StateArchitectBoardRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

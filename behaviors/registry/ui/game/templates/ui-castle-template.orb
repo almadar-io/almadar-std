@@ -1,0 +1,99 @@
+{
+  "name": "ui-castle-template",
+  "version": "1.0.0",
+  "description": "CastleTemplate — UI factory (1:1 with the @almadar/ui castle-template pattern).",
+  "orbitals": [
+    {
+      "name": "CastleTemplateOrbital",
+      "entity": {
+        "name": "CastleTemplateItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "CastleTemplateRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "CastleTemplateItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "CastleTemplateItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "type": "castle-template",
+                      "scale": "@config.scale",
+                      "entity": "@entity"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "External styling override",
+              "tier": "presentation"
+            },
+            "scale": {
+              "type": "number",
+              "default": 0.45,
+              "label": "Scale",
+              "description": "Canvas render scale",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "CastleTemplatePage",
+          "path": "/castle-template",
+          "traits": [
+            {
+              "ref": "CastleTemplateRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

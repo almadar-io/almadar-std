@@ -1,0 +1,67 @@
+app ui-badge "1.0.0"
+"Badge — UI factory (1:1 with the @almadar/ui badge pattern)."
+orbital BadgeOrbital {
+  entity BadgeItem [runtime] {
+    id : string!
+  }
+
+  trait BadgeRender -> @rebindable BadgeItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          className: @config.className
+          variant: @config.variant
+          size: @config.size
+          amount: @config.amount
+          label: @config.label
+          icon: @config.icon
+          onRemove: REMOVE
+          removeLabel: @config.removeLabel
+          type: badge
+        })
+    }
+
+    emits {
+      REMOVE -> external {
+        id : string
+      }
+        @description "When set, renders a small X button on the right of the badge that invokes this handler — turns the badge into a removable chip. Used by the TagInput molecule and other 'list of removable values' surfaces."
+        @tier "essential"
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes applied to the root element."
+        @tier "presentation"
+      variant : "default" | "primary" | "secondary" | "success" | "warning" | "danger" | "error" | "info" | "neutral" = default
+        @label "Variant"
+        @description "variant prop"
+        @tier "presentation"
+      size : "sm" | "md" | "lg" = sm
+        @label "Size"
+        @description "size prop"
+        @tier "presentation"
+      amount : number = 0
+        @label "Amount"
+        @description "Numeric count or amount to display in badge"
+        @tier "presentation"
+      label : string | number
+        @label "Label"
+        @description "Badge label text (alternative to children for schema-driven rendering). Numeric values are auto-coerced to string for rendering — common case is unread counts, error counts, status codes, etc."
+        @tier "presentation"
+      icon : node
+        @label "Icon"
+        @description "Icon name (Lucide icon string) or React node"
+        @tier "presentation"
+      removeLabel : string = ""
+        @label "Remove Label"
+        @description "Accessible label for the remove button. Defaults to 'Remove'."
+        @tier "presentation"
+    }
+  }
+
+  page "/badge" as BadgePage -> BadgeRender
+}

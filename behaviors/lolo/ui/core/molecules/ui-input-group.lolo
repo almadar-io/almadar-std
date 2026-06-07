@@ -1,0 +1,38 @@
+app ui-input-group "1.0.0"
+"InputGroup — UI factory (1:1 with the @almadar/ui input-group pattern)."
+orbital InputGroupOrbital {
+  entity InputGroupItem [runtime] {
+    id : string!
+  }
+
+  trait InputGroupRender -> @rebindable InputGroupItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          leftAddon: @config.leftAddon
+          rightAddon: @config.rightAddon
+          className: @config.className
+          type: input-group
+        })
+    }
+
+    config {
+      leftAddon : json
+        @label "Left Addon"
+        @description "Left addon (icon, button, or text)"
+        @tier "presentation"
+      rightAddon : json
+        @label "Right Addon"
+        @description "Right addon (icon, button, or text)"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/input-group" as InputGroupPage -> InputGroupRender
+}

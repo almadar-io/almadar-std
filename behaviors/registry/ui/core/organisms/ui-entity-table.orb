@@ -1,0 +1,340 @@
+{
+  "name": "ui-entity-table",
+  "version": "1.0.0",
+  "description": "EntityTable — UI factory (1:1 with the @almadar/ui entity-table pattern).",
+  "orbitals": [
+    {
+      "name": "EntityTableOrbital",
+      "entity": {
+        "name": "EntityTableItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "EntityTableRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "EntityTableItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "EntityTableItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "emptyDescription": "@config.emptyDescription",
+                      "selectable": "@config.selectable",
+                      "searchable": "@config.searchable",
+                      "type": "entity-table",
+                      "emptyIcon": "@config.emptyIcon",
+                      "entity": "@entity",
+                      "searchValue": "@config.searchValue",
+                      "look": "@config.look",
+                      "headerActions": "@config.headerActions",
+                      "sortBy": "@config.sortBy",
+                      "showTotal": "@config.showTotal",
+                      "rowActions": "@config.rowActions",
+                      "fields": "@config.fields",
+                      "totalCount": "@config.totalCount",
+                      "emptyTitle": "@config.emptyTitle",
+                      "searchPlaceholder": "@config.searchPlaceholder",
+                      "className": "@config.className",
+                      "itemActions": "@config.itemActions",
+                      "sortDirection": "@config.sortDirection",
+                      "emptyAction": "@config.emptyAction",
+                      "bulkActions": "@config.bulkActions",
+                      "isLoading": "@config.isLoading",
+                      "pageSize": "@config.pageSize",
+                      "activeFilters": "@config.activeFilters",
+                      "selectedIds": "@config.selectedIds",
+                      "columns": "@config.columns",
+                      "error": "@config.error"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "activeFilters": {
+              "type": "json",
+              "label": "Active Filters",
+              "description": "Active filters",
+              "tier": "presentation"
+            },
+            "sortDirection": {
+              "type": "string",
+              "default": "asc",
+              "label": "Sort Direction",
+              "description": "Current sort direction",
+              "tier": "presentation"
+            },
+            "bulkActions": {
+              "type": "[json]",
+              "default": [],
+              "label": "Bulk Actions",
+              "description": "Bulk actions",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "rowActions": {
+              "type": "[EntityTableRowActionsItem]",
+              "default": [],
+              "label": "Row Actions",
+              "description": "Row actions",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "default",
+                      "danger"
+                    ]
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "onClick": {
+                    "name": "onClick",
+                    "type": "string",
+                    "required": true
+                  },
+                  "show": {
+                    "name": "show",
+                    "type": "string",
+                    "required": false
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
+              "tier": "presentation"
+            },
+            "itemActions": {
+              "type": "[json]",
+              "default": [],
+              "label": "Item Actions",
+              "description": "Item actions from generated code - maps to rowActions",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "emptyAction": {
+              "type": "json",
+              "label": "Empty Action",
+              "description": "emptyAction prop",
+              "tier": "presentation"
+            },
+            "emptyTitle": {
+              "type": "string",
+              "default": "",
+              "label": "Empty Title",
+              "description": "emptyTitle prop",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "emptyIcon": {
+              "type": "string",
+              "default": "circle",
+              "label": "Empty Icon",
+              "description": "emptyIcon prop",
+              "tier": "presentation"
+            },
+            "totalCount": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Total Count",
+              "description": "Total number of items",
+              "tier": "presentation"
+            },
+            "error": {
+              "type": "json",
+              "label": "Error",
+              "description": "Error state",
+              "tier": "presentation"
+            },
+            "sortBy": {
+              "type": "string",
+              "default": "",
+              "label": "Sort By",
+              "description": "Current sort field",
+              "tier": "presentation"
+            },
+            "emptyDescription": {
+              "type": "string",
+              "default": "",
+              "label": "Empty Description",
+              "description": "emptyDescription prop",
+              "tier": "presentation"
+            },
+            "selectable": {
+              "type": "boolean",
+              "default": false,
+              "label": "Selectable",
+              "description": "Selection",
+              "tier": "presentation"
+            },
+            "columns": {
+              "type": "[json]",
+              "default": [],
+              "label": "Columns",
+              "description": "Columns can be Column objects or simple string field names",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "headerActions": {
+              "type": "node",
+              "label": "Header Actions",
+              "description": "Header actions",
+              "tier": "presentation"
+            },
+            "searchable": {
+              "type": "boolean",
+              "default": false,
+              "label": "Searchable",
+              "description": "Search",
+              "tier": "presentation"
+            },
+            "searchPlaceholder": {
+              "type": "string",
+              "default": "",
+              "label": "Search Placeholder",
+              "description": "searchPlaceholder prop",
+              "tier": "presentation"
+            },
+            "showTotal": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Total",
+              "description": "Show total count in pagination",
+              "tier": "presentation"
+            },
+            "look": {
+              "type": "string",
+              "default": "dense",
+              "label": "Look",
+              "description": "Layer 2 visual treatment — orthogonal to the semantic variant.",
+              "tier": "presentation",
+              "values": [
+                "dense",
+                "spacious",
+                "striped",
+                "borderless",
+                "card-rows"
+              ]
+            },
+            "searchValue": {
+              "type": "string",
+              "default": "",
+              "label": "Search Value",
+              "description": "Current search query value",
+              "tier": "presentation"
+            },
+            "selectedIds": {
+              "type": "[json]",
+              "default": [],
+              "label": "Selected Ids",
+              "description": "Currently selected item IDs",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "fields": {
+              "type": "[json]",
+              "default": [],
+              "label": "Fields",
+              "description": "Fields to display - accepts string[] or Column[] for unified interface. Alias for columns",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "pageSize": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Page Size",
+              "description": "Number of items per page",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "EntityTablePage",
+          "path": "/entity-table",
+          "traits": [
+            {
+              "ref": "EntityTableRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

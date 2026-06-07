@@ -1,0 +1,159 @@
+app ui-entity-table "1.0.0"
+"EntityTable — UI factory (1:1 with the @almadar/ui entity-table pattern)."
+orbital EntityTableOrbital {
+  type EntityTableRowActionsItem = {
+    label : string!
+    icon : string
+    onClick : any!
+    variant : "default" | "danger"
+    show : any
+    event : string
+  }
+
+  entity EntityTableItem [runtime] {
+    id : string!
+  }
+
+  trait EntityTableRender -> @rebindable EntityTableItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch EntityTableItem {})
+        (render-ui main {
+          entity: @entity
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          sortBy: @config.sortBy
+          sortDirection: @config.sortDirection
+          searchValue: @config.searchValue
+          pageSize: @config.pageSize
+          totalCount: @config.totalCount
+          activeFilters: @config.activeFilters
+          selectedIds: @config.selectedIds
+          fields: @config.fields
+          columns: @config.columns
+          itemActions: @config.itemActions
+          emptyIcon: @config.emptyIcon
+          emptyTitle: @config.emptyTitle
+          emptyDescription: @config.emptyDescription
+          emptyAction: @config.emptyAction
+          selectable: @config.selectable
+          searchable: @config.searchable
+          searchPlaceholder: @config.searchPlaceholder
+          rowActions: @config.rowActions
+          bulkActions: @config.bulkActions
+          headerActions: @config.headerActions
+          showTotal: @config.showTotal
+          look: @config.look
+          type: entity-table
+        })
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : json
+        @label "Error"
+        @description "Error state"
+        @tier "presentation"
+      sortBy : string = ""
+        @label "Sort By"
+        @description "Current sort field"
+        @tier "presentation"
+      sortDirection : string = asc
+        @label "Sort Direction"
+        @description "Current sort direction"
+        @tier "presentation"
+      searchValue : string = ""
+        @label "Search Value"
+        @description "Current search query value"
+        @tier "presentation"
+      pageSize : number = 0
+        @label "Page Size"
+        @description "Number of items per page"
+        @tier "presentation"
+      totalCount : number = 0
+        @label "Total Count"
+        @description "Total number of items"
+        @tier "presentation"
+      activeFilters : json
+        @label "Active Filters"
+        @description "Active filters"
+        @tier "presentation"
+      selectedIds : [json] = []
+        @label "Selected Ids"
+        @description "Currently selected item IDs"
+        @tier "presentation"
+      fields : [json] = []
+        @label "Fields"
+        @description "Fields to display - accepts string[] or Column[] for unified interface. Alias for columns"
+        @tier "presentation"
+      columns : [json] = []
+        @label "Columns"
+        @description "Columns can be Column objects or simple string field names"
+        @tier "presentation"
+      itemActions : [json] = []
+        @label "Item Actions"
+        @description "Item actions from generated code - maps to rowActions"
+        @tier "presentation"
+      emptyIcon : string = "circle"
+        @label "Empty Icon"
+        @description "emptyIcon prop"
+        @tier "presentation"
+      emptyTitle : string = ""
+        @label "Empty Title"
+        @description "emptyTitle prop"
+        @tier "presentation"
+      emptyDescription : string = ""
+        @label "Empty Description"
+        @description "emptyDescription prop"
+        @tier "presentation"
+      emptyAction : json
+        @label "Empty Action"
+        @description "emptyAction prop"
+        @tier "presentation"
+      selectable : boolean = false
+        @label "Selectable"
+        @description "Selection"
+        @tier "presentation"
+      searchable : boolean = false
+        @label "Searchable"
+        @description "Search"
+        @tier "presentation"
+      searchPlaceholder : string = ""
+        @label "Search Placeholder"
+        @description "searchPlaceholder prop"
+        @tier "presentation"
+      rowActions : [EntityTableRowActionsItem] = []
+        @label "Row Actions"
+        @description "Row actions"
+        @tier "presentation"
+      bulkActions : [json] = []
+        @label "Bulk Actions"
+        @description "Bulk actions"
+        @tier "presentation"
+      headerActions : node
+        @label "Header Actions"
+        @description "Header actions"
+        @tier "presentation"
+      showTotal : boolean = true
+        @label "Show Total"
+        @description "Show total count in pagination"
+        @tier "presentation"
+      look : "dense" | "spacious" | "striped" | "borderless" | "card-rows" = dense
+        @label "Look"
+        @description "Layer 2 visual treatment — orthogonal to the semantic variant."
+        @tier "presentation"
+    }
+  }
+
+  page "/entity-table" as EntityTablePage -> EntityTableRender
+}

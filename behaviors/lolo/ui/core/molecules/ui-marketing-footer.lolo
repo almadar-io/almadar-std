@@ -1,0 +1,52 @@
+app ui-marketing-footer "1.0.0"
+"MarketingFooter — UI factory (1:1 with the @almadar/ui marketing-footer pattern)."
+orbital MarketingFooterOrbital {
+  type MarketingFooterColumnsItem = {
+    title : string!
+    items : [MarketingFooterColumnsItemItemsItem]!
+  }
+  type MarketingFooterColumnsItemItemsItem = {
+    label : string!
+    href : string!
+  }
+
+  entity MarketingFooterItem [runtime] {
+    id : string!
+  }
+
+  trait MarketingFooterRender -> @rebindable MarketingFooterItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          columns: @config.columns
+          copyright: @config.copyright
+          logo: @config.logo
+          className: @config.className
+          type: marketing-footer
+        })
+    }
+
+    config {
+      columns : [MarketingFooterColumnsItem] = []
+        @label "Columns"
+        @description "columns prop"
+        @tier "presentation"
+      copyright : string = ""
+        @label "Copyright"
+        @description "copyright prop"
+        @tier "presentation"
+      logo : json
+        @label "Logo"
+        @description "logo prop"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/marketing-footer" as MarketingFooterPage -> MarketingFooterRender
+}

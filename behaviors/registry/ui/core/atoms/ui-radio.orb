@@ -1,0 +1,162 @@
+{
+  "name": "ui-radio",
+  "version": "1.0.0",
+  "description": "Radio — UI factory (1:1 with the @almadar/ui radio pattern).",
+  "orbitals": [
+    {
+      "name": "RadioOrbital",
+      "entity": {
+        "name": "RadioItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "RadioRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "RadioItem",
+          "emits": [
+            {
+              "event": "ACTION",
+              "description": "Declarative event name for trait dispatch",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "ACTION",
+                "name": "Action",
+                "description": "Declarative event name for trait dispatch",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "action": "ACTION",
+                      "label": "@config.label",
+                      "value": "@config.value",
+                      "helperText": "@config.helperText",
+                      "error": "@config.error",
+                      "type": "radio",
+                      "size": "@config.size",
+                      "options": "@config.options",
+                      "className": "@config.className"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "value": {
+              "type": "string",
+              "default": "",
+              "label": "Value",
+              "description": "Current selected value",
+              "tier": "presentation"
+            },
+            "helperText": {
+              "type": "string",
+              "default": "",
+              "label": "Helper Text",
+              "description": "Helper text displayed below the radio button",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes applied to the root element.",
+              "tier": "presentation"
+            },
+            "label": {
+              "type": "string",
+              "default": "",
+              "label": "Label",
+              "description": "Label text displayed next to the radio button",
+              "tier": "presentation"
+            },
+            "error": {
+              "type": "string",
+              "default": "",
+              "label": "Error",
+              "description": "Error message displayed below the radio button",
+              "tier": "presentation"
+            },
+            "options": {
+              "type": "[string]",
+              "default": [],
+              "label": "Options",
+              "description": "Radio options (string array or SelectOption array)",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "size": {
+              "type": "string",
+              "default": "md",
+              "label": "Size",
+              "description": "Size of the radio button",
+              "tier": "presentation",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "RadioPage",
+          "path": "/radio",
+          "traits": [
+            {
+              "ref": "RadioRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

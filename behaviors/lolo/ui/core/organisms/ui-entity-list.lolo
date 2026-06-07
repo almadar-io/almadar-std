@@ -1,0 +1,131 @@
+app ui-entity-list "1.0.0"
+"EntityList — UI factory (1:1 with the @almadar/ui entity-list pattern)."
+orbital EntityListOrbital {
+  entity EntityListItem [runtime] {
+    id : string!
+  }
+
+  trait EntityListRender -> @rebindable EntityListItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch EntityListItem {})
+        (render-ui main {
+          entity: @entity
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          sortBy: @config.sortBy
+          sortDirection: @config.sortDirection
+          searchValue: @config.searchValue
+          pageSize: @config.pageSize
+          totalCount: @config.totalCount
+          activeFilters: @config.activeFilters
+          selectedIds: @config.selectedIds
+          entityType: @config.entityType
+          selectable: @config.selectable
+          itemActions: ITEM_ACTIONS
+          showDividers: @config.showDividers
+          variant: @config.variant
+          emptyMessage: @config.emptyMessage
+          renderItem: RENDER_ITEM
+          children: @config.children
+          fields: @config.fields
+          fieldNames: @config.fieldNames
+          type: entity-list
+        })
+    }
+
+    emits {
+      ITEM_ACTIONS -> external {
+        id : string
+      }
+        @description "Item actions - schema-driven or function-based"
+        @tier "essential"
+      RENDER_ITEM -> external {
+        item : object
+        index : number
+      }
+        @description "renderItem prop"
+        @tier "essential"
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : json
+        @label "Error"
+        @description "Error state"
+        @tier "presentation"
+      sortBy : string = ""
+        @label "Sort By"
+        @description "Current sort field"
+        @tier "presentation"
+      sortDirection : string = ""
+        @label "Sort Direction"
+        @description "Current sort direction"
+        @tier "presentation"
+      searchValue : string = ""
+        @label "Search Value"
+        @description "Current search query value"
+        @tier "presentation"
+      pageSize : number = 0
+        @label "Page Size"
+        @description "Number of items per page"
+        @tier "presentation"
+      totalCount : number = 0
+        @label "Total Count"
+        @description "Total number of items"
+        @tier "presentation"
+      activeFilters : json
+        @label "Active Filters"
+        @description "Active filters"
+        @tier "presentation"
+      selectedIds : [json] = []
+        @label "Selected Ids"
+        @description "Currently selected item IDs"
+        @tier "presentation"
+      entityType : string = ""
+        @label "Entity Type"
+        @description "Entity type name for display"
+        @tier "presentation"
+      selectable : boolean = false
+        @label "Selectable"
+        @description "selectable prop"
+        @tier "presentation"
+      showDividers : boolean = false
+        @label "Show Dividers"
+        @description "showDividers prop"
+        @tier "presentation"
+      variant : "default" | "card" = default
+        @label "Variant"
+        @description "variant prop"
+        @tier "presentation"
+      emptyMessage : string = ""
+        @label "Empty Message"
+        @description "emptyMessage prop"
+        @tier "presentation"
+      children : node
+        @label "Children"
+        @description "children prop"
+        @tier "presentation"
+      fields : [json] = []
+        @label "Fields"
+        @description "Fields to display - accepts string[] or {key, header}[] for unified interface"
+        @tier "presentation"
+      fieldNames : [string] = []
+        @label "Field Names"
+        @description "Alias for fields - backwards compatibility"
+        @tier "presentation"
+    }
+  }
+
+  page "/entity-list" as EntityListPage -> EntityListRender
+}

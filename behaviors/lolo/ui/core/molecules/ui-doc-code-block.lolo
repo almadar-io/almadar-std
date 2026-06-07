@@ -1,0 +1,48 @@
+app ui-doc-code-block "1.0.0"
+"DocCodeBlock — UI factory (1:1 with the @almadar/ui doc-code-block pattern)."
+orbital DocCodeBlockOrbital {
+  entity DocCodeBlockItem [runtime] {
+    id : string!
+  }
+
+  trait DocCodeBlockRender -> @rebindable DocCodeBlockItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          code: @config.code
+          language: @config.language
+          title: @config.title
+          showLineNumbers: @config.showLineNumbers
+          className: @config.className
+          type: doc-code-block
+        })
+    }
+
+    config {
+      code : string = ""
+        @label "Code"
+        @description "Code content to display"
+        @tier "presentation"
+      language : string = ""
+        @label "Language"
+        @description "Programming language label"
+        @tier "presentation"
+      title : string = ""
+        @label "Title"
+        @description "Optional title/filename shown in the header bar"
+        @tier "presentation"
+      showLineNumbers : boolean = false
+        @label "Show Line Numbers"
+        @description "Show line numbers in the gutter"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional class names"
+        @tier "presentation"
+    }
+  }
+
+  page "/doc-code-block" as DocCodeBlockPage -> DocCodeBlockRender
+}

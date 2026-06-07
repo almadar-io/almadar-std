@@ -1,0 +1,217 @@
+{
+  "name": "ui-game-hud",
+  "version": "1.0.0",
+  "description": "GameHud — UI factory (1:1 with the @almadar/ui game-hud pattern).",
+  "orbitals": [
+    {
+      "name": "GameHudOrbital",
+      "entity": {
+        "name": "GameHudItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "GameHudRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "GameHudItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "items": "@config.items",
+                      "className": "@config.className",
+                      "type": "game-hud",
+                      "elements": "@config.elements",
+                      "size": "@config.size",
+                      "transparent": "@config.transparent",
+                      "stats": "@config.stats",
+                      "position": "@config.position"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "size": {
+              "type": "string",
+              "default": "md",
+              "label": "Size",
+              "description": "Size variant",
+              "tier": "presentation",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            },
+            "position": {
+              "type": "string",
+              "default": "",
+              "label": "Position",
+              "description": "Position of the HUD",
+              "tier": "presentation"
+            },
+            "transparent": {
+              "type": "boolean",
+              "default": true,
+              "label": "Transparent",
+              "description": "Whether to use a semi-transparent background",
+              "tier": "presentation"
+            },
+            "stats": {
+              "type": "[GameHudStatsItem]",
+              "default": [],
+              "label": "Stats",
+              "description": "Stats to display - accepts readonly for compatibility with generated const arrays",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "source": {
+                    "name": "source",
+                    "type": "string",
+                    "required": false
+                  },
+                  "field": {
+                    "name": "field",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "items": {
+              "type": "[GameHudItemsItem]",
+              "default": [],
+              "label": "Items",
+              "description": "Alias for stats (schema compatibility)",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "field": {
+                    "name": "field",
+                    "type": "string",
+                    "required": false
+                  },
+                  "source": {
+                    "name": "source",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "elements": {
+              "type": "[GameHudElementsItem]",
+              "default": [],
+              "label": "Elements",
+              "description": "Schema-style elements array (alternative to stats). Converted to stats internally for backwards compatibility.",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "name": "type",
+                    "type": "string",
+                    "required": false
+                  },
+                  "bind": {
+                    "name": "bind",
+                    "type": "string",
+                    "required": false
+                  },
+                  "format": {
+                    "name": "format",
+                    "type": "string",
+                    "required": false
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "position": {
+                    "name": "position",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
+                  "value": {
+                    "name": "value",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "number",
+                      "string"
+                    ]
+                  },
+                  "max": {
+                    "name": "max",
+                    "type": "number",
+                    "required": false
+                  }
+                }
+              }
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "GameHudPage",
+          "path": "/game-hud",
+          "traits": [
+            {
+              "ref": "GameHudRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

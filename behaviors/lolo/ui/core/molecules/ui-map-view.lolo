@@ -1,0 +1,114 @@
+app ui-map-view "1.0.0"
+"MapView — UI factory (1:1 with the @almadar/ui map-view pattern)."
+orbital MapViewOrbital {
+  type MapViewMarkersItem = {
+    id : string | number!
+    lat : number!
+    lng : number!
+    label : string
+    category : string
+  }
+  type MapViewRoutesItem = {
+    id : string | number!
+    waypoints : [MapViewRoutesItemWaypointsItem]!
+    color : string
+    weight : number
+    opacity : number
+    dashArray : string
+    label : string
+  }
+  type MapViewRoutesItemWaypointsItem = {
+    lat : number!
+    lng : number!
+  }
+
+  entity MapViewItem [runtime] {
+    id : string!
+  }
+
+  trait MapViewRender -> @rebindable MapViewItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          markers: @config.markers
+          routes: @config.routes
+          centerLat: @config.centerLat
+          centerLng: @config.centerLng
+          zoom: @config.zoom
+          height: @config.height
+          onMarkerClick: MARKER_CLICK
+          onMapClick: MAP_CLICK
+          mapClickEvent: MAP_CLICK
+          markerClickEvent: MARKER_CLICK
+          showClickedPin: @config.showClickedPin
+          className: @config.className
+          showAttribution: @config.showAttribution
+          type: map-view
+        })
+    }
+
+    emits {
+      MARKER_CLICK -> external {
+        marker : object
+        id : string!
+        lat : number!
+        lng : number!
+        label : string
+        category : string
+      }
+        @description "Callback when a marker is clicked (programmatic use)"
+        @tier "essential"
+      MAP_CLICK -> external {
+        lat : number
+        lng : number
+        latitude : number!
+        longitude : number!
+      }
+        @description "Callback when the map is clicked (programmatic use)"
+        @tier "essential"
+    }
+
+    config {
+      markers : [MapViewMarkersItem] = []
+        @label "Markers"
+        @description "Array of markers to display"
+        @tier "presentation"
+      routes : [MapViewRoutesItem] = []
+        @label "Routes"
+        @description "Routes (polylines with optional popups) drawn over the tile layer"
+        @tier "presentation"
+      centerLat : number = 51.505
+        @label "Center Lat"
+        @description "Map center latitude"
+        @tier "presentation"
+      centerLng : number = -0.09
+        @label "Center Lng"
+        @description "Map center longitude"
+        @tier "presentation"
+      zoom : number = 13
+        @label "Zoom"
+        @description "Zoom level (1-18, default 13)"
+        @tier "presentation"
+      height : string = "400px"
+        @label "Height"
+        @description "Height of the map container (default '400px')"
+        @tier "presentation"
+      showClickedPin : boolean = false
+        @label "Show Clicked Pin"
+        @description "Whether to show a pin at the clicked location"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      showAttribution : boolean = true
+        @label "Show Attribution"
+        @description "Show attribution (default true)"
+        @tier "presentation"
+    }
+  }
+
+  page "/map-view" as MapViewPage -> MapViewRender
+}

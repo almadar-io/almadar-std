@@ -1,0 +1,172 @@
+{
+  "name": "ui-file-tree",
+  "version": "1.0.0",
+  "description": "FileTree — UI factory (1:1 with the @almadar/ui file-tree pattern).",
+  "orbitals": [
+    {
+      "name": "FileTreeOrbital",
+      "entity": {
+        "name": "FileTreeItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "FileTreeRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "FileTreeItem",
+          "emits": [
+            {
+              "event": "FILE_SELECT",
+              "description": "Called when a file is clicked",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "path",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "FILE_SELECT",
+                "name": "File Select",
+                "description": "Called when a file is clicked",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "onFileSelect": "FILE_SELECT",
+                      "tree": "@config.tree",
+                      "selectedPath": "@config.selectedPath",
+                      "className": "@config.className",
+                      "type": "file-tree",
+                      "indent": "@config.indent"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "CSS class",
+              "tier": "presentation"
+            },
+            "tree": {
+              "type": "[FileTreeTreeItem]",
+              "default": [],
+              "label": "Tree",
+              "description": "The tree data",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "language": {
+                    "name": "language",
+                    "type": "string",
+                    "required": false
+                  },
+                  "type": {
+                    "name": "type",
+                    "type": "string",
+                    "required": true,
+                    "values": [
+                      "file",
+                      "dir"
+                    ]
+                  },
+                  "size": {
+                    "name": "size",
+                    "type": "number",
+                    "required": false
+                  },
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
+                  },
+                  "path": {
+                    "name": "path",
+                    "type": "string",
+                    "required": true
+                  },
+                  "children": {
+                    "name": "children",
+                    "type": "array",
+                    "required": false,
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "indent": {
+              "type": "number",
+              "default": 16.0,
+              "label": "Indent",
+              "description": "Indent size per level in px (default: 16)",
+              "tier": "presentation"
+            },
+            "selectedPath": {
+              "type": "string",
+              "default": "",
+              "label": "Selected Path",
+              "description": "Currently selected file path",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "FileTreePage",
+          "path": "/file-tree",
+          "traits": [
+            {
+              "ref": "FileTreeRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

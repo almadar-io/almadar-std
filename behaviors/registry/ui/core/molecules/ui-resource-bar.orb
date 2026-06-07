@@ -1,0 +1,131 @@
+{
+  "name": "ui-resource-bar",
+  "version": "1.0.0",
+  "description": "ResourceBar — UI factory (1:1 with the @almadar/ui resource-bar pattern).",
+  "orbitals": [
+    {
+      "name": "ResourceBarOrbital",
+      "entity": {
+        "name": "ResourceBarItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ResourceBarRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "ResourceBarItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "resources": "@config.resources",
+                      "type": "resource-bar",
+                      "className": "@config.className",
+                      "size": "@config.size"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "size": {
+              "type": "string",
+              "default": "md",
+              "label": "Size",
+              "description": "Size variant",
+              "tier": "presentation",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "resources": {
+              "type": "[ResourceBarResourcesItem]",
+              "default": [],
+              "label": "Resources",
+              "description": "Resources to display",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "value": {
+                    "name": "value",
+                    "type": "number",
+                    "required": false
+                  },
+                  "max": {
+                    "name": "max",
+                    "type": "number",
+                    "required": false
+                  }
+                }
+              }
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "ResourceBarPage",
+          "path": "/resource-bar",
+          "traits": [
+            {
+              "ref": "ResourceBarRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

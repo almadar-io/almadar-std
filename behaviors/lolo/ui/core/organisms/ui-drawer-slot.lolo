@@ -1,0 +1,60 @@
+app ui-drawer-slot "1.0.0"
+"DrawerSlot — UI factory (1:1 with the @almadar/ui drawer-slot pattern)."
+orbital DrawerSlotOrbital {
+  entity DrawerSlotItem [runtime] {
+    id : string!
+  }
+
+  trait DrawerSlotRender -> @rebindable DrawerSlotItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch DrawerSlotItem {})
+        (render-ui main {
+          children: @config.children
+          title: @config.title
+          position: @config.position
+          size: @config.size
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          entity: DrawerSlotItem
+          type: drawer-slot
+        })
+    }
+
+    config {
+      children : node
+        @label "Children"
+        @description "Content to display in the drawer"
+        @tier "presentation"
+      title : string = ""
+        @label "Title"
+        @description "Override drawer title (extracted from children if not provided)"
+        @tier "presentation"
+      position : "left" | "right" = right
+        @label "Position"
+        @description "Drawer position"
+        @tier "presentation"
+      size : "sm" | "md" | "lg" | "xl" | "full" = md
+        @label "Size"
+        @description "Drawer size"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Custom class name"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state"
+        @tier "presentation"
+      error : json
+        @label "Error"
+        @description "Error state"
+        @tier "presentation"
+    }
+  }
+
+  page "/drawer-slot" as DrawerSlotPage -> DrawerSlotRender
+}

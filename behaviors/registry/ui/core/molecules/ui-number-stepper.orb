@@ -1,0 +1,193 @@
+{
+  "name": "ui-number-stepper",
+  "version": "1.0.0",
+  "description": "NumberStepper — UI factory (1:1 with the @almadar/ui number-stepper pattern).",
+  "orbitals": [
+    {
+      "name": "NumberStepperOrbital",
+      "entity": {
+        "name": "NumberStepperItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "NumberStepperRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "NumberStepperItem",
+          "emits": [
+            {
+              "event": "CHANGE",
+              "description": "Direct onChange callback",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "value",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "ACTION",
+              "description": "Declarative event name for value changes",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "CHANGE",
+                "name": "Change",
+                "description": "Direct onChange callback",
+                "tier": "essential"
+              },
+              {
+                "key": "ACTION",
+                "name": "Action",
+                "description": "Declarative event name for value changes",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "action": "ACTION",
+                      "label": "@config.label",
+                      "step": "@config.step",
+                      "className": "@config.className",
+                      "actionPayload": "@config.actionPayload",
+                      "type": "number-stepper",
+                      "max": "@config.max",
+                      "size": "@config.size",
+                      "disabled": "@config.disabled",
+                      "value": "@config.value",
+                      "min": "@config.min",
+                      "onChange": "CHANGE"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "disabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Disabled",
+              "description": "Disabled state",
+              "tier": "presentation"
+            },
+            "value": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Value",
+              "description": "Current value",
+              "tier": "presentation"
+            },
+            "actionPayload": {
+              "type": "json",
+              "label": "Action Payload",
+              "description": "Payload to include with the action event",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "size": {
+              "type": "string",
+              "default": "md",
+              "label": "Size",
+              "description": "Size variant",
+              "tier": "presentation",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            },
+            "max": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Max",
+              "description": "Maximum value",
+              "tier": "presentation"
+            },
+            "step": {
+              "type": "number",
+              "default": 1.0,
+              "label": "Step",
+              "description": "Step increment",
+              "tier": "presentation"
+            },
+            "min": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Min",
+              "description": "Minimum value",
+              "tier": "presentation"
+            },
+            "label": {
+              "type": "string",
+              "default": "",
+              "label": "Label",
+              "description": "Accessible label",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "NumberStepperPage",
+          "path": "/number-stepper",
+          "traits": [
+            {
+              "ref": "NumberStepperRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

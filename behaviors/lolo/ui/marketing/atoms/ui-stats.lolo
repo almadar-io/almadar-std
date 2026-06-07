@@ -1,0 +1,43 @@
+app ui-stats "1.0.0"
+"Stats — UI factory (1:1 with the @almadar/ui stats pattern)."
+orbital StatsOrbital {
+  entity StatsItem [runtime] {
+    id : string!
+  }
+
+  trait StatsRender -> @rebindable StatsItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          value: @config.value
+          label: @config.label
+          size: @config.size
+          className: @config.className
+          type: stats
+        })
+    }
+
+    config {
+      value : string = ""
+        @label "Value"
+        @description "The stat value to display prominently"
+        @tier "presentation"
+      label : string = ""
+        @label "Label"
+        @description "Label describing the value"
+        @tier "presentation"
+      size : "sm" | "md" | "lg" = md
+        @label "Size"
+        @description "Size of the value text"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional class names"
+        @tier "presentation"
+    }
+  }
+
+  page "/stats" as StatsPage -> StatsRender
+}

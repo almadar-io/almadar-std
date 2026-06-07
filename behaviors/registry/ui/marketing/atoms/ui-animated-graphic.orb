@@ -1,0 +1,193 @@
+{
+  "name": "ui-animated-graphic",
+  "version": "1.0.0",
+  "description": "AnimatedGraphic — UI factory (1:1 with the @almadar/ui animated-graphic pattern).",
+  "orbitals": [
+    {
+      "name": "AnimatedGraphicOrbital",
+      "entity": {
+        "name": "AnimatedGraphicItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "AnimatedGraphicRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "AnimatedGraphicItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "animated-graphic",
+                      "src": "@config.src",
+                      "animation": "@config.animation",
+                      "easing": "@config.easing",
+                      "className": "@config.className",
+                      "duration": "@config.duration",
+                      "strokeColor": "@config.strokeColor",
+                      "fillColor": "@config.fillColor",
+                      "alt": "@config.alt",
+                      "animate": "@config.animate",
+                      "width": "@config.width",
+                      "height": "@config.height",
+                      "svgContent": "@config.svgContent",
+                      "delay": "@config.delay"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "animate": {
+              "type": "boolean",
+              "default": false,
+              "label": "Animate",
+              "description": "Whether to run the animation (default: false). Controlled externally or via AnimatedReveal.",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes applied to the root element.",
+              "tier": "presentation"
+            },
+            "duration": {
+              "type": "number",
+              "default": 1200.0,
+              "label": "Duration",
+              "description": "Animation duration in ms (default: 1200)",
+              "tier": "presentation"
+            },
+            "strokeColor": {
+              "type": "string",
+              "default": "",
+              "label": "Stroke Color",
+              "description": "Stroke color override for SVG paths",
+              "tier": "presentation"
+            },
+            "svgContent": {
+              "type": "string",
+              "default": "",
+              "label": "Svg Content",
+              "description": "Inline SVG string. Takes precedence over src if both provided.",
+              "tier": "presentation"
+            },
+            "width": {
+              "type": "string",
+              "label": "Width",
+              "description": "Width of the graphic container",
+              "tier": "presentation",
+              "values": [
+                "string",
+                "number"
+              ]
+            },
+            "src": {
+              "type": "string",
+              "default": "",
+              "label": "Src",
+              "description": "URL to an SVG file. Fetched and inlined to enable stroke/fill animations.",
+              "tier": "presentation"
+            },
+            "easing": {
+              "type": "string",
+              "default": "cubic-bezier(0.16, 1, 0.3, 1)",
+              "label": "Easing",
+              "description": "Easing function (default: cubic-bezier(0.16, 1, 0.3, 1))",
+              "tier": "presentation"
+            },
+            "fillColor": {
+              "type": "string",
+              "default": "",
+              "label": "Fill Color",
+              "description": "Fill color for the 'fill' animation end state",
+              "tier": "presentation"
+            },
+            "alt": {
+              "type": "string",
+              "default": "",
+              "label": "Alt",
+              "description": "Alt text for accessibility",
+              "tier": "presentation"
+            },
+            "height": {
+              "type": "string",
+              "label": "Height",
+              "description": "Height of the graphic container",
+              "tier": "presentation",
+              "values": [
+                "string",
+                "number"
+              ]
+            },
+            "animation": {
+              "type": "string",
+              "default": "draw",
+              "label": "Animation",
+              "description": "Animation type applied to SVG paths/shapes",
+              "tier": "presentation",
+              "values": [
+                "draw",
+                "fill",
+                "pulse",
+                "morph"
+              ]
+            },
+            "delay": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Delay",
+              "description": "Delay before animation starts in ms (default: 0)",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "AnimatedGraphicPage",
+          "path": "/animated-graphic",
+          "traits": [
+            {
+              "ref": "AnimatedGraphicRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+app ui-event-handler-board "1.0.0"
+"EventHandlerBoard — UI factory (1:1 with the @almadar/ui event-handler-board pattern)."
+orbital EventHandlerBoardOrbital {
+  entity EventHandlerBoardItem [runtime] {
+    id : string!
+  }
+
+  trait EventHandlerBoardRender -> @rebindable EventHandlerBoardItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch EventHandlerBoardItem {})
+        (render-ui main {
+          entity: @entity
+          stepDurationMs: @config.stepDurationMs
+          playEvent: PLAY
+          completeEvent: COMPLETE
+          type: event-handler-board
+        })
+    }
+
+    emits {
+      PLAY -> external {
+        id : string
+      }
+        @description "Emits UI:{playEvent}"
+        @tier "essential"
+      COMPLETE -> external {
+        success : boolean!
+      }
+        @description "Emits UI:{completeEvent} with { success }"
+        @tier "essential"
+    }
+
+    config {
+      stepDurationMs : number = 800
+        @label "Step Duration Ms"
+        @description "Playback speed in ms per event"
+        @tier "presentation"
+    }
+  }
+
+  page "/event-handler-board" as EventHandlerBoardPage -> EventHandlerBoardRender
+}

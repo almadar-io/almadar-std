@@ -1,0 +1,90 @@
+app ui-game-over-screen "1.0.0"
+"GameOverScreen — UI factory (1:1 with the @almadar/ui game-over-screen pattern)."
+orbital GameOverScreenOrbital {
+  type GameOverScreenStatsItem = {
+    label : string!
+    value : number | string
+    bind : string
+    format : "number" | "time" | "text"
+    icon : node
+  }
+
+  entity GameOverScreenItem [runtime] {
+    id : string!
+  }
+
+  trait GameOverScreenRender -> @rebindable GameOverScreenItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          title: @config.title
+          message: @config.message
+          stats: @config.stats
+          actions: @config.actions
+          menuItems: @config.menuItems
+          onAction: ACTION
+          eventBus: @config.eventBus
+          variant: @config.variant
+          highScore: @config.highScore
+          currentScore: @config.currentScore
+          className: @config.className
+          type: game-over-screen
+        })
+    }
+
+    emits {
+      ACTION -> external {
+        action : object
+      }
+        @description "Called when an action is selected (legacy callback, prefer event bus)"
+        @tier "essential"
+    }
+
+    config {
+      title : string = ""
+        @label "Title"
+        @description "Screen title (e.g., 'Game Over', 'Victory!')"
+        @tier "presentation"
+      message : string = ""
+        @label "Message"
+        @description "Optional message"
+        @tier "presentation"
+      stats : [GameOverScreenStatsItem] = []
+        @label "Stats"
+        @description "Stats to display"
+        @tier "presentation"
+      actions : [json] = []
+        @label "Actions"
+        @description "Action buttons"
+        @tier "presentation"
+      menuItems : [json] = []
+        @label "Menu Items"
+        @description "Alias for actions (schema compatibility)"
+        @tier "presentation"
+      eventBus : json
+        @label "Event Bus"
+        @description "Event bus for emitting UI events (optional, uses hook if not provided)"
+        @tier "presentation"
+      variant : "victory" | "defeat" | "neutral" = neutral
+        @label "Variant"
+        @description "Victory or defeat variant"
+        @tier "presentation"
+      highScore : number | string
+        @label "High Score"
+        @description "High score (optional, shows 'NEW HIGH SCORE!' if exceeded)"
+        @tier "presentation"
+      currentScore : number | string
+        @label "Current Score"
+        @description "Current score for high score comparison (accepts string for schema bindings)"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/game-over-screen" as GameOverScreenPage -> GameOverScreenRender
+}

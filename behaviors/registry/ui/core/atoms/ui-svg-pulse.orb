@@ -1,0 +1,141 @@
+{
+  "name": "ui-svg-pulse",
+  "version": "1.0.0",
+  "description": "SvgPulse — UI factory (1:1 with the @almadar/ui svg-pulse pattern).",
+  "orbitals": [
+    {
+      "name": "SvgPulseOrbital",
+      "entity": {
+        "name": "SvgPulseItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "SvgPulseRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "SvgPulseItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "maxRadius": "@config.maxRadius",
+                      "className": "@config.className",
+                      "animated": "@config.animated",
+                      "color": "@config.color",
+                      "type": "svg-pulse",
+                      "opacity": "@config.opacity",
+                      "cy": "@config.cy",
+                      "cx": "@config.cx",
+                      "rings": "@config.rings"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "rings": {
+              "type": "number",
+              "default": 3.0,
+              "label": "Rings",
+              "description": "rings prop",
+              "tier": "presentation"
+            },
+            "color": {
+              "type": "string",
+              "default": "var(--color-primary)",
+              "label": "Color",
+              "description": "color prop",
+              "tier": "presentation"
+            },
+            "maxRadius": {
+              "type": "number",
+              "default": 60.0,
+              "label": "Max Radius",
+              "description": "maxRadius prop",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "className prop",
+              "tier": "presentation"
+            },
+            "cx": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Cx",
+              "description": "cx prop",
+              "tier": "presentation"
+            },
+            "cy": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Cy",
+              "description": "cy prop",
+              "tier": "presentation"
+            },
+            "animated": {
+              "type": "boolean",
+              "default": true,
+              "label": "Animated",
+              "description": "animated prop",
+              "tier": "presentation"
+            },
+            "opacity": {
+              "type": "number",
+              "default": 1.0,
+              "label": "Opacity",
+              "description": "opacity prop",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "SvgPulsePage",
+          "path": "/svg-pulse",
+          "traits": [
+            {
+              "ref": "SvgPulseRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

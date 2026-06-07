@@ -1,0 +1,124 @@
+app ui-repeatable-form-section "1.0.0"
+"RepeatableFormSection — UI factory (1:1 with the @almadar/ui repeatable-form-section pattern)."
+orbital RepeatableFormSectionOrbital {
+  type RepeatableFormSectionItemsItem = {
+    id : string!
+    addedInState : string
+    addedAt : string
+  }
+
+  entity RepeatableFormSectionItem [runtime] {
+    id : string!
+  }
+
+  trait RepeatableFormSectionRender -> @rebindable RepeatableFormSectionItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          sectionType: @config.sectionType
+          title: @config.title
+          items: @config.items
+          renderItem: RENDER_ITEM
+          minItems: @config.minItems
+          maxItems: @config.maxItems
+          allowReorder: @config.allowReorder
+          addLabel: @config.addLabel
+          emptyMessage: @config.emptyMessage
+          readOnly: @config.readOnly
+          className: @config.className
+          onAdd: ADD
+          onRemove: REMOVE
+          onReorder: REORDER
+          trackAddedInState: @config.trackAddedInState
+          currentState: @config.currentState
+          showAuditInfo: @config.showAuditInfo
+          type: repeatable-form-section
+        })
+    }
+
+    emits {
+      RENDER_ITEM -> external {
+        item : object
+        index : number
+      }
+        @description "Render function for each item"
+        @tier "essential"
+      ADD -> external {
+        id : string
+      }
+        @description "Add handler"
+        @tier "essential"
+      REMOVE -> external {
+        itemId : string
+        index : number
+      }
+        @description "Remove handler"
+        @tier "essential"
+      REORDER -> external {
+        fromIndex : number
+        toIndex : number
+      }
+        @description "Reorder handler"
+        @tier "essential"
+    }
+
+    config {
+      sectionType : string = ""
+        @label "Section Type"
+        @description "Section type identifier"
+        @tier "presentation"
+      title : string = ""
+        @label "Title"
+        @description "Section title"
+        @tier "presentation"
+      items : [RepeatableFormSectionItemsItem] = []
+        @label "Items"
+        @description "Items in the section"
+        @tier "presentation"
+      minItems : number = 0
+        @label "Min Items"
+        @description "Minimum items required"
+        @tier "presentation"
+      maxItems : number = 0
+        @label "Max Items"
+        @description "Maximum items allowed"
+        @tier "presentation"
+      allowReorder : boolean = false
+        @label "Allow Reorder"
+        @description "Allow reordering"
+        @tier "presentation"
+      addLabel : string = ""
+        @label "Add Label"
+        @description "Add button label"
+        @tier "presentation"
+      emptyMessage : string = ""
+        @label "Empty Message"
+        @description "Empty state message"
+        @tier "presentation"
+      readOnly : boolean = false
+        @label "Read Only"
+        @description "Read-only mode"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      trackAddedInState : boolean = false
+        @label "Track Added In State"
+        @description "Inspection-specific enhancements"
+        @tier "presentation"
+      currentState : string = ""
+        @label "Current State"
+        @description "Current inspection state (used when trackAddedInState is true)"
+        @tier "presentation"
+      showAuditInfo : boolean = false
+        @label "Show Audit Info"
+        @description "Show audit metadata (addedInState, addedAt)"
+        @tier "presentation"
+    }
+  }
+
+  page "/repeatable-form-section" as RepeatableFormSectionPage -> RepeatableFormSectionRender
+}

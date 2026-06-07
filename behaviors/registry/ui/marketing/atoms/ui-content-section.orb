@@ -1,0 +1,119 @@
+{
+  "name": "ui-content-section",
+  "version": "1.0.0",
+  "description": "ContentSection — UI factory (1:1 with the @almadar/ui content-section pattern).",
+  "orbitals": [
+    {
+      "name": "ContentSectionOrbital",
+      "entity": {
+        "name": "ContentSectionItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ContentSectionRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "ContentSectionItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "content-section",
+                      "children": "@config.children",
+                      "background": "@config.background",
+                      "className": "@config.className",
+                      "padding": "@config.padding"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional class names",
+              "tier": "presentation"
+            },
+            "padding": {
+              "type": "string",
+              "default": "lg",
+              "label": "Padding",
+              "description": "Vertical padding size",
+              "tier": "presentation",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            },
+            "background": {
+              "type": "string",
+              "default": "default",
+              "label": "Background",
+              "description": "Background style",
+              "tier": "presentation",
+              "values": [
+                "default",
+                "alt",
+                "dark",
+                "gradient"
+              ]
+            },
+            "children": {
+              "type": "node",
+              "label": "Children",
+              "description": "Section content",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "ContentSectionPage",
+          "path": "/content-section",
+          "traits": [
+            {
+              "ref": "ContentSectionRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

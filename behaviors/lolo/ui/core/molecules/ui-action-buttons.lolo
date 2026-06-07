@@ -1,0 +1,66 @@
+app ui-action-buttons "1.0.0"
+"ActionButtons — UI factory (1:1 with the @almadar/ui action-buttons pattern)."
+orbital ActionButtonsOrbital {
+  type ActionButtonsButtonsItem = {
+    id : string!
+    label : string
+    icon : node
+    variant : string
+  }
+
+  entity ActionButtonsItem [runtime] {
+    id : string!
+  }
+
+  trait ActionButtonsRender -> @rebindable ActionButtonsItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          buttons: @config.buttons
+          onAction: ACTION
+          actionEvent: ACTION
+          layout: @config.layout
+          size: @config.size
+          className: @config.className
+          disabled: @config.disabled
+          type: action-buttons
+        })
+    }
+
+    emits {
+      ACTION -> external {
+        id : string
+        pressed : boolean
+      }
+        @description "Called when a button is pressed/released"
+        @tier "essential"
+    }
+
+    config {
+      buttons : [ActionButtonsButtonsItem] = []
+        @label "Buttons"
+        @description "Button configurations"
+        @tier "presentation"
+      layout : "horizontal" | "vertical" | "diamond" = horizontal
+        @label "Layout"
+        @description "Layout variant"
+        @tier "presentation"
+      size : "sm" | "md" | "lg" = md
+        @label "Size"
+        @description "Size variant"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      disabled : boolean = false
+        @label "Disabled"
+        @description "Disabled state"
+        @tier "presentation"
+    }
+  }
+
+  page "/action-buttons" as ActionButtonsPage -> ActionButtonsRender
+}

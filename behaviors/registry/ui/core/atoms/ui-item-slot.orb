@@ -1,0 +1,173 @@
+{
+  "name": "ui-item-slot",
+  "version": "1.0.0",
+  "description": "ItemSlot — UI factory (1:1 with the @almadar/ui item-slot pattern).",
+  "orbitals": [
+    {
+      "name": "ItemSlotOrbital",
+      "entity": {
+        "name": "ItemSlotItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ItemSlotRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "ItemSlotItem",
+          "emits": [
+            {
+              "event": "CLICK",
+              "description": "Click handler",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "CLICK",
+                "name": "Click",
+                "description": "Click handler",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "label": "@config.label",
+                      "type": "item-slot",
+                      "size": "@config.size",
+                      "className": "@config.className",
+                      "quantity": "@config.quantity",
+                      "rarity": "@config.rarity",
+                      "onClick": "CLICK",
+                      "icon": "@config.icon",
+                      "empty": "@config.empty",
+                      "selected": "@config.selected"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "rarity": {
+              "type": "string",
+              "default": "common",
+              "label": "Rarity",
+              "description": "Rarity tier affecting border color",
+              "tier": "presentation",
+              "values": [
+                "common",
+                "uncommon",
+                "rare",
+                "epic",
+                "legendary"
+              ]
+            },
+            "label": {
+              "type": "string",
+              "default": "",
+              "label": "Label",
+              "description": "Item label",
+              "tier": "presentation"
+            },
+            "icon": {
+              "type": "node",
+              "label": "Icon",
+              "description": "Icon component or emoji",
+              "tier": "presentation"
+            },
+            "quantity": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Quantity",
+              "description": "Stack quantity",
+              "tier": "presentation"
+            },
+            "selected": {
+              "type": "boolean",
+              "default": false,
+              "label": "Selected",
+              "description": "Whether the slot is selected",
+              "tier": "presentation"
+            },
+            "size": {
+              "type": "string",
+              "default": "md",
+              "label": "Size",
+              "description": "Size variant",
+              "tier": "presentation",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            },
+            "empty": {
+              "type": "boolean",
+              "default": false,
+              "label": "Empty",
+              "description": "Whether the slot is empty",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "ItemSlotPage",
+          "path": "/item-slot",
+          "traits": [
+            {
+              "ref": "ItemSlotRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

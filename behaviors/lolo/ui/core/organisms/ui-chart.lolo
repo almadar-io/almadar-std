@@ -1,0 +1,142 @@
+app ui-chart "1.0.0"
+"Chart — UI factory (1:1 with the @almadar/ui chart pattern)."
+orbital ChartOrbital {
+  type ChartSeriesItem = {
+    name : string!
+    data : [ChartSeriesItemDataItem]!
+    color : string
+    dashed : boolean
+  }
+  type ChartSeriesItemDataItem = {
+    date : json!
+    value : number!
+    label : string
+  }
+  type ChartDataItem = {
+    date : json!
+    value : number!
+    label : string
+  }
+  type ChartScatterDataItem = {
+    x : number!
+    y : number!
+    label : string
+    size : number
+    color : string
+  }
+  type ChartActionsItem = {
+    label : string!
+    event : string
+    navigatesTo : string
+    variant : "primary" | "secondary" | "ghost"
+  }
+
+  entity ChartItem [runtime] {
+    id : string!
+  }
+
+  trait ChartRender -> @rebindable ChartItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch ChartItem {})
+        (render-ui main {
+          title: @config.title
+          subtitle: @config.subtitle
+          chartType: @config.chartType
+          look: @config.look
+          series: @config.series
+          data: @config.data
+          scatterData: @config.scatterData
+          height: @config.height
+          showLegend: @config.showLegend
+          showValues: @config.showValues
+          stack: @config.stack
+          timeAxis: @config.timeAxis
+          drillEvent: @config.drillEvent
+          actions: @config.actions
+          entity: ChartItem
+          isLoading: @config.isLoading
+          error: @config.error
+          className: @config.className
+          type: chart
+        })
+    }
+
+    config {
+      title : string = ""
+        @label "Title"
+        @description "Chart title"
+        @tier "presentation"
+      subtitle : string = ""
+        @label "Subtitle"
+        @description "Chart subtitle / description"
+        @tier "presentation"
+      chartType : "bar" | "line" | "pie" | "area" | "donut" | "scatter" | "histogram" = bar
+        @label "Chart Type"
+        @description "Chart type (legacy alias for `look`)."
+        @synonyms "chart style, graph type, bar chart, line chart, pie chart, area chart, donut chart, scatter plot, histogram"
+        @tier "domain"
+      look : "bar-vertical" | "bar-horizontal" | "line" | "area" | "pie" | "donut" | "scatter" | "histogram" = "bar-vertical"
+        @label "Look"
+        @description "Layer 2 visual treatment — drives the chart sub-renderer (bar / line / pie / etc.)."
+        @synonyms "chart style, render style, visual treatment"
+        @tier "presentation"
+      series : [ChartSeriesItem] = []
+        @label "Series"
+        @description "Multi-series data"
+        @tier "presentation"
+      data : [ChartDataItem] = []
+        @label "Data"
+        @description "Simple single-series shorthand (bar/line/pie/area/donut/histogram)"
+        @tier "presentation"
+      scatterData : [ChartScatterDataItem] = []
+        @label "Scatter Data"
+        @description "Raw {x,y} points for scatter"
+        @tier "presentation"
+      height : number = 200
+        @label "Height"
+        @description "Chart height in px"
+        @tier "presentation"
+      showLegend : boolean = true
+        @label "Show Legend"
+        @description "Show legend"
+        @tier "presentation"
+      showValues : boolean = false
+        @label "Show Values"
+        @description "Show values on chart"
+        @tier "presentation"
+      stack : "none" | "stack" | "normalize" = none
+        @label "Stack"
+        @description "Stack mode for bar / area"
+        @tier "presentation"
+      timeAxis : boolean = false
+        @label "Time Axis"
+        @description "Format X-axis labels as time (ISO date in → 'Mar 2026'-style label out)"
+        @tier "presentation"
+      drillEvent : string = ""
+        @label "Drill Event"
+        @description "Event name emitted as `UI:{drillEvent}` with `{ label, value, seriesLabel? }` on data-point click"
+        @tier "presentation"
+      actions : [ChartActionsItem] = []
+        @label "Actions"
+        @description "Top-level chart actions (export, refresh, etc.)"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state"
+        @tier "presentation"
+      error : json
+        @label "Error"
+        @description "Error state"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/chart" as ChartPage -> ChartRender
+}

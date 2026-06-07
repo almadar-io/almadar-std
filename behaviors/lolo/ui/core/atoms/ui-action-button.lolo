@@ -1,0 +1,72 @@
+app ui-action-button "1.0.0"
+"ActionButton — UI factory (1:1 with the @almadar/ui action-button pattern)."
+orbital ActionButtonOrbital {
+  entity ActionButtonItem [runtime] {
+    id : string!
+  }
+
+  trait ActionButtonRender -> @rebindable ActionButtonItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          label: @config.label
+          icon: @config.icon
+          cooldown: @config.cooldown
+          disabled: @config.disabled
+          hotkey: @config.hotkey
+          size: @config.size
+          variant: @config.variant
+          onClick: CLICK
+          className: @config.className
+          type: action-button
+        })
+    }
+
+    emits {
+      CLICK -> external {
+        id : string
+      }
+        @description "Click handler"
+        @tier "essential"
+    }
+
+    config {
+      label : string = ""
+        @label "Label"
+        @description "Button label text"
+        @tier "presentation"
+      icon : node
+        @label "Icon"
+        @description "Icon displayed before the label"
+        @tier "presentation"
+      cooldown : number = 0
+        @label "Cooldown"
+        @description "Cooldown progress from 0 (ready) to 1 (full cooldown)"
+        @tier "presentation"
+      disabled : boolean = false
+        @label "Disabled"
+        @description "Whether the button is disabled"
+        @tier "presentation"
+      hotkey : string = ""
+        @label "Hotkey"
+        @description "Keyboard hotkey to display as a badge"
+        @tier "presentation"
+      size : "sm" | "md" | "lg" = md
+        @label "Size"
+        @description "Size variant"
+        @tier "presentation"
+      variant : "primary" | "secondary" | "danger" = primary
+        @label "Variant"
+        @description "Visual variant"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/action-button" as ActionButtonPage -> ActionButtonRender
+}

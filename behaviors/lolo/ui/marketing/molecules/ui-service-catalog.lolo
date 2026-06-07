@@ -1,0 +1,39 @@
+app ui-service-catalog "1.0.0"
+"ServiceCatalog — UI factory (1:1 with the @almadar/ui service-catalog pattern)."
+orbital ServiceCatalogOrbital {
+  type ServiceCatalogServicesItem = {
+    name : string!
+    layer : string!
+    layerColor : string
+  }
+
+  entity ServiceCatalogItem [runtime] {
+    id : string!
+  }
+
+  trait ServiceCatalogRender -> @rebindable ServiceCatalogItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          services: @config.services
+          className: @config.className
+          type: service-catalog
+        })
+    }
+
+    config {
+      services : [ServiceCatalogServicesItem] = []
+        @label "Services"
+        @description "List of services to display"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional class names"
+        @tier "presentation"
+    }
+  }
+
+  page "/service-catalog" as ServiceCatalogPage -> ServiceCatalogRender
+}

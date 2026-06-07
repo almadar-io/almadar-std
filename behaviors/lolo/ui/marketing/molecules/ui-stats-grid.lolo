@@ -1,0 +1,38 @@
+app ui-stats-grid "1.0.0"
+"StatsGrid — UI factory (1:1 with the @almadar/ui stats-grid pattern)."
+orbital StatsGridOrbital {
+  entity StatsGridItem [runtime] {
+    id : string!
+  }
+
+  trait StatsGridRender -> @rebindable StatsGridItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          stats: @config.stats
+          columns: @config.columns
+          className: @config.className
+          type: stats-grid
+        })
+    }
+
+    config {
+      stats : [json] = []
+        @label "Stats"
+        @description "stats prop"
+        @tier "presentation"
+      columns : number = 3
+        @label "Columns"
+        @description "columns prop"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/stats-grid" as StatsGridPage -> StatsGridRender
+}

@@ -1,0 +1,434 @@
+[
+  {
+    "organism": "ui-form",
+    "orbital": "FormOrbital",
+    "tier": "organisms",
+    "factoryPath": "behaviors/functions/ui/core/organisms/ui-form.ts",
+    "entities": [
+      {
+        "name": "FormItem",
+        "fields": [],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "FormRender",
+        "emittedEvents": [
+          "SUBMIT",
+          "CANCEL",
+          "FIELD_CHANGE"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "SUBMIT",
+            "direction": "emit",
+            "description": "Event dispatch props (for trait state machine integration)",
+            "tier": "essential"
+          },
+          {
+            "name": "CANCEL",
+            "direction": "emit",
+            "description": "Event to dispatch on cancel (defaults to 'CANCEL')",
+            "tier": "essential"
+          },
+          {
+            "name": "FIELD_CHANGE",
+            "direction": "emit",
+            "description": "Callback when any field value changes",
+            "tier": "essential"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "cancelLabel",
+            "type": "string",
+            "default": "",
+            "label": "Cancel Label",
+            "description": "Cancel button label (if provided, shows cancel button)",
+            "tier": "presentation"
+          },
+          {
+            "key": "children",
+            "type": "node",
+            "label": "Children",
+            "description": "Form fields (traditional React children)",
+            "tier": "presentation"
+          },
+          {
+            "key": "className",
+            "type": "string",
+            "default": "",
+            "label": "Class Name",
+            "description": "Additional CSS classes",
+            "tier": "presentation"
+          },
+          {
+            "key": "conditionalFields",
+            "type": "json",
+            "label": "Conditional Fields",
+            "description": "Inspection form extensions",
+            "tier": "presentation"
+          },
+          {
+            "key": "configPath",
+            "type": "string",
+            "default": "",
+            "label": "Config Path",
+            "description": "Config path for form configuration (schema-driven)",
+            "tier": "presentation"
+          },
+          {
+            "key": "error",
+            "type": "json",
+            "label": "Error",
+            "description": "Error state",
+            "tier": "presentation"
+          },
+          {
+            "key": "evaluationContext",
+            "type": "json",
+            "label": "Evaluation Context",
+            "description": "Context for S-expression evaluation - accepts flexible types from generated code",
+            "tier": "presentation"
+          },
+          {
+            "key": "fields",
+            "type": "[json]",
+            "default": [],
+            "label": "Fields",
+            "description": "Fields definition (schema format) - accepts readonly for generated const arrays",
+            "tier": "presentation",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "gap",
+            "type": "string",
+            "default": "md",
+            "label": "Gap",
+            "description": "Gap between fields",
+            "tier": "presentation",
+            "enumValues": [
+              "sm",
+              "md",
+              "lg"
+            ]
+          },
+          {
+            "key": "hiddenCalculations",
+            "type": "json",
+            "label": "Hidden Calculations",
+            "description": "Hidden calculations that emit GLOBAL_VARIABLE_SET on field change (boolean true means enabled but config loaded separately)",
+            "tier": "presentation"
+          },
+          {
+            "key": "initialData",
+            "type": "json",
+            "label": "Initial Data",
+            "description": "Initial form data",
+            "tier": "presentation"
+          },
+          {
+            "key": "isLoading",
+            "type": "boolean",
+            "default": false,
+            "label": "Is Loading",
+            "description": "Loading state",
+            "tier": "presentation"
+          },
+          {
+            "key": "layout",
+            "type": "string",
+            "default": "vertical",
+            "label": "Layout",
+            "description": "Form layout",
+            "tier": "presentation",
+            "enumValues": [
+              "vertical",
+              "horizontal",
+              "inline"
+            ]
+          },
+          {
+            "key": "mode",
+            "type": "string",
+            "default": "",
+            "label": "Mode",
+            "description": "Form mode — 'create' for new records, 'edit' for updating existing. Accepts `string` so schema-driven callers (whose `config.mode` is typed as `string` per the trait's declared config block) compile cleanly. The runtime treats anything other than 'edit' as 'create'.",
+            "tier": "presentation"
+          },
+          {
+            "key": "onCancel",
+            "type": "string",
+            "default": "",
+            "label": "On Cancel",
+            "description": "Cancel event name for trait dispatch (emitted via eventBus as UI:{onCancel})",
+            "tier": "presentation"
+          },
+          {
+            "key": "onSubmit",
+            "type": "string",
+            "default": "",
+            "label": "On Submit",
+            "description": "Submit event name for trait dispatch (emitted via eventBus as UI:{onSubmit})",
+            "tier": "presentation"
+          },
+          {
+            "key": "relationsData",
+            "type": "json",
+            "label": "Relations Data",
+            "description": "Relation data props",
+            "tier": "presentation"
+          },
+          {
+            "key": "relationsLoading",
+            "type": "json",
+            "label": "Relations Loading",
+            "description": "Loading state for relation data: { fieldName: boolean }",
+            "tier": "presentation"
+          },
+          {
+            "key": "repeatable",
+            "type": "boolean",
+            "default": false,
+            "label": "Repeatable",
+            "description": "Whether the form supports repeatable entries",
+            "tier": "presentation"
+          },
+          {
+            "key": "sections",
+            "type": "[FormSectionsItem]",
+            "default": [],
+            "label": "Sections",
+            "description": "Nested form sections with optional conditions",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "fields": {
+                  "name": "fields",
+                  "required": true,
+                  "type": "array",
+                  "items": {
+                    "properties": {
+                      "readonly": {
+                        "name": "readonly",
+                        "required": false,
+                        "type": "boolean"
+                      },
+                      "required": {
+                        "name": "required",
+                        "required": false,
+                        "type": "boolean"
+                      },
+                      "values": {
+                        "name": "values",
+                        "required": false,
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "label": {
+                        "name": "label",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "max": {
+                        "name": "max",
+                        "required": false,
+                        "type": "number"
+                      },
+                      "min": {
+                        "name": "min",
+                        "required": false,
+                        "type": "number"
+                      },
+                      "name": {
+                        "name": "name",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "pattern": {
+                        "name": "pattern",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "type": {
+                        "name": "type",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "validation": {
+                        "name": "validation",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "disabled": {
+                        "name": "disabled",
+                        "required": false,
+                        "type": "boolean"
+                      },
+                      "inputType": {
+                        "name": "inputType",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "options": {
+                        "name": "options",
+                        "required": false,
+                        "type": "array",
+                        "items": {
+                          "properties": {
+                            "label": {
+                              "name": "label",
+                              "required": true,
+                              "type": "string"
+                            },
+                            "value": {
+                              "name": "value",
+                              "required": true,
+                              "type": "string"
+                            }
+                          },
+                          "type": "object"
+                        }
+                      },
+                      "field": {
+                        "name": "field",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "defaultValue": {
+                        "name": "defaultValue",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "relation": {
+                        "name": "relation",
+                        "required": false,
+                        "properties": {
+                          "entity": {
+                            "name": "entity",
+                            "required": true,
+                            "type": "string"
+                          },
+                          "cardinality": {
+                            "name": "cardinality",
+                            "required": false,
+                            "type": "string",
+                            "values": [
+                              "one",
+                              "many"
+                            ]
+                          },
+                          "displayField": {
+                            "name": "displayField",
+                            "required": false,
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "placeholder": {
+                        "name": "placeholder",
+                        "required": false,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "condition": {
+                  "name": "condition",
+                  "required": false,
+                  "type": "string"
+                },
+                "title": {
+                  "name": "title",
+                  "required": true,
+                  "type": "string"
+                },
+                "collapsible": {
+                  "name": "collapsible",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "showCancel",
+            "type": "boolean",
+            "default": false,
+            "label": "Show Cancel",
+            "description": "Show cancel button (defaults to true for schema forms)",
+            "tier": "presentation"
+          },
+          {
+            "key": "showSubmit",
+            "type": "boolean",
+            "default": true,
+            "label": "Show Submit",
+            "description": "Show submit button (defaults to true for schema forms). Set false when a parent atom owns the submit action externally (e.g. wizard footers).",
+            "tier": "presentation"
+          },
+          {
+            "key": "submitLabel",
+            "type": "string",
+            "default": "",
+            "label": "Submit Label",
+            "description": "Submit button label",
+            "tier": "presentation"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "",
+            "label": "Title",
+            "description": "Form title (used by ModalSlot to extract title)",
+            "tier": "presentation"
+          },
+          {
+            "key": "violationTriggers",
+            "type": "json",
+            "label": "Violation Triggers",
+            "description": "Violation conditions that emit VIOLATION_DETECTED when met (boolean true means enabled but config loaded separately)",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "FormPage",
+        "defaultPath": "/form",
+        "primaryEntity": "FormItem"
+      }
+    ],
+    "emittedEvents": [
+      "CANCEL",
+      "FIELD_CHANGE",
+      "SUBMIT"
+    ],
+    "listenedEvents": []
+  }
+]

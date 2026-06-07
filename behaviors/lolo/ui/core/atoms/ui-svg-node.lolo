@@ -1,0 +1,63 @@
+app ui-svg-node "1.0.0"
+"SvgNode — UI factory (1:1 with the @almadar/ui svg-node pattern)."
+orbital SvgNodeOrbital {
+  entity SvgNodeItem [runtime] {
+    id : string!
+  }
+
+  trait SvgNodeRender -> @rebindable SvgNodeItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          x: @config.x
+          y: @config.y
+          r: @config.r
+          variant: @config.variant
+          color: @config.color
+          opacity: @config.opacity
+          className: @config.className
+          label: @config.label
+          type: svg-node
+        })
+    }
+
+    config {
+      x : number = 0
+        @label "X"
+        @description "x prop"
+        @tier "presentation"
+      y : number = 0
+        @label "Y"
+        @description "y prop"
+        @tier "presentation"
+      r : number = 6
+        @label "R"
+        @description "r prop"
+        @tier "presentation"
+      variant : "filled" | "stroked" | "pulse" = filled
+        @label "Variant"
+        @description "variant prop"
+        @tier "presentation"
+      color : string = "var(--color-primary)"
+        @label "Color"
+        @description "color prop"
+        @tier "presentation"
+      opacity : number = 1
+        @label "Opacity"
+        @description "opacity prop"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+      label : string = ""
+        @label "Label"
+        @description "label prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/svg-node" as SvgNodePage -> SvgNodeRender
+}

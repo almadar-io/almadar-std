@@ -1,0 +1,217 @@
+{
+  "name": "ui-text-highlight",
+  "version": "1.0.0",
+  "description": "TextHighlight — UI factory (1:1 with the @almadar/ui text-highlight pattern).",
+  "orbitals": [
+    {
+      "name": "TextHighlightOrbital",
+      "entity": {
+        "name": "TextHighlightItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "TextHighlightRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "TextHighlightItem",
+          "emits": [
+            {
+              "event": "CLICK",
+              "description": "Callback when highlight is clicked",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "MOUSE_ENTER",
+              "description": "Callback when highlight is hovered",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "MOUSE_LEAVE",
+              "description": "Callback when hover ends",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "ACTION",
+              "description": "Declarative event name — emits UI:{action} via eventBus on click",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "HOVER",
+              "description": "Declarative hover event — emits UI:{hoverEvent} with { hovered: true/false }",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "CLICK",
+                "name": "Click",
+                "description": "Callback when highlight is clicked",
+                "tier": "essential"
+              },
+              {
+                "key": "MOUSE_ENTER",
+                "name": "Mouse Enter",
+                "description": "Callback when highlight is hovered",
+                "tier": "essential"
+              },
+              {
+                "key": "MOUSE_LEAVE",
+                "name": "Mouse Leave",
+                "description": "Callback when hover ends",
+                "tier": "essential"
+              },
+              {
+                "key": "ACTION",
+                "name": "Action",
+                "description": "Declarative event name — emits UI:{action} via eventBus on click",
+                "tier": "essential"
+              },
+              {
+                "key": "HOVER",
+                "name": "Hover",
+                "description": "Declarative hover event — emits UI:{hoverEvent} with { hovered: true/false }",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "hoverEvent": "HOVER",
+                      "highlightType": "@config.highlightType",
+                      "onMouseLeave": "MOUSE_LEAVE",
+                      "action": "ACTION",
+                      "children": "@config.children",
+                      "type": "text-highlight",
+                      "onClick": "CLICK",
+                      "isActive": "@config.isActive",
+                      "onMouseEnter": "MOUSE_ENTER",
+                      "annotationId": "@config.annotationId"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "highlightType": {
+              "type": "string",
+              "default": "question",
+              "label": "Highlight Type",
+              "description": "Type of highlight (determines color)",
+              "tier": "presentation",
+              "values": [
+                "question",
+                "note"
+              ]
+            },
+            "annotationId": {
+              "type": "string",
+              "default": "",
+              "label": "Annotation Id",
+              "description": "Unique ID for the annotation",
+              "tier": "presentation"
+            },
+            "children": {
+              "type": "node",
+              "label": "Children",
+              "description": "Highlighted text content",
+              "tier": "presentation"
+            },
+            "isActive": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Active",
+              "description": "Whether the highlight is currently active/focused",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "TextHighlightPage",
+          "path": "/text-highlight",
+          "traits": [
+            {
+              "ref": "TextHighlightRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

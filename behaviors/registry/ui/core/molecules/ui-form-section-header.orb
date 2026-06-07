@@ -1,0 +1,177 @@
+{
+  "name": "ui-form-section-header",
+  "version": "1.0.0",
+  "description": "FormSectionHeader — UI factory (1:1 with the @almadar/ui form-section-header pattern).",
+  "orbitals": [
+    {
+      "name": "FormSectionHeaderOrbital",
+      "entity": {
+        "name": "FormSectionHeaderItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "FormSectionHeaderRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "FormSectionHeaderItem",
+          "emits": [
+            {
+              "event": "TOGGLE",
+              "description": "Toggle collapse handler (makes header clickable)",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "TOGGLE",
+                "name": "Toggle",
+                "description": "Toggle collapse handler (makes header clickable)",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "form-section-header",
+                      "className": "@config.className",
+                      "badgeVariant": "@config.badgeVariant",
+                      "isCollapsed": "@config.isCollapsed",
+                      "onToggle": "TOGGLE",
+                      "title": "@config.title",
+                      "isComplete": "@config.isComplete",
+                      "hasErrors": "@config.hasErrors",
+                      "icon": "@config.icon",
+                      "subtitle": "@config.subtitle",
+                      "badge": "@config.badge"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "isComplete": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Complete",
+              "description": "Whether section is complete",
+              "tier": "presentation"
+            },
+            "icon": {
+              "type": "string",
+              "default": "circle",
+              "label": "Icon",
+              "description": "Icon name to show before title",
+              "tier": "presentation"
+            },
+            "badgeVariant": {
+              "type": "string",
+              "default": "default",
+              "label": "Badge Variant",
+              "description": "Badge variant",
+              "tier": "presentation",
+              "values": [
+                "default",
+                "primary",
+                "success",
+                "warning",
+                "danger"
+              ]
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "hasErrors": {
+              "type": "boolean",
+              "default": false,
+              "label": "Has Errors",
+              "description": "Whether section has validation errors",
+              "tier": "presentation"
+            },
+            "title": {
+              "type": "string",
+              "default": "",
+              "label": "Title",
+              "description": "Section title",
+              "tier": "presentation"
+            },
+            "subtitle": {
+              "type": "string",
+              "default": "",
+              "label": "Subtitle",
+              "description": "Section subtitle",
+              "tier": "presentation"
+            },
+            "isCollapsed": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Collapsed",
+              "description": "Whether section is collapsed",
+              "tier": "presentation"
+            },
+            "badge": {
+              "type": "string",
+              "default": "",
+              "label": "Badge",
+              "description": "Badge text (e.g., '3 fields', 'Required', 'Complete')",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "FormSectionHeaderPage",
+          "path": "/form-section-header",
+          "traits": [
+            {
+              "ref": "FormSectionHeaderRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

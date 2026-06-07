@@ -1,0 +1,63 @@
+app ui-pricing-card "1.0.0"
+"PricingCard — UI factory (1:1 with the @almadar/ui pricing-card pattern)."
+orbital PricingCardOrbital {
+  entity PricingCardItem [runtime] {
+    id : string!
+  }
+
+  trait PricingCardRender -> @rebindable PricingCardItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          name: @config.name
+          price: @config.price
+          description: @config.description
+          features: @config.features
+          action: @config.action
+          highlighted: @config.highlighted
+          badge: @config.badge
+          className: @config.className
+          type: pricing-card
+        })
+    }
+
+    config {
+      name : string = ""
+        @label "Name"
+        @description "name prop"
+        @tier "presentation"
+      price : string = ""
+        @label "Price"
+        @description "price prop"
+        @tier "presentation"
+      description : string = ""
+        @label "Description"
+        @description "description prop"
+        @tier "presentation"
+      features : [string] = []
+        @label "Features"
+        @description "features prop"
+        @tier "presentation"
+      action : json
+        @label "Action"
+        @description "action prop"
+        @tier "presentation"
+      highlighted : boolean = false
+        @label "Highlighted"
+        @description "highlighted prop"
+        @tier "presentation"
+      badge : string = ""
+        @label "Badge"
+        @description "badge prop"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/pricing-card" as PricingCardPage -> PricingCardRender
+}

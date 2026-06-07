@@ -1,0 +1,62 @@
+app ui-navigation "1.0.0"
+"Navigation — UI factory (1:1 with the @almadar/ui navigation pattern)."
+orbital NavigationOrbital {
+  type NavigationItemsItem = {
+    id : string!
+    label : string!
+    icon : string
+    badge : string | number
+    href : string
+    onClick : any
+    isActive : boolean
+    disabled : boolean
+    subMenu : [json]
+  }
+
+  entity NavigationItem [runtime] {
+    id : string!
+  }
+
+  trait NavigationRender -> @rebindable NavigationItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch NavigationItem {})
+        (render-ui main {
+          items: @config.items
+          orientation: @config.orientation
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          entity: NavigationItem
+          type: navigation
+        })
+    }
+
+    config {
+      items : [NavigationItemsItem] = []
+        @label "Items"
+        @description "Navigation items"
+        @tier "presentation"
+      orientation : "horizontal" | "vertical" = horizontal
+        @label "Orientation"
+        @description "Navigation orientation"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : json
+        @label "Error"
+        @description "Error state"
+        @tier "presentation"
+    }
+  }
+
+  page "/navigation" as NavigationPage -> NavigationRender
+}

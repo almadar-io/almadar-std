@@ -1,0 +1,105 @@
+app ui-meter "1.0.0"
+"Meter — UI factory (1:1 with the @almadar/ui meter pattern)."
+orbital MeterOrbital {
+  type MeterThresholdsItem = {
+    value : number!
+    color : string!
+    label : string
+  }
+  type MeterActionsItem = {
+    label : string!
+    event : string
+    navigatesTo : string
+    variant : "primary" | "secondary" | "ghost"
+  }
+
+  entity MeterItem [runtime] {
+    id : string!
+  }
+
+  trait MeterRender -> @rebindable MeterItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          value: @config.value
+          min: @config.min
+          max: @config.max
+          label: @config.label
+          unit: @config.unit
+          variant: @config.variant
+          thresholds: @config.thresholds
+          segments: @config.segments
+          showValue: @config.showValue
+          size: @config.size
+          actions: @config.actions
+          isLoading: @config.isLoading
+          error: @config.error
+          className: @config.className
+          type: meter
+        })
+    }
+
+    config {
+      value : number = 0
+        @label "Value"
+        @description "Current value"
+        @tier "presentation"
+      min : number = 0
+        @label "Min"
+        @description "Minimum value"
+        @tier "presentation"
+      max : number = 100
+        @label "Max"
+        @description "Maximum value"
+        @tier "presentation"
+      label : string = ""
+        @label "Label"
+        @description "Display label"
+        @tier "presentation"
+      unit : string = ""
+        @label "Unit"
+        @description "Unit suffix (e.g., '%', 'MB', 'credits')"
+        @tier "presentation"
+      variant : "linear" | "radial" | "segmented" = linear
+        @label "Variant"
+        @description "Display variant"
+        @tier "presentation"
+      thresholds : [MeterThresholdsItem] = []
+        @label "Thresholds"
+        @description "Color thresholds"
+        @tier "presentation"
+      segments : number = 5
+        @label "Segments"
+        @description "Number of segments (for segmented variant)"
+        @tier "presentation"
+      showValue : boolean = true
+        @label "Show Value"
+        @description "Show value text"
+        @tier "presentation"
+      size : "sm" | "md" | "lg" = md
+        @label "Size"
+        @description "Size (for radial variant)"
+        @tier "presentation"
+      actions : [MeterActionsItem] = []
+        @label "Actions"
+        @description "Actions"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state"
+        @tier "presentation"
+      error : json
+        @label "Error"
+        @description "Error state"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/meter" as MeterPage -> MeterRender
+}

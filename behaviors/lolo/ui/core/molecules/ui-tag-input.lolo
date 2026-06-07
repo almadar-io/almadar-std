@@ -1,0 +1,79 @@
+app ui-tag-input "1.0.0"
+"TagInput — UI factory (1:1 with the @almadar/ui tag-input pattern)."
+orbital TagInputOrbital {
+  entity TagInputItem [runtime] {
+    id : string!
+  }
+
+  trait TagInputRender -> @rebindable TagInputItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          value: @config.value
+          onChange: CHANGE
+          placeholder: @config.placeholder
+          disabled: @config.disabled
+          variant: @config.variant
+          unique: @config.unique
+          helperText: @config.helperText
+          className: @config.className
+          addEvent: ADD
+          removeEvent: REMOVE
+          type: tag-input
+        })
+    }
+
+    emits {
+      CHANGE -> external {
+        next : [object]
+      }
+        @description "Direct callback emitted on every change. Stays as the Storybook / non-trait contract; trait-driven schemas should prefer the bus events below."
+        @tier "essential"
+      ADD -> external {
+        id : string
+      }
+        @description "Event emitted when a tag is added: `UI:{addEvent}` with payload `{ tag: string, value: string[] }`."
+        @tier "essential"
+      REMOVE -> external {
+        id : string
+      }
+        @description "Event emitted when a tag is removed: `UI:{removeEvent}` with payload `{ tag: string, index: number, value: string[] }`."
+        @tier "essential"
+    }
+
+    config {
+      value : [string] = []
+        @label "Value"
+        @description "Current list of tags."
+        @tier "presentation"
+      placeholder : string = ""
+        @label "Placeholder"
+        @description "Placeholder for the entry input. Default: `'Type and press Enter…'`."
+        @tier "presentation"
+      disabled : boolean = false
+        @label "Disabled"
+        @description "Disable add + remove interactions."
+        @tier "presentation"
+      variant : "default" | "primary" | "secondary" | "success" | "warning" | "danger" | "error" | "info" | "neutral" = default
+        @label "Variant"
+        @description "Variant applied to each chip Badge. Default: `'default'`."
+        @tier "presentation"
+      unique : boolean = true
+        @label "Unique"
+        @description "Suppress duplicate entries. Default: `true`."
+        @tier "presentation"
+      helperText : string = ""
+        @label "Helper Text"
+        @description "Helper text rendered under the input."
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes applied to the outer container."
+        @tier "presentation"
+    }
+  }
+
+  page "/tag-input" as TagInputPage -> TagInputRender
+}

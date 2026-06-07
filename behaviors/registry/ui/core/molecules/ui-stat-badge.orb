@@ -1,0 +1,159 @@
+{
+  "name": "ui-stat-badge",
+  "version": "1.0.0",
+  "description": "StatBadge — UI factory (1:1 with the @almadar/ui stat-badge pattern).",
+  "orbitals": [
+    {
+      "name": "StatBadgeOrbital",
+      "entity": {
+        "name": "StatBadgeItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "StatBadgeRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "StatBadgeItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "format": "@config.format",
+                      "value": "@config.value",
+                      "size": "@config.size",
+                      "source": "@config.source",
+                      "field": "@config.field",
+                      "className": "@config.className",
+                      "label": "@config.label",
+                      "type": "stat-badge",
+                      "variant": "@config.variant",
+                      "max": "@config.max",
+                      "icon": "@config.icon"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "source": {
+              "type": "string",
+              "default": "",
+              "label": "Source",
+              "description": "Data source entity name (for schema config)",
+              "tier": "presentation"
+            },
+            "format": {
+              "type": "string",
+              "default": "number",
+              "label": "Format",
+              "description": "Display format",
+              "tier": "presentation"
+            },
+            "label": {
+              "type": "string",
+              "default": "",
+              "label": "Label",
+              "description": "Stat label",
+              "tier": "presentation"
+            },
+            "max": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Max",
+              "description": "Maximum value (for bar/hearts format)",
+              "tier": "presentation"
+            },
+            "field": {
+              "type": "string",
+              "default": "",
+              "label": "Field",
+              "description": "Field name in the source (for schema config)",
+              "tier": "presentation"
+            },
+            "icon": {
+              "type": "node",
+              "label": "Icon",
+              "description": "Icon component or emoji",
+              "tier": "presentation"
+            },
+            "variant": {
+              "type": "string",
+              "default": "default",
+              "label": "Variant",
+              "description": "Visual variant",
+              "tier": "presentation"
+            },
+            "value": {
+              "type": "string",
+              "label": "Value",
+              "description": "Current value (defaults to 0 if not provided)",
+              "tier": "presentation",
+              "values": [
+                "number",
+                "string"
+              ]
+            },
+            "size": {
+              "type": "string",
+              "default": "md",
+              "label": "Size",
+              "description": "Size variant",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "StatBadgePage",
+          "path": "/stat-badge",
+          "traits": [
+            {
+              "ref": "StatBadgeRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

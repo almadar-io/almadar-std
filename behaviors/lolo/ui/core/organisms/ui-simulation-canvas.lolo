@@ -1,0 +1,53 @@
+app ui-simulation-canvas "1.0.0"
+"SimulationCanvas — UI factory (1:1 with the @almadar/ui simulation-canvas pattern)."
+orbital SimulationCanvasOrbital {
+  entity SimulationCanvasItem [runtime] {
+    id : string!
+  }
+
+  trait SimulationCanvasRender -> @rebindable SimulationCanvasItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          preset: @config.preset
+          width: @config.width
+          height: @config.height
+          running: @config.running
+          speed: @config.speed
+          className: @config.className
+          type: simulation-canvas
+        })
+    }
+
+    config {
+      preset : json
+        @label "Preset"
+        @description "preset prop"
+        @tier "presentation"
+      width : number = 600
+        @label "Width"
+        @description "width prop"
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "height prop"
+        @tier "presentation"
+      running : boolean = false
+        @label "Running"
+        @description "running prop"
+        @tier "presentation"
+      speed : number = 1
+        @label "Speed"
+        @description "speed prop"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/simulation-canvas" as SimulationCanvasPage -> SimulationCanvasRender
+}

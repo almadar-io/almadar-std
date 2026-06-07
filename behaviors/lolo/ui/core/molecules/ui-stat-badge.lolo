@@ -1,0 +1,73 @@
+app ui-stat-badge "1.0.0"
+"StatBadge — UI factory (1:1 with the @almadar/ui stat-badge pattern)."
+orbital StatBadgeOrbital {
+  entity StatBadgeItem [runtime] {
+    id : string!
+  }
+
+  trait StatBadgeRender -> @rebindable StatBadgeItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          label: @config.label
+          value: @config.value
+          max: @config.max
+          source: @config.source
+          field: @config.field
+          format: @config.format
+          icon: @config.icon
+          size: @config.size
+          variant: @config.variant
+          className: @config.className
+          type: stat-badge
+        })
+    }
+
+    config {
+      label : string = ""
+        @label "Label"
+        @description "Stat label"
+        @tier "presentation"
+      value : number | string
+        @label "Value"
+        @description "Current value (defaults to 0 if not provided)"
+        @tier "presentation"
+      max : number = 0
+        @label "Max"
+        @description "Maximum value (for bar/hearts format)"
+        @tier "presentation"
+      source : string = ""
+        @label "Source"
+        @description "Data source entity name (for schema config)"
+        @tier "presentation"
+      field : string = ""
+        @label "Field"
+        @description "Field name in the source (for schema config)"
+        @tier "presentation"
+      format : string = number
+        @label "Format"
+        @description "Display format"
+        @tier "presentation"
+      icon : node
+        @label "Icon"
+        @description "Icon component or emoji"
+        @tier "presentation"
+      size : string = md
+        @label "Size"
+        @description "Size variant"
+        @tier "presentation"
+      variant : string = default
+        @label "Variant"
+        @description "Visual variant"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/stat-badge" as StatBadgePage -> StatBadgeRender
+}

@@ -1,0 +1,129 @@
+{
+  "name": "ui-waypoint-marker",
+  "version": "1.0.0",
+  "description": "WaypointMarker — UI factory (1:1 with the @almadar/ui waypoint-marker pattern).",
+  "orbitals": [
+    {
+      "name": "WaypointMarkerOrbital",
+      "entity": {
+        "name": "WaypointMarkerItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "WaypointMarkerRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "WaypointMarkerItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "active": "@config.active",
+                      "label": "@config.label",
+                      "className": "@config.className",
+                      "type": "waypoint-marker",
+                      "size": "@config.size",
+                      "completed": "@config.completed",
+                      "icon": "@config.icon"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "icon": {
+              "type": "node",
+              "label": "Icon",
+              "description": "Custom icon to render inside the marker",
+              "tier": "presentation"
+            },
+            "completed": {
+              "type": "boolean",
+              "default": false,
+              "label": "Completed",
+              "description": "Whether this waypoint has been completed",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "size": {
+              "type": "string",
+              "default": "md",
+              "label": "Size",
+              "description": "Size variant",
+              "tier": "presentation",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            },
+            "label": {
+              "type": "string",
+              "default": "",
+              "label": "Label",
+              "description": "Label text below the marker",
+              "tier": "presentation"
+            },
+            "active": {
+              "type": "boolean",
+              "default": false,
+              "label": "Active",
+              "description": "Whether this waypoint is currently active",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "WaypointMarkerPage",
+          "path": "/waypoint-marker",
+          "traits": [
+            {
+              "ref": "WaypointMarkerRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

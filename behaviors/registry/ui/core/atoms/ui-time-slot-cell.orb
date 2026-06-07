@@ -1,0 +1,129 @@
+{
+  "name": "ui-time-slot-cell",
+  "version": "1.0.0",
+  "description": "TimeSlotCell — UI factory (1:1 with the @almadar/ui time-slot-cell pattern).",
+  "orbitals": [
+    {
+      "name": "TimeSlotCellOrbital",
+      "entity": {
+        "name": "TimeSlotCellItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "TimeSlotCellRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "TimeSlotCellItem",
+          "emits": [
+            {
+              "event": "CLICK",
+              "description": "Called when the slot is clicked",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "time",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "CLICK",
+                "name": "Click",
+                "description": "Called when the slot is clicked",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "isOccupied": "@config.isOccupied",
+                      "className": "@config.className",
+                      "time": "@config.time",
+                      "children": "@config.children",
+                      "type": "time-slot-cell",
+                      "onClick": "CLICK"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "isOccupied": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Occupied",
+              "description": "Whether this slot contains an event",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "children": {
+              "type": "node",
+              "label": "Children",
+              "description": "Event content placed inside the slot",
+              "tier": "presentation"
+            },
+            "time": {
+              "type": "string",
+              "default": "",
+              "label": "Time",
+              "description": "Time label for this slot (e.g. '09:00')",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "TimeSlotCellPage",
+          "path": "/time-slot-cell",
+          "traits": [
+            {
+              "ref": "TimeSlotCellRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

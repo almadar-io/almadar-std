@@ -1,0 +1,200 @@
+{
+  "name": "ui-step-flow-organism",
+  "version": "1.0.0",
+  "description": "StepFlowOrganism — UI factory (1:1 with the @almadar/ui step-flow-organism pattern).",
+  "orbitals": [
+    {
+      "name": "StepFlowOrganismOrbital",
+      "entity": {
+        "name": "StepFlowOrganismItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "StepFlowOrganismRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "StepFlowOrganismItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "StepFlowOrganismItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "subtitle": "@config.subtitle",
+                      "isLoading": "@config.isLoading",
+                      "error": "@config.error",
+                      "entity": "@entity",
+                      "sortBy": "@config.sortBy",
+                      "pageSize": "@config.pageSize",
+                      "orientation": "@config.orientation",
+                      "searchValue": "@config.searchValue",
+                      "className": "@config.className",
+                      "totalCount": "@config.totalCount",
+                      "selectedIds": "@config.selectedIds",
+                      "type": "step-flow-organism",
+                      "showConnectors": "@config.showConnectors",
+                      "sortDirection": "@config.sortDirection",
+                      "activeFilters": "@config.activeFilters",
+                      "heading": "@config.heading"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
+              "tier": "presentation"
+            },
+            "activeFilters": {
+              "type": "json",
+              "label": "Active Filters",
+              "description": "Active filters",
+              "tier": "presentation"
+            },
+            "showConnectors": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Connectors",
+              "description": "showConnectors prop",
+              "tier": "presentation"
+            },
+            "totalCount": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Total Count",
+              "description": "Total number of items",
+              "tier": "presentation"
+            },
+            "orientation": {
+              "type": "string",
+              "default": "horizontal",
+              "label": "Orientation",
+              "description": "orientation prop",
+              "tier": "presentation",
+              "values": [
+                "horizontal",
+                "vertical"
+              ]
+            },
+            "subtitle": {
+              "type": "string",
+              "default": "",
+              "label": "Subtitle",
+              "description": "subtitle prop",
+              "tier": "presentation"
+            },
+            "sortDirection": {
+              "type": "string",
+              "default": "",
+              "label": "Sort Direction",
+              "description": "Current sort direction",
+              "tier": "presentation"
+            },
+            "sortBy": {
+              "type": "string",
+              "default": "",
+              "label": "Sort By",
+              "description": "Current sort field",
+              "tier": "presentation"
+            },
+            "error": {
+              "type": "json",
+              "label": "Error",
+              "description": "Error state",
+              "tier": "presentation"
+            },
+            "searchValue": {
+              "type": "string",
+              "default": "",
+              "label": "Search Value",
+              "description": "Current search query value",
+              "tier": "presentation"
+            },
+            "pageSize": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Page Size",
+              "description": "Number of items per page",
+              "tier": "presentation"
+            },
+            "selectedIds": {
+              "type": "[json]",
+              "default": [],
+              "label": "Selected Ids",
+              "description": "Currently selected item IDs",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "heading": {
+              "type": "string",
+              "default": "",
+              "label": "Heading",
+              "description": "heading prop",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "StepFlowOrganismPage",
+          "path": "/step-flow-organism",
+          "traits": [
+            {
+              "ref": "StepFlowOrganismRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

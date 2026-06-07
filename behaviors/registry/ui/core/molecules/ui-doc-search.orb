@@ -1,0 +1,114 @@
+{
+  "name": "ui-doc-search",
+  "version": "1.0.0",
+  "description": "DocSearch — UI factory (1:1 with the @almadar/ui doc-search pattern).",
+  "orbitals": [
+    {
+      "name": "DocSearchOrbital",
+      "entity": {
+        "name": "DocSearchItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "DocSearchRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "DocSearchItem",
+          "emits": [
+            {
+              "event": "SEARCH",
+              "description": "Callback invoked with the search query, returns results",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "query",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "SEARCH",
+                "name": "Search",
+                "description": "Callback invoked with the search query, returns results",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "onSearch": "SEARCH",
+                      "placeholder": "@config.placeholder",
+                      "className": "@config.className",
+                      "type": "doc-search"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "placeholder": {
+              "type": "string",
+              "default": "Search documentation...",
+              "label": "Placeholder",
+              "description": "Placeholder text for the input",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional class names",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "DocSearchPage",
+          "path": "/doc-search",
+          "traits": [
+            {
+              "ref": "DocSearchRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

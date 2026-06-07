@@ -1,0 +1,186 @@
+{
+  "name": "ui-likert-scale",
+  "version": "1.0.0",
+  "description": "LikertScale — UI factory (1:1 with the @almadar/ui likert-scale pattern).",
+  "orbitals": [
+    {
+      "name": "LikertScaleOrbital",
+      "entity": {
+        "name": "LikertScaleItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "LikertScaleRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "LikertScaleItem",
+          "emits": [
+            {
+              "event": "CHANGE",
+              "description": "Change callback",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "value",
+                  "type": "number"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "CHANGE",
+                "name": "Change",
+                "description": "Change callback",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "onChange": "CHANGE",
+                      "disabled": "@config.disabled",
+                      "size": "@config.size",
+                      "className": "@config.className",
+                      "options": "@config.options",
+                      "value": "@config.value",
+                      "question": "@config.question",
+                      "changeEvent": "CHANGE",
+                      "variant": "@config.variant",
+                      "type": "likert-scale"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "size": {
+              "type": "string",
+              "default": "md",
+              "label": "Size",
+              "description": "Size variant",
+              "tier": "presentation",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            },
+            "options": {
+              "type": "[LikertScaleOptionsItem]",
+              "default": [],
+              "label": "Options",
+              "description": "Scale points (defaults to a 5-point agree/disagree set)",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "value": {
+                    "name": "value",
+                    "type": "string",
+                    "required": true,
+                    "values": [
+                      "number",
+                      "string"
+                    ]
+                  }
+                }
+              }
+            },
+            "disabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Disabled",
+              "description": "Disabled state",
+              "tier": "presentation"
+            },
+            "value": {
+              "type": "string",
+              "label": "Value",
+              "description": "Selected value (controlled)",
+              "tier": "presentation",
+              "values": [
+                "number",
+                "string"
+              ]
+            },
+            "question": {
+              "type": "string",
+              "default": "",
+              "label": "Question",
+              "description": "Optional row prompt above the scale",
+              "tier": "presentation"
+            },
+            "variant": {
+              "type": "string",
+              "default": "radios",
+              "label": "Variant",
+              "description": "Visual variant: classic radios or pill segmented buttons",
+              "tier": "presentation",
+              "values": [
+                "radios",
+                "buttons"
+              ]
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "LikertScalePage",
+          "path": "/likert-scale",
+          "traits": [
+            {
+              "ref": "LikertScaleRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

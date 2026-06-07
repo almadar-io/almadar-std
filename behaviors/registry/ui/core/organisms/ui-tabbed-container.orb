@@ -1,0 +1,181 @@
+{
+  "name": "ui-tabbed-container",
+  "version": "1.0.0",
+  "description": "TabbedContainer — UI factory (1:1 with the @almadar/ui tabbed-container pattern).",
+  "orbitals": [
+    {
+      "name": "TabbedContainerOrbital",
+      "entity": {
+        "name": "TabbedContainerItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "TabbedContainerRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "TabbedContainerItem",
+          "emits": [
+            {
+              "event": "TAB_CHANGE",
+              "description": "Callback when tab changes",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "tabId",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "TAB_CHANGE",
+                "name": "Tab Change",
+                "description": "Callback when tab changes",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "tabbed-container",
+                      "tabs": "@config.tabs",
+                      "activeTab": "@config.activeTab",
+                      "onTabChange": "TAB_CHANGE",
+                      "position": "@config.position",
+                      "defaultTab": "@config.defaultTab",
+                      "className": "@config.className"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "position": {
+              "type": "string",
+              "default": "top",
+              "label": "Position",
+              "description": "Tab position",
+              "tier": "presentation",
+              "values": [
+                "top",
+                "left"
+              ]
+            },
+            "tabs": {
+              "type": "[TabbedContainerTabsItem]",
+              "default": [],
+              "label": "Tabs",
+              "description": "Tab definitions",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "content": {
+                    "name": "content",
+                    "type": "string",
+                    "required": false
+                  },
+                  "sectionId": {
+                    "name": "sectionId",
+                    "type": "string",
+                    "required": false
+                  },
+                  "disabled": {
+                    "name": "disabled",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "badge": {
+                    "name": "badge",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "string",
+                      "number"
+                    ]
+                  }
+                }
+              }
+            },
+            "defaultTab": {
+              "type": "string",
+              "default": "",
+              "label": "Default Tab",
+              "description": "Default active tab ID",
+              "tier": "presentation"
+            },
+            "activeTab": {
+              "type": "string",
+              "default": "",
+              "label": "Active Tab",
+              "description": "Controlled active tab",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "TabbedContainerPage",
+          "path": "/tabbed-container",
+          "traits": [
+            {
+              "ref": "TabbedContainerRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

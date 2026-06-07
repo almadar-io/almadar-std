@@ -1,0 +1,53 @@
+app ui-book-cover-page "1.0.0"
+"BookCoverPage — UI factory (1:1 with the @almadar/ui book-cover-page pattern)."
+orbital BookCoverPageOrbital {
+  entity BookCoverPageItem [runtime] {
+    id : string!
+  }
+
+  trait BookCoverPageRender -> @rebindable BookCoverPageItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          className: @config.className
+          title: @config.title
+          subtitle: @config.subtitle
+          author: @config.author
+          coverImageUrl: @config.coverImageUrl
+          direction: @config.direction
+          type: book-cover-page
+        })
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      title : string = ""
+        @label "Title"
+        @description "title prop"
+        @tier "presentation"
+      subtitle : string = ""
+        @label "Subtitle"
+        @description "subtitle prop"
+        @tier "presentation"
+      author : string = ""
+        @label "Author"
+        @description "author prop"
+        @tier "presentation"
+      coverImageUrl : string = ""
+        @label "Cover Image Url"
+        @description "coverImageUrl prop"
+        @tier "presentation"
+      direction : "rtl" | "ltr" = rtl
+        @label "Direction"
+        @description "direction prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/book-cover-page" as BookCoverPagePage -> BookCoverPageRender
+}

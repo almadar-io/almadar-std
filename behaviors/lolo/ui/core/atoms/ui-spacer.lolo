@@ -1,0 +1,38 @@
+app ui-spacer "1.0.0"
+"Spacer — UI factory (1:1 with the @almadar/ui spacer pattern)."
+orbital SpacerOrbital {
+  entity SpacerItem [runtime] {
+    id : string!
+  }
+
+  trait SpacerRender -> @rebindable SpacerItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          size: @config.size
+          axis: @config.axis
+          className: @config.className
+          type: spacer
+        })
+    }
+
+    config {
+      size : "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "auto" = auto
+        @label "Size"
+        @description "Fixed size (auto = flex grow)"
+        @tier "presentation"
+      axis : "horizontal" | "vertical" = horizontal
+        @label "Axis"
+        @description "Orientation (for fixed sizes)"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Custom class name"
+        @tier "presentation"
+    }
+  }
+
+  page "/spacer" as SpacerPage -> SpacerRender
+}

@@ -1,0 +1,137 @@
+{
+  "name": "ui-resource-counter",
+  "version": "1.0.0",
+  "description": "ResourceCounter — UI factory (1:1 with the @almadar/ui resource-counter pattern).",
+  "orbitals": [
+    {
+      "name": "ResourceCounterOrbital",
+      "entity": {
+        "name": "ResourceCounterItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ResourceCounterRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "ResourceCounterItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "resource-counter",
+                      "icon": "@config.icon",
+                      "value": "@config.value",
+                      "color": "@config.color",
+                      "max": "@config.max",
+                      "className": "@config.className",
+                      "label": "@config.label",
+                      "size": "@config.size"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "value": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Value",
+              "description": "Current value",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "icon": {
+              "type": "node",
+              "label": "Icon",
+              "description": "Icon component or emoji",
+              "tier": "presentation"
+            },
+            "max": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Max",
+              "description": "Maximum value",
+              "tier": "presentation"
+            },
+            "size": {
+              "type": "string",
+              "default": "md",
+              "label": "Size",
+              "description": "Size variant",
+              "tier": "presentation",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            },
+            "color": {
+              "type": "string",
+              "default": "",
+              "label": "Color",
+              "description": "Accent color class (e.g. 'text-yellow-400')",
+              "tier": "presentation"
+            },
+            "label": {
+              "type": "string",
+              "default": "",
+              "label": "Label",
+              "description": "Resource label",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "ResourceCounterPage",
+          "path": "/resource-counter",
+          "traits": [
+            {
+              "ref": "ResourceCounterRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

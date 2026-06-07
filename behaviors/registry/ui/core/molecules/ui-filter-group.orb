@@ -1,0 +1,229 @@
+{
+  "name": "ui-filter-group",
+  "version": "1.0.0",
+  "description": "FilterGroup — UI factory (1:1 with the @almadar/ui filter-group pattern).",
+  "orbitals": [
+    {
+      "name": "FilterGroupOrbital",
+      "entity": {
+        "name": "FilterGroupItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "FilterGroupRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "FilterGroupItem",
+          "emits": [
+            {
+              "event": "FILTER_CHANGE",
+              "description": "Callback when a filter changes - for EntityStore integration",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "field",
+                  "type": "string"
+                },
+                {
+                  "name": "value",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CLEAR_ALL",
+              "description": "Callback to clear all filters",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "FILTER_CHANGE",
+                "name": "Filter Change",
+                "description": "Callback when a filter changes - for EntityStore integration",
+                "tier": "essential"
+              },
+              {
+                "key": "CLEAR_ALL",
+                "name": "Clear All",
+                "description": "Callback to clear all filters",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "FilterGroupItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "showIcon": "@config.showIcon",
+                      "onClearAll": "CLEAR_ALL",
+                      "onFilterChange": "FILTER_CHANGE",
+                      "variant": "@config.variant",
+                      "type": "filter-group",
+                      "entity": "FilterGroupItem",
+                      "query": "@config.query",
+                      "look": "@config.look",
+                      "filters": "@config.filters",
+                      "isLoading": "@config.isLoading"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "showIcon": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Icon",
+              "description": "Show filter icon",
+              "tier": "presentation"
+            },
+            "filters": {
+              "type": "[FilterGroupFiltersItem]",
+              "default": [],
+              "label": "Filters",
+              "description": "Filter definitions from schema",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "field": {
+                    "name": "field",
+                    "type": "string",
+                    "required": true
+                  },
+                  "options": {
+                    "name": "options",
+                    "type": "array",
+                    "required": false,
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "type": {
+                    "name": "type",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "checkbox",
+                      "select",
+                      "toggle"
+                    ]
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "variant": {
+              "type": "string",
+              "default": "default",
+              "label": "Variant",
+              "description": "Variant style",
+              "tier": "presentation",
+              "values": [
+                "default",
+                "compact",
+                "pills",
+                "vertical"
+              ]
+            },
+            "look": {
+              "type": "string",
+              "default": "toolbar",
+              "label": "Look",
+              "description": "Layer 2 visual treatment — orthogonal to the semantic variant.",
+              "tier": "presentation",
+              "values": [
+                "toolbar",
+                "chips",
+                "pills",
+                "popover-trigger",
+                "inline-column-header"
+              ]
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "query": {
+              "type": "string",
+              "default": "",
+              "label": "Query",
+              "description": "Query singleton binding for state management. When provided, syncs filter state with the query singleton. Example: '@TaskQuery'",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "FilterGroupPage",
+          "path": "/filter-group",
+          "traits": [
+            {
+              "ref": "FilterGroupRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,108 @@
+app ui-input "1.0.0"
+"Input — UI factory (1:1 with the @almadar/ui input pattern)."
+orbital InputOrbital {
+  type InputOptionsItem = {
+    value : string!
+    label : string!
+  }
+
+  entity InputItem [runtime] {
+    id : string!
+  }
+
+  trait InputRender -> @rebindable InputItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          className: @config.className
+          placeholder: @config.placeholder
+          value: @config.value
+          disabled: @config.disabled
+          action: ACTION
+          inputType: @config.inputType
+          error: @config.error
+          leftIcon: @config.leftIcon
+          rightIcon: @config.rightIcon
+          icon: @config.icon
+          clearable: @config.clearable
+          onClear: CLEAR
+          options: @config.options
+          rows: @config.rows
+          onChange: @config.onChange
+          type: input
+        })
+    }
+
+    emits {
+      ACTION -> external {
+        id : string
+      }
+        @description "Declarative event name for trait dispatch"
+        @tier "essential"
+      CLEAR -> external {
+        id : string
+      }
+        @description "Callback when clear button is clicked"
+        @tier "essential"
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes applied to the root element."
+        @tier "presentation"
+      placeholder : string = ""
+        @label "Placeholder"
+        @description "Placeholder text"
+        @tier "presentation"
+      value : string | number
+        @label "Value"
+        @description "Current value"
+        @tier "presentation"
+      disabled : boolean = false
+        @label "Disabled"
+        @description "Whether input is disabled"
+        @tier "presentation"
+      inputType : "text" | "email" | "password" | "number" | "tel" | "url" | "search" | "date" | "datetime-local" | "time" | "checkbox" | "select" | "textarea" = text
+        @label "Input Type"
+        @description "Input type - supports 'select' and 'textarea' in addition to standard types"
+        @tier "presentation"
+      error : string = ""
+        @label "Error"
+        @description "error prop"
+        @tier "presentation"
+      leftIcon : node
+        @label "Left Icon"
+        @description "leftIcon prop"
+        @tier "presentation"
+      rightIcon : node
+        @label "Right Icon"
+        @description "rightIcon prop"
+        @tier "presentation"
+      icon : string = "circle"
+        @label "Icon"
+        @description "Lucide icon component for left side (convenience prop)"
+        @tier "presentation"
+      clearable : boolean = false
+        @label "Clearable"
+        @description "Show clear button when input has value"
+        @tier "presentation"
+      options : [InputOptionsItem] = []
+        @label "Options"
+        @description "Options for select type"
+        @tier "presentation"
+      rows : number = 3
+        @label "Rows"
+        @description "Rows for textarea type"
+        @tier "presentation"
+      onChange : json
+        @label "On Change"
+        @description "onChange handler - accepts events from input, select, or textarea"
+        @tier "presentation"
+    }
+  }
+
+  page "/input" as InputPage -> InputRender
+}

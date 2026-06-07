@@ -1,0 +1,150 @@
+{
+  "name": "ui-enemy-plate",
+  "version": "1.0.0",
+  "description": "EnemyPlate — UI factory (1:1 with the @almadar/ui enemy-plate pattern).",
+  "orbitals": [
+    {
+      "name": "EnemyPlateOrbital",
+      "entity": {
+        "name": "EnemyPlateItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "EnemyPlateRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "EnemyPlateItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "type": "enemy-plate",
+                      "effects": "@config.effects",
+                      "maxHealth": "@config.maxHealth",
+                      "level": "@config.level",
+                      "name": "@config.name",
+                      "health": "@config.health"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "level": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Level",
+              "description": "Enemy level",
+              "tier": "presentation"
+            },
+            "effects": {
+              "type": "[EnemyPlateEffectsItem]",
+              "default": [],
+              "label": "Effects",
+              "description": "Active status effects",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": true
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "buff",
+                      "debuff",
+                      "neutral"
+                    ]
+                  }
+                }
+              }
+            },
+            "health": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Health",
+              "description": "Current health",
+              "tier": "presentation"
+            },
+            "maxHealth": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Max Health",
+              "description": "Maximum health",
+              "tier": "presentation"
+            },
+            "name": {
+              "type": "string",
+              "default": "",
+              "label": "Name",
+              "description": "Enemy name",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "EnemyPlatePage",
+          "path": "/enemy-plate",
+          "traits": [
+            {
+              "ref": "EnemyPlateRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

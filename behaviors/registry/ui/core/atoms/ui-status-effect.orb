@@ -1,0 +1,142 @@
+{
+  "name": "ui-status-effect",
+  "version": "1.0.0",
+  "description": "StatusEffect — UI factory (1:1 with the @almadar/ui status-effect pattern).",
+  "orbitals": [
+    {
+      "name": "StatusEffectOrbital",
+      "entity": {
+        "name": "StatusEffectItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "StatusEffectRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "StatusEffectItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "duration": "@config.duration",
+                      "icon": "@config.icon",
+                      "label": "@config.label",
+                      "variant": "@config.variant",
+                      "size": "@config.size",
+                      "type": "status-effect",
+                      "stacks": "@config.stacks"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "variant": {
+              "type": "string",
+              "default": "neutral",
+              "label": "Variant",
+              "description": "Effect type",
+              "tier": "presentation",
+              "values": [
+                "buff",
+                "debuff",
+                "neutral"
+              ]
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "size": {
+              "type": "string",
+              "default": "md",
+              "label": "Size",
+              "description": "Size variant",
+              "tier": "presentation",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            },
+            "duration": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Duration",
+              "description": "Remaining duration in seconds",
+              "tier": "presentation"
+            },
+            "icon": {
+              "type": "node",
+              "label": "Icon",
+              "description": "Icon to display for the effect",
+              "tier": "presentation"
+            },
+            "label": {
+              "type": "string",
+              "default": "",
+              "label": "Label",
+              "description": "Label describing the effect",
+              "tier": "presentation"
+            },
+            "stacks": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Stacks",
+              "description": "Number of stacks",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "StatusEffectPage",
+          "path": "/status-effect",
+          "traits": [
+            {
+              "ref": "StatusEffectRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,168 @@
+app ui-detail-panel "1.0.0"
+"DetailPanel — UI factory (1:1 with the @almadar/ui detail-panel pattern)."
+orbital DetailPanelOrbital {
+  type DetailPanelSectionsItem = {
+    title : string!
+    fields : [json]!
+  }
+  type DetailPanelActionsItem = {
+    label : string!
+    icon : string
+    onClick : any
+    event : string
+    navigatesTo : string
+    variant : "primary" | "secondary" | "ghost" | "danger"
+  }
+
+  entity DetailPanelItem [runtime] {
+    id : string!
+  }
+
+  trait DetailPanelRender -> @rebindable DetailPanelItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch DetailPanelItem {})
+        (render-ui main {
+          entity: @entity
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          sortBy: @config.sortBy
+          sortDirection: @config.sortDirection
+          searchValue: @config.searchValue
+          pageSize: @config.pageSize
+          totalCount: @config.totalCount
+          activeFilters: @config.activeFilters
+          selectedIds: @config.selectedIds
+          title: @config.title
+          subtitle: @config.subtitle
+          status: @config.status
+          avatar: @config.avatar
+          sections: @config.sections
+          actions: @config.actions
+          footer: @config.footer
+          slideOver: @config.slideOver
+          fields: @config.fields
+          fieldNames: @config.fieldNames
+          initialData: @config.initialData
+          mode: @config.mode
+          position: @config.position
+          width: @config.width
+          displayFields: @config.displayFields
+          showActions: @config.showActions
+          type: detail-panel
+        })
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : json
+        @label "Error"
+        @description "Error state"
+        @tier "presentation"
+      sortBy : string = ""
+        @label "Sort By"
+        @description "Current sort field"
+        @tier "presentation"
+      sortDirection : string = ""
+        @label "Sort Direction"
+        @description "Current sort direction"
+        @tier "presentation"
+      searchValue : string = ""
+        @label "Search Value"
+        @description "Current search query value"
+        @tier "presentation"
+      pageSize : number = 0
+        @label "Page Size"
+        @description "Number of items per page"
+        @tier "presentation"
+      totalCount : number = 0
+        @label "Total Count"
+        @description "Total number of items"
+        @tier "presentation"
+      activeFilters : json
+        @label "Active Filters"
+        @description "Active filters"
+        @tier "presentation"
+      selectedIds : [json] = []
+        @label "Selected Ids"
+        @description "Currently selected item IDs"
+        @tier "presentation"
+      title : string = ""
+        @label "Title"
+        @description "title prop"
+        @tier "presentation"
+      subtitle : string = ""
+        @label "Subtitle"
+        @description "subtitle prop"
+        @tier "presentation"
+      status : json
+        @label "Status"
+        @description "status prop"
+        @tier "presentation"
+      avatar : node
+        @label "Avatar"
+        @description "avatar prop"
+        @tier "presentation"
+      sections : [DetailPanelSectionsItem] = []
+        @label "Sections"
+        @description "sections prop"
+        @tier "presentation"
+      actions : [DetailPanelActionsItem] = []
+        @label "Actions"
+        @description "Unified actions array - first action with variant='primary' is the main action"
+        @tier "presentation"
+      footer : node
+        @label "Footer"
+        @description "footer prop"
+        @tier "presentation"
+      slideOver : boolean = false
+        @label "Slide Over"
+        @description "slideOver prop"
+        @tier "presentation"
+      fields : [json] = []
+        @label "Fields"
+        @description "Fields to display - accepts string[], {key, header}[], or DetailField[]"
+        @tier "presentation"
+      fieldNames : [string] = []
+        @label "Field Names"
+        @description "Alias for fields - backwards compatibility"
+        @tier "presentation"
+      initialData : json
+        @label "Initial Data"
+        @description "Initial data for edit mode (passed by compiler)"
+        @tier "presentation"
+      mode : string = ""
+        @label "Mode"
+        @description "Display mode (passed by compiler)"
+        @tier "presentation"
+      position : "left" | "right" = left
+        @label "Position"
+        @description "Panel position (for drawer/sidebar placement)"
+        @tier "presentation"
+      width : string = ""
+        @label "Width"
+        @description "Panel width (CSS value, e.g., '400px', '50%')"
+        @tier "presentation"
+      displayFields : [string] = []
+        @label "Display Fields"
+        @description "Display fields (alias for fields)"
+        @tier "presentation"
+      showActions : boolean = false
+        @label "Show Actions"
+        @description "Show actions flag"
+        @tier "presentation"
+    }
+  }
+
+  page "/detail-panel" as DetailPanelPage -> DetailPanelRender
+}

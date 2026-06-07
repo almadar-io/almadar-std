@@ -1,0 +1,136 @@
+{
+  "name": "ui-game-audio-provider",
+  "version": "1.0.0",
+  "description": "GameAudioProvider — UI factory (1:1 with the @almadar/ui game-audio-provider pattern).",
+  "orbitals": [
+    {
+      "name": "GameAudioProviderOrbital",
+      "entity": {
+        "name": "GameAudioProviderItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "GameAudioProviderRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "GameAudioProviderItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "GameAudioProviderItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "baseUrl": "@config.baseUrl",
+                      "className": "@config.className",
+                      "initialMuted": "@config.initialMuted",
+                      "children": "@config.children",
+                      "isLoading": "@config.isLoading",
+                      "entity": "GameAudioProviderItem",
+                      "manifest": "@config.manifest",
+                      "error": "@config.error",
+                      "type": "game-audio-provider"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "initialMuted": {
+              "type": "boolean",
+              "default": false,
+              "label": "Initial Muted",
+              "description": "Initial muted state",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Closed-circuit props (unused, accepted for runtime compatibility)",
+              "tier": "presentation"
+            },
+            "children": {
+              "type": "node",
+              "label": "Children",
+              "description": "Children to render",
+              "tier": "presentation"
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "isLoading prop",
+              "tier": "presentation"
+            },
+            "manifest": {
+              "type": "json",
+              "label": "Manifest",
+              "description": "Sound manifest — keys mapped to SoundEntry definitions",
+              "tier": "presentation"
+            },
+            "error": {
+              "type": "json",
+              "label": "Error",
+              "description": "error prop",
+              "tier": "presentation"
+            },
+            "baseUrl": {
+              "type": "string",
+              "default": "",
+              "label": "Base Url",
+              "description": "Base URL prepended to all sound paths (default '')",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "GameAudioProviderPage",
+          "path": "/game-audio-provider",
+          "traits": [
+            {
+              "ref": "GameAudioProviderRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

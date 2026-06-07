@@ -1,0 +1,85 @@
+app ui-section "1.0.0"
+"Section — UI factory (1:1 with the @almadar/ui section pattern)."
+orbital SectionOrbital {
+  entity SectionItem [runtime] {
+    id : string!
+  }
+
+  trait SectionRender -> @rebindable SectionItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch SectionItem {})
+        (render-ui main {
+          title: @config.title
+          description: @config.description
+          action: @config.action
+          padding: @config.padding
+          variant: @config.variant
+          divider: @config.divider
+          className: @config.className
+          children: @config.children
+          headerClassName: @config.headerClassName
+          contentClassName: @config.contentClassName
+          isLoading: @config.isLoading
+          error: @config.error
+          entity: SectionItem
+          type: section
+        })
+    }
+
+    config {
+      title : string = ""
+        @label "Title"
+        @description "Section title"
+        @tier "presentation"
+      description : string = ""
+        @label "Description"
+        @description "Section subtitle/description"
+        @tier "presentation"
+      action : node
+        @label "Action"
+        @description "Action element (e.g., button, link)"
+        @tier "presentation"
+      padding : "none" | "sm" | "md" | "lg" | "xl" = md
+        @label "Padding"
+        @description "Padding amount"
+        @tier "presentation"
+      variant : "default" | "card" | "bordered" | "filled" = default
+        @label "Variant"
+        @description "Visual variant"
+        @tier "presentation"
+      divider : boolean = false
+        @label "Divider"
+        @description "Show divider below header"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Custom class name"
+        @tier "presentation"
+      children : node
+        @label "Children"
+        @description "Children elements"
+        @tier "presentation"
+      headerClassName : string = ""
+        @label "Header Class Name"
+        @description "Header custom class name"
+        @tier "presentation"
+      contentClassName : string = ""
+        @label "Content Class Name"
+        @description "Content custom class name"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : json
+        @label "Error"
+        @description "Error state"
+        @tier "presentation"
+    }
+  }
+
+  page "/section" as SectionPage -> SectionRender
+}

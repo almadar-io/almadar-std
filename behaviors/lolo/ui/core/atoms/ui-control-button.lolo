@@ -1,0 +1,80 @@
+app ui-control-button "1.0.0"
+"ControlButton — UI factory (1:1 with the @almadar/ui control-button pattern)."
+orbital ControlButtonOrbital {
+  entity ControlButtonItem [runtime] {
+    id : string!
+  }
+
+  trait ControlButtonRender -> @rebindable ControlButtonItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          label: @config.label
+          icon: @config.icon
+          size: @config.size
+          shape: @config.shape
+          variant: @config.variant
+          onPress: PRESS
+          onRelease: RELEASE
+          pressEvent: PRESS
+          releaseEvent: RELEASE
+          pressed: @config.pressed
+          disabled: @config.disabled
+          className: @config.className
+          type: control-button
+        })
+    }
+
+    emits {
+      PRESS -> external {
+        id : string
+      }
+        @description "Called when button is pressed"
+        @tier "essential"
+      RELEASE -> external {
+        id : string
+      }
+        @description "Called when button is released"
+        @tier "essential"
+    }
+
+    config {
+      label : string = ""
+        @label "Label"
+        @description "Button label text"
+        @tier "presentation"
+      icon : node
+        @label "Icon"
+        @description "Icon component or emoji"
+        @tier "presentation"
+      size : string = md
+        @label "Size"
+        @description "Size variant"
+        @tier "presentation"
+      shape : string = circle
+        @label "Shape"
+        @description "Shape variant"
+        @tier "presentation"
+      variant : string = secondary
+        @label "Variant"
+        @description "Visual variant"
+        @tier "presentation"
+      pressed : boolean = false
+        @label "Pressed"
+        @description "Whether the button is currently pressed"
+        @tier "presentation"
+      disabled : boolean = false
+        @label "Disabled"
+        @description "Whether the button is disabled"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/control-button" as ControlButtonPage -> ControlButtonRender
+}

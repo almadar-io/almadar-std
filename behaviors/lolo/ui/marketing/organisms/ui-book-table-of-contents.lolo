@@ -1,0 +1,54 @@
+app ui-book-table-of-contents "1.0.0"
+"BookTableOfContents — UI factory (1:1 with the @almadar/ui book-table-of-contents pattern)."
+orbital BookTableOfContentsOrbital {
+  type BookTableOfContentsPartsItem = {
+    title : string!
+    chapters : [BookTableOfContentsPartsItemChaptersItem]!
+  }
+  type BookTableOfContentsPartsItemChaptersItem = {
+    id : string!
+    title : string!
+    content : string!
+    orbitalSchema : json
+  }
+
+  entity BookTableOfContentsItem [runtime] {
+    id : string!
+  }
+
+  trait BookTableOfContentsRender -> @rebindable BookTableOfContentsItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          className: @config.className
+          parts: @config.parts
+          currentChapterId: @config.currentChapterId
+          direction: @config.direction
+          type: book-table-of-contents
+        })
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      parts : [BookTableOfContentsPartsItem] = []
+        @label "Parts"
+        @description "parts prop"
+        @tier "presentation"
+      currentChapterId : string = ""
+        @label "Current Chapter Id"
+        @description "currentChapterId prop"
+        @tier "presentation"
+      direction : "rtl" | "ltr" = rtl
+        @label "Direction"
+        @description "direction prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/book-table-of-contents" as BookTableOfContentsPage -> BookTableOfContentsRender
+}

@@ -1,0 +1,38 @@
+app ui-doc-breadcrumb "1.0.0"
+"DocBreadcrumb — UI factory (1:1 with the @almadar/ui doc-breadcrumb pattern)."
+orbital DocBreadcrumbOrbital {
+  type DocBreadcrumbItemsItem = {
+    label : string!
+    href : string
+  }
+
+  entity DocBreadcrumbItem [runtime] {
+    id : string!
+  }
+
+  trait DocBreadcrumbRender -> @rebindable DocBreadcrumbItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          items: @config.items
+          className: @config.className
+          type: doc-breadcrumb
+        })
+    }
+
+    config {
+      items : [DocBreadcrumbItemsItem] = []
+        @label "Items"
+        @description "Breadcrumb path items, last item is treated as current page"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/doc-breadcrumb" as DocBreadcrumbPage -> DocBreadcrumbRender
+}

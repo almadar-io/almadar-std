@@ -1,0 +1,172 @@
+{
+  "name": "ui-orbital-visualization",
+  "version": "1.0.0",
+  "description": "OrbitalVisualization — UI factory (1:1 with the @almadar/ui orbital-visualization pattern).",
+  "orbitals": [
+    {
+      "name": "OrbitalVisualizationOrbital",
+      "entity": {
+        "name": "OrbitalVisualizationItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "OrbitalVisualizationRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "OrbitalVisualizationItem",
+          "emits": [
+            {
+              "event": "CLICK",
+              "description": "Click handler",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "CLICK",
+                "name": "Click",
+                "description": "Click handler",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "OrbitalVisualizationItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "schema": "@config.schema",
+                      "size": "@config.size",
+                      "className": "@config.className",
+                      "onClick": "CLICK",
+                      "complexity": "@config.complexity",
+                      "animated": "@config.animated",
+                      "type": "orbital-visualization",
+                      "showLabel": "@config.showLabel",
+                      "error": "@config.error",
+                      "entity": "OrbitalVisualizationItem",
+                      "isLoading": "@config.isLoading"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "complexity": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Complexity",
+              "description": "Direct complexity override (1-100+)",
+              "tier": "presentation"
+            },
+            "error": {
+              "type": "json",
+              "label": "Error",
+              "description": "Error state",
+              "tier": "presentation"
+            },
+            "size": {
+              "type": "string",
+              "default": "md",
+              "label": "Size",
+              "description": "Size of the visualization",
+              "tier": "presentation",
+              "values": [
+                "sm",
+                "md",
+                "lg",
+                "xl"
+              ]
+            },
+            "showLabel": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Label",
+              "description": "Show complexity label",
+              "tier": "presentation"
+            },
+            "schema": {
+              "type": "json",
+              "label": "Schema",
+              "description": "Full KFlow schema object",
+              "tier": "presentation"
+            },
+            "animated": {
+              "type": "boolean",
+              "default": true,
+              "label": "Animated",
+              "description": "Animation enabled",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "OrbitalVisualizationPage",
+          "path": "/orbital-visualization",
+          "traits": [
+            {
+              "ref": "OrbitalVisualizationRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

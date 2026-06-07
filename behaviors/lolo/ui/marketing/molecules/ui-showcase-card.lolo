@@ -1,0 +1,58 @@
+app ui-showcase-card "1.0.0"
+"ShowcaseCard — UI factory (1:1 with the @almadar/ui showcase-card pattern)."
+orbital ShowcaseCardOrbital {
+  entity ShowcaseCardItem [runtime] {
+    id : string!
+  }
+
+  trait ShowcaseCardRender -> @rebindable ShowcaseCardItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          title: @config.title
+          description: @config.description
+          image: @config.image
+          href: @config.href
+          badge: @config.badge
+          accentColor: @config.accentColor
+          className: @config.className
+          type: showcase-card
+        })
+    }
+
+    config {
+      title : string = ""
+        @label "Title"
+        @description "title prop"
+        @tier "presentation"
+      description : string = ""
+        @label "Description"
+        @description "description prop"
+        @tier "presentation"
+      image : json
+        @label "Image"
+        @description "image prop"
+        @tier "presentation"
+      href : string = ""
+        @label "Href"
+        @description "href prop"
+        @tier "presentation"
+      badge : string = ""
+        @label "Badge"
+        @description "badge prop"
+        @tier "presentation"
+      accentColor : string = ""
+        @label "Accent Color"
+        @description "accentColor prop"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/showcase-card" as ShowcaseCardPage -> ShowcaseCardRender
+}

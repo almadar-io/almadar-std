@@ -1,0 +1,91 @@
+{
+  "name": "ui-pricing-page-template",
+  "version": "1.0.0",
+  "description": "PricingPageTemplate — UI factory (1:1 with the @almadar/ui pricing-page-template pattern).",
+  "orbitals": [
+    {
+      "name": "PricingPageTemplateOrbital",
+      "entity": {
+        "name": "PricingPageTemplateItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "PricingPageTemplateRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "PricingPageTemplateItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "PricingPageTemplateItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "entity": "@entity",
+                      "className": "@config.className",
+                      "type": "pricing-page-template"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "External styling override",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "PricingPageTemplatePage",
+          "path": "/pricing-page-template",
+          "traits": [
+            {
+              "ref": "PricingPageTemplateRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,109 @@
+{
+  "name": "ui-step-item",
+  "version": "1.0.0",
+  "description": "StepItem — UI factory (1:1 with the @almadar/ui step-item pattern).",
+  "orbitals": [
+    {
+      "name": "StepItemOrbital",
+      "entity": {
+        "name": "StepItemItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "StepItemRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "StepItemItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "title": "@config.title",
+                      "type": "step-item",
+                      "icon": "@config.icon",
+                      "number": "@config.number",
+                      "description": "@config.description"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "description": {
+              "type": "string",
+              "default": "",
+              "label": "Description",
+              "description": "description prop",
+              "tier": "presentation"
+            },
+            "title": {
+              "type": "string",
+              "default": "",
+              "label": "Title",
+              "description": "title prop",
+              "tier": "presentation"
+            },
+            "number": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Number",
+              "description": "number prop",
+              "tier": "presentation"
+            },
+            "icon": {
+              "type": "string",
+              "default": "circle",
+              "label": "Icon",
+              "description": "icon prop",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "StepItemPage",
+          "path": "/step-item",
+          "traits": [
+            {
+              "ref": "StepItemRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

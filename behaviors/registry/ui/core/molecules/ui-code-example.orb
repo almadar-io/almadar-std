@@ -1,0 +1,125 @@
+{
+  "name": "ui-code-example",
+  "version": "1.0.0",
+  "description": "CodeExample — UI factory (1:1 with the @almadar/ui code-example pattern).",
+  "orbitals": [
+    {
+      "name": "CodeExampleOrbital",
+      "entity": {
+        "name": "CodeExampleItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "CodeExampleRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "CodeExampleItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "maxHeight": "@config.maxHeight",
+                      "title": "@config.title",
+                      "type": "code-example",
+                      "className": "@config.className",
+                      "code": "@config.code",
+                      "language": "@config.language",
+                      "copyable": "@config.copyable"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "code": {
+              "type": "string",
+              "default": "",
+              "label": "Code",
+              "description": "The code content to display",
+              "tier": "presentation"
+            },
+            "language": {
+              "type": "string",
+              "default": "",
+              "label": "Language",
+              "description": "Programming language label",
+              "tier": "presentation"
+            },
+            "title": {
+              "type": "string",
+              "default": "",
+              "label": "Title",
+              "description": "Optional title shown in the header bar",
+              "tier": "presentation"
+            },
+            "copyable": {
+              "type": "boolean",
+              "default": false,
+              "label": "Copyable",
+              "description": "Whether to show a copy button",
+              "tier": "presentation"
+            },
+            "maxHeight": {
+              "type": "string",
+              "default": "",
+              "label": "Max Height",
+              "description": "Maximum height of the code area (CSS value)",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional class names",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "CodeExamplePage",
+          "path": "/code-example",
+          "traits": [
+            {
+              "ref": "CodeExampleRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

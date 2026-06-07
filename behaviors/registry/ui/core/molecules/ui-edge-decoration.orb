@@ -1,0 +1,143 @@
+{
+  "name": "ui-edge-decoration",
+  "version": "1.0.0",
+  "description": "EdgeDecoration — UI factory (1:1 with the @almadar/ui edge-decoration pattern).",
+  "orbitals": [
+    {
+      "name": "EdgeDecorationOrbital",
+      "entity": {
+        "name": "EdgeDecorationItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "EdgeDecorationRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "EdgeDecorationItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "opacity": "@config.opacity",
+                      "className": "@config.className",
+                      "variant": "@config.variant",
+                      "type": "edge-decoration",
+                      "color": "@config.color",
+                      "side": "@config.side",
+                      "width": "@config.width",
+                      "strokeWidth": "@config.strokeWidth"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "strokeWidth": {
+              "type": "number",
+              "default": 0.5,
+              "label": "Stroke Width",
+              "description": "Stroke width",
+              "tier": "presentation"
+            },
+            "variant": {
+              "type": "string",
+              "default": "arch",
+              "label": "Variant",
+              "description": "Which decorative element",
+              "tier": "presentation",
+              "values": [
+                "arch",
+                "vine",
+                "lattice"
+              ]
+            },
+            "width": {
+              "type": "number",
+              "default": 15.0,
+              "label": "Width",
+              "description": "Width of the decoration area as percentage of container (default: 15)",
+              "tier": "presentation"
+            },
+            "side": {
+              "type": "string",
+              "default": "both",
+              "label": "Side",
+              "description": "Which side(s) to place the decoration",
+              "tier": "presentation",
+              "values": [
+                "left",
+                "right",
+                "both"
+              ]
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "className prop",
+              "tier": "presentation"
+            },
+            "opacity": {
+              "type": "number",
+              "default": 0.15,
+              "label": "Opacity",
+              "description": "Overall opacity (default: 0.15)",
+              "tier": "presentation"
+            },
+            "color": {
+              "type": "string",
+              "default": "var(--color-primary)",
+              "label": "Color",
+              "description": "Stroke color",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "EdgeDecorationPage",
+          "path": "/edge-decoration",
+          "traits": [
+            {
+              "ref": "EdgeDecorationRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

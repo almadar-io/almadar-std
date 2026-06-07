@@ -1,0 +1,131 @@
+{
+  "name": "ui-svg-flow",
+  "version": "1.0.0",
+  "description": "SvgFlow — UI factory (1:1 with the @almadar/ui svg-flow pattern).",
+  "orbitals": [
+    {
+      "name": "SvgFlowOrbital",
+      "entity": {
+        "name": "SvgFlowItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "SvgFlowRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "SvgFlowItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "opacity": "@config.opacity",
+                      "type": "svg-flow",
+                      "strokeWidth": "@config.strokeWidth",
+                      "animated": "@config.animated",
+                      "color": "@config.color",
+                      "points": "@config.points",
+                      "className": "@config.className"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "opacity": {
+              "type": "number",
+              "default": 1.0,
+              "label": "Opacity",
+              "description": "opacity prop",
+              "tier": "presentation"
+            },
+            "animated": {
+              "type": "boolean",
+              "default": false,
+              "label": "Animated",
+              "description": "animated prop",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "className prop",
+              "tier": "presentation"
+            },
+            "points": {
+              "type": "[[json]]",
+              "default": [],
+              "label": "Points",
+              "description": "points prop",
+              "tier": "presentation",
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "color": {
+              "type": "string",
+              "default": "var(--color-primary)",
+              "label": "Color",
+              "description": "color prop",
+              "tier": "presentation"
+            },
+            "strokeWidth": {
+              "type": "number",
+              "default": 1.5,
+              "label": "Stroke Width",
+              "description": "strokeWidth prop",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "SvgFlowPage",
+          "path": "/svg-flow",
+          "traits": [
+            {
+              "ref": "SvgFlowRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

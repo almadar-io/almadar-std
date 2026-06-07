@@ -1,0 +1,121 @@
+{
+  "name": "ui-flip-container",
+  "version": "1.0.0",
+  "description": "FlipContainer — UI factory (1:1 with the @almadar/ui flip-container pattern).",
+  "orbitals": [
+    {
+      "name": "FlipContainerOrbital",
+      "entity": {
+        "name": "FlipContainerItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "FlipContainerRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "FlipContainerItem",
+          "emits": [
+            {
+              "event": "CLICK",
+              "description": "Click handler on the outer wrapper",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "CLICK",
+                "name": "Click",
+                "description": "Click handler on the outer wrapper",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": "@config.children",
+                      "onClick": "CLICK",
+                      "className": "@config.className",
+                      "flipped": "@config.flipped",
+                      "type": "flip-container"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "children": {
+              "type": "node",
+              "label": "Children",
+              "description": "The two face elements (front and back)",
+              "tier": "presentation"
+            },
+            "flipped": {
+              "type": "boolean",
+              "default": false,
+              "label": "Flipped",
+              "description": "Whether the container is flipped (rotateY 180deg)",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Optional className for the outer wrapper",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "FlipContainerPage",
+          "path": "/flip-container",
+          "traits": [
+            {
+              "ref": "FlipContainerRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

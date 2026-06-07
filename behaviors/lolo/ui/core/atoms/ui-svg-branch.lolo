@@ -1,0 +1,63 @@
+app ui-svg-branch "1.0.0"
+"SvgBranch — UI factory (1:1 with the @almadar/ui svg-branch pattern)."
+orbital SvgBranchOrbital {
+  entity SvgBranchItem [runtime] {
+    id : string!
+  }
+
+  trait SvgBranchRender -> @rebindable SvgBranchItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          x: @config.x
+          y: @config.y
+          variant: @config.variant
+          branches: @config.branches
+          size: @config.size
+          color: @config.color
+          opacity: @config.opacity
+          className: @config.className
+          type: svg-branch
+        })
+    }
+
+    config {
+      x : number = 0
+        @label "X"
+        @description "x prop"
+        @tier "presentation"
+      y : number = 0
+        @label "Y"
+        @description "y prop"
+        @tier "presentation"
+      variant : "fork" | "merge" | "diamond" = fork
+        @label "Variant"
+        @description "variant prop"
+        @tier "presentation"
+      branches : number = 2
+        @label "Branches"
+        @description "branches prop"
+        @tier "presentation"
+      size : number = 1
+        @label "Size"
+        @description "size prop"
+        @tier "presentation"
+      color : string = "var(--color-primary)"
+        @label "Color"
+        @description "color prop"
+        @tier "presentation"
+      opacity : number = 1
+        @label "Opacity"
+        @description "opacity prop"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/svg-branch" as SvgBranchPage -> SvgBranchRender
+}

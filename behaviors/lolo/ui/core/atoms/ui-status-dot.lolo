@@ -1,0 +1,48 @@
+app ui-status-dot "1.0.0"
+"StatusDot — UI factory (1:1 with the @almadar/ui status-dot pattern)."
+orbital StatusDotOrbital {
+  entity StatusDotItem [runtime] {
+    id : string!
+  }
+
+  trait StatusDotRender -> @rebindable StatusDotItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          className: @config.className
+          status: @config.status
+          pulse: @config.pulse
+          size: @config.size
+          label: @config.label
+          type: status-dot
+        })
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes applied to the root element."
+        @tier "presentation"
+      status : "online" | "offline" | "away" | "busy" | "warning" | "critical" = offline
+        @label "Status"
+        @description "Status determines the dot color"
+        @tier "presentation"
+      pulse : boolean = false
+        @label "Pulse"
+        @description "Enable pulse animation for active/critical states"
+        @tier "presentation"
+      size : "sm" | "md" | "lg" = md
+        @label "Size"
+        @description "Dot size"
+        @tier "presentation"
+      label : string = ""
+        @label "Label"
+        @description "Accessible label (rendered as sr-only text)"
+        @tier "presentation"
+    }
+  }
+
+  page "/status-dot" as StatusDotPage -> StatusDotRender
+}

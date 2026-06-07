@@ -1,0 +1,68 @@
+app ui-side-panel "1.0.0"
+"SidePanel — UI factory (1:1 with the @almadar/ui side-panel pattern)."
+orbital SidePanelOrbital {
+  entity SidePanelItem [runtime] {
+    id : string!
+  }
+
+  trait SidePanelRender -> @rebindable SidePanelItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          title: @config.title
+          children: @config.children
+          isOpen: @config.isOpen
+          onClose: CLOSE
+          width: @config.width
+          position: @config.position
+          showOverlay: @config.showOverlay
+          className: @config.className
+          closeEvent: CLOSE
+          type: side-panel
+        })
+    }
+
+    emits {
+      CLOSE -> external {
+        id : string
+      }
+        @description "On close handler"
+        @tier "essential"
+    }
+
+    config {
+      title : string = ""
+        @label "Title"
+        @description "Panel title"
+        @tier "presentation"
+      children : node
+        @label "Children"
+        @description "Panel content"
+        @tier "presentation"
+      isOpen : boolean = false
+        @label "Is Open"
+        @description "Is panel open"
+        @tier "presentation"
+      width : string = "w-full sm:w-96"
+        @label "Width"
+        @description "Panel width as Tailwind class string. Default fills the viewport on mobile and snaps to `w-96` (384 px) at `sm:` and above so phones don't lose content to a fixed 384 px column. Consumers passing a custom value should include a `w-full` mobile fallback in the same string (e.g. `'w-full sm:w-[480px]'`) — Tailwind's JIT can't see dynamically-concatenated class names."
+        @tier "presentation"
+      position : "left" | "right" = right
+        @label "Position"
+        @description "Panel position"
+        @tier "presentation"
+      showOverlay : boolean = true
+        @label "Show Overlay"
+        @description "Show overlay on mobile"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/side-panel" as SidePanelPage -> SidePanelRender
+}

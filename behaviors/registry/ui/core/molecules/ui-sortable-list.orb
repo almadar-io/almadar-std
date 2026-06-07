@@ -1,0 +1,154 @@
+{
+  "name": "ui-sortable-list",
+  "version": "1.0.0",
+  "description": "SortableList — UI factory (1:1 with the @almadar/ui sortable-list pattern).",
+  "orbitals": [
+    {
+      "name": "SortableListOrbital",
+      "entity": {
+        "name": "SortableListItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "SortableListRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "SortableListItem",
+          "emits": [
+            {
+              "event": "RENDER_ITEM",
+              "description": "renderItem prop",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "item",
+                  "type": "object"
+                },
+                {
+                  "name": "index",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "REORDER",
+              "description": "reorderEvent prop",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "RENDER_ITEM",
+                "name": "Render Item",
+                "description": "renderItem prop",
+                "tier": "essential"
+              },
+              {
+                "key": "REORDER",
+                "name": "Reorder",
+                "description": "reorderEvent prop",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "SortableListItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "reorderEvent": "REORDER",
+                      "items": "@entity",
+                      "renderItem": "RENDER_ITEM",
+                      "reorderPayload": "@config.reorderPayload",
+                      "dragHandlePosition": "@config.dragHandlePosition",
+                      "type": "sortable-list"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "reorderPayload": {
+              "type": "json",
+              "label": "Reorder Payload",
+              "description": "reorderPayload prop",
+              "tier": "presentation"
+            },
+            "dragHandlePosition": {
+              "type": "string",
+              "default": "left",
+              "label": "Drag Handle Position",
+              "description": "dragHandlePosition prop",
+              "tier": "presentation",
+              "values": [
+                "left",
+                "right"
+              ]
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "className prop",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "SortableListPage",
+          "path": "/sortable-list",
+          "traits": [
+            {
+              "ref": "SortableListRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

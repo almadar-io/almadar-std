@@ -1,0 +1,83 @@
+app ui-filter-group "1.0.0"
+"FilterGroup — UI factory (1:1 with the @almadar/ui filter-group pattern)."
+orbital FilterGroupOrbital {
+  type FilterGroupFiltersItem = {
+    field : string!
+    label : string!
+    type : "checkbox" | "select" | "toggle"
+    options : [string]
+  }
+
+  entity FilterGroupItem [runtime] {
+    id : string!
+  }
+
+  trait FilterGroupRender -> @rebindable FilterGroupItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch FilterGroupItem {})
+        (render-ui main {
+          entity: FilterGroupItem
+          filters: @config.filters
+          onFilterChange: FILTER_CHANGE
+          onClearAll: CLEAR_ALL
+          className: @config.className
+          variant: @config.variant
+          showIcon: @config.showIcon
+          query: @config.query
+          isLoading: @config.isLoading
+          look: @config.look
+          type: filter-group
+        })
+    }
+
+    emits {
+      FILTER_CHANGE -> external {
+        field : string
+        value : string
+      }
+        @description "Callback when a filter changes - for EntityStore integration"
+        @tier "essential"
+      CLEAR_ALL -> external {
+        id : string
+      }
+        @description "Callback to clear all filters"
+        @tier "essential"
+    }
+
+    config {
+      filters : [FilterGroupFiltersItem] = []
+        @label "Filters"
+        @description "Filter definitions from schema"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      variant : "default" | "compact" | "pills" | "vertical" = default
+        @label "Variant"
+        @description "Variant style"
+        @tier "presentation"
+      showIcon : boolean = true
+        @label "Show Icon"
+        @description "Show filter icon"
+        @tier "presentation"
+      query : string = ""
+        @label "Query"
+        @description "Query singleton binding for state management. When provided, syncs filter state with the query singleton. Example: '@TaskQuery'"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      look : "toolbar" | "chips" | "pills" | "popover-trigger" | "inline-column-header" = toolbar
+        @label "Look"
+        @description "Layer 2 visual treatment — orthogonal to the semantic variant."
+        @tier "presentation"
+    }
+  }
+
+  page "/filter-group" as FilterGroupPage -> FilterGroupRender
+}

@@ -1,0 +1,143 @@
+{
+  "name": "ui-pricing-card",
+  "version": "1.0.0",
+  "description": "PricingCard — UI factory (1:1 with the @almadar/ui pricing-card pattern).",
+  "orbitals": [
+    {
+      "name": "PricingCardOrbital",
+      "entity": {
+        "name": "PricingCardItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "PricingCardRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "PricingCardItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "pricing-card",
+                      "price": "@config.price",
+                      "name": "@config.name",
+                      "badge": "@config.badge",
+                      "description": "@config.description",
+                      "highlighted": "@config.highlighted",
+                      "className": "@config.className",
+                      "action": "@config.action",
+                      "features": "@config.features"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "features": {
+              "type": "[string]",
+              "default": [],
+              "label": "Features",
+              "description": "features prop",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "price": {
+              "type": "string",
+              "default": "",
+              "label": "Price",
+              "description": "price prop",
+              "tier": "presentation"
+            },
+            "description": {
+              "type": "string",
+              "default": "",
+              "label": "Description",
+              "description": "description prop",
+              "tier": "presentation"
+            },
+            "name": {
+              "type": "string",
+              "default": "",
+              "label": "Name",
+              "description": "name prop",
+              "tier": "presentation"
+            },
+            "action": {
+              "type": "json",
+              "label": "Action",
+              "description": "action prop",
+              "tier": "presentation"
+            },
+            "badge": {
+              "type": "string",
+              "default": "",
+              "label": "Badge",
+              "description": "badge prop",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "className prop",
+              "tier": "presentation"
+            },
+            "highlighted": {
+              "type": "boolean",
+              "default": false,
+              "label": "Highlighted",
+              "description": "highlighted prop",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "PricingCardPage",
+          "path": "/pricing-card",
+          "traits": [
+            {
+              "ref": "PricingCardRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

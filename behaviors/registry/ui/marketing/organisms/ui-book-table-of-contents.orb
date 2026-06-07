@@ -1,0 +1,153 @@
+{
+  "name": "ui-book-table-of-contents",
+  "version": "1.0.0",
+  "description": "BookTableOfContents — UI factory (1:1 with the @almadar/ui book-table-of-contents pattern).",
+  "orbitals": [
+    {
+      "name": "BookTableOfContentsOrbital",
+      "entity": {
+        "name": "BookTableOfContentsItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "BookTableOfContentsRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "BookTableOfContentsItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "currentChapterId": "@config.currentChapterId",
+                      "type": "book-table-of-contents",
+                      "parts": "@config.parts",
+                      "className": "@config.className",
+                      "direction": "@config.direction"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "currentChapterId": {
+              "type": "string",
+              "default": "",
+              "label": "Current Chapter Id",
+              "description": "currentChapterId prop",
+              "tier": "presentation"
+            },
+            "direction": {
+              "type": "string",
+              "default": "rtl",
+              "label": "Direction",
+              "description": "direction prop",
+              "tier": "presentation",
+              "values": [
+                "rtl",
+                "ltr"
+              ]
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "parts": {
+              "type": "[BookTableOfContentsPartsItem]",
+              "default": [],
+              "label": "Parts",
+              "description": "parts prop",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "name": "title",
+                    "type": "string",
+                    "required": true
+                  },
+                  "chapters": {
+                    "name": "chapters",
+                    "type": "array",
+                    "required": true,
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "content": {
+                          "name": "content",
+                          "type": "string",
+                          "required": true
+                        },
+                        "orbitalSchema": {
+                          "name": "orbitalSchema",
+                          "type": "string",
+                          "required": false
+                        },
+                        "title": {
+                          "name": "title",
+                          "type": "string",
+                          "required": true
+                        },
+                        "id": {
+                          "name": "id",
+                          "type": "string",
+                          "required": true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "BookTableOfContentsPage",
+          "path": "/book-table-of-contents",
+          "traits": [
+            {
+              "ref": "BookTableOfContentsRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

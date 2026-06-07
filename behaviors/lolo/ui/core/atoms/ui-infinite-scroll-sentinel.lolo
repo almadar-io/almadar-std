@@ -1,0 +1,57 @@
+app ui-infinite-scroll-sentinel "1.0.0"
+"InfiniteScrollSentinel — UI factory (1:1 with the @almadar/ui infinite-scroll-sentinel pattern)."
+orbital InfiniteScrollSentinelOrbital {
+  entity InfiniteScrollSentinelItem [runtime] {
+    id : string!
+  }
+
+  trait InfiniteScrollSentinelRender -> @rebindable InfiniteScrollSentinelItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          loadMoreEvent: LOAD_MORE
+          loadMorePayload: @config.loadMorePayload
+          isLoading: @config.isLoading
+          hasMore: @config.hasMore
+          threshold: @config.threshold
+          className: @config.className
+          type: infinite-scroll-sentinel
+        })
+    }
+
+    emits {
+      LOAD_MORE -> external {
+        id : string
+      }
+        @description "Event name to emit when load-more is triggered (emitted as UI:{loadMoreEvent})"
+        @tier "essential"
+    }
+
+    config {
+      loadMorePayload : json
+        @label "Load More Payload"
+        @description "Optional payload to include with the load-more event"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Whether a load operation is currently in progress"
+        @tier "presentation"
+      hasMore : boolean = true
+        @label "Has More"
+        @description "Whether there are more items to load"
+        @tier "presentation"
+      threshold : string = "200px"
+        @label "Threshold"
+        @description "IntersectionObserver rootMargin for early trigger"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional class names"
+        @tier "presentation"
+    }
+  }
+
+  page "/infinite-scroll-sentinel" as InfiniteScrollSentinelPage -> InfiniteScrollSentinelRender
+}

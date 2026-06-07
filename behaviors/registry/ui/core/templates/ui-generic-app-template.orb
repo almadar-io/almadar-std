@@ -1,0 +1,128 @@
+{
+  "name": "ui-generic-app-template",
+  "version": "1.0.0",
+  "description": "GenericAppTemplate — UI factory (1:1 with the @almadar/ui generic-app-template pattern).",
+  "orbitals": [
+    {
+      "name": "GenericAppTemplateOrbital",
+      "entity": {
+        "name": "GenericAppTemplateItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "GenericAppTemplateRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "GenericAppTemplateItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "GenericAppTemplateItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "footer": "@config.footer",
+                      "entity": "@entity",
+                      "title": "@config.title",
+                      "children": "@config.children",
+                      "type": "generic-app-template",
+                      "headerActions": "@config.headerActions",
+                      "className": "@config.className",
+                      "subtitle": "@config.subtitle"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "subtitle": {
+              "type": "string",
+              "default": "",
+              "label": "Subtitle",
+              "description": "Subtitle or description",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional class name",
+              "tier": "presentation"
+            },
+            "title": {
+              "type": "string",
+              "default": "",
+              "label": "Title",
+              "description": "Page title",
+              "tier": "presentation"
+            },
+            "children": {
+              "type": "node",
+              "label": "Children",
+              "description": "Main content",
+              "tier": "presentation"
+            },
+            "headerActions": {
+              "type": "node",
+              "label": "Header Actions",
+              "description": "Header actions (buttons, links)",
+              "tier": "presentation"
+            },
+            "footer": {
+              "type": "node",
+              "label": "Footer",
+              "description": "Footer content",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "GenericAppTemplatePage",
+          "path": "/generic-app-template",
+          "traits": [
+            {
+              "ref": "GenericAppTemplateRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

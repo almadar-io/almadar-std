@@ -1,0 +1,101 @@
+{
+  "name": "ui-quiz-block",
+  "version": "1.0.0",
+  "description": "QuizBlock — UI factory (1:1 with the @almadar/ui quiz-block pattern).",
+  "orbitals": [
+    {
+      "name": "QuizBlockOrbital",
+      "entity": {
+        "name": "QuizBlockItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "QuizBlockRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "QuizBlockItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "quiz-block",
+                      "question": "@config.question",
+                      "answer": "@config.answer",
+                      "className": "@config.className"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "question": {
+              "type": "string",
+              "default": "",
+              "label": "Question",
+              "description": "The quiz question",
+              "tier": "presentation"
+            },
+            "answer": {
+              "type": "string",
+              "default": "",
+              "label": "Answer",
+              "description": "The quiz answer (revealed on toggle)",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "QuizBlockPage",
+          "path": "/quiz-block",
+          "traits": [
+            {
+              "ref": "QuizBlockRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

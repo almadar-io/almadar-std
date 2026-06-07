@@ -1,0 +1,58 @@
+app ui-resource-counter "1.0.0"
+"ResourceCounter — UI factory (1:1 with the @almadar/ui resource-counter pattern)."
+orbital ResourceCounterOrbital {
+  entity ResourceCounterItem [runtime] {
+    id : string!
+  }
+
+  trait ResourceCounterRender -> @rebindable ResourceCounterItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          icon: @config.icon
+          label: @config.label
+          value: @config.value
+          max: @config.max
+          color: @config.color
+          size: @config.size
+          className: @config.className
+          type: resource-counter
+        })
+    }
+
+    config {
+      icon : node
+        @label "Icon"
+        @description "Icon component or emoji"
+        @tier "presentation"
+      label : string = ""
+        @label "Label"
+        @description "Resource label"
+        @tier "presentation"
+      value : number = 0
+        @label "Value"
+        @description "Current value"
+        @tier "presentation"
+      max : number = 0
+        @label "Max"
+        @description "Maximum value"
+        @tier "presentation"
+      color : string = ""
+        @label "Color"
+        @description "Accent color class (e.g. 'text-yellow-400')"
+        @tier "presentation"
+      size : "sm" | "md" | "lg" = md
+        @label "Size"
+        @description "Size variant"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/resource-counter" as ResourceCounterPage -> ResourceCounterRender
+}

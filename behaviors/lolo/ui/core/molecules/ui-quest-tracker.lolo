@@ -1,0 +1,47 @@
+app ui-quest-tracker "1.0.0"
+"QuestTracker — UI factory (1:1 with the @almadar/ui quest-tracker pattern)."
+orbital QuestTrackerOrbital {
+  type QuestTrackerQuestsItem = {
+    id : string!
+    title : string!
+    progress : number!
+    maxProgress : number!
+    active : boolean
+    completed : boolean
+  }
+
+  entity QuestTrackerItem [runtime] {
+    id : string!
+  }
+
+  trait QuestTrackerRender -> @rebindable QuestTrackerItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          quests: @config.quests
+          activeQuestId: @config.activeQuestId
+          className: @config.className
+          type: quest-tracker
+        })
+    }
+
+    config {
+      quests : [QuestTrackerQuestsItem] = []
+        @label "Quests"
+        @description "Array of quests to display"
+        @tier "presentation"
+      activeQuestId : string = ""
+        @label "Active Quest Id"
+        @description "ID of the currently active quest"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/quest-tracker" as QuestTrackerPage -> QuestTrackerRender
+}

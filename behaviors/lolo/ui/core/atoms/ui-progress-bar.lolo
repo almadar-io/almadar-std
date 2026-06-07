@@ -1,0 +1,78 @@
+app ui-progress-bar "1.0.0"
+"ProgressBar — UI factory (1:1 with the @almadar/ui progress-bar pattern)."
+orbital ProgressBarOrbital {
+  entity ProgressBarItem [runtime] {
+    id : string!
+  }
+
+  trait ProgressBarRender -> @rebindable ProgressBarItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          value: @config.value
+          max: @config.max
+          progressType: @config.progressType
+          variant: @config.variant
+          color: @config.color
+          showPercentage: @config.showPercentage
+          showLabel: @config.showLabel
+          label: @config.label
+          size: @config.size
+          steps: @config.steps
+          className: @config.className
+          type: progress-bar
+        })
+    }
+
+    config {
+      value : number = 0
+        @label "Value"
+        @description "Progress value (0-100)"
+        @tier "presentation"
+      max : number = 100
+        @label "Max"
+        @description "Maximum value (for calculating percentage)"
+        @tier "presentation"
+      progressType : "linear" | "circular" | "stepped" = linear
+        @label "Progress Type"
+        @description "Type of the progress bar (linear, circular, stepped)"
+        @tier "presentation"
+      variant : "default" | "primary" | "success" | "warning" | "danger" = primary
+        @label "Variant"
+        @description "Variant/color of the progress bar"
+        @tier "presentation"
+      color : "default" | "primary" | "success" | "warning" | "danger" = default
+        @label "Color"
+        @description "Color variant (alias for variant)"
+        @tier "presentation"
+      showPercentage : boolean = false
+        @label "Show Percentage"
+        @description "Show percentage text"
+        @tier "presentation"
+      showLabel : boolean = false
+        @label "Show Label"
+        @description "Alias for showPercentage (pattern compatibility)"
+        @tier "presentation"
+      label : string = ""
+        @label "Label"
+        @description "Label text"
+        @tier "presentation"
+      size : "sm" | "md" | "lg" = md
+        @label "Size"
+        @description "Size (for circular variant)"
+        @tier "presentation"
+      steps : number = 5
+        @label "Steps"
+        @description "Number of steps (for stepped variant)"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/progress-bar" as ProgressBarPage -> ProgressBarRender
+}

@@ -1,0 +1,107 @@
+{
+  "name": "ui-battle-template",
+  "version": "1.0.0",
+  "description": "BattleTemplate — UI factory (1:1 with the @almadar/ui battle-template pattern).",
+  "orbitals": [
+    {
+      "name": "BattleTemplateOrbital",
+      "entity": {
+        "name": "BattleTemplateItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "BattleTemplateRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "BattleTemplateItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "BattleTemplateItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "unitScale": "@config.unitScale",
+                      "className": "@config.className",
+                      "type": "battle-template",
+                      "scale": "@config.scale",
+                      "entity": "@entity"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "External styling override",
+              "tier": "presentation"
+            },
+            "scale": {
+              "type": "number",
+              "default": 0.45,
+              "label": "Scale",
+              "description": "Canvas render scale",
+              "tier": "presentation"
+            },
+            "unitScale": {
+              "type": "number",
+              "default": 1.0,
+              "label": "Unit Scale",
+              "description": "Unit draw-size multiplier",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "BattleTemplatePage",
+          "path": "/battle-template",
+          "traits": [
+            {
+              "ref": "BattleTemplateRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

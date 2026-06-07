@@ -1,0 +1,68 @@
+app ui-svg-stack "1.0.0"
+"SvgStack — UI factory (1:1 with the @almadar/ui svg-stack pattern)."
+orbital SvgStackOrbital {
+  entity SvgStackItem [runtime] {
+    id : string!
+  }
+
+  trait SvgStackRender -> @rebindable SvgStackItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          x: @config.x
+          y: @config.y
+          layers: @config.layers
+          width: @config.width
+          height: @config.height
+          color: @config.color
+          opacity: @config.opacity
+          className: @config.className
+          labels: @config.labels
+          type: svg-stack
+        })
+    }
+
+    config {
+      x : number = 0
+        @label "X"
+        @description "x prop"
+        @tier "presentation"
+      y : number = 0
+        @label "Y"
+        @description "y prop"
+        @tier "presentation"
+      layers : number = 0
+        @label "Layers"
+        @description "layers prop"
+        @tier "presentation"
+      width : number = 60
+        @label "Width"
+        @description "width prop"
+        @tier "presentation"
+      height : number = 40
+        @label "Height"
+        @description "height prop"
+        @tier "presentation"
+      color : string = "var(--color-primary)"
+        @label "Color"
+        @description "color prop"
+        @tier "presentation"
+      opacity : number = 1
+        @label "Opacity"
+        @description "opacity prop"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+      labels : [string] = []
+        @label "Labels"
+        @description "labels prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/svg-stack" as SvgStackPage -> SvgStackRender
+}

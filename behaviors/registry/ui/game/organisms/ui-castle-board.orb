@@ -1,0 +1,266 @@
+{
+  "name": "ui-castle-board",
+  "version": "1.0.0",
+  "description": "CastleBoard — UI factory (1:1 with the @almadar/ui castle-board pattern).",
+  "orbitals": [
+    {
+      "name": "CastleBoardOrbital",
+      "entity": {
+        "name": "CastleBoardItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "CastleBoardRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "CastleBoardItem",
+          "emits": [
+            {
+              "event": "HEADER",
+              "description": "-- Render-prop slots --",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "ctx",
+                  "type": "object"
+                }
+              ]
+            },
+            {
+              "event": "SIDE_PANEL",
+              "description": "Side panel content (buildings list, recruit tab, garrison tab)",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "ctx",
+                  "type": "object"
+                }
+              ]
+            },
+            {
+              "event": "OVERLAY",
+              "description": "Canvas overlay (hover tooltips, etc.)",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "ctx",
+                  "type": "object"
+                }
+              ]
+            },
+            {
+              "event": "FOOTER",
+              "description": "Bottom bar (income summary, etc.)",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "ctx",
+                  "type": "object"
+                }
+              ]
+            },
+            {
+              "event": "FEATURE_CLICK",
+              "description": "-- Callback overrides --",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "feature",
+                  "type": "object"
+                },
+                {
+                  "name": "featureId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "featureType",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "x",
+                  "type": "number",
+                  "required": true
+                },
+                {
+                  "name": "y",
+                  "type": "number",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "UNIT_CLICK",
+              "description": "Called when a unit is clicked",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "unit",
+                  "type": "object"
+                },
+                {
+                  "name": "unitId",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "TILE_CLICK",
+              "description": "Called when any tile is clicked",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "x",
+                  "type": "number"
+                },
+                {
+                  "name": "y",
+                  "type": "number"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "HEADER",
+                "name": "Header",
+                "description": "-- Render-prop slots --",
+                "tier": "essential"
+              },
+              {
+                "key": "SIDE_PANEL",
+                "name": "Side Panel",
+                "description": "Side panel content (buildings list, recruit tab, garrison tab)",
+                "tier": "essential"
+              },
+              {
+                "key": "OVERLAY",
+                "name": "Overlay",
+                "description": "Canvas overlay (hover tooltips, etc.)",
+                "tier": "essential"
+              },
+              {
+                "key": "FOOTER",
+                "name": "Footer",
+                "description": "Bottom bar (income summary, etc.)",
+                "tier": "essential"
+              },
+              {
+                "key": "FEATURE_CLICK",
+                "name": "Feature Click",
+                "description": "-- Callback overrides --",
+                "tier": "essential"
+              },
+              {
+                "key": "UNIT_CLICK",
+                "name": "Unit Click",
+                "description": "Called when a unit is clicked",
+                "tier": "essential"
+              },
+              {
+                "key": "TILE_CLICK",
+                "name": "Tile Click",
+                "description": "Called when any tile is clicked",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "CastleBoardItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "onUnitClick": "UNIT_CLICK",
+                      "sidePanel": "SIDE_PANEL",
+                      "footer": "FOOTER",
+                      "header": "HEADER",
+                      "overlay": "OVERLAY",
+                      "featureClickEvent": "FEATURE_CLICK",
+                      "unitClickEvent": "UNIT_CLICK",
+                      "className": "@config.className",
+                      "type": "castle-board",
+                      "onTileClick": "TILE_CLICK",
+                      "onFeatureClick": "FEATURE_CLICK",
+                      "tileClickEvent": "TILE_CLICK",
+                      "entity": "@entity",
+                      "scale": "@config.scale"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "className prop",
+              "tier": "presentation"
+            },
+            "scale": {
+              "type": "number",
+              "default": 0.45,
+              "label": "Scale",
+              "description": "Canvas render scale",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "CastleBoardPage",
+          "path": "/castle-board",
+          "traits": [
+            {
+              "ref": "CastleBoardRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

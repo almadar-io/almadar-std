@@ -1,0 +1,131 @@
+app ui-media-gallery "1.0.0"
+"MediaGallery — UI factory (1:1 with the @almadar/ui media-gallery pattern)."
+orbital MediaGalleryOrbital {
+  type MediaGalleryActionsItem = {
+    label : string!
+    event : string
+    navigatesTo : string
+    variant : "primary" | "secondary" | "ghost"
+  }
+
+  entity MediaGalleryItem [runtime] {
+    id : string!
+  }
+
+  trait MediaGalleryRender -> @rebindable MediaGalleryItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch MediaGalleryItem {})
+        (render-ui main {
+          entity: @entity
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          sortBy: @config.sortBy
+          sortDirection: @config.sortDirection
+          searchValue: @config.searchValue
+          pageSize: @config.pageSize
+          totalCount: @config.totalCount
+          activeFilters: @config.activeFilters
+          selectedIds: @config.selectedIds
+          title: @config.title
+          items: @config.items
+          columns: @config.columns
+          selectable: @config.selectable
+          selectedItems: @config.selectedItems
+          selectionEvent: SELECTION
+          showUpload: @config.showUpload
+          actions: @config.actions
+          aspectRatio: @config.aspectRatio
+          type: media-gallery
+        })
+    }
+
+    emits {
+      SELECTION -> external {
+        selection : [object]!
+      }
+        @description "Event name emitted when selection changes (emitted as UI:{selectionEvent})"
+        @tier "essential"
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : json
+        @label "Error"
+        @description "Error state"
+        @tier "presentation"
+      sortBy : string = ""
+        @label "Sort By"
+        @description "Current sort field"
+        @tier "presentation"
+      sortDirection : string = ""
+        @label "Sort Direction"
+        @description "Current sort direction"
+        @tier "presentation"
+      searchValue : string = ""
+        @label "Search Value"
+        @description "Current search query value"
+        @tier "presentation"
+      pageSize : number = 0
+        @label "Page Size"
+        @description "Number of items per page"
+        @tier "presentation"
+      totalCount : number = 0
+        @label "Total Count"
+        @description "Total number of items"
+        @tier "presentation"
+      activeFilters : json
+        @label "Active Filters"
+        @description "Active filters"
+        @tier "presentation"
+      selectedIds : [json] = []
+        @label "Selected Ids"
+        @description "Currently selected item IDs"
+        @tier "presentation"
+      title : string = ""
+        @label "Title"
+        @description "Gallery title"
+        @tier "presentation"
+      items : [json] = []
+        @label "Items"
+        @description "Media items"
+        @tier "presentation"
+      columns : number = 3
+        @label "Columns"
+        @description "Column count"
+        @tier "presentation"
+      selectable : boolean = false
+        @label "Selectable"
+        @description "Enable item selection"
+        @tier "presentation"
+      selectedItems : [string] = []
+        @label "Selected Items"
+        @description "Selected item IDs"
+        @tier "presentation"
+      showUpload : boolean = false
+        @label "Show Upload"
+        @description "Show upload button"
+        @tier "presentation"
+      actions : [MediaGalleryActionsItem] = []
+        @label "Actions"
+        @description "Actions"
+        @tier "presentation"
+      aspectRatio : "square" | "landscape" | "portrait" = square
+        @label "Aspect Ratio"
+        @description "Aspect ratio for thumbnails"
+        @tier "presentation"
+    }
+  }
+
+  page "/media-gallery" as MediaGalleryPage -> MediaGalleryRender
+}

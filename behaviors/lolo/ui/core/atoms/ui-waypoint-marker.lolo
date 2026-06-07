@@ -1,0 +1,53 @@
+app ui-waypoint-marker "1.0.0"
+"WaypointMarker — UI factory (1:1 with the @almadar/ui waypoint-marker pattern)."
+orbital WaypointMarkerOrbital {
+  entity WaypointMarkerItem [runtime] {
+    id : string!
+  }
+
+  trait WaypointMarkerRender -> @rebindable WaypointMarkerItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          label: @config.label
+          icon: @config.icon
+          active: @config.active
+          completed: @config.completed
+          size: @config.size
+          className: @config.className
+          type: waypoint-marker
+        })
+    }
+
+    config {
+      label : string = ""
+        @label "Label"
+        @description "Label text below the marker"
+        @tier "presentation"
+      icon : node
+        @label "Icon"
+        @description "Custom icon to render inside the marker"
+        @tier "presentation"
+      active : boolean = false
+        @label "Active"
+        @description "Whether this waypoint is currently active"
+        @tier "presentation"
+      completed : boolean = false
+        @label "Completed"
+        @description "Whether this waypoint has been completed"
+        @tier "presentation"
+      size : "sm" | "md" | "lg" = md
+        @label "Size"
+        @description "Size variant"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/waypoint-marker" as WaypointMarkerPage -> WaypointMarkerRender
+}

@@ -1,0 +1,101 @@
+{
+  "name": "ui-install-box",
+  "version": "1.0.0",
+  "description": "InstallBox — UI factory (1:1 with the @almadar/ui install-box pattern).",
+  "orbitals": [
+    {
+      "name": "InstallBoxOrbital",
+      "entity": {
+        "name": "InstallBoxItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "InstallBoxRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "InstallBoxItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "label": "@config.label",
+                      "type": "install-box",
+                      "className": "@config.className",
+                      "command": "@config.command"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional class names",
+              "tier": "presentation"
+            },
+            "command": {
+              "type": "string",
+              "default": "",
+              "label": "Command",
+              "description": "The command to display and copy",
+              "tier": "presentation"
+            },
+            "label": {
+              "type": "string",
+              "default": "",
+              "label": "Label",
+              "description": "Optional label above the command",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "InstallBoxPage",
+          "path": "/install-box",
+          "traits": [
+            {
+              "ref": "InstallBoxRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

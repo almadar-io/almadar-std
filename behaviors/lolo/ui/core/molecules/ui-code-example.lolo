@@ -1,0 +1,53 @@
+app ui-code-example "1.0.0"
+"CodeExample — UI factory (1:1 with the @almadar/ui code-example pattern)."
+orbital CodeExampleOrbital {
+  entity CodeExampleItem [runtime] {
+    id : string!
+  }
+
+  trait CodeExampleRender -> @rebindable CodeExampleItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          code: @config.code
+          language: @config.language
+          title: @config.title
+          copyable: @config.copyable
+          maxHeight: @config.maxHeight
+          className: @config.className
+          type: code-example
+        })
+    }
+
+    config {
+      code : string = ""
+        @label "Code"
+        @description "The code content to display"
+        @tier "presentation"
+      language : string = ""
+        @label "Language"
+        @description "Programming language label"
+        @tier "presentation"
+      title : string = ""
+        @label "Title"
+        @description "Optional title shown in the header bar"
+        @tier "presentation"
+      copyable : boolean = false
+        @label "Copyable"
+        @description "Whether to show a copy button"
+        @tier "presentation"
+      maxHeight : string = ""
+        @label "Max Height"
+        @description "Maximum height of the code area (CSS value)"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional class names"
+        @tier "presentation"
+    }
+  }
+
+  page "/code-example" as CodeExamplePage -> CodeExampleRender
+}

@@ -1,0 +1,137 @@
+{
+  "name": "ui-infinite-scroll-sentinel",
+  "version": "1.0.0",
+  "description": "InfiniteScrollSentinel — UI factory (1:1 with the @almadar/ui infinite-scroll-sentinel pattern).",
+  "orbitals": [
+    {
+      "name": "InfiniteScrollSentinelOrbital",
+      "entity": {
+        "name": "InfiniteScrollSentinelItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "InfiniteScrollSentinelRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "InfiniteScrollSentinelItem",
+          "emits": [
+            {
+              "event": "LOAD_MORE",
+              "description": "Event name to emit when load-more is triggered (emitted as UI:{loadMoreEvent})",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "LOAD_MORE",
+                "name": "Load More",
+                "description": "Event name to emit when load-more is triggered (emitted as UI:{loadMoreEvent})",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "infinite-scroll-sentinel",
+                      "isLoading": "@config.isLoading",
+                      "className": "@config.className",
+                      "loadMorePayload": "@config.loadMorePayload",
+                      "hasMore": "@config.hasMore",
+                      "loadMoreEvent": "LOAD_MORE",
+                      "threshold": "@config.threshold"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "threshold": {
+              "type": "string",
+              "default": "200px",
+              "label": "Threshold",
+              "description": "IntersectionObserver rootMargin for early trigger",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional class names",
+              "tier": "presentation"
+            },
+            "loadMorePayload": {
+              "type": "json",
+              "label": "Load More Payload",
+              "description": "Optional payload to include with the load-more event",
+              "tier": "presentation"
+            },
+            "hasMore": {
+              "type": "boolean",
+              "default": true,
+              "label": "Has More",
+              "description": "Whether there are more items to load",
+              "tier": "presentation"
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Whether a load operation is currently in progress",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "InfiniteScrollSentinelPage",
+          "path": "/infinite-scroll-sentinel",
+          "traits": [
+            {
+              "ref": "InfiniteScrollSentinelRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

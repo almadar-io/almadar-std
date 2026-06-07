@@ -1,0 +1,466 @@
+[
+  {
+    "organism": "ui-data-list",
+    "orbital": "DataListOrbital",
+    "tier": "molecules",
+    "factoryPath": "behaviors/functions/ui/core/molecules/ui-data-list.ts",
+    "entities": [
+      {
+        "name": "DataListItem",
+        "fields": [],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "DataListRender",
+        "emittedEvents": [
+          "REORDER",
+          "ITEM_CLICK",
+          "SWIPE_LEFT",
+          "SWIPE_RIGHT",
+          "LONG_PRESS",
+          "LOAD_MORE",
+          "CHILDREN",
+          "RENDER_ITEM"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "REORDER",
+            "direction": "emit",
+            "description": "Event emitted on reorder: UI:{reorderEvent} with { fromIndex, toIndex }",
+            "tier": "essential"
+          },
+          {
+            "name": "ITEM_CLICK",
+            "direction": "emit",
+            "description": "When set, the whole row is clickable and emits UI:{itemClickEvent} with { id, row } (action-button clicks stopPropagation so they still win).",
+            "tier": "essential"
+          },
+          {
+            "name": "SWIPE_LEFT",
+            "direction": "emit",
+            "description": "Event emitted on left swipe: UI:{swipeLeftEvent} with { row }",
+            "tier": "essential"
+          },
+          {
+            "name": "SWIPE_RIGHT",
+            "direction": "emit",
+            "description": "Event emitted on right swipe: UI:{swipeRightEvent} with { row }",
+            "tier": "essential"
+          },
+          {
+            "name": "LONG_PRESS",
+            "direction": "emit",
+            "description": "Event emitted on long press: UI:{longPressEvent} with { row }",
+            "tier": "essential"
+          },
+          {
+            "name": "LOAD_MORE",
+            "direction": "emit",
+            "description": "Event emitted when more items needed: UI:{loadMoreEvent}",
+            "tier": "essential"
+          },
+          {
+            "name": "CHILDREN",
+            "direction": "emit",
+            "description": "Render prop for custom per-item content. When provided, `fields` and `itemActions` are ignored.",
+            "tier": "essential"
+          },
+          {
+            "name": "RENDER_ITEM",
+            "direction": "emit",
+            "description": "Per-item render function (schema-level alias for children render prop). In .orb schemas: ['fn', 'item', { pattern tree with @item.field bindings }] The compiler converts this to the children render prop.",
+            "tier": "essential"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "accepts",
+            "type": "string",
+            "default": "",
+            "label": "Accepts",
+            "description": "When set, the container accepts drops whose dragGroup matches this value (or '*' for any group)",
+            "tier": "presentation"
+          },
+          {
+            "key": "className",
+            "type": "string",
+            "default": "",
+            "label": "Class Name",
+            "description": "Additional CSS classes",
+            "tier": "presentation"
+          },
+          {
+            "key": "columns",
+            "type": "[DataListColumnsItem]",
+            "default": [],
+            "label": "Columns",
+            "description": "Alias for `fields` — the compiler emits `columns` for field defs.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "date",
+                    "currency",
+                    "number",
+                    "boolean",
+                    "percent"
+                  ]
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "h3",
+                    "h4",
+                    "body",
+                    "caption",
+                    "badge",
+                    "small",
+                    "progress"
+                  ]
+                },
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "currentUser",
+            "type": "string",
+            "default": "",
+            "label": "Current User",
+            "description": "Current user identifier; messages matching this value align right (used with variant: 'message')",
+            "tier": "presentation"
+          },
+          {
+            "key": "dndItemIdField",
+            "type": "string",
+            "default": "",
+            "label": "Dnd Item Id Field",
+            "description": "Row field used as the @dnd-kit draggable id (default 'id')",
+            "tier": "presentation"
+          },
+          {
+            "key": "dndRoot",
+            "type": "boolean",
+            "default": false,
+            "label": "Dnd Root",
+            "description": "Mark this container as the DnD root for its subtree — descendant zones share one DndContext (cross-container drag). Use on an outer container whose own items are not draggable.",
+            "tier": "presentation"
+          },
+          {
+            "key": "dragGroup",
+            "type": "string",
+            "default": "",
+            "label": "Drag Group",
+            "description": "When set, items in this container are draggable and announce this group as their source",
+            "tier": "presentation"
+          },
+          {
+            "key": "dropEvent",
+            "type": "string",
+            "default": "",
+            "label": "Drop Event",
+            "description": "Bus event fired on cross-container drop. Payload: { id, sourceGroup, targetGroup, newIndex }",
+            "tier": "presentation"
+          },
+          {
+            "key": "error",
+            "type": "json",
+            "label": "Error",
+            "description": "Error state",
+            "tier": "presentation"
+          },
+          {
+            "key": "fields",
+            "type": "[DataListFieldsItem]",
+            "default": [],
+            "label": "Fields",
+            "description": "Field definitions for rendering each row. The pattern contract in `@almadar/patterns` documents `columns` as the wire-format alias the compiler emits — both names resolve to the same shape here. Pass either.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "h3",
+                    "h4",
+                    "body",
+                    "caption",
+                    "badge",
+                    "small",
+                    "progress"
+                  ]
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "date",
+                    "currency",
+                    "number",
+                    "boolean",
+                    "percent"
+                  ]
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "gap",
+            "type": "string",
+            "default": "none",
+            "label": "Gap",
+            "description": "Gap between rows",
+            "tier": "presentation",
+            "enumValues": [
+              "none",
+              "sm",
+              "md",
+              "lg"
+            ]
+          },
+          {
+            "key": "groupBy",
+            "type": "string",
+            "default": "",
+            "label": "Group By",
+            "description": "Group items by a field value (renders section headers between groups)",
+            "tier": "presentation"
+          },
+          {
+            "key": "hasMore",
+            "type": "boolean",
+            "default": false,
+            "label": "Has More",
+            "description": "Whether more items are available for infinite scroll",
+            "tier": "presentation"
+          },
+          {
+            "key": "infiniteScroll",
+            "type": "boolean",
+            "default": false,
+            "label": "Infinite Scroll",
+            "description": "Enable infinite scroll loading",
+            "tier": "presentation"
+          },
+          {
+            "key": "isLoading",
+            "type": "boolean",
+            "default": false,
+            "label": "Is Loading",
+            "description": "Loading state",
+            "tier": "presentation"
+          },
+          {
+            "key": "itemActions",
+            "type": "[DataListItemActionsItem]",
+            "default": [],
+            "label": "Item Actions",
+            "description": "Per-item action buttons",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "primary",
+                    "secondary",
+                    "ghost",
+                    "danger"
+                  ]
+                },
+                "event": {
+                  "name": "event",
+                  "required": true,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "look",
+            "type": "string",
+            "default": "dense",
+            "label": "Look",
+            "description": "Layer 2 visual treatment — mirrors the `entity-table` look enum so data-grid / data-list / entity-table share one knob name from authors.",
+            "tier": "presentation",
+            "enumValues": [
+              "dense",
+              "spacious",
+              "striped",
+              "borderless",
+              "card-rows"
+            ]
+          },
+          {
+            "key": "maxInlineActions",
+            "type": "number",
+            "default": 0,
+            "label": "Max Inline Actions",
+            "description": "Max inline action buttons before the rest collapse into a '⋯' overflow menu. Omit = all inline.",
+            "tier": "presentation"
+          },
+          {
+            "key": "pageSize",
+            "type": "number",
+            "default": 5,
+            "label": "Page Size",
+            "description": "Max items to show before 'Show More' button. Defaults to 5. Set to 0 to disable.",
+            "tier": "presentation"
+          },
+          {
+            "key": "positionEvent",
+            "type": "string",
+            "default": "",
+            "label": "Position Event",
+            "description": "Bus event fired N times per drop (one per item in affected zones) so the trait can persist new positions for the WHOLE zone, not just the moved item. Payload: { id, position }",
+            "tier": "presentation"
+          },
+          {
+            "key": "reorderable",
+            "type": "boolean",
+            "default": false,
+            "label": "Reorderable",
+            "description": "Enable drag-to-reorder with grip handles",
+            "tier": "presentation"
+          },
+          {
+            "key": "senderField",
+            "type": "string",
+            "default": "",
+            "label": "Sender Field",
+            "description": "Field name identifying the sender (used with variant: 'message')",
+            "tier": "presentation"
+          },
+          {
+            "key": "sortable",
+            "type": "boolean",
+            "default": false,
+            "label": "Sortable",
+            "description": "Enable in-container reorder; items can be dragged to new positions among siblings",
+            "tier": "presentation"
+          },
+          {
+            "key": "swipeLeftActions",
+            "type": "[json]",
+            "default": [],
+            "label": "Swipe Left Actions",
+            "description": "Actions revealed on left swipe",
+            "tier": "presentation",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "swipeRightActions",
+            "type": "[json]",
+            "default": [],
+            "label": "Swipe Right Actions",
+            "description": "Actions revealed on right swipe",
+            "tier": "presentation",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "variant",
+            "type": "string",
+            "default": "default",
+            "label": "Variant",
+            "description": "Visual variant",
+            "tier": "presentation",
+            "enumValues": [
+              "default",
+              "card",
+              "compact",
+              "message"
+            ]
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "DataListPage",
+        "defaultPath": "/data-list",
+        "primaryEntity": "DataListItem"
+      }
+    ],
+    "emittedEvents": [
+      "CHILDREN",
+      "ITEM_CLICK",
+      "LOAD_MORE",
+      "LONG_PRESS",
+      "RENDER_ITEM",
+      "REORDER",
+      "SWIPE_LEFT",
+      "SWIPE_RIGHT"
+    ],
+    "listenedEvents": []
+  }
+]

@@ -1,0 +1,137 @@
+app ui-header "1.0.0"
+"Header — UI factory (1:1 with the @almadar/ui header pattern)."
+orbital HeaderOrbital {
+  entity HeaderItem [runtime] {
+    id : string!
+  }
+
+  trait HeaderRender -> @rebindable HeaderItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch HeaderItem {})
+        (render-ui main {
+          logo: @config.logo
+          logoSrc: @config.logoSrc
+          brandName: @config.brandName
+          navigationItems: @config.navigationItems
+          showMenuToggle: @config.showMenuToggle
+          isMenuOpen: @config.isMenuOpen
+          onMenuToggle: MENU_TOGGLE
+          showSearch: @config.showSearch
+          searchPlaceholder: @config.searchPlaceholder
+          onSearch: SEARCH
+          userAvatar: @config.userAvatar
+          userName: @config.userName
+          onUserClick: USER_CLICK
+          actions: @config.actions
+          sticky: @config.sticky
+          variant: @config.variant
+          look: @config.look
+          onLogoClick: LOGO_CLICK
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          entity: HeaderItem
+          type: header
+        })
+    }
+
+    emits {
+      MENU_TOGGLE -> external {
+        id : string
+      }
+        @description "Menu toggle callback"
+        @tier "essential"
+      SEARCH -> external {
+        value : string
+      }
+        @description "Search callback"
+        @tier "essential"
+      USER_CLICK -> external {
+        id : string
+      }
+        @description "Callback when user avatar is clicked"
+        @tier "essential"
+      LOGO_CLICK -> external {
+        id : string
+      }
+        @description "Callback when logo/brand is clicked"
+        @tier "essential"
+    }
+
+    config {
+      logo : node
+        @label "Logo"
+        @description "Logo/Brand content"
+        @tier "presentation"
+      logoSrc : string = ""
+        @label "Logo Src"
+        @description "Logo image source"
+        @tier "presentation"
+      brandName : string = KFlow
+        @label "Brand Name"
+        @description "Brand/App name"
+        @tier "presentation"
+      navigationItems : [json] = []
+        @label "Navigation Items"
+        @description "Navigation items (for desktop header variant)"
+        @tier "presentation"
+      showMenuToggle : boolean = true
+        @label "Show Menu Toggle"
+        @description "Show menu toggle button"
+        @tier "presentation"
+      isMenuOpen : boolean = false
+        @label "Is Menu Open"
+        @description "Is menu open (for toggle icon)"
+        @tier "presentation"
+      showSearch : boolean = false
+        @label "Show Search"
+        @description "Show search input"
+        @tier "presentation"
+      searchPlaceholder : string = ""
+        @label "Search Placeholder"
+        @description "Search placeholder"
+        @tier "presentation"
+      userAvatar : json
+        @label "User Avatar"
+        @description "User avatar configuration"
+        @tier "presentation"
+      userName : string = ""
+        @label "User Name"
+        @description "User name (display name or email)"
+        @tier "presentation"
+      actions : node
+        @label "Actions"
+        @description "Action buttons (right side)"
+        @tier "presentation"
+      sticky : boolean = true
+        @label "Sticky"
+        @description "Sticky header"
+        @tier "presentation"
+      variant : "mobile" | "desktop" = mobile
+        @label "Variant"
+        @description "Variant - mobile shows menu toggle, desktop shows full nav"
+        @tier "presentation"
+      look : "hero" | "compact-bar" | "breadcrumb" | "contextual" | "editorial-banner" = "compact-bar"
+        @label "Look"
+        @description "Layer 2 visual treatment — orthogonal to the structural variant (which currently flips mobile vs desktop)."
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator (closed circuit)"
+        @tier "presentation"
+      error : json
+        @label "Error"
+        @description "Error state (closed circuit)"
+        @tier "presentation"
+    }
+  }
+
+  page "/header" as HeaderPage -> HeaderRender
+}

@@ -1,0 +1,145 @@
+{
+  "name": "ui-event-log",
+  "version": "1.0.0",
+  "description": "EventLog — UI factory (1:1 with the @almadar/ui event-log pattern).",
+  "orbitals": [
+    {
+      "name": "EventLogOrbital",
+      "entity": {
+        "name": "EventLogItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "EventLogRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "EventLogItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "label": "@config.label",
+                      "maxHeight": "@config.maxHeight",
+                      "entries": "@config.entries",
+                      "type": "event-log"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "label": {
+              "type": "string",
+              "default": "",
+              "label": "Label",
+              "description": "Title label",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "entries": {
+              "type": "[EventLogEntriesItem]",
+              "default": [],
+              "label": "Entries",
+              "description": "Log entries",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "message": {
+                    "name": "message",
+                    "type": "string",
+                    "required": true
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": true
+                  },
+                  "status": {
+                    "name": "status",
+                    "type": "string",
+                    "required": true,
+                    "values": [
+                      "pending",
+                      "active",
+                      "done",
+                      "error"
+                    ]
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  "timestamp": {
+                    "name": "timestamp",
+                    "type": "number",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "maxHeight": {
+              "type": "number",
+              "default": 200.0,
+              "label": "Max Height",
+              "description": "Max visible height before scroll",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "EventLogPage",
+          "path": "/event-log",
+          "traits": [
+            {
+              "ref": "EventLogRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

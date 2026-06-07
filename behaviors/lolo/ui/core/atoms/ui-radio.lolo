@@ -1,0 +1,67 @@
+app ui-radio "1.0.0"
+"Radio — UI factory (1:1 with the @almadar/ui radio pattern)."
+orbital RadioOrbital {
+  entity RadioItem [runtime] {
+    id : string!
+  }
+
+  trait RadioRender -> @rebindable RadioItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          className: @config.className
+          options: @config.options
+          value: @config.value
+          action: ACTION
+          label: @config.label
+          helperText: @config.helperText
+          error: @config.error
+          size: @config.size
+          type: radio
+        })
+    }
+
+    emits {
+      ACTION -> external {
+        id : string
+      }
+        @description "Declarative event name for trait dispatch"
+        @tier "essential"
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes applied to the root element."
+        @tier "presentation"
+      options : [string] = []
+        @label "Options"
+        @description "Radio options (string array or SelectOption array)"
+        @tier "presentation"
+      value : string = ""
+        @label "Value"
+        @description "Current selected value"
+        @tier "presentation"
+      label : string = ""
+        @label "Label"
+        @description "Label text displayed next to the radio button"
+        @tier "presentation"
+      helperText : string = ""
+        @label "Helper Text"
+        @description "Helper text displayed below the radio button"
+        @tier "presentation"
+      error : string = ""
+        @label "Error"
+        @description "Error message displayed below the radio button"
+        @tier "presentation"
+      size : "sm" | "md" | "lg" = md
+        @label "Size"
+        @description "Size of the radio button"
+        @tier "presentation"
+    }
+  }
+
+  page "/radio" as RadioPage -> RadioRender
+}

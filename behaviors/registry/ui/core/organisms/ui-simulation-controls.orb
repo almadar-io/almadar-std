@@ -1,0 +1,228 @@
+{
+  "name": "ui-simulation-controls",
+  "version": "1.0.0",
+  "description": "SimulationControls — UI factory (1:1 with the @almadar/ui simulation-controls pattern).",
+  "orbitals": [
+    {
+      "name": "SimulationControlsOrbital",
+      "entity": {
+        "name": "SimulationControlsItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "SimulationControlsRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "SimulationControlsItem",
+          "emits": [
+            {
+              "event": "PLAY",
+              "description": "onPlay prop",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "PAUSE",
+              "description": "onPause prop",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "STEP",
+              "description": "onStep prop",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "RESET",
+              "description": "onReset prop",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "SPEED_CHANGE",
+              "description": "onSpeedChange prop",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "speed",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "PARAMETER_CHANGE",
+              "description": "onParameterChange prop",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "name",
+                  "type": "string"
+                },
+                {
+                  "name": "value",
+                  "type": "number"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "PLAY",
+                "name": "Play",
+                "description": "onPlay prop",
+                "tier": "essential"
+              },
+              {
+                "key": "PAUSE",
+                "name": "Pause",
+                "description": "onPause prop",
+                "tier": "essential"
+              },
+              {
+                "key": "STEP",
+                "name": "Step",
+                "description": "onStep prop",
+                "tier": "essential"
+              },
+              {
+                "key": "RESET",
+                "name": "Reset",
+                "description": "onReset prop",
+                "tier": "essential"
+              },
+              {
+                "key": "SPEED_CHANGE",
+                "name": "Speed Change",
+                "description": "onSpeedChange prop",
+                "tier": "essential"
+              },
+              {
+                "key": "PARAMETER_CHANGE",
+                "name": "Parameter Change",
+                "description": "onParameterChange prop",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "running": "@config.running",
+                      "onSpeedChange": "SPEED_CHANGE",
+                      "speed": "@config.speed",
+                      "onParameterChange": "PARAMETER_CHANGE",
+                      "onPlay": "PLAY",
+                      "onReset": "RESET",
+                      "className": "@config.className",
+                      "parameters": "@config.parameters",
+                      "onStep": "STEP",
+                      "type": "simulation-controls",
+                      "onPause": "PAUSE"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "parameters": {
+              "type": "json",
+              "label": "Parameters",
+              "description": "parameters prop",
+              "tier": "presentation"
+            },
+            "running": {
+              "type": "boolean",
+              "default": false,
+              "label": "Running",
+              "description": "running prop",
+              "tier": "presentation"
+            },
+            "speed": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Speed",
+              "description": "speed prop",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "className prop",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "SimulationControlsPage",
+          "path": "/simulation-controls",
+          "traits": [
+            {
+              "ref": "SimulationControlsRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

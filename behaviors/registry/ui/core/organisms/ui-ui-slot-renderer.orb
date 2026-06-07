@@ -1,0 +1,141 @@
+{
+  "name": "ui-ui-slot-renderer",
+  "version": "1.0.0",
+  "description": "UiSlotRenderer — UI factory (1:1 with the @almadar/ui ui-slot-renderer pattern).",
+  "orbitals": [
+    {
+      "name": "UiSlotRendererOrbital",
+      "entity": {
+        "name": "UiSlotRendererItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "UiSlotRendererRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "UiSlotRendererItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "UiSlotRendererItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "hudMode": "@config.hudMode",
+                      "includeFloating": "@config.includeFloating",
+                      "suspense": "@config.suspense",
+                      "isLoading": "@config.isLoading",
+                      "type": "ui-slot-renderer",
+                      "includeHud": "@config.includeHud",
+                      "error": "@config.error",
+                      "className": "@config.className",
+                      "entity": "UiSlotRendererItem"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "hudMode": {
+              "type": "string",
+              "default": "fixed",
+              "label": "Hud Mode",
+              "description": "HUD positioning mode: 'fixed' (default, viewport-relative) or 'inline' (container-relative, uses sticky)",
+              "tier": "presentation",
+              "values": [
+                "fixed",
+                "inline"
+              ]
+            },
+            "suspense": {
+              "type": "json",
+              "label": "Suspense",
+              "description": "Enable Suspense boundaries around each slot. When true, each inline slot is wrapped in `<ErrorBoundary><Suspense>` with Skeleton fallbacks. Opt-in — existing isLoading prop pattern still works.",
+              "tier": "presentation"
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional class name for the container",
+              "tier": "presentation"
+            },
+            "error": {
+              "type": "json",
+              "label": "Error",
+              "description": "Error state",
+              "tier": "presentation"
+            },
+            "includeHud": {
+              "type": "boolean",
+              "default": false,
+              "label": "Include Hud",
+              "description": "Include HUD slots",
+              "tier": "presentation"
+            },
+            "includeFloating": {
+              "type": "boolean",
+              "default": false,
+              "label": "Include Floating",
+              "description": "Include floating slot",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "UiSlotRendererPage",
+          "path": "/ui-slot-renderer",
+          "traits": [
+            {
+              "ref": "UiSlotRendererRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

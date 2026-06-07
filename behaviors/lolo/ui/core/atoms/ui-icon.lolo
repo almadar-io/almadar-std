@@ -1,0 +1,63 @@
+app ui-icon "1.0.0"
+"Icon — UI factory (1:1 with the @almadar/ui icon pattern)."
+orbital IconOrbital {
+  entity IconItem [runtime] {
+    id : string!
+  }
+
+  trait IconRender -> @rebindable IconItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          icon: @config.icon
+          name: @config.name
+          size: @config.size
+          color: @config.color
+          animation: @config.animation
+          className: @config.className
+          strokeWidth: @config.strokeWidth
+          style: @config.style
+          type: icon
+        })
+    }
+
+    config {
+      icon : string = "circle"
+        @label "Icon"
+        @description "Lucide icon component (preferred for type-safe usage)"
+        @tier "presentation"
+      name : string = ""
+        @label "Name"
+        @description "Icon name as string (resolved from iconMap)"
+        @tier "presentation"
+      size : "xs" | "sm" | "md" | "lg" | "xl" = md
+        @label "Size"
+        @description "Size of the icon"
+        @tier "presentation"
+      color : string = ""
+        @label "Color"
+        @description "Color class (Tailwind color class) or 'inherit' for theme default"
+        @tier "presentation"
+      animation : "spin" | "pulse" | "none" = none
+        @label "Animation"
+        @description "Animation type"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      strokeWidth : number = 0
+        @label "Stroke Width"
+        @description "Icon stroke width - uses theme default if not specified"
+        @tier "presentation"
+      style : json
+        @label "Style"
+        @description "Inline style"
+        @tier "presentation"
+    }
+  }
+
+  page "/icon" as IconPage -> IconRender
+}

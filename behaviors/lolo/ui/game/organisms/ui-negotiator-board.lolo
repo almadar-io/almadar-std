@@ -1,0 +1,32 @@
+app ui-negotiator-board "1.0.0"
+"NegotiatorBoard — UI factory (1:1 with the @almadar/ui negotiator-board pattern)."
+orbital NegotiatorBoardOrbital {
+  entity NegotiatorBoardItem [runtime] {
+    id : string!
+  }
+
+  trait NegotiatorBoardRender -> @rebindable NegotiatorBoardItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch NegotiatorBoardItem {})
+        (render-ui main {
+          entity: @entity
+          completeEvent: COMPLETE
+          type: negotiator-board
+        })
+    }
+
+    emits {
+      COMPLETE -> external {
+        success : boolean!
+        score : number!
+      }
+        @description "completeEvent prop"
+        @tier "essential"
+    }
+  }
+
+  page "/negotiator-board" as NegotiatorBoardPage -> NegotiatorBoardRender
+}

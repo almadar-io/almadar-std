@@ -1,0 +1,294 @@
+{
+  "name": "ui-sidebar",
+  "version": "1.0.0",
+  "description": "Sidebar — UI factory (1:1 with the @almadar/ui sidebar pattern).",
+  "orbitals": [
+    {
+      "name": "SidebarOrbital",
+      "entity": {
+        "name": "SidebarItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "SidebarRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "SidebarItem",
+          "emits": [
+            {
+              "event": "COLLAPSE_CHANGE",
+              "description": "Event emitted when collapse state changes, payload: { collapsed: boolean }",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "collapsed",
+                  "type": "boolean",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "CLOSE",
+              "description": "Event emitted when close button is clicked",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "LOGO_CLICK",
+              "description": "Event emitted when logo/brand is clicked",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "COLLAPSE_CHANGE",
+                "name": "Collapse Change",
+                "description": "Event emitted when collapse state changes, payload: { collapsed: boolean }",
+                "tier": "essential"
+              },
+              {
+                "key": "CLOSE",
+                "name": "Close",
+                "description": "Event emitted when close button is clicked",
+                "tier": "essential"
+              },
+              {
+                "key": "LOGO_CLICK",
+                "name": "Logo Click",
+                "description": "Event emitted when logo/brand is clicked",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "hideCollapseButton": "@config.hideCollapseButton",
+                      "type": "sidebar",
+                      "brandName": "@config.brandName",
+                      "className": "@config.className",
+                      "items": "@config.items",
+                      "error": "@config.error",
+                      "collapsed": "@config.collapsed",
+                      "collapseChangeEvent": "COLLAPSE_CHANGE",
+                      "defaultCollapsed": "@config.defaultCollapsed",
+                      "footerContent": "@config.footerContent",
+                      "showCloseButton": "@config.showCloseButton",
+                      "closeEvent": "CLOSE",
+                      "logoSrc": "@config.logoSrc",
+                      "logoClickEvent": "LOGO_CLICK",
+                      "logo": "@config.logo",
+                      "isLoading": "@config.isLoading",
+                      "userSection": "@config.userSection"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "logoSrc": {
+              "type": "string",
+              "default": "",
+              "label": "Logo Src",
+              "description": "Logo image source",
+              "tier": "presentation"
+            },
+            "brandName": {
+              "type": "string",
+              "default": "KFlow",
+              "label": "Brand Name",
+              "description": "Brand/App name",
+              "tier": "presentation"
+            },
+            "items": {
+              "type": "[SidebarItemsItem]",
+              "default": [],
+              "label": "Items",
+              "description": "Navigation items",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  "onClick": {
+                    "name": "onClick",
+                    "type": "string",
+                    "required": false
+                  },
+                  "active": {
+                    "name": "active",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "isActive": {
+                    "name": "isActive",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "subItems": {
+                    "name": "subItems",
+                    "type": "array",
+                    "required": false,
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "badge": {
+                    "name": "badge",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "string",
+                      "number"
+                    ]
+                  },
+                  "href": {
+                    "name": "href",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "error": {
+              "type": "json",
+              "label": "Error",
+              "description": "Error state",
+              "tier": "presentation"
+            },
+            "logo": {
+              "type": "node",
+              "label": "Logo",
+              "description": "Logo/Brand content - can be a ReactNode or logo config",
+              "tier": "presentation"
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
+              "tier": "presentation"
+            },
+            "collapsed": {
+              "type": "boolean",
+              "default": false,
+              "label": "Collapsed",
+              "description": "Collapsed state (controlled)",
+              "tier": "presentation"
+            },
+            "userSection": {
+              "type": "node",
+              "label": "User Section",
+              "description": "User section content",
+              "tier": "presentation"
+            },
+            "footerContent": {
+              "type": "node",
+              "label": "Footer Content",
+              "description": "Footer content (e.g., theme toggle)",
+              "tier": "presentation"
+            },
+            "defaultCollapsed": {
+              "type": "boolean",
+              "default": false,
+              "label": "Default Collapsed",
+              "description": "Default collapsed state",
+              "tier": "presentation"
+            },
+            "hideCollapseButton": {
+              "type": "boolean",
+              "default": false,
+              "label": "Hide Collapse Button",
+              "description": "Hide the collapse/expand button",
+              "tier": "presentation"
+            },
+            "showCloseButton": {
+              "type": "boolean",
+              "default": false,
+              "label": "Show Close Button",
+              "description": "Show a close button (for mobile)",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "SidebarPage",
+          "path": "/sidebar",
+          "traits": [
+            {
+              "ref": "SidebarRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

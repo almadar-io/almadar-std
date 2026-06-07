@@ -1,0 +1,48 @@
+app ui-game-shell "1.0.0"
+"GameShell — UI factory (1:1 with the @almadar/ui game-shell pattern)."
+orbital GameShellOrbital {
+  entity GameShellItem [runtime] {
+    id : string!
+  }
+
+  trait GameShellRender -> @rebindable GameShellItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          appName: @config.appName
+          hud: @config.hud
+          className: @config.className
+          showTopBar: @config.showTopBar
+          children: @config.children
+          type: game-shell
+        })
+    }
+
+    config {
+      appName : string = Game
+        @label "App Name"
+        @description "Application / game title shown in the HUD bar"
+        @tier "presentation"
+      hud : node
+        @label "Hud"
+        @description "Optional HUD content rendered above the main area"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Extra class name on the root container"
+        @tier "presentation"
+      showTopBar : boolean = true
+        @label "Show Top Bar"
+        @description "Whether to show the minimal top bar (default: true)"
+        @tier "presentation"
+      children : node
+        @label "Children"
+        @description "Game content rendered inside the full-screen area"
+        @tier "presentation"
+    }
+  }
+
+  page "/game-shell" as GameShellPage -> GameShellRender
+}

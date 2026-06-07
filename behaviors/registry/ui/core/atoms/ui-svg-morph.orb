@@ -1,0 +1,138 @@
+{
+  "name": "ui-svg-morph",
+  "version": "1.0.0",
+  "description": "SvgMorph — UI factory (1:1 with the @almadar/ui svg-morph pattern).",
+  "orbitals": [
+    {
+      "name": "SvgMorphOrbital",
+      "entity": {
+        "name": "SvgMorphItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "SvgMorphRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "SvgMorphItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "x": "@config.x",
+                      "variant": "@config.variant",
+                      "opacity": "@config.opacity",
+                      "className": "@config.className",
+                      "y": "@config.y",
+                      "type": "svg-morph",
+                      "color": "@config.color",
+                      "size": "@config.size"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "size": {
+              "type": "number",
+              "default": 1.0,
+              "label": "Size",
+              "description": "size prop",
+              "tier": "presentation"
+            },
+            "opacity": {
+              "type": "number",
+              "default": 1.0,
+              "label": "Opacity",
+              "description": "opacity prop",
+              "tier": "presentation"
+            },
+            "variant": {
+              "type": "string",
+              "default": "generic",
+              "label": "Variant",
+              "description": "variant prop",
+              "tier": "presentation",
+              "values": [
+                "text-to-code",
+                "code-to-app",
+                "generic"
+              ]
+            },
+            "y": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Y",
+              "description": "y prop",
+              "tier": "presentation"
+            },
+            "color": {
+              "type": "string",
+              "default": "var(--color-primary)",
+              "label": "Color",
+              "description": "color prop",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "className prop",
+              "tier": "presentation"
+            },
+            "x": {
+              "type": "number",
+              "default": 0.0,
+              "label": "X",
+              "description": "x prop",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "SvgMorphPage",
+          "path": "/svg-morph",
+          "traits": [
+            {
+              "ref": "SvgMorphRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

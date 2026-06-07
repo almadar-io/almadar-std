@@ -1,0 +1,137 @@
+{
+  "name": "ui-tooltip",
+  "version": "1.0.0",
+  "description": "Tooltip — UI factory (1:1 with the @almadar/ui tooltip pattern).",
+  "orbitals": [
+    {
+      "name": "TooltipOrbital",
+      "entity": {
+        "name": "TooltipItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "TooltipRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "TooltipItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "content": "@config.content",
+                      "className": "@config.className",
+                      "type": "tooltip",
+                      "children": "@config.children",
+                      "position": "@config.position",
+                      "delay": "@config.delay",
+                      "showArrow": "@config.showArrow",
+                      "hideDelay": "@config.hideDelay"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "delay": {
+              "type": "number",
+              "default": 200.0,
+              "label": "Delay",
+              "description": "Show delay in milliseconds",
+              "tier": "presentation"
+            },
+            "showArrow": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Arrow",
+              "description": "Show arrow",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "position": {
+              "type": "string",
+              "default": "top",
+              "label": "Position",
+              "description": "Tooltip position",
+              "tier": "presentation",
+              "values": [
+                "top",
+                "bottom",
+                "left",
+                "right"
+              ]
+            },
+            "children": {
+              "type": "node",
+              "label": "Children",
+              "description": "Tooltip trigger element (ReactElement or ReactNode that will be wrapped in span)",
+              "tier": "presentation"
+            },
+            "content": {
+              "type": "node",
+              "label": "Content",
+              "description": "Tooltip content",
+              "tier": "presentation"
+            },
+            "hideDelay": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Hide Delay",
+              "description": "Hide delay in milliseconds",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "TooltipPage",
+          "path": "/tooltip",
+          "traits": [
+            {
+              "ref": "TooltipRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

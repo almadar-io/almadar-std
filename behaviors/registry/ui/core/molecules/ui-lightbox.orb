@@ -1,0 +1,185 @@
+{
+  "name": "ui-lightbox",
+  "version": "1.0.0",
+  "description": "Lightbox — UI factory (1:1 with the @almadar/ui lightbox pattern).",
+  "orbitals": [
+    {
+      "name": "LightboxOrbital",
+      "entity": {
+        "name": "LightboxItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "LightboxRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "LightboxItem",
+          "emits": [
+            {
+              "event": "CLOSE",
+              "description": "Direct onClose callback",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "INDEX_CHANGE",
+              "description": "Direct onIndexChange callback",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "index",
+                  "type": "number"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "CLOSE",
+                "name": "Close",
+                "description": "Direct onClose callback",
+                "tier": "essential"
+              },
+              {
+                "key": "INDEX_CHANGE",
+                "name": "Index Change",
+                "description": "Direct onIndexChange callback",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "images": "@config.images",
+                      "onIndexChange": "INDEX_CHANGE",
+                      "showCounter": "@config.showCounter",
+                      "closeAction": "@config.closeAction",
+                      "type": "lightbox",
+                      "onClose": "CLOSE",
+                      "className": "@config.className",
+                      "currentIndex": "@config.currentIndex",
+                      "isOpen": "@config.isOpen"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "showCounter": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Counter",
+              "description": "Show image counter (e.g., '3 of 12')",
+              "tier": "presentation"
+            },
+            "isOpen": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Open",
+              "description": "Whether the lightbox is open",
+              "tier": "presentation"
+            },
+            "images": {
+              "type": "[LightboxImagesItem]",
+              "default": [],
+              "label": "Images",
+              "description": "Array of images to display",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "src": {
+                    "name": "src",
+                    "type": "string",
+                    "required": false
+                  },
+                  "caption": {
+                    "name": "caption",
+                    "type": "string",
+                    "required": false
+                  },
+                  "alt": {
+                    "name": "alt",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "closeAction": {
+              "type": "string",
+              "default": "",
+              "label": "Close Action",
+              "description": "Declarative close event name",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "currentIndex": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Current Index",
+              "description": "Current image index",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "LightboxPage",
+          "path": "/lightbox",
+          "traits": [
+            {
+              "ref": "LightboxRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

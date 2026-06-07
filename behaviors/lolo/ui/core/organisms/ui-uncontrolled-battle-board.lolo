@@ -1,0 +1,22 @@
+app ui-uncontrolled-battle-board "1.0.0"
+"UncontrolledBattleBoard — UI factory (1:1 with the @almadar/ui uncontrolled-battle-board pattern)."
+orbital UncontrolledBattleBoardOrbital {
+  entity UncontrolledBattleBoardItem [runtime] {
+    id : string!
+  }
+
+  trait UncontrolledBattleBoardRender -> @rebindable UncontrolledBattleBoardItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch UncontrolledBattleBoardItem {})
+        (render-ui main {
+          entity: @entity
+          type: uncontrolled-battle-board
+        })
+    }
+  }
+
+  page "/uncontrolled-battle-board" as UncontrolledBattleBoardPage -> UncontrolledBattleBoardRender
+}

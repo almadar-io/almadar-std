@@ -1,0 +1,54 @@
+app ui-d-pad "1.0.0"
+"DPad — UI factory (1:1 with the @almadar/ui d-pad pattern)."
+orbital DPadOrbital {
+  entity DPadItem [runtime] {
+    id : string!
+  }
+
+  trait DPadRender -> @rebindable DPadItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          onDirection: DIRECTION
+          directionEvent: DIRECTION
+          size: @config.size
+          includeDiagonals: @config.includeDiagonals
+          className: @config.className
+          disabled: @config.disabled
+          type: d-pad
+        })
+    }
+
+    emits {
+      DIRECTION -> external {
+        direction : string
+        pressed : boolean
+      }
+        @description "Called when a direction is pressed/released"
+        @tier "essential"
+    }
+
+    config {
+      size : "sm" | "md" | "lg" = md
+        @label "Size"
+        @description "Size variant"
+        @tier "presentation"
+      includeDiagonals : boolean = false
+        @label "Include Diagonals"
+        @description "Whether to include diagonal buttons"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      disabled : boolean = false
+        @label "Disabled"
+        @description "Disabled state"
+        @tier "presentation"
+    }
+  }
+
+  page "/d-pad" as DPadPage -> DPadRender
+}

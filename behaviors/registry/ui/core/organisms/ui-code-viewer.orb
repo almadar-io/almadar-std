@@ -1,0 +1,281 @@
+{
+  "name": "ui-code-viewer",
+  "version": "1.0.0",
+  "description": "CodeViewer — UI factory (1:1 with the @almadar/ui code-viewer pattern).",
+  "orbitals": [
+    {
+      "name": "CodeViewerOrbital",
+      "entity": {
+        "name": "CodeViewerItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "CodeViewerRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "CodeViewerItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "CodeViewerItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "showLineNumbers": "@config.showLineNumbers",
+                      "newValue": "@config.newValue",
+                      "oldValue": "@config.oldValue",
+                      "mode": "@config.mode",
+                      "className": "@config.className",
+                      "title": "@config.title",
+                      "entity": "CodeViewerItem",
+                      "language": "@config.language",
+                      "actions": "@config.actions",
+                      "error": "@config.error",
+                      "code": "@config.code",
+                      "type": "code-viewer",
+                      "diff": "@config.diff",
+                      "showCopy": "@config.showCopy",
+                      "maxHeight": "@config.maxHeight",
+                      "wordWrap": "@config.wordWrap",
+                      "files": "@config.files",
+                      "isLoading": "@config.isLoading"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "mode": {
+              "type": "string",
+              "default": "code",
+              "label": "Mode",
+              "description": "Display mode",
+              "tier": "presentation",
+              "values": [
+                "code",
+                "diff"
+              ]
+            },
+            "showCopy": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Copy",
+              "description": "Show copy button",
+              "tier": "presentation"
+            },
+            "diff": {
+              "type": "[CodeViewerDiffItem]",
+              "default": [],
+              "label": "Diff",
+              "description": "Diff lines (for diff mode)",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "afterLineNumber": {
+                    "name": "afterLineNumber",
+                    "type": "number",
+                    "required": false
+                  },
+                  "type": {
+                    "name": "type",
+                    "type": "string",
+                    "required": true,
+                    "values": [
+                      "added",
+                      "removed",
+                      "unchanged",
+                      "context"
+                    ]
+                  },
+                  "content": {
+                    "name": "content",
+                    "type": "string",
+                    "required": true
+                  },
+                  "beforeLineNumber": {
+                    "name": "beforeLineNumber",
+                    "type": "number",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "maxHeight": {
+              "type": "string",
+              "label": "Max Height",
+              "description": "Max height before scrolling",
+              "tier": "presentation",
+              "values": [
+                "number",
+                "string"
+              ]
+            },
+            "showLineNumbers": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Line Numbers",
+              "description": "Show line numbers",
+              "tier": "presentation"
+            },
+            "newValue": {
+              "type": "string",
+              "default": "",
+              "label": "New Value",
+              "description": "New value (for generating diff)",
+              "tier": "presentation"
+            },
+            "code": {
+              "type": "string",
+              "default": "",
+              "label": "Code",
+              "description": "Code content",
+              "tier": "presentation"
+            },
+            "actions": {
+              "type": "[CodeViewerActionsItem]",
+              "default": [],
+              "label": "Actions",
+              "description": "Actions",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "primary",
+                      "secondary",
+                      "ghost"
+                    ]
+                  },
+                  "navigatesTo": {
+                    "name": "navigatesTo",
+                    "type": "string",
+                    "required": false
+                  },
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "language": {
+              "type": "string",
+              "default": "",
+              "label": "Language",
+              "description": "Language for display label",
+              "tier": "presentation"
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "title": {
+              "type": "string",
+              "default": "",
+              "label": "Title",
+              "description": "Viewer title",
+              "tier": "presentation"
+            },
+            "files": {
+              "type": "[json]",
+              "default": [],
+              "label": "Files",
+              "description": "Multiple files (tabbed view)",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "wordWrap": {
+              "type": "boolean",
+              "default": false,
+              "label": "Word Wrap",
+              "description": "Enable word wrap",
+              "tier": "presentation"
+            },
+            "oldValue": {
+              "type": "string",
+              "default": "",
+              "label": "Old Value",
+              "description": "Old value (for generating diff)",
+              "tier": "presentation"
+            },
+            "error": {
+              "type": "json",
+              "label": "Error",
+              "description": "Error state",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "CodeViewerPage",
+          "path": "/code-viewer",
+          "traits": [
+            {
+              "ref": "CodeViewerRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

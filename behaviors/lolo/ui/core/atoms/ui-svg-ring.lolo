@@ -1,0 +1,68 @@
+app ui-svg-ring "1.0.0"
+"SvgRing — UI factory (1:1 with the @almadar/ui svg-ring pattern)."
+orbital SvgRingOrbital {
+  entity SvgRingItem [runtime] {
+    id : string!
+  }
+
+  trait SvgRingRender -> @rebindable SvgRingItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          cx: @config.cx
+          cy: @config.cy
+          r: @config.r
+          variant: @config.variant
+          color: @config.color
+          strokeWidth: @config.strokeWidth
+          opacity: @config.opacity
+          className: @config.className
+          label: @config.label
+          type: svg-ring
+        })
+    }
+
+    config {
+      cx : number = 0
+        @label "Cx"
+        @description "cx prop"
+        @tier "presentation"
+      cy : number = 0
+        @label "Cy"
+        @description "cy prop"
+        @tier "presentation"
+      r : number = 40
+        @label "R"
+        @description "r prop"
+        @tier "presentation"
+      variant : "solid" | "dashed" | "glow" = solid
+        @label "Variant"
+        @description "variant prop"
+        @tier "presentation"
+      color : string = "var(--color-primary)"
+        @label "Color"
+        @description "color prop"
+        @tier "presentation"
+      strokeWidth : number = 1.5
+        @label "Stroke Width"
+        @description "strokeWidth prop"
+        @tier "presentation"
+      opacity : number = 1
+        @label "Opacity"
+        @description "opacity prop"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+      label : string = ""
+        @label "Label"
+        @description "label prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/svg-ring" as SvgRingPage -> SvgRingRender
+}

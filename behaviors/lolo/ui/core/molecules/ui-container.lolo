@@ -1,0 +1,53 @@
+app ui-container "1.0.0"
+"Container — UI factory (1:1 with the @almadar/ui container pattern)."
+orbital ContainerOrbital {
+  entity ContainerItem [runtime] {
+    id : string!
+  }
+
+  trait ContainerRender -> @rebindable ContainerItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          size: @config.size
+          maxWidth: @config.maxWidth
+          padding: @config.padding
+          center: @config.center
+          className: @config.className
+          children: @config.children
+          type: container
+        })
+    }
+
+    config {
+      size : "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "full" = xs
+        @label "Size"
+        @description "Maximum width"
+        @tier "presentation"
+      maxWidth : "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "full" = xs
+        @label "Max Width"
+        @description "Alias for size (pattern compatibility)"
+        @tier "presentation"
+      padding : "none" | "sm" | "md" | "lg" | "xl" = md
+        @label "Padding"
+        @description "Horizontal padding"
+        @tier "presentation"
+      center : boolean = true
+        @label "Center"
+        @description "Center horizontally"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Custom class name"
+        @tier "presentation"
+      children : node
+        @label "Children"
+        @description "Children elements"
+        @tier "presentation"
+    }
+  }
+
+  page "/container" as ContainerPage -> ContainerRender
+}

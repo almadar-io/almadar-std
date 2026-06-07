@@ -1,0 +1,63 @@
+app ui-svg-mesh "1.0.0"
+"SvgMesh — UI factory (1:1 with the @almadar/ui svg-mesh pattern)."
+orbital SvgMeshOrbital {
+  entity SvgMeshItem [runtime] {
+    id : string!
+  }
+
+  trait SvgMeshRender -> @rebindable SvgMeshItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          cx: @config.cx
+          cy: @config.cy
+          nodes: @config.nodes
+          radius: @config.radius
+          color: @config.color
+          connectionDensity: @config.connectionDensity
+          opacity: @config.opacity
+          className: @config.className
+          type: svg-mesh
+        })
+    }
+
+    config {
+      cx : number = 0
+        @label "Cx"
+        @description "cx prop"
+        @tier "presentation"
+      cy : number = 0
+        @label "Cy"
+        @description "cy prop"
+        @tier "presentation"
+      nodes : number = 6
+        @label "Nodes"
+        @description "nodes prop"
+        @tier "presentation"
+      radius : number = 50
+        @label "Radius"
+        @description "radius prop"
+        @tier "presentation"
+      color : string = "var(--color-primary)"
+        @label "Color"
+        @description "color prop"
+        @tier "presentation"
+      connectionDensity : number = 0.5
+        @label "Connection Density"
+        @description "connectionDensity prop"
+        @tier "presentation"
+      opacity : number = 1
+        @label "Opacity"
+        @description "opacity prop"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/svg-mesh" as SvgMeshPage -> SvgMeshRender
+}

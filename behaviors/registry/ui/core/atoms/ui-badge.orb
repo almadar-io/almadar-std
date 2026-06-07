@@ -1,0 +1,172 @@
+{
+  "name": "ui-badge",
+  "version": "1.0.0",
+  "description": "Badge — UI factory (1:1 with the @almadar/ui badge pattern).",
+  "orbitals": [
+    {
+      "name": "BadgeOrbital",
+      "entity": {
+        "name": "BadgeItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "BadgeRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "BadgeItem",
+          "emits": [
+            {
+              "event": "REMOVE",
+              "description": "When set, renders a small X button on the right of the badge that invokes this handler — turns the badge into a removable chip. Used by the TagInput molecule and other 'list of removable values' surfaces.",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "REMOVE",
+                "name": "Remove",
+                "description": "When set, renders a small X button on the right of the badge that invokes this handler — turns the badge into a removable chip. Used by the TagInput molecule and other 'list of removable values' surfaces.",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "label": "@config.label",
+                      "className": "@config.className",
+                      "removeLabel": "@config.removeLabel",
+                      "onRemove": "REMOVE",
+                      "variant": "@config.variant",
+                      "type": "badge",
+                      "icon": "@config.icon",
+                      "size": "@config.size",
+                      "amount": "@config.amount"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "variant": {
+              "type": "string",
+              "default": "default",
+              "label": "Variant",
+              "description": "variant prop",
+              "tier": "presentation",
+              "values": [
+                "default",
+                "primary",
+                "secondary",
+                "success",
+                "warning",
+                "danger",
+                "error",
+                "info",
+                "neutral"
+              ]
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes applied to the root element.",
+              "tier": "presentation"
+            },
+            "amount": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Amount",
+              "description": "Numeric count or amount to display in badge",
+              "tier": "presentation"
+            },
+            "removeLabel": {
+              "type": "string",
+              "default": "",
+              "label": "Remove Label",
+              "description": "Accessible label for the remove button. Defaults to 'Remove'.",
+              "tier": "presentation"
+            },
+            "label": {
+              "type": "string",
+              "label": "Label",
+              "description": "Badge label text (alternative to children for schema-driven rendering). Numeric values are auto-coerced to string for rendering — common case is unread counts, error counts, status codes, etc.",
+              "tier": "presentation",
+              "values": [
+                "string",
+                "number"
+              ]
+            },
+            "icon": {
+              "type": "node",
+              "label": "Icon",
+              "description": "Icon name (Lucide icon string) or React node",
+              "tier": "presentation"
+            },
+            "size": {
+              "type": "string",
+              "default": "sm",
+              "label": "Size",
+              "description": "size prop",
+              "tier": "presentation",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "BadgePage",
+          "path": "/badge",
+          "traits": [
+            {
+              "ref": "BadgeRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+app ui-enemy-plate "1.0.0"
+"EnemyPlate — UI factory (1:1 with the @almadar/ui enemy-plate pattern)."
+orbital EnemyPlateOrbital {
+  type EnemyPlateEffectsItem = {
+    icon : node!
+    label : string
+    variant : "buff" | "debuff" | "neutral"
+  }
+
+  entity EnemyPlateItem [runtime] {
+    id : string!
+  }
+
+  trait EnemyPlateRender -> @rebindable EnemyPlateItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          name: @config.name
+          health: @config.health
+          maxHealth: @config.maxHealth
+          level: @config.level
+          effects: @config.effects
+          className: @config.className
+          type: enemy-plate
+        })
+    }
+
+    config {
+      name : string = ""
+        @label "Name"
+        @description "Enemy name"
+        @tier "presentation"
+      health : number = 0
+        @label "Health"
+        @description "Current health"
+        @tier "presentation"
+      maxHealth : number = 0
+        @label "Max Health"
+        @description "Maximum health"
+        @tier "presentation"
+      level : number = 0
+        @label "Level"
+        @description "Enemy level"
+        @tier "presentation"
+      effects : [EnemyPlateEffectsItem] = []
+        @label "Effects"
+        @description "Active status effects"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/enemy-plate" as EnemyPlatePage -> EnemyPlateRender
+}

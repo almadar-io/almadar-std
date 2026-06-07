@@ -1,0 +1,58 @@
+app ui-case-study-card "1.0.0"
+"CaseStudyCard — UI factory (1:1 with the @almadar/ui case-study-card pattern)."
+orbital CaseStudyCardOrbital {
+  entity CaseStudyCardItem [runtime] {
+    id : string!
+  }
+
+  trait CaseStudyCardRender -> @rebindable CaseStudyCardItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          title: @config.title
+          description: @config.description
+          category: @config.category
+          categoryColor: @config.categoryColor
+          href: @config.href
+          linkLabel: @config.linkLabel
+          className: @config.className
+          type: case-study-card
+        })
+    }
+
+    config {
+      title : string = ""
+        @label "Title"
+        @description "Case study title"
+        @tier "presentation"
+      description : string = ""
+        @label "Description"
+        @description "Short description of the case study"
+        @tier "presentation"
+      category : string = ""
+        @label "Category"
+        @description "Category label shown as a badge"
+        @tier "presentation"
+      categoryColor : string = ""
+        @label "Category Color"
+        @description "Custom background color for the category badge (CSS value)"
+        @tier "presentation"
+      href : string = ""
+        @label "Href"
+        @description "URL the card links to"
+        @tier "presentation"
+      linkLabel : string = "Read more"
+        @label "Link Label"
+        @description "Label for the link button"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional class names"
+        @tier "presentation"
+    }
+  }
+
+  page "/case-study-card" as CaseStudyCardPage -> CaseStudyCardRender
+}

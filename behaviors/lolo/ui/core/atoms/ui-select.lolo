@@ -1,0 +1,62 @@
+app ui-select "1.0.0"
+"Select — UI factory (1:1 with the @almadar/ui select pattern)."
+orbital SelectOrbital {
+  type SelectOptionsItem = {
+    value : string!
+    label : string!
+  }
+
+  entity SelectItem [runtime] {
+    id : string!
+  }
+
+  trait SelectRender -> @rebindable SelectItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          className: @config.className
+          options: @config.options
+          placeholder: @config.placeholder
+          value: @config.value
+          action: ACTION
+          error: @config.error
+          type: select
+        })
+    }
+
+    emits {
+      ACTION -> external {
+        id : string
+      }
+        @description "Declarative event name for trait dispatch"
+        @tier "essential"
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes applied to the root element."
+        @tier "presentation"
+      options : [SelectOptionsItem] = []
+        @label "Options"
+        @description "Select options"
+        @tier "presentation"
+      placeholder : string = ""
+        @label "Placeholder"
+        @description "Placeholder text"
+        @tier "presentation"
+      value : string = ""
+        @label "Value"
+        @description "Current value"
+        @tier "presentation"
+      error : string = ""
+        @label "Error"
+        @description "Error message"
+        @tier "presentation"
+    }
+  }
+
+  page "/select" as SelectPage -> SelectRender
+}

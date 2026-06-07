@@ -1,0 +1,43 @@
+app ui-label "1.0.0"
+"Label — UI factory (1:1 with the @almadar/ui label pattern)."
+orbital LabelOrbital {
+  entity LabelItem [runtime] {
+    id : string!
+  }
+
+  trait LabelRender -> @rebindable LabelItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          className: @config.className
+          text: @config.text
+          htmlFor: @config.htmlFor
+          required: @config.required
+          type: label
+        })
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes applied to the root element."
+        @tier "presentation"
+      text : string = ""
+        @label "Text"
+        @description "Label text content"
+        @tier "presentation"
+      htmlFor : string = ""
+        @label "Html For"
+        @description "Associated input element ID"
+        @tier "presentation"
+      required : boolean = false
+        @label "Required"
+        @description "Show required indicator"
+        @tier "presentation"
+    }
+  }
+
+  page "/label" as LabelPage -> LabelRender
+}

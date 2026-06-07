@@ -1,0 +1,81 @@
+app ui-option-constraint-group "1.0.0"
+"OptionConstraintGroup — UI factory (1:1 with the @almadar/ui option-constraint-group pattern)."
+orbital OptionConstraintGroupOrbital {
+  type OptionConstraintGroupOptionsItem = {
+    id : string!
+    label : string!
+    priceDelta : number
+    disabled : boolean
+    outOfStock : boolean
+  }
+
+  entity OptionConstraintGroupItem [runtime] {
+    id : string!
+  }
+
+  trait OptionConstraintGroupRender -> @rebindable OptionConstraintGroupItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          groupId: @config.groupId
+          title: @config.title
+          description: @config.description
+          options: @config.options
+          constraint: @config.constraint
+          selected: @config.selected
+          onChange: CHANGE
+          changeEvent: CHANGE
+          size: @config.size
+          className: @config.className
+          type: option-constraint-group
+        })
+    }
+
+    emits {
+      CHANGE -> external {
+        selected : [object]
+      }
+        @description "onChange prop"
+        @tier "essential"
+    }
+
+    config {
+      groupId : string = ""
+        @label "Group Id"
+        @description "groupId prop"
+        @tier "presentation"
+      title : string = ""
+        @label "Title"
+        @description "title prop"
+        @tier "presentation"
+      description : string = ""
+        @label "Description"
+        @description "description prop"
+        @tier "presentation"
+      options : [OptionConstraintGroupOptionsItem] = []
+        @label "Options"
+        @description "options prop"
+        @tier "presentation"
+      constraint : json
+        @label "Constraint"
+        @description "constraint prop"
+        @tier "presentation"
+      selected : [string] = []
+        @label "Selected"
+        @description "selected prop"
+        @tier "presentation"
+      size : "sm" | "md" = md
+        @label "Size"
+        @description "size prop"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/option-constraint-group" as OptionConstraintGroupPage -> OptionConstraintGroupRender
+}

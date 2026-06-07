@@ -1,0 +1,33 @@
+app ui-aside "1.0.0"
+"Aside — UI factory (1:1 with the @almadar/ui aside pattern)."
+orbital AsideOrbital {
+  entity AsideItem [runtime] {
+    id : string!
+  }
+
+  trait AsideRender -> @rebindable AsideItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          className: @config.className
+          children: @config.children
+          type: aside
+        })
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      children : node
+        @label "Children"
+        @description "Aside contents"
+        @tier "presentation"
+    }
+  }
+
+  page "/aside" as AsidePage -> AsideRender
+}

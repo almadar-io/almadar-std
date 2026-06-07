@@ -1,0 +1,130 @@
+{
+  "name": "ui-transition-arrow",
+  "version": "1.0.0",
+  "description": "TransitionArrow — UI factory (1:1 with the @almadar/ui transition-arrow pattern).",
+  "orbitals": [
+    {
+      "name": "TransitionArrowOrbital",
+      "entity": {
+        "name": "TransitionArrowItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "TransitionArrowRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "TransitionArrowItem",
+          "emits": [
+            {
+              "event": "CLICK",
+              "description": "Click handler",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "CLICK",
+                "name": "Click",
+                "description": "Click handler",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "transition-arrow",
+                      "isActive": "@config.isActive",
+                      "onClick": "CLICK",
+                      "guardHint": "@config.guardHint",
+                      "eventLabel": "@config.eventLabel",
+                      "className": "@config.className"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "eventLabel": {
+              "type": "string",
+              "default": "",
+              "label": "Event Label",
+              "description": "Event label shown on the arrow",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes for the SVG group",
+              "tier": "presentation"
+            },
+            "isActive": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Active",
+              "description": "Whether this transition is currently active",
+              "tier": "presentation"
+            },
+            "guardHint": {
+              "type": "string",
+              "default": "",
+              "label": "Guard Hint",
+              "description": "Guard hint shown below event",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "TransitionArrowPage",
+          "path": "/transition-arrow",
+          "traits": [
+            {
+              "ref": "TransitionArrowRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

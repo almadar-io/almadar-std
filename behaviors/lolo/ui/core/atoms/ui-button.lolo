@@ -1,0 +1,87 @@
+app ui-button "1.0.0"
+"Button — UI factory (1:1 with the @almadar/ui button pattern)."
+orbital ButtonOrbital {
+  entity ButtonItem [runtime] {
+    id : string!
+  }
+
+  trait ButtonRender -> @rebindable ButtonItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          className: @config.className
+          variant: @config.variant
+          size: @config.size
+          isLoading: @config.isLoading
+          leftIcon: @config.leftIcon
+          rightIcon: @config.rightIcon
+          icon: @config.icon
+          iconRight: @config.iconRight
+          action: ACTION
+          actionPayload: @config.actionPayload
+          label: @config.label
+          disabled: @config.disabled
+          type: button
+        })
+    }
+
+    emits {
+      ACTION -> external {
+        id : string
+      }
+        @description "Declarative event name — emits UI:{action} via eventBus on click"
+        @tier "essential"
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes applied to the root element."
+        @tier "presentation"
+      variant : "primary" | "secondary" | "ghost" | "danger" | "success" | "warning" | "default" = primary
+        @label "Variant"
+        @description "variant prop"
+        @tier "presentation"
+      size : "sm" | "md" | "lg" = md
+        @label "Size"
+        @description "size prop"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "isLoading prop"
+        @tier "presentation"
+      leftIcon : json
+        @label "Left Icon"
+        @description "Left icon as ReactNode, Lucide component, or string name (e.g. 'plus', 'trash')"
+        @tier "presentation"
+      rightIcon : json
+        @label "Right Icon"
+        @description "Right icon as ReactNode, Lucide component, or string name"
+        @tier "presentation"
+      icon : string = "circle"
+        @label "Icon"
+        @description "Alias for leftIcon"
+        @tier "presentation"
+      iconRight : json
+        @label "Icon Right"
+        @description "Alias for rightIcon"
+        @tier "presentation"
+      actionPayload : json
+        @label "Action Payload"
+        @description "Payload to include with the action event"
+        @tier "presentation"
+      label : string = ""
+        @label "Label"
+        @description "Button label text (alternative to children for schema-driven rendering)"
+        @tier "presentation"
+      disabled : boolean = false
+        @label "Disabled"
+        @description "Disable the button (greys out, blocks click events)"
+        @tier "presentation"
+    }
+  }
+
+  page "/button" as ButtonPage -> ButtonRender
+}

@@ -1,0 +1,72 @@
+app ui-qr-scanner "1.0.0"
+"QrScanner — UI factory (1:1 with the @almadar/ui qr-scanner pattern)."
+orbital QrScannerOrbital {
+  entity QrScannerItem [runtime] {
+    id : string!
+  }
+
+  trait QrScannerRender -> @rebindable QrScannerItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          onScan: SCAN
+          scanEvent: SCAN
+          onError: ERROR
+          facingMode: @config.facingMode
+          paused: @config.paused
+          showOverlay: @config.showOverlay
+          showCameraControls: @config.showCameraControls
+          fallback: @config.fallback
+          className: @config.className
+          type: qr-scanner
+        })
+    }
+
+    emits {
+      SCAN -> external {
+        result : object
+        text : string!
+        format : string!
+        timestamp : number!
+      }
+        @description "onScan prop"
+        @tier "essential"
+      ERROR -> external {
+        error : object
+      }
+        @description "onError prop"
+        @tier "essential"
+    }
+
+    config {
+      facingMode : "environment" | "user" = environment
+        @label "Facing Mode"
+        @description "facingMode prop"
+        @tier "presentation"
+      paused : boolean = false
+        @label "Paused"
+        @description "paused prop"
+        @tier "presentation"
+      showOverlay : boolean = true
+        @label "Show Overlay"
+        @description "showOverlay prop"
+        @tier "presentation"
+      showCameraControls : boolean = true
+        @label "Show Camera Controls"
+        @description "showCameraControls prop"
+        @tier "presentation"
+      fallback : node
+        @label "Fallback"
+        @description "fallback prop"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/qr-scanner" as QrScannerPage -> QrScannerRender
+}

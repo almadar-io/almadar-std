@@ -1,0 +1,33 @@
+app ui-scaled-diagram "1.0.0"
+"ScaledDiagram — UI factory (1:1 with the @almadar/ui scaled-diagram pattern)."
+orbital ScaledDiagramOrbital {
+  entity ScaledDiagramItem [runtime] {
+    id : string!
+  }
+
+  trait ScaledDiagramRender -> @rebindable ScaledDiagramItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          children: @config.children
+          className: @config.className
+          type: scaled-diagram
+        })
+    }
+
+    config {
+      children : node
+        @label "Children"
+        @description "children prop"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/scaled-diagram" as ScaledDiagramPage -> ScaledDiagramRender
+}

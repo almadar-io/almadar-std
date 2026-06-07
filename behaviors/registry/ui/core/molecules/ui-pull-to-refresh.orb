@@ -1,0 +1,128 @@
+{
+  "name": "ui-pull-to-refresh",
+  "version": "1.0.0",
+  "description": "PullToRefresh — UI factory (1:1 with the @almadar/ui pull-to-refresh pattern).",
+  "orbitals": [
+    {
+      "name": "PullToRefreshOrbital",
+      "entity": {
+        "name": "PullToRefreshItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "PullToRefreshRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "PullToRefreshItem",
+          "emits": [
+            {
+              "event": "REFRESH",
+              "description": "Event name to emit on refresh (emitted as UI:{refreshEvent})",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "REFRESH",
+                "name": "Refresh",
+                "description": "Event name to emit on refresh (emitted as UI:{refreshEvent})",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "children": "@config.children",
+                      "threshold": "@config.threshold",
+                      "refreshPayload": "@config.refreshPayload",
+                      "type": "pull-to-refresh",
+                      "refreshEvent": "REFRESH"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "threshold": {
+              "type": "number",
+              "default": 60.0,
+              "label": "Threshold",
+              "description": "Pull distance threshold to trigger refresh in px (default: 60)",
+              "tier": "presentation"
+            },
+            "refreshPayload": {
+              "type": "json",
+              "label": "Refresh Payload",
+              "description": "Payload to include with the refresh event",
+              "tier": "presentation"
+            },
+            "children": {
+              "type": "node",
+              "label": "Children",
+              "description": "Content to wrap",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "PullToRefreshPage",
+          "path": "/pull-to-refresh",
+          "traits": [
+            {
+              "ref": "PullToRefreshRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+app ui-chart-legend "1.0.0"
+"ChartLegend — UI factory (1:1 with the @almadar/ui chart-legend pattern)."
+orbital ChartLegendOrbital {
+  type ChartLegendItemsItem = {
+    label : string!
+    color : string!
+  }
+
+  entity ChartLegendItem [runtime] {
+    id : string!
+  }
+
+  trait ChartLegendRender -> @rebindable ChartLegendItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          items: @config.items
+          className: @config.className
+          direction: @config.direction
+          type: chart-legend
+        })
+    }
+
+    config {
+      items : [ChartLegendItemsItem] = []
+        @label "Items"
+        @description "Legend items with label and color"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      direction : "horizontal" | "vertical" = horizontal
+        @label "Direction"
+        @description "Layout direction"
+        @tier "presentation"
+    }
+  }
+
+  page "/chart-legend" as ChartLegendPage -> ChartLegendRender
+}

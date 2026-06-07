@@ -1,0 +1,147 @@
+app ui-trait-slot "1.0.0"
+"TraitSlot — UI factory (1:1 with the @almadar/ui trait-slot pattern)."
+orbital TraitSlotOrbital {
+  type TraitSlotEquippedItem = {
+    id : string!
+    name : string!
+    category : string!
+    description : string
+    iconEmoji : string
+    iconUrl : string
+    stateMachine : TraitSlotEquippedItemStateMachine
+  }
+  type TraitSlotEquippedItemStateMachine = {
+    name : string!
+    states : [string]!
+    currentState : string!
+    transitions : [TraitSlotEquippedItemStateMachineTransitionsItem]!
+    description : string
+  }
+  type TraitSlotEquippedItemStateMachineTransitionsItem = {
+    from : string!
+    to : string!
+    event : string!
+    guardHint : string
+  }
+
+  entity TraitSlotItem [runtime] {
+    id : string!
+  }
+
+  trait TraitSlotRender -> @rebindable TraitSlotItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch TraitSlotItem {})
+        (render-ui main {
+          slotNumber: @config.slotNumber
+          equippedItem: @config.equippedItem
+          locked: @config.locked
+          lockLabel: @config.lockLabel
+          selected: @config.selected
+          size: @config.size
+          showTooltip: @config.showTooltip
+          categoryColors: @config.categoryColors
+          tooltipFrameUrl: @config.tooltipFrameUrl
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          entity: TraitSlotItem
+          onItemDrop: ITEM_DROP
+          draggable: @config.draggable
+          onDragStart: DRAG_START
+          feedback: @config.feedback
+          onClick: CLICK
+          onRemove: REMOVE
+          clickEvent: CLICK
+          removeEvent: REMOVE
+          type: trait-slot
+        })
+    }
+
+    emits {
+      ITEM_DROP -> external {
+        item : object
+      }
+        @description "-- Drag and drop --"
+        @tier "essential"
+      DRAG_START -> external {
+        item : object
+      }
+        @description "Called when drag starts from this slot"
+        @tier "essential"
+      CLICK -> external {
+        slotNumber : number!
+      }
+        @description "-- Callbacks --"
+        @tier "essential"
+      REMOVE -> external {
+        slotNumber : number!
+      }
+        @description "Remove handler"
+        @tier "essential"
+    }
+
+    config {
+      slotNumber : number = 0
+        @label "Slot Number"
+        @description "Slot index (1-based)"
+        @tier "presentation"
+      equippedItem : TraitSlotEquippedItem
+        @label "Equipped Item"
+        @description "Currently equipped item, if any"
+        @tier "presentation"
+      locked : boolean = false
+        @label "Locked"
+        @description "Whether slot is locked"
+        @tier "presentation"
+      lockLabel : string = ""
+        @label "Lock Label"
+        @description "Label shown when locked"
+        @tier "presentation"
+      selected : boolean = false
+        @label "Selected"
+        @description "Whether slot is selected"
+        @tier "presentation"
+      size : "sm" | "md" | "lg" = md
+        @label "Size"
+        @description "Size variant"
+        @tier "presentation"
+      showTooltip : boolean = true
+        @label "Show Tooltip"
+        @description "Show tooltip on hover"
+        @tier "presentation"
+      categoryColors : json
+        @label "Category Colors"
+        @description "Category → color mapping"
+        @tier "presentation"
+      tooltipFrameUrl : string = ""
+        @label "Tooltip Frame Url"
+        @description "Optional tooltip frame image URL"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state"
+        @tier "presentation"
+      error : json
+        @label "Error"
+        @description "Error state"
+        @tier "presentation"
+      draggable : boolean = false
+        @label "Draggable"
+        @description "Whether this slot's equipped item is draggable"
+        @tier "presentation"
+      feedback : "correct" | "wrong" = correct
+        @label "Feedback"
+        @description "Per-slot correctness feedback after a failed attempt"
+        @tier "presentation"
+    }
+  }
+
+  page "/trait-slot" as TraitSlotPage -> TraitSlotRender
+}

@@ -1,0 +1,69 @@
+app ui-trait-state-viewer "1.0.0"
+"TraitStateViewer — UI factory (1:1 with the @almadar/ui trait-state-viewer pattern)."
+orbital TraitStateViewerOrbital {
+  entity TraitStateViewerItem [runtime] {
+    id : string!
+  }
+
+  trait TraitStateViewerRender -> @rebindable TraitStateViewerItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch TraitStateViewerItem {})
+        (render-ui main {
+          variant: @config.variant
+          size: @config.size
+          showTransitions: @config.showTransitions
+          onStateClick: STATE_CLICK
+          stateStyles: @config.stateStyles
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          entity: TraitStateViewerItem
+          type: trait-state-viewer
+        })
+    }
+
+    emits {
+      STATE_CLICK -> external {
+        state : string
+      }
+        @description "Click handler for states"
+        @tier "essential"
+    }
+
+    config {
+      variant : "linear" | "compact" | "full" = compact
+        @label "Variant"
+        @description "Display variant"
+        @tier "presentation"
+      size : "sm" | "md" | "lg" = md
+        @label "Size"
+        @description "Size variant"
+        @tier "presentation"
+      showTransitions : boolean = true
+        @label "Show Transitions"
+        @description "Whether to show transition labels"
+        @tier "presentation"
+      stateStyles : json
+        @label "State Styles"
+        @description "Custom state styles passed to StateIndicator"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state"
+        @tier "presentation"
+      error : json
+        @label "Error"
+        @description "Error state"
+        @tier "presentation"
+    }
+  }
+
+  page "/trait-state-viewer" as TraitStateViewerPage -> TraitStateViewerRender
+}

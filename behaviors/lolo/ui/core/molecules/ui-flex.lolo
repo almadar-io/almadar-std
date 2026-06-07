@@ -1,0 +1,78 @@
+app ui-flex "1.0.0"
+"Flex — UI factory (1:1 with the @almadar/ui flex pattern)."
+orbital FlexOrbital {
+  entity FlexItem [runtime] {
+    id : string!
+  }
+
+  trait FlexRender -> @rebindable FlexItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          direction: @config.direction
+          wrap: @config.wrap
+          align: @config.align
+          justify: @config.justify
+          gap: @config.gap
+          inline: @config.inline
+          grow: @config.grow
+          shrink: @config.shrink
+          basis: @config.basis
+          className: @config.className
+          children: @config.children
+          type: flex
+        })
+    }
+
+    config {
+      direction : "row" | "row-reverse" | "col" | "col-reverse" = row
+        @label "Direction"
+        @description "Flex direction"
+        @tier "presentation"
+      wrap : "nowrap" | "wrap" | "wrap-reverse" = nowrap
+        @label "Wrap"
+        @description "Flex wrap"
+        @tier "presentation"
+      align : "start" | "center" | "end" | "stretch" | "baseline" = stretch
+        @label "Align"
+        @description "Align items"
+        @tier "presentation"
+      justify : "start" | "center" | "end" | "between" | "around" | "evenly" = start
+        @label "Justify"
+        @description "Justify content"
+        @tier "presentation"
+      gap : "none" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" = none
+        @label "Gap"
+        @description "Gap between items"
+        @tier "presentation"
+      inline : boolean = false
+        @label "Inline"
+        @description "Inline flex"
+        @tier "presentation"
+      grow : boolean | number
+        @label "Grow"
+        @description "Flex grow"
+        @tier "presentation"
+      shrink : boolean | number
+        @label "Shrink"
+        @description "Flex shrink"
+        @tier "presentation"
+      basis : string | number
+        @label "Basis"
+        @description "Flex basis"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Custom class name"
+        @tier "presentation"
+      children : node
+        @label "Children"
+        @description "Children elements"
+        @tier "presentation"
+    }
+  }
+
+  page "/flex" as FlexPage -> FlexRender
+}

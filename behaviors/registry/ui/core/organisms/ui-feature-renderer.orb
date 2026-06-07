@@ -1,0 +1,217 @@
+{
+  "name": "ui-feature-renderer",
+  "version": "1.0.0",
+  "description": "FeatureRenderer — UI factory (1:1 with the @almadar/ui feature-renderer pattern).",
+  "orbitals": [
+    {
+      "name": "FeatureRendererOrbital",
+      "entity": {
+        "name": "FeatureRendererItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "FeatureRendererRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "FeatureRendererItem",
+          "emits": [
+            {
+              "event": "FEATURE_CLICK",
+              "description": "Called when feature is clicked",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "feature",
+                  "type": "object"
+                }
+              ]
+            },
+            {
+              "event": "FEATURE_HOVER",
+              "description": "Called when feature is hovered",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "feature",
+                  "type": "object"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "FEATURE_CLICK",
+                "name": "Feature Click",
+                "description": "Called when feature is clicked",
+                "tier": "essential"
+              },
+              {
+                "key": "FEATURE_HOVER",
+                "name": "Feature Hover",
+                "description": "Called when feature is hovered",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "feature-renderer",
+                      "offsetZ": "@config.offsetZ",
+                      "offsetX": "@config.offsetX",
+                      "cellSize": "@config.cellSize",
+                      "featureColors": "@config.featureColors",
+                      "features": "@config.features",
+                      "onFeatureClick": "FEATURE_CLICK",
+                      "selectedFeatureIds": "@config.selectedFeatureIds",
+                      "onFeatureHover": "FEATURE_HOVER"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "features": {
+              "type": "[FeatureRendererFeaturesItem]",
+              "default": [],
+              "label": "Features",
+              "description": "Array of features to render",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": false
+                  },
+                  "elevation": {
+                    "name": "elevation",
+                    "type": "number",
+                    "required": false
+                  },
+                  "y": {
+                    "name": "y",
+                    "type": "number",
+                    "required": true
+                  },
+                  "sprite": {
+                    "name": "sprite",
+                    "type": "string",
+                    "required": false
+                  },
+                  "assetUrl": {
+                    "name": "assetUrl",
+                    "type": "string",
+                    "required": false
+                  },
+                  "z": {
+                    "name": "z",
+                    "type": "number",
+                    "required": false
+                  },
+                  "color": {
+                    "name": "color",
+                    "type": "string",
+                    "required": false
+                  },
+                  "x": {
+                    "name": "x",
+                    "type": "number",
+                    "required": true
+                  },
+                  "type": {
+                    "name": "type",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "cellSize": {
+              "type": "number",
+              "default": 1.0,
+              "label": "Cell Size",
+              "description": "Grid cell size",
+              "tier": "presentation"
+            },
+            "offsetX": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Offset X",
+              "description": "Grid offset X",
+              "tier": "presentation"
+            },
+            "offsetZ": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Offset Z",
+              "description": "Grid offset Z",
+              "tier": "presentation"
+            },
+            "featureColors": {
+              "type": "json",
+              "label": "Feature Colors",
+              "description": "Feature color overrides",
+              "tier": "presentation"
+            },
+            "selectedFeatureIds": {
+              "type": "[string]",
+              "default": [],
+              "label": "Selected Feature Ids",
+              "description": "Selected feature IDs",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "FeatureRendererPage",
+          "path": "/feature-renderer",
+          "traits": [
+            {
+              "ref": "FeatureRendererRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

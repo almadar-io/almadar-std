@@ -1,0 +1,237 @@
+{
+  "name": "ui-confirm-dialog",
+  "version": "1.0.0",
+  "description": "ConfirmDialog — UI factory (1:1 with the @almadar/ui confirm-dialog pattern).",
+  "orbitals": [
+    {
+      "name": "ConfirmDialogOrbital",
+      "entity": {
+        "name": "ConfirmDialogItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ConfirmDialogRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "ConfirmDialogItem",
+          "emits": [
+            {
+              "event": "CLOSE",
+              "description": "Callback when dialog is closed (injected by slot wrapper)",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CONFIRM",
+              "description": "Callback when action is confirmed (injected by slot wrapper)",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "CLOSE",
+                "name": "Close",
+                "description": "Callback when dialog is closed (injected by slot wrapper)",
+                "tier": "essential"
+              },
+              {
+                "key": "CONFIRM",
+                "name": "Confirm",
+                "description": "Callback when action is confirmed (injected by slot wrapper)",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "ConfirmDialogItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "error": "@config.error",
+                      "title": "@config.title",
+                      "cancelLabel": "@config.cancelLabel",
+                      "variant": "@config.variant",
+                      "description": "@config.description",
+                      "onClose": "CLOSE",
+                      "type": "confirm-dialog",
+                      "confirmLabel": "@config.confirmLabel",
+                      "message": "@config.message",
+                      "isOpen": "@config.isOpen",
+                      "className": "@config.className",
+                      "isLoading": "@config.isLoading",
+                      "size": "@config.size",
+                      "confirmText": "@config.confirmText",
+                      "entity": "ConfirmDialogItem",
+                      "cancelText": "@config.cancelText",
+                      "onConfirm": "CONFIRM"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "description": {
+              "type": "json",
+              "label": "Description",
+              "description": "Alias for message (schema compatibility)",
+              "tier": "presentation"
+            },
+            "isOpen": {
+              "type": "boolean",
+              "default": true,
+              "label": "Is Open",
+              "description": "Whether the dialog is open (defaults to true when rendered by slot wrapper)",
+              "tier": "presentation"
+            },
+            "confirmText": {
+              "type": "string",
+              "default": "",
+              "label": "Confirm Text",
+              "description": "Confirm button text",
+              "tier": "presentation"
+            },
+            "variant": {
+              "type": "string",
+              "default": "danger",
+              "label": "Variant",
+              "description": "Dialog variant",
+              "tier": "presentation",
+              "values": [
+                "danger",
+                "warning",
+                "info",
+                "default"
+              ]
+            },
+            "cancelLabel": {
+              "type": "string",
+              "default": "",
+              "label": "Cancel Label",
+              "description": "Alias for cancelText (schema compatibility)",
+              "tier": "presentation"
+            },
+            "title": {
+              "type": "string",
+              "default": "",
+              "label": "Title",
+              "description": "Dialog title",
+              "tier": "presentation"
+            },
+            "message": {
+              "type": "json",
+              "label": "Message",
+              "description": "Dialog message/description",
+              "tier": "presentation"
+            },
+            "cancelText": {
+              "type": "string",
+              "default": "",
+              "label": "Cancel Text",
+              "description": "Cancel button text",
+              "tier": "presentation"
+            },
+            "error": {
+              "type": "json",
+              "label": "Error",
+              "description": "Error state",
+              "tier": "presentation"
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state for confirm button",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "confirmLabel": {
+              "type": "string",
+              "default": "",
+              "label": "Confirm Label",
+              "description": "Alias for confirmText (schema compatibility)",
+              "tier": "presentation"
+            },
+            "size": {
+              "type": "string",
+              "default": "sm",
+              "label": "Size",
+              "description": "Dialog size",
+              "tier": "presentation",
+              "values": [
+                "sm",
+                "md",
+                "lg",
+                "xl",
+                "full"
+              ]
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "ConfirmDialogPage",
+          "path": "/confirm-dialog",
+          "traits": [
+            {
+              "ref": "ConfirmDialogRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

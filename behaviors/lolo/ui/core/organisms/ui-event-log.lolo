@@ -1,0 +1,51 @@
+app ui-event-log "1.0.0"
+"EventLog — UI factory (1:1 with the @almadar/ui event-log pattern)."
+orbital EventLogOrbital {
+  type EventLogEntriesItem = {
+    id : string!
+    timestamp : number!
+    icon : string!
+    message : string!
+    status : "pending" | "active" | "done" | "error"!
+  }
+
+  entity EventLogItem [runtime] {
+    id : string!
+  }
+
+  trait EventLogRender -> @rebindable EventLogItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          entries: @config.entries
+          maxHeight: @config.maxHeight
+          label: @config.label
+          className: @config.className
+          type: event-log
+        })
+    }
+
+    config {
+      entries : [EventLogEntriesItem] = []
+        @label "Entries"
+        @description "Log entries"
+        @tier "presentation"
+      maxHeight : number = 200
+        @label "Max Height"
+        @description "Max visible height before scroll"
+        @tier "presentation"
+      label : string = ""
+        @label "Label"
+        @description "Title label"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/event-log" as EventLogPage -> EventLogRender
+}

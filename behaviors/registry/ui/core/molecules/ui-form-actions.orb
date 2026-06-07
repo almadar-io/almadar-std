@@ -1,0 +1,197 @@
+{
+  "name": "ui-form-actions",
+  "version": "1.0.0",
+  "description": "FormActions — UI factory (1:1 with the @almadar/ui form-actions pattern).",
+  "orbitals": [
+    {
+      "name": "FormActionsOrbital",
+      "entity": {
+        "name": "FormActionsItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "FormActionsRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "FormActionsItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "FormActionsItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "orientation": "@config.orientation",
+                      "filters": "@config.filters",
+                      "className": "@config.className",
+                      "variant": "@config.variant",
+                      "primary": "@config.primary",
+                      "children": "@config.children",
+                      "secondary": "@config.secondary",
+                      "entity": "FormActionsItem",
+                      "look": "@config.look",
+                      "type": "form-actions"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "orientation": {
+              "type": "string",
+              "default": "horizontal",
+              "label": "Orientation",
+              "description": "Orientation",
+              "tier": "presentation",
+              "values": [
+                "horizontal",
+                "vertical"
+              ]
+            },
+            "children": {
+              "type": "node",
+              "label": "Children",
+              "description": "Button group content (Button components) - use this OR primary/secondary",
+              "tier": "presentation"
+            },
+            "filters": {
+              "type": "[FormActionsFiltersItem]",
+              "default": [],
+              "label": "Filters",
+              "description": "Filter definitions for filter-group pattern",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "type": {
+                    "name": "type",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "checkbox",
+                      "select",
+                      "toggle"
+                    ]
+                  },
+                  "options": {
+                    "name": "options",
+                    "type": "array",
+                    "required": false,
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "field": {
+                    "name": "field",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "secondary": {
+              "type": "[json]",
+              "default": [],
+              "label": "Secondary",
+              "description": "Secondary action buttons config (for form-actions pattern) Accepts readonly array for compatibility with generated const arrays",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "primary": {
+              "type": "json",
+              "label": "Primary",
+              "description": "Primary action button config (for form-actions pattern) Accepts Readonly for compatibility with generated const objects",
+              "tier": "presentation"
+            },
+            "variant": {
+              "type": "string",
+              "default": "default",
+              "label": "Variant",
+              "description": "Visual variant",
+              "tier": "presentation",
+              "values": [
+                "default",
+                "segmented",
+                "toggle"
+              ]
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "look": {
+              "type": "string",
+              "default": "right-aligned-buttons",
+              "label": "Look",
+              "description": "Layer 2 visual treatment for the action-cluster (form-actions) pattern.",
+              "tier": "presentation",
+              "values": [
+                "right-aligned-buttons",
+                "floating-bar",
+                "inline-row",
+                "dropdown-menu",
+                "command-palette-trigger"
+              ]
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "FormActionsPage",
+          "path": "/form-actions",
+          "traits": [
+            {
+              "ref": "FormActionsRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

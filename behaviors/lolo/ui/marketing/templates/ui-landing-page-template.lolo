@@ -1,0 +1,40 @@
+app ui-landing-page-template "1.0.0"
+"LandingPageTemplate — UI factory (1:1 with the @almadar/ui landing-page-template pattern)."
+orbital LandingPageTemplateOrbital {
+  entity LandingPageTemplateItem [runtime] {
+    id : string!
+  }
+
+  trait LandingPageTemplateRender -> @rebindable LandingPageTemplateItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch LandingPageTemplateItem {})
+        (render-ui main {
+          entity: @entity
+          className: @config.className
+          variant: @config.variant
+          featureColumns: @config.featureColumns
+          type: landing-page-template
+        })
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "External styling override"
+        @tier "presentation"
+      variant : "product" | "service" | "platform" = product
+        @label "Variant"
+        @description "variant prop"
+        @tier "presentation"
+      featureColumns : number = 3
+        @label "Feature Columns"
+        @description "featureColumns prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/landing-page-template" as LandingPageTemplatePage -> LandingPageTemplateRender
+}

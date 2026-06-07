@@ -1,0 +1,179 @@
+{
+  "name": "ui-book-viewer",
+  "version": "1.0.0",
+  "description": "BookViewer — UI factory (1:1 with the @almadar/ui book-viewer pattern).",
+  "orbitals": [
+    {
+      "name": "BookViewerOrbital",
+      "entity": {
+        "name": "BookViewerItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "BookViewerRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "BookViewerItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "BookViewerItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "sortBy": "@config.sortBy",
+                      "isLoading": "@config.isLoading",
+                      "entity": "@entity",
+                      "searchValue": "@config.searchValue",
+                      "error": "@config.error",
+                      "sortDirection": "@config.sortDirection",
+                      "pageSize": "@config.pageSize",
+                      "totalCount": "@config.totalCount",
+                      "activeFilters": "@config.activeFilters",
+                      "selectedIds": "@config.selectedIds",
+                      "initialPage": "@config.initialPage",
+                      "fieldMap": "@config.fieldMap",
+                      "className": "@config.className",
+                      "type": "book-viewer"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "sortBy": {
+              "type": "string",
+              "default": "",
+              "label": "Sort By",
+              "description": "Current sort field",
+              "tier": "presentation"
+            },
+            "sortDirection": {
+              "type": "string",
+              "default": "",
+              "label": "Sort Direction",
+              "description": "Current sort direction",
+              "tier": "presentation"
+            },
+            "fieldMap": {
+              "type": "json",
+              "label": "Field Map",
+              "description": "Field name translation map — a BookFieldMap object or locale key ('ar')",
+              "tier": "presentation"
+            },
+            "activeFilters": {
+              "type": "json",
+              "label": "Active Filters",
+              "description": "Active filters",
+              "tier": "presentation"
+            },
+            "searchValue": {
+              "type": "string",
+              "default": "",
+              "label": "Search Value",
+              "description": "Current search query value",
+              "tier": "presentation"
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
+              "tier": "presentation"
+            },
+            "pageSize": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Page Size",
+              "description": "Number of items per page",
+              "tier": "presentation"
+            },
+            "error": {
+              "type": "json",
+              "label": "Error",
+              "description": "Error state",
+              "tier": "presentation"
+            },
+            "totalCount": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Total Count",
+              "description": "Total number of items",
+              "tier": "presentation"
+            },
+            "initialPage": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Initial Page",
+              "description": "Initial page index (default: 0 = cover)",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "selectedIds": {
+              "type": "[json]",
+              "default": [],
+              "label": "Selected Ids",
+              "description": "Currently selected item IDs",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "BookViewerPage",
+          "path": "/book-viewer",
+          "traits": [
+            {
+              "ref": "BookViewerRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

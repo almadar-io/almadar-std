@@ -1,0 +1,132 @@
+{
+  "name": "ui-event-handler-board",
+  "version": "1.0.0",
+  "description": "EventHandlerBoard — UI factory (1:1 with the @almadar/ui event-handler-board pattern).",
+  "orbitals": [
+    {
+      "name": "EventHandlerBoardOrbital",
+      "entity": {
+        "name": "EventHandlerBoardItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "EventHandlerBoardRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "EventHandlerBoardItem",
+          "emits": [
+            {
+              "event": "PLAY",
+              "description": "Emits UI:{playEvent}",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "COMPLETE",
+              "description": "Emits UI:{completeEvent} with { success }",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "success",
+                  "type": "boolean",
+                  "required": true
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "PLAY",
+                "name": "Play",
+                "description": "Emits UI:{playEvent}",
+                "tier": "essential"
+              },
+              {
+                "key": "COMPLETE",
+                "name": "Complete",
+                "description": "Emits UI:{completeEvent} with { success }",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "EventHandlerBoardItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "stepDurationMs": "@config.stepDurationMs",
+                      "entity": "@entity",
+                      "completeEvent": "COMPLETE",
+                      "playEvent": "PLAY",
+                      "type": "event-handler-board"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "stepDurationMs": {
+              "type": "number",
+              "default": 800.0,
+              "label": "Step Duration Ms",
+              "description": "Playback speed in ms per event",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "EventHandlerBoardPage",
+          "path": "/event-handler-board",
+          "traits": [
+            {
+              "ref": "EventHandlerBoardRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

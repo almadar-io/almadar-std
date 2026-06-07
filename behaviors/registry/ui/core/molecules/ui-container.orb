@@ -1,0 +1,149 @@
+{
+  "name": "ui-container",
+  "version": "1.0.0",
+  "description": "Container — UI factory (1:1 with the @almadar/ui container pattern).",
+  "orbitals": [
+    {
+      "name": "ContainerOrbital",
+      "entity": {
+        "name": "ContainerItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ContainerRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "ContainerItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "padding": "@config.padding",
+                      "type": "container",
+                      "size": "@config.size",
+                      "className": "@config.className",
+                      "children": "@config.children",
+                      "center": "@config.center",
+                      "maxWidth": "@config.maxWidth"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "padding": {
+              "type": "string",
+              "default": "md",
+              "label": "Padding",
+              "description": "Horizontal padding",
+              "tier": "presentation",
+              "values": [
+                "none",
+                "sm",
+                "md",
+                "lg",
+                "xl"
+              ]
+            },
+            "center": {
+              "type": "boolean",
+              "default": true,
+              "label": "Center",
+              "description": "Center horizontally",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Custom class name",
+              "tier": "presentation"
+            },
+            "children": {
+              "type": "node",
+              "label": "Children",
+              "description": "Children elements",
+              "tier": "presentation"
+            },
+            "maxWidth": {
+              "type": "string",
+              "default": "xs",
+              "label": "Max Width",
+              "description": "Alias for size (pattern compatibility)",
+              "tier": "presentation",
+              "values": [
+                "xs",
+                "sm",
+                "md",
+                "lg",
+                "xl",
+                "2xl",
+                "full"
+              ]
+            },
+            "size": {
+              "type": "string",
+              "default": "xs",
+              "label": "Size",
+              "description": "Maximum width",
+              "tier": "presentation",
+              "values": [
+                "xs",
+                "sm",
+                "md",
+                "lg",
+                "xl",
+                "2xl",
+                "full"
+              ]
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "ContainerPage",
+          "path": "/container",
+          "traits": [
+            {
+              "ref": "ContainerRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

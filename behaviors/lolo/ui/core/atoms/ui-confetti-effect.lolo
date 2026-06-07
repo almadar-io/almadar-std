@@ -1,0 +1,43 @@
+app ui-confetti-effect "1.0.0"
+"ConfettiEffect — UI factory (1:1 with the @almadar/ui confetti-effect pattern)."
+orbital ConfettiEffectOrbital {
+  entity ConfettiEffectItem [runtime] {
+    id : string!
+  }
+
+  trait ConfettiEffectRender -> @rebindable ConfettiEffectItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          trigger: @config.trigger
+          duration: @config.duration
+          particleCount: @config.particleCount
+          className: @config.className
+          type: confetti-effect
+        })
+    }
+
+    config {
+      trigger : boolean = false
+        @label "Trigger"
+        @description "When this changes from false to true, a burst of particles is spawned"
+        @tier "presentation"
+      duration : number = 2000
+        @label "Duration"
+        @description "How long the animation lasts in milliseconds"
+        @tier "presentation"
+      particleCount : number = 30
+        @label "Particle Count"
+        @description "Number of particles to spawn"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional class names"
+        @tier "presentation"
+    }
+  }
+
+  page "/confetti-effect" as ConfettiEffectPage -> ConfettiEffectRender
+}

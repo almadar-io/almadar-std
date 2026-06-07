@@ -1,0 +1,145 @@
+{
+  "name": "ui-sequencer-board",
+  "version": "1.0.0",
+  "description": "SequencerBoard — UI factory (1:1 with the @almadar/ui sequencer-board pattern).",
+  "orbitals": [
+    {
+      "name": "SequencerBoardOrbital",
+      "entity": {
+        "name": "SequencerBoardItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "SequencerBoardRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "SequencerBoardItem",
+          "emits": [
+            {
+              "event": "PLAY",
+              "description": "Emits UI:{playEvent} with { sequence: string[] }",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "sequence",
+                  "type": "[object]",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "COMPLETE",
+              "description": "Emits UI:{completeEvent} with { success: boolean }",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "success",
+                  "type": "boolean",
+                  "required": true
+                },
+                {
+                  "name": "sequence",
+                  "type": "[object]",
+                  "required": true
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "PLAY",
+                "name": "Play",
+                "description": "Emits UI:{playEvent} with { sequence: string[] }",
+                "tier": "essential"
+              },
+              {
+                "key": "COMPLETE",
+                "name": "Complete",
+                "description": "Emits UI:{completeEvent} with { success: boolean }",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "SequencerBoardItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "playEvent": "PLAY",
+                      "stepDurationMs": "@config.stepDurationMs",
+                      "type": "sequencer-board",
+                      "categoryColors": "@config.categoryColors",
+                      "entity": "@entity",
+                      "completeEvent": "COMPLETE"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "stepDurationMs": {
+              "type": "number",
+              "default": 1000.0,
+              "label": "Step Duration Ms",
+              "description": "Playback speed in ms per step",
+              "tier": "presentation"
+            },
+            "categoryColors": {
+              "type": "json",
+              "label": "Category Colors",
+              "description": "Category → color mapping",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "SequencerBoardPage",
+          "path": "/sequencer-board",
+          "traits": [
+            {
+              "ref": "SequencerBoardRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

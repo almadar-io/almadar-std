@@ -1,0 +1,124 @@
+{
+  "name": "ui-form-field",
+  "version": "1.0.0",
+  "description": "FormField — UI factory (1:1 with the @almadar/ui form-field pattern).",
+  "orbitals": [
+    {
+      "name": "FormFieldOrbital",
+      "entity": {
+        "name": "FormFieldItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "FormFieldRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "FormFieldItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "required": "@config.required",
+                      "label": "@config.label",
+                      "className": "@config.className",
+                      "type": "form-field",
+                      "hint": "@config.hint",
+                      "children": "@config.children",
+                      "error": "@config.error"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "required": {
+              "type": "boolean",
+              "default": false,
+              "label": "Required",
+              "description": "required prop",
+              "tier": "presentation"
+            },
+            "hint": {
+              "type": "string",
+              "default": "",
+              "label": "Hint",
+              "description": "hint prop",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "className prop",
+              "tier": "presentation"
+            },
+            "label": {
+              "type": "string",
+              "default": "",
+              "label": "Label",
+              "description": "label prop",
+              "tier": "presentation"
+            },
+            "children": {
+              "type": "node",
+              "label": "Children",
+              "description": "children prop",
+              "tier": "presentation"
+            },
+            "error": {
+              "type": "string",
+              "default": "",
+              "label": "Error",
+              "description": "error prop",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "FormFieldPage",
+          "path": "/form-field",
+          "traits": [
+            {
+              "ref": "FormFieldRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

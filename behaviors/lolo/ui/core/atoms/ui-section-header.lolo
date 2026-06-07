@@ -1,0 +1,48 @@
+app ui-section-header "1.0.0"
+"SectionHeader — UI factory (1:1 with the @almadar/ui section-header pattern)."
+orbital SectionHeaderOrbital {
+  entity SectionHeaderItem [runtime] {
+    id : string!
+  }
+
+  trait SectionHeaderRender -> @rebindable SectionHeaderItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          title: @config.title
+          subtitle: @config.subtitle
+          align: @config.align
+          level: @config.level
+          className: @config.className
+          type: section-header
+        })
+    }
+
+    config {
+      title : string = ""
+        @label "Title"
+        @description "Section title text"
+        @tier "presentation"
+      subtitle : string = ""
+        @label "Subtitle"
+        @description "Optional subtitle text"
+        @tier "presentation"
+      align : "center" | "left" | "right" = center
+        @label "Align"
+        @description "Text alignment"
+        @tier "presentation"
+      level : number = 2
+        @label "Level"
+        @description "Heading level (1, 2, or 3)"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional class names"
+        @tier "presentation"
+    }
+  }
+
+  page "/section-header" as SectionHeaderPage -> SectionHeaderRender
+}

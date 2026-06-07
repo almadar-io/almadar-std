@@ -1,0 +1,53 @@
+app ui-timer-display "1.0.0"
+"TimerDisplay — UI factory (1:1 with the @almadar/ui timer-display pattern)."
+orbital TimerDisplayOrbital {
+  entity TimerDisplayItem [runtime] {
+    id : string!
+  }
+
+  trait TimerDisplayRender -> @rebindable TimerDisplayItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          seconds: @config.seconds
+          running: @config.running
+          format: @config.format
+          size: @config.size
+          className: @config.className
+          lowThreshold: @config.lowThreshold
+          type: timer-display
+        })
+    }
+
+    config {
+      seconds : number = 0
+        @label "Seconds"
+        @description "Time in seconds"
+        @tier "presentation"
+      running : boolean = false
+        @label "Running"
+        @description "Whether the timer is running"
+        @tier "presentation"
+      format : "mm:ss" | "ss" | "countdown" = "mm:ss"
+        @label "Format"
+        @description "Display format"
+        @tier "presentation"
+      size : "sm" | "md" | "lg" = md
+        @label "Size"
+        @description "Size variant"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      lowThreshold : number = 0
+        @label "Low Threshold"
+        @description "Seconds below which to pulse red"
+        @tier "presentation"
+    }
+  }
+
+  page "/timer-display" as TimerDisplayPage -> TimerDisplayRender
+}

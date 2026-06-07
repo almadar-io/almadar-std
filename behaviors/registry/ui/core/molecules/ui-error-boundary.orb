@@ -1,0 +1,136 @@
+{
+  "name": "ui-error-boundary",
+  "version": "1.0.0",
+  "description": "ErrorBoundary — UI factory (1:1 with the @almadar/ui error-boundary pattern).",
+  "orbitals": [
+    {
+      "name": "ErrorBoundaryOrbital",
+      "entity": {
+        "name": "ErrorBoundaryItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ErrorBoundaryRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "ErrorBoundaryItem",
+          "emits": [
+            {
+              "event": "FALLBACK",
+              "description": "Fallback UI when an error is caught — ReactNode or render function",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "ERROR",
+              "description": "Called when an error is caught (for logging/telemetry)",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "object"
+                },
+                {
+                  "name": "errorInfo",
+                  "type": "object"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "FALLBACK",
+                "name": "Fallback",
+                "description": "Fallback UI when an error is caught — ReactNode or render function",
+                "tier": "essential"
+              },
+              {
+                "key": "ERROR",
+                "name": "Error",
+                "description": "Called when an error is caught (for logging/telemetry)",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "onError": "ERROR",
+                      "type": "error-boundary",
+                      "children": "@config.children",
+                      "fallback": "FALLBACK"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes for the wrapper",
+              "tier": "presentation"
+            },
+            "children": {
+              "type": "node",
+              "label": "Children",
+              "description": "Content to render when no error",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "ErrorBoundaryPage",
+          "path": "/error-boundary",
+          "traits": [
+            {
+              "ref": "ErrorBoundaryRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

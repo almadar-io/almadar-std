@@ -1,0 +1,138 @@
+{
+  "name": "ui-svg-shield",
+  "version": "1.0.0",
+  "description": "SvgShield — UI factory (1:1 with the @almadar/ui svg-shield pattern).",
+  "orbitals": [
+    {
+      "name": "SvgShieldOrbital",
+      "entity": {
+        "name": "SvgShieldItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "SvgShieldRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "SvgShieldItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "color": "@config.color",
+                      "y": "@config.y",
+                      "type": "svg-shield",
+                      "x": "@config.x",
+                      "variant": "@config.variant",
+                      "size": "@config.size",
+                      "className": "@config.className",
+                      "opacity": "@config.opacity"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "opacity": {
+              "type": "number",
+              "default": 1.0,
+              "label": "Opacity",
+              "description": "opacity prop",
+              "tier": "presentation"
+            },
+            "x": {
+              "type": "number",
+              "default": 0.0,
+              "label": "X",
+              "description": "x prop",
+              "tier": "presentation"
+            },
+            "variant": {
+              "type": "string",
+              "default": "outline",
+              "label": "Variant",
+              "description": "variant prop",
+              "tier": "presentation",
+              "values": [
+                "outline",
+                "filled",
+                "check"
+              ]
+            },
+            "color": {
+              "type": "string",
+              "default": "var(--color-primary)",
+              "label": "Color",
+              "description": "color prop",
+              "tier": "presentation"
+            },
+            "y": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Y",
+              "description": "y prop",
+              "tier": "presentation"
+            },
+            "size": {
+              "type": "number",
+              "default": 1.0,
+              "label": "Size",
+              "description": "size prop",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "className prop",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "SvgShieldPage",
+          "path": "/svg-shield",
+          "traits": [
+            {
+              "ref": "SvgShieldRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

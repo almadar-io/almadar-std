@@ -1,0 +1,321 @@
+{
+  "name": "ui-map-view",
+  "version": "1.0.0",
+  "description": "MapView — UI factory (1:1 with the @almadar/ui map-view pattern).",
+  "orbitals": [
+    {
+      "name": "MapViewOrbital",
+      "entity": {
+        "name": "MapViewItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "MapViewRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "MapViewItem",
+          "emits": [
+            {
+              "event": "MARKER_CLICK",
+              "description": "Callback when a marker is clicked (programmatic use)",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "marker",
+                  "type": "object"
+                },
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "lat",
+                  "type": "number",
+                  "required": true
+                },
+                {
+                  "name": "lng",
+                  "type": "number",
+                  "required": true
+                },
+                {
+                  "name": "label",
+                  "type": "string"
+                },
+                {
+                  "name": "category",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "MAP_CLICK",
+              "description": "Callback when the map is clicked (programmatic use)",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "lat",
+                  "type": "number"
+                },
+                {
+                  "name": "lng",
+                  "type": "number"
+                },
+                {
+                  "name": "latitude",
+                  "type": "number",
+                  "required": true
+                },
+                {
+                  "name": "longitude",
+                  "type": "number",
+                  "required": true
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "MARKER_CLICK",
+                "name": "Marker Click",
+                "description": "Callback when a marker is clicked (programmatic use)",
+                "tier": "essential"
+              },
+              {
+                "key": "MAP_CLICK",
+                "name": "Map Click",
+                "description": "Callback when the map is clicked (programmatic use)",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "markers": "@config.markers",
+                      "centerLng": "@config.centerLng",
+                      "className": "@config.className",
+                      "onMarkerClick": "MARKER_CLICK",
+                      "routes": "@config.routes",
+                      "showClickedPin": "@config.showClickedPin",
+                      "showAttribution": "@config.showAttribution",
+                      "type": "map-view",
+                      "zoom": "@config.zoom",
+                      "height": "@config.height",
+                      "mapClickEvent": "MAP_CLICK",
+                      "markerClickEvent": "MARKER_CLICK",
+                      "centerLat": "@config.centerLat",
+                      "onMapClick": "MAP_CLICK"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "centerLat": {
+              "type": "number",
+              "default": 51.505,
+              "label": "Center Lat",
+              "description": "Map center latitude",
+              "tier": "presentation"
+            },
+            "showClickedPin": {
+              "type": "boolean",
+              "default": false,
+              "label": "Show Clicked Pin",
+              "description": "Whether to show a pin at the clicked location",
+              "tier": "presentation"
+            },
+            "centerLng": {
+              "type": "number",
+              "default": -0.09,
+              "label": "Center Lng",
+              "description": "Map center longitude",
+              "tier": "presentation"
+            },
+            "markers": {
+              "type": "[MapViewMarkersItem]",
+              "default": [],
+              "label": "Markers",
+              "description": "Array of markers to display",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "lng": {
+                    "name": "lng",
+                    "type": "number",
+                    "required": true
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
+                  "category": {
+                    "name": "category",
+                    "type": "string",
+                    "required": false
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": true,
+                    "values": [
+                      "string",
+                      "number"
+                    ]
+                  },
+                  "lat": {
+                    "name": "lat",
+                    "type": "number",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "zoom": {
+              "type": "number",
+              "default": 13.0,
+              "label": "Zoom",
+              "description": "Zoom level (1-18, default 13)",
+              "tier": "presentation"
+            },
+            "showAttribution": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Attribution",
+              "description": "Show attribution (default true)",
+              "tier": "presentation"
+            },
+            "height": {
+              "type": "string",
+              "default": "400px",
+              "label": "Height",
+              "description": "Height of the map container (default '400px')",
+              "tier": "presentation"
+            },
+            "routes": {
+              "type": "[MapViewRoutesItem]",
+              "default": [],
+              "label": "Routes",
+              "description": "Routes (polylines with optional popups) drawn over the tile layer",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "type": "string",
+                    "required": false
+                  },
+                  "weight": {
+                    "name": "weight",
+                    "type": "number",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": true,
+                    "values": [
+                      "string",
+                      "number"
+                    ]
+                  },
+                  "opacity": {
+                    "name": "opacity",
+                    "type": "number",
+                    "required": false
+                  },
+                  "dashArray": {
+                    "name": "dashArray",
+                    "type": "string",
+                    "required": false
+                  },
+                  "waypoints": {
+                    "name": "waypoints",
+                    "type": "array",
+                    "required": true,
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "lng": {
+                          "name": "lng",
+                          "type": "number",
+                          "required": true
+                        },
+                        "lat": {
+                          "name": "lat",
+                          "type": "number",
+                          "required": true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "MapViewPage",
+          "path": "/map-view",
+          "traits": [
+            {
+              "ref": "MapViewRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,129 @@
+{
+  "name": "ui-branching-logic-builder",
+  "version": "1.0.0",
+  "description": "BranchingLogicBuilder — UI factory (1:1 with the @almadar/ui branching-logic-builder pattern).",
+  "orbitals": [
+    {
+      "name": "BranchingLogicBuilderOrbital",
+      "entity": {
+        "name": "BranchingLogicBuilderItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "BranchingLogicBuilderRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "BranchingLogicBuilderItem",
+          "emits": [
+            {
+              "event": "RULES_CHANGE",
+              "description": "onRulesChange prop",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "rules",
+                  "type": "[object]"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "RULES_CHANGE",
+                "name": "Rules Change",
+                "description": "onRulesChange prop",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "readOnly": "@config.readOnly",
+                      "onRulesChange": "RULES_CHANGE",
+                      "className": "@config.className",
+                      "type": "branching-logic-builder",
+                      "rulesChangeEvent": "RULES_CHANGE",
+                      "rules": "@config.rules",
+                      "questions": "@config.questions"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "className prop",
+              "tier": "presentation"
+            },
+            "readOnly": {
+              "type": "boolean",
+              "default": false,
+              "label": "Read Only",
+              "description": "readOnly prop",
+              "tier": "presentation"
+            },
+            "questions": {
+              "type": "json",
+              "label": "Questions",
+              "description": "questions prop",
+              "tier": "presentation"
+            },
+            "rules": {
+              "type": "json",
+              "label": "Rules",
+              "description": "Rules. Accepts either a typed array (direct consumers) or the runtime payload shape from a render-ui binding (`@payload.data`). Narrowed to `[]` internally when the value isn't an array.",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "BranchingLogicBuilderPage",
+          "path": "/branching-logic-builder",
+          "traits": [
+            {
+              "ref": "BranchingLogicBuilderRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

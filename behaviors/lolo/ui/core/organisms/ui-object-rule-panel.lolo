@@ -1,0 +1,66 @@
+app ui-object-rule-panel "1.0.0"
+"ObjectRulePanel — UI factory (1:1 with the @almadar/ui object-rule-panel pattern)."
+orbital ObjectRulePanelOrbital {
+  type ObjectRulePanelObject = {
+    id : string!
+    name : string!
+    icon : string!
+    states : [string]!
+    initialState : string!
+    currentState : string!
+    availableEvents : [json]!
+    availableActions : [json]!
+    rules : [ObjectRulePanelObjectRulesItem]!
+    maxRules : number
+  }
+  type ObjectRulePanelObjectRulesItem = {
+    id : string!
+    whenEvent : string!
+    thenAction : string!
+  }
+
+  entity ObjectRulePanelItem [runtime] {
+    id : string!
+  }
+
+  trait ObjectRulePanelRender -> @rebindable ObjectRulePanelItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          object: @config.object
+          onRulesChange: RULES_CHANGE
+          disabled: @config.disabled
+          className: @config.className
+          type: object-rule-panel
+        })
+    }
+
+    emits {
+      RULES_CHANGE -> external {
+        objectId : string
+        rules : [object]
+      }
+        @description "Called when rules change"
+        @tier "essential"
+    }
+
+    config {
+      object : ObjectRulePanelObject
+        @label "Object"
+        @description "The selected object"
+        @tier "presentation"
+      disabled : boolean = false
+        @label "Disabled"
+        @description "Whether editing is disabled"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/object-rule-panel" as ObjectRulePanelPage -> ObjectRulePanelRender
+}

@@ -1,0 +1,123 @@
+{
+  "name": "ui-world-map-template",
+  "version": "1.0.0",
+  "description": "WorldMapTemplate — UI factory (1:1 with the @almadar/ui world-map-template pattern).",
+  "orbitals": [
+    {
+      "name": "WorldMapTemplateOrbital",
+      "entity": {
+        "name": "WorldMapTemplateItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "WorldMapTemplateRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "WorldMapTemplateItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "WorldMapTemplateItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "allowMoveAllHeroes": "@config.allowMoveAllHeroes",
+                      "unitScale": "@config.unitScale",
+                      "scale": "@config.scale",
+                      "className": "@config.className",
+                      "diamondTopY": "@config.diamondTopY",
+                      "type": "world-map-template",
+                      "entity": "@entity"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "diamondTopY": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Diamond Top Y",
+              "description": "Override for the diamond-top Y offset within tile sprites (default: 374).",
+              "tier": "presentation"
+            },
+            "allowMoveAllHeroes": {
+              "type": "boolean",
+              "default": false,
+              "label": "Allow Move All Heroes",
+              "description": "Allow selecting / moving ALL heroes (including enemy). For testing.",
+              "tier": "presentation"
+            },
+            "unitScale": {
+              "type": "number",
+              "default": 2.5,
+              "label": "Unit Scale",
+              "description": "Unit draw-size multiplier",
+              "tier": "presentation"
+            },
+            "scale": {
+              "type": "number",
+              "default": 0.4,
+              "label": "Scale",
+              "description": "Canvas render scale",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "External styling override",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "WorldMapTemplatePage",
+          "path": "/world-map-template",
+          "traits": [
+            {
+              "ref": "WorldMapTemplateRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

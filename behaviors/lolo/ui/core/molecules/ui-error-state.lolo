@@ -1,0 +1,53 @@
+app ui-error-state "1.0.0"
+"ErrorState — UI factory (1:1 with the @almadar/ui error-state pattern)."
+orbital ErrorStateOrbital {
+  entity ErrorStateItem [runtime] {
+    id : string!
+  }
+
+  trait ErrorStateRender -> @rebindable ErrorStateItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          title: @config.title
+          message: @config.message
+          description: @config.description
+          onRetry: RETRY
+          className: @config.className
+          retryEvent: RETRY
+          type: error-state
+        })
+    }
+
+    emits {
+      RETRY -> external {
+        id : string
+      }
+        @description "onRetry prop"
+        @tier "essential"
+    }
+
+    config {
+      title : string = ""
+        @label "Title"
+        @description "title prop"
+        @tier "presentation"
+      message : string = ""
+        @label "Message"
+        @description "Error message to display"
+        @tier "presentation"
+      description : string = ""
+        @label "Description"
+        @description "Alias for message (schema compatibility)"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/error-state" as ErrorStatePage -> ErrorStateRender
+}

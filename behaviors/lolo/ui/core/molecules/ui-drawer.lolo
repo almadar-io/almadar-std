@@ -1,0 +1,83 @@
+app ui-drawer "1.0.0"
+"Drawer — UI factory (1:1 with the @almadar/ui drawer pattern)."
+orbital DrawerOrbital {
+  entity DrawerItem [runtime] {
+    id : string!
+  }
+
+  trait DrawerRender -> @rebindable DrawerItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          isOpen: @config.isOpen
+          onClose: CLOSE
+          title: @config.title
+          children: @config.children
+          footer: @config.footer
+          position: @config.position
+          width: @config.width
+          showCloseButton: @config.showCloseButton
+          closeOnOverlayClick: @config.closeOnOverlayClick
+          closeOnEscape: @config.closeOnEscape
+          className: @config.className
+          closeEvent: CLOSE
+          type: drawer
+        })
+    }
+
+    emits {
+      CLOSE -> external {
+        id : string
+      }
+        @description "Callback when drawer should close (injected by slot wrapper)"
+        @tier "essential"
+    }
+
+    config {
+      isOpen : boolean = true
+        @label "Is Open"
+        @description "Whether the drawer is open (defaults to true when rendered by slot wrapper)"
+        @tier "presentation"
+      title : string = ""
+        @label "Title"
+        @description "Drawer title"
+        @tier "presentation"
+      children : node
+        @label "Children"
+        @description "Drawer content (can be empty if using slot content)"
+        @tier "presentation"
+      footer : node
+        @label "Footer"
+        @description "Footer content"
+        @tier "presentation"
+      position : "left" | "right" = right
+        @label "Position"
+        @description "Position (left or right)"
+        @tier "presentation"
+      width : string = md
+        @label "Width"
+        @description "Width (CSS value or preset size)"
+        @tier "presentation"
+      showCloseButton : boolean = true
+        @label "Show Close Button"
+        @description "Show close button"
+        @tier "presentation"
+      closeOnOverlayClick : boolean = true
+        @label "Close On Overlay Click"
+        @description "Close on overlay click"
+        @tier "presentation"
+      closeOnEscape : boolean = true
+        @label "Close On Escape"
+        @description "Close on escape key"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional class name"
+        @tier "presentation"
+    }
+  }
+
+  page "/drawer" as DrawerPage -> DrawerRender
+}

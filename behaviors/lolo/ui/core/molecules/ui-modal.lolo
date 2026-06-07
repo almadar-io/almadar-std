@@ -1,0 +1,88 @@
+app ui-modal "1.0.0"
+"Modal — UI factory (1:1 with the @almadar/ui modal pattern)."
+orbital ModalOrbital {
+  entity ModalItem [runtime] {
+    id : string!
+  }
+
+  trait ModalRender -> @rebindable ModalItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          isOpen: @config.isOpen
+          onClose: CLOSE
+          title: @config.title
+          children: @config.children
+          footer: @config.footer
+          size: @config.size
+          showCloseButton: @config.showCloseButton
+          closeOnOverlayClick: @config.closeOnOverlayClick
+          closeOnEscape: @config.closeOnEscape
+          className: @config.className
+          closeEvent: CLOSE
+          swipeDownToClose: @config.swipeDownToClose
+          look: @config.look
+          type: modal
+        })
+    }
+
+    emits {
+      CLOSE -> external {
+        id : string
+      }
+        @description "Callback when modal should close (injected by slot wrapper)"
+        @tier "essential"
+    }
+
+    config {
+      isOpen : boolean = true
+        @label "Is Open"
+        @description "Whether the modal is open (defaults to true when rendered by slot wrapper)"
+        @tier "presentation"
+      title : string = ""
+        @label "Title"
+        @description "title prop"
+        @tier "presentation"
+      children : node
+        @label "Children"
+        @description "Modal content (can be empty if using slot content)"
+        @tier "presentation"
+      footer : node
+        @label "Footer"
+        @description "footer prop"
+        @tier "presentation"
+      size : "sm" | "md" | "lg" | "xl" | "full" = md
+        @label "Size"
+        @description "size prop"
+        @tier "presentation"
+      showCloseButton : boolean = true
+        @label "Show Close Button"
+        @description "showCloseButton prop"
+        @tier "presentation"
+      closeOnOverlayClick : boolean = true
+        @label "Close On Overlay Click"
+        @description "closeOnOverlayClick prop"
+        @tier "presentation"
+      closeOnEscape : boolean = true
+        @label "Close On Escape"
+        @description "closeOnEscape prop"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+      swipeDownToClose : boolean = true
+        @label "Swipe Down To Close"
+        @description "Enable swipe-down-to-close on mobile bottom sheet (default: true)"
+        @tier "presentation"
+      look : "centered-card" | "top-sheet" | "side-drawer" | "full-screen" = "centered-card"
+        @label "Look"
+        @description "Layer 2 visual treatment — orthogonal to the semantic variant."
+        @tier "presentation"
+    }
+  }
+
+  page "/modal" as ModalPage -> ModalRender
+}

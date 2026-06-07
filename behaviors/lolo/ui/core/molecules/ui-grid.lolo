@@ -1,0 +1,78 @@
+app ui-grid "1.0.0"
+"Grid — UI factory (1:1 with the @almadar/ui grid pattern)."
+orbital GridOrbital {
+  entity GridItem [runtime] {
+    id : string!
+  }
+
+  trait GridRender -> @rebindable GridItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          cols: @config.cols
+          rows: @config.rows
+          gap: @config.gap
+          rowGap: @config.rowGap
+          colGap: @config.colGap
+          alignItems: @config.alignItems
+          justifyItems: @config.justifyItems
+          flow: @config.flow
+          className: @config.className
+          style: @config.style
+          children: @config.children
+          type: grid
+        })
+    }
+
+    config {
+      cols : json
+        @label "Cols"
+        @description "Number of columns (can be responsive object)"
+        @tier "presentation"
+      rows : number = 0
+        @label "Rows"
+        @description "Number of rows"
+        @tier "presentation"
+      gap : "none" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" = md
+        @label "Gap"
+        @description "Gap between items"
+        @tier "presentation"
+      rowGap : "none" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" = none
+        @label "Row Gap"
+        @description "Row gap (overrides gap for rows)"
+        @tier "presentation"
+      colGap : "none" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" = none
+        @label "Col Gap"
+        @description "Column gap (overrides gap for columns)"
+        @tier "presentation"
+      alignItems : "start" | "center" | "end" | "stretch" | "baseline" = start
+        @label "Align Items"
+        @description "Align items on block axis"
+        @tier "presentation"
+      justifyItems : "start" | "center" | "end" | "stretch" = start
+        @label "Justify Items"
+        @description "Justify items on inline axis"
+        @tier "presentation"
+      flow : "row" | "col" | "row-dense" | "col-dense" = row
+        @label "Flow"
+        @description "Auto-flow direction"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Custom class name"
+        @tier "presentation"
+      style : json
+        @label "Style"
+        @description "Inline styles"
+        @tier "presentation"
+      children : node
+        @label "Children"
+        @description "Children elements"
+        @tier "presentation"
+    }
+  }
+
+  page "/grid" as GridPage -> GridRender
+}

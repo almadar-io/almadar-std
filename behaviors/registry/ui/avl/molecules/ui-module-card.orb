@@ -1,0 +1,236 @@
+{
+  "name": "ui-module-card",
+  "version": "1.0.0",
+  "description": "ModuleCard — UI factory (1:1 with the @almadar/ui module-card pattern).",
+  "orbitals": [
+    {
+      "name": "ModuleCardOrbital",
+      "entity": {
+        "name": "ModuleCardItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ModuleCardRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "ModuleCardItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "module-card",
+                      "data": "@config.data"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "data": {
+              "type": "ModuleCardData",
+              "label": "Data",
+              "description": "data prop",
+              "tier": "presentation",
+              "properties": {
+                "pages": {
+                  "name": "pages",
+                  "type": "array",
+                  "required": true,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "route": {
+                        "name": "route",
+                        "type": "string",
+                        "required": true
+                      },
+                      "name": {
+                        "name": "name",
+                        "type": "string",
+                        "required": true
+                      }
+                    }
+                  }
+                },
+                "entityName": {
+                  "name": "entityName",
+                  "type": "string",
+                  "required": true
+                },
+                "persistence": {
+                  "name": "persistence",
+                  "type": "string",
+                  "required": true
+                },
+                "fields": {
+                  "name": "fields",
+                  "type": "array",
+                  "required": true,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "hasDefault": {
+                        "name": "hasDefault",
+                        "type": "boolean",
+                        "required": true
+                      },
+                      "name": {
+                        "name": "name",
+                        "type": "string",
+                        "required": true
+                      },
+                      "type": {
+                        "name": "type",
+                        "type": "string",
+                        "required": true
+                      },
+                      "required": {
+                        "name": "required",
+                        "type": "boolean",
+                        "required": true
+                      }
+                    }
+                  }
+                },
+                "externalLinks": {
+                  "name": "externalLinks",
+                  "type": "array",
+                  "required": true,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "direction": {
+                        "name": "direction",
+                        "type": "string",
+                        "required": true,
+                        "values": [
+                          "out",
+                          "in"
+                        ]
+                      },
+                      "targetOrbital": {
+                        "name": "targetOrbital",
+                        "type": "string",
+                        "required": true
+                      },
+                      "eventName": {
+                        "name": "eventName",
+                        "type": "string",
+                        "required": true
+                      },
+                      "traitName": {
+                        "name": "traitName",
+                        "type": "string",
+                        "required": true
+                      }
+                    }
+                  }
+                },
+                "traitDetails": {
+                  "name": "traitDetails",
+                  "type": "string",
+                  "required": true
+                },
+                "traits": {
+                  "name": "traits",
+                  "type": "array",
+                  "required": true,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "name": "name",
+                        "type": "string",
+                        "required": true
+                      },
+                      "stateCount": {
+                        "name": "stateCount",
+                        "type": "number",
+                        "required": true
+                      },
+                      "eventCount": {
+                        "name": "eventCount",
+                        "type": "number",
+                        "required": true
+                      },
+                      "transitionCount": {
+                        "name": "transitionCount",
+                        "type": "number",
+                        "required": true
+                      },
+                      "emits": {
+                        "name": "emits",
+                        "type": "array",
+                        "required": true,
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "listens": {
+                        "name": "listens",
+                        "type": "array",
+                        "required": true,
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                },
+                "orbitalName": {
+                  "name": "orbitalName",
+                  "type": "string",
+                  "required": true
+                }
+              }
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "ModuleCardPage",
+          "path": "/module-card",
+          "traits": [
+            {
+              "ref": "ModuleCardRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

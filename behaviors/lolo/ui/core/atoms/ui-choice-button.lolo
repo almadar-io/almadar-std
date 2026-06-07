@@ -1,0 +1,57 @@
+app ui-choice-button "1.0.0"
+"ChoiceButton — UI factory (1:1 with the @almadar/ui choice-button pattern)."
+orbital ChoiceButtonOrbital {
+  entity ChoiceButtonItem [runtime] {
+    id : string!
+  }
+
+  trait ChoiceButtonRender -> @rebindable ChoiceButtonItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          text: @config.text
+          index: @config.index
+          disabled: @config.disabled
+          selected: @config.selected
+          onClick: CLICK
+          className: @config.className
+          type: choice-button
+        })
+    }
+
+    emits {
+      CLICK -> external {
+        id : string
+      }
+        @description "Click handler"
+        @tier "essential"
+    }
+
+    config {
+      text : string = ""
+        @label "Text"
+        @description "Choice text content"
+        @tier "presentation"
+      index : number = 0
+        @label "Index"
+        @description "Choice index number (displayed as prefix)"
+        @tier "presentation"
+      disabled : boolean = false
+        @label "Disabled"
+        @description "Whether the choice is disabled"
+        @tier "presentation"
+      selected : boolean = false
+        @label "Selected"
+        @description "Whether the choice is currently selected"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/choice-button" as ChoiceButtonPage -> ChoiceButtonRender
+}

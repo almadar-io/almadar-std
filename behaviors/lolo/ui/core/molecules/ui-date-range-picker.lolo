@@ -1,0 +1,65 @@
+app ui-date-range-picker "1.0.0"
+"DateRangePicker — UI factory (1:1 with the @almadar/ui date-range-picker pattern)."
+orbital DateRangePickerOrbital {
+  type DateRangePickerPresetsItem = {
+    label : string!
+    value : string!
+    range : any!
+  }
+
+  entity DateRangePickerItem [runtime] {
+    id : string!
+  }
+
+  trait DateRangePickerRender -> @rebindable DateRangePickerItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          event: EVENT
+          onChange: CHANGE
+          presets: @config.presets
+          fromLabel: @config.fromLabel
+          toLabel: @config.toLabel
+          className: @config.className
+          type: date-range-picker
+        })
+    }
+
+    emits {
+      EVENT -> external {
+        from : string!
+        to : string!
+      }
+        @description "Event name emitted as `UI:{event}` with payload `{ from, to }`. Optional — when omitted, only the `onChange` callback fires."
+        @tier "essential"
+      CHANGE -> external {
+        range : object
+      }
+        @description "Callback fired alongside the bus emit."
+        @tier "essential"
+    }
+
+    config {
+      presets : [DateRangePickerPresetsItem] = []
+        @label "Presets"
+        @description "Preset shortcuts. Defaults to the standard finance set (Last 7d / Last 30d / This Month / This Quarter / YTD). Pass an empty array to hide presets entirely."
+        @tier "presentation"
+      fromLabel : string = From
+        @label "From Label"
+        @description "From-input label."
+        @tier "presentation"
+      toLabel : string = To
+        @label "To Label"
+        @description "To-input label."
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes."
+        @tier "presentation"
+    }
+  }
+
+  page "/date-range-picker" as DateRangePickerPage -> DateRangePickerRender
+}

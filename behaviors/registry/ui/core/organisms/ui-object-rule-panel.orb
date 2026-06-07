@@ -1,0 +1,206 @@
+{
+  "name": "ui-object-rule-panel",
+  "version": "1.0.0",
+  "description": "ObjectRulePanel — UI factory (1:1 with the @almadar/ui object-rule-panel pattern).",
+  "orbitals": [
+    {
+      "name": "ObjectRulePanelOrbital",
+      "entity": {
+        "name": "ObjectRulePanelItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ObjectRulePanelRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "ObjectRulePanelItem",
+          "emits": [
+            {
+              "event": "RULES_CHANGE",
+              "description": "Called when rules change",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "objectId",
+                  "type": "string"
+                },
+                {
+                  "name": "rules",
+                  "type": "[object]"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "RULES_CHANGE",
+                "name": "Rules Change",
+                "description": "Called when rules change",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "disabled": "@config.disabled",
+                      "className": "@config.className",
+                      "type": "object-rule-panel",
+                      "onRulesChange": "RULES_CHANGE",
+                      "object": "@config.object"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "object": {
+              "type": "ObjectRulePanelObject",
+              "label": "Object",
+              "description": "The selected object",
+              "tier": "presentation",
+              "properties": {
+                "currentState": {
+                  "name": "currentState",
+                  "type": "string",
+                  "required": true
+                },
+                "icon": {
+                  "name": "icon",
+                  "type": "string",
+                  "required": true
+                },
+                "initialState": {
+                  "name": "initialState",
+                  "type": "string",
+                  "required": true
+                },
+                "maxRules": {
+                  "name": "maxRules",
+                  "type": "number",
+                  "required": false
+                },
+                "rules": {
+                  "name": "rules",
+                  "type": "array",
+                  "required": true,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      "whenEvent": {
+                        "name": "whenEvent",
+                        "type": "string",
+                        "required": true
+                      },
+                      "thenAction": {
+                        "name": "thenAction",
+                        "type": "string",
+                        "required": true
+                      }
+                    }
+                  }
+                },
+                "id": {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                "states": {
+                  "name": "states",
+                  "type": "array",
+                  "required": true,
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "availableEvents": {
+                  "name": "availableEvents",
+                  "type": "array",
+                  "required": true,
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "availableActions": {
+                  "name": "availableActions",
+                  "type": "array",
+                  "required": true,
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": true
+                }
+              }
+            },
+            "disabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Disabled",
+              "description": "Whether editing is disabled",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "ObjectRulePanelPage",
+          "path": "/object-rule-panel",
+          "traits": [
+            {
+              "ref": "ObjectRulePanelRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

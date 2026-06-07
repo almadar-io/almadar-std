@@ -1,0 +1,110 @@
+app ui-graph-canvas "1.0.0"
+"GraphCanvas — UI factory (1:1 with the @almadar/ui graph-canvas pattern)."
+orbital GraphCanvasOrbital {
+  type GraphCanvasEdgesItem = {
+    source : string!
+    target : string!
+    label : string
+    weight : number
+    color : string
+  }
+  type GraphCanvasActionsItem = {
+    label : string!
+    event : string
+    navigatesTo : string
+    variant : "primary" | "secondary" | "ghost"
+  }
+
+  entity GraphCanvasItem [runtime] {
+    id : string!
+  }
+
+  trait GraphCanvasRender -> @rebindable GraphCanvasItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch GraphCanvasItem {})
+        (render-ui main {
+          title: @config.title
+          nodes: @config.nodes
+          edges: @config.edges
+          height: @config.height
+          showLabels: @config.showLabels
+          interactive: @config.interactive
+          draggable: @config.draggable
+          actions: @config.actions
+          onNodeClick: NODE_CLICK
+          nodeClickEvent: NODE_CLICK
+          layout: @config.layout
+          entity: GraphCanvasItem
+          isLoading: @config.isLoading
+          error: @config.error
+          className: @config.className
+          type: graph-canvas
+        })
+    }
+
+    emits {
+      NODE_CLICK -> external {
+        node : object
+        id : string!
+      }
+        @description "On node click"
+        @tier "essential"
+    }
+
+    config {
+      title : string = ""
+        @label "Title"
+        @description "Graph title"
+        @tier "presentation"
+      nodes : [json] = []
+        @label "Nodes"
+        @description "Graph nodes"
+        @tier "presentation"
+      edges : [GraphCanvasEdgesItem] = []
+        @label "Edges"
+        @description "Graph edges"
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Canvas height"
+        @tier "presentation"
+      showLabels : boolean = true
+        @label "Show Labels"
+        @description "Show node labels"
+        @tier "presentation"
+      interactive : boolean = true
+        @label "Interactive"
+        @description "Enable zoom/pan"
+        @tier "presentation"
+      draggable : boolean = true
+        @label "Draggable"
+        @description "Enable node dragging"
+        @tier "presentation"
+      actions : [GraphCanvasActionsItem] = []
+        @label "Actions"
+        @description "Actions"
+        @tier "presentation"
+      layout : "force" | "circular" | "grid" = force
+        @label "Layout"
+        @description "Layout algorithm"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state"
+        @tier "presentation"
+      error : json
+        @label "Error"
+        @description "Error state"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/graph-canvas" as GraphCanvasPage -> GraphCanvasRender
+}

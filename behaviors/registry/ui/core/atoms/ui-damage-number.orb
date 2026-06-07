@@ -1,0 +1,106 @@
+{
+  "name": "ui-damage-number",
+  "version": "1.0.0",
+  "description": "DamageNumber — UI factory (1:1 with the @almadar/ui damage-number pattern).",
+  "orbitals": [
+    {
+      "name": "DamageNumberOrbital",
+      "entity": {
+        "name": "DamageNumberItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "DamageNumberRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "DamageNumberItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "size": "@config.size",
+                      "className": "@config.className",
+                      "type": "damage-number",
+                      "value": "@config.value"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "value": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Value",
+              "description": "The damage/heal value to display",
+              "tier": "presentation"
+            },
+            "size": {
+              "type": "string",
+              "default": "md",
+              "label": "Size",
+              "description": "Size variant",
+              "tier": "presentation",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "DamageNumberPage",
+          "path": "/damage-number",
+          "traits": [
+            {
+              "ref": "DamageNumberRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

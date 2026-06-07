@@ -1,0 +1,76 @@
+app ui-dialogue-box "1.0.0"
+"DialogueBox — UI factory (1:1 with the @almadar/ui dialogue-box pattern)."
+orbital DialogueBoxOrbital {
+  type DialogueBoxDialogue = {
+    id : string
+    speaker : string!
+    text : string!
+    portrait : string
+    choices : [json]
+    autoAdvance : number
+  }
+
+  entity DialogueBoxItem [runtime] {
+    id : string!
+  }
+
+  trait DialogueBoxRender -> @rebindable DialogueBoxItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          dialogue: @config.dialogue
+          typewriterSpeed: @config.typewriterSpeed
+          position: @config.position
+          onComplete: COMPLETE
+          onChoice: CHOICE
+          onAdvance: ADVANCE
+          completeEvent: COMPLETE
+          choiceEvent: CHOICE
+          advanceEvent: ADVANCE
+          className: @config.className
+          type: dialogue-box
+        })
+    }
+
+    emits {
+      COMPLETE -> external {
+        id : string
+      }
+        @description "Called when text animation completes"
+        @tier "essential"
+      CHOICE -> external {
+        choice : object
+      }
+        @description "Called when a choice is selected"
+        @tier "essential"
+      ADVANCE -> external {
+        id : string
+      }
+        @description "Called when dialogue is advanced (no choices)"
+        @tier "essential"
+    }
+
+    config {
+      dialogue : DialogueBoxDialogue
+        @label "Dialogue"
+        @description "Current dialogue node to display"
+        @tier "presentation"
+      typewriterSpeed : number = 30
+        @label "Typewriter Speed"
+        @description "Typewriter speed in ms per character (0 = instant)"
+        @tier "presentation"
+      position : "top" | "bottom" = bottom
+        @label "Position"
+        @description "Position of dialogue box"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Optional className"
+        @tier "presentation"
+    }
+  }
+
+  page "/dialogue-box" as DialogueBoxPage -> DialogueBoxRender
+}

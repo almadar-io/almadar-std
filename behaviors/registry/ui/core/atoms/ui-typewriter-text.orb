@@ -1,0 +1,130 @@
+{
+  "name": "ui-typewriter-text",
+  "version": "1.0.0",
+  "description": "TypewriterText — UI factory (1:1 with the @almadar/ui typewriter-text pattern).",
+  "orbitals": [
+    {
+      "name": "TypewriterTextOrbital",
+      "entity": {
+        "name": "TypewriterTextItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "TypewriterTextRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "TypewriterTextItem",
+          "emits": [
+            {
+              "event": "COMPLETE",
+              "description": "Called when the entire text has been revealed",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "COMPLETE",
+                "name": "Complete",
+                "description": "Called when the entire text has been revealed",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "text": "@config.text",
+                      "startDelay": "@config.startDelay",
+                      "onComplete": "COMPLETE",
+                      "speed": "@config.speed",
+                      "type": "typewriter-text"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "text": {
+              "type": "string",
+              "default": "",
+              "label": "Text",
+              "description": "The full text to reveal",
+              "tier": "presentation"
+            },
+            "speed": {
+              "type": "number",
+              "default": 40.0,
+              "label": "Speed",
+              "description": "Milliseconds per character",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional class names",
+              "tier": "presentation"
+            },
+            "startDelay": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Start Delay",
+              "description": "Delay before typing starts (ms)",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "TypewriterTextPage",
+          "path": "/typewriter-text",
+          "traits": [
+            {
+              "ref": "TypewriterTextRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

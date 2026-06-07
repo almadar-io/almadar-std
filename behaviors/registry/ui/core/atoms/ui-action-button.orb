@@ -1,0 +1,171 @@
+{
+  "name": "ui-action-button",
+  "version": "1.0.0",
+  "description": "ActionButton — UI factory (1:1 with the @almadar/ui action-button pattern).",
+  "orbitals": [
+    {
+      "name": "ActionButtonOrbital",
+      "entity": {
+        "name": "ActionButtonItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ActionButtonRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "ActionButtonItem",
+          "emits": [
+            {
+              "event": "CLICK",
+              "description": "Click handler",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "CLICK",
+                "name": "Click",
+                "description": "Click handler",
+                "tier": "essential"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "icon": "@config.icon",
+                      "label": "@config.label",
+                      "onClick": "CLICK",
+                      "hotkey": "@config.hotkey",
+                      "cooldown": "@config.cooldown",
+                      "size": "@config.size",
+                      "className": "@config.className",
+                      "variant": "@config.variant",
+                      "type": "action-button",
+                      "disabled": "@config.disabled"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "icon": {
+              "type": "node",
+              "label": "Icon",
+              "description": "Icon displayed before the label",
+              "tier": "presentation"
+            },
+            "disabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Disabled",
+              "description": "Whether the button is disabled",
+              "tier": "presentation"
+            },
+            "variant": {
+              "type": "string",
+              "default": "primary",
+              "label": "Variant",
+              "description": "Visual variant",
+              "tier": "presentation",
+              "values": [
+                "primary",
+                "secondary",
+                "danger"
+              ]
+            },
+            "cooldown": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Cooldown",
+              "description": "Cooldown progress from 0 (ready) to 1 (full cooldown)",
+              "tier": "presentation"
+            },
+            "size": {
+              "type": "string",
+              "default": "md",
+              "label": "Size",
+              "description": "Size variant",
+              "tier": "presentation",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            },
+            "hotkey": {
+              "type": "string",
+              "default": "",
+              "label": "Hotkey",
+              "description": "Keyboard hotkey to display as a badge",
+              "tier": "presentation"
+            },
+            "label": {
+              "type": "string",
+              "default": "",
+              "label": "Label",
+              "description": "Button label text",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "ActionButtonPage",
+          "path": "/action-button",
+          "traits": [
+            {
+              "ref": "ActionButtonRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

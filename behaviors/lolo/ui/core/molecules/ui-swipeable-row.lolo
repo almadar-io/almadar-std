@@ -1,0 +1,68 @@
+app ui-swipeable-row "1.0.0"
+"SwipeableRow — UI factory (1:1 with the @almadar/ui swipeable-row pattern)."
+orbital SwipeableRowOrbital {
+  type SwipeableRowLeftActionsItem = {
+    label : string!
+    icon : string
+    variant : "primary" | "secondary" | "danger" | "ghost"
+    event : string!
+    eventPayload : json
+  }
+  type SwipeableRowRightActionsItem = {
+    label : string!
+    icon : string
+    variant : "primary" | "secondary" | "danger" | "ghost"
+    event : string!
+    eventPayload : json
+  }
+
+  entity SwipeableRowItem [runtime] {
+    id : string!
+  }
+
+  trait SwipeableRowRender -> @rebindable SwipeableRowItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          leftActions: @config.leftActions
+          rightActions: @config.rightActions
+          threshold: @config.threshold
+          children: @config.children
+          itemData: @config.itemData
+          className: @config.className
+          type: swipeable-row
+        })
+    }
+
+    config {
+      leftActions : [SwipeableRowLeftActionsItem] = []
+        @label "Left Actions"
+        @description "leftActions prop"
+        @tier "presentation"
+      rightActions : [SwipeableRowRightActionsItem] = []
+        @label "Right Actions"
+        @description "rightActions prop"
+        @tier "presentation"
+      threshold : number = 80
+        @label "Threshold"
+        @description "threshold prop"
+        @tier "presentation"
+      children : node
+        @label "Children"
+        @description "children prop"
+        @tier "presentation"
+      itemData : json
+        @label "Item Data"
+        @description "itemData prop"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/swipeable-row" as SwipeableRowPage -> SwipeableRowRender
+}
