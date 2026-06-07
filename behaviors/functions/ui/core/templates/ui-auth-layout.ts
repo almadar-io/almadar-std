@@ -39,14 +39,14 @@ export type StdUiAuthLayoutEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiAuthLayoutConfig {
-  /** Default: `true` */
-  showBranding?: boolean;
   /** Default: `""` */
   backgroundImage?: string;
-  brandingContent?: unknown;
-  logo?: unknown;
   /** Default: `"{{APP_TITLE}}"` */
   appName?: string;
+  /** Default: `true` */
+  showBranding?: boolean;
+  logo?: unknown;
+  brandingContent?: unknown;
 }
 
 /**

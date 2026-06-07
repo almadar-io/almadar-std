@@ -49,13 +49,13 @@ export interface StdUiChoiceButtonConfig {
   /** Default: `0` */
   index?: number;
   /** Default: `""` */
-  text?: string;
-  /** Default: `false` */
-  selected?: boolean;
-  /** Default: `""` */
   className?: string;
   /** Default: `false` */
   disabled?: boolean;
+  /** Default: `""` */
+  text?: string;
+  /** Default: `false` */
+  selected?: boolean;
 }
 
 /**

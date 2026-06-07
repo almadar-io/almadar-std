@@ -106,18 +106,18 @@
                     "main",
                     {
                       "selectBeforeEvent": "SELECT_BEFORE",
-                      "onRevert": "REVERT",
-                      "afterId": "@config.afterId",
-                      "beforeId": "@config.beforeId",
-                      "view": "@config.view",
                       "type": "version-diff",
-                      "onSelectAfter": "SELECT_AFTER",
+                      "className": "@config.className",
                       "selectAfterEvent": "SELECT_AFTER",
-                      "revisions": "@config.revisions",
                       "onSelectBefore": "SELECT_BEFORE",
-                      "language": "@config.language",
+                      "onRevert": "REVERT",
                       "revertEvent": "REVERT",
-                      "className": "@config.className"
+                      "afterId": "@config.afterId",
+                      "view": "@config.view",
+                      "onSelectAfter": "SELECT_AFTER",
+                      "revisions": "@config.revisions",
+                      "language": "@config.language",
+                      "beforeId": "@config.beforeId"
                     }
                   ]
                 ]
@@ -126,37 +126,47 @@
           },
           "config": {
             "revisions": {
-              "type": "json",
+              "type": "[VersionDiffRevisionsItem]",
+              "default": [],
               "label": "Revisions",
               "description": "All available revisions (at least 2). Accepts either a typed array (direct consumers) or the runtime payload shape from a render-ui binding (`@payload.revisions`). Narrowed to `[]` internally when the value isn't an array.",
-              "tier": "presentation"
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "author": {
+                    "name": "author",
+                    "type": "string",
+                    "required": false
+                  },
+                  "content": {
+                    "name": "content",
+                    "type": "string",
+                    "required": true
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "timestamp": {
+                    "name": "timestamp",
+                    "type": "string",
+                    "required": false
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
             },
             "beforeId": {
               "type": "string",
               "default": "",
               "label": "Before Id",
               "description": "Currently selected 'before' revision id.",
-              "tier": "presentation"
-            },
-            "language": {
-              "type": "string",
-              "default": "",
-              "label": "Language",
-              "description": "Language label (informational).",
-              "tier": "presentation"
-            },
-            "afterId": {
-              "type": "string",
-              "default": "",
-              "label": "After Id",
-              "description": "Currently selected 'after' revision id.",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes.",
               "tier": "presentation"
             },
             "view": {
@@ -169,6 +179,27 @@
                 "side-by-side",
                 "inline"
               ]
+            },
+            "language": {
+              "type": "string",
+              "default": "",
+              "label": "Language",
+              "description": "Language label (informational).",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes.",
+              "tier": "presentation"
+            },
+            "afterId": {
+              "type": "string",
+              "default": "",
+              "label": "After Id",
+              "description": "Currently selected 'after' revision id.",
+              "tier": "presentation"
             }
           },
           "scope": "instance"

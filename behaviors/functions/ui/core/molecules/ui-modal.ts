@@ -46,26 +46,26 @@ export interface StdUiModalClosePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiModalConfig {
-  /** Default: `true` */
-  isOpen?: boolean;
-  /** Default: `true` */
-  showCloseButton?: boolean;
-  children?: unknown;
   /** Default: `"centered-card"` */
   look?: 'centered-card' | 'top-sheet' | 'side-drawer' | 'full-screen';
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  /** Default: `true` */
+  showCloseButton?: boolean;
   /** Default: `true` */
   closeOnEscape?: boolean;
   /** Default: `true` */
-  closeOnOverlayClick?: boolean;
-  footer?: unknown;
-  /** Default: `""` */
-  className?: string;
+  isOpen?: boolean;
   /** Default: `""` */
   title?: string;
   /** Default: `true` */
+  closeOnOverlayClick?: boolean;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  /** Default: `true` */
   swipeDownToClose?: boolean;
+  footer?: unknown;
+  children?: unknown;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

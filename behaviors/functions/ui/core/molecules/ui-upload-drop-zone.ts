@@ -54,22 +54,22 @@ export interface StdUiUploadDropZoneFilesPayload {
  */
 export interface StdUiUploadDropZoneConfig {
   /** Default: `""` */
-  accept?: string;
-  /** Default: `1` */
-  maxFiles?: number;
-  /** Default: `""` */
   className?: string;
   /** Default: `"circle"` */
   icon?: string;
+  /** Default: `1` */
+  maxFiles?: number;
+  /** Default: `0` */
+  maxSize?: number;
+  actionPayload?: unknown;
   /** Default: `false` */
   disabled?: boolean;
+  /** Default: `""` */
+  accept?: string;
   /** Default: `"Drop files here or click to browse"` */
   label?: string;
   /** Default: `""` */
   description?: string;
-  /** Default: `0` */
-  maxSize?: number;
-  actionPayload?: unknown;
 }
 
 /**

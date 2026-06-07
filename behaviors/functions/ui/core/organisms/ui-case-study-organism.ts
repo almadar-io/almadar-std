@@ -42,27 +42,27 @@ export interface StdUiCaseStudyOrganismConfig {
   /** Default: `""` */
   heading?: string;
   /** Default: `0` */
-  totalCount?: number;
-  /** Default: `0` */
   pageSize?: number;
+  /** Default: `""` */
+  subtitle?: string;
   /** Default: `false` */
   isLoading?: boolean;
-  error?: unknown;
-  activeFilters?: unknown;
-  /** Default: `[]` */
-  selectedIds?: string[];
   /** Default: `""` */
   sortBy?: string;
-  /** Default: `0` */
-  pageProp?: number;
+  /** Default: `""` */
+  sortDirection?: string;
+  error?: unknown;
+  /** Default: `[]` */
+  selectedIds?: string[];
   /** Default: `""` */
   searchValue?: string;
   /** Default: `""` */
   className?: string;
-  /** Default: `""` */
-  sortDirection?: string;
-  /** Default: `""` */
-  subtitle?: string;
+  /** Default: `0` */
+  pageProp?: number;
+  activeFilters?: unknown;
+  /** Default: `0` */
+  totalCount?: number;
 }
 
 /**
@@ -171,21 +171,21 @@ export function stdUiCaseStudyOrganismCaseStudyOrganismOrbital(params: StdUiCase
                   'render-ui',
                   'main',
                   {
+                    'className': '@config.className',
+                    'error': '@config.error',
+                    'sortDirection': '@config.sortDirection',
+                    'searchValue': '@config.searchValue',
                     'pageSize': '@config.pageSize',
-                    'activeFilters': '@config.activeFilters',
-                    'totalCount': '@config.totalCount',
-                    'subtitle': '@config.subtitle',
-                    'heading': '@config.heading',
                     'type': 'case-study-organism',
                     'page': '@config.pageProp',
-                    'searchValue': '@config.searchValue',
-                    'sortBy': '@config.sortBy',
-                    'className': '@config.className',
                     'isLoading': '@config.isLoading',
-                    'sortDirection': '@config.sortDirection',
+                    'subtitle': '@config.subtitle',
+                    'sortBy': '@config.sortBy',
+                    'activeFilters': '@config.activeFilters',
                     'entity': '@entity',
-                    'error': '@config.error',
                     'selectedIds': '@config.selectedIds',
+                    'heading': '@config.heading',
+                    'totalCount': '@config.totalCount',
                   },
                 ],
               ],
@@ -200,18 +200,18 @@ export function stdUiCaseStudyOrganismCaseStudyOrganismOrbital(params: StdUiCase
             'description': 'heading prop',
             'tier': 'presentation',
           },
-          'totalCount': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Total Count',
-            'description': 'Total number of items',
-            'tier': 'presentation',
-          },
           'pageSize': {
             'type': 'number',
             'default': 0,
             'label': 'Page Size',
             'description': 'Number of items per page',
+            'tier': 'presentation',
+          },
+          'subtitle': {
+            'type': 'string',
+            'default': '',
+            'label': 'Subtitle',
+            'description': 'subtitle prop',
             'tier': 'presentation',
           },
           'isLoading': {
@@ -221,16 +221,24 @@ export function stdUiCaseStudyOrganismCaseStudyOrganismOrbital(params: StdUiCase
             'description': 'Loading state indicator',
             'tier': 'presentation',
           },
+          'sortBy': {
+            'type': 'string',
+            'default': '',
+            'label': 'Sort By',
+            'description': 'Current sort field',
+            'tier': 'presentation',
+          },
+          'sortDirection': {
+            'type': 'string',
+            'default': '',
+            'label': 'Sort Direction',
+            'description': 'Current sort direction',
+            'tier': 'presentation',
+          },
           'error': {
             'type': 'json',
             'label': 'Error',
             'description': 'Error state',
-            'tier': 'presentation',
-          },
-          'activeFilters': {
-            'type': 'json',
-            'label': 'Active Filters',
-            'description': 'Active filters',
             'tier': 'presentation',
           },
           'selectedIds': {
@@ -242,21 +250,6 @@ export function stdUiCaseStudyOrganismCaseStudyOrganismOrbital(params: StdUiCase
             'items': {
               'type': 'string',
             },
-          },
-          'sortBy': {
-            'type': 'string',
-            'default': '',
-            'label': 'Sort By',
-            'description': 'Current sort field',
-            'tier': 'presentation',
-          },
-          'pageProp': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page',
-            'description': 'Current page number',
-            'synonyms': 'page',
-            'tier': 'presentation',
           },
           'searchValue': {
             'type': 'string',
@@ -272,18 +265,25 @@ export function stdUiCaseStudyOrganismCaseStudyOrganismOrbital(params: StdUiCase
             'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
-          'sortDirection': {
-            'type': 'string',
-            'default': '',
-            'label': 'Sort Direction',
-            'description': 'Current sort direction',
+          'pageProp': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page',
+            'description': 'Current page number',
+            'synonyms': 'page',
             'tier': 'presentation',
           },
-          'subtitle': {
-            'type': 'string',
-            'default': '',
-            'label': 'Subtitle',
-            'description': 'subtitle prop',
+          'activeFilters': {
+            'type': 'json',
+            'label': 'Active Filters',
+            'description': 'Active filters',
+            'tier': 'presentation',
+          },
+          'totalCount': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Total Count',
+            'description': 'Total number of items',
             'tier': 'presentation',
           },
         },

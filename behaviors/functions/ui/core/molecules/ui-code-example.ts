@@ -39,18 +39,18 @@ export type StdUiCodeExampleEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiCodeExampleConfig {
-  /** Default: `false` */
-  copyable?: boolean;
-  /** Default: `""` */
-  language?: string;
-  /** Default: `""` */
-  title?: string;
-  /** Default: `""` */
-  maxHeight?: string;
   /** Default: `""` */
   className?: string;
   /** Default: `""` */
   code?: string;
+  /** Default: `""` */
+  title?: string;
+  /** Default: `""` */
+  language?: string;
+  /** Default: `false` */
+  copyable?: boolean;
+  /** Default: `""` */
+  maxHeight?: string;
 }
 
 /**

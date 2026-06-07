@@ -69,55 +69,55 @@ export interface StdUiDataGridRenderItemPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiDataGridConfig {
-  /** Default: `""` */
-  reorderEvent?: string;
-  /** Default: `[]` */
-  itemActions?: EntityRow[];
   /** Default: `false` */
-  hasMore?: boolean;
-  /** Default: `false` */
-  sortable?: boolean;
-  /** Default: `""` */
-  dropEvent?: string;
-  /** Default: `0` */
-  cols?: number;
-  /** Default: `[]` */
-  columns?: EntityRow[];
-  /** Default: `""` */
-  className?: string;
-  /** Default: `false` */
-  dndRoot?: boolean;
+  scrollX?: boolean;
+  error?: EntityRow;
   /** Default: `false` */
   selectable?: boolean;
   /** Default: `false` */
   infiniteScroll?: boolean;
   /** Default: `""` */
-  imageField?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
+  positionEvent?: string;
+  /** Default: `0` */
+  pageSize?: number;
+  /** Default: `"md"` */
+  gap?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
+  /** Default: `""` */
+  reorderEvent?: string;
+  /** Default: `[]` */
+  itemActions?: EntityRow[];
+  /** Default: `""` */
+  dropEvent?: string;
   /** Default: `""` */
   dragGroup?: string;
   /** Default: `""` */
-  positionEvent?: string;
-  /** Default: `""` */
   dndItemIdField?: string;
-  /** Default: `0` */
-  pageSize?: number;
-  /** Default: `""` */
-  accepts?: string;
-  /** Default: `[]` */
-  fields?: EntityRow[];
   /** Default: `false` */
-  scrollX?: boolean;
-  error?: EntityRow;
-  /** Default: `"md"` */
-  gap?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
-  /** Default: `280` */
-  minCardWidth?: number;
+  dndRoot?: boolean;
   /** Default: `0` */
   maxInlineActions?: number;
+  /** Default: `280` */
+  minCardWidth?: number;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `0` */
+  cols?: number;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `[]` */
+  columns?: EntityRow[];
+  /** Default: `false` */
+  hasMore?: boolean;
+  /** Default: `""` */
+  accepts?: string;
+  /** Default: `false` */
+  sortable?: boolean;
+  /** Default: `[]` */
+  fields?: EntityRow[];
   /** Default: `"dense"` */
   look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
+  /** Default: `""` */
+  imageField?: string;
 }
 
 /**

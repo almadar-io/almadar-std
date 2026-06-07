@@ -40,53 +40,53 @@ export type StdUiDetailPanelEventKey = 'INIT';
  */
 export interface StdUiDetailPanelConfig {
   /** Default: `""` */
-  mode?: string;
-  activeFilters?: unknown;
-  /** Default: `[]` */
-  selectedIds?: string[];
+  sortBy?: string;
   /** Default: `false` */
   slideOver?: boolean;
   /** Default: `""` */
-  title?: string;
-  /** Default: `[]` */
-  fieldNames?: string[];
-  avatar?: unknown;
-  /** Default: `""` */
-  width?: string;
-  /** Default: `""` */
-  sortBy?: string;
-  /** Default: `false` */
-  showActions?: boolean;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `0` */
-  totalCount?: number;
-  status?: EntityRow;
-  footer?: unknown;
-  /** Default: `""` */
   subtitle?: string;
+  initialData?: unknown;
+  avatar?: unknown;
   /** Default: `0` */
   pageProp?: number;
+  footer?: unknown;
+  /** Default: `""` */
+  title?: string;
+  /** Default: `""` */
+  searchValue?: string;
+  /** Default: `[]` */
+  actions?: EntityRow[];
   /** Default: `""` */
   className?: string;
-  error?: unknown;
+  /** Default: `""` */
+  width?: string;
+  status?: EntityRow;
+  /** Default: `0` */
+  totalCount?: number;
   /** Default: `[]` */
-  sections?: EntityRow[];
+  displayFields?: string[];
+  /** Default: `false` */
+  showActions?: boolean;
   /** Default: `0` */
   pageSize?: number;
   /** Default: `[]` */
   fields?: EntityRow[];
   /** Default: `""` */
-  searchValue?: string;
-  /** Default: `[]` */
-  actions?: EntityRow[];
-  initialData?: unknown;
+  mode?: string;
+  activeFilters?: unknown;
   /** Default: `""` */
   sortDirection?: string;
+  /** Default: `[]` */
+  selectedIds?: string[];
+  /** Default: `[]` */
+  sections?: EntityRow[];
+  /** Default: `[]` */
+  fieldNames?: string[];
+  /** Default: `false` */
+  isLoading?: boolean;
+  error?: unknown;
   /** Default: `"left"` */
   position?: 'left' | 'right';
-  /** Default: `[]` */
-  displayFields?: string[];
 }
 
 /**
@@ -196,34 +196,34 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                   'main',
                   {
                     'sortBy': '@config.sortBy',
+                    'slideOver': '@config.slideOver',
                     'actions': '@config.actions',
+                    'entity': '@entity',
                     'fieldNames': '@config.fieldNames',
                     'sortDirection': '@config.sortDirection',
-                    'activeFilters': '@config.activeFilters',
-                    'footer': '@config.footer',
-                    'width': '@config.width',
-                    'error': '@config.error',
-                    'searchValue': '@config.searchValue',
-                    'type': 'detail-panel',
-                    'mode': '@config.mode',
-                    'position': '@config.position',
-                    'sections': '@config.sections',
-                    'showActions': '@config.showActions',
-                    'slideOver': '@config.slideOver',
-                    'status': '@config.status',
-                    'displayFields': '@config.displayFields',
-                    'subtitle': '@config.subtitle',
-                    'isLoading': '@config.isLoading',
-                    'title': '@config.title',
-                    'pageSize': '@config.pageSize',
-                    'className': '@config.className',
                     'initialData': '@config.initialData',
                     'totalCount': '@config.totalCount',
-                    'fields': '@config.fields',
+                    'type': 'detail-panel',
+                    'activeFilters': '@config.activeFilters',
+                    'status': '@config.status',
+                    'className': '@config.className',
                     'avatar': '@config.avatar',
-                    'selectedIds': '@config.selectedIds',
-                    'entity': '@entity',
+                    'title': '@config.title',
+                    'pageSize': '@config.pageSize',
+                    'error': '@config.error',
+                    'subtitle': '@config.subtitle',
+                    'fields': '@config.fields',
+                    'mode': '@config.mode',
                     'page': '@config.pageProp',
+                    'displayFields': '@config.displayFields',
+                    'searchValue': '@config.searchValue',
+                    'selectedIds': '@config.selectedIds',
+                    'sections': '@config.sections',
+                    'footer': '@config.footer',
+                    'isLoading': '@config.isLoading',
+                    'width': '@config.width',
+                    'position': '@config.position',
+                    'showActions': '@config.showActions',
                   },
                 ],
               ],
@@ -231,34 +231,51 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
           ],
         },
         'config': {
-          'mode': {
+          'sortBy': {
             'type': 'string',
             'default': '',
-            'label': 'Mode',
-            'description': 'Display mode (passed by compiler)',
+            'label': 'Sort By',
+            'description': 'Current sort field',
             'tier': 'presentation',
-          },
-          'activeFilters': {
-            'type': 'json',
-            'label': 'Active Filters',
-            'description': 'Active filters',
-            'tier': 'presentation',
-          },
-          'selectedIds': {
-            'type': '[string]',
-            'default': [],
-            'label': 'Selected Ids',
-            'description': 'Currently selected item IDs',
-            'tier': 'presentation',
-            'items': {
-              'type': 'string',
-            },
           },
           'slideOver': {
             'type': 'boolean',
             'default': false,
             'label': 'Slide Over',
             'description': 'slideOver prop',
+            'tier': 'presentation',
+          },
+          'subtitle': {
+            'type': 'string',
+            'default': '',
+            'label': 'Subtitle',
+            'description': 'subtitle prop',
+            'tier': 'presentation',
+          },
+          'initialData': {
+            'type': 'json',
+            'label': 'Initial Data',
+            'description': 'Initial data for edit mode (passed by compiler)',
+            'tier': 'presentation',
+          },
+          'avatar': {
+            'type': 'node',
+            'label': 'Avatar',
+            'description': 'avatar prop',
+            'tier': 'presentation',
+          },
+          'pageProp': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page',
+            'description': 'Current page number',
+            'synonyms': 'page',
+            'tier': 'presentation',
+          },
+          'footer': {
+            'type': 'node',
+            'label': 'Footer',
+            'description': 'footer prop',
             'tier': 'presentation',
           },
           'title': {
@@ -268,20 +285,61 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
             'description': 'title prop',
             'tier': 'presentation',
           },
-          'fieldNames': {
-            'type': '[string]',
+          'searchValue': {
+            'type': 'string',
+            'default': '',
+            'label': 'Search Value',
+            'description': 'Current search query value',
+            'tier': 'presentation',
+          },
+          'actions': {
+            'type': '[DetailPanelActionsItem]',
             'default': [],
-            'label': 'Field Names',
-            'description': 'Alias for fields - backwards compatibility',
+            'label': 'Actions',
+            'description': 'Unified actions array - first action with variant=\'primary\' is the main action',
             'tier': 'presentation',
             'items': {
-              'type': 'string',
+              'type': 'object',
+              'properties': {
+                'variant': {
+                  'name': 'variant',
+                  'type': 'string',
+                  'required': false,
+                  'values': [
+                    'primary',
+                    'secondary',
+                    'ghost',
+                    'danger',
+                  ],
+                },
+                'event': {
+                  'name': 'event',
+                  'type': 'string',
+                  'required': false,
+                },
+                'icon': {
+                  'name': 'icon',
+                  'type': 'string',
+                  'required': false,
+                },
+                'navigatesTo': {
+                  'name': 'navigatesTo',
+                  'type': 'string',
+                  'required': false,
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': true,
+                },
+              },
             },
           },
-          'avatar': {
-            'type': 'node',
-            'label': 'Avatar',
-            'description': 'avatar prop',
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
           'width': {
@@ -289,34 +347,6 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
             'default': '',
             'label': 'Width',
             'description': 'Panel width (CSS value, e.g., \'400px\', \'50%\')',
-            'tier': 'presentation',
-          },
-          'sortBy': {
-            'type': 'string',
-            'default': '',
-            'label': 'Sort By',
-            'description': 'Current sort field',
-            'tier': 'presentation',
-          },
-          'showActions': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Show Actions',
-            'description': 'Show actions flag',
-            'tier': 'presentation',
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
-            'tier': 'presentation',
-          },
-          'totalCount': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Total Count',
-            'description': 'Total number of items',
             'tier': 'presentation',
           },
           'status': {
@@ -344,86 +374,29 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
               },
             },
           },
-          'footer': {
-            'type': 'node',
-            'label': 'Footer',
-            'description': 'footer prop',
-            'tier': 'presentation',
-          },
-          'subtitle': {
-            'type': 'string',
-            'default': '',
-            'label': 'Subtitle',
-            'description': 'subtitle prop',
-            'tier': 'presentation',
-          },
-          'pageProp': {
+          'totalCount': {
             'type': 'number',
             'default': 0,
-            'label': 'Page',
-            'description': 'Current page number',
-            'synonyms': 'page',
+            'label': 'Total Count',
+            'description': 'Total number of items',
             'tier': 'presentation',
           },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'error': {
-            'type': 'json',
-            'label': 'Error',
-            'description': 'Error state',
-            'tier': 'presentation',
-          },
-          'sections': {
-            'type': '[DetailPanelSectionsItem]',
+          'displayFields': {
+            'type': '[string]',
             'default': [],
-            'label': 'Sections',
-            'description': 'sections prop',
+            'label': 'Display Fields',
+            'description': 'Display fields (alias for fields)',
             'tier': 'presentation',
             'items': {
-              'type': 'object',
-              'properties': {
-                'fields': {
-                  'name': 'fields',
-                  'type': 'array',
-                  'required': true,
-                  'items': {
-                    'type': 'object',
-                    'properties': {
-                      'icon': {
-                        'name': 'icon',
-                        'type': 'string',
-                        'required': false,
-                      },
-                      'label': {
-                        'name': 'label',
-                        'type': 'string',
-                        'required': true,
-                      },
-                      'value': {
-                        'name': 'value',
-                        'type': 'string',
-                        'required': true,
-                      },
-                      'copyable': {
-                        'name': 'copyable',
-                        'type': 'boolean',
-                        'required': false,
-                      },
-                    },
-                  },
-                },
-                'title': {
-                  'name': 'title',
-                  'type': 'string',
-                  'required': true,
-                },
-              },
+              'type': 'string',
             },
+          },
+          'showActions': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Show Actions',
+            'description': 'Show actions flag',
+            'tier': 'presentation',
           },
           'pageSize': {
             'type': 'number',
@@ -441,18 +414,13 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
             'items': {
               'type': 'object',
               'properties': {
-                'key': {
-                  'name': 'key',
-                  'type': 'string',
-                  'required': false,
-                },
                 'label': {
                   'name': 'label',
                   'type': 'string',
                   'required': false,
                 },
-                'name': {
-                  'name': 'name',
+                'key': {
+                  'name': 'key',
                   'type': 'string',
                   'required': false,
                 },
@@ -461,63 +429,25 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                   'type': 'string',
                   'required': false,
                 },
+                'name': {
+                  'name': 'name',
+                  'type': 'string',
+                  'required': false,
+                },
               },
             },
           },
-          'searchValue': {
+          'mode': {
             'type': 'string',
             'default': '',
-            'label': 'Search Value',
-            'description': 'Current search query value',
+            'label': 'Mode',
+            'description': 'Display mode (passed by compiler)',
             'tier': 'presentation',
           },
-          'actions': {
-            'type': '[DetailPanelActionsItem]',
-            'default': [],
-            'label': 'Actions',
-            'description': 'Unified actions array - first action with variant=\'primary\' is the main action',
-            'tier': 'presentation',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'event': {
-                  'name': 'event',
-                  'type': 'string',
-                  'required': false,
-                },
-                'icon': {
-                  'name': 'icon',
-                  'type': 'string',
-                  'required': false,
-                },
-                'label': {
-                  'name': 'label',
-                  'type': 'string',
-                  'required': true,
-                },
-                'navigatesTo': {
-                  'name': 'navigatesTo',
-                  'type': 'string',
-                  'required': false,
-                },
-                'variant': {
-                  'name': 'variant',
-                  'type': 'string',
-                  'required': false,
-                  'values': [
-                    'primary',
-                    'secondary',
-                    'ghost',
-                    'danger',
-                  ],
-                },
-              },
-            },
-          },
-          'initialData': {
+          'activeFilters': {
             'type': 'json',
-            'label': 'Initial Data',
-            'description': 'Initial data for edit mode (passed by compiler)',
+            'label': 'Active Filters',
+            'description': 'Active filters',
             'tier': 'presentation',
           },
           'sortDirection': {
@@ -525,6 +455,86 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
             'default': '',
             'label': 'Sort Direction',
             'description': 'Current sort direction',
+            'tier': 'presentation',
+          },
+          'selectedIds': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Selected Ids',
+            'description': 'Currently selected item IDs',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'sections': {
+            'type': '[DetailPanelSectionsItem]',
+            'default': [],
+            'label': 'Sections',
+            'description': 'sections prop',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'title': {
+                  'name': 'title',
+                  'type': 'string',
+                  'required': true,
+                },
+                'fields': {
+                  'name': 'fields',
+                  'type': 'array',
+                  'required': true,
+                  'items': {
+                    'type': 'object',
+                    'properties': {
+                      'copyable': {
+                        'name': 'copyable',
+                        'type': 'boolean',
+                        'required': false,
+                      },
+                      'label': {
+                        'name': 'label',
+                        'type': 'string',
+                        'required': true,
+                      },
+                      'icon': {
+                        'name': 'icon',
+                        'type': 'string',
+                        'required': false,
+                      },
+                      'value': {
+                        'name': 'value',
+                        'type': 'string',
+                        'required': true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          'fieldNames': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Field Names',
+            'description': 'Alias for fields - backwards compatibility',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
+          'error': {
+            'type': 'json',
+            'label': 'Error',
+            'description': 'Error state',
             'tier': 'presentation',
           },
           'position': {
@@ -537,16 +547,6 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
               'left',
               'right',
             ],
-          },
-          'displayFields': {
-            'type': '[string]',
-            'default': [],
-            'label': 'Display Fields',
-            'description': 'Display fields (alias for fields)',
-            'tier': 'presentation',
-            'items': {
-              'type': 'string',
-            },
           },
         },
         'scope': 'instance',

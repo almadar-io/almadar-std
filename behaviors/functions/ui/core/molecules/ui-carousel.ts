@@ -64,15 +64,15 @@ export interface StdUiCarouselSlideChangePayload {
 export interface StdUiCarouselConfig {
   /** Default: `false` */
   autoPlay?: boolean;
-  slideChangePayload?: unknown;
-  /** Default: `[]` */
-  items?: EntityRow[];
+  /** Default: `false` */
+  loop?: boolean;
   /** Default: `""` */
   className?: string;
   /** Default: `true` */
   showDots?: boolean;
-  /** Default: `false` */
-  loop?: boolean;
+  /** Default: `[]` */
+  items?: EntityRow[];
+  slideChangePayload?: unknown;
   /** Default: `5000` */
   autoPlayInterval?: number;
   /** Default: `true` */

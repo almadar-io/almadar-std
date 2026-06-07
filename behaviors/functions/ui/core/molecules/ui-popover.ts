@@ -41,14 +41,14 @@ export type StdUiPopoverEventKey = 'INIT';
 export interface StdUiPopoverConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `"click"` */
-  trigger?: 'click' | 'hover';
   /** Default: `true` */
   showArrow?: boolean;
   children?: unknown;
-  content?: unknown;
   /** Default: `"bottom"` */
   position?: 'top' | 'bottom' | 'left' | 'right';
+  /** Default: `"click"` */
+  trigger?: 'click' | 'hover';
+  content?: unknown;
 }
 
 /**

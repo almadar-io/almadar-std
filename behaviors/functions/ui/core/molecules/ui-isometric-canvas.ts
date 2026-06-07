@@ -106,49 +106,49 @@ export interface StdUiIsometricCanvasDrawEffectsPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiIsometricCanvasConfig {
-  /** Default: `[]` */
-  features?: EntityRow[];
-  hoveredTile?: EntityRow;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `false` */
-  hasActiveEffects?: boolean;
-  /** Default: `0` */
-  boardHeight?: number;
-  /** Default: `[]` */
-  effectSpriteUrls?: string[];
-  /** Default: `""` */
-  assetBaseUrl?: string;
-  /** Default: `[]` */
-  units?: EntityRow[];
-  /** Default: `[]` */
-  tiles?: EntityRow[];
-  /** Default: `0.4` */
-  scale?: number;
-  /** Default: `true` */
-  enableCamera?: boolean;
-  /** Default: `[]` */
-  validMoves?: EntityRow[];
-  error?: EntityRow;
   /** Default: `true` */
   showMinimap?: boolean;
-  /** Default: `false` */
-  debug?: boolean;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `""` */
-  backgroundImage?: string;
-  /** Default: `[]` */
-  attackTargets?: EntityRow[];
-  /** Default: `0` */
-  boardWidth?: number;
-  /** Default: `1` */
-  unitScale?: number;
   /** Default: `0` */
   diamondTopY?: number;
   assetManifest?: EntityRow;
   /** Default: `""` */
+  className?: string;
+  /** Default: `[]` */
+  units?: EntityRow[];
+  /** Default: `[]` */
+  attackTargets?: EntityRow[];
+  /** Default: `""` */
+  backgroundImage?: string;
+  /** Default: `[]` */
+  effectSpriteUrls?: string[];
+  /** Default: `false` */
+  hasActiveEffects?: boolean;
+  /** Default: `0` */
+  boardWidth?: number;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `false` */
+  debug?: boolean;
+  error?: EntityRow;
+  /** Default: `true` */
+  enableCamera?: boolean;
+  /** Default: `""` */
   selectedUnitId?: string;
+  /** Default: `[]` */
+  validMoves?: EntityRow[];
+  hoveredTile?: EntityRow;
+  /** Default: `1` */
+  unitScale?: number;
+  /** Default: `[]` */
+  features?: EntityRow[];
+  /** Default: `""` */
+  assetBaseUrl?: string;
+  /** Default: `0` */
+  boardHeight?: number;
+  /** Default: `[]` */
+  tiles?: EntityRow[];
+  /** Default: `0.4` */
+  scale?: number;
 }
 
 /**

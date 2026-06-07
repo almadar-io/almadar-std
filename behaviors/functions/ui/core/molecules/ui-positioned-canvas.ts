@@ -55,16 +55,16 @@ export interface StdUiPositionedCanvasMovePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiPositionedCanvasConfig {
-  /** Default: `800` */
-  width?: number;
-  /** Default: `""` */
-  selectedId?: string;
   /** Default: `""` */
   className?: string;
+  /** Default: `800` */
+  width?: number;
   /** Default: `600` */
   height?: number;
   /** Default: `false` */
   editable?: boolean;
+  /** Default: `""` */
+  selectedId?: string;
 }
 
 /**

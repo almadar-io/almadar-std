@@ -39,48 +39,48 @@ export type StdUiStatDisplayEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiStatDisplayConfig {
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `""` */
+  prefix?: string;
+  icon?: unknown;
+  /** Default: `""` */
+  clickEvent?: string;
+  /** Default: `0` */
+  target?: number;
+  /** Default: `"bg-muted"` */
+  iconBg?: string;
+  /** Default: `""` */
+  label?: string;
+  /** Default: `"higher-is-better"` */
+  trendPolarity?: 'higher-is-better' | 'lower-is-better';
+  /** Default: `""` */
+  suffix?: string;
+  /** Default: `0` */
+  max?: number;
+  /** Default: `""` */
+  value?: string;
+  /** Default: `"elevated"` */
+  look?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
+  /** Default: `"default"` */
+  variant?: 'default' | 'primary' | 'success' | 'warning' | 'error' | 'info';
+  /** Default: `"absolute"` */
+  trendFormat?: 'absolute' | 'percent';
   /** Default: `""` */
   format?: string;
   /** Default: `""` */
   className?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `false` */
-  compact?: boolean;
-  icon?: unknown;
-  /** Default: `0` */
-  target?: number;
-  /** Default: `""` */
-  prefix?: string;
-  /** Default: `"absolute"` */
-  trendFormat?: 'absolute' | 'percent';
-  /** Default: `""` */
-  suffix?: string;
-  /** Default: `"elevated"` */
-  look?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
-  /** Default: `""` */
-  clickEvent?: string;
-  /** Default: `""` */
-  value?: string;
-  /** Default: `"text-foreground"` */
-  iconColor?: string;
-  /** Default: `[]` */
-  sparklineData?: number[];
-  /** Default: `0` */
-  max?: number;
-  /** Default: `"higher-is-better"` */
-  trendPolarity?: 'higher-is-better' | 'lower-is-better';
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
-  /** Default: `"default"` */
-  variant?: 'default' | 'primary' | 'success' | 'warning' | 'error' | 'info';
-  /** Default: `""` */
-  label?: string;
-  /** Default: `"bg-muted"` */
-  iconBg?: string;
-  error?: EntityRow;
   /** Default: `0` */
   trend?: number;
+  /** Default: `[]` */
+  sparklineData?: number[];
+  error?: EntityRow;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
+  /** Default: `"text-foreground"` */
+  iconColor?: string;
+  /** Default: `false` */
+  compact?: boolean;
 }
 
 /**

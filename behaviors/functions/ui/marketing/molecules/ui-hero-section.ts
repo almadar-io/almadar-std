@@ -39,31 +39,31 @@ export type StdUiHeroSectionEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiHeroSectionConfig {
-  image?: EntityRow;
-  secondaryAction?: EntityRow;
-  /** Default: `"primary"` */
-  tagVariant?: 'primary' | 'secondary' | 'accent';
   /** Default: `""` */
-  tag?: string;
-  /** Default: `"below"` */
-  imagePosition?: 'below' | 'right' | 'background';
-  children?: unknown;
+  titleAccent?: string;
+  secondaryAction?: EntityRow;
+  /** Default: `""` */
+  installCommand?: string;
+  /** Default: `"center"` */
+  align?: 'center' | 'left';
   /** Default: `""` */
   title?: string;
   /** Default: `""` */
-  titleAccent?: string;
-  primaryAction?: EntityRow;
-  /** Default: `""` */
-  subtitle?: string;
-  /** Default: `"center"` */
-  align?: 'center' | 'left';
+  className?: string;
+  /** Default: `"below"` */
+  imagePosition?: 'below' | 'right' | 'background';
+  backgroundElement?: unknown;
   /** Default: `"subtle"` */
   background?: 'dark' | 'gradient' | 'subtle';
+  children?: unknown;
   /** Default: `""` */
-  installCommand?: string;
+  tag?: string;
   /** Default: `""` */
-  className?: string;
-  backgroundElement?: unknown;
+  subtitle?: string;
+  /** Default: `"primary"` */
+  tagVariant?: 'primary' | 'secondary' | 'accent';
+  primaryAction?: EntityRow;
+  image?: EntityRow;
 }
 
 /**

@@ -46,30 +46,30 @@ export interface StdUiCanvasEffectCompletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiCanvasEffectConfig {
+  /** Default: `""` */
+  assetBaseUrl?: string;
+  /** Default: `400` */
+  width?: number;
+  /** Default: `300` */
+  height?: number;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `1` */
+  intensity?: number;
+  /** Default: `""` */
+  effectSpriteUrl?: string;
+  assetManifest?: EntityRow;
+  /** Default: `0` */
+  y?: number;
   /** Default: `"melee"` */
   actionType?: 'melee' | 'ranged' | 'magic' | 'heal' | 'defend' | 'hit' | 'death' | 'buff' | 'debuff' | 'shield' | 'aoe' | 'critical';
   /** Default: `2000` */
   duration?: number;
   error?: EntityRow;
   /** Default: `""` */
-  assetBaseUrl?: string;
-  /** Default: `1` */
-  intensity?: number;
-  /** Default: `""` */
   className?: string;
-  assetManifest?: EntityRow;
-  /** Default: `0` */
-  y?: number;
-  /** Default: `400` */
-  width?: number;
   /** Default: `0` */
   x?: number;
-  /** Default: `""` */
-  effectSpriteUrl?: string;
-  /** Default: `300` */
-  height?: number;
-  /** Default: `false` */
-  isLoading?: boolean;
 }
 
 /**
@@ -193,22 +193,22 @@ export function stdUiCanvasEffectCanvasEffectOrbital(params: StdUiCanvasEffectCa
                   'render-ui',
                   'main',
                   {
-                    'width': '@config.width',
-                    'x': '@config.x',
-                    'intensity': '@config.intensity',
-                    'y': '@config.y',
-                    'onComplete': 'COMPLETE',
-                    'duration': '@config.duration',
-                    'assetManifest': '@config.assetManifest',
-                    'className': '@config.className',
-                    'isLoading': '@config.isLoading',
-                    'actionType': '@config.actionType',
-                    'error': '@config.error',
                     'completeEvent': 'COMPLETE',
-                    'assetBaseUrl': '@config.assetBaseUrl',
-                    'type': 'canvas-effect',
                     'height': '@config.height',
+                    'width': '@config.width',
+                    'assetBaseUrl': '@config.assetBaseUrl',
+                    'onComplete': 'COMPLETE',
+                    'assetManifest': '@config.assetManifest',
                     'effectSpriteUrl': '@config.effectSpriteUrl',
+                    'duration': '@config.duration',
+                    'error': '@config.error',
+                    'x': '@config.x',
+                    'isLoading': '@config.isLoading',
+                    'intensity': '@config.intensity',
+                    'actionType': '@config.actionType',
+                    'className': '@config.className',
+                    'y': '@config.y',
+                    'type': 'canvas-effect',
                   },
                 ],
               ],
@@ -216,6 +216,263 @@ export function stdUiCanvasEffectCanvasEffectOrbital(params: StdUiCanvasEffectCa
           ],
         },
         'config': {
+          'assetBaseUrl': {
+            'type': 'string',
+            'default': '',
+            'label': 'Asset Base Url',
+            'description': 'Base URL for remote assets. Prepended to relative effectSpriteUrl paths.',
+            'tier': 'presentation',
+          },
+          'width': {
+            'type': 'number',
+            'default': 400,
+            'label': 'Width',
+            'description': 'Canvas width (default 400)',
+            'tier': 'presentation',
+          },
+          'height': {
+            'type': 'number',
+            'default': 300,
+            'label': 'Height',
+            'description': 'Canvas height (default 300)',
+            'tier': 'presentation',
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
+          'intensity': {
+            'type': 'number',
+            'default': 1,
+            'label': 'Intensity',
+            'description': 'Optional intensity multiplier (1 = normal, 2 = double size/brightness)',
+            'tier': 'presentation',
+          },
+          'effectSpriteUrl': {
+            'type': 'string',
+            'default': '',
+            'label': 'Effect Sprite Url',
+            'description': '--- Remote asset loading ---',
+            'tier': 'presentation',
+          },
+          'assetManifest': {
+            'type': 'CanvasEffectAssetManifest',
+            'label': 'Asset Manifest',
+            'description': 'Full effect asset manifest for the sprite particle engine. When provided, enables the canvas-based particle system.',
+            'tier': 'presentation',
+            'properties': {
+              'animations': {
+                'name': 'animations',
+                'type': 'object',
+                'required': false,
+                'properties': {
+                  'blackSmoke': {
+                    'name': 'blackSmoke',
+                    'type': 'array',
+                    'required': false,
+                    'items': {
+                      'type': 'string',
+                    },
+                  },
+                  'smokeExplosion': {
+                    'name': 'smokeExplosion',
+                    'type': 'array',
+                    'required': false,
+                    'items': {
+                      'type': 'string',
+                    },
+                  },
+                  'smokePuff': {
+                    'name': 'smokePuff',
+                    'type': 'array',
+                    'required': false,
+                    'items': {
+                      'type': 'string',
+                    },
+                  },
+                  'flash': {
+                    'name': 'flash',
+                    'type': 'array',
+                    'required': false,
+                    'items': {
+                      'type': 'string',
+                    },
+                  },
+                  'gasSmoke': {
+                    'name': 'gasSmoke',
+                    'type': 'array',
+                    'required': false,
+                    'items': {
+                      'type': 'string',
+                    },
+                  },
+                  'explosion': {
+                    'name': 'explosion',
+                    'type': 'array',
+                    'required': false,
+                    'items': {
+                      'type': 'string',
+                    },
+                  },
+                },
+              },
+              'baseUrl': {
+                'name': 'baseUrl',
+                'type': 'string',
+                'required': true,
+              },
+              'particles': {
+                'name': 'particles',
+                'type': 'object',
+                'required': false,
+                'properties': {
+                  'flare': {
+                    'name': 'flare',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'scorch': {
+                    'name': 'scorch',
+                    'type': 'array',
+                    'required': false,
+                    'items': {
+                      'type': 'string',
+                    },
+                  },
+                  'light': {
+                    'name': 'light',
+                    'type': 'array',
+                    'required': false,
+                    'items': {
+                      'type': 'string',
+                    },
+                  },
+                  'symbol': {
+                    'name': 'symbol',
+                    'type': 'array',
+                    'required': false,
+                    'items': {
+                      'type': 'string',
+                    },
+                  },
+                  'twirl': {
+                    'name': 'twirl',
+                    'type': 'array',
+                    'required': false,
+                    'items': {
+                      'type': 'string',
+                    },
+                  },
+                  'smoke': {
+                    'name': 'smoke',
+                    'type': 'array',
+                    'required': false,
+                    'items': {
+                      'type': 'string',
+                    },
+                  },
+                  'magic': {
+                    'name': 'magic',
+                    'type': 'array',
+                    'required': false,
+                    'items': {
+                      'type': 'string',
+                    },
+                  },
+                  'flame': {
+                    'name': 'flame',
+                    'type': 'array',
+                    'required': false,
+                    'items': {
+                      'type': 'string',
+                    },
+                  },
+                  'dirt': {
+                    'name': 'dirt',
+                    'type': 'array',
+                    'required': false,
+                    'items': {
+                      'type': 'string',
+                    },
+                  },
+                  'scratch': {
+                    'name': 'scratch',
+                    'type': 'array',
+                    'required': false,
+                    'items': {
+                      'type': 'string',
+                    },
+                  },
+                  'circle': {
+                    'name': 'circle',
+                    'type': 'array',
+                    'required': false,
+                    'items': {
+                      'type': 'string',
+                    },
+                  },
+                  'slash': {
+                    'name': 'slash',
+                    'type': 'array',
+                    'required': false,
+                    'items': {
+                      'type': 'string',
+                    },
+                  },
+                  'fire': {
+                    'name': 'fire',
+                    'type': 'array',
+                    'required': false,
+                    'items': {
+                      'type': 'string',
+                    },
+                  },
+                  'spark': {
+                    'name': 'spark',
+                    'type': 'array',
+                    'required': false,
+                    'items': {
+                      'type': 'string',
+                    },
+                  },
+                  'muzzle': {
+                    'name': 'muzzle',
+                    'type': 'array',
+                    'required': false,
+                    'items': {
+                      'type': 'string',
+                    },
+                  },
+                  'trace': {
+                    'name': 'trace',
+                    'type': 'array',
+                    'required': false,
+                    'items': {
+                      'type': 'string',
+                    },
+                  },
+                  'star': {
+                    'name': 'star',
+                    'type': 'array',
+                    'required': false,
+                    'items': {
+                      'type': 'string',
+                    },
+                  },
+                },
+              },
+            },
+          },
+          'y': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Y',
+            'description': 'Screen-space Y position (center of the effect)',
+            'tier': 'presentation',
+          },
           'actionType': {
             'type': 'string',
             'default': 'melee',
@@ -272,20 +529,6 @@ export function stdUiCanvasEffectCanvasEffectOrbital(params: StdUiCanvasEffectCa
               },
             },
           },
-          'assetBaseUrl': {
-            'type': 'string',
-            'default': '',
-            'label': 'Asset Base Url',
-            'description': 'Base URL for remote assets. Prepended to relative effectSpriteUrl paths.',
-            'tier': 'presentation',
-          },
-          'intensity': {
-            'type': 'number',
-            'default': 1,
-            'label': 'Intensity',
-            'description': 'Optional intensity multiplier (1 = normal, 2 = double size/brightness)',
-            'tier': 'presentation',
-          },
           'className': {
             'type': 'string',
             'default': '',
@@ -293,254 +536,11 @@ export function stdUiCanvasEffectCanvasEffectOrbital(params: StdUiCanvasEffectCa
             'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
-          'assetManifest': {
-            'type': 'CanvasEffectAssetManifest',
-            'label': 'Asset Manifest',
-            'description': 'Full effect asset manifest for the sprite particle engine. When provided, enables the canvas-based particle system.',
-            'tier': 'presentation',
-            'properties': {
-              'animations': {
-                'name': 'animations',
-                'type': 'object',
-                'required': false,
-                'properties': {
-                  'explosion': {
-                    'name': 'explosion',
-                    'type': 'array',
-                    'required': false,
-                    'items': {
-                      'type': 'string',
-                    },
-                  },
-                  'flash': {
-                    'name': 'flash',
-                    'type': 'array',
-                    'required': false,
-                    'items': {
-                      'type': 'string',
-                    },
-                  },
-                  'gasSmoke': {
-                    'name': 'gasSmoke',
-                    'type': 'array',
-                    'required': false,
-                    'items': {
-                      'type': 'string',
-                    },
-                  },
-                  'smokeExplosion': {
-                    'name': 'smokeExplosion',
-                    'type': 'array',
-                    'required': false,
-                    'items': {
-                      'type': 'string',
-                    },
-                  },
-                  'blackSmoke': {
-                    'name': 'blackSmoke',
-                    'type': 'array',
-                    'required': false,
-                    'items': {
-                      'type': 'string',
-                    },
-                  },
-                  'smokePuff': {
-                    'name': 'smokePuff',
-                    'type': 'array',
-                    'required': false,
-                    'items': {
-                      'type': 'string',
-                    },
-                  },
-                },
-              },
-              'baseUrl': {
-                'name': 'baseUrl',
-                'type': 'string',
-                'required': true,
-              },
-              'particles': {
-                'name': 'particles',
-                'type': 'object',
-                'required': false,
-                'properties': {
-                  'light': {
-                    'name': 'light',
-                    'type': 'array',
-                    'required': false,
-                    'items': {
-                      'type': 'string',
-                    },
-                  },
-                  'flame': {
-                    'name': 'flame',
-                    'type': 'array',
-                    'required': false,
-                    'items': {
-                      'type': 'string',
-                    },
-                  },
-                  'smoke': {
-                    'name': 'smoke',
-                    'type': 'array',
-                    'required': false,
-                    'items': {
-                      'type': 'string',
-                    },
-                  },
-                  'magic': {
-                    'name': 'magic',
-                    'type': 'array',
-                    'required': false,
-                    'items': {
-                      'type': 'string',
-                    },
-                  },
-                  'slash': {
-                    'name': 'slash',
-                    'type': 'array',
-                    'required': false,
-                    'items': {
-                      'type': 'string',
-                    },
-                  },
-                  'twirl': {
-                    'name': 'twirl',
-                    'type': 'array',
-                    'required': false,
-                    'items': {
-                      'type': 'string',
-                    },
-                  },
-                  'scorch': {
-                    'name': 'scorch',
-                    'type': 'array',
-                    'required': false,
-                    'items': {
-                      'type': 'string',
-                    },
-                  },
-                  'circle': {
-                    'name': 'circle',
-                    'type': 'array',
-                    'required': false,
-                    'items': {
-                      'type': 'string',
-                    },
-                  },
-                  'spark': {
-                    'name': 'spark',
-                    'type': 'array',
-                    'required': false,
-                    'items': {
-                      'type': 'string',
-                    },
-                  },
-                  'star': {
-                    'name': 'star',
-                    'type': 'array',
-                    'required': false,
-                    'items': {
-                      'type': 'string',
-                    },
-                  },
-                  'fire': {
-                    'name': 'fire',
-                    'type': 'array',
-                    'required': false,
-                    'items': {
-                      'type': 'string',
-                    },
-                  },
-                  'flare': {
-                    'name': 'flare',
-                    'type': 'string',
-                    'required': false,
-                  },
-                  'muzzle': {
-                    'name': 'muzzle',
-                    'type': 'array',
-                    'required': false,
-                    'items': {
-                      'type': 'string',
-                    },
-                  },
-                  'trace': {
-                    'name': 'trace',
-                    'type': 'array',
-                    'required': false,
-                    'items': {
-                      'type': 'string',
-                    },
-                  },
-                  'dirt': {
-                    'name': 'dirt',
-                    'type': 'array',
-                    'required': false,
-                    'items': {
-                      'type': 'string',
-                    },
-                  },
-                  'scratch': {
-                    'name': 'scratch',
-                    'type': 'array',
-                    'required': false,
-                    'items': {
-                      'type': 'string',
-                    },
-                  },
-                  'symbol': {
-                    'name': 'symbol',
-                    'type': 'array',
-                    'required': false,
-                    'items': {
-                      'type': 'string',
-                    },
-                  },
-                },
-              },
-            },
-          },
-          'y': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Y',
-            'description': 'Screen-space Y position (center of the effect)',
-            'tier': 'presentation',
-          },
-          'width': {
-            'type': 'number',
-            'default': 400,
-            'label': 'Width',
-            'description': 'Canvas width (default 400)',
-            'tier': 'presentation',
-          },
           'x': {
             'type': 'number',
             'default': 0,
             'label': 'X',
             'description': 'Screen-space X position (center of the effect)',
-            'tier': 'presentation',
-          },
-          'effectSpriteUrl': {
-            'type': 'string',
-            'default': '',
-            'label': 'Effect Sprite Url',
-            'description': '--- Remote asset loading ---',
-            'tier': 'presentation',
-          },
-          'height': {
-            'type': 'number',
-            'default': 300,
-            'label': 'Height',
-            'description': 'Canvas height (default 300)',
-            'tier': 'presentation',
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
             'tier': 'presentation',
           },
         },

@@ -39,10 +39,10 @@ export type StdUiThemeToggleEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiThemeToggleConfig {
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
   /** Default: `""` */
   className?: string;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
   /** Default: `false` */
   showLabel?: boolean;
 }

@@ -41,16 +41,16 @@ export type StdUiTurnIndicatorEventKey = 'INIT';
 export interface StdUiTurnIndicatorConfig {
   /** Default: `""` */
   phase?: string;
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
-  /** Default: `0` */
-  currentTurn?: number;
-  /** Default: `""` */
-  activeTeam?: string;
   /** Default: `""` */
   className?: string;
   /** Default: `0` */
   maxTurns?: number;
+  /** Default: `""` */
+  activeTeam?: string;
+  /** Default: `0` */
+  currentTurn?: number;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
 }
 
 /**

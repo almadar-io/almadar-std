@@ -39,28 +39,28 @@ export type StdUiFlexEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiFlexConfig {
-  /** Default: `0` */
-  grow?: number;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"none"` */
-  gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
-  /** Default: `"start"` */
-  justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';
-  /** Default: `"nowrap"` */
-  wrap?: 'nowrap' | 'wrap' | 'wrap-reverse';
-  asProp?: unknown;
-  /** Default: `"stretch"` */
-  align?: 'start' | 'center' | 'end' | 'stretch' | 'baseline';
-  /** Default: `false` */
-  inline?: boolean;
+  /** Default: `"row"` */
+  direction?: 'row' | 'row-reverse' | 'col' | 'col-reverse';
   /** Default: `0` */
   shrink?: number;
   /** Default: `""` */
-  basis?: string;
-  /** Default: `"row"` */
-  direction?: 'row' | 'row-reverse' | 'col' | 'col-reverse';
+  className?: string;
+  /** Default: `"stretch"` */
+  align?: 'start' | 'center' | 'end' | 'stretch' | 'baseline';
+  /** Default: `"none"` */
+  gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  /** Default: `false` */
+  inline?: boolean;
+  asProp?: unknown;
+  /** Default: `"start"` */
+  justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';
   children?: unknown;
+  /** Default: `"nowrap"` */
+  wrap?: 'nowrap' | 'wrap' | 'wrap-reverse';
+  /** Default: `""` */
+  basis?: string;
+  /** Default: `0` */
+  grow?: number;
 }
 
 /**

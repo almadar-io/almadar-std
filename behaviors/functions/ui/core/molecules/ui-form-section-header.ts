@@ -47,23 +47,23 @@ export interface StdUiFormSectionHeaderTogglePayload {
  */
 export interface StdUiFormSectionHeaderConfig {
   /** Default: `""` */
-  subtitle?: string;
-  /** Default: `""` */
   title?: string;
+  /** Default: `false` */
+  isCollapsed?: boolean;
+  /** Default: `false` */
+  hasErrors?: boolean;
+  /** Default: `false` */
+  isComplete?: boolean;
   /** Default: `""` */
   badge?: string;
   /** Default: `""` */
   className?: string;
-  /** Default: `false` */
-  isComplete?: boolean;
-  /** Default: `"circle"` */
-  icon?: string;
+  /** Default: `""` */
+  subtitle?: string;
   /** Default: `"default"` */
   badgeVariant?: 'default' | 'primary' | 'success' | 'warning' | 'danger';
-  /** Default: `false` */
-  hasErrors?: boolean;
-  /** Default: `false` */
-  isCollapsed?: boolean;
+  /** Default: `"circle"` */
+  icon?: string;
 }
 
 /**

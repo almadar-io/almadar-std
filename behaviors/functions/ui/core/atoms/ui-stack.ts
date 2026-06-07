@@ -62,30 +62,30 @@ export interface StdUiStackActionPayload {
 export interface StdUiStackConfig {
   /** Default: `""` */
   role?: string;
+  children?: unknown;
+  /** Default: `"stretch"` */
+  align?: 'start' | 'center' | 'end' | 'stretch' | 'baseline';
   style?: unknown;
-  actionPayload?: unknown;
-  /** Default: `false` */
-  responsive?: boolean;
   /** Default: `false` */
   flex?: boolean;
-  /** Default: `"start"` */
-  justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';
-  children?: unknown;
-  /** Default: `""` */
-  className?: string;
+  /** Default: `"md"` */
+  gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   /** Default: `"vertical"` */
   direction?: 'horizontal' | 'vertical';
   /** Default: `0` */
   tabIndex?: number;
   /** Default: `false` */
-  reverse?: boolean;
-  /** Default: `"stretch"` */
-  align?: 'start' | 'center' | 'end' | 'stretch' | 'baseline';
-  /** Default: `false` */
   wrap?: boolean;
-  /** Default: `"md"` */
-  gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   asProp?: unknown;
+  /** Default: `""` */
+  className?: string;
+  actionPayload?: unknown;
+  /** Default: `false` */
+  responsive?: boolean;
+  /** Default: `"start"` */
+  justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';
+  /** Default: `false` */
+  reverse?: boolean;
 }
 
 /**

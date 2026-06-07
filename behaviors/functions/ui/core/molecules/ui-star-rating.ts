@@ -53,21 +53,21 @@ export interface StdUiStarRatingChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiStarRatingConfig {
-  actionPayload?: unknown;
-  /** Default: `"full"` */
-  precision?: 'full' | 'half';
   /** Default: `""` */
   label?: string;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
-  /** Default: `0` */
-  value?: number;
-  /** Default: `5` */
-  max?: number;
   /** Default: `""` */
   className?: string;
+  /** Default: `"full"` */
+  precision?: 'full' | 'half';
   /** Default: `false` */
   readOnly?: boolean;
+  /** Default: `0` */
+  value?: number;
+  actionPayload?: unknown;
+  /** Default: `5` */
+  max?: number;
 }
 
 /**

@@ -172,8 +172,8 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
                   'render-ui',
                   'main',
                   {
-                    'completeEvent': 'COMPLETE',
                     'type': 'simulator-board',
+                    'completeEvent': 'COMPLETE',
                     'entity': '@entity',
                   },
                 ],

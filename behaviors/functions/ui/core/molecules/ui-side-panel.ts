@@ -46,19 +46,19 @@ export interface StdUiSidePanelClosePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiSidePanelConfig {
-  /** Default: `"right"` */
-  position?: 'left' | 'right';
   children?: unknown;
-  /** Default: `""` */
-  title?: string;
-  /** Default: `"w-full sm:w-96"` */
-  width?: string;
-  /** Default: `true` */
-  showOverlay?: boolean;
   /** Default: `false` */
   isOpen?: boolean;
   /** Default: `""` */
+  title?: string;
+  /** Default: `"right"` */
+  position?: 'left' | 'right';
+  /** Default: `true` */
+  showOverlay?: boolean;
+  /** Default: `""` */
   className?: string;
+  /** Default: `"w-full sm:w-96"` */
+  width?: string;
 }
 
 /**

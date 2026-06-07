@@ -54,16 +54,16 @@
                     "render-ui",
                     "main",
                     {
-                      "look": "@config.look",
+                      "className": "@config.className",
                       "children": "@config.children",
-                      "type": "form-actions",
-                      "orientation": "@config.orientation",
-                      "variant": "@config.variant",
-                      "secondary": "@config.secondary",
-                      "filters": "@config.filters",
-                      "entity": "FormActionsItem",
                       "primary": "@config.primary",
-                      "className": "@config.className"
+                      "look": "@config.look",
+                      "secondary": "@config.secondary",
+                      "entity": "FormActionsItem",
+                      "filters": "@config.filters",
+                      "orientation": "@config.orientation",
+                      "type": "form-actions",
+                      "variant": "@config.variant"
                     }
                   ]
                 ]
@@ -71,38 +71,48 @@
             ]
           },
           "config": {
-            "primary": {
-              "type": "FormActionsPrimary",
-              "label": "Primary",
-              "description": "Primary action button config (for form-actions pattern) Accepts Readonly for compatibility with generated const objects",
+            "secondary": {
+              "type": "[FormActionsSecondaryItem]",
+              "default": [],
+              "label": "Secondary",
+              "description": "Secondary action buttons config (for form-actions pattern) Accepts readonly array for compatibility with generated const arrays",
               "tier": "presentation",
-              "properties": {
-                "navigatesTo": {
-                  "name": "navigatesTo",
-                  "type": "string",
-                  "required": false
-                },
-                "variant": {
-                  "name": "variant",
-                  "type": "string",
-                  "required": false
-                },
-                "label": {
-                  "name": "label",
-                  "type": "string",
-                  "required": true
-                },
-                "actionType": {
-                  "name": "actionType",
-                  "type": "string",
-                  "required": false
-                },
-                "event": {
-                  "name": "event",
-                  "type": "string",
-                  "required": false
+              "items": {
+                "type": "object",
+                "properties": {
+                  "actionType": {
+                    "name": "actionType",
+                    "type": "string",
+                    "required": false
+                  },
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": false
+                  },
+                  "navigatesTo": {
+                    "name": "navigatesTo",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  }
                 }
               }
+            },
+            "children": {
+              "type": "node",
+              "label": "Children",
+              "description": "Button group content (Button components) - use this OR primary/secondary",
+              "tier": "presentation"
             },
             "orientation": {
               "type": "string",
@@ -129,55 +139,17 @@
                 "command-palette-trigger"
               ]
             },
-            "secondary": {
-              "type": "[FormActionsSecondaryItem]",
-              "default": [],
-              "label": "Secondary",
-              "description": "Secondary action buttons config (for form-actions pattern) Accepts readonly array for compatibility with generated const arrays",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": false
-                  },
-                  "navigatesTo": {
-                    "name": "navigatesTo",
-                    "type": "string",
-                    "required": false
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "actionType": {
-                    "name": "actionType",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "className": {
+            "variant": {
               "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "children": {
-              "type": "node",
-              "label": "Children",
-              "description": "Button group content (Button components) - use this OR primary/secondary",
-              "tier": "presentation"
+              "default": "default",
+              "label": "Variant",
+              "description": "Visual variant",
+              "tier": "presentation",
+              "values": [
+                "default",
+                "segmented",
+                "toggle"
+              ]
             },
             "filters": {
               "type": "[FormActionsFiltersItem]",
@@ -188,13 +160,21 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "label": {
-                    "name": "label",
+                  "field": {
+                    "name": "field",
                     "type": "string",
                     "required": true
                   },
-                  "field": {
-                    "name": "field",
+                  "options": {
+                    "name": "options",
+                    "type": "array",
+                    "required": false,
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "label": {
+                    "name": "label",
                     "type": "string",
                     "required": true
                   },
@@ -207,29 +187,49 @@
                       "select",
                       "toggle"
                     ]
-                  },
-                  "options": {
-                    "name": "options",
-                    "type": "array",
-                    "required": false,
-                    "items": {
-                      "type": "string"
-                    }
                   }
                 }
               }
             },
-            "variant": {
-              "type": "string",
-              "default": "default",
-              "label": "Variant",
-              "description": "Visual variant",
+            "primary": {
+              "type": "FormActionsPrimary",
+              "label": "Primary",
+              "description": "Primary action button config (for form-actions pattern) Accepts Readonly for compatibility with generated const objects",
               "tier": "presentation",
-              "values": [
-                "default",
-                "segmented",
-                "toggle"
-              ]
+              "properties": {
+                "label": {
+                  "name": "label",
+                  "type": "string",
+                  "required": true
+                },
+                "event": {
+                  "name": "event",
+                  "type": "string",
+                  "required": false
+                },
+                "actionType": {
+                  "name": "actionType",
+                  "type": "string",
+                  "required": false
+                },
+                "navigatesTo": {
+                  "name": "navigatesTo",
+                  "type": "string",
+                  "required": false
+                },
+                "variant": {
+                  "name": "variant",
+                  "type": "string",
+                  "required": false
+                }
+              }
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
             }
           },
           "scope": "instance"

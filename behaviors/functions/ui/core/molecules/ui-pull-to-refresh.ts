@@ -46,12 +46,12 @@ export interface StdUiPullToRefreshRefreshPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiPullToRefreshConfig {
-  /** Default: `""` */
-  className?: string;
+  children?: unknown;
   refreshPayload?: unknown;
   /** Default: `60` */
   threshold?: number;
-  children?: unknown;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

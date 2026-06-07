@@ -40,9 +40,9 @@ export type StdUiVariablePanelEventKey = 'INIT';
  */
 export interface StdUiVariablePanelConfig {
   /** Default: `""` */
-  entityName?: string;
-  /** Default: `""` */
   className?: string;
+  /** Default: `""` */
+  entityName?: string;
   /** Default: `[]` */
   variables?: EntityRow[];
 }
@@ -148,10 +148,10 @@ export function stdUiVariablePanelVariablePanelOrbital(params: StdUiVariablePane
                   'render-ui',
                   'main',
                   {
+                    'variables': '@config.variables',
+                    'type': 'variable-panel',
                     'entityName': '@config.entityName',
                     'className': '@config.className',
-                    'type': 'variable-panel',
-                    'variables': '@config.variables',
                   },
                 ],
               ],
@@ -159,18 +159,18 @@ export function stdUiVariablePanelVariablePanelOrbital(params: StdUiVariablePane
           ],
         },
         'config': {
-          'entityName': {
-            'type': 'string',
-            'default': '',
-            'label': 'Entity Name',
-            'description': 'Entity name',
-            'tier': 'presentation',
-          },
           'className': {
             'type': 'string',
             'default': '',
             'label': 'Class Name',
             'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'entityName': {
+            'type': 'string',
+            'default': '',
+            'label': 'Entity Name',
+            'description': 'Entity name',
             'tier': 'presentation',
           },
           'variables': {
@@ -182,6 +182,11 @@ export function stdUiVariablePanelVariablePanelOrbital(params: StdUiVariablePane
             'items': {
               'type': 'object',
               'properties': {
+                'unit': {
+                  'name': 'unit',
+                  'type': 'string',
+                  'required': false,
+                },
                 'name': {
                   'name': 'name',
                   'type': 'string',
@@ -195,11 +200,6 @@ export function stdUiVariablePanelVariablePanelOrbital(params: StdUiVariablePane
                 'min': {
                   'name': 'min',
                   'type': 'number',
-                  'required': false,
-                },
-                'unit': {
-                  'name': 'unit',
-                  'type': 'string',
                   'required': false,
                 },
                 'value': {

@@ -47,23 +47,23 @@ export interface StdUiButtonActionPayload {
  */
 export interface StdUiButtonConfig {
   /** Default: `false` */
+  disabled?: boolean;
+  /** Default: `false` */
   isLoading?: boolean;
   /** Default: `""` */
   label?: string;
-  /** Default: `false` */
-  disabled?: boolean;
-  rightIcon?: unknown;
+  iconRight?: unknown;
   /** Default: `"circle"` */
   icon?: string;
-  actionPayload?: unknown;
-  leftIcon?: unknown;
-  iconRight?: unknown;
-  /** Default: `"primary"` */
-  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'success' | 'warning' | 'default';
-  /** Default: `""` */
-  className?: string;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"primary"` */
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'success' | 'warning' | 'default';
+  actionPayload?: unknown;
+  leftIcon?: unknown;
+  rightIcon?: unknown;
 }
 
 /**

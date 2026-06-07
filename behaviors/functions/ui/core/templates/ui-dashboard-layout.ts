@@ -67,27 +67,27 @@ export interface StdUiDashboardLayoutSignOutPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiDashboardLayoutConfig {
-  /** Default: `"{{APP_TITLE}}"` */
-  appName?: string;
-  /** Default: `false` */
-  showSearch?: boolean;
-  /** Default: `[]` */
-  navItems?: EntityRow[];
-  /** Default: `[]` */
-  topBarActions?: EntityRow[];
-  sidebarFooter?: unknown;
-  /** Default: `"sidebar"` */
-  layoutMode?: 'sidebar' | 'topnav' | 'bottomnav' | 'minimal';
+  user?: EntityRow;
+  logo?: unknown;
   /** Default: `[]` */
   notifications?: EntityRow[];
+  sidebarFooter?: unknown;
+  headerActions?: unknown;
+  /** Default: `false` */
+  showSearch?: boolean;
   /** Default: `true` */
   showThemeToggle?: boolean;
   /** Default: `""` */
   currentPath?: string;
-  user?: EntityRow;
-  headerActions?: unknown;
-  logo?: unknown;
+  /** Default: `"{{APP_TITLE}}"` */
+  appName?: string;
+  /** Default: `"sidebar"` */
+  layoutMode?: 'sidebar' | 'topnav' | 'bottomnav' | 'minimal';
+  /** Default: `[]` */
+  navItems?: EntityRow[];
   children?: unknown;
+  /** Default: `[]` */
+  topBarActions?: EntityRow[];
 }
 
 /**

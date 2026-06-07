@@ -42,24 +42,24 @@ export interface StdUiHeroOrganismConfig {
   /** Default: `0` */
   pageSize?: number;
   activeFilters?: unknown;
-  /** Default: `false` */
-  isLoading?: boolean;
   /** Default: `[]` */
   selectedIds?: string[];
-  /** Default: `""` */
-  className?: string;
-  /** Default: `0` */
-  totalCount?: number;
-  children?: unknown;
-  /** Default: `""` */
-  sortBy?: string;
   /** Default: `0` */
   pageProp?: number;
   /** Default: `""` */
   sortDirection?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `""` */
+  sortBy?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
   error?: unknown;
+  children?: unknown;
   /** Default: `""` */
   searchValue?: string;
+  /** Default: `0` */
+  totalCount?: number;
 }
 
 /**
@@ -168,20 +168,20 @@ export function stdUiHeroOrganismHeroOrganismOrbital(params: StdUiHeroOrganismHe
                   'render-ui',
                   'main',
                   {
-                    'searchValue': '@config.searchValue',
-                    'selectedIds': '@config.selectedIds',
-                    'isLoading': '@config.isLoading',
-                    'pageSize': '@config.pageSize',
-                    'totalCount': '@config.totalCount',
-                    'sortDirection': '@config.sortDirection',
-                    'entity': '@entity',
-                    'sortBy': '@config.sortBy',
-                    'page': '@config.pageProp',
                     'activeFilters': '@config.activeFilters',
-                    'children': '@config.children',
-                    'type': 'hero-organism',
-                    'className': '@config.className',
                     'error': '@config.error',
+                    'selectedIds': '@config.selectedIds',
+                    'type': 'hero-organism',
+                    'page': '@config.pageProp',
+                    'sortDirection': '@config.sortDirection',
+                    'searchValue': '@config.searchValue',
+                    'className': '@config.className',
+                    'pageSize': '@config.pageSize',
+                    'sortBy': '@config.sortBy',
+                    'entity': '@entity',
+                    'isLoading': '@config.isLoading',
+                    'children': '@config.children',
+                    'totalCount': '@config.totalCount',
                   },
                 ],
               ],
@@ -202,13 +202,6 @@ export function stdUiHeroOrganismHeroOrganismOrbital(params: StdUiHeroOrganismHe
             'description': 'Active filters',
             'tier': 'presentation',
           },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
-            'tier': 'presentation',
-          },
           'selectedIds': {
             'type': '[string]',
             'default': [],
@@ -218,33 +211,6 @@ export function stdUiHeroOrganismHeroOrganismOrbital(params: StdUiHeroOrganismHe
             'items': {
               'type': 'string',
             },
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'totalCount': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Total Count',
-            'description': 'Total number of items',
-            'tier': 'presentation',
-          },
-          'children': {
-            'type': 'node',
-            'label': 'Children',
-            'description': 'children prop',
-            'tier': 'presentation',
-          },
-          'sortBy': {
-            'type': 'string',
-            'default': '',
-            'label': 'Sort By',
-            'description': 'Current sort field',
-            'tier': 'presentation',
           },
           'pageProp': {
             'type': 'number',
@@ -261,10 +227,37 @@ export function stdUiHeroOrganismHeroOrganismOrbital(params: StdUiHeroOrganismHe
             'description': 'Current sort direction',
             'tier': 'presentation',
           },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'sortBy': {
+            'type': 'string',
+            'default': '',
+            'label': 'Sort By',
+            'description': 'Current sort field',
+            'tier': 'presentation',
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
           'error': {
             'type': 'json',
             'label': 'Error',
             'description': 'Error state',
+            'tier': 'presentation',
+          },
+          'children': {
+            'type': 'node',
+            'label': 'Children',
+            'description': 'children prop',
             'tier': 'presentation',
           },
           'searchValue': {
@@ -272,6 +265,13 @@ export function stdUiHeroOrganismHeroOrganismOrbital(params: StdUiHeroOrganismHe
             'default': '',
             'label': 'Search Value',
             'description': 'Current search query value',
+            'tier': 'presentation',
+          },
+          'totalCount': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Total Count',
+            'description': 'Total number of items',
             'tier': 'presentation',
           },
         },

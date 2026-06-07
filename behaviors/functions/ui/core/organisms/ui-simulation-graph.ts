@@ -39,20 +39,20 @@ export type StdUiSimulationGraphEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiSimulationGraphConfig {
-  /** Default: `""` */
-  unit?: string;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `120` */
-  height?: number;
-  /** Default: `[]` */
-  data?: EntityRow[];
-  /** Default: `200` */
-  maxPoints?: number;
   /** Default: `"#e94560"` */
   color?: string;
   /** Default: `""` */
   label?: string;
+  /** Default: `[]` */
+  data?: EntityRow[];
+  /** Default: `""` */
+  unit?: string;
+  /** Default: `120` */
+  height?: number;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `200` */
+  maxPoints?: number;
   /** Default: `300` */
   width?: number;
 }
@@ -158,15 +158,15 @@ export function stdUiSimulationGraphSimulationGraphOrbital(params: StdUiSimulati
                   'render-ui',
                   'main',
                   {
-                    'unit': '@config.unit',
-                    'color': '@config.color',
-                    'data': '@config.data',
-                    'width': '@config.width',
-                    'label': '@config.label',
-                    'className': '@config.className',
                     'maxPoints': '@config.maxPoints',
+                    'unit': '@config.unit',
+                    'width': '@config.width',
+                    'color': '@config.color',
                     'type': 'simulation-graph',
+                    'data': '@config.data',
+                    'label': '@config.label',
                     'height': '@config.height',
+                    'className': '@config.className',
                   },
                 ],
               ],
@@ -174,25 +174,18 @@ export function stdUiSimulationGraphSimulationGraphOrbital(params: StdUiSimulati
           ],
         },
         'config': {
-          'unit': {
+          'color': {
             'type': 'string',
-            'default': '',
-            'label': 'Unit',
-            'description': 'unit prop',
+            'default': '#e94560',
+            'label': 'Color',
+            'description': 'color prop',
             'tier': 'presentation',
           },
-          'className': {
+          'label': {
             'type': 'string',
             'default': '',
-            'label': 'Class Name',
-            'description': 'className prop',
-            'tier': 'presentation',
-          },
-          'height': {
-            'type': 'number',
-            'default': 120,
-            'label': 'Height',
-            'description': 'height prop',
+            'label': 'Label',
+            'description': 'label prop',
             'tier': 'presentation',
           },
           'data': {
@@ -217,25 +210,32 @@ export function stdUiSimulationGraphSimulationGraphOrbital(params: StdUiSimulati
               },
             },
           },
+          'unit': {
+            'type': 'string',
+            'default': '',
+            'label': 'Unit',
+            'description': 'unit prop',
+            'tier': 'presentation',
+          },
+          'height': {
+            'type': 'number',
+            'default': 120,
+            'label': 'Height',
+            'description': 'height prop',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'className prop',
+            'tier': 'presentation',
+          },
           'maxPoints': {
             'type': 'number',
             'default': 200,
             'label': 'Max Points',
             'description': 'maxPoints prop',
-            'tier': 'presentation',
-          },
-          'color': {
-            'type': 'string',
-            'default': '#e94560',
-            'label': 'Color',
-            'description': 'color prop',
-            'tier': 'presentation',
-          },
-          'label': {
-            'type': 'string',
-            'default': '',
-            'label': 'Label',
-            'description': 'label prop',
             'tier': 'presentation',
           },
           'width': {

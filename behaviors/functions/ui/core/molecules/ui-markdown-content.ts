@@ -41,10 +41,10 @@ export type StdUiMarkdownContentEventKey = 'INIT';
 export interface StdUiMarkdownContentConfig {
   /** Default: `""` */
   content?: string;
-  /** Default: `"rtl"` */
-  direction?: 'rtl' | 'ltr';
   /** Default: `""` */
   className?: string;
+  /** Default: `"rtl"` */
+  direction?: 'rtl' | 'ltr';
 }
 
 /**

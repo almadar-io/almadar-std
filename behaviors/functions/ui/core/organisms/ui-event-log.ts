@@ -39,14 +39,14 @@ export type StdUiEventLogEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiEventLogConfig {
-  /** Default: `""` */
-  className?: string;
-  /** Default: `""` */
-  label?: string;
   /** Default: `200` */
   maxHeight?: number;
+  /** Default: `""` */
+  className?: string;
   /** Default: `[]` */
   entries?: EntityRow[];
+  /** Default: `""` */
+  label?: string;
 }
 
 /**
@@ -151,8 +151,8 @@ export function stdUiEventLogEventLogOrbital(params: StdUiEventLogEventLogOrbita
                   'main',
                   {
                     'type': 'event-log',
-                    'entries': '@config.entries',
                     'maxHeight': '@config.maxHeight',
+                    'entries': '@config.entries',
                     'label': '@config.label',
                     'className': '@config.className',
                   },
@@ -162,25 +162,18 @@ export function stdUiEventLogEventLogOrbital(params: StdUiEventLogEventLogOrbita
           ],
         },
         'config': {
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'label': {
-            'type': 'string',
-            'default': '',
-            'label': 'Label',
-            'description': 'Title label',
-            'tier': 'presentation',
-          },
           'maxHeight': {
             'type': 'number',
             'default': 200,
             'label': 'Max Height',
             'description': 'Max visible height before scroll',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
           'entries': {
@@ -192,8 +185,24 @@ export function stdUiEventLogEventLogOrbital(params: StdUiEventLogEventLogOrbita
             'items': {
               'type': 'object',
               'properties': {
+                'status': {
+                  'name': 'status',
+                  'type': 'string',
+                  'required': true,
+                  'values': [
+                    'pending',
+                    'active',
+                    'done',
+                    'error',
+                  ],
+                },
                 'id': {
                   'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                'icon': {
+                  'name': 'icon',
                   'type': 'string',
                   'required': true,
                 },
@@ -207,24 +216,15 @@ export function stdUiEventLogEventLogOrbital(params: StdUiEventLogEventLogOrbita
                   'type': 'number',
                   'required': true,
                 },
-                'status': {
-                  'name': 'status',
-                  'type': 'string',
-                  'required': true,
-                  'values': [
-                    'pending',
-                    'active',
-                    'done',
-                    'error',
-                  ],
-                },
-                'icon': {
-                  'name': 'icon',
-                  'type': 'string',
-                  'required': true,
-                },
               },
             },
+          },
+          'label': {
+            'type': 'string',
+            'default': '',
+            'label': 'Label',
+            'description': 'Title label',
+            'tier': 'presentation',
           },
         },
         'scope': 'instance',

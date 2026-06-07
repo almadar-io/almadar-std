@@ -44,9 +44,9 @@ export interface StdUiLabelConfig {
   /** Default: `""` */
   htmlFor?: string;
   /** Default: `""` */
-  className?: string;
-  /** Default: `""` */
   text?: string;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**
