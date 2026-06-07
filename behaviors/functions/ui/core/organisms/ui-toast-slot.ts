@@ -41,16 +41,16 @@ export type StdUiToastSlotEventKey = 'INIT';
 export interface StdUiToastSlotConfig {
   /** Default: `"success"` */
   variant?: 'success' | 'error' | 'info' | 'warning';
+  /** Default: `false` */
+  isLoading?: boolean;
   /** Default: `5000` */
   duration?: number;
   children?: unknown;
   /** Default: `""` */
   title?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
+  error?: EntityRow;
   /** Default: `""` */
   className?: string;
-  error?: unknown;
 }
 
 /**
@@ -159,15 +159,15 @@ export function stdUiToastSlotToastSlotOrbital(params: StdUiToastSlotToastSlotOr
                   'render-ui',
                   'main',
                   {
-                    'title': '@config.title',
-                    'className': '@config.className',
-                    'children': '@config.children',
-                    'isLoading': '@config.isLoading',
                     'entity': 'ToastSlotItem',
-                    'variant': '@config.variant',
-                    'duration': '@config.duration',
+                    'isLoading': '@config.isLoading',
                     'error': '@config.error',
+                    'children': '@config.children',
+                    'variant': '@config.variant',
+                    'className': '@config.className',
                     'type': 'toast-slot',
+                    'title': '@config.title',
+                    'duration': '@config.duration',
                   },
                 ],
               ],
@@ -187,6 +187,13 @@ export function stdUiToastSlotToastSlotOrbital(params: StdUiToastSlotToastSlotOr
               'info',
               'warning',
             ],
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
           },
           'duration': {
             'type': 'number',
@@ -208,24 +215,39 @@ export function stdUiToastSlotToastSlotOrbital(params: StdUiToastSlotToastSlotOr
             'description': 'Toast title',
             'tier': 'presentation',
           },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
+          'error': {
+            'type': 'ToastSlotError',
+            'label': 'Error',
+            'description': 'Error state',
             'tier': 'presentation',
+            'properties': {
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+            },
           },
           'className': {
             'type': 'string',
             'default': '',
             'label': 'Class Name',
             'description': 'Custom class name',
-            'tier': 'presentation',
-          },
-          'error': {
-            'type': 'json',
-            'label': 'Error',
-            'description': 'Error state',
             'tier': 'presentation',
           },
         },

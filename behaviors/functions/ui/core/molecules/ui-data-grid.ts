@@ -69,55 +69,55 @@ export interface StdUiDataGridRenderItemPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiDataGridConfig {
-  /** Default: `[]` */
-  itemActions?: EntityRow[];
-  /** Default: `""` */
-  accepts?: string;
-  /** Default: `""` */
-  positionEvent?: string;
-  /** Default: `[]` */
-  columns?: EntityRow[];
-  /** Default: `false` */
-  dndRoot?: boolean;
-  /** Default: `false` */
-  scrollX?: boolean;
-  /** Default: `""` */
-  className?: string;
   /** Default: `""` */
   reorderEvent?: string;
-  error?: unknown;
-  /** Default: `""` */
-  imageField?: string;
-  /** Default: `0` */
-  cols?: number;
-  /** Default: `false` */
-  selectable?: boolean;
+  /** Default: `[]` */
+  itemActions?: EntityRow[];
   /** Default: `false` */
   hasMore?: boolean;
-  /** Default: `""` */
-  dragGroup?: string;
-  /** Default: `"md"` */
-  gap?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `[]` */
-  fields?: EntityRow[];
-  /** Default: `280` */
-  minCardWidth?: number;
-  /** Default: `0` */
-  pageSize?: number;
-  /** Default: `0` */
-  maxInlineActions?: number;
   /** Default: `false` */
   sortable?: boolean;
   /** Default: `""` */
   dropEvent?: string;
+  /** Default: `0` */
+  cols?: number;
+  /** Default: `[]` */
+  columns?: EntityRow[];
+  /** Default: `""` */
+  className?: string;
+  /** Default: `false` */
+  dndRoot?: boolean;
+  /** Default: `false` */
+  selectable?: boolean;
   /** Default: `false` */
   infiniteScroll?: boolean;
-  /** Default: `"dense"` */
-  look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
+  /** Default: `""` */
+  imageField?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `""` */
+  dragGroup?: string;
+  /** Default: `""` */
+  positionEvent?: string;
   /** Default: `""` */
   dndItemIdField?: string;
+  /** Default: `0` */
+  pageSize?: number;
+  /** Default: `""` */
+  accepts?: string;
+  /** Default: `[]` */
+  fields?: EntityRow[];
+  /** Default: `false` */
+  scrollX?: boolean;
+  error?: EntityRow;
+  /** Default: `"md"` */
+  gap?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
+  /** Default: `280` */
+  minCardWidth?: number;
+  /** Default: `0` */
+  maxInlineActions?: number;
+  /** Default: `"dense"` */
+  look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
 }
 
 /**

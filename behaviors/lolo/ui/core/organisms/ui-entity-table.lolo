@@ -1,11 +1,45 @@
 app ui-entity-table "1.0.0"
 "EntityTable — UI factory (1:1 with the @almadar/ui entity-table pattern)."
 orbital EntityTableOrbital {
+  type EntityTableFieldsItem = {
+    key : string!
+    header : string!
+    name : string
+    label : string
+    width : string
+    sortable : boolean
+  }
+  type EntityTableColumnsItem = {
+    key : string!
+    header : string!
+    name : string
+    label : string
+    width : string
+    sortable : boolean
+  }
+  type EntityTableItemActionsItem = {
+    label : string!
+    event : string
+    navigatesTo : string
+    action : string
+    placement : string
+    icon : string
+    variant : string
+  }
+  type EntityTableEmptyAction = {
+    label : string!
+    event : string
+  }
   type EntityTableRowActionsItem = {
     label : string!
     icon : string
     variant : "default" | "danger"
     event : string
+  }
+  type EntityTableBulkActionsItem = {
+    label : string!
+    icon : string
+    variant : "default" | "danger"
   }
 
   entity EntityTableItem [runtime] {
@@ -102,19 +136,19 @@ orbital EntityTableOrbital {
         @label "Active Filters"
         @description "Active filters"
         @tier "presentation"
-      selectedIds : [json] = []
+      selectedIds : [string] = []
         @label "Selected Ids"
         @description "Currently selected item IDs"
         @tier "presentation"
-      fields : [json] = []
+      fields : [EntityTableFieldsItem] = []
         @label "Fields"
         @description "Fields to display - accepts string[] or Column[] for unified interface. Alias for columns"
         @tier "presentation"
-      columns : [json] = []
+      columns : [EntityTableColumnsItem] = []
         @label "Columns"
         @description "Columns can be Column objects or simple string field names"
         @tier "presentation"
-      itemActions : [json] = []
+      itemActions : [EntityTableItemActionsItem] = []
         @label "Item Actions"
         @description "Item actions from generated code - maps to rowActions"
         @tier "presentation"
@@ -130,7 +164,7 @@ orbital EntityTableOrbital {
         @label "Empty Description"
         @description "emptyDescription prop"
         @tier "presentation"
-      emptyAction : json
+      emptyAction : EntityTableEmptyAction
         @label "Empty Action"
         @description "emptyAction prop"
         @tier "presentation"
@@ -150,7 +184,7 @@ orbital EntityTableOrbital {
         @label "Row Actions"
         @description "Row actions"
         @tier "presentation"
-      bulkActions : [json] = []
+      bulkActions : [EntityTableBulkActionsItem] = []
         @label "Bulk Actions"
         @description "Bulk actions"
         @tier "presentation"

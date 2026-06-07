@@ -39,11 +39,11 @@ export type StdUiBookChapterViewEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiBookChapterViewConfig {
-  /** Default: `""` */
-  className?: string;
-  chapter?: EntityRow;
   /** Default: `"rtl"` */
   direction?: 'rtl' | 'ltr';
+  chapter?: EntityRow;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**
@@ -148,9 +148,9 @@ export function stdUiBookChapterViewBookChapterViewOrbital(params: StdUiBookChap
                   'main',
                   {
                     'chapter': '@config.chapter',
+                    'className': '@config.className',
                     'type': 'book-chapter-view',
                     'direction': '@config.direction',
-                    'className': '@config.className',
                   },
                 ],
               ],
@@ -158,12 +158,16 @@ export function stdUiBookChapterViewBookChapterViewOrbital(params: StdUiBookChap
           ],
         },
         'config': {
-          'className': {
+          'direction': {
             'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
+            'default': 'rtl',
+            'label': 'Direction',
+            'description': 'direction prop',
             'tier': 'presentation',
+            'values': [
+              'rtl',
+              'ltr',
+            ],
           },
           'chapter': {
             'type': 'BookChapterViewChapter',
@@ -193,16 +197,12 @@ export function stdUiBookChapterViewBookChapterViewOrbital(params: StdUiBookChap
               },
             },
           },
-          'direction': {
+          'className': {
             'type': 'string',
-            'default': 'rtl',
-            'label': 'Direction',
-            'description': 'direction prop',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
             'tier': 'presentation',
-            'values': [
-              'rtl',
-              'ltr',
-            ],
           },
         },
         'scope': 'instance',

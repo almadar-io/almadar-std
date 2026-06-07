@@ -47,16 +47,16 @@ export interface StdUiActionButtonsActionPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiActionButtonsConfig {
-  /** Default: `false` */
-  disabled?: boolean;
   /** Default: `""` */
   className?: string;
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
   /** Default: `[]` */
   buttons?: EntityRow[];
   /** Default: `"horizontal"` */
   layout?: 'horizontal' | 'vertical' | 'diamond';
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
+  /** Default: `false` */
+  disabled?: boolean;
 }
 
 /**

@@ -1,6 +1,14 @@
 app ui-rich-block-editor "1.0.0"
 "RichBlockEditor — UI factory (1:1 with the @almadar/ui rich-block-editor pattern)."
 orbital RichBlockEditorOrbital {
+  type RichBlockEditorInitialBlocksItem = {
+    id : string!
+    type : "paragraph" | "heading-1" | "heading-2" | "heading-3" | "bullet-list" | "numbered-list" | "quote" | "code" | "divider" | "image"!
+    content : string
+    metadata : json
+    children : [json]
+  }
+
   entity RichBlockEditorItem [runtime] {
     id : string!
   }
@@ -31,7 +39,7 @@ orbital RichBlockEditorOrbital {
     }
 
     config {
-      initialBlocks : [json] = []
+      initialBlocks : [RichBlockEditorInitialBlocksItem] = []
         @label "Initial Blocks"
         @description "Initial block payload. Accepts strongly-typed RichBlock[] from native callers and the wider EntityRow[] shape that orb-bound traits emit (orb `[object]` lowers to `Record<string, FieldValue | undefined>[]`, which is structurally EntityRow[]). Items missing id/type are normalized into paragraph blocks at mount."
         @tier "presentation"

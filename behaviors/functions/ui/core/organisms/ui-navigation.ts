@@ -39,15 +39,15 @@ export type StdUiNavigationEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiNavigationConfig {
-  /** Default: `[]` */
-  items?: EntityRow[];
-  error?: unknown;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `"horizontal"` */
-  orientation?: 'horizontal' | 'vertical';
   /** Default: `""` */
   className?: string;
+  /** Default: `[]` */
+  items?: EntityRow[];
+  /** Default: `false` */
+  isLoading?: boolean;
+  error?: EntityRow;
+  /** Default: `"horizontal"` */
+  orientation?: 'horizontal' | 'vertical';
 }
 
 /**
@@ -156,13 +156,13 @@ export function stdUiNavigationNavigationOrbital(params: StdUiNavigationNavigati
                   'render-ui',
                   'main',
                   {
-                    'type': 'navigation',
-                    'orientation': '@config.orientation',
-                    'className': '@config.className',
-                    'isLoading': '@config.isLoading',
-                    'items': '@config.items',
-                    'error': '@config.error',
                     'entity': 'NavigationItem',
+                    'type': 'navigation',
+                    'className': '@config.className',
+                    'items': '@config.items',
+                    'isLoading': '@config.isLoading',
+                    'error': '@config.error',
+                    'orientation': '@config.orientation',
                   },
                 ],
               ],
@@ -170,6 +170,13 @@ export function stdUiNavigationNavigationOrbital(params: StdUiNavigationNavigati
           ],
         },
         'config': {
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
           'items': {
             'type': '[NavigationItemsItem]',
             'default': [],
@@ -179,18 +186,13 @@ export function stdUiNavigationNavigationOrbital(params: StdUiNavigationNavigati
             'items': {
               'type': 'object',
               'properties': {
-                'icon': {
-                  'name': 'icon',
-                  'type': 'string',
-                  'required': false,
-                },
-                'label': {
-                  'name': 'label',
+                'id': {
+                  'name': 'id',
                   'type': 'string',
                   'required': true,
                 },
-                'isActive': {
-                  'name': 'isActive',
+                'disabled': {
+                  'name': 'disabled',
                   'type': 'boolean',
                   'required': false,
                 },
@@ -202,8 +204,8 @@ export function stdUiNavigationNavigationOrbital(params: StdUiNavigationNavigati
                     'type': 'string',
                   },
                 },
-                'id': {
-                  'name': 'id',
+                'label': {
+                  'name': 'label',
                   'type': 'string',
                   'required': true,
                 },
@@ -217,19 +219,18 @@ export function stdUiNavigationNavigationOrbital(params: StdUiNavigationNavigati
                   'type': 'string',
                   'required': false,
                 },
-                'disabled': {
-                  'name': 'disabled',
+                'icon': {
+                  'name': 'icon',
+                  'type': 'string',
+                  'required': false,
+                },
+                'isActive': {
+                  'name': 'isActive',
                   'type': 'boolean',
                   'required': false,
                 },
               },
             },
-          },
-          'error': {
-            'type': 'json',
-            'label': 'Error',
-            'description': 'Error state',
-            'tier': 'presentation',
           },
           'isLoading': {
             'type': 'boolean',
@@ -237,6 +238,34 @@ export function stdUiNavigationNavigationOrbital(params: StdUiNavigationNavigati
             'label': 'Is Loading',
             'description': 'Loading state indicator',
             'tier': 'presentation',
+          },
+          'error': {
+            'type': 'NavigationError',
+            'label': 'Error',
+            'description': 'Error state',
+            'tier': 'presentation',
+            'properties': {
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+            },
           },
           'orientation': {
             'type': 'string',
@@ -248,13 +277,6 @@ export function stdUiNavigationNavigationOrbital(params: StdUiNavigationNavigati
               'horizontal',
               'vertical',
             ],
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
           },
         },
         'scope': 'instance',

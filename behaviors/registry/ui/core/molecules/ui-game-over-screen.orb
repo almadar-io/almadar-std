@@ -69,18 +69,18 @@
                     "render-ui",
                     "main",
                     {
+                      "stats": "@config.stats",
                       "onAction": "ACTION",
                       "eventBus": "@config.eventBus",
-                      "highScore": "@config.highScore",
-                      "type": "game-over-screen",
-                      "title": "@config.title",
-                      "actions": "@config.actions",
-                      "menuItems": "@config.menuItems",
-                      "variant": "@config.variant",
                       "currentScore": "@config.currentScore",
-                      "message": "@config.message",
+                      "menuItems": "@config.menuItems",
                       "className": "@config.className",
-                      "stats": "@config.stats"
+                      "message": "@config.message",
+                      "actions": "@config.actions",
+                      "highScore": "@config.highScore",
+                      "variant": "@config.variant",
+                      "type": "game-over-screen",
+                      "title": "@config.title"
                     }
                   ]
                 ]
@@ -88,42 +88,11 @@
             ]
           },
           "config": {
-            "actions": {
-              "type": "[json]",
-              "default": [],
-              "label": "Actions",
-              "description": "Action buttons",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
-            },
-            "highScore": {
-              "type": "string",
-              "default": "",
-              "label": "High Score",
-              "description": "High score (optional, shows 'NEW HIGH SCORE!' if exceeded)",
-              "tier": "presentation"
-            },
-            "currentScore": {
-              "type": "string",
-              "default": "",
-              "label": "Current Score",
-              "description": "Current score for high score comparison (accepts string for schema bindings)",
-              "tier": "presentation"
-            },
             "message": {
               "type": "string",
               "default": "",
               "label": "Message",
               "description": "Optional message",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
               "tier": "presentation"
             },
             "variant": {
@@ -138,28 +107,62 @@
                 "neutral"
               ]
             },
+            "menuItems": {
+              "type": "[GameOverScreenMenuItemsItem]",
+              "default": [],
+              "label": "Menu Items",
+              "description": "Alias for actions (schema compatibility)",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "navigatesTo": {
+                    "name": "navigatesTo",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": false
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "primary",
+                      "secondary",
+                      "ghost"
+                    ]
+                  }
+                }
+              }
+            },
             "eventBus": {
               "type": "json",
               "label": "Event Bus",
               "description": "Event bus for emitting UI events (optional, uses hook if not provided)",
               "tier": "presentation"
             },
-            "title": {
+            "highScore": {
               "type": "string",
               "default": "",
-              "label": "Title",
-              "description": "Screen title (e.g., 'Game Over', 'Victory!')",
+              "label": "High Score",
+              "description": "High score (optional, shows 'NEW HIGH SCORE!' if exceeded)",
               "tier": "presentation"
             },
-            "menuItems": {
-              "type": "[json]",
-              "default": [],
-              "label": "Menu Items",
-              "description": "Alias for actions (schema compatibility)",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
             },
             "stats": {
               "type": "[GameOverScreenStatsItem]",
@@ -170,8 +173,8 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "bind": {
-                    "name": "bind",
+                  "icon": {
+                    "name": "icon",
                     "type": "string",
                     "required": false
                   },
@@ -179,11 +182,6 @@
                     "name": "label",
                     "type": "string",
                     "required": true
-                  },
-                  "value": {
-                    "name": "value",
-                    "type": "string",
-                    "required": false
                   },
                   "format": {
                     "name": "format",
@@ -195,13 +193,69 @@
                       "text"
                     ]
                   },
-                  "icon": {
-                    "name": "icon",
+                  "value": {
+                    "name": "value",
+                    "type": "string",
+                    "required": false
+                  },
+                  "bind": {
+                    "name": "bind",
                     "type": "string",
                     "required": false
                   }
                 }
               }
+            },
+            "title": {
+              "type": "string",
+              "default": "",
+              "label": "Title",
+              "description": "Screen title (e.g., 'Game Over', 'Victory!')",
+              "tier": "presentation"
+            },
+            "actions": {
+              "type": "[GameOverScreenActionsItem]",
+              "default": [],
+              "label": "Actions",
+              "description": "Action buttons",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": false
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "primary",
+                      "secondary",
+                      "ghost"
+                    ]
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "navigatesTo": {
+                    "name": "navigatesTo",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "currentScore": {
+              "type": "string",
+              "default": "",
+              "label": "Current Score",
+              "description": "Current score for high score comparison (accepts string for schema bindings)",
+              "tier": "presentation"
             }
           },
           "scope": "instance"

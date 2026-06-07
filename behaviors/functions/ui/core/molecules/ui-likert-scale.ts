@@ -46,20 +46,20 @@ export interface StdUiLikertScaleChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiLikertScaleConfig {
-  /** Default: `false` */
-  disabled?: boolean;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
   /** Default: `""` */
-  className?: string;
+  question?: string;
   /** Default: `"radios"` */
   variant?: 'radios' | 'buttons';
-  /** Default: `""` */
-  value?: string;
   /** Default: `[]` */
   options?: EntityRow[];
   /** Default: `""` */
-  question?: string;
+  className?: string;
+  /** Default: `false` */
+  disabled?: boolean;
+  /** Default: `""` */
+  value?: string;
 }
 
 /**

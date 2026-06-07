@@ -41,16 +41,16 @@ export type StdUiCombatLogEventKey = 'INIT';
 export interface StdUiCombatLogConfig {
   /** Default: `[]` */
   events?: EntityRow[];
-  /** Default: `""` */
-  className?: string;
-  /** Default: `true` */
-  autoScroll?: boolean;
-  /** Default: `50` */
-  maxVisible?: number;
   /** Default: `"Combat Log"` */
   title?: string;
+  /** Default: `true` */
+  autoScroll?: boolean;
   /** Default: `false` */
   showTimestamps?: boolean;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `50` */
+  maxVisible?: number;
 }
 
 /**

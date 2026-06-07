@@ -85,27 +85,197 @@
           },
           {
             "key": "error",
-            "type": "json",
+            "type": "FormError",
             "label": "Error",
             "description": "Error state",
-            "tier": "presentation"
+            "tier": "presentation",
+            "properties": {
+              "code": {
+                "name": "code",
+                "required": false,
+                "type": "string"
+              },
+              "name": {
+                "name": "name",
+                "required": false,
+                "type": "string"
+              },
+              "message": {
+                "name": "message",
+                "required": true,
+                "type": "string"
+              },
+              "stack": {
+                "name": "stack",
+                "required": false,
+                "type": "string"
+              }
+            }
           },
           {
             "key": "evaluationContext",
-            "type": "json",
+            "type": "FormEvaluationContext",
             "label": "Evaluation Context",
             "description": "Context for S-expression evaluation - accepts flexible types from generated code",
-            "tier": "presentation"
+            "tier": "presentation",
+            "properties": {
+              "localVariables": {
+                "name": "localVariables",
+                "required": false,
+                "type": "string"
+              },
+              "formValues": {
+                "name": "formValues",
+                "required": true,
+                "type": "string"
+              },
+              "globalVariables": {
+                "name": "globalVariables",
+                "required": true,
+                "type": "string"
+              },
+              "entity": {
+                "name": "entity",
+                "required": false,
+                "type": "string"
+              }
+            }
           },
           {
             "key": "fields",
-            "type": "[json]",
+            "type": "[FormFieldsItem]",
             "default": [],
             "label": "Fields",
             "description": "Fields definition (schema format) - accepts readonly for generated const arrays",
             "tier": "presentation",
             "items": {
-              "type": "string"
+              "properties": {
+                "validation": {
+                  "name": "validation",
+                  "required": false,
+                  "type": "string"
+                },
+                "field": {
+                  "name": "field",
+                  "required": false,
+                  "type": "string"
+                },
+                "relation": {
+                  "name": "relation",
+                  "required": false,
+                  "properties": {
+                    "entity": {
+                      "name": "entity",
+                      "required": true,
+                      "type": "string"
+                    },
+                    "displayField": {
+                      "name": "displayField",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "cardinality": {
+                      "name": "cardinality",
+                      "required": false,
+                      "type": "string",
+                      "values": [
+                        "one",
+                        "many"
+                      ]
+                    }
+                  },
+                  "type": "object"
+                },
+                "options": {
+                  "name": "options",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "properties": {
+                      "label": {
+                        "name": "label",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "value": {
+                        "name": "value",
+                        "required": true,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "inputType": {
+                  "name": "inputType",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "required": {
+                  "name": "required",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "pattern": {
+                  "name": "pattern",
+                  "required": false,
+                  "type": "string"
+                },
+                "placeholder": {
+                  "name": "placeholder",
+                  "required": false,
+                  "type": "string"
+                },
+                "defaultValue": {
+                  "name": "defaultValue",
+                  "required": false,
+                  "type": "string"
+                },
+                "max": {
+                  "name": "max",
+                  "required": false,
+                  "type": "number"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "min": {
+                  "name": "min",
+                  "required": false,
+                  "type": "number"
+                },
+                "readonly": {
+                  "name": "readonly",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "disabled": {
+                  "name": "disabled",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "values": {
+                  "name": "values",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "type": {
+                  "name": "type",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
             }
           },
           {
@@ -211,98 +381,12 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "title": {
-                  "name": "title",
-                  "required": true,
-                  "type": "string"
-                },
-                "id": {
-                  "name": "id",
-                  "required": true,
-                  "type": "string"
-                },
                 "fields": {
                   "name": "fields",
                   "required": true,
                   "type": "array",
                   "items": {
                     "properties": {
-                      "required": {
-                        "name": "required",
-                        "required": false,
-                        "type": "boolean"
-                      },
-                      "validation": {
-                        "name": "validation",
-                        "required": false,
-                        "type": "string"
-                      },
-                      "pattern": {
-                        "name": "pattern",
-                        "required": false,
-                        "type": "string"
-                      },
-                      "inputType": {
-                        "name": "inputType",
-                        "required": false,
-                        "type": "string"
-                      },
-                      "relation": {
-                        "name": "relation",
-                        "required": false,
-                        "properties": {
-                          "entity": {
-                            "name": "entity",
-                            "required": true,
-                            "type": "string"
-                          },
-                          "displayField": {
-                            "name": "displayField",
-                            "required": false,
-                            "type": "string"
-                          },
-                          "cardinality": {
-                            "name": "cardinality",
-                            "required": false,
-                            "type": "string",
-                            "values": [
-                              "one",
-                              "many"
-                            ]
-                          }
-                        },
-                        "type": "object"
-                      },
-                      "placeholder": {
-                        "name": "placeholder",
-                        "required": false,
-                        "type": "string"
-                      },
-                      "label": {
-                        "name": "label",
-                        "required": false,
-                        "type": "string"
-                      },
-                      "max": {
-                        "name": "max",
-                        "required": false,
-                        "type": "number"
-                      },
-                      "name": {
-                        "name": "name",
-                        "required": false,
-                        "type": "string"
-                      },
-                      "readonly": {
-                        "name": "readonly",
-                        "required": false,
-                        "type": "boolean"
-                      },
-                      "defaultValue": {
-                        "name": "defaultValue",
-                        "required": false,
-                        "type": "string"
-                      },
                       "options": {
                         "name": "options",
                         "required": false,
@@ -323,20 +407,35 @@
                           "type": "object"
                         }
                       },
+                      "label": {
+                        "name": "label",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "readonly": {
+                        "name": "readonly",
+                        "required": false,
+                        "type": "boolean"
+                      },
                       "disabled": {
                         "name": "disabled",
                         "required": false,
                         "type": "boolean"
                       },
-                      "type": {
-                        "name": "type",
+                      "placeholder": {
+                        "name": "placeholder",
                         "required": false,
                         "type": "string"
                       },
-                      "field": {
-                        "name": "field",
+                      "inputType": {
+                        "name": "inputType",
                         "required": false,
                         "type": "string"
+                      },
+                      "max": {
+                        "name": "max",
+                        "required": false,
+                        "type": "number"
                       },
                       "values": {
                         "name": "values",
@@ -346,10 +445,71 @@
                           "type": "string"
                         }
                       },
+                      "validation": {
+                        "name": "validation",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "type": {
+                        "name": "type",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "relation": {
+                        "name": "relation",
+                        "required": false,
+                        "properties": {
+                          "displayField": {
+                            "name": "displayField",
+                            "required": false,
+                            "type": "string"
+                          },
+                          "cardinality": {
+                            "name": "cardinality",
+                            "required": false,
+                            "type": "string",
+                            "values": [
+                              "one",
+                              "many"
+                            ]
+                          },
+                          "entity": {
+                            "name": "entity",
+                            "required": true,
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
                       "min": {
                         "name": "min",
                         "required": false,
                         "type": "number"
+                      },
+                      "field": {
+                        "name": "field",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "pattern": {
+                        "name": "pattern",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "required": {
+                        "name": "required",
+                        "required": false,
+                        "type": "boolean"
+                      },
+                      "name": {
+                        "name": "name",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "defaultValue": {
+                        "name": "defaultValue",
+                        "required": false,
+                        "type": "string"
                       }
                     },
                     "type": "object"
@@ -360,9 +520,19 @@
                   "required": false,
                   "type": "boolean"
                 },
+                "title": {
+                  "name": "title",
+                  "required": true,
+                  "type": "string"
+                },
                 "condition": {
                   "name": "condition",
                   "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
                   "type": "string"
                 }
               },

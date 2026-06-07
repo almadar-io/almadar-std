@@ -53,29 +53,29 @@ export interface StdUiInputClearPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiInputConfig {
-  /** Default: `""` */
-  className?: string;
-  /** Default: `false` */
-  disabled?: boolean;
-  /** Default: `"circle"` */
-  icon?: string;
-  /** Default: `""` */
-  value?: string;
-  /** Default: `false` */
-  clearable?: boolean;
-  /** Default: `[]` */
-  options?: EntityRow[];
   /** Default: `"text"` */
   inputType?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'search' | 'date' | 'datetime-local' | 'time' | 'checkbox' | 'select' | 'textarea';
-  /** Default: `3` */
-  rows?: number;
   rightIcon?: unknown;
+  /** Default: `"circle"` */
+  icon?: string;
+  onChange?: unknown;
   /** Default: `""` */
   error?: string;
   /** Default: `""` */
   placeholder?: string;
-  onChange?: unknown;
   leftIcon?: unknown;
+  /** Default: `false` */
+  clearable?: boolean;
+  /** Default: `false` */
+  disabled?: boolean;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `""` */
+  value?: string;
+  /** Default: `[]` */
+  options?: EntityRow[];
+  /** Default: `3` */
+  rows?: number;
 }
 
 /**

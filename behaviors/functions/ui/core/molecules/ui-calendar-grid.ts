@@ -83,14 +83,14 @@ export interface StdUiCalendarGridSwipeRightPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiCalendarGridConfig {
-  weekStart?: unknown;
   /** Default: `[]` */
   timeSlots?: string[];
+  weekStart?: unknown;
   /** Default: `""` */
   className?: string;
+  longPressPayload?: unknown;
   /** Default: `"auto"` */
   dayWindow?: string;
-  longPressPayload?: unknown;
 }
 
 /**

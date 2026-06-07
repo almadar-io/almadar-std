@@ -210,9 +210,9 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                   'render-ui',
                   'main',
                   {
+                    'entity': '@entity',
                     'stepDurationMs': '@config.stepDurationMs',
                     'categoryColors': '@config.categoryColors',
-                    'entity': '@entity',
                     'playEvent': 'PLAY',
                     'completeEvent': 'COMPLETE',
                     'type': 'sequencer-board',

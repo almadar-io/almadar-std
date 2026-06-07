@@ -136,35 +136,35 @@
                     "render-ui",
                     "main",
                     {
-                      "positionEvent": "@config.positionEvent",
-                      "selectable": "@config.selectable",
-                      "dropEvent": "@config.dropEvent",
-                      "dndItemIdField": "@config.dndItemIdField",
-                      "error": "@config.error",
-                      "pageSize": "@config.pageSize",
-                      "entity": "@entity",
-                      "sortColumn": "@config.sortColumn",
-                      "accepts": "@config.accepts",
-                      "dndRoot": "@config.dndRoot",
-                      "emptyMessage": "@config.emptyMessage",
-                      "type": "table-view",
-                      "columns": "@config.columns",
-                      "sortEvent": "SORT",
-                      "sortable": "@config.sortable",
-                      "selectedIds": "@config.selectedIds",
-                      "isLoading": "@config.isLoading",
-                      "maxInlineActions": "@config.maxInlineActions",
-                      "className": "@config.className",
-                      "reorderEvent": "@config.reorderEvent",
-                      "fields": "@config.fields",
-                      "renderItem": "RENDER_ITEM",
-                      "itemActions": "@config.itemActions",
-                      "selectEvent": "SELECT",
                       "groupBy": "@config.groupBy",
-                      "children": "CHILDREN",
-                      "sortDirection": "@config.sortDirection",
+                      "columns": "@config.columns",
+                      "itemActions": "@config.itemActions",
+                      "type": "table-view",
+                      "selectable": "@config.selectable",
+                      "selectEvent": "SELECT",
+                      "look": "@config.look",
+                      "sortable": "@config.sortable",
                       "dragGroup": "@config.dragGroup",
-                      "look": "@config.look"
+                      "accepts": "@config.accepts",
+                      "emptyMessage": "@config.emptyMessage",
+                      "positionEvent": "@config.positionEvent",
+                      "dndRoot": "@config.dndRoot",
+                      "selectedIds": "@config.selectedIds",
+                      "error": "@config.error",
+                      "reorderEvent": "@config.reorderEvent",
+                      "maxInlineActions": "@config.maxInlineActions",
+                      "fields": "@config.fields",
+                      "dropEvent": "@config.dropEvent",
+                      "sortDirection": "@config.sortDirection",
+                      "sortColumn": "@config.sortColumn",
+                      "children": "CHILDREN",
+                      "renderItem": "RENDER_ITEM",
+                      "dndItemIdField": "@config.dndItemIdField",
+                      "pageSize": "@config.pageSize",
+                      "isLoading": "@config.isLoading",
+                      "entity": "@entity",
+                      "className": "@config.className",
+                      "sortEvent": "SORT"
                     }
                   ]
                 ]
@@ -172,33 +172,22 @@
             ]
           },
           "config": {
-            "emptyMessage": {
-              "type": "string",
-              "default": "",
-              "label": "Empty Message",
-              "description": "Message shown when there are no rows.",
+            "sortable": {
+              "type": "boolean",
+              "default": false,
+              "label": "Sortable",
+              "description": "Enable in-container reorder; items can be dragged to new positions among siblings",
               "tier": "presentation"
             },
-            "positionEvent": {
-              "type": "string",
-              "default": "",
-              "label": "Position Event",
-              "description": "Bus event fired N times per drop (one per item in affected zones) so the trait can persist new positions for the WHOLE zone, not just the moved item. Payload: { id, position }",
-              "tier": "presentation"
-            },
-            "maxInlineActions": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Max Inline Actions",
-              "description": "Max inline action buttons before the rest collapse into a '⋯' overflow menu. Omit = all inline.",
-              "tier": "presentation"
-            },
-            "groupBy": {
-              "type": "string",
-              "default": "",
-              "label": "Group By",
-              "description": "Group rows under section headers by a field value.",
-              "tier": "presentation"
+            "selectedIds": {
+              "type": "[string]",
+              "default": [],
+              "label": "Selected Ids",
+              "description": "Currently-selected ids (controlled). Falls back to local state when omitted.",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
             },
             "fields": {
               "type": "[TableViewFieldsItem]",
@@ -209,41 +198,6 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "field": {
-                    "name": "field",
-                    "type": "string",
-                    "required": false
-                  },
-                  "key": {
-                    "name": "key",
-                    "type": "string",
-                    "required": true
-                  },
-                  "width": {
-                    "name": "width",
-                    "type": "string",
-                    "required": false
-                  },
-                  "className": {
-                    "name": "className",
-                    "type": "string",
-                    "required": false
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "align": {
-                    "name": "align",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "left",
-                      "center",
-                      "right"
-                    ]
-                  },
                   "weight": {
                     "name": "weight",
                     "type": "string",
@@ -264,6 +218,221 @@
                     "type": "string",
                     "required": false
                   },
+                  "header": {
+                    "name": "header",
+                    "type": "string",
+                    "required": false
+                  },
+                  "className": {
+                    "name": "className",
+                    "type": "string",
+                    "required": false
+                  },
+                  "field": {
+                    "name": "field",
+                    "type": "string",
+                    "required": false
+                  },
+                  "key": {
+                    "name": "key",
+                    "type": "string",
+                    "required": true
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "width": {
+                    "name": "width",
+                    "type": "string",
+                    "required": false
+                  },
+                  "align": {
+                    "name": "align",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "left",
+                      "center",
+                      "right"
+                    ]
+                  },
+                  "format": {
+                    "name": "format",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "badge",
+                      "date",
+                      "currency",
+                      "number",
+                      "percent",
+                      "boolean"
+                    ]
+                  }
+                }
+              }
+            },
+            "maxInlineActions": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Max Inline Actions",
+              "description": "Max inline action buttons before the rest collapse into a '⋯' overflow menu. Omit = all inline.",
+              "tier": "presentation"
+            },
+            "dndItemIdField": {
+              "type": "string",
+              "default": "",
+              "label": "Dnd Item Id Field",
+              "description": "Row field used as the @dnd-kit draggable id (default 'id')",
+              "tier": "presentation"
+            },
+            "sortDirection": {
+              "type": "string",
+              "default": "asc",
+              "label": "Sort Direction",
+              "description": "Current sort direction (display hint).",
+              "tier": "presentation",
+              "values": [
+                "asc",
+                "desc"
+              ]
+            },
+            "emptyMessage": {
+              "type": "string",
+              "default": "",
+              "label": "Empty Message",
+              "description": "Message shown when there are no rows.",
+              "tier": "presentation"
+            },
+            "groupBy": {
+              "type": "string",
+              "default": "",
+              "label": "Group By",
+              "description": "Group rows under section headers by a field value.",
+              "tier": "presentation"
+            },
+            "pageSize": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Page Size",
+              "description": "Max rows before a 'Show More' button. Defaults to 0 (show all).",
+              "tier": "presentation"
+            },
+            "sortColumn": {
+              "type": "string",
+              "default": "",
+              "label": "Sort Column",
+              "description": "Current sort column (display hint for the active header arrow).",
+              "tier": "presentation"
+            },
+            "reorderEvent": {
+              "type": "string",
+              "default": "",
+              "label": "Reorder Event",
+              "description": "Bus event fired on in-container reorder. Payload: { id, oldIndex, newIndex }",
+              "tier": "presentation"
+            },
+            "positionEvent": {
+              "type": "string",
+              "default": "",
+              "label": "Position Event",
+              "description": "Bus event fired N times per drop (one per item in affected zones) so the trait can persist new positions for the WHOLE zone, not just the moved item. Payload: { id, position }",
+              "tier": "presentation"
+            },
+            "error": {
+              "type": "TableViewError",
+              "label": "Error",
+              "description": "Error state.",
+              "tier": "presentation",
+              "properties": {
+                "stack": {
+                  "name": "stack",
+                  "type": "string",
+                  "required": false
+                },
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": false
+                },
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                },
+                "code": {
+                  "name": "code",
+                  "type": "string",
+                  "required": false
+                }
+              }
+            },
+            "columns": {
+              "type": "[TableViewColumnsItem]",
+              "default": [],
+              "label": "Columns",
+              "description": "Column definitions. The compiler emits `columns`; `fields` is the alias.",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "align": {
+                    "name": "align",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "left",
+                      "center",
+                      "right"
+                    ]
+                  },
+                  "width": {
+                    "name": "width",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
+                  "key": {
+                    "name": "key",
+                    "type": "string",
+                    "required": true
+                  },
+                  "field": {
+                    "name": "field",
+                    "type": "string",
+                    "required": false
+                  },
+                  "weight": {
+                    "name": "weight",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "normal",
+                      "medium",
+                      "semibold"
+                    ]
+                  },
+                  "sortable": {
+                    "name": "sortable",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "className": {
+                    "name": "className",
+                    "type": "string",
+                    "required": false
+                  },
+                  "header": {
+                    "name": "header",
+                    "type": "string",
+                    "required": false
+                  },
                   "format": {
                     "name": "format",
                     "type": "string",
@@ -277,62 +446,10 @@
                       "boolean"
                     ]
                   },
-                  "header": {
-                    "name": "header",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "dndRoot": {
-              "type": "boolean",
-              "default": false,
-              "label": "Dnd Root",
-              "description": "Mark this container as the DnD root for its subtree — descendant zones share one DndContext (cross-container drag). Use on an outer container whose own items are not draggable.",
-              "tier": "presentation"
-            },
-            "pageSize": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Page Size",
-              "description": "Max rows before a 'Show More' button. Defaults to 0 (show all).",
-              "tier": "presentation"
-            },
-            "itemActions": {
-              "type": "[TableViewItemActionsItem]",
-              "default": [],
-              "label": "Item Actions",
-              "description": "Per-row action buttons (trailing column).",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": true
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
                   "icon": {
                     "name": "icon",
                     "type": "string",
                     "required": false
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "primary",
-                      "secondary",
-                      "ghost",
-                      "danger"
-                    ]
                   }
                 }
               }
@@ -342,12 +459,6 @@
               "default": false,
               "label": "Is Loading",
               "description": "Loading state.",
-              "tier": "presentation"
-            },
-            "error": {
-              "type": "json",
-              "label": "Error",
-              "description": "Error state.",
               "tier": "presentation"
             },
             "look": {
@@ -371,134 +482,11 @@
               "description": "Bus event fired on cross-container drop. Payload: { id, sourceGroup, targetGroup, newIndex }",
               "tier": "presentation"
             },
-            "selectedIds": {
-              "type": "[string]",
-              "default": [],
-              "label": "Selected Ids",
-              "description": "Currently-selected ids (controlled). Falls back to local state when omitted.",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
-            },
-            "sortable": {
+            "dndRoot": {
               "type": "boolean",
               "default": false,
-              "label": "Sortable",
-              "description": "Enable in-container reorder; items can be dragged to new positions among siblings",
-              "tier": "presentation"
-            },
-            "reorderEvent": {
-              "type": "string",
-              "default": "",
-              "label": "Reorder Event",
-              "description": "Bus event fired on in-container reorder. Payload: { id, oldIndex, newIndex }",
-              "tier": "presentation"
-            },
-            "columns": {
-              "type": "[TableViewColumnsItem]",
-              "default": [],
-              "label": "Columns",
-              "description": "Column definitions. The compiler emits `columns`; `fields` is the alias.",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "key": {
-                    "name": "key",
-                    "type": "string",
-                    "required": true
-                  },
-                  "align": {
-                    "name": "align",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "left",
-                      "center",
-                      "right"
-                    ]
-                  },
-                  "weight": {
-                    "name": "weight",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "normal",
-                      "medium",
-                      "semibold"
-                    ]
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "header": {
-                    "name": "header",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "sortable": {
-                    "name": "sortable",
-                    "type": "boolean",
-                    "required": false
-                  },
-                  "field": {
-                    "name": "field",
-                    "type": "string",
-                    "required": false
-                  },
-                  "width": {
-                    "name": "width",
-                    "type": "string",
-                    "required": false
-                  },
-                  "format": {
-                    "name": "format",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "badge",
-                      "date",
-                      "currency",
-                      "number",
-                      "percent",
-                      "boolean"
-                    ]
-                  },
-                  "className": {
-                    "name": "className",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "dndItemIdField": {
-              "type": "string",
-              "default": "",
-              "label": "Dnd Item Id Field",
-              "description": "Row field used as the @dnd-kit draggable id (default 'id')",
-              "tier": "presentation"
-            },
-            "sortColumn": {
-              "type": "string",
-              "default": "",
-              "label": "Sort Column",
-              "description": "Current sort column (display hint for the active header arrow).",
-              "tier": "presentation"
-            },
-            "dragGroup": {
-              "type": "string",
-              "default": "",
-              "label": "Drag Group",
-              "description": "When set, items in this container are draggable and announce this group as their source",
+              "label": "Dnd Root",
+              "description": "Mark this container as the DnD root for its subtree — descendant zones share one DndContext (cross-container drag). Use on an outer container whose own items are not draggable.",
               "tier": "presentation"
             },
             "selectable": {
@@ -508,29 +496,63 @@
               "description": "Render a leading checkbox column. Selection changes emit `selectEvent`.",
               "tier": "presentation"
             },
-            "sortDirection": {
+            "accepts": {
               "type": "string",
-              "default": "asc",
-              "label": "Sort Direction",
-              "description": "Current sort direction (display hint).",
+              "default": "",
+              "label": "Accepts",
+              "description": "When set, the container accepts drops whose dragGroup matches this value (or '*' for any group)",
+              "tier": "presentation"
+            },
+            "itemActions": {
+              "type": "[TableViewItemActionsItem]",
+              "default": [],
+              "label": "Item Actions",
+              "description": "Per-row action buttons (trailing column).",
               "tier": "presentation",
-              "values": [
-                "asc",
-                "desc"
-              ]
+              "items": {
+                "type": "object",
+                "properties": {
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "primary",
+                      "secondary",
+                      "ghost",
+                      "danger"
+                    ]
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "dragGroup": {
+              "type": "string",
+              "default": "",
+              "label": "Drag Group",
+              "description": "When set, items in this container are draggable and announce this group as their source",
+              "tier": "presentation"
             },
             "className": {
               "type": "string",
               "default": "",
               "label": "Class Name",
               "description": "Additional CSS classes applied to the table root.",
-              "tier": "presentation"
-            },
-            "accepts": {
-              "type": "string",
-              "default": "",
-              "label": "Accepts",
-              "description": "When set, the container accepts drops whose dragGroup matches this value (or '*' for any group)",
               "tier": "presentation"
             }
           },

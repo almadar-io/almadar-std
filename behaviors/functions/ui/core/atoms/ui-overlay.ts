@@ -55,10 +55,10 @@ export interface StdUiOverlayActionPayload {
 export interface StdUiOverlayConfig {
   /** Default: `true` */
   isVisible?: boolean;
-  /** Default: `""` */
-  className?: string;
   /** Default: `false` */
   blur?: boolean;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

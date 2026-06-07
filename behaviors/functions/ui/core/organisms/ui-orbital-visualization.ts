@@ -46,20 +46,20 @@ export interface StdUiOrbitalVisualizationClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiOrbitalVisualizationConfig {
-  /** Default: `true` */
-  showLabel?: boolean;
   /** Default: `0` */
   complexity?: number;
   /** Default: `""` */
   className?: string;
-  schema?: unknown;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg' | 'xl';
-  error?: unknown;
+  error?: EntityRow;
   /** Default: `true` */
   animated?: boolean;
+  schema?: EntityRow;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `true` */
+  showLabel?: boolean;
 }
 
 /**
@@ -188,17 +188,17 @@ export function stdUiOrbitalVisualizationOrbitalVisualizationOrbital(params: Std
                   'render-ui',
                   'main',
                   {
-                    'type': 'orbital-visualization',
-                    'onClick': 'CLICK',
-                    'animated': '@config.animated',
                     'className': '@config.className',
+                    'isLoading': '@config.isLoading',
+                    'animated': '@config.animated',
+                    'entity': 'OrbitalVisualizationItem',
+                    'showLabel': '@config.showLabel',
+                    'size': '@config.size',
+                    'error': '@config.error',
                     'schema': '@config.schema',
                     'complexity': '@config.complexity',
-                    'size': '@config.size',
-                    'showLabel': '@config.showLabel',
-                    'entity': 'OrbitalVisualizationItem',
-                    'error': '@config.error',
-                    'isLoading': '@config.isLoading',
+                    'onClick': 'CLICK',
+                    'type': 'orbital-visualization',
                   },
                 ],
               ],
@@ -206,13 +206,6 @@ export function stdUiOrbitalVisualizationOrbitalVisualizationOrbital(params: Std
           ],
         },
         'config': {
-          'showLabel': {
-            'type': 'boolean',
-            'default': true,
-            'label': 'Show Label',
-            'description': 'Show complexity label',
-            'tier': 'presentation',
-          },
           'complexity': {
             'type': 'number',
             'default': 0,
@@ -227,18 +220,89 @@ export function stdUiOrbitalVisualizationOrbitalVisualizationOrbital(params: Std
             'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
+          'error': {
+            'type': 'OrbitalVisualizationError',
+            'label': 'Error',
+            'description': 'Error state',
+            'tier': 'presentation',
+            'properties': {
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+            },
+          },
+          'animated': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Animated',
+            'description': 'Animation enabled',
+            'tier': 'presentation',
+          },
           'schema': {
-            'type': 'json',
+            'type': 'OrbitalVisualizationSchema',
             'label': 'Schema',
             'description': 'Full KFlow schema object',
             'tier': 'presentation',
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
-            'tier': 'presentation',
+            'properties': {
+              'traits': {
+                'name': 'traits',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'string',
+                },
+              },
+              'ui': {
+                'name': 'ui',
+                'type': 'object',
+                'required': false,
+                'properties': {
+                  'pages': {
+                    'name': 'pages',
+                    'type': 'array',
+                    'required': false,
+                    'items': {
+                      'type': 'object',
+                      'properties': {
+                        'sections': {
+                          'name': 'sections',
+                          'type': 'array',
+                          'required': false,
+                          'items': {
+                            'type': 'string',
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+              'dataEntities': {
+                'name': 'dataEntities',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'string',
+                },
+              },
+            },
           },
           'size': {
             'type': 'string',
@@ -253,17 +317,18 @@ export function stdUiOrbitalVisualizationOrbitalVisualizationOrbital(params: Std
               'xl',
             ],
           },
-          'error': {
-            'type': 'json',
-            'label': 'Error',
-            'description': 'Error state',
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
             'tier': 'presentation',
           },
-          'animated': {
+          'showLabel': {
             'type': 'boolean',
             'default': true,
-            'label': 'Animated',
-            'description': 'Animation enabled',
+            'label': 'Show Label',
+            'description': 'Show complexity label',
             'tier': 'presentation',
           },
         },

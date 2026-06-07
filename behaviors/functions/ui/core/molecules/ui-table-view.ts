@@ -69,51 +69,51 @@ export interface StdUiTableViewRenderItemPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiTableViewConfig {
-  /** Default: `""` */
-  emptyMessage?: string;
-  /** Default: `""` */
-  positionEvent?: string;
+  /** Default: `false` */
+  sortable?: boolean;
+  /** Default: `[]` */
+  selectedIds?: string[];
+  /** Default: `[]` */
+  fields?: EntityRow[];
   /** Default: `0` */
   maxInlineActions?: number;
   /** Default: `""` */
+  dndItemIdField?: string;
+  /** Default: `"asc"` */
+  sortDirection?: 'asc' | 'desc';
+  /** Default: `""` */
+  emptyMessage?: string;
+  /** Default: `""` */
   groupBy?: string;
-  /** Default: `[]` */
-  fields?: EntityRow[];
-  /** Default: `false` */
-  dndRoot?: boolean;
   /** Default: `0` */
   pageSize?: number;
+  /** Default: `""` */
+  sortColumn?: string;
+  /** Default: `""` */
+  reorderEvent?: string;
+  /** Default: `""` */
+  positionEvent?: string;
+  error?: EntityRow;
   /** Default: `[]` */
-  itemActions?: EntityRow[];
+  columns?: EntityRow[];
   /** Default: `false` */
   isLoading?: boolean;
-  error?: unknown;
   /** Default: `"dense"` */
   look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'bordered';
   /** Default: `""` */
   dropEvent?: string;
-  /** Default: `[]` */
-  selectedIds?: string[];
   /** Default: `false` */
-  sortable?: boolean;
-  /** Default: `""` */
-  reorderEvent?: string;
-  /** Default: `[]` */
-  columns?: EntityRow[];
-  /** Default: `""` */
-  dndItemIdField?: string;
-  /** Default: `""` */
-  sortColumn?: string;
-  /** Default: `""` */
-  dragGroup?: string;
+  dndRoot?: boolean;
   /** Default: `false` */
   selectable?: boolean;
-  /** Default: `"asc"` */
-  sortDirection?: 'asc' | 'desc';
-  /** Default: `""` */
-  className?: string;
   /** Default: `""` */
   accepts?: string;
+  /** Default: `[]` */
+  itemActions?: EntityRow[];
+  /** Default: `""` */
+  dragGroup?: string;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

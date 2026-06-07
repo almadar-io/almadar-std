@@ -159,16 +159,16 @@ export interface StdUiBattleBoardPlayAgainPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiBattleBoardConfig {
-  /** Default: `""` */
-  className?: string;
   /** Default: `[]` */
   effectSpriteUrls?: string[];
+  /** Default: `""` */
+  className?: string;
+  /** Default: `1` */
+  unitScale?: number;
   /** Default: `false` */
   hasActiveEffects?: boolean;
   /** Default: `0.45` */
   scale?: number;
-  /** Default: `1` */
-  unitScale?: number;
 }
 
 /**
@@ -604,31 +604,31 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                   'render-ui',
                   'main',
                   {
-                    'onGameEnd': 'GAME_END',
-                    'endTurnEvent': 'END_TURN',
-                    'type': 'battle-board',
-                    'entity': '@entity',
-                    'sidebar': 'SIDEBAR',
-                    'className': '@config.className',
-                    'gameOverOverlay': 'GAME_OVER_OVERLAY',
-                    'calculateDamage': 'CALCULATE_DAMAGE',
                     'onAttack': 'ATTACK',
-                    'onDrawEffects': 'DRAW_EFFECTS',
+                    'onGameEnd': 'GAME_END',
+                    'unitClickEvent': 'UNIT_CLICK',
+                    'tileClickEvent': 'TILE_CLICK',
+                    'attackEvent': 'ATTACK',
+                    'effectSpriteUrls': '@config.effectSpriteUrls',
+                    'calculateDamage': 'CALCULATE_DAMAGE',
+                    'gameEndEvent': 'GAME_END',
+                    'className': '@config.className',
+                    'sidebar': 'SIDEBAR',
                     'onUnitMove': 'UNIT_MOVE',
                     'actions': 'ACTIONS',
-                    'unitScale': '@config.unitScale',
-                    'effectSpriteUrls': '@config.effectSpriteUrls',
-                    'resolveUnitFrame': 'RESOLVE_UNIT_FRAME',
-                    'tileClickEvent': 'TILE_CLICK',
-                    'unitClickEvent': 'UNIT_CLICK',
-                    'cancelEvent': 'CANCEL',
-                    'attackEvent': 'ATTACK',
-                    'overlay': 'OVERLAY',
-                    'scale': '@config.scale',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'header': 'HEADER',
-                    'gameEndEvent': 'GAME_END',
                     'hasActiveEffects': '@config.hasActiveEffects',
+                    'playAgainEvent': 'PLAY_AGAIN',
+                    'cancelEvent': 'CANCEL',
+                    'overlay': 'OVERLAY',
+                    'endTurnEvent': 'END_TURN',
+                    'gameOverOverlay': 'GAME_OVER_OVERLAY',
+                    'type': 'battle-board',
+                    'resolveUnitFrame': 'RESOLVE_UNIT_FRAME',
+                    'unitScale': '@config.unitScale',
+                    'entity': '@entity',
+                    'scale': '@config.scale',
+                    'header': 'HEADER',
+                    'onDrawEffects': 'DRAW_EFFECTS',
                   },
                 ],
               ],
@@ -636,13 +636,6 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
           ],
         },
         'config': {
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'className prop',
-            'tier': 'presentation',
-          },
           'effectSpriteUrls': {
             'type': '[string]',
             'default': [],
@@ -652,6 +645,20 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
             'items': {
               'type': 'string',
             },
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'className prop',
+            'tier': 'presentation',
+          },
+          'unitScale': {
+            'type': 'number',
+            'default': 1,
+            'label': 'Unit Scale',
+            'description': 'Unit draw-size multiplier',
+            'tier': 'presentation',
           },
           'hasActiveEffects': {
             'type': 'boolean',
@@ -665,13 +672,6 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
             'default': 0.45,
             'label': 'Scale',
             'description': 'Canvas render scale',
-            'tier': 'presentation',
-          },
-          'unitScale': {
-            'type': 'number',
-            'default': 1,
-            'label': 'Unit Scale',
-            'description': 'Unit draw-size multiplier',
             'tier': 'presentation',
           },
         },

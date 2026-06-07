@@ -138,8 +138,8 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'render-ui',
                   'main',
                   {
-                    'entity': '@entity',
                     'type': 'uncontrolled-battle-board',
+                    'entity': '@entity',
                   },
                 ],
               ],

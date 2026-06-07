@@ -40,18 +40,18 @@ export type StdUiShowcaseCardEventKey = 'INIT';
  */
 export interface StdUiShowcaseCardConfig {
   /** Default: `""` */
-  description?: string;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `""` */
-  title?: string;
-  /** Default: `""` */
   href?: string;
   image?: EntityRow;
   /** Default: `""` */
   badge?: string;
   /** Default: `""` */
   accentColor?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `""` */
+  title?: string;
+  /** Default: `""` */
+  description?: string;
 }
 
 /**

@@ -55,15 +55,15 @@
                     "main",
                     {
                       "look": "@config.look",
-                      "primary": "@config.primary",
-                      "secondary": "@config.secondary",
-                      "type": "form-actions",
                       "children": "@config.children",
+                      "type": "form-actions",
                       "orientation": "@config.orientation",
                       "variant": "@config.variant",
+                      "secondary": "@config.secondary",
+                      "filters": "@config.filters",
                       "entity": "FormActionsItem",
-                      "className": "@config.className",
-                      "filters": "@config.filters"
+                      "primary": "@config.primary",
+                      "className": "@config.className"
                     }
                   ]
                 ]
@@ -71,15 +71,49 @@
             ]
           },
           "config": {
-            "secondary": {
-              "type": "[json]",
-              "default": [],
-              "label": "Secondary",
-              "description": "Secondary action buttons config (for form-actions pattern) Accepts readonly array for compatibility with generated const arrays",
+            "primary": {
+              "type": "FormActionsPrimary",
+              "label": "Primary",
+              "description": "Primary action button config (for form-actions pattern) Accepts Readonly for compatibility with generated const objects",
               "tier": "presentation",
-              "items": {
-                "type": "string"
+              "properties": {
+                "navigatesTo": {
+                  "name": "navigatesTo",
+                  "type": "string",
+                  "required": false
+                },
+                "variant": {
+                  "name": "variant",
+                  "type": "string",
+                  "required": false
+                },
+                "label": {
+                  "name": "label",
+                  "type": "string",
+                  "required": true
+                },
+                "actionType": {
+                  "name": "actionType",
+                  "type": "string",
+                  "required": false
+                },
+                "event": {
+                  "name": "event",
+                  "type": "string",
+                  "required": false
+                }
               }
+            },
+            "orientation": {
+              "type": "string",
+              "default": "horizontal",
+              "label": "Orientation",
+              "description": "Orientation",
+              "tier": "presentation",
+              "values": [
+                "horizontal",
+                "vertical"
+              ]
             },
             "look": {
               "type": "string",
@@ -95,16 +129,55 @@
                 "command-palette-trigger"
               ]
             },
-            "orientation": {
-              "type": "string",
-              "default": "horizontal",
-              "label": "Orientation",
-              "description": "Orientation",
+            "secondary": {
+              "type": "[FormActionsSecondaryItem]",
+              "default": [],
+              "label": "Secondary",
+              "description": "Secondary action buttons config (for form-actions pattern) Accepts readonly array for compatibility with generated const arrays",
               "tier": "presentation",
-              "values": [
-                "horizontal",
-                "vertical"
-              ]
+              "items": {
+                "type": "object",
+                "properties": {
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": false
+                  },
+                  "navigatesTo": {
+                    "name": "navigatesTo",
+                    "type": "string",
+                    "required": false
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "actionType": {
+                    "name": "actionType",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "children": {
+              "type": "node",
+              "label": "Children",
+              "description": "Button group content (Button components) - use this OR primary/secondary",
+              "tier": "presentation"
             },
             "filters": {
               "type": "[FormActionsFiltersItem]",
@@ -115,13 +188,13 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "field": {
-                    "name": "field",
+                  "label": {
+                    "name": "label",
                     "type": "string",
                     "required": true
                   },
-                  "label": {
-                    "name": "label",
+                  "field": {
+                    "name": "field",
                     "type": "string",
                     "required": true
                   },
@@ -146,19 +219,6 @@
                 }
               }
             },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "primary": {
-              "type": "json",
-              "label": "Primary",
-              "description": "Primary action button config (for form-actions pattern) Accepts Readonly for compatibility with generated const objects",
-              "tier": "presentation"
-            },
             "variant": {
               "type": "string",
               "default": "default",
@@ -170,12 +230,6 @@
                 "segmented",
                 "toggle"
               ]
-            },
-            "children": {
-              "type": "node",
-              "label": "Children",
-              "description": "Button group content (Button components) - use this OR primary/secondary",
-              "tier": "presentation"
             }
           },
           "scope": "instance"

@@ -172,9 +172,9 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
                   'render-ui',
                   'main',
                   {
+                    'completeEvent': 'COMPLETE',
                     'type': 'simulator-board',
                     'entity': '@entity',
-                    'completeEvent': 'COMPLETE',
                   },
                 ],
               ],

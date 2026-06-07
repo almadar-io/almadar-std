@@ -1,6 +1,40 @@
 app ui-simulation-canvas "1.0.0"
 "SimulationCanvas — UI factory (1:1 with the @almadar/ui simulation-canvas pattern)."
 orbital SimulationCanvasOrbital {
+  type SimulationCanvasPreset = {
+    id : string!
+    name : string!
+    description : string!
+    domain : string!
+    gravity : SimulationCanvasPresetGravity
+    bodies : [SimulationCanvasPresetBodiesItem]!
+    constraints : [SimulationCanvasPresetConstraintsItem]
+    backgroundColor : string
+    showVelocity : boolean
+    parameters : json!
+  }
+  type SimulationCanvasPresetGravity = {
+    x : number!
+    y : number!
+  }
+  type SimulationCanvasPresetBodiesItem = {
+    id : string!
+    x : number!
+    y : number!
+    vx : number!
+    vy : number!
+    mass : number!
+    radius : number!
+    color : string!
+    fixed : boolean!
+  }
+  type SimulationCanvasPresetConstraintsItem = {
+    bodyA : number!
+    bodyB : number!
+    length : number!
+    stiffness : number!
+  }
+
   entity SimulationCanvasItem [runtime] {
     id : string!
   }
@@ -22,7 +56,7 @@ orbital SimulationCanvasOrbital {
     }
 
     config {
-      preset : json
+      preset : SimulationCanvasPreset
         @label "Preset"
         @description "preset prop"
         @tier "presentation"

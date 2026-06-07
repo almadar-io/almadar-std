@@ -39,10 +39,10 @@ export type StdUiSkeletonEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiSkeletonConfig {
-  /** Default: `5` */
-  rows?: number;
   /** Default: `4` */
   fields?: number;
+  /** Default: `5` */
+  rows?: number;
   /** Default: `4` */
   columns?: number;
   /** Default: `""` */

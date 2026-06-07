@@ -47,25 +47,25 @@ export interface StdUiModalClosePayload {
  */
 export interface StdUiModalConfig {
   /** Default: `true` */
-  swipeDownToClose?: boolean;
-  /** Default: `true` */
-  showCloseButton?: boolean;
-  /** Default: `""` */
-  title?: string;
-  footer?: unknown;
-  /** Default: `true` */
-  closeOnEscape?: boolean;
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
-  children?: unknown;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"centered-card"` */
-  look?: 'centered-card' | 'top-sheet' | 'side-drawer' | 'full-screen';
-  /** Default: `true` */
   isOpen?: boolean;
   /** Default: `true` */
+  showCloseButton?: boolean;
+  children?: unknown;
+  /** Default: `"centered-card"` */
+  look?: 'centered-card' | 'top-sheet' | 'side-drawer' | 'full-screen';
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  /** Default: `true` */
+  closeOnEscape?: boolean;
+  /** Default: `true` */
   closeOnOverlayClick?: boolean;
+  footer?: unknown;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `""` */
+  title?: string;
+  /** Default: `true` */
+  swipeDownToClose?: boolean;
 }
 
 /**

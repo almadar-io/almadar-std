@@ -47,15 +47,15 @@ export interface StdUiTransitionArrowClickPayload {
  */
 export interface StdUiTransitionArrowConfig {
   toProp?: EntityRow;
-  /** Default: `false` */
-  isActive?: boolean;
+  fromProp?: EntityRow;
+  /** Default: `""` */
+  eventLabel?: string;
   /** Default: `""` */
   className?: string;
   /** Default: `""` */
   guardHint?: string;
-  /** Default: `""` */
-  eventLabel?: string;
-  fromProp?: EntityRow;
+  /** Default: `false` */
+  isActive?: boolean;
 }
 
 /**
@@ -179,14 +179,14 @@ export function stdUiTransitionArrowTransitionArrowOrbital(params: StdUiTransiti
                   'render-ui',
                   'main',
                   {
+                    'guardHint': '@config.guardHint',
                     'to': '@config.toProp',
+                    'eventLabel': '@config.eventLabel',
+                    'onClick': 'CLICK',
                     'isActive': '@config.isActive',
+                    'className': '@config.className',
                     'from': '@config.fromProp',
                     'type': 'transition-arrow',
-                    'className': '@config.className',
-                    'onClick': 'CLICK',
-                    'eventLabel': '@config.eventLabel',
-                    'guardHint': '@config.guardHint',
                   },
                 ],
               ],
@@ -201,45 +201,17 @@ export function stdUiTransitionArrowTransitionArrowOrbital(params: StdUiTransiti
             'synonyms': 'to',
             'tier': 'presentation',
             'properties': {
-              'y': {
-                'name': 'y',
-                'type': 'number',
-                'required': true,
-              },
               'x': {
                 'name': 'x',
                 'type': 'number',
                 'required': true,
               },
+              'y': {
+                'name': 'y',
+                'type': 'number',
+                'required': true,
+              },
             },
-          },
-          'isActive': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Active',
-            'description': 'Whether this transition is currently active',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes for the SVG group',
-            'tier': 'presentation',
-          },
-          'guardHint': {
-            'type': 'string',
-            'default': '',
-            'label': 'Guard Hint',
-            'description': 'Guard hint shown below event',
-            'tier': 'presentation',
-          },
-          'eventLabel': {
-            'type': 'string',
-            'default': '',
-            'label': 'Event Label',
-            'description': 'Event label shown on the arrow',
-            'tier': 'presentation',
           },
           'fromProp': {
             'type': 'TransitionArrowFrom',
@@ -259,6 +231,34 @@ export function stdUiTransitionArrowTransitionArrowOrbital(params: StdUiTransiti
                 'required': true,
               },
             },
+          },
+          'eventLabel': {
+            'type': 'string',
+            'default': '',
+            'label': 'Event Label',
+            'description': 'Event label shown on the arrow',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes for the SVG group',
+            'tier': 'presentation',
+          },
+          'guardHint': {
+            'type': 'string',
+            'default': '',
+            'label': 'Guard Hint',
+            'description': 'Guard hint shown below event',
+            'tier': 'presentation',
+          },
+          'isActive': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Active',
+            'description': 'Whether this transition is currently active',
+            'tier': 'presentation',
           },
         },
         'scope': 'instance',

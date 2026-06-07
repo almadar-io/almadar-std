@@ -42,11 +42,11 @@ export interface StdUiCommunityLinksConfig {
   github?: EntityRow;
   /** Default: `""` */
   heading?: string;
-  twitter?: EntityRow;
   /** Default: `""` */
   subtitle?: string;
   /** Default: `""` */
   className?: string;
+  twitter?: EntityRow;
   discord?: EntityRow;
 }
 

@@ -39,48 +39,48 @@ export type StdUiStatDisplayEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiStatDisplayConfig {
+  /** Default: `""` */
+  format?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `false` */
+  compact?: boolean;
+  icon?: unknown;
   /** Default: `0` */
   target?: number;
   /** Default: `""` */
-  format?: string;
-  icon?: unknown;
-  /** Default: `false` */
-  compact?: boolean;
+  prefix?: string;
+  /** Default: `"absolute"` */
+  trendFormat?: 'absolute' | 'percent';
+  /** Default: `""` */
+  suffix?: string;
   /** Default: `"elevated"` */
   look?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
   /** Default: `""` */
+  clickEvent?: string;
+  /** Default: `""` */
   value?: string;
-  /** Default: `0` */
-  max?: number;
-  error?: unknown;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `"absolute"` */
-  trendFormat?: 'absolute' | 'percent';
   /** Default: `"text-foreground"` */
   iconColor?: string;
-  /** Default: `"default"` */
-  variant?: 'default' | 'primary' | 'success' | 'warning' | 'error' | 'info';
+  /** Default: `[]` */
+  sparklineData?: number[];
+  /** Default: `0` */
+  max?: number;
   /** Default: `"higher-is-better"` */
   trendPolarity?: 'higher-is-better' | 'lower-is-better';
-  /** Default: `""` */
-  className?: string;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
-  /** Default: `""` */
-  suffix?: string;
+  /** Default: `"default"` */
+  variant?: 'default' | 'primary' | 'success' | 'warning' | 'error' | 'info';
   /** Default: `""` */
   label?: string;
   /** Default: `"bg-muted"` */
   iconBg?: string;
-  /** Default: `""` */
-  clickEvent?: string;
+  error?: EntityRow;
   /** Default: `0` */
   trend?: number;
-  /** Default: `[]` */
-  sparklineData?: number[];
-  /** Default: `""` */
-  prefix?: string;
 }
 
 /**

@@ -49,14 +49,14 @@ export interface StdUiSidePanelConfig {
   /** Default: `"right"` */
   position?: 'left' | 'right';
   children?: unknown;
-  /** Default: `false` */
-  isOpen?: boolean;
   /** Default: `""` */
   title?: string;
   /** Default: `"w-full sm:w-96"` */
   width?: string;
   /** Default: `true` */
   showOverlay?: boolean;
+  /** Default: `false` */
+  isOpen?: boolean;
   /** Default: `""` */
   className?: string;
 }

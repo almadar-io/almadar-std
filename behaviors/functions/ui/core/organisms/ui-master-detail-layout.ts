@@ -41,17 +41,17 @@ export type StdUiMasterDetailLayoutEventKey = 'INIT';
 export interface StdUiMasterDetailLayoutConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `""` */
-  detailClassName?: string;
-  master?: unknown;
-  emptyDetail?: unknown;
-  /** Default: `false` */
-  hasSelection?: boolean;
   /** Default: `"350px"` */
   masterWidth?: string;
   detail?: unknown;
+  /** Default: `false` */
+  hasSelection?: boolean;
+  emptyDetail?: unknown;
   /** Default: `""` */
   masterClassName?: string;
+  /** Default: `""` */
+  detailClassName?: string;
+  master?: unknown;
 }
 
 /**
@@ -155,13 +155,13 @@ export function stdUiMasterDetailLayoutMasterDetailLayoutOrbital(params: StdUiMa
                   'render-ui',
                   'main',
                   {
-                    'emptyDetail': '@config.emptyDetail',
-                    'detail': '@config.detail',
-                    'master': '@config.master',
                     'masterWidth': '@config.masterWidth',
-                    'className': '@config.className',
                     'masterClassName': '@config.masterClassName',
+                    'detail': '@config.detail',
+                    'emptyDetail': '@config.emptyDetail',
                     'hasSelection': '@config.hasSelection',
+                    'master': '@config.master',
+                    'className': '@config.className',
                     'type': 'master-detail-layout',
                     'detailClassName': '@config.detailClassName',
                   },
@@ -178,32 +178,6 @@ export function stdUiMasterDetailLayoutMasterDetailLayoutOrbital(params: StdUiMa
             'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
-          'detailClassName': {
-            'type': 'string',
-            'default': '',
-            'label': 'Detail Class Name',
-            'description': 'Class for detail pane',
-            'tier': 'presentation',
-          },
-          'master': {
-            'type': 'node',
-            'label': 'Master',
-            'description': 'Master panel content (usually a list)',
-            'tier': 'presentation',
-          },
-          'emptyDetail': {
-            'type': 'node',
-            'label': 'Empty Detail',
-            'description': 'Content shown when nothing is selected',
-            'tier': 'presentation',
-          },
-          'hasSelection': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Has Selection',
-            'description': 'Whether an item is currently selected',
-            'tier': 'presentation',
-          },
           'masterWidth': {
             'type': 'string',
             'default': '350px',
@@ -217,11 +191,37 @@ export function stdUiMasterDetailLayoutMasterDetailLayoutOrbital(params: StdUiMa
             'description': 'Detail panel content',
             'tier': 'presentation',
           },
+          'hasSelection': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Has Selection',
+            'description': 'Whether an item is currently selected',
+            'tier': 'presentation',
+          },
+          'emptyDetail': {
+            'type': 'node',
+            'label': 'Empty Detail',
+            'description': 'Content shown when nothing is selected',
+            'tier': 'presentation',
+          },
           'masterClassName': {
             'type': 'string',
             'default': '',
             'label': 'Master Class Name',
             'description': 'Class for master pane',
+            'tier': 'presentation',
+          },
+          'detailClassName': {
+            'type': 'string',
+            'default': '',
+            'label': 'Detail Class Name',
+            'description': 'Class for detail pane',
+            'tier': 'presentation',
+          },
+          'master': {
+            'type': 'node',
+            'label': 'Master',
+            'description': 'Master panel content (usually a list)',
             'tier': 'presentation',
           },
         },

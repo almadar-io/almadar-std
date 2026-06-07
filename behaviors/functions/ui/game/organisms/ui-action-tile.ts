@@ -41,10 +41,10 @@ export type StdUiActionTileEventKey = 'INIT';
 export interface StdUiActionTileConfig {
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
+  categoryColors?: unknown;
+  action?: EntityRow;
   /** Default: `false` */
   disabled?: boolean;
-  action?: EntityRow;
-  categoryColors?: unknown;
 }
 
 /**
@@ -148,11 +148,11 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
                   'render-ui',
                   'main',
                   {
-                    'disabled': '@config.disabled',
-                    'action': '@config.action',
+                    'size': '@config.size',
                     'categoryColors': '@config.categoryColors',
                     'type': 'action-tile',
-                    'size': '@config.size',
+                    'action': '@config.action',
+                    'disabled': '@config.disabled',
                   },
                 ],
               ],
@@ -172,11 +172,10 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
               'lg',
             ],
           },
-          'disabled': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Disabled',
-            'description': 'Whether the tile is disabled / already used',
+          'categoryColors': {
+            'type': 'json',
+            'label': 'Category Colors',
+            'description': 'Category → color mapping',
             'tier': 'presentation',
           },
           'action': {
@@ -190,10 +189,13 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
                 'type': 'object',
                 'required': false,
                 'properties': {
-                  'name': {
-                    'name': 'name',
-                    'type': 'string',
+                  'states': {
+                    'name': 'states',
+                    'type': 'array',
                     'required': true,
+                    'items': {
+                      'type': 'string',
+                    },
                   },
                   'transitions': {
                     'name': 'transitions',
@@ -230,13 +232,10 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
                     'type': 'string',
                     'required': false,
                   },
-                  'states': {
-                    'name': 'states',
-                    'type': 'array',
+                  'name': {
+                    'name': 'name',
+                    'type': 'string',
                     'required': true,
-                    'items': {
-                      'type': 'string',
-                    },
                   },
                   'currentState': {
                     'name': 'currentState',
@@ -244,21 +243,6 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
                     'required': true,
                   },
                 },
-              },
-              'category': {
-                'name': 'category',
-                'type': 'string',
-                'required': true,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': true,
-              },
-              'id': {
-                'name': 'id',
-                'type': 'string',
-                'required': true,
               },
               'description': {
                 'name': 'description',
@@ -270,6 +254,21 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
                 'type': 'string',
                 'required': false,
               },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': true,
+              },
+              'id': {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              'category': {
+                'name': 'category',
+                'type': 'string',
+                'required': true,
+              },
               'iconUrl': {
                 'name': 'iconUrl',
                 'type': 'string',
@@ -277,10 +276,11 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
               },
             },
           },
-          'categoryColors': {
-            'type': 'json',
-            'label': 'Category Colors',
-            'description': 'Category → color mapping',
+          'disabled': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Disabled',
+            'description': 'Whether the tile is disabled / already used',
             'tier': 'presentation',
           },
         },

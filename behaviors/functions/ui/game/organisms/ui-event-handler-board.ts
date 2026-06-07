@@ -202,11 +202,11 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
                   'render-ui',
                   'main',
                   {
-                    'completeEvent': 'COMPLETE',
+                    'playEvent': 'PLAY',
                     'entity': '@entity',
+                    'completeEvent': 'COMPLETE',
                     'stepDurationMs': '@config.stepDurationMs',
                     'type': 'event-handler-board',
-                    'playEvent': 'PLAY',
                   },
                 ],
               ],

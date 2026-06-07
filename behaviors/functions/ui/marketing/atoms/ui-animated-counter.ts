@@ -40,15 +40,15 @@ export type StdUiAnimatedCounterEventKey = 'INIT';
  */
 export interface StdUiAnimatedCounterConfig {
   /** Default: `""` */
+  prefix?: string;
+  /** Default: `""` */
   suffix?: string;
+  /** Default: `600` */
+  duration?: number;
   /** Default: `""` */
   className?: string;
   /** Default: `""` */
   value?: string;
-  /** Default: `600` */
-  duration?: number;
-  /** Default: `""` */
-  prefix?: string;
 }
 
 /**

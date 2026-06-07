@@ -1,9 +1,19 @@
 app ui-detail-panel "1.0.0"
 "DetailPanel — UI factory (1:1 with the @almadar/ui detail-panel pattern)."
 orbital DetailPanelOrbital {
+  type DetailPanelStatus = {
+    label : string!
+    variant : "default" | "success" | "warning" | "danger" | "info"
+  }
   type DetailPanelSectionsItem = {
     title : string!
-    fields : [json]!
+    fields : [DetailPanelSectionsItemFieldsItem]!
+  }
+  type DetailPanelSectionsItemFieldsItem = {
+    label : string!
+    value : node!
+    icon : string
+    copyable : boolean
   }
   type DetailPanelActionsItem = {
     label : string!
@@ -11,6 +21,12 @@ orbital DetailPanelOrbital {
     event : string
     navigatesTo : string
     variant : "primary" | "secondary" | "ghost" | "danger"
+  }
+  type DetailPanelFieldsItem = {
+    key : string
+    header : string
+    name : string
+    label : string
   }
 
   entity DetailPanelItem [runtime] {
@@ -98,7 +114,7 @@ orbital DetailPanelOrbital {
         @label "Active Filters"
         @description "Active filters"
         @tier "presentation"
-      selectedIds : [json] = []
+      selectedIds : [string] = []
         @label "Selected Ids"
         @description "Currently selected item IDs"
         @tier "presentation"
@@ -110,7 +126,7 @@ orbital DetailPanelOrbital {
         @label "Subtitle"
         @description "subtitle prop"
         @tier "presentation"
-      status : json
+      status : DetailPanelStatus
         @label "Status"
         @description "status prop"
         @tier "presentation"
@@ -134,7 +150,7 @@ orbital DetailPanelOrbital {
         @label "Slide Over"
         @description "slideOver prop"
         @tier "presentation"
-      fields : [json] = []
+      fields : [DetailPanelFieldsItem] = []
         @label "Fields"
         @description "Fields to display - accepts string[], {key, header}[], or DetailField[]"
         @tier "presentation"

@@ -1,6 +1,46 @@
 app ui-form-section "1.0.0"
 "FormSection — UI factory (1:1 with the @almadar/ui form-section pattern)."
 orbital FormSectionOrbital {
+  type FormSectionFieldsItem = {
+    name : string
+    field : string
+    label : string
+    type : string
+    inputType : string
+    placeholder : string
+    required : boolean
+    defaultValue : json
+    options : [FormSectionFieldsItemOptionsItem]
+    values : [string]
+    relation : FormSectionFieldsItemRelation
+    min : number
+    max : number
+    pattern : string
+    validation : json
+    readonly : boolean
+    disabled : boolean
+  }
+  type FormSectionFieldsItemOptionsItem = {
+    value : string!
+    label : string!
+  }
+  type FormSectionFieldsItemRelation = {
+    entity : string!
+    displayField : string
+    cardinality : "one" | "many"
+  }
+  type FormSectionError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
+  }
+  type FormSectionEvaluationContext = {
+    formValues : json!
+    globalVariables : json!
+    localVariables : json
+    entity : json
+  }
   type FormSectionSectionsItem = {
     id : string!
     title : string!
@@ -128,7 +168,7 @@ orbital FormSectionOrbital {
         @label "Mode"
         @description "Form mode — 'create' for new records, 'edit' for updating existing. Accepts `string` so schema-driven callers (whose `config.mode` is typed as `string` per the trait's declared config block) compile cleanly. The runtime treats anything other than 'edit' as 'create'."
         @tier "presentation"
-      fields : [json] = []
+      fields : [FormSectionFieldsItem] = []
         @label "Fields"
         @description "Fields definition (schema format) - accepts readonly for generated const arrays"
         @tier "presentation"
@@ -140,7 +180,7 @@ orbital FormSectionOrbital {
         @label "Is Loading"
         @description "Loading state"
         @tier "presentation"
-      error : json
+      error : FormSectionError
         @label "Error"
         @description "Error state"
         @tier "presentation"
@@ -184,7 +224,7 @@ orbital FormSectionOrbital {
         @label "Violation Triggers"
         @description "Violation conditions that emit VIOLATION_DETECTED when met (boolean true means enabled but config loaded separately)"
         @tier "presentation"
-      evaluationContext : json
+      evaluationContext : FormSectionEvaluationContext
         @label "Evaluation Context"
         @description "Context for S-expression evaluation - accepts flexible types from generated code"
         @tier "presentation"

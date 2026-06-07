@@ -73,16 +73,16 @@
                     "render-ui",
                     "main",
                     {
-                      "disabled": "@config.disabled",
-                      "className": "@config.className",
-                      "columns": "@config.columns",
-                      "onChange": "CHANGE",
+                      "title": "@config.title",
                       "size": "@config.size",
-                      "rows": "@config.rows",
-                      "type": "matrix-question",
                       "values": "@config.values",
+                      "disabled": "@config.disabled",
                       "changeEvent": "CHANGE",
-                      "title": "@config.title"
+                      "type": "matrix-question",
+                      "columns": "@config.columns",
+                      "rows": "@config.rows",
+                      "onChange": "CHANGE",
+                      "className": "@config.className"
                     }
                   ]
                 ]
@@ -90,11 +90,50 @@
             ]
           },
           "config": {
+            "size": {
+              "type": "string",
+              "default": "md",
+              "label": "Size",
+              "description": "Visual size",
+              "tier": "presentation",
+              "values": [
+                "sm",
+                "md"
+              ]
+            },
             "className": {
               "type": "string",
               "default": "",
               "label": "Class Name",
               "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "columns": {
+              "type": "[MatrixQuestionColumnsItem]",
+              "default": [],
+              "label": "Columns",
+              "description": "Column definitions; defaults to 5-point Likert",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "value": {
+                    "name": "value",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "values": {
+              "type": "json",
+              "label": "Values",
+              "description": "Selected value per row, keyed by rowId",
               "tier": "presentation"
             },
             "rows": {
@@ -119,39 +158,11 @@
                 }
               }
             },
-            "columns": {
-              "type": "[MatrixQuestionColumnsItem]",
-              "default": [],
-              "label": "Columns",
-              "description": "Column definitions; defaults to 5-point Likert",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "value": {
-                    "name": "value",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            },
             "title": {
               "type": "string",
               "default": "",
               "label": "Title",
               "description": "Optional title rendered above the matrix",
-              "tier": "presentation"
-            },
-            "values": {
-              "type": "json",
-              "label": "Values",
-              "description": "Selected value per row, keyed by rowId",
               "tier": "presentation"
             },
             "disabled": {
@@ -160,17 +171,6 @@
               "label": "Disabled",
               "description": "Disable all inputs",
               "tier": "presentation"
-            },
-            "size": {
-              "type": "string",
-              "default": "md",
-              "label": "Size",
-              "description": "Visual size",
-              "tier": "presentation",
-              "values": [
-                "sm",
-                "md"
-              ]
             }
           },
           "scope": "instance"

@@ -40,9 +40,9 @@ export type StdUiQuizBlockEventKey = 'INIT';
  */
 export interface StdUiQuizBlockConfig {
   /** Default: `""` */
-  answer?: string;
-  /** Default: `""` */
   question?: string;
+  /** Default: `""` */
+  answer?: string;
   /** Default: `""` */
   className?: string;
 }

@@ -49,15 +49,15 @@
                     "render-ui",
                     "main",
                     {
-                      "mapHeight": "@config.mapHeight",
                       "width": "@config.width",
-                      "type": "mini-map",
-                      "units": "@config.units",
-                      "className": "@config.className",
                       "height": "@config.height",
                       "mapWidth": "@config.mapWidth",
                       "viewportRect": "@config.viewportRect",
-                      "tiles": "@config.tiles"
+                      "className": "@config.className",
+                      "type": "mini-map",
+                      "units": "@config.units",
+                      "tiles": "@config.tiles",
+                      "mapHeight": "@config.mapHeight"
                     }
                   ]
                 ]
@@ -65,22 +65,12 @@
             ]
           },
           "config": {
-            "mapHeight": {
+            "width": {
               "type": "number",
-              "default": 100.0,
-              "label": "Map Height",
-              "description": "Logical map height (for coordinate scaling)",
+              "default": 150.0,
+              "label": "Width",
+              "description": "Canvas display width in pixels",
               "tier": "presentation"
-            },
-            "units": {
-              "type": "[json]",
-              "default": [],
-              "label": "Units",
-              "description": "Unit positions: each unit renders as a 2px dot",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
             },
             "viewportRect": {
               "type": "MiniMapViewportRect",
@@ -88,16 +78,6 @@
               "description": "Viewport rectangle outline",
               "tier": "presentation",
               "properties": {
-                "h": {
-                  "name": "h",
-                  "type": "number",
-                  "required": true
-                },
-                "y": {
-                  "name": "y",
-                  "type": "number",
-                  "required": true
-                },
                 "x": {
                   "name": "x",
                   "type": "number",
@@ -107,8 +87,25 @@
                   "name": "w",
                   "type": "number",
                   "required": true
+                },
+                "h": {
+                  "name": "h",
+                  "type": "number",
+                  "required": true
+                },
+                "y": {
+                  "name": "y",
+                  "type": "number",
+                  "required": true
                 }
               }
+            },
+            "mapHeight": {
+              "type": "number",
+              "default": 100.0,
+              "label": "Map Height",
+              "description": "Logical map height (for coordinate scaling)",
+              "tier": "presentation"
             },
             "className": {
               "type": "string",
@@ -117,21 +114,11 @@
               "description": "Additional CSS classes",
               "tier": "presentation"
             },
-            "tiles": {
-              "type": "[json]",
-              "default": [],
-              "label": "Tiles",
-              "description": "Tile data: each tile renders as a 1px dot at (x,y) with the given color",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
-            },
-            "width": {
+            "mapWidth": {
               "type": "number",
-              "default": 150.0,
-              "label": "Width",
-              "description": "Canvas display width in pixels",
+              "default": 100.0,
+              "label": "Map Width",
+              "description": "Logical map width (for coordinate scaling)",
               "tier": "presentation"
             },
             "height": {
@@ -141,12 +128,64 @@
               "description": "Canvas display height in pixels",
               "tier": "presentation"
             },
-            "mapWidth": {
-              "type": "number",
-              "default": 100.0,
-              "label": "Map Width",
-              "description": "Logical map width (for coordinate scaling)",
-              "tier": "presentation"
+            "units": {
+              "type": "[MiniMapUnitsItem]",
+              "default": [],
+              "label": "Units",
+              "description": "Unit positions: each unit renders as a 2px dot",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "y": {
+                    "name": "y",
+                    "type": "number",
+                    "required": true
+                  },
+                  "color": {
+                    "name": "color",
+                    "type": "string",
+                    "required": true
+                  },
+                  "x": {
+                    "name": "x",
+                    "type": "number",
+                    "required": true
+                  },
+                  "isPlayer": {
+                    "name": "isPlayer",
+                    "type": "boolean",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "tiles": {
+              "type": "[MiniMapTilesItem]",
+              "default": [],
+              "label": "Tiles",
+              "description": "Tile data: each tile renders as a 1px dot at (x,y) with the given color",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "name": "x",
+                    "type": "number",
+                    "required": true
+                  },
+                  "color": {
+                    "name": "color",
+                    "type": "string",
+                    "required": true
+                  },
+                  "y": {
+                    "name": "y",
+                    "type": "number",
+                    "required": true
+                  }
+                }
+              }
             }
           },
           "scope": "instance"

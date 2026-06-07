@@ -42,34 +42,34 @@ export interface StdUiCodeViewerConfig {
   /** Default: `true` */
   showLineNumbers?: boolean;
   /** Default: `""` */
-  code?: string;
+  className?: string;
+  /** Default: `[]` */
+  files?: EntityRow[];
+  /** Default: `""` */
+  oldValue?: string;
+  /** Default: `""` */
+  maxHeight?: string;
   /** Default: `""` */
   title?: string;
   /** Default: `false` */
   wordWrap?: boolean;
+  error?: EntityRow;
   /** Default: `[]` */
   actions?: EntityRow[];
   /** Default: `""` */
   language?: string;
-  /** Default: `true` */
-  showCopy?: boolean;
-  /** Default: `""` */
-  oldValue?: string;
-  error?: unknown;
   /** Default: `[]` */
   diff?: EntityRow[];
-  /** Default: `""` */
-  className?: string;
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `"code"` */
-  mode?: 'code' | 'diff';
-  /** Default: `[]` */
-  files?: EntityRow[];
   /** Default: `""` */
   newValue?: string;
   /** Default: `""` */
-  maxHeight?: string;
+  code?: string;
+  /** Default: `"code"` */
+  mode?: 'code' | 'diff';
+  /** Default: `true` */
+  showCopy?: boolean;
 }
 
 /**
@@ -178,24 +178,24 @@ export function stdUiCodeViewerCodeViewerOrbital(params: StdUiCodeViewerCodeView
                   'render-ui',
                   'main',
                   {
-                    'error': '@config.error',
-                    'files': '@config.files',
-                    'className': '@config.className',
-                    'maxHeight': '@config.maxHeight',
-                    'code': '@config.code',
-                    'diff': '@config.diff',
+                    'entity': 'CodeViewerItem',
                     'oldValue': '@config.oldValue',
-                    'wordWrap': '@config.wordWrap',
-                    'type': 'code-viewer',
+                    'diff': '@config.diff',
                     'mode': '@config.mode',
+                    'code': '@config.code',
                     'title': '@config.title',
                     'isLoading': '@config.isLoading',
                     'actions': '@config.actions',
-                    'showCopy': '@config.showCopy',
-                    'entity': 'CodeViewerItem',
+                    'className': '@config.className',
+                    'maxHeight': '@config.maxHeight',
+                    'error': '@config.error',
+                    'showLineNumbers': '@config.showLineNumbers',
                     'language': '@config.language',
                     'newValue': '@config.newValue',
-                    'showLineNumbers': '@config.showLineNumbers',
+                    'type': 'code-viewer',
+                    'showCopy': '@config.showCopy',
+                    'files': '@config.files',
+                    'wordWrap': '@config.wordWrap',
                   },
                 ],
               ],
@@ -210,11 +210,52 @@ export function stdUiCodeViewerCodeViewerOrbital(params: StdUiCodeViewerCodeView
             'description': 'Show line numbers',
             'tier': 'presentation',
           },
-          'code': {
+          'className': {
             'type': 'string',
             'default': '',
-            'label': 'Code',
-            'description': 'Code content',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'files': {
+            'type': '[CodeViewerFilesItem]',
+            'default': [],
+            'label': 'Files',
+            'description': 'Multiple files (tabbed view)',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'language': {
+                  'name': 'language',
+                  'type': 'string',
+                  'required': false,
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': true,
+                },
+                'code': {
+                  'name': 'code',
+                  'type': 'string',
+                  'required': true,
+                },
+              },
+            },
+          },
+          'oldValue': {
+            'type': 'string',
+            'default': '',
+            'label': 'Old Value',
+            'description': 'Old value (for generating diff)',
+            'tier': 'presentation',
+          },
+          'maxHeight': {
+            'type': 'string',
+            'default': '',
+            'label': 'Max Height',
+            'description': 'Max height before scrolling',
             'tier': 'presentation',
           },
           'title': {
@@ -231,6 +272,34 @@ export function stdUiCodeViewerCodeViewerOrbital(params: StdUiCodeViewerCodeView
             'description': 'Enable word wrap',
             'tier': 'presentation',
           },
+          'error': {
+            'type': 'CodeViewerError',
+            'label': 'Error',
+            'description': 'Error state',
+            'tier': 'presentation',
+            'properties': {
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+            },
+          },
           'actions': {
             'type': '[CodeViewerActionsItem]',
             'default': [],
@@ -240,10 +309,15 @@ export function stdUiCodeViewerCodeViewerOrbital(params: StdUiCodeViewerCodeView
             'items': {
               'type': 'object',
               'properties': {
-                'navigatesTo': {
-                  'name': 'navigatesTo',
+                'variant': {
+                  'name': 'variant',
                   'type': 'string',
                   'required': false,
+                  'values': [
+                    'primary',
+                    'secondary',
+                    'ghost',
+                  ],
                 },
                 'event': {
                   'name': 'event',
@@ -255,15 +329,10 @@ export function stdUiCodeViewerCodeViewerOrbital(params: StdUiCodeViewerCodeView
                   'type': 'string',
                   'required': true,
                 },
-                'variant': {
-                  'name': 'variant',
+                'navigatesTo': {
+                  'name': 'navigatesTo',
                   'type': 'string',
                   'required': false,
-                  'values': [
-                    'primary',
-                    'secondary',
-                    'ghost',
-                  ],
                 },
               },
             },
@@ -273,26 +342,6 @@ export function stdUiCodeViewerCodeViewerOrbital(params: StdUiCodeViewerCodeView
             'default': '',
             'label': 'Language',
             'description': 'Language for display label',
-            'tier': 'presentation',
-          },
-          'showCopy': {
-            'type': 'boolean',
-            'default': true,
-            'label': 'Show Copy',
-            'description': 'Show copy button',
-            'tier': 'presentation',
-          },
-          'oldValue': {
-            'type': 'string',
-            'default': '',
-            'label': 'Old Value',
-            'description': 'Old value (for generating diff)',
-            'tier': 'presentation',
-          },
-          'error': {
-            'type': 'json',
-            'label': 'Error',
-            'description': 'Error state',
             'tier': 'presentation',
           },
           'diff': {
@@ -309,13 +358,13 @@ export function stdUiCodeViewerCodeViewerOrbital(params: StdUiCodeViewerCodeView
                   'type': 'string',
                   'required': true,
                 },
-                'afterLineNumber': {
-                  'name': 'afterLineNumber',
+                'beforeLineNumber': {
+                  'name': 'beforeLineNumber',
                   'type': 'number',
                   'required': false,
                 },
-                'beforeLineNumber': {
-                  'name': 'beforeLineNumber',
+                'afterLineNumber': {
+                  'name': 'afterLineNumber',
                   'type': 'number',
                   'required': false,
                 },
@@ -333,18 +382,25 @@ export function stdUiCodeViewerCodeViewerOrbital(params: StdUiCodeViewerCodeView
               },
             },
           },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
           'isLoading': {
             'type': 'boolean',
             'default': false,
             'label': 'Is Loading',
             'description': 'Loading state',
+            'tier': 'presentation',
+          },
+          'newValue': {
+            'type': 'string',
+            'default': '',
+            'label': 'New Value',
+            'description': 'New value (for generating diff)',
+            'tier': 'presentation',
+          },
+          'code': {
+            'type': 'string',
+            'default': '',
+            'label': 'Code',
+            'description': 'Code content',
             'tier': 'presentation',
           },
           'mode': {
@@ -358,28 +414,11 @@ export function stdUiCodeViewerCodeViewerOrbital(params: StdUiCodeViewerCodeView
               'diff',
             ],
           },
-          'files': {
-            'type': '[json]',
-            'default': [],
-            'label': 'Files',
-            'description': 'Multiple files (tabbed view)',
-            'tier': 'presentation',
-            'items': {
-              'type': 'string',
-            },
-          },
-          'newValue': {
-            'type': 'string',
-            'default': '',
-            'label': 'New Value',
-            'description': 'New value (for generating diff)',
-            'tier': 'presentation',
-          },
-          'maxHeight': {
-            'type': 'string',
-            'default': '',
-            'label': 'Max Height',
-            'description': 'Max height before scrolling',
+          'showCopy': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Show Copy',
+            'description': 'Show copy button',
             'tier': 'presentation',
           },
         },

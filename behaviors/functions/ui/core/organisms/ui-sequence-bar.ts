@@ -55,20 +55,20 @@ export interface StdUiSequenceBarSlotRemovePayload {
  */
 export interface StdUiSequenceBarConfig {
   categoryColors?: unknown;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `[]` */
-  slots?: EntityRow[];
   /** Default: `[]` */
   slotFeedback?: string[];
-  /** Default: `"lg"` */
-  size?: 'sm' | 'md' | 'lg';
   /** Default: `0` */
   maxSlots?: number;
+  /** Default: `[]` */
+  slots?: EntityRow[];
   /** Default: `false` */
   playing?: boolean;
   /** Default: `-1` */
   currentStep?: number;
+  /** Default: `"lg"` */
+  size?: 'sm' | 'md' | 'lg';
+  /** Default: `""` */
+  className?: string;
 }
 
 /**
@@ -214,17 +214,17 @@ export function stdUiSequenceBarSequenceBarOrbital(params: StdUiSequenceBarSeque
                   'render-ui',
                   'main',
                   {
-                    'currentStep': '@config.currentStep',
+                    'type': 'sequence-bar',
+                    'size': '@config.size',
+                    'onSlotRemove': 'SLOT_REMOVE',
+                    'slots': '@config.slots',
+                    'maxSlots': '@config.maxSlots',
                     'onSlotDrop': 'SLOT_DROP',
                     'className': '@config.className',
-                    'type': 'sequence-bar',
-                    'onSlotRemove': 'SLOT_REMOVE',
-                    'size': '@config.size',
-                    'maxSlots': '@config.maxSlots',
+                    'categoryColors': '@config.categoryColors',
+                    'currentStep': '@config.currentStep',
                     'playing': '@config.playing',
                     'slotFeedback': '@config.slotFeedback',
-                    'categoryColors': '@config.categoryColors',
-                    'slots': '@config.slots',
                   },
                 ],
               ],
@@ -237,23 +237,6 @@ export function stdUiSequenceBarSequenceBarOrbital(params: StdUiSequenceBarSeque
             'label': 'Category Colors',
             'description': 'Category → color mapping',
             'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'slots': {
-            'type': '[json]',
-            'default': [],
-            'label': 'Slots',
-            'description': 'The current sequence (sparse — undefined means empty slot)',
-            'tier': 'presentation',
-            'items': {
-              'type': 'string',
-            },
           },
           'slotFeedback': {
             'type': '[string]',
@@ -269,24 +252,114 @@ export function stdUiSequenceBarSequenceBarOrbital(params: StdUiSequenceBarSeque
               ],
             },
           },
-          'size': {
-            'type': 'string',
-            'default': 'lg',
-            'label': 'Size',
-            'description': 'Size variant',
-            'tier': 'presentation',
-            'values': [
-              'sm',
-              'md',
-              'lg',
-            ],
-          },
           'maxSlots': {
             'type': 'number',
             'default': 0,
             'label': 'Max Slots',
             'description': 'Max number of slots',
             'tier': 'presentation',
+          },
+          'slots': {
+            'type': '[SequenceBarSlotsItem]',
+            'default': [],
+            'label': 'Slots',
+            'description': 'The current sequence (sparse — undefined means empty slot)',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'category': {
+                  'name': 'category',
+                  'type': 'string',
+                  'required': true,
+                },
+                'iconUrl': {
+                  'name': 'iconUrl',
+                  'type': 'string',
+                  'required': false,
+                },
+                'stateMachine': {
+                  'name': 'stateMachine',
+                  'type': 'object',
+                  'required': false,
+                  'properties': {
+                    'transitions': {
+                      'name': 'transitions',
+                      'type': 'array',
+                      'required': true,
+                      'items': {
+                        'type': 'object',
+                        'properties': {
+                          'to': {
+                            'name': 'to',
+                            'type': 'string',
+                            'required': true,
+                          },
+                          'from': {
+                            'name': 'from',
+                            'type': 'string',
+                            'required': true,
+                          },
+                          'guardHint': {
+                            'name': 'guardHint',
+                            'type': 'string',
+                            'required': false,
+                          },
+                          'event': {
+                            'name': 'event',
+                            'type': 'string',
+                            'required': true,
+                          },
+                        },
+                      },
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'currentState': {
+                      'name': 'currentState',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'description': {
+                      'name': 'description',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'states': {
+                      'name': 'states',
+                      'type': 'array',
+                      'required': true,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
+                  },
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                'description': {
+                  'name': 'description',
+                  'type': 'string',
+                  'required': false,
+                },
+                'iconEmoji': {
+                  'name': 'iconEmoji',
+                  'type': 'string',
+                  'required': false,
+                },
+                'name': {
+                  'name': 'name',
+                  'type': 'string',
+                  'required': true,
+                },
+              },
+            },
           },
           'playing': {
             'type': 'boolean',
@@ -300,6 +373,25 @@ export function stdUiSequenceBarSequenceBarOrbital(params: StdUiSequenceBarSeque
             'default': -1,
             'label': 'Current Step',
             'description': 'Current step index during playback (-1 = not playing)',
+            'tier': 'presentation',
+          },
+          'size': {
+            'type': 'string',
+            'default': 'lg',
+            'label': 'Size',
+            'description': 'Size variant',
+            'tier': 'presentation',
+            'values': [
+              'sm',
+              'md',
+              'lg',
+            ],
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
         },

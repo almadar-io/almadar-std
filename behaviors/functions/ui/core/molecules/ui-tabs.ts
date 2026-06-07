@@ -49,17 +49,17 @@ export interface StdUiTabsConfig {
   /** Default: `[]` */
   tabs?: EntityRow[];
   /** Default: `""` */
-  activeTab?: string;
-  /** Default: `""` */
   className?: string;
   /** Default: `""` */
   defaultActiveTab?: string;
-  /** Default: `"horizontal"` */
-  orientation?: 'horizontal' | 'vertical';
+  /** Default: `""` */
+  activeTab?: string;
   /** Default: `[]` */
   items?: EntityRow[];
   /** Default: `"default"` */
   variant?: 'default' | 'pills' | 'underline';
+  /** Default: `"horizontal"` */
+  orientation?: 'horizontal' | 'vertical';
 }
 
 /**

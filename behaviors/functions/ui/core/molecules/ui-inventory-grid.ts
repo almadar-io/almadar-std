@@ -50,14 +50,14 @@ export interface StdUiInventoryGridConfig {
   columns?: number;
   /** Default: `0` */
   totalSlots?: number;
-  /** Default: `""` */
-  selectedId?: string;
-  /** Default: `""` */
-  className?: string;
   /** Default: `[]` */
   items?: EntityRow[];
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
+  /** Default: `""` */
+  selectedId?: string;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

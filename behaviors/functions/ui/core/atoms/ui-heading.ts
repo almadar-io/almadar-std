@@ -39,28 +39,29 @@ export type StdUiHeadingEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiHeadingConfig {
-  asProp?: unknown;
-  children?: unknown;
-  /** Default: `"xs"` */
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
-  /** Default: `"left"` */
-  align?: 'left' | 'center' | 'right';
-  /** Default: `false` */
-  truncate?: boolean;
-  /** Default: `"primary"` */
-  color?: 'primary' | 'secondary' | 'muted' | 'error' | 'success' | 'warning' | 'inherit';
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"body"` */
-  variant?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'heading' | 'subheading' | 'body1' | 'body2' | 'body' | 'caption' | 'overline' | 'small' | 'large' | 'label';
-  style?: unknown;
   /** Default: `"visible"` */
   overflow?: 'visible' | 'hidden' | 'wrap' | 'clamp-2' | 'clamp-3';
   content?: unknown;
-  /** Default: `2` */
-  level?: number;
+  /** Default: `""` */
+  className?: string;
   /** Default: `"light"` */
   weight?: 'light' | 'normal' | 'medium' | 'semibold' | 'bold';
+  children?: unknown;
+  /** Default: `"xs"` */
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
+  /** Default: `""` */
+  asProp?: string;
+  style?: unknown;
+  /** Default: `2` */
+  level?: number;
+  /** Default: `"primary"` */
+  color?: 'primary' | 'secondary' | 'muted' | 'error' | 'success' | 'warning' | 'inherit';
+  /** Default: `false` */
+  truncate?: boolean;
+  /** Default: `"body"` */
+  variant?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'heading' | 'subheading' | 'body1' | 'body2' | 'body' | 'caption' | 'overline' | 'small' | 'large' | 'label';
+  /** Default: `"left"` */
+  align?: 'left' | 'center' | 'right';
 }
 
 /**

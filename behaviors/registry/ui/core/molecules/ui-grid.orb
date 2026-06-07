@@ -49,19 +49,19 @@
                     "render-ui",
                     "main",
                     {
-                      "children": "@config.children",
-                      "rowGap": "@config.rowGap",
-                      "cols": "@config.cols",
-                      "colGap": "@config.colGap",
-                      "justifyItems": "@config.justifyItems",
-                      "flow": "@config.flow",
                       "as": "@config.asProp",
-                      "style": "@config.style",
-                      "className": "@config.className",
-                      "type": "grid",
-                      "gap": "@config.gap",
+                      "colGap": "@config.colGap",
                       "rows": "@config.rows",
-                      "alignItems": "@config.alignItems"
+                      "rowGap": "@config.rowGap",
+                      "children": "@config.children",
+                      "type": "grid",
+                      "flow": "@config.flow",
+                      "justifyItems": "@config.justifyItems",
+                      "cols": "@config.cols",
+                      "alignItems": "@config.alignItems",
+                      "gap": "@config.gap",
+                      "className": "@config.className",
+                      "style": "@config.style"
                     }
                   ]
                 ]
@@ -69,38 +69,43 @@
             ]
           },
           "config": {
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Custom class name",
+            "style": {
+              "type": "json",
+              "label": "Style",
+              "description": "Inline styles",
               "tier": "presentation"
             },
-            "flow": {
+            "children": {
+              "type": "node",
+              "label": "Children",
+              "description": "Children elements",
+              "tier": "presentation"
+            },
+            "asProp": {
+              "type": "json",
+              "label": "As",
+              "description": "HTML element to render as",
+              "synonyms": "as",
+              "tier": "presentation"
+            },
+            "justifyItems": {
               "type": "string",
-              "default": "row",
-              "label": "Flow",
-              "description": "Auto-flow direction",
+              "default": "start",
+              "label": "Justify Items",
+              "description": "Justify items on inline axis",
               "tier": "presentation",
               "values": [
-                "row",
-                "col",
-                "row-dense",
-                "col-dense"
+                "start",
+                "center",
+                "end",
+                "stretch"
               ]
             },
-            "rows": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Rows",
-              "description": "Number of rows",
-              "tier": "presentation"
-            },
-            "colGap": {
+            "gap": {
               "type": "string",
-              "default": "none",
-              "label": "Col Gap",
-              "description": "Column gap (overrides gap for columns)",
+              "default": "md",
+              "label": "Gap",
+              "description": "Gap between items",
               "tier": "presentation",
               "values": [
                 "none",
@@ -110,26 +115,6 @@
                 "lg",
                 "xl",
                 "2xl"
-              ]
-            },
-            "style": {
-              "type": "json",
-              "label": "Style",
-              "description": "Inline styles",
-              "tier": "presentation"
-            },
-            "alignItems": {
-              "type": "string",
-              "default": "start",
-              "label": "Align Items",
-              "description": "Align items on block axis",
-              "tier": "presentation",
-              "values": [
-                "start",
-                "center",
-                "end",
-                "stretch",
-                "baseline"
               ]
             },
             "rowGap": {
@@ -148,43 +133,72 @@
                 "2xl"
               ]
             },
-            "cols": {
-              "type": "json",
-              "label": "Cols",
-              "description": "Number of columns (can be responsive object)",
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Custom class name",
               "tier": "presentation"
             },
-            "justifyItems": {
+            "rows": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Rows",
+              "description": "Number of rows",
+              "tier": "presentation"
+            },
+            "cols": {
+              "type": "GridCols",
+              "label": "Cols",
+              "description": "Number of columns (can be responsive object)",
+              "tier": "presentation",
+              "properties": {
+                "lg": {
+                  "name": "lg",
+                  "type": "string",
+                  "required": false
+                },
+                "md": {
+                  "name": "md",
+                  "type": "string",
+                  "required": false
+                },
+                "sm": {
+                  "name": "sm",
+                  "type": "string",
+                  "required": false
+                },
+                "xl": {
+                  "name": "xl",
+                  "type": "string",
+                  "required": false
+                },
+                "base": {
+                  "name": "base",
+                  "type": "string",
+                  "required": false
+                }
+              }
+            },
+            "alignItems": {
               "type": "string",
               "default": "start",
-              "label": "Justify Items",
-              "description": "Justify items on inline axis",
+              "label": "Align Items",
+              "description": "Align items on block axis",
               "tier": "presentation",
               "values": [
                 "start",
                 "center",
                 "end",
-                "stretch"
+                "stretch",
+                "baseline"
               ]
             },
-            "children": {
-              "type": "node",
-              "label": "Children",
-              "description": "Children elements",
-              "tier": "presentation"
-            },
-            "asProp": {
-              "type": "json",
-              "label": "As",
-              "description": "HTML element to render as",
-              "synonyms": "as",
-              "tier": "presentation"
-            },
-            "gap": {
+            "colGap": {
               "type": "string",
-              "default": "md",
-              "label": "Gap",
-              "description": "Gap between items",
+              "default": "none",
+              "label": "Col Gap",
+              "description": "Column gap (overrides gap for columns)",
               "tier": "presentation",
               "values": [
                 "none",
@@ -194,6 +208,19 @@
                 "lg",
                 "xl",
                 "2xl"
+              ]
+            },
+            "flow": {
+              "type": "string",
+              "default": "row",
+              "label": "Flow",
+              "description": "Auto-flow direction",
+              "tier": "presentation",
+              "values": [
+                "row",
+                "col",
+                "row-dense",
+                "col-dense"
               ]
             }
           },

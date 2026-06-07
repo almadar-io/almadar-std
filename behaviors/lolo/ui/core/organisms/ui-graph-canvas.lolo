@@ -1,6 +1,15 @@
 app ui-graph-canvas "1.0.0"
 "GraphCanvas — UI factory (1:1 with the @almadar/ui graph-canvas pattern)."
 orbital GraphCanvasOrbital {
+  type GraphCanvasNodesItem = {
+    id : string!
+    label : string
+    group : string
+    color : string
+    size : number
+    x : number
+    y : number
+  }
   type GraphCanvasEdgesItem = {
     source : string!
     target : string!
@@ -13,6 +22,12 @@ orbital GraphCanvasOrbital {
     event : string
     navigatesTo : string
     variant : "primary" | "secondary" | "ghost"
+  }
+  type GraphCanvasError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
   }
 
   entity GraphCanvasItem [runtime] {
@@ -59,7 +74,7 @@ orbital GraphCanvasOrbital {
         @label "Title"
         @description "Graph title"
         @tier "presentation"
-      nodes : [json] = []
+      nodes : [GraphCanvasNodesItem] = []
         @label "Nodes"
         @description "Graph nodes"
         @tier "presentation"
@@ -95,7 +110,7 @@ orbital GraphCanvasOrbital {
         @label "Is Loading"
         @description "Loading state"
         @tier "presentation"
-      error : json
+      error : GraphCanvasError
         @label "Error"
         @description "Error state"
         @tier "presentation"

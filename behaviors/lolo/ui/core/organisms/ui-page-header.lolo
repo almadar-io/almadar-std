@@ -5,6 +5,30 @@ orbital PageHeaderOrbital {
     label : string!
     href : string
   }
+  type PageHeaderStatus = {
+    label : string!
+    variant : "default" | "success" | "warning" | "danger" | "info"
+  }
+  type PageHeaderActionsItem = {
+    label : string!
+    navigatesTo : string
+    event : string
+    variant : "primary" | "secondary" | "ghost" | "danger"
+    icon : string
+    loading : boolean
+    disabled : boolean
+  }
+  type PageHeaderError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
+  }
+  type PageHeaderTabsItem = {
+    label : string!
+    value : string!
+    count : number
+  }
 
   entity PageHeaderItem [runtime] {
     id : string!
@@ -66,11 +90,11 @@ orbital PageHeaderOrbital {
         @label "Breadcrumbs"
         @description "Breadcrumbs"
         @tier "presentation"
-      status : json
+      status : PageHeaderStatus
         @label "Status"
         @description "Status badge"
         @tier "presentation"
-      actions : [json] = []
+      actions : [PageHeaderActionsItem] = []
         @label "Actions"
         @description "Actions array - first action with variant='primary' (or first action) is the main action"
         @tier "presentation"
@@ -78,11 +102,11 @@ orbital PageHeaderOrbital {
         @label "Is Loading"
         @description "Loading state indicator"
         @tier "presentation"
-      error : json
+      error : PageHeaderError
         @label "Error"
         @description "Error state"
         @tier "presentation"
-      tabs : [json] = []
+      tabs : [PageHeaderTabsItem] = []
         @label "Tabs"
         @description "Tabs for sub-navigation"
         @tier "presentation"

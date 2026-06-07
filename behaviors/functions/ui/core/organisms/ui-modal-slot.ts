@@ -39,16 +39,16 @@ export type StdUiModalSlotEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiModalSlotConfig {
-  children?: unknown;
-  error?: unknown;
+  error?: EntityRow;
   /** Default: `""` */
   title?: string;
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
-  /** Default: `false` */
-  isLoading?: boolean;
   /** Default: `""` */
   className?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  children?: unknown;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
 }
 
 /**
@@ -157,14 +157,14 @@ export function stdUiModalSlotModalSlotOrbital(params: StdUiModalSlotModalSlotOr
                   'render-ui',
                   'main',
                   {
-                    'children': '@config.children',
-                    'className': '@config.className',
-                    'isLoading': '@config.isLoading',
-                    'type': 'modal-slot',
-                    'size': '@config.size',
                     'title': '@config.title',
-                    'error': '@config.error',
+                    'isLoading': '@config.isLoading',
+                    'size': '@config.size',
+                    'className': '@config.className',
+                    'children': '@config.children',
+                    'type': 'modal-slot',
                     'entity': 'ModalSlotItem',
+                    'error': '@config.error',
                   },
                 ],
               ],
@@ -172,23 +172,59 @@ export function stdUiModalSlotModalSlotOrbital(params: StdUiModalSlotModalSlotOr
           ],
         },
         'config': {
-          'children': {
-            'type': 'node',
-            'label': 'Children',
-            'description': 'Content to display in the modal',
-            'tier': 'presentation',
-          },
           'error': {
-            'type': 'json',
+            'type': 'ModalSlotError',
             'label': 'Error',
             'description': 'Error state',
             'tier': 'presentation',
+            'properties': {
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+            },
           },
           'title': {
             'type': 'string',
             'default': '',
             'label': 'Title',
             'description': 'Override modal title (extracted from children if not provided)',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Custom class name',
+            'tier': 'presentation',
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
+          'children': {
+            'type': 'node',
+            'label': 'Children',
+            'description': 'Content to display in the modal',
             'tier': 'presentation',
           },
           'size': {
@@ -204,20 +240,6 @@ export function stdUiModalSlotModalSlotOrbital(params: StdUiModalSlotModalSlotOr
               'xl',
               'full',
             ],
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Custom class name',
-            'tier': 'presentation',
           },
         },
         'scope': 'instance',

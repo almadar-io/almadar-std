@@ -39,26 +39,26 @@ export type StdUiGridEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiGridConfig {
+  style?: unknown;
+  children?: unknown;
+  asProp?: unknown;
+  /** Default: `"start"` */
+  justifyItems?: 'start' | 'center' | 'end' | 'stretch';
+  /** Default: `"md"` */
+  gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  /** Default: `"none"` */
+  rowGap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   /** Default: `""` */
   className?: string;
-  /** Default: `"row"` */
-  flow?: 'row' | 'col' | 'row-dense' | 'col-dense';
   /** Default: `0` */
   rows?: number;
-  /** Default: `"none"` */
-  colGap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
-  style?: unknown;
+  cols?: EntityRow;
   /** Default: `"start"` */
   alignItems?: 'start' | 'center' | 'end' | 'stretch' | 'baseline';
   /** Default: `"none"` */
-  rowGap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
-  cols?: unknown;
-  /** Default: `"start"` */
-  justifyItems?: 'start' | 'center' | 'end' | 'stretch';
-  children?: unknown;
-  asProp?: unknown;
-  /** Default: `"md"` */
-  gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  colGap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  /** Default: `"row"` */
+  flow?: 'row' | 'col' | 'row-dense' | 'col-dense';
 }
 
 /**

@@ -39,19 +39,19 @@ export type StdUiActionPaletteEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiActionPaletteConfig {
-  /** Default: `true` */
-  allowDuplicates?: boolean;
-  /** Default: `""` */
-  className?: string;
   /** Default: `[]` */
   actions?: EntityRow[];
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
-  /** Default: `""` */
-  label?: string;
   /** Default: `[]` */
   usedActionIds?: string[];
   categoryColors?: unknown;
+  /** Default: `""` */
+  label?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `true` */
+  allowDuplicates?: boolean;
 }
 
 /**
@@ -157,12 +157,12 @@ export function stdUiActionPaletteActionPaletteOrbital(params: StdUiActionPalett
                   {
                     'usedActionIds': '@config.usedActionIds',
                     'label': '@config.label',
-                    'allowDuplicates': '@config.allowDuplicates',
-                    'className': '@config.className',
-                    'categoryColors': '@config.categoryColors',
-                    'actions': '@config.actions',
-                    'type': 'action-palette',
                     'size': '@config.size',
+                    'className': '@config.className',
+                    'allowDuplicates': '@config.allowDuplicates',
+                    'type': 'action-palette',
+                    'actions': '@config.actions',
+                    'categoryColors': '@config.categoryColors',
                   },
                 ],
               ],
@@ -170,20 +170,6 @@ export function stdUiActionPaletteActionPaletteOrbital(params: StdUiActionPalett
           ],
         },
         'config': {
-          'allowDuplicates': {
-            'type': 'boolean',
-            'default': true,
-            'label': 'Allow Duplicates',
-            'description': 'Whether each action can be used multiple times',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
           'actions': {
             'type': '[ActionPaletteActionsItem]',
             'default': [],
@@ -193,11 +179,6 @@ export function stdUiActionPaletteActionPaletteOrbital(params: StdUiActionPalett
             'items': {
               'type': 'object',
               'properties': {
-                'name': {
-                  'name': 'name',
-                  'type': 'string',
-                  'required': true,
-                },
                 'id': {
                   'name': 'id',
                   'type': 'string',
@@ -213,6 +194,11 @@ export function stdUiActionPaletteActionPaletteOrbital(params: StdUiActionPalett
                   'type': 'string',
                   'required': false,
                 },
+                'category': {
+                  'name': 'category',
+                  'type': 'string',
+                  'required': true,
+                },
                 'stateMachine': {
                   'name': 'stateMachine',
                   'type': 'object',
@@ -226,11 +212,6 @@ export function stdUiActionPaletteActionPaletteOrbital(params: StdUiActionPalett
                         'type': 'string',
                       },
                     },
-                    'name': {
-                      'name': 'name',
-                      'type': 'string',
-                      'required': true,
-                    },
                     'currentState': {
                       'name': 'currentState',
                       'type': 'string',
@@ -243,11 +224,6 @@ export function stdUiActionPaletteActionPaletteOrbital(params: StdUiActionPalett
                       'items': {
                         'type': 'object',
                         'properties': {
-                          'guardHint': {
-                            'name': 'guardHint',
-                            'type': 'string',
-                            'required': false,
-                          },
                           'to': {
                             'name': 'to',
                             'type': 'string',
@@ -263,8 +239,18 @@ export function stdUiActionPaletteActionPaletteOrbital(params: StdUiActionPalett
                             'type': 'string',
                             'required': true,
                           },
+                          'guardHint': {
+                            'name': 'guardHint',
+                            'type': 'string',
+                            'required': false,
+                          },
                         },
                       },
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': true,
                     },
                     'description': {
                       'name': 'description',
@@ -278,8 +264,8 @@ export function stdUiActionPaletteActionPaletteOrbital(params: StdUiActionPalett
                   'type': 'string',
                   'required': false,
                 },
-                'category': {
-                  'name': 'category',
+                'name': {
+                  'name': 'name',
                   'type': 'string',
                   'required': true,
                 },
@@ -298,13 +284,6 @@ export function stdUiActionPaletteActionPaletteOrbital(params: StdUiActionPalett
               'lg',
             ],
           },
-          'label': {
-            'type': 'string',
-            'default': '',
-            'label': 'Label',
-            'description': 'Label above the palette',
-            'tier': 'presentation',
-          },
           'usedActionIds': {
             'type': '[string]',
             'default': [],
@@ -319,6 +298,27 @@ export function stdUiActionPaletteActionPaletteOrbital(params: StdUiActionPalett
             'type': 'json',
             'label': 'Category Colors',
             'description': 'Category → color mapping',
+            'tier': 'presentation',
+          },
+          'label': {
+            'type': 'string',
+            'default': '',
+            'label': 'Label',
+            'description': 'Label above the palette',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'allowDuplicates': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Allow Duplicates',
+            'description': 'Whether each action can be used multiple times',
             'tier': 'presentation',
           },
         },

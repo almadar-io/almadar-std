@@ -41,10 +41,10 @@ export type StdUiSocialProofEventKey = 'INIT';
 export interface StdUiSocialProofConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `"logos"` */
-  variant?: 'logos' | 'quotes' | 'badges';
   /** Default: `[]` */
   items?: EntityRow[];
+  /** Default: `"logos"` */
+  variant?: 'logos' | 'quotes' | 'badges';
 }
 
 /**

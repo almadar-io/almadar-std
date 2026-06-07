@@ -69,14 +69,14 @@
                     "render-ui",
                     "main",
                     {
-                      "readOnly": "@config.readOnly",
                       "onChange": "CHANGE",
+                      "readOnly": "@config.readOnly",
                       "type": "rich-block-editor",
-                      "changeEvent": "CHANGE",
-                      "showToolbar": "@config.showToolbar",
-                      "className": "@config.className",
                       "initialBlocks": "@config.initialBlocks",
-                      "placeholder": "@config.placeholder"
+                      "changeEvent": "CHANGE",
+                      "placeholder": "@config.placeholder",
+                      "showToolbar": "@config.showToolbar",
+                      "className": "@config.className"
                     }
                   ]
                 ]
@@ -92,13 +92,55 @@
               "tier": "presentation"
             },
             "initialBlocks": {
-              "type": "[json]",
+              "type": "[RichBlockEditorInitialBlocksItem]",
               "default": [],
               "label": "Initial Blocks",
               "description": "Initial block payload. Accepts strongly-typed RichBlock[] from native callers and the wider EntityRow[] shape that orb-bound traits emit (orb `[object]` lowers to `Record<string, FieldValue | undefined>[]`, which is structurally EntityRow[]). Items missing id/type are normalized into paragraph blocks at mount.",
               "tier": "presentation",
               "items": {
-                "type": "string"
+                "type": "object",
+                "properties": {
+                  "metadata": {
+                    "name": "metadata",
+                    "type": "string",
+                    "required": false
+                  },
+                  "children": {
+                    "name": "children",
+                    "type": "array",
+                    "required": false,
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "type": {
+                    "name": "type",
+                    "type": "string",
+                    "required": true,
+                    "values": [
+                      "paragraph",
+                      "heading-1",
+                      "heading-2",
+                      "heading-3",
+                      "bullet-list",
+                      "numbered-list",
+                      "quote",
+                      "code",
+                      "divider",
+                      "image"
+                    ]
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  "content": {
+                    "name": "content",
+                    "type": "string",
+                    "required": false
+                  }
+                }
               }
             },
             "placeholder": {

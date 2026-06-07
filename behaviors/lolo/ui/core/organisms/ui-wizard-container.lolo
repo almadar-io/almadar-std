@@ -29,7 +29,7 @@ orbital WizardContainerOrbital {
     repeatable : boolean
     minItems : number
     addButtonLabel : string
-    hiddenCalculations : [json]
+    hiddenCalculations : [WizardContainerStepsItemSectionsItemHiddenCalculationsItem]
     dataSource : json
     readOnly : boolean
   }
@@ -39,7 +39,7 @@ orbital WizardContainerOrbital {
     label : string
     required : boolean
     repeatable : boolean
-    options : [json]
+    options : [WizardContainerStepsItemSectionsItemFieldsItemOptionsItem]
     defaultValue : json
     condition : [json]
     placeholder : string
@@ -49,7 +49,7 @@ orbital WizardContainerOrbital {
     dataSource : json
     displayFields : [string]
     searchConfig : json
-    hiddenCalculations : [json]
+    hiddenCalculations : [WizardContainerStepsItemSectionsItemFieldsItemHiddenCalculationsItem]
     signatureConfig : json
     displayTemplate : json
     lawReference : json
@@ -57,8 +57,33 @@ orbital WizardContainerOrbital {
     calculated : json
     readOnly : boolean
     minDate : json
-    stats : [json]
-    items : [json]
+    stats : [WizardContainerStepsItemSectionsItemFieldsItemStatsItem]
+    items : [WizardContainerStepsItemSectionsItemFieldsItemItemsItem]
+  }
+  type WizardContainerStepsItemSectionsItemFieldsItemOptionsItem = {
+    value : string!
+    label : string!
+    isDefault : boolean
+  }
+  type WizardContainerStepsItemSectionsItemFieldsItemHiddenCalculationsItem = {
+    variable : string!
+    expression : json!
+    scope : string
+  }
+  type WizardContainerStepsItemSectionsItemFieldsItemStatsItem = {
+    label : string!
+    value : json!
+    icon : string
+  }
+  type WizardContainerStepsItemSectionsItemFieldsItemItemsItem = {
+    id : string!
+    label : string!
+    autoCheck : json
+  }
+  type WizardContainerStepsItemSectionsItemHiddenCalculationsItem = {
+    variable : string!
+    expression : json!
+    scope : string
   }
   type WizardContainerStepsItemEntityMapping = {
     entity : string!
@@ -74,6 +99,12 @@ orbital WizardContainerOrbital {
     law : string!
     article : string!
     description : string
+  }
+  type WizardContainerError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
   }
 
   entity WizardContainerItem [runtime] {
@@ -144,7 +175,7 @@ orbital WizardContainerOrbital {
         @label "Is Loading"
         @description "Loading state indicator"
         @tier "presentation"
-      error : json
+      error : WizardContainerError
         @label "Error"
         @description "Error state"
         @tier "presentation"

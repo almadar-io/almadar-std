@@ -49,15 +49,15 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "health-panel",
+                      "size": "@config.size",
+                      "current": "@config.current",
                       "className": "@config.className",
+                      "label": "@config.label",
+                      "effects": "@config.effects",
                       "shield": "@config.shield",
                       "max": "@config.max",
-                      "label": "@config.label",
-                      "type": "health-panel",
-                      "effects": "@config.effects",
-                      "size": "@config.size",
-                      "showNumbers": "@config.showNumbers",
-                      "current": "@config.current"
+                      "showNumbers": "@config.showNumbers"
                     }
                   ]
                 ]
@@ -65,43 +65,12 @@
             ]
           },
           "config": {
-            "current": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Current",
-              "description": "Current health value",
-              "tier": "presentation"
-            },
             "label": {
               "type": "string",
               "default": "",
               "label": "Label",
               "description": "Label shown above the bar",
               "tier": "presentation"
-            },
-            "showNumbers": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Numbers",
-              "description": "Whether to display numeric HP values",
-              "tier": "presentation"
-            },
-            "max": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Max",
-              "description": "Maximum health value",
-              "tier": "presentation"
-            },
-            "effects": {
-              "type": "[json]",
-              "default": [],
-              "label": "Effects",
-              "description": "Active status effects displayed as small badges",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
             },
             "shield": {
               "type": "number",
@@ -110,11 +79,18 @@
               "description": "Shield/armor points",
               "tier": "presentation"
             },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
+            "current": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Current",
+              "description": "Current health value",
+              "tier": "presentation"
+            },
+            "showNumbers": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Numbers",
+              "description": "Whether to display numeric HP values",
               "tier": "presentation"
             },
             "size": {
@@ -128,6 +104,52 @@
                 "md",
                 "lg"
               ]
+            },
+            "effects": {
+              "type": "[HealthPanelEffectsItem]",
+              "default": [],
+              "label": "Effects",
+              "description": "Active status effects displayed as small badges",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": true
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "buff",
+                      "debuff",
+                      "neutral"
+                    ]
+                  }
+                }
+              }
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "max": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Max",
+              "description": "Maximum health value",
+              "tier": "presentation"
             }
           },
           "scope": "instance"
