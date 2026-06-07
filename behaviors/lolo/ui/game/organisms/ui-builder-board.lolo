@@ -1,6 +1,37 @@
 app ui-builder-board "1.0.0"
 "BuilderBoard — UI factory (1:1 with the @almadar/ui builder-board pattern)."
 orbital BuilderBoardOrbital {
+  type BuilderBoardEntity = {
+    id : string!
+    title : string!
+    description : string!
+    components : [BuilderBoardEntityComponentsItem]!
+    slots : [BuilderBoardEntitySlotsItem]!
+    successMessage : string
+    failMessage : string
+    hint : string
+    headerImage : string
+    theme : BuilderBoardEntityTheme
+  }
+  type BuilderBoardEntityComponentsItem = {
+    id : string!
+    label : string!
+    description : string
+    iconEmoji : string
+    iconUrl : string
+    category : string
+  }
+  type BuilderBoardEntitySlotsItem = {
+    id : string!
+    label : string!
+    description : string
+    acceptsComponentId : string!
+  }
+  type BuilderBoardEntityTheme = {
+    background : string
+    accentColor : string
+  }
+
   entity BuilderBoardItem [runtime] {
     id : string!
   }
@@ -10,9 +41,8 @@ orbital BuilderBoardOrbital {
 
     state idle {
       INIT -> idle
-        (fetch BuilderBoardItem {})
         (render-ui main {
-          entity: @entity
+          entity: @config.entityProp
           completeEvent: COMPLETE
           type: builder-board
         })
@@ -25,6 +55,14 @@ orbital BuilderBoardOrbital {
       }
         @description "completeEvent prop"
         @tier "essential"
+    }
+
+    config {
+      entityProp : BuilderBoardEntity
+        @label "Entity"
+        @description "entity prop"
+        @synonyms "entity"
+        @tier "presentation"
     }
   }
 

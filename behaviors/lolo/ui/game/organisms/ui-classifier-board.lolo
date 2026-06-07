@@ -1,6 +1,36 @@
 app ui-classifier-board "1.0.0"
 "ClassifierBoard — UI factory (1:1 with the @almadar/ui classifier-board pattern)."
 orbital ClassifierBoardOrbital {
+  type ClassifierBoardEntity = {
+    id : string!
+    title : string!
+    description : string!
+    items : [ClassifierBoardEntityItemsItem]!
+    categories : [ClassifierBoardEntityCategoriesItem]!
+    successMessage : string
+    failMessage : string
+    hint : string
+    headerImage : string
+    theme : ClassifierBoardEntityTheme
+  }
+  type ClassifierBoardEntityItemsItem = {
+    id : string!
+    label : string!
+    description : string
+    correctCategory : string!
+    iconUrl : string
+  }
+  type ClassifierBoardEntityCategoriesItem = {
+    id : string!
+    label : string!
+    color : string
+    imageUrl : string
+  }
+  type ClassifierBoardEntityTheme = {
+    background : string
+    accentColor : string
+  }
+
   entity ClassifierBoardItem [runtime] {
     id : string!
   }
@@ -10,9 +40,8 @@ orbital ClassifierBoardOrbital {
 
     state idle {
       INIT -> idle
-        (fetch ClassifierBoardItem {})
         (render-ui main {
-          entity: @entity
+          entity: @config.entityProp
           completeEvent: COMPLETE
           type: classifier-board
         })
@@ -25,6 +54,14 @@ orbital ClassifierBoardOrbital {
       }
         @description "completeEvent prop"
         @tier "essential"
+    }
+
+    config {
+      entityProp : ClassifierBoardEntity
+        @label "Entity"
+        @description "entity prop"
+        @synonyms "entity"
+        @tier "presentation"
     }
   }
 

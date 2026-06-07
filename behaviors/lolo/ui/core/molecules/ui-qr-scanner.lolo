@@ -1,6 +1,12 @@
 app ui-qr-scanner "1.0.0"
 "QrScanner — UI factory (1:1 with the @almadar/ui qr-scanner pattern)."
 orbital QrScannerOrbital {
+  type QrScannerSCANResult = {
+    text : string!
+    format : string!
+    timestamp : number!
+  }
+
   entity QrScannerItem [runtime] {
     id : string!
   }
@@ -26,10 +32,8 @@ orbital QrScannerOrbital {
 
     emits {
       SCAN -> external {
-        result : object
-        text : string!
-        format : string!
-        timestamp : number!
+        result : QrScannerSCANResult
+        _payload : object
       }
         @description "onScan prop"
         @tier "essential"

@@ -1,6 +1,38 @@
 app ui-simulator-board "1.0.0"
 "SimulatorBoard — UI factory (1:1 with the @almadar/ui simulator-board pattern)."
 orbital SimulatorBoardOrbital {
+  type SimulatorBoardEntity = {
+    id : string!
+    title : string!
+    description : string!
+    parameters : [SimulatorBoardEntityParametersItem]!
+    outputLabel : string!
+    outputUnit : string!
+    computeExpression : string!
+    targetValue : number!
+    targetTolerance : number!
+    successMessage : string
+    failMessage : string
+    hint : string
+    headerImage : string
+    theme : SimulatorBoardEntityTheme
+  }
+  type SimulatorBoardEntityParametersItem = {
+    id : string!
+    label : string!
+    unit : string!
+    min : number!
+    max : number!
+    step : number!
+    initial : number!
+    correct : number!
+    tolerance : number!
+  }
+  type SimulatorBoardEntityTheme = {
+    background : string
+    accentColor : string
+  }
+
   entity SimulatorBoardItem [runtime] {
     id : string!
   }
@@ -10,9 +42,8 @@ orbital SimulatorBoardOrbital {
 
     state idle {
       INIT -> idle
-        (fetch SimulatorBoardItem {})
         (render-ui main {
-          entity: @entity
+          entity: @config.entityProp
           completeEvent: COMPLETE
           type: simulator-board
         })
@@ -25,6 +56,14 @@ orbital SimulatorBoardOrbital {
       }
         @description "completeEvent prop"
         @tier "essential"
+    }
+
+    config {
+      entityProp : SimulatorBoardEntity
+        @label "Entity"
+        @description "entity prop"
+        @synonyms "entity"
+        @tier "presentation"
     }
   }
 

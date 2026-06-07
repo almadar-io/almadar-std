@@ -1,6 +1,30 @@
 app ui-debugger-board "1.0.0"
 "DebuggerBoard — UI factory (1:1 with the @almadar/ui debugger-board pattern)."
 orbital DebuggerBoardOrbital {
+  type DebuggerBoardEntity = {
+    id : string!
+    title : string!
+    description : string!
+    language : string
+    lines : [DebuggerBoardEntityLinesItem]!
+    bugCount : number!
+    successMessage : string
+    failMessage : string
+    hint : string
+    headerImage : string
+    theme : DebuggerBoardEntityTheme
+  }
+  type DebuggerBoardEntityLinesItem = {
+    id : string!
+    content : string!
+    isBug : boolean!
+    explanation : string
+  }
+  type DebuggerBoardEntityTheme = {
+    background : string
+    accentColor : string
+  }
+
   entity DebuggerBoardItem [runtime] {
     id : string!
   }
@@ -10,9 +34,8 @@ orbital DebuggerBoardOrbital {
 
     state idle {
       INIT -> idle
-        (fetch DebuggerBoardItem {})
         (render-ui main {
-          entity: @entity
+          entity: @config.entityProp
           completeEvent: COMPLETE
           type: debugger-board
         })
@@ -25,6 +48,14 @@ orbital DebuggerBoardOrbital {
       }
         @description "completeEvent prop"
         @tier "essential"
+    }
+
+    config {
+      entityProp : DebuggerBoardEntity
+        @label "Entity"
+        @description "entity prop"
+        @synonyms "entity"
+        @tier "presentation"
     }
   }
 

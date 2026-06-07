@@ -1,6 +1,49 @@
 app ui-state-architect-board "1.0.0"
 "StateArchitectBoard — UI factory (1:1 with the @almadar/ui state-architect-board pattern)."
 orbital StateArchitectBoardOrbital {
+  type StateArchitectBoardEntity = {
+    id : string!
+    title : string!
+    description : string!
+    hint : string!
+    entityName : string!
+    variables : [StateArchitectBoardEntityVariablesItem]!
+    states : [string]!
+    initialState : string!
+    transitions : [StateArchitectBoardEntityTransitionsItem]!
+    availableEvents : [string]!
+    availableStates : [string]
+    testCases : [StateArchitectBoardEntityTestCasesItem]!
+    showCodeView : boolean
+    successMessage : string
+    failMessage : string
+    headerImage : string
+    theme : StateArchitectBoardEntityTheme
+  }
+  type StateArchitectBoardEntityVariablesItem = {
+    name : string!
+    value : number!
+    min : number
+    max : number
+    unit : string
+  }
+  type StateArchitectBoardEntityTransitionsItem = {
+    id : string!
+    from : string!
+    to : string!
+    event : string!
+    guardHint : string
+  }
+  type StateArchitectBoardEntityTestCasesItem = {
+    events : [string]!
+    expectedState : string!
+    label : string!
+  }
+  type StateArchitectBoardEntityTheme = {
+    background : string
+    accentColor : string
+  }
+
   entity StateArchitectBoardItem [runtime] {
     id : string!
   }
@@ -10,9 +53,8 @@ orbital StateArchitectBoardOrbital {
 
     state idle {
       INIT -> idle
-        (fetch StateArchitectBoardItem {})
         (render-ui main {
-          entity: @entity
+          entity: @config.entityProp
           stepDurationMs: @config.stepDurationMs
           testEvent: TEST
           completeEvent: COMPLETE
@@ -35,6 +77,11 @@ orbital StateArchitectBoardOrbital {
     }
 
     config {
+      entityProp : StateArchitectBoardEntity
+        @label "Entity"
+        @description "Puzzle data"
+        @synonyms "entity"
+        @tier "presentation"
       stepDurationMs : number = 600
         @label "Step Duration Ms"
         @description "Playback speed"
