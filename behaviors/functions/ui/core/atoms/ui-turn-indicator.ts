@@ -39,18 +39,18 @@ export type StdUiTurnIndicatorEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiTurnIndicatorConfig {
-  /** Default: `0` */
-  currentTurn?: number;
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
-  /** Default: `""` */
-  activeTeam?: string;
   /** Default: `""` */
   phase?: string;
+  /** Default: `0` */
+  currentTurn?: number;
   /** Default: `""` */
   className?: string;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
   /** Default: `0` */
   maxTurns?: number;
+  /** Default: `""` */
+  activeTeam?: string;
 }
 
 /**

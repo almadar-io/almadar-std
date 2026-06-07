@@ -39,12 +39,12 @@ export type StdUiStepItemEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiStepItemConfig {
-  /** Default: `""` */
-  description?: string;
-  /** Default: `""` */
-  title?: string;
   /** Default: `0` */
   number?: number;
+  /** Default: `""` */
+  title?: string;
+  /** Default: `""` */
+  description?: string;
   /** Default: `"circle"` */
   icon?: string;
 }

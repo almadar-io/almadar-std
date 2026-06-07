@@ -47,20 +47,20 @@ export interface StdUiActionButtonClickPayload {
  */
 export interface StdUiActionButtonConfig {
   icon?: unknown;
-  /** Default: `false` */
-  disabled?: boolean;
-  /** Default: `"primary"` */
-  variant?: 'primary' | 'secondary' | 'danger';
-  /** Default: `0` */
-  cooldown?: number;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
   /** Default: `""` */
   hotkey?: string;
+  /** Default: `false` */
+  disabled?: boolean;
   /** Default: `""` */
   label?: string;
+  /** Default: `0` */
+  cooldown?: number;
   /** Default: `""` */
   className?: string;
+  /** Default: `"primary"` */
+  variant?: 'primary' | 'secondary' | 'danger';
 }
 
 /**

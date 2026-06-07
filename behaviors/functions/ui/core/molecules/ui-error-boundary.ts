@@ -54,9 +54,9 @@ export interface StdUiErrorBoundaryErrorPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiErrorBoundaryConfig {
+  children?: unknown;
   /** Default: `""` */
   className?: string;
-  children?: unknown;
 }
 
 /**

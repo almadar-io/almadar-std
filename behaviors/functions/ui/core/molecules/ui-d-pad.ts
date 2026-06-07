@@ -51,10 +51,10 @@ export interface StdUiDPadConfig {
   size?: 'sm' | 'md' | 'lg';
   /** Default: `false` */
   includeDiagonals?: boolean;
-  /** Default: `""` */
-  className?: string;
   /** Default: `false` */
   disabled?: boolean;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

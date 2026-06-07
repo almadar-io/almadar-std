@@ -39,29 +39,31 @@ export type StdUiContentRendererEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiContentRendererConfig {
-  /** Default: `"rtl"` */
-  direction?: 'rtl' | 'ltr';
   /** Default: `[]` */
-  segments?: EntityRow[];
-  /** Default: `0` */
-  pageSize?: number;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
+  selectedIds?: EntityRow[];
   /** Default: `""` */
   sortBy?: string;
   /** Default: `""` */
-  content?: string;
-  /** Default: `""` */
-  sortDirection?: string;
-  /** Default: `""` */
   searchValue?: string;
-  activeFilters?: unknown;
-  /** Default: `[]` */
-  selectedIds?: EntityRow[];
+  /** Default: `0` */
+  pageSize?: number;
   /** Default: `0` */
   totalCount?: number;
+  /** Default: `""` */
+  className?: string;
+  activeFilters?: unknown;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `""` */
+  content?: string;
+  /** Default: `[]` */
+  segments?: EntityRow[];
+  /** Default: `0` */
+  pageProp?: number;
+  /** Default: `"rtl"` */
+  direction?: 'rtl' | 'ltr';
+  /** Default: `""` */
+  sortDirection?: string;
   error?: unknown;
 }
 
@@ -171,21 +173,22 @@ export function stdUiContentRendererContentRendererOrbital(params: StdUiContentR
                   'render-ui',
                   'main',
                   {
-                    'content': '@config.content',
-                    'sortDirection': '@config.sortDirection',
-                    'error': '@config.error',
-                    'sortBy': '@config.sortBy',
-                    'pageSize': '@config.pageSize',
-                    'className': '@config.className',
                     'entity': '@entity',
+                    'pageSize': '@config.pageSize',
+                    'sortBy': '@config.sortBy',
+                    'isLoading': '@config.isLoading',
+                    'error': '@config.error',
+                    'className': '@config.className',
+                    'segments': '@config.segments',
+                    'totalCount': '@config.totalCount',
+                    'sortDirection': '@config.sortDirection',
+                    'activeFilters': '@config.activeFilters',
+                    'selectedIds': '@config.selectedIds',
+                    'content': '@config.content',
                     'searchValue': '@config.searchValue',
                     'direction': '@config.direction',
-                    'selectedIds': '@config.selectedIds',
-                    'isLoading': '@config.isLoading',
-                    'segments': '@config.segments',
                     'type': 'content-renderer',
-                    'totalCount': '@config.totalCount',
-                    'activeFilters': '@config.activeFilters',
+                    'page': '@config.pageProp',
                   },
                 ],
               ],
@@ -193,16 +196,70 @@ export function stdUiContentRendererContentRendererOrbital(params: StdUiContentR
           ],
         },
         'config': {
-          'direction': {
-            'type': 'string',
-            'default': 'rtl',
-            'label': 'Direction',
-            'description': 'Text direction for markdown',
+          'selectedIds': {
+            'type': '[json]',
+            'default': [],
+            'label': 'Selected Ids',
+            'description': 'Currently selected item IDs',
             'tier': 'presentation',
-            'values': [
-              'rtl',
-              'ltr',
-            ],
+            'items': {
+              'type': 'string',
+            },
+          },
+          'sortBy': {
+            'type': 'string',
+            'default': '',
+            'label': 'Sort By',
+            'description': 'Current sort field',
+            'tier': 'presentation',
+          },
+          'searchValue': {
+            'type': 'string',
+            'default': '',
+            'label': 'Search Value',
+            'description': 'Current search query value',
+            'tier': 'presentation',
+          },
+          'pageSize': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page Size',
+            'description': 'Number of items per page',
+            'tier': 'presentation',
+          },
+          'totalCount': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Total Count',
+            'description': 'Total number of items',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'activeFilters': {
+            'type': 'json',
+            'label': 'Active Filters',
+            'description': 'Active filters',
+            'tier': 'presentation',
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
+          'content': {
+            'type': 'string',
+            'default': '',
+            'label': 'Content',
+            'description': 'Raw content string — auto-parsed into segments',
+            'tier': 'presentation',
           },
           'segments': {
             'type': '[json]',
@@ -214,76 +271,30 @@ export function stdUiContentRendererContentRendererOrbital(params: StdUiContentR
               'type': 'string',
             },
           },
-          'pageSize': {
+          'pageProp': {
             'type': 'number',
             'default': 0,
-            'label': 'Page Size',
-            'description': 'Number of items per page',
+            'label': 'Page',
+            'description': 'Current page number',
+            'synonyms': 'page',
             'tier': 'presentation',
           },
-          'className': {
+          'direction': {
             'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
+            'default': 'rtl',
+            'label': 'Direction',
+            'description': 'Text direction for markdown',
             'tier': 'presentation',
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
-            'tier': 'presentation',
-          },
-          'sortBy': {
-            'type': 'string',
-            'default': '',
-            'label': 'Sort By',
-            'description': 'Current sort field',
-            'tier': 'presentation',
-          },
-          'content': {
-            'type': 'string',
-            'default': '',
-            'label': 'Content',
-            'description': 'Raw content string — auto-parsed into segments',
-            'tier': 'presentation',
+            'values': [
+              'rtl',
+              'ltr',
+            ],
           },
           'sortDirection': {
             'type': 'string',
             'default': '',
             'label': 'Sort Direction',
             'description': 'Current sort direction',
-            'tier': 'presentation',
-          },
-          'searchValue': {
-            'type': 'string',
-            'default': '',
-            'label': 'Search Value',
-            'description': 'Current search query value',
-            'tier': 'presentation',
-          },
-          'activeFilters': {
-            'type': 'json',
-            'label': 'Active Filters',
-            'description': 'Active filters',
-            'tier': 'presentation',
-          },
-          'selectedIds': {
-            'type': '[json]',
-            'default': [],
-            'label': 'Selected Ids',
-            'description': 'Currently selected item IDs',
-            'tier': 'presentation',
-            'items': {
-              'type': 'string',
-            },
-          },
-          'totalCount': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Total Count',
-            'description': 'Total number of items',
             'tier': 'presentation',
           },
           'error': {

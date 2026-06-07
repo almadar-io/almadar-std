@@ -39,10 +39,10 @@ export type StdUiPopoverEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiPopoverConfig {
+  children?: unknown;
   content?: unknown;
   /** Default: `"bottom"` */
   position?: 'top' | 'bottom' | 'left' | 'right';
-  children?: unknown;
   /** Default: `true` */
   showArrow?: boolean;
   /** Default: `"click"` */

@@ -39,12 +39,12 @@ export type StdUiGameAudioToggleEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiGameAudioToggleConfig {
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `"sm"` */
-  size?: 'sm' | 'md' | 'lg';
   /** Default: `""` */
   className?: string;
+  /** Default: `"sm"` */
+  size?: 'sm' | 'md' | 'lg';
+  /** Default: `false` */
+  isLoading?: boolean;
   error?: unknown;
 }
 
@@ -154,12 +154,12 @@ export function stdUiGameAudioToggleGameAudioToggleOrbital(params: StdUiGameAudi
                   'render-ui',
                   'main',
                   {
-                    'entity': 'GameAudioToggleItem',
                     'size': '@config.size',
-                    'className': '@config.className',
-                    'error': '@config.error',
-                    'isLoading': '@config.isLoading',
                     'type': 'game-audio-toggle',
+                    'isLoading': '@config.isLoading',
+                    'error': '@config.error',
+                    'entity': 'GameAudioToggleItem',
+                    'className': '@config.className',
                   },
                 ],
               ],
@@ -167,11 +167,11 @@ export function stdUiGameAudioToggleGameAudioToggleOrbital(params: StdUiGameAudi
           ],
         },
         'config': {
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state (passed through)',
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
           'size': {
@@ -186,11 +186,11 @@ export function stdUiGameAudioToggleGameAudioToggleOrbital(params: StdUiGameAudi
               'lg',
             ],
           },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state (passed through)',
             'tier': 'presentation',
           },
           'error': {

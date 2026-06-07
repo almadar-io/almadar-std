@@ -39,30 +39,32 @@ export type StdUiFeatureGridOrganismEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiFeatureGridOrganismConfig {
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `""` */
-  className?: string;
   activeFilters?: unknown;
-  /** Default: `""` */
-  sortBy?: string;
-  error?: unknown;
-  /** Default: `""` */
-  searchValue?: string;
-  /** Default: `3` */
-  columns?: number;
-  /** Default: `0` */
-  pageSize?: number;
   /** Default: `""` */
   heading?: string;
   /** Default: `""` */
   subtitle?: string;
+  /** Default: `""` */
+  sortDirection?: string;
+  /** Default: `0` */
+  totalCount?: number;
+  /** Default: `3` */
+  columns?: number;
   /** Default: `[]` */
   selectedIds?: EntityRow[];
   /** Default: `0` */
-  totalCount?: number;
+  pageSize?: number;
+  error?: unknown;
   /** Default: `""` */
-  sortDirection?: string;
+  searchValue?: string;
+  /** Default: `0` */
+  pageProp?: number;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `""` */
+  sortBy?: string;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**
@@ -171,21 +173,22 @@ export function stdUiFeatureGridOrganismFeatureGridOrganismOrbital(params: StdUi
                   'render-ui',
                   'main',
                   {
+                    'entity': '@entity',
+                    'page': '@config.pageProp',
+                    'className': '@config.className',
+                    'error': '@config.error',
+                    'totalCount': '@config.totalCount',
+                    'type': 'feature-grid-organism',
+                    'pageSize': '@config.pageSize',
+                    'subtitle': '@config.subtitle',
+                    'sortBy': '@config.sortBy',
+                    'heading': '@config.heading',
+                    'isLoading': '@config.isLoading',
                     'columns': '@config.columns',
                     'sortDirection': '@config.sortDirection',
-                    'error': '@config.error',
-                    'pageSize': '@config.pageSize',
-                    'heading': '@config.heading',
-                    'activeFilters': '@config.activeFilters',
-                    'subtitle': '@config.subtitle',
-                    'type': 'feature-grid-organism',
-                    'entity': '@entity',
                     'searchValue': '@config.searchValue',
                     'selectedIds': '@config.selectedIds',
-                    'isLoading': '@config.isLoading',
-                    'sortBy': '@config.sortBy',
-                    'className': '@config.className',
-                    'totalCount': '@config.totalCount',
+                    'activeFilters': '@config.activeFilters',
                   },
                 ],
               ],
@@ -193,58 +196,10 @@ export function stdUiFeatureGridOrganismFeatureGridOrganismOrbital(params: StdUi
           ],
         },
         'config': {
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
           'activeFilters': {
             'type': 'json',
             'label': 'Active Filters',
             'description': 'Active filters',
-            'tier': 'presentation',
-          },
-          'sortBy': {
-            'type': 'string',
-            'default': '',
-            'label': 'Sort By',
-            'description': 'Current sort field',
-            'tier': 'presentation',
-          },
-          'error': {
-            'type': 'json',
-            'label': 'Error',
-            'description': 'Error state',
-            'tier': 'presentation',
-          },
-          'searchValue': {
-            'type': 'string',
-            'default': '',
-            'label': 'Search Value',
-            'description': 'Current search query value',
-            'tier': 'presentation',
-          },
-          'columns': {
-            'type': 'number',
-            'default': 3,
-            'label': 'Columns',
-            'description': 'columns prop',
-            'tier': 'presentation',
-          },
-          'pageSize': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page Size',
-            'description': 'Number of items per page',
             'tier': 'presentation',
           },
           'heading': {
@@ -261,6 +216,27 @@ export function stdUiFeatureGridOrganismFeatureGridOrganismOrbital(params: StdUi
             'description': 'subtitle prop',
             'tier': 'presentation',
           },
+          'sortDirection': {
+            'type': 'string',
+            'default': '',
+            'label': 'Sort Direction',
+            'description': 'Current sort direction',
+            'tier': 'presentation',
+          },
+          'totalCount': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Total Count',
+            'description': 'Total number of items',
+            'tier': 'presentation',
+          },
+          'columns': {
+            'type': 'number',
+            'default': 3,
+            'label': 'Columns',
+            'description': 'columns prop',
+            'tier': 'presentation',
+          },
           'selectedIds': {
             'type': '[json]',
             'default': [],
@@ -271,18 +247,53 @@ export function stdUiFeatureGridOrganismFeatureGridOrganismOrbital(params: StdUi
               'type': 'string',
             },
           },
-          'totalCount': {
+          'pageSize': {
             'type': 'number',
             'default': 0,
-            'label': 'Total Count',
-            'description': 'Total number of items',
+            'label': 'Page Size',
+            'description': 'Number of items per page',
             'tier': 'presentation',
           },
-          'sortDirection': {
+          'error': {
+            'type': 'json',
+            'label': 'Error',
+            'description': 'Error state',
+            'tier': 'presentation',
+          },
+          'searchValue': {
             'type': 'string',
             'default': '',
-            'label': 'Sort Direction',
-            'description': 'Current sort direction',
+            'label': 'Search Value',
+            'description': 'Current search query value',
+            'tier': 'presentation',
+          },
+          'pageProp': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page',
+            'description': 'Current page number',
+            'synonyms': 'page',
+            'tier': 'presentation',
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
+          'sortBy': {
+            'type': 'string',
+            'default': '',
+            'label': 'Sort By',
+            'description': 'Current sort field',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
         },

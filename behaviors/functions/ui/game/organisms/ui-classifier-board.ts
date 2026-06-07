@@ -172,8 +172,8 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
                   'render-ui',
                   'main',
                   {
-                    'entity': '@entity',
                     'completeEvent': 'COMPLETE',
+                    'entity': '@entity',
                     'type': 'classifier-board',
                   },
                 ],

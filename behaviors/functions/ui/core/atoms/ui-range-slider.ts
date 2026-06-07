@@ -60,27 +60,27 @@ export interface StdUiRangeSliderFormatValuePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiRangeSliderConfig {
-  /** Default: `100` */
-  max?: number;
   /** Default: `1` */
   step?: number;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
+  /** Default: `100` */
+  max?: number;
+  /** Default: `false` */
+  showTicks?: boolean;
+  /** Default: `false` */
+  showTooltip?: boolean;
+  /** Default: `0` */
+  buffered?: number;
+  /** Default: `""` */
+  className?: string;
   /** Default: `0` */
   min?: number;
   /** Default: `false` */
-  showTicks?: boolean;
-  /** Default: `0` */
-  buffered?: number;
-  /** Default: `false` */
   disabled?: boolean;
   actionPayload?: unknown;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
   /** Default: `0` */
   value?: number;
-  /** Default: `false` */
-  showTooltip?: boolean;
 }
 
 /**

@@ -5,7 +5,6 @@ orbital EntityCardsOrbital {
     label : string!
     event : string
     navigatesTo : string
-    onClick : any
     action : string
     placement : string
     variant : string
@@ -29,6 +28,7 @@ orbital EntityCardsOrbital {
           sortBy: @config.sortBy
           sortDirection: @config.sortDirection
           searchValue: @config.searchValue
+          page: @config.pageProp
           pageSize: @config.pageSize
           totalCount: @config.totalCount
           activeFilters: @config.activeFilters
@@ -41,13 +41,23 @@ orbital EntityCardsOrbital {
           fields: @config.fields
           fieldNames: @config.fieldNames
           columns: @config.columns
-          itemActions: @config.itemActions
           showTotal: @config.showTotal
           showAvatar: @config.showAvatar
           variant: @config.variant
           imageField: @config.imageField
+          itemActions: [{ label: "View", event: VIEW }]
           type: entity-cards
         })
+      VIEW -> idle
+        (emit VIEW {})
+    }
+
+    emits {
+      VIEW -> external {
+        id : string
+      }
+        @description "User opened a record from the list."
+        @tier "essential"
     }
 
     config {
@@ -74,6 +84,11 @@ orbital EntityCardsOrbital {
       searchValue : string = ""
         @label "Search Value"
         @description "Current search query value"
+        @tier "presentation"
+      pageProp : number = 0
+        @label "Page"
+        @description "Current page number"
+        @synonyms "page"
         @tier "presentation"
       pageSize : number = 0
         @label "Page Size"

@@ -1,6 +1,15 @@
 app ui-transition-arrow "1.0.0"
 "TransitionArrow — UI factory (1:1 with the @almadar/ui transition-arrow pattern)."
 orbital TransitionArrowOrbital {
+  type TransitionArrowFrom = {
+    x : number!
+    y : number!
+  }
+  type TransitionArrowTo = {
+    x : number!
+    y : number!
+  }
+
   entity TransitionArrowItem [runtime] {
     id : string!
   }
@@ -11,6 +20,8 @@ orbital TransitionArrowOrbital {
     state idle {
       INIT -> idle
         (render-ui main {
+          from: @config.fromProp
+          to: @config.toProp
           eventLabel: @config.eventLabel
           guardHint: @config.guardHint
           isActive: @config.isActive
@@ -29,6 +40,16 @@ orbital TransitionArrowOrbital {
     }
 
     config {
+      fromProp : TransitionArrowFrom
+        @label "From"
+        @description "Start position (center of from-node)"
+        @synonyms "from"
+        @tier "presentation"
+      toProp : TransitionArrowTo
+        @label "To"
+        @description "End position (center of to-node)"
+        @synonyms "to"
+        @tier "presentation"
       eventLabel : string = ""
         @label "Event Label"
         @description "Event label shown on the arrow"

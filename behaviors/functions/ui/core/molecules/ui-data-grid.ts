@@ -70,54 +70,54 @@ export interface StdUiDataGridRenderItemPayload {
  */
 export interface StdUiDataGridConfig {
   /** Default: `[]` */
-  fields?: EntityRow[];
-  /** Default: `""` */
-  className?: string;
-  /** Default: `[]` */
-  columns?: EntityRow[];
-  /** Default: `""` */
-  dropEvent?: string;
-  /** Default: `false` */
-  scrollX?: boolean;
+  itemActions?: EntityRow[];
   /** Default: `""` */
   accepts?: string;
   /** Default: `""` */
-  dragGroup?: string;
-  /** Default: `""` */
   positionEvent?: string;
-  /** Default: `false` */
-  sortable?: boolean;
-  /** Default: `""` */
-  dndItemIdField?: string;
   /** Default: `[]` */
-  itemActions?: EntityRow[];
+  columns?: EntityRow[];
+  /** Default: `false` */
+  dndRoot?: boolean;
+  /** Default: `false` */
+  scrollX?: boolean;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `""` */
+  reorderEvent?: string;
+  error?: unknown;
+  /** Default: `""` */
+  imageField?: string;
   /** Default: `0` */
   cols?: number;
+  /** Default: `false` */
+  selectable?: boolean;
+  /** Default: `false` */
+  hasMore?: boolean;
+  /** Default: `""` */
+  dragGroup?: string;
   /** Default: `"md"` */
   gap?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `""` */
-  imageField?: string;
-  /** Default: `0` */
-  maxInlineActions?: number;
-  error?: unknown;
-  /** Default: `false` */
-  selectable?: boolean;
-  /** Default: `false` */
-  infiniteScroll?: boolean;
-  /** Default: `""` */
-  reorderEvent?: string;
-  /** Default: `false` */
-  dndRoot?: boolean;
+  /** Default: `[]` */
+  fields?: EntityRow[];
   /** Default: `280` */
   minCardWidth?: number;
-  /** Default: `"dense"` */
-  look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
-  /** Default: `false` */
-  hasMore?: boolean;
   /** Default: `0` */
   pageSize?: number;
+  /** Default: `0` */
+  maxInlineActions?: number;
+  /** Default: `false` */
+  sortable?: boolean;
+  /** Default: `""` */
+  dropEvent?: string;
+  /** Default: `false` */
+  infiniteScroll?: boolean;
+  /** Default: `"dense"` */
+  look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
+  /** Default: `""` */
+  dndItemIdField?: string;
 }
 
 /**

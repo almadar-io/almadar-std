@@ -39,18 +39,18 @@ export type StdUiDrawerSlotEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiDrawerSlotConfig {
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `""` */
+  title?: string;
+  /** Default: `"right"` */
+  position?: 'left' | 'right';
+  /** Default: `""` */
+  className?: string;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
   error?: unknown;
   children?: unknown;
-  /** Default: `""` */
-  title?: string;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `"right"` */
-  position?: 'left' | 'right';
 }
 
 /**
@@ -159,15 +159,15 @@ export function stdUiDrawerSlotDrawerSlotOrbital(params: StdUiDrawerSlotDrawerSl
                   'render-ui',
                   'main',
                   {
+                    'isLoading': '@config.isLoading',
+                    'children': '@config.children',
+                    'entity': 'DrawerSlotItem',
+                    'position': '@config.position',
+                    'size': '@config.size',
+                    'error': '@config.error',
+                    'type': 'drawer-slot',
                     'title': '@config.title',
                     'className': '@config.className',
-                    'children': '@config.children',
-                    'position': '@config.position',
-                    'isLoading': '@config.isLoading',
-                    'error': '@config.error',
-                    'size': '@config.size',
-                    'entity': 'DrawerSlotItem',
-                    'type': 'drawer-slot',
                   },
                 ],
               ],
@@ -175,6 +175,38 @@ export function stdUiDrawerSlotDrawerSlotOrbital(params: StdUiDrawerSlotDrawerSl
           ],
         },
         'config': {
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state',
+            'tier': 'presentation',
+          },
+          'title': {
+            'type': 'string',
+            'default': '',
+            'label': 'Title',
+            'description': 'Override drawer title (extracted from children if not provided)',
+            'tier': 'presentation',
+          },
+          'position': {
+            'type': 'string',
+            'default': 'right',
+            'label': 'Position',
+            'description': 'Drawer position',
+            'tier': 'presentation',
+            'values': [
+              'left',
+              'right',
+            ],
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Custom class name',
+            'tier': 'presentation',
+          },
           'size': {
             'type': 'string',
             'default': 'md',
@@ -200,38 +232,6 @@ export function stdUiDrawerSlotDrawerSlotOrbital(params: StdUiDrawerSlotDrawerSl
             'label': 'Children',
             'description': 'Content to display in the drawer',
             'tier': 'presentation',
-          },
-          'title': {
-            'type': 'string',
-            'default': '',
-            'label': 'Title',
-            'description': 'Override drawer title (extracted from children if not provided)',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Custom class name',
-            'tier': 'presentation',
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state',
-            'tier': 'presentation',
-          },
-          'position': {
-            'type': 'string',
-            'default': 'right',
-            'label': 'Position',
-            'description': 'Drawer position',
-            'tier': 'presentation',
-            'values': [
-              'left',
-              'right',
-            ],
           },
         },
         'scope': 'instance',

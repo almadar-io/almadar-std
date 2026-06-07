@@ -39,17 +39,17 @@ export type StdUiGameAudioProviderEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiGameAudioProviderConfig {
-  /** Default: `false` */
-  initialMuted?: boolean;
   /** Default: `""` */
   className?: string;
-  children?: unknown;
-  /** Default: `false` */
-  isLoading?: boolean;
   manifest?: unknown;
-  error?: unknown;
+  children?: unknown;
   /** Default: `""` */
   baseUrl?: string;
+  /** Default: `false` */
+  initialMuted?: boolean;
+  /** Default: `false` */
+  isLoading?: boolean;
+  error?: unknown;
 }
 
 /**
@@ -158,15 +158,15 @@ export function stdUiGameAudioProviderGameAudioProviderOrbital(params: StdUiGame
                   'render-ui',
                   'main',
                   {
-                    'baseUrl': '@config.baseUrl',
-                    'className': '@config.className',
-                    'initialMuted': '@config.initialMuted',
-                    'children': '@config.children',
-                    'isLoading': '@config.isLoading',
                     'entity': 'GameAudioProviderItem',
+                    'initialMuted': '@config.initialMuted',
                     'manifest': '@config.manifest',
-                    'error': '@config.error',
+                    'baseUrl': '@config.baseUrl',
                     'type': 'game-audio-provider',
+                    'isLoading': '@config.isLoading',
+                    'children': '@config.children',
+                    'className': '@config.className',
+                    'error': '@config.error',
                   },
                 ],
               ],
@@ -174,13 +174,6 @@ export function stdUiGameAudioProviderGameAudioProviderOrbital(params: StdUiGame
           ],
         },
         'config': {
-          'initialMuted': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Initial Muted',
-            'description': 'Initial muted state',
-            'tier': 'presentation',
-          },
           'className': {
             'type': 'string',
             'default': '',
@@ -188,10 +181,30 @@ export function stdUiGameAudioProviderGameAudioProviderOrbital(params: StdUiGame
             'description': 'Closed-circuit props (unused, accepted for runtime compatibility)',
             'tier': 'presentation',
           },
+          'manifest': {
+            'type': 'json',
+            'label': 'Manifest',
+            'description': 'Sound manifest — keys mapped to SoundEntry definitions',
+            'tier': 'presentation',
+          },
           'children': {
             'type': 'node',
             'label': 'Children',
             'description': 'Children to render',
+            'tier': 'presentation',
+          },
+          'baseUrl': {
+            'type': 'string',
+            'default': '',
+            'label': 'Base Url',
+            'description': 'Base URL prepended to all sound paths (default \'\')',
+            'tier': 'presentation',
+          },
+          'initialMuted': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Initial Muted',
+            'description': 'Initial muted state',
             'tier': 'presentation',
           },
           'isLoading': {
@@ -201,23 +214,10 @@ export function stdUiGameAudioProviderGameAudioProviderOrbital(params: StdUiGame
             'description': 'isLoading prop',
             'tier': 'presentation',
           },
-          'manifest': {
-            'type': 'json',
-            'label': 'Manifest',
-            'description': 'Sound manifest — keys mapped to SoundEntry definitions',
-            'tier': 'presentation',
-          },
           'error': {
             'type': 'json',
             'label': 'Error',
             'description': 'error prop',
-            'tier': 'presentation',
-          },
-          'baseUrl': {
-            'type': 'string',
-            'default': '',
-            'label': 'Base Url',
-            'description': 'Base URL prepended to all sound paths (default \'\')',
             'tier': 'presentation',
           },
         },

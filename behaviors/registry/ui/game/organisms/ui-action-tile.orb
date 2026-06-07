@@ -49,11 +49,11 @@
                     "render-ui",
                     "main",
                     {
+                      "disabled": "@config.disabled",
                       "action": "@config.action",
                       "categoryColors": "@config.categoryColors",
-                      "disabled": "@config.disabled",
-                      "size": "@config.size",
-                      "type": "action-tile"
+                      "type": "action-tile",
+                      "size": "@config.size"
                     }
                   ]
                 ]
@@ -61,6 +61,25 @@
             ]
           },
           "config": {
+            "size": {
+              "type": "string",
+              "default": "md",
+              "label": "Size",
+              "description": "Size variant",
+              "tier": "presentation",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            },
+            "disabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Disabled",
+              "description": "Whether the tile is disabled / already used",
+              "tier": "presentation"
+            },
             "action": {
               "type": "ActionTileAction",
               "label": "Action",
@@ -72,10 +91,40 @@
                   "type": "object",
                   "required": false,
                   "properties": {
-                    "currentState": {
-                      "name": "currentState",
+                    "name": {
+                      "name": "name",
                       "type": "string",
                       "required": true
+                    },
+                    "transitions": {
+                      "name": "transitions",
+                      "type": "array",
+                      "required": true,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "from": {
+                            "name": "from",
+                            "type": "string",
+                            "required": true
+                          },
+                          "event": {
+                            "name": "event",
+                            "type": "string",
+                            "required": true
+                          },
+                          "to": {
+                            "name": "to",
+                            "type": "string",
+                            "required": true
+                          },
+                          "guardHint": {
+                            "name": "guardHint",
+                            "type": "string",
+                            "required": false
+                          }
+                        }
+                      }
                     },
                     "description": {
                       "name": "description",
@@ -90,65 +139,35 @@
                         "type": "string"
                       }
                     },
-                    "name": {
-                      "name": "name",
+                    "currentState": {
+                      "name": "currentState",
                       "type": "string",
                       "required": true
-                    },
-                    "transitions": {
-                      "name": "transitions",
-                      "type": "array",
-                      "required": true,
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "to": {
-                            "name": "to",
-                            "type": "string",
-                            "required": true
-                          },
-                          "from": {
-                            "name": "from",
-                            "type": "string",
-                            "required": true
-                          },
-                          "guardHint": {
-                            "name": "guardHint",
-                            "type": "string",
-                            "required": false
-                          },
-                          "event": {
-                            "name": "event",
-                            "type": "string",
-                            "required": true
-                          }
-                        }
-                      }
                     }
                   }
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": true
-                },
-                "iconEmoji": {
-                  "name": "iconEmoji",
-                  "type": "string",
-                  "required": false
-                },
-                "id": {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
                 },
                 "category": {
                   "name": "category",
                   "type": "string",
                   "required": true
                 },
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": true
+                },
+                "id": {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
                 "description": {
                   "name": "description",
+                  "type": "string",
+                  "required": false
+                },
+                "iconEmoji": {
+                  "name": "iconEmoji",
                   "type": "string",
                   "required": false
                 },
@@ -159,29 +178,10 @@
                 }
               }
             },
-            "size": {
-              "type": "string",
-              "default": "md",
-              "label": "Size",
-              "description": "Size variant",
-              "tier": "presentation",
-              "values": [
-                "sm",
-                "md",
-                "lg"
-              ]
-            },
             "categoryColors": {
               "type": "json",
               "label": "Category Colors",
               "description": "Category → color mapping",
-              "tier": "presentation"
-            },
-            "disabled": {
-              "type": "boolean",
-              "default": false,
-              "label": "Disabled",
-              "description": "Whether the tile is disabled / already used",
               "tier": "presentation"
             }
           },

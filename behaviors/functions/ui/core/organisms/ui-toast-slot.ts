@@ -39,17 +39,17 @@ export type StdUiToastSlotEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiToastSlotConfig {
-  children?: unknown;
   /** Default: `"success"` */
   variant?: 'success' | 'error' | 'info' | 'warning';
-  /** Default: `""` */
-  className?: string;
+  /** Default: `5000` */
+  duration?: number;
+  children?: unknown;
   /** Default: `""` */
   title?: string;
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `5000` */
-  duration?: number;
+  /** Default: `""` */
+  className?: string;
   error?: unknown;
 }
 
@@ -159,15 +159,15 @@ export function stdUiToastSlotToastSlotOrbital(params: StdUiToastSlotToastSlotOr
                   'render-ui',
                   'main',
                   {
-                    'children': '@config.children',
-                    'variant': '@config.variant',
-                    'entity': 'ToastSlotItem',
-                    'type': 'toast-slot',
-                    'duration': '@config.duration',
-                    'error': '@config.error',
                     'title': '@config.title',
                     'className': '@config.className',
+                    'children': '@config.children',
                     'isLoading': '@config.isLoading',
+                    'entity': 'ToastSlotItem',
+                    'variant': '@config.variant',
+                    'duration': '@config.duration',
+                    'error': '@config.error',
+                    'type': 'toast-slot',
                   },
                 ],
               ],
@@ -175,12 +175,6 @@ export function stdUiToastSlotToastSlotOrbital(params: StdUiToastSlotToastSlotOr
           ],
         },
         'config': {
-          'children': {
-            'type': 'node',
-            'label': 'Children',
-            'description': 'Content to display in the toast (message or ReactNode)',
-            'tier': 'presentation',
-          },
           'variant': {
             'type': 'string',
             'default': 'success',
@@ -194,11 +188,17 @@ export function stdUiToastSlotToastSlotOrbital(params: StdUiToastSlotToastSlotOr
               'warning',
             ],
           },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Custom class name',
+          'duration': {
+            'type': 'number',
+            'default': 5000,
+            'label': 'Duration',
+            'description': 'Auto-dismiss duration in ms (0 = no auto-dismiss)',
+            'tier': 'presentation',
+          },
+          'children': {
+            'type': 'node',
+            'label': 'Children',
+            'description': 'Content to display in the toast (message or ReactNode)',
             'tier': 'presentation',
           },
           'title': {
@@ -215,11 +215,11 @@ export function stdUiToastSlotToastSlotOrbital(params: StdUiToastSlotToastSlotOr
             'description': 'Loading state indicator',
             'tier': 'presentation',
           },
-          'duration': {
-            'type': 'number',
-            'default': 5000,
-            'label': 'Duration',
-            'description': 'Auto-dismiss duration in ms (0 = no auto-dismiss)',
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Custom class name',
             'tier': 'presentation',
           },
           'error': {

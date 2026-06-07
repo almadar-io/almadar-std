@@ -39,12 +39,12 @@ export type StdUiDocTocEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiDocTocConfig {
-  /** Default: `""` */
-  className?: string;
-  /** Default: `""` */
-  activeId?: string;
   /** Default: `[]` */
   items?: EntityRow[];
+  /** Default: `""` */
+  activeId?: string;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

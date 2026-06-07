@@ -40,15 +40,15 @@ export type StdUiSectionHeaderEventKey = 'INIT';
  */
 export interface StdUiSectionHeaderConfig {
   /** Default: `""` */
-  className?: string;
-  /** Default: `"center"` */
-  align?: 'center' | 'left' | 'right';
-  /** Default: `""` */
   subtitle?: string;
-  /** Default: `""` */
-  title?: string;
   /** Default: `2` */
   level?: number;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `""` */
+  title?: string;
+  /** Default: `"center"` */
+  align?: 'center' | 'left' | 'right';
 }
 
 /**

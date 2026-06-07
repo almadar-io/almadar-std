@@ -42,10 +42,10 @@ export interface StdUiArticleSectionConfig {
   /** Default: `""` */
   title?: string;
   children?: unknown;
-  /** Default: `""` */
-  className?: string;
   /** Default: `"md"` */
   maxWidth?: 'sm' | 'md' | 'lg';
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

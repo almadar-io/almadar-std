@@ -43,16 +43,16 @@ export interface StdUiTrendIndicatorConfig {
   size?: 'sm' | 'md' | 'lg';
   /** Default: `""` */
   className?: string;
-  /** Default: `true` */
-  showValue?: boolean;
+  /** Default: `0` */
+  value?: number;
   /** Default: `"up"` */
   direction?: 'up' | 'down' | 'flat';
+  /** Default: `true` */
+  showValue?: boolean;
   /** Default: `""` */
   label?: string;
   /** Default: `false` */
   invert?: boolean;
-  /** Default: `0` */
-  value?: number;
 }
 
 /**

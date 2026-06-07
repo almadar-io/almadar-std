@@ -60,25 +60,25 @@ export interface StdUiSignaturePadClearPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiSignaturePadConfig {
-  /** Default: `"Signature"` */
-  label?: string;
-  /** Default: `200` */
-  height?: number;
-  /** Default: `"Draw your signature above"` */
-  helperText?: string;
-  error?: unknown;
-  /** Default: `""` */
-  strokeColor?: string;
   /** Default: `false` */
   readOnly?: boolean;
-  /** Default: `2` */
-  strokeWidth?: number;
+  /** Default: `""` */
+  strokeColor?: string;
+  /** Default: `200` */
+  height?: number;
+  error?: unknown;
   /** Default: `""` */
   value?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
   /** Default: `""` */
   className?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `2` */
+  strokeWidth?: number;
+  /** Default: `"Signature"` */
+  label?: string;
+  /** Default: `"Draw your signature above"` */
+  helperText?: string;
 }
 
 /**
@@ -244,21 +244,21 @@ export function stdUiSignaturePadSignaturePadOrbital(params: StdUiSignaturePadSi
                   'render-ui',
                   'main',
                   {
-                    'onChange': 'CHANGE',
-                    'strokeWidth': '@config.strokeWidth',
-                    'readOnly': '@config.readOnly',
-                    'className': '@config.className',
-                    'height': '@config.height',
-                    'clearEvent': 'CLEAR',
-                    'isLoading': '@config.isLoading',
-                    'type': 'signature-pad',
                     'entity': 'SignaturePadItem',
+                    'isLoading': '@config.isLoading',
                     'value': '@config.value',
-                    'label': '@config.label',
+                    'onChange': 'CHANGE',
+                    'className': '@config.className',
+                    'readOnly': '@config.readOnly',
                     'strokeColor': '@config.strokeColor',
-                    'helperText': '@config.helperText',
-                    'signEvent': 'SIGN',
+                    'strokeWidth': '@config.strokeWidth',
                     'error': '@config.error',
+                    'clearEvent': 'CLEAR',
+                    'signEvent': 'SIGN',
+                    'height': '@config.height',
+                    'helperText': '@config.helperText',
+                    'type': 'signature-pad',
+                    'label': '@config.label',
                   },
                 ],
               ],
@@ -266,31 +266,11 @@ export function stdUiSignaturePadSignaturePadOrbital(params: StdUiSignaturePadSi
           ],
         },
         'config': {
-          'label': {
-            'type': 'string',
-            'default': 'Signature',
-            'label': 'Label',
-            'description': 'Label above the pad',
-            'tier': 'presentation',
-          },
-          'height': {
-            'type': 'number',
-            'default': 200,
-            'label': 'Height',
-            'description': 'Pad height',
-            'tier': 'presentation',
-          },
-          'helperText': {
-            'type': 'string',
-            'default': 'Draw your signature above',
-            'label': 'Helper Text',
-            'description': 'Helper text',
-            'tier': 'presentation',
-          },
-          'error': {
-            'type': 'json',
-            'label': 'Error',
-            'description': 'Error state',
+          'readOnly': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Read Only',
+            'description': 'Whether the pad is read-only',
             'tier': 'presentation',
           },
           'strokeColor': {
@@ -300,18 +280,17 @@ export function stdUiSignaturePadSignaturePadOrbital(params: StdUiSignaturePadSi
             'description': 'Stroke color',
             'tier': 'presentation',
           },
-          'readOnly': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Read Only',
-            'description': 'Whether the pad is read-only',
+          'height': {
+            'type': 'number',
+            'default': 200,
+            'label': 'Height',
+            'description': 'Pad height',
             'tier': 'presentation',
           },
-          'strokeWidth': {
-            'type': 'number',
-            'default': 2,
-            'label': 'Stroke Width',
-            'description': 'Stroke width',
+          'error': {
+            'type': 'json',
+            'label': 'Error',
+            'description': 'Error state',
             'tier': 'presentation',
           },
           'value': {
@@ -321,6 +300,13 @@ export function stdUiSignaturePadSignaturePadOrbital(params: StdUiSignaturePadSi
             'description': 'Existing signature image URL',
             'tier': 'presentation',
           },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
           'isLoading': {
             'type': 'boolean',
             'default': false,
@@ -328,11 +314,25 @@ export function stdUiSignaturePadSignaturePadOrbital(params: StdUiSignaturePadSi
             'description': 'Loading state',
             'tier': 'presentation',
           },
-          'className': {
+          'strokeWidth': {
+            'type': 'number',
+            'default': 2,
+            'label': 'Stroke Width',
+            'description': 'Stroke width',
+            'tier': 'presentation',
+          },
+          'label': {
             'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
+            'default': 'Signature',
+            'label': 'Label',
+            'description': 'Label above the pad',
+            'tier': 'presentation',
+          },
+          'helperText': {
+            'type': 'string',
+            'default': 'Draw your signature above',
+            'label': 'Helper Text',
+            'description': 'Helper text',
             'tier': 'presentation',
           },
         },

@@ -54,19 +54,19 @@ export interface StdUiWizardContainerCompletePayload {
  */
 export interface StdUiWizardContainerConfig {
   /** Default: `true` */
-  showProgress?: boolean;
-  /** Default: `false` */
-  compact?: boolean;
-  /** Default: `""` */
-  className?: string;
-  currentStep?: unknown;
-  error?: unknown;
-  /** Default: `true` */
   allowBack?: boolean;
+  /** Default: `true` */
+  showProgress?: boolean;
   /** Default: `[]` */
   steps?: EntityRow[];
   /** Default: `false` */
   isLoading?: boolean;
+  currentStep?: unknown;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `false` */
+  compact?: boolean;
+  error?: unknown;
 }
 
 /**
@@ -213,18 +213,18 @@ export function stdUiWizardContainerWizardContainerOrbital(params: StdUiWizardCo
                   'render-ui',
                   'main',
                   {
+                    'allowBack': '@config.allowBack',
+                    'showProgress': '@config.showProgress',
+                    'steps': '@config.steps',
+                    'className': '@config.className',
+                    'isLoading': '@config.isLoading',
+                    'type': 'wizard-container',
+                    'onComplete': 'COMPLETE',
+                    'compact': '@config.compact',
+                    'currentStep': '@config.currentStep',
                     'error': '@config.error',
                     'entity': 'WizardContainerItem',
-                    'type': 'wizard-container',
-                    'className': '@config.className',
-                    'compact': '@config.compact',
-                    'onComplete': 'COMPLETE',
-                    'currentStep': '@config.currentStep',
                     'onStepChange': 'STEP_CHANGE',
-                    'isLoading': '@config.isLoading',
-                    'allowBack': '@config.allowBack',
-                    'steps': '@config.steps',
-                    'showProgress': '@config.showProgress',
                   },
                 ],
               ],
@@ -232,44 +232,18 @@ export function stdUiWizardContainerWizardContainerOrbital(params: StdUiWizardCo
           ],
         },
         'config': {
-          'showProgress': {
-            'type': 'boolean',
-            'default': true,
-            'label': 'Show Progress',
-            'description': 'Show progress indicator',
-            'tier': 'presentation',
-          },
-          'compact': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Compact',
-            'description': 'Modal mode (compact header, no padding)',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'currentStep': {
-            'type': 'json',
-            'label': 'Current Step',
-            'description': 'Current step index (controlled) - accepts unknown for generated code compatibility',
-            'tier': 'presentation',
-          },
-          'error': {
-            'type': 'json',
-            'label': 'Error',
-            'description': 'Error state',
-            'tier': 'presentation',
-          },
           'allowBack': {
             'type': 'boolean',
             'default': true,
             'label': 'Allow Back',
             'description': 'Allow navigation to previous steps',
+            'tier': 'presentation',
+          },
+          'showProgress': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Show Progress',
+            'description': 'Show progress indicator',
             'tier': 'presentation',
           },
           'steps': {
@@ -281,6 +255,307 @@ export function stdUiWizardContainerWizardContainerOrbital(params: StdUiWizardCo
             'items': {
               'type': 'object',
               'properties': {
+                'content': {
+                  'name': 'content',
+                  'type': 'string',
+                  'required': false,
+                },
+                'globalVariablesSet': {
+                  'name': 'globalVariablesSet',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
+                    'type': 'string',
+                  },
+                },
+                'localVariables': {
+                  'name': 'localVariables',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
+                    'type': 'string',
+                  },
+                },
+                'contextMenu': {
+                  'name': 'contextMenu',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
+                    'type': 'string',
+                  },
+                },
+                'tabId': {
+                  'name': 'tabId',
+                  'type': 'string',
+                  'required': false,
+                },
+                'description': {
+                  'name': 'description',
+                  'type': 'string',
+                  'required': false,
+                },
+                'entityMapping': {
+                  'name': 'entityMapping',
+                  'type': 'object',
+                  'required': false,
+                  'properties': {
+                    'idField': {
+                      'name': 'idField',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'entity': {
+                      'name': 'entity',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'parentField': {
+                      'name': 'parentField',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'mode': {
+                      'name': 'mode',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  },
+                },
+                'title': {
+                  'name': 'title',
+                  'type': 'string',
+                  'required': false,
+                },
+                'sections': {
+                  'name': 'sections',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
+                    'type': 'object',
+                    'properties': {
+                      'title': {
+                        'name': 'title',
+                        'type': 'string',
+                        'required': false,
+                      },
+                      'id': {
+                        'name': 'id',
+                        'type': 'string',
+                        'required': true,
+                      },
+                      'addButtonLabel': {
+                        'name': 'addButtonLabel',
+                        'type': 'string',
+                        'required': false,
+                      },
+                      'fields': {
+                        'name': 'fields',
+                        'type': 'array',
+                        'required': false,
+                        'items': {
+                          'type': 'object',
+                          'properties': {
+                            'options': {
+                              'name': 'options',
+                              'type': 'array',
+                              'required': false,
+                              'items': {
+                                'type': 'string',
+                              },
+                            },
+                            'repeatable': {
+                              'name': 'repeatable',
+                              'type': 'boolean',
+                              'required': false,
+                            },
+                            'minLength': {
+                              'name': 'minLength',
+                              'type': 'number',
+                              'required': false,
+                            },
+                            'displayFields': {
+                              'name': 'displayFields',
+                              'type': 'array',
+                              'required': false,
+                              'items': {
+                                'type': 'string',
+                              },
+                            },
+                            'searchConfig': {
+                              'name': 'searchConfig',
+                              'type': 'string',
+                              'required': false,
+                            },
+                            'entityField': {
+                              'name': 'entityField',
+                              'type': 'string',
+                              'required': false,
+                            },
+                            'maxLength': {
+                              'name': 'maxLength',
+                              'type': 'number',
+                              'required': false,
+                            },
+                            'contextMenu': {
+                              'name': 'contextMenu',
+                              'type': 'array',
+                              'required': false,
+                              'items': {
+                                'type': 'string',
+                              },
+                            },
+                            'calculated': {
+                              'name': 'calculated',
+                              'type': 'string',
+                              'required': false,
+                            },
+                            'items': {
+                              'name': 'items',
+                              'type': 'array',
+                              'required': false,
+                              'items': {
+                                'type': 'string',
+                              },
+                            },
+                            'placeholder': {
+                              'name': 'placeholder',
+                              'type': 'string',
+                              'required': false,
+                            },
+                            'lawReference': {
+                              'name': 'lawReference',
+                              'type': 'string',
+                              'required': false,
+                            },
+                            'readOnly': {
+                              'name': 'readOnly',
+                              'type': 'boolean',
+                              'required': false,
+                            },
+                            'required': {
+                              'name': 'required',
+                              'type': 'boolean',
+                              'required': false,
+                            },
+                            'label': {
+                              'name': 'label',
+                              'type': 'string',
+                              'required': false,
+                            },
+                            'displayTemplate': {
+                              'name': 'displayTemplate',
+                              'type': 'string',
+                              'required': false,
+                            },
+                            'signatureConfig': {
+                              'name': 'signatureConfig',
+                              'type': 'string',
+                              'required': false,
+                            },
+                            'dataSource': {
+                              'name': 'dataSource',
+                              'type': 'string',
+                              'required': false,
+                            },
+                            'minDate': {
+                              'name': 'minDate',
+                              'type': 'string',
+                              'required': false,
+                            },
+                            'type': {
+                              'name': 'type',
+                              'type': 'string',
+                              'required': true,
+                            },
+                            'stats': {
+                              'name': 'stats',
+                              'type': 'array',
+                              'required': false,
+                              'items': {
+                                'type': 'string',
+                              },
+                            },
+                            'hiddenCalculations': {
+                              'name': 'hiddenCalculations',
+                              'type': 'array',
+                              'required': false,
+                              'items': {
+                                'type': 'string',
+                              },
+                            },
+                            'defaultValue': {
+                              'name': 'defaultValue',
+                              'type': 'string',
+                              'required': false,
+                            },
+                            'condition': {
+                              'name': 'condition',
+                              'type': 'array',
+                              'required': false,
+                              'items': {
+                                'type': 'string',
+                              },
+                            },
+                            'id': {
+                              'name': 'id',
+                              'type': 'string',
+                              'required': true,
+                            },
+                          },
+                        },
+                      },
+                      'dataSource': {
+                        'name': 'dataSource',
+                        'type': 'string',
+                        'required': false,
+                      },
+                      'readOnly': {
+                        'name': 'readOnly',
+                        'type': 'boolean',
+                        'required': false,
+                      },
+                      'hiddenCalculations': {
+                        'name': 'hiddenCalculations',
+                        'type': 'array',
+                        'required': false,
+                        'items': {
+                          'type': 'string',
+                        },
+                      },
+                      'description': {
+                        'name': 'description',
+                        'type': 'string',
+                        'required': false,
+                      },
+                      'minItems': {
+                        'name': 'minItems',
+                        'type': 'number',
+                        'required': false,
+                      },
+                      'subsections': {
+                        'name': 'subsections',
+                        'type': 'array',
+                        'required': false,
+                        'items': {
+                          'type': 'string',
+                        },
+                      },
+                      'repeatable': {
+                        'name': 'repeatable',
+                        'type': 'boolean',
+                        'required': false,
+                      },
+                      'condition': {
+                        'name': 'condition',
+                        'type': 'array',
+                        'required': false,
+                        'items': {
+                          'type': 'string',
+                        },
+                      },
+                    },
+                  },
+                },
                 'lawReferences': {
                   'name': 'lawReferences',
                   'type': 'array',
@@ -306,23 +581,23 @@ export function stdUiWizardContainerWizardContainerOrbital(params: StdUiWizardCo
                     },
                   },
                 },
-                'phase': {
-                  'name': 'phase',
-                  'type': 'string',
-                  'required': false,
-                },
                 'id': {
                   'name': 'id',
                   'type': 'string',
                   'required': false,
                 },
-                'title': {
-                  'name': 'title',
+                'phase': {
+                  'name': 'phase',
                   'type': 'string',
                   'required': false,
                 },
-                'contextMenu': {
-                  'name': 'contextMenu',
+                'optional': {
+                  'name': 'optional',
+                  'type': 'boolean',
+                  'required': false,
+                },
+                'globalVariablesRequired': {
+                  'name': 'globalVariablesRequired',
                   'type': 'array',
                   'required': false,
                   'items': {
@@ -336,330 +611,24 @@ export function stdUiWizardContainerWizardContainerOrbital(params: StdUiWizardCo
                   'items': {
                     'type': 'object',
                     'properties': {
+                      'condition': {
+                        'name': 'condition',
+                        'type': 'array',
+                        'required': true,
+                        'items': {
+                          'type': 'string',
+                        },
+                      },
                       'message': {
                         'name': 'message',
                         'type': 'string',
                         'required': true,
                       },
-                      'condition': {
-                        'name': 'condition',
-                        'type': 'array',
-                        'required': true,
-                        'items': {
-                          'type': 'string',
-                        },
-                      },
-                    },
-                  },
-                },
-                'sections': {
-                  'name': 'sections',
-                  'type': 'array',
-                  'required': false,
-                  'items': {
-                    'type': 'object',
-                    'properties': {
-                      'title': {
-                        'name': 'title',
-                        'type': 'string',
-                        'required': false,
-                      },
-                      'description': {
-                        'name': 'description',
-                        'type': 'string',
-                        'required': false,
-                      },
-                      'id': {
-                        'name': 'id',
-                        'type': 'string',
-                        'required': true,
-                      },
-                      'fields': {
-                        'name': 'fields',
-                        'type': 'array',
-                        'required': false,
-                        'items': {
-                          'type': 'object',
-                          'properties': {
-                            'maxLength': {
-                              'name': 'maxLength',
-                              'type': 'number',
-                              'required': false,
-                            },
-                            'condition': {
-                              'name': 'condition',
-                              'type': 'array',
-                              'required': false,
-                              'items': {
-                                'type': 'string',
-                              },
-                            },
-                            'entityField': {
-                              'name': 'entityField',
-                              'type': 'string',
-                              'required': false,
-                            },
-                            'options': {
-                              'name': 'options',
-                              'type': 'array',
-                              'required': false,
-                              'items': {
-                                'type': 'string',
-                              },
-                            },
-                            'minLength': {
-                              'name': 'minLength',
-                              'type': 'number',
-                              'required': false,
-                            },
-                            'searchConfig': {
-                              'name': 'searchConfig',
-                              'type': 'string',
-                              'required': false,
-                            },
-                            'contextMenu': {
-                              'name': 'contextMenu',
-                              'type': 'array',
-                              'required': false,
-                              'items': {
-                                'type': 'string',
-                              },
-                            },
-                            'type': {
-                              'name': 'type',
-                              'type': 'string',
-                              'required': true,
-                            },
-                            'stats': {
-                              'name': 'stats',
-                              'type': 'array',
-                              'required': false,
-                              'items': {
-                                'type': 'string',
-                              },
-                            },
-                            'displayFields': {
-                              'name': 'displayFields',
-                              'type': 'array',
-                              'required': false,
-                              'items': {
-                                'type': 'string',
-                              },
-                            },
-                            'readOnly': {
-                              'name': 'readOnly',
-                              'type': 'boolean',
-                              'required': false,
-                            },
-                            'repeatable': {
-                              'name': 'repeatable',
-                              'type': 'boolean',
-                              'required': false,
-                            },
-                            'lawReference': {
-                              'name': 'lawReference',
-                              'type': 'string',
-                              'required': false,
-                            },
-                            'hiddenCalculations': {
-                              'name': 'hiddenCalculations',
-                              'type': 'array',
-                              'required': false,
-                              'items': {
-                                'type': 'string',
-                              },
-                            },
-                            'defaultValue': {
-                              'name': 'defaultValue',
-                              'type': 'string',
-                              'required': false,
-                            },
-                            'placeholder': {
-                              'name': 'placeholder',
-                              'type': 'string',
-                              'required': false,
-                            },
-                            'id': {
-                              'name': 'id',
-                              'type': 'string',
-                              'required': true,
-                            },
-                            'dataSource': {
-                              'name': 'dataSource',
-                              'type': 'string',
-                              'required': false,
-                            },
-                            'calculated': {
-                              'name': 'calculated',
-                              'type': 'string',
-                              'required': false,
-                            },
-                            'signatureConfig': {
-                              'name': 'signatureConfig',
-                              'type': 'string',
-                              'required': false,
-                            },
-                            'minDate': {
-                              'name': 'minDate',
-                              'type': 'string',
-                              'required': false,
-                            },
-                            'required': {
-                              'name': 'required',
-                              'type': 'boolean',
-                              'required': false,
-                            },
-                            'items': {
-                              'name': 'items',
-                              'type': 'array',
-                              'required': false,
-                              'items': {
-                                'type': 'string',
-                              },
-                            },
-                            'displayTemplate': {
-                              'name': 'displayTemplate',
-                              'type': 'string',
-                              'required': false,
-                            },
-                            'label': {
-                              'name': 'label',
-                              'type': 'string',
-                              'required': false,
-                            },
-                          },
-                        },
-                      },
-                      'subsections': {
-                        'name': 'subsections',
-                        'type': 'array',
-                        'required': false,
-                        'items': {
-                          'type': 'string',
-                        },
-                      },
-                      'readOnly': {
-                        'name': 'readOnly',
-                        'type': 'boolean',
-                        'required': false,
-                      },
-                      'minItems': {
-                        'name': 'minItems',
-                        'type': 'number',
-                        'required': false,
-                      },
-                      'dataSource': {
-                        'name': 'dataSource',
-                        'type': 'string',
-                        'required': false,
-                      },
-                      'addButtonLabel': {
-                        'name': 'addButtonLabel',
-                        'type': 'string',
-                        'required': false,
-                      },
-                      'repeatable': {
-                        'name': 'repeatable',
-                        'type': 'boolean',
-                        'required': false,
-                      },
-                      'hiddenCalculations': {
-                        'name': 'hiddenCalculations',
-                        'type': 'array',
-                        'required': false,
-                        'items': {
-                          'type': 'string',
-                        },
-                      },
-                      'condition': {
-                        'name': 'condition',
-                        'type': 'array',
-                        'required': false,
-                        'items': {
-                          'type': 'string',
-                        },
-                      },
-                    },
-                  },
-                },
-                'entityMapping': {
-                  'name': 'entityMapping',
-                  'type': 'object',
-                  'required': false,
-                  'properties': {
-                    'mode': {
-                      'name': 'mode',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'idField': {
-                      'name': 'idField',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'entity': {
-                      'name': 'entity',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'parentField': {
-                      'name': 'parentField',
-                      'type': 'string',
-                      'required': false,
                     },
                   },
                 },
                 'name': {
                   'name': 'name',
-                  'type': 'string',
-                  'required': false,
-                },
-                'globalVariablesSet': {
-                  'name': 'globalVariablesSet',
-                  'type': 'array',
-                  'required': false,
-                  'items': {
-                    'type': 'string',
-                  },
-                },
-                'content': {
-                  'name': 'content',
-                  'type': 'string',
-                  'required': false,
-                },
-                'tabId': {
-                  'name': 'tabId',
-                  'type': 'string',
-                  'required': false,
-                },
-                'isValid': {
-                  'name': 'isValid',
-                  'type': 'string',
-                  'required': false,
-                },
-                'globalVariablesRequired': {
-                  'name': 'globalVariablesRequired',
-                  'type': 'array',
-                  'required': false,
-                  'items': {
-                    'type': 'string',
-                  },
-                },
-                'localVariables': {
-                  'name': 'localVariables',
-                  'type': 'array',
-                  'required': false,
-                  'items': {
-                    'type': 'string',
-                  },
-                },
-                'optional': {
-                  'name': 'optional',
-                  'type': 'boolean',
-                  'required': false,
-                },
-                'description': {
-                  'name': 'description',
                   'type': 'string',
                   'required': false,
                 },
@@ -671,6 +640,32 @@ export function stdUiWizardContainerWizardContainerOrbital(params: StdUiWizardCo
             'default': false,
             'label': 'Is Loading',
             'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
+          'currentStep': {
+            'type': 'json',
+            'label': 'Current Step',
+            'description': 'Current step index (controlled) - accepts unknown for generated code compatibility',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'compact': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Compact',
+            'description': 'Modal mode (compact header, no padding)',
+            'tier': 'presentation',
+          },
+          'error': {
+            'type': 'json',
+            'label': 'Error',
+            'description': 'Error state',
             'tier': 'presentation',
           },
         },

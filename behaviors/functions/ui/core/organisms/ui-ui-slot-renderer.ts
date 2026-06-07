@@ -39,18 +39,18 @@ export type StdUiUiSlotRendererEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiUiSlotRendererConfig {
+  error?: unknown;
+  suspense?: unknown;
   /** Default: `"fixed"` */
   hudMode?: 'fixed' | 'inline';
-  suspense?: unknown;
-  /** Default: `false` */
-  isLoading?: boolean;
   /** Default: `""` */
   className?: string;
-  error?: unknown;
+  /** Default: `false` */
+  includeFloating?: boolean;
   /** Default: `false` */
   includeHud?: boolean;
   /** Default: `false` */
-  includeFloating?: boolean;
+  isLoading?: boolean;
 }
 
 /**
@@ -159,15 +159,15 @@ export function stdUiUiSlotRendererUiSlotRendererOrbital(params: StdUiUiSlotRend
                   'render-ui',
                   'main',
                   {
+                    'includeHud': '@config.includeHud',
                     'hudMode': '@config.hudMode',
+                    'className': '@config.className',
+                    'isLoading': '@config.isLoading',
+                    'error': '@config.error',
                     'includeFloating': '@config.includeFloating',
                     'suspense': '@config.suspense',
-                    'isLoading': '@config.isLoading',
-                    'type': 'ui-slot-renderer',
-                    'includeHud': '@config.includeHud',
-                    'error': '@config.error',
-                    'className': '@config.className',
                     'entity': 'UiSlotRendererItem',
+                    'type': 'ui-slot-renderer',
                   },
                 ],
               ],
@@ -175,6 +175,18 @@ export function stdUiUiSlotRendererUiSlotRendererOrbital(params: StdUiUiSlotRend
           ],
         },
         'config': {
+          'error': {
+            'type': 'json',
+            'label': 'Error',
+            'description': 'Error state',
+            'tier': 'presentation',
+          },
+          'suspense': {
+            'type': 'json',
+            'label': 'Suspense',
+            'description': 'Enable Suspense boundaries around each slot. When true, each inline slot is wrapped in `<ErrorBoundary><Suspense>` with Skeleton fallbacks. Opt-in — existing isLoading prop pattern still works.',
+            'tier': 'presentation',
+          },
           'hudMode': {
             'type': 'string',
             'default': 'fixed',
@@ -186,19 +198,6 @@ export function stdUiUiSlotRendererUiSlotRendererOrbital(params: StdUiUiSlotRend
               'inline',
             ],
           },
-          'suspense': {
-            'type': 'json',
-            'label': 'Suspense',
-            'description': 'Enable Suspense boundaries around each slot. When true, each inline slot is wrapped in `<ErrorBoundary><Suspense>` with Skeleton fallbacks. Opt-in — existing isLoading prop pattern still works.',
-            'tier': 'presentation',
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
-            'tier': 'presentation',
-          },
           'className': {
             'type': 'string',
             'default': '',
@@ -206,10 +205,11 @@ export function stdUiUiSlotRendererUiSlotRendererOrbital(params: StdUiUiSlotRend
             'description': 'Additional class name for the container',
             'tier': 'presentation',
           },
-          'error': {
-            'type': 'json',
-            'label': 'Error',
-            'description': 'Error state',
+          'includeFloating': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Include Floating',
+            'description': 'Include floating slot',
             'tier': 'presentation',
           },
           'includeHud': {
@@ -219,11 +219,11 @@ export function stdUiUiSlotRendererUiSlotRendererOrbital(params: StdUiUiSlotRend
             'description': 'Include HUD slots',
             'tier': 'presentation',
           },
-          'includeFloating': {
+          'isLoading': {
             'type': 'boolean',
             'default': false,
-            'label': 'Include Floating',
-            'description': 'Include floating slot',
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
             'tier': 'presentation',
           },
         },

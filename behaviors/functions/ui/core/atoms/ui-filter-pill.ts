@@ -53,16 +53,17 @@ export interface StdUiFilterPillClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiFilterPillConfig {
-  label?: 'string' | 'number';
+  /** Default: `""` */
+  label?: string;
+  /** Default: `true` */
+  removable?: boolean;
+  /** Default: `"sm"` */
+  size?: 'sm' | 'md' | 'lg';
   icon?: unknown;
   /** Default: `"default"` */
   variant?: 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'info' | 'neutral';
-  /** Default: `"sm"` */
-  size?: 'sm' | 'md' | 'lg';
   /** Default: `""` */
   className?: string;
-  /** Default: `true` */
-  removable?: boolean;
 }
 
 /**

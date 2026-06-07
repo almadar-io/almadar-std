@@ -62,21 +62,21 @@ export interface StdUiCarouselSlideChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiCarouselConfig {
+  /** Default: `true` */
+  showArrows?: boolean;
   /** Default: `false` */
-  autoPlay?: boolean;
-  /** Default: `5000` */
-  autoPlayInterval?: number;
-  slideChangePayload?: unknown;
+  loop?: boolean;
   /** Default: `[]` */
   items?: EntityRow[];
   /** Default: `false` */
-  loop?: boolean;
-  /** Default: `""` */
-  className?: string;
+  autoPlay?: boolean;
   /** Default: `true` */
   showDots?: boolean;
-  /** Default: `true` */
-  showArrows?: boolean;
+  /** Default: `""` */
+  className?: string;
+  slideChangePayload?: unknown;
+  /** Default: `5000` */
+  autoPlayInterval?: number;
 }
 
 /**

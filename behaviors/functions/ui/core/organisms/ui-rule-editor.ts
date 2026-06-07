@@ -203,13 +203,13 @@ export function stdUiRuleEditorRuleEditorOrbital(params: StdUiRuleEditorRuleEdit
                   'render-ui',
                   'main',
                   {
-                    'rule': '@config.rule',
-                    'availableActions': '@config.availableActions',
-                    'availableEvents': '@config.availableEvents',
                     'onRemove': 'REMOVE',
-                    'onChange': 'CHANGE',
-                    'className': '@config.className',
                     'type': 'rule-editor',
+                    'availableActions': '@config.availableActions',
+                    'rule': '@config.rule',
+                    'availableEvents': '@config.availableEvents',
+                    'className': '@config.className',
+                    'onChange': 'CHANGE',
                     'disabled': '@config.disabled',
                   },
                 ],
@@ -236,13 +236,13 @@ export function stdUiRuleEditorRuleEditorOrbital(params: StdUiRuleEditorRuleEdit
                 'type': 'string',
                 'required': true,
               },
-              'thenAction': {
-                'name': 'thenAction',
+              'id': {
+                'name': 'id',
                 'type': 'string',
                 'required': true,
               },
-              'id': {
-                'name': 'id',
+              'thenAction': {
+                'name': 'thenAction',
                 'type': 'string',
                 'required': true,
               },

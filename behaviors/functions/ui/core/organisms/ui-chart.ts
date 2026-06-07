@@ -41,37 +41,37 @@ export type StdUiChartEventKey = 'INIT';
 export interface StdUiChartConfig {
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `[]` */
-  scatterData?: EntityRow[];
-  /** Default: `"bar-vertical"` */
-  look?: 'bar-vertical' | 'bar-horizontal' | 'line' | 'area' | 'pie' | 'donut' | 'scatter' | 'histogram';
-  /** Default: `""` */
-  className?: string;
-  /** Default: `""` */
-  title?: string;
-  /** Default: `200` */
-  height?: number;
-  /** Default: `false` */
-  showValues?: boolean;
-  /** Default: `true` */
-  showLegend?: boolean;
-  /** Default: `""` */
-  drillEvent?: string;
-  error?: unknown;
-  /** Default: `[]` */
-  series?: EntityRow[];
   /** Default: `"none"` */
   stack?: 'none' | 'stack' | 'normalize';
-  /** Default: `false` */
-  timeAxis?: boolean;
+  /** Default: `""` */
+  drillEvent?: string;
   /** Default: `"bar"` */
   chartType?: 'bar' | 'line' | 'pie' | 'area' | 'donut' | 'scatter' | 'histogram';
   /** Default: `[]` */
-  data?: EntityRow[];
+  series?: EntityRow[];
+  /** Default: `false` */
+  showValues?: boolean;
+  error?: unknown;
   /** Default: `""` */
   subtitle?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"bar-vertical"` */
+  look?: 'bar-vertical' | 'bar-horizontal' | 'line' | 'area' | 'pie' | 'donut' | 'scatter' | 'histogram';
   /** Default: `[]` */
   actions?: EntityRow[];
+  /** Default: `""` */
+  title?: string;
+  /** Default: `false` */
+  timeAxis?: boolean;
+  /** Default: `200` */
+  height?: number;
+  /** Default: `true` */
+  showLegend?: boolean;
+  /** Default: `[]` */
+  data?: EntityRow[];
+  /** Default: `[]` */
+  scatterData?: EntityRow[];
 }
 
 /**
@@ -180,25 +180,25 @@ export function stdUiChartChartOrbital(params: StdUiChartChartOrbitalParams = {}
                   'render-ui',
                   'main',
                   {
+                    'isLoading': '@config.isLoading',
+                    'showValues': '@config.showValues',
+                    'timeAxis': '@config.timeAxis',
                     'chartType': '@config.chartType',
                     'className': '@config.className',
-                    'showLegend': '@config.showLegend',
-                    'height': '@config.height',
-                    'data': '@config.data',
                     'drillEvent': '@config.drillEvent',
+                    'subtitle': '@config.subtitle',
+                    'height': '@config.height',
                     'actions': '@config.actions',
-                    'timeAxis': '@config.timeAxis',
-                    'title': '@config.title',
-                    'scatterData': '@config.scatterData',
-                    'entity': 'ChartItem',
                     'stack': '@config.stack',
+                    'look': '@config.look',
+                    'scatterData': '@config.scatterData',
+                    'type': 'chart',
+                    'data': '@config.data',
                     'series': '@config.series',
                     'error': '@config.error',
-                    'subtitle': '@config.subtitle',
-                    'look': '@config.look',
-                    'showValues': '@config.showValues',
-                    'type': 'chart',
-                    'isLoading': '@config.isLoading',
+                    'showLegend': '@config.showLegend',
+                    'entity': 'ChartItem',
+                    'title': '@config.title',
                   },
                 ],
               ],
@@ -213,95 +213,17 @@ export function stdUiChartChartOrbital(params: StdUiChartChartOrbitalParams = {}
             'description': 'Loading state',
             'tier': 'presentation',
           },
-          'scatterData': {
-            'type': '[ChartScatterDataItem]',
-            'default': [],
-            'label': 'Scatter Data',
-            'description': 'Raw {x,y} points for scatter',
-            'tier': 'presentation',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'label': {
-                  'name': 'label',
-                  'type': 'string',
-                  'required': false,
-                },
-                'size': {
-                  'name': 'size',
-                  'type': 'number',
-                  'required': false,
-                },
-                'x': {
-                  'name': 'x',
-                  'type': 'number',
-                  'required': true,
-                },
-                'y': {
-                  'name': 'y',
-                  'type': 'number',
-                  'required': true,
-                },
-                'color': {
-                  'name': 'color',
-                  'type': 'string',
-                  'required': false,
-                },
-              },
-            },
-          },
-          'look': {
+          'stack': {
             'type': 'string',
-            'default': 'bar-vertical',
-            'label': 'Look',
-            'description': 'Layer 2 visual treatment — drives the chart sub-renderer (bar / line / pie / etc.).',
-            'synonyms': 'chart style, render style, visual treatment',
+            'default': 'none',
+            'label': 'Stack',
+            'description': 'Stack mode for bar / area',
             'tier': 'presentation',
             'values': [
-              'bar-vertical',
-              'bar-horizontal',
-              'line',
-              'area',
-              'pie',
-              'donut',
-              'scatter',
-              'histogram',
+              'none',
+              'stack',
+              'normalize',
             ],
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'title': {
-            'type': 'string',
-            'default': '',
-            'label': 'Title',
-            'description': 'Chart title',
-            'tier': 'presentation',
-          },
-          'height': {
-            'type': 'number',
-            'default': 200,
-            'label': 'Height',
-            'description': 'Chart height in px',
-            'tier': 'presentation',
-          },
-          'showValues': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Show Values',
-            'description': 'Show values on chart',
-            'tier': 'presentation',
-          },
-          'showLegend': {
-            'type': 'boolean',
-            'default': true,
-            'label': 'Show Legend',
-            'description': 'Show legend',
-            'tier': 'presentation',
           },
           'drillEvent': {
             'type': 'string',
@@ -310,11 +232,22 @@ export function stdUiChartChartOrbital(params: StdUiChartChartOrbitalParams = {}
             'description': 'Event name emitted as `UI:{drillEvent}` with `{ label, value, seriesLabel? }` on data-point click',
             'tier': 'presentation',
           },
-          'error': {
-            'type': 'json',
-            'label': 'Error',
-            'description': 'Error state',
-            'tier': 'presentation',
+          'chartType': {
+            'type': 'string',
+            'default': 'bar',
+            'label': 'Chart Type',
+            'description': 'Chart type (legacy alias for `look`).',
+            'synonyms': 'chart style, graph type, bar chart, line chart, pie chart, area chart, donut chart, scatter plot, histogram',
+            'tier': 'domain',
+            'values': [
+              'bar',
+              'line',
+              'pie',
+              'area',
+              'donut',
+              'scatter',
+              'histogram',
+            ],
           },
           'series': {
             'type': '[ChartSeriesItem]',
@@ -325,16 +258,6 @@ export function stdUiChartChartOrbital(params: StdUiChartChartOrbitalParams = {}
             'items': {
               'type': 'object',
               'properties': {
-                'color': {
-                  'name': 'color',
-                  'type': 'string',
-                  'required': false,
-                },
-                'name': {
-                  'name': 'name',
-                  'type': 'string',
-                  'required': true,
-                },
                 'data': {
                   'name': 'data',
                   'type': 'array',
@@ -360,6 +283,16 @@ export function stdUiChartChartOrbital(params: StdUiChartChartOrbitalParams = {}
                     },
                   },
                 },
+                'name': {
+                  'name': 'name',
+                  'type': 'string',
+                  'required': true,
+                },
+                'color': {
+                  'name': 'color',
+                  'type': 'string',
+                  'required': false,
+                },
                 'dashed': {
                   'name': 'dashed',
                   'type': 'boolean',
@@ -368,17 +301,94 @@ export function stdUiChartChartOrbital(params: StdUiChartChartOrbitalParams = {}
               },
             },
           },
-          'stack': {
+          'showValues': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Show Values',
+            'description': 'Show values on chart',
+            'tier': 'presentation',
+          },
+          'error': {
+            'type': 'json',
+            'label': 'Error',
+            'description': 'Error state',
+            'tier': 'presentation',
+          },
+          'subtitle': {
             'type': 'string',
-            'default': 'none',
-            'label': 'Stack',
-            'description': 'Stack mode for bar / area',
+            'default': '',
+            'label': 'Subtitle',
+            'description': 'Chart subtitle / description',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'look': {
+            'type': 'string',
+            'default': 'bar-vertical',
+            'label': 'Look',
+            'description': 'Layer 2 visual treatment — drives the chart sub-renderer (bar / line / pie / etc.).',
+            'synonyms': 'chart style, render style, visual treatment',
             'tier': 'presentation',
             'values': [
-              'none',
-              'stack',
-              'normalize',
+              'bar-vertical',
+              'bar-horizontal',
+              'line',
+              'area',
+              'pie',
+              'donut',
+              'scatter',
+              'histogram',
             ],
+          },
+          'actions': {
+            'type': '[ChartActionsItem]',
+            'default': [],
+            'label': 'Actions',
+            'description': 'Top-level chart actions (export, refresh, etc.)',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': true,
+                },
+                'event': {
+                  'name': 'event',
+                  'type': 'string',
+                  'required': false,
+                },
+                'variant': {
+                  'name': 'variant',
+                  'type': 'string',
+                  'required': false,
+                  'values': [
+                    'primary',
+                    'secondary',
+                    'ghost',
+                  ],
+                },
+                'navigatesTo': {
+                  'name': 'navigatesTo',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'title': {
+            'type': 'string',
+            'default': '',
+            'label': 'Title',
+            'description': 'Chart title',
+            'tier': 'presentation',
           },
           'timeAxis': {
             'type': 'boolean',
@@ -387,22 +397,19 @@ export function stdUiChartChartOrbital(params: StdUiChartChartOrbitalParams = {}
             'description': 'Format X-axis labels as time (ISO date in → \'Mar 2026\'-style label out)',
             'tier': 'presentation',
           },
-          'chartType': {
-            'type': 'string',
-            'default': 'bar',
-            'label': 'Chart Type',
-            'description': 'Chart type (legacy alias for `look`).',
-            'synonyms': 'chart style, graph type, bar chart, line chart, pie chart, area chart, donut chart, scatter plot, histogram',
-            'tier': 'domain',
-            'values': [
-              'bar',
-              'line',
-              'pie',
-              'area',
-              'donut',
-              'scatter',
-              'histogram',
-            ],
+          'height': {
+            'type': 'number',
+            'default': 200,
+            'label': 'Height',
+            'description': 'Chart height in px',
+            'tier': 'presentation',
+          },
+          'showLegend': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Show Legend',
+            'description': 'Show legend',
+            'tier': 'presentation',
           },
           'data': {
             'type': '[ChartDataItem]',
@@ -418,59 +425,52 @@ export function stdUiChartChartOrbital(params: StdUiChartChartOrbitalParams = {}
                   'type': 'string',
                   'required': false,
                 },
-                'date': {
-                  'name': 'date',
-                  'type': 'string',
-                  'required': true,
-                },
                 'value': {
                   'name': 'value',
                   'type': 'number',
                   'required': true,
                 },
+                'date': {
+                  'name': 'date',
+                  'type': 'string',
+                  'required': true,
+                },
               },
             },
           },
-          'subtitle': {
-            'type': 'string',
-            'default': '',
-            'label': 'Subtitle',
-            'description': 'Chart subtitle / description',
-            'tier': 'presentation',
-          },
-          'actions': {
-            'type': '[ChartActionsItem]',
+          'scatterData': {
+            'type': '[ChartScatterDataItem]',
             'default': [],
-            'label': 'Actions',
-            'description': 'Top-level chart actions (export, refresh, etc.)',
+            'label': 'Scatter Data',
+            'description': 'Raw {x,y} points for scatter',
             'tier': 'presentation',
             'items': {
               'type': 'object',
               'properties': {
-                'event': {
-                  'name': 'event',
-                  'type': 'string',
-                  'required': false,
-                },
                 'label': {
                   'name': 'label',
                   'type': 'string',
+                  'required': false,
+                },
+                'color': {
+                  'name': 'color',
+                  'type': 'string',
+                  'required': false,
+                },
+                'size': {
+                  'name': 'size',
+                  'type': 'number',
+                  'required': false,
+                },
+                'x': {
+                  'name': 'x',
+                  'type': 'number',
                   'required': true,
                 },
-                'navigatesTo': {
-                  'name': 'navigatesTo',
-                  'type': 'string',
-                  'required': false,
-                },
-                'variant': {
-                  'name': 'variant',
-                  'type': 'string',
-                  'required': false,
-                  'values': [
-                    'primary',
-                    'secondary',
-                    'ghost',
-                  ],
+                'y': {
+                  'name': 'y',
+                  'type': 'number',
+                  'required': true,
                 },
               },
             },

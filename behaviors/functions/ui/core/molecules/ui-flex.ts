@@ -39,24 +39,28 @@ export type StdUiFlexEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiFlexConfig {
+  /** Default: `""` */
+  className?: string;
+  children?: unknown;
+  /** Default: `"none"` */
+  gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  /** Default: `0` */
+  grow?: number;
+  /** Default: `0` */
+  shrink?: number;
+  /** Default: `false` */
+  inline?: boolean;
+  asProp?: unknown;
+  /** Default: `"stretch"` */
+  align?: 'start' | 'center' | 'end' | 'stretch' | 'baseline';
   /** Default: `"row"` */
   direction?: 'row' | 'row-reverse' | 'col' | 'col-reverse';
   /** Default: `"start"` */
   justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';
-  shrink?: 'boolean' | 'number';
-  children?: unknown;
-  /** Default: `false` */
-  inline?: boolean;
+  /** Default: `""` */
+  basis?: string;
   /** Default: `"nowrap"` */
   wrap?: 'nowrap' | 'wrap' | 'wrap-reverse';
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"stretch"` */
-  align?: 'start' | 'center' | 'end' | 'stretch' | 'baseline';
-  /** Default: `"none"` */
-  gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
-  basis?: 'string' | 'number';
-  grow?: 'boolean' | 'number';
 }
 
 /**

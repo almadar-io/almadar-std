@@ -39,6 +39,12 @@ export type StdUiGridEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiGridConfig {
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"row"` */
+  flow?: 'row' | 'col' | 'row-dense' | 'col-dense';
+  /** Default: `0` */
+  rows?: number;
   /** Default: `"none"` */
   colGap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   style?: unknown;
@@ -46,18 +52,13 @@ export interface StdUiGridConfig {
   alignItems?: 'start' | 'center' | 'end' | 'stretch' | 'baseline';
   /** Default: `"none"` */
   rowGap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
-  /** Default: `"md"` */
-  gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
-  children?: unknown;
+  cols?: unknown;
   /** Default: `"start"` */
   justifyItems?: 'start' | 'center' | 'end' | 'stretch';
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"row"` */
-  flow?: 'row' | 'col' | 'row-dense' | 'col-dense';
-  cols?: unknown;
-  /** Default: `0` */
-  rows?: number;
+  children?: unknown;
+  asProp?: unknown;
+  /** Default: `"md"` */
+  gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
 }
 
 /**

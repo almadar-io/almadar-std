@@ -54,24 +54,24 @@
                     "render-ui",
                     "main",
                     {
-                      "showLineNumbers": "@config.showLineNumbers",
-                      "newValue": "@config.newValue",
-                      "oldValue": "@config.oldValue",
-                      "mode": "@config.mode",
+                      "error": "@config.error",
+                      "files": "@config.files",
                       "className": "@config.className",
+                      "maxHeight": "@config.maxHeight",
+                      "code": "@config.code",
+                      "diff": "@config.diff",
+                      "oldValue": "@config.oldValue",
+                      "wordWrap": "@config.wordWrap",
+                      "type": "code-viewer",
+                      "mode": "@config.mode",
                       "title": "@config.title",
+                      "isLoading": "@config.isLoading",
+                      "actions": "@config.actions",
+                      "showCopy": "@config.showCopy",
                       "entity": "CodeViewerItem",
                       "language": "@config.language",
-                      "actions": "@config.actions",
-                      "error": "@config.error",
-                      "code": "@config.code",
-                      "type": "code-viewer",
-                      "diff": "@config.diff",
-                      "showCopy": "@config.showCopy",
-                      "maxHeight": "@config.maxHeight",
-                      "wordWrap": "@config.wordWrap",
-                      "files": "@config.files",
-                      "isLoading": "@config.isLoading"
+                      "newValue": "@config.newValue",
+                      "showLineNumbers": "@config.showLineNumbers"
                     }
                   ]
                 ]
@@ -79,72 +79,6 @@
             ]
           },
           "config": {
-            "mode": {
-              "type": "string",
-              "default": "code",
-              "label": "Mode",
-              "description": "Display mode",
-              "tier": "presentation",
-              "values": [
-                "code",
-                "diff"
-              ]
-            },
-            "showCopy": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Copy",
-              "description": "Show copy button",
-              "tier": "presentation"
-            },
-            "diff": {
-              "type": "[CodeViewerDiffItem]",
-              "default": [],
-              "label": "Diff",
-              "description": "Diff lines (for diff mode)",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "afterLineNumber": {
-                    "name": "afterLineNumber",
-                    "type": "number",
-                    "required": false
-                  },
-                  "type": {
-                    "name": "type",
-                    "type": "string",
-                    "required": true,
-                    "values": [
-                      "added",
-                      "removed",
-                      "unchanged",
-                      "context"
-                    ]
-                  },
-                  "content": {
-                    "name": "content",
-                    "type": "string",
-                    "required": true
-                  },
-                  "beforeLineNumber": {
-                    "name": "beforeLineNumber",
-                    "type": "number",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "maxHeight": {
-              "type": "string",
-              "label": "Max Height",
-              "description": "Max height before scrolling",
-              "tier": "presentation",
-              "values": [
-                "number",
-                "string"
-              ]
-            },
             "showLineNumbers": {
               "type": "boolean",
               "default": true,
@@ -152,18 +86,25 @@
               "description": "Show line numbers",
               "tier": "presentation"
             },
-            "newValue": {
-              "type": "string",
-              "default": "",
-              "label": "New Value",
-              "description": "New value (for generating diff)",
-              "tier": "presentation"
-            },
             "code": {
               "type": "string",
               "default": "",
               "label": "Code",
               "description": "Code content",
+              "tier": "presentation"
+            },
+            "title": {
+              "type": "string",
+              "default": "",
+              "label": "Title",
+              "description": "Viewer title",
+              "tier": "presentation"
+            },
+            "wordWrap": {
+              "type": "boolean",
+              "default": false,
+              "label": "Word Wrap",
+              "description": "Enable word wrap",
               "tier": "presentation"
             },
             "actions": {
@@ -175,6 +116,16 @@
               "items": {
                 "type": "object",
                 "properties": {
+                  "navigatesTo": {
+                    "name": "navigatesTo",
+                    "type": "string",
+                    "required": false
+                  },
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": false
+                  },
                   "label": {
                     "name": "label",
                     "type": "string",
@@ -189,16 +140,6 @@
                       "secondary",
                       "ghost"
                     ]
-                  },
-                  "navigatesTo": {
-                    "name": "navigatesTo",
-                    "type": "string",
-                    "required": false
-                  },
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": false
                   }
                 }
               }
@@ -210,42 +151,11 @@
               "description": "Language for display label",
               "tier": "presentation"
             },
-            "isLoading": {
+            "showCopy": {
               "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "title": {
-              "type": "string",
-              "default": "",
-              "label": "Title",
-              "description": "Viewer title",
-              "tier": "presentation"
-            },
-            "files": {
-              "type": "[json]",
-              "default": [],
-              "label": "Files",
-              "description": "Multiple files (tabbed view)",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
-            },
-            "wordWrap": {
-              "type": "boolean",
-              "default": false,
-              "label": "Word Wrap",
-              "description": "Enable word wrap",
+              "default": true,
+              "label": "Show Copy",
+              "description": "Show copy button",
               "tier": "presentation"
             },
             "oldValue": {
@@ -259,6 +169,93 @@
               "type": "json",
               "label": "Error",
               "description": "Error state",
+              "tier": "presentation"
+            },
+            "diff": {
+              "type": "[CodeViewerDiffItem]",
+              "default": [],
+              "label": "Diff",
+              "description": "Diff lines (for diff mode)",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "content": {
+                    "name": "content",
+                    "type": "string",
+                    "required": true
+                  },
+                  "afterLineNumber": {
+                    "name": "afterLineNumber",
+                    "type": "number",
+                    "required": false
+                  },
+                  "beforeLineNumber": {
+                    "name": "beforeLineNumber",
+                    "type": "number",
+                    "required": false
+                  },
+                  "type": {
+                    "name": "type",
+                    "type": "string",
+                    "required": true,
+                    "values": [
+                      "added",
+                      "removed",
+                      "unchanged",
+                      "context"
+                    ]
+                  }
+                }
+              }
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state",
+              "tier": "presentation"
+            },
+            "mode": {
+              "type": "string",
+              "default": "code",
+              "label": "Mode",
+              "description": "Display mode",
+              "tier": "presentation",
+              "values": [
+                "code",
+                "diff"
+              ]
+            },
+            "files": {
+              "type": "[json]",
+              "default": [],
+              "label": "Files",
+              "description": "Multiple files (tabbed view)",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "newValue": {
+              "type": "string",
+              "default": "",
+              "label": "New Value",
+              "description": "New value (for generating diff)",
+              "tier": "presentation"
+            },
+            "maxHeight": {
+              "type": "string",
+              "default": "",
+              "label": "Max Height",
+              "description": "Max height before scrolling",
               "tier": "presentation"
             }
           },

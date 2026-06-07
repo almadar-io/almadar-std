@@ -46,22 +46,22 @@ export interface StdUiAnimatedRevealChildrenPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiAnimatedRevealConfig {
-  /** Default: `"fade-up"` */
-  animation?: 'fade-up' | 'fade-down' | 'fade-in' | 'fade-left' | 'fade-right' | 'scale' | 'scale-up' | 'none';
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"scroll"` */
-  trigger?: 'scroll' | 'hover' | 'manual';
-  /** Default: `600` */
-  duration?: number;
-  /** Default: `"cubic-bezier(0.16, 1, 0.3, 1)"` */
-  easing?: string;
   /** Default: `true` */
   once?: boolean;
-  /** Default: `0.15` */
-  threshold?: number;
   /** Default: `false` */
   animate?: boolean;
+  /** Default: `600` */
+  duration?: number;
+  /** Default: `0.15` */
+  threshold?: number;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"cubic-bezier(0.16, 1, 0.3, 1)"` */
+  easing?: string;
+  /** Default: `"fade-up"` */
+  animation?: 'fade-up' | 'fade-down' | 'fade-in' | 'fade-left' | 'fade-right' | 'scale' | 'scale-up' | 'none';
+  /** Default: `"scroll"` */
+  trigger?: 'scroll' | 'hover' | 'manual';
   /** Default: `0` */
   delay?: number;
 }

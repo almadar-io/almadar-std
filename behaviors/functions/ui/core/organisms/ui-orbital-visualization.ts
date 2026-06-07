@@ -46,20 +46,20 @@ export interface StdUiOrbitalVisualizationClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiOrbitalVisualizationConfig {
-  /** Default: `0` */
-  complexity?: number;
-  error?: unknown;
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg' | 'xl';
   /** Default: `true` */
   showLabel?: boolean;
-  schema?: unknown;
-  /** Default: `true` */
-  animated?: boolean;
+  /** Default: `0` */
+  complexity?: number;
   /** Default: `""` */
   className?: string;
+  schema?: unknown;
   /** Default: `false` */
   isLoading?: boolean;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  error?: unknown;
+  /** Default: `true` */
+  animated?: boolean;
 }
 
 /**
@@ -188,16 +188,16 @@ export function stdUiOrbitalVisualizationOrbitalVisualizationOrbital(params: Std
                   'render-ui',
                   'main',
                   {
-                    'schema': '@config.schema',
-                    'size': '@config.size',
-                    'className': '@config.className',
-                    'onClick': 'CLICK',
-                    'complexity': '@config.complexity',
-                    'animated': '@config.animated',
                     'type': 'orbital-visualization',
+                    'onClick': 'CLICK',
+                    'animated': '@config.animated',
+                    'className': '@config.className',
+                    'schema': '@config.schema',
+                    'complexity': '@config.complexity',
+                    'size': '@config.size',
                     'showLabel': '@config.showLabel',
-                    'error': '@config.error',
                     'entity': 'OrbitalVisualizationItem',
+                    'error': '@config.error',
                     'isLoading': '@config.isLoading',
                   },
                 ],
@@ -206,6 +206,13 @@ export function stdUiOrbitalVisualizationOrbitalVisualizationOrbital(params: Std
           ],
         },
         'config': {
+          'showLabel': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Show Label',
+            'description': 'Show complexity label',
+            'tier': 'presentation',
+          },
           'complexity': {
             'type': 'number',
             'default': 0,
@@ -213,10 +220,24 @@ export function stdUiOrbitalVisualizationOrbitalVisualizationOrbital(params: Std
             'description': 'Direct complexity override (1-100+)',
             'tier': 'presentation',
           },
-          'error': {
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'schema': {
             'type': 'json',
-            'label': 'Error',
-            'description': 'Error state',
+            'label': 'Schema',
+            'description': 'Full KFlow schema object',
+            'tier': 'presentation',
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
             'tier': 'presentation',
           },
           'size': {
@@ -232,17 +253,10 @@ export function stdUiOrbitalVisualizationOrbitalVisualizationOrbital(params: Std
               'xl',
             ],
           },
-          'showLabel': {
-            'type': 'boolean',
-            'default': true,
-            'label': 'Show Label',
-            'description': 'Show complexity label',
-            'tier': 'presentation',
-          },
-          'schema': {
+          'error': {
             'type': 'json',
-            'label': 'Schema',
-            'description': 'Full KFlow schema object',
+            'label': 'Error',
+            'description': 'Error state',
             'tier': 'presentation',
           },
           'animated': {
@@ -250,20 +264,6 @@ export function stdUiOrbitalVisualizationOrbitalVisualizationOrbital(params: Std
             'default': true,
             'label': 'Animated',
             'description': 'Animation enabled',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
             'tier': 'presentation',
           },
         },

@@ -71,10 +71,10 @@ export interface StdUiReplyTreeContinueThreadPayload {
 export interface StdUiReplyTreeConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `true` */
-  showActions?: boolean;
   /** Default: `6` */
   maxDepth?: number;
+  /** Default: `true` */
+  showActions?: boolean;
 }
 
 /**

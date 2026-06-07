@@ -47,12 +47,12 @@ export interface StdUiStateMachineViewRenderStateNodePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiStateMachineViewConfig {
+  /** Default: `false` */
+  isLoading?: boolean;
   layoutData?: unknown;
   error?: unknown;
   /** Default: `""` */
   className?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
 }
 
 /**
@@ -180,12 +180,12 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
                   'render-ui',
                   'main',
                   {
-                    'error': '@config.error',
+                    'type': 'state-machine-view',
                     'renderStateNode': 'RENDER_STATE_NODE',
                     'isLoading': '@config.isLoading',
                     'layoutData': '@config.layoutData',
-                    'type': 'state-machine-view',
                     'className': '@config.className',
+                    'error': '@config.error',
                   },
                 ],
               ],
@@ -193,6 +193,13 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
           ],
         },
         'config': {
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
           'layoutData': {
             'type': 'json',
             'label': 'Layout Data',
@@ -210,13 +217,6 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
             'default': '',
             'label': 'Class Name',
             'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
             'tier': 'presentation',
           },
         },

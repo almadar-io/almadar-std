@@ -39,17 +39,17 @@ export type StdUiRuntimeDebuggerEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiRuntimeDebuggerConfig {
-  schema?: unknown;
-  /** Default: `true` */
-  defaultCollapsed?: boolean;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `""` */
-  defaultTab?: string;
   /** Default: `"bottom-right"` */
   position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
+  /** Default: `""` */
+  defaultTab?: string;
+  /** Default: `""` */
+  className?: string;
+  schema?: unknown;
   /** Default: `"floating"` */
   mode?: 'floating' | 'inline' | 'verify';
+  /** Default: `true` */
+  defaultCollapsed?: boolean;
 }
 
 /**
@@ -153,13 +153,13 @@ export function stdUiRuntimeDebuggerRuntimeDebuggerOrbital(params: StdUiRuntimeD
                   'render-ui',
                   'main',
                   {
-                    'defaultCollapsed': '@config.defaultCollapsed',
                     'mode': '@config.mode',
-                    'defaultTab': '@config.defaultTab',
-                    'position': '@config.position',
-                    'type': 'runtime-debugger',
-                    'className': '@config.className',
                     'schema': '@config.schema',
+                    'type': 'runtime-debugger',
+                    'position': '@config.position',
+                    'defaultCollapsed': '@config.defaultCollapsed',
+                    'className': '@config.className',
+                    'defaultTab': '@config.defaultTab',
                   },
                 ],
               ],
@@ -167,33 +167,6 @@ export function stdUiRuntimeDebuggerRuntimeDebuggerOrbital(params: StdUiRuntimeD
           ],
         },
         'config': {
-          'schema': {
-            'type': 'json',
-            'label': 'Schema',
-            'description': 'Raw schema for EventDispatcherTab payload extraction',
-            'tier': 'presentation',
-          },
-          'defaultCollapsed': {
-            'type': 'boolean',
-            'default': true,
-            'label': 'Default Collapsed',
-            'description': 'Initial collapsed state',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'defaultTab': {
-            'type': 'string',
-            'default': '',
-            'label': 'Default Tab',
-            'description': 'Default active tab id',
-            'tier': 'presentation',
-          },
           'position': {
             'type': 'string',
             'default': 'bottom-right',
@@ -207,6 +180,26 @@ export function stdUiRuntimeDebuggerRuntimeDebuggerOrbital(params: StdUiRuntimeD
               'top-left',
             ],
           },
+          'defaultTab': {
+            'type': 'string',
+            'default': '',
+            'label': 'Default Tab',
+            'description': 'Default active tab id',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'schema': {
+            'type': 'json',
+            'label': 'Schema',
+            'description': 'Raw schema for EventDispatcherTab payload extraction',
+            'tier': 'presentation',
+          },
           'mode': {
             'type': 'string',
             'default': 'floating',
@@ -218,6 +211,13 @@ export function stdUiRuntimeDebuggerRuntimeDebuggerOrbital(params: StdUiRuntimeD
               'inline',
               'verify',
             ],
+          },
+          'defaultCollapsed': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Default Collapsed',
+            'description': 'Initial collapsed state',
+            'tier': 'presentation',
           },
         },
         'scope': 'instance',

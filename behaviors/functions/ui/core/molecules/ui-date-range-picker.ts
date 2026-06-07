@@ -54,14 +54,18 @@ export interface StdUiDateRangePickerChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiDateRangePickerConfig {
-  /** Default: `[]` */
-  presets?: EntityRow[];
   /** Default: `"From"` */
   fromLabel?: string;
   /** Default: `""` */
-  className?: string;
+  fromProp?: string;
   /** Default: `"To"` */
   toLabel?: string;
+  /** Default: `""` */
+  toProp?: string;
+  /** Default: `[]` */
+  presets?: EntityRow[];
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

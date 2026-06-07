@@ -130,28 +130,28 @@
                     "render-ui",
                     "main",
                     {
-                      "onItemDrop": "ITEM_DROP",
-                      "showTooltip": "@config.showTooltip",
-                      "lockLabel": "@config.lockLabel",
-                      "equippedItem": "@config.equippedItem",
-                      "selected": "@config.selected",
-                      "size": "@config.size",
-                      "tooltipFrameUrl": "@config.tooltipFrameUrl",
-                      "className": "@config.className",
-                      "slotNumber": "@config.slotNumber",
-                      "error": "@config.error",
-                      "locked": "@config.locked",
-                      "draggable": "@config.draggable",
-                      "onDragStart": "DRAG_START",
-                      "onClick": "CLICK",
-                      "feedback": "@config.feedback",
-                      "onRemove": "REMOVE",
                       "clickEvent": "CLICK",
-                      "removeEvent": "REMOVE",
+                      "locked": "@config.locked",
+                      "selected": "@config.selected",
+                      "isLoading": "@config.isLoading",
                       "entity": "TraitSlotItem",
+                      "onItemDrop": "ITEM_DROP",
+                      "slotNumber": "@config.slotNumber",
                       "type": "trait-slot",
+                      "equippedItem": "@config.equippedItem",
+                      "tooltipFrameUrl": "@config.tooltipFrameUrl",
+                      "feedback": "@config.feedback",
+                      "lockLabel": "@config.lockLabel",
+                      "size": "@config.size",
                       "categoryColors": "@config.categoryColors",
-                      "isLoading": "@config.isLoading"
+                      "draggable": "@config.draggable",
+                      "onClick": "CLICK",
+                      "removeEvent": "REMOVE",
+                      "className": "@config.className",
+                      "showTooltip": "@config.showTooltip",
+                      "error": "@config.error",
+                      "onDragStart": "DRAG_START",
+                      "onRemove": "REMOVE"
                     }
                   ]
                 ]
@@ -159,24 +159,174 @@
             ]
           },
           "config": {
-            "showTooltip": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Tooltip",
-              "description": "Show tooltip on hover",
-              "tier": "presentation"
-            },
             "error": {
               "type": "json",
               "label": "Error",
               "description": "Error state",
               "tier": "presentation"
             },
-            "draggable": {
+            "lockLabel": {
+              "type": "string",
+              "default": "",
+              "label": "Lock Label",
+              "description": "Label shown when locked",
+              "tier": "presentation"
+            },
+            "slotNumber": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Slot Number",
+              "description": "Slot index (1-based)",
+              "tier": "presentation"
+            },
+            "locked": {
               "type": "boolean",
               "default": false,
-              "label": "Draggable",
-              "description": "Whether this slot's equipped item is draggable",
+              "label": "Locked",
+              "description": "Whether slot is locked",
+              "tier": "presentation"
+            },
+            "selected": {
+              "type": "boolean",
+              "default": false,
+              "label": "Selected",
+              "description": "Whether slot is selected",
+              "tier": "presentation"
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state",
+              "tier": "presentation"
+            },
+            "tooltipFrameUrl": {
+              "type": "string",
+              "default": "",
+              "label": "Tooltip Frame Url",
+              "description": "Optional tooltip frame image URL",
+              "tier": "presentation"
+            },
+            "equippedItem": {
+              "type": "TraitSlotEquippedItem",
+              "label": "Equipped Item",
+              "description": "Currently equipped item, if any",
+              "tier": "presentation",
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                "description": {
+                  "name": "description",
+                  "type": "string",
+                  "required": false
+                },
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": true
+                },
+                "iconEmoji": {
+                  "name": "iconEmoji",
+                  "type": "string",
+                  "required": false
+                },
+                "category": {
+                  "name": "category",
+                  "type": "string",
+                  "required": true
+                },
+                "iconUrl": {
+                  "name": "iconUrl",
+                  "type": "string",
+                  "required": false
+                },
+                "stateMachine": {
+                  "name": "stateMachine",
+                  "type": "object",
+                  "required": false,
+                  "properties": {
+                    "transitions": {
+                      "name": "transitions",
+                      "type": "array",
+                      "required": true,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "from": {
+                            "name": "from",
+                            "type": "string",
+                            "required": true
+                          },
+                          "to": {
+                            "name": "to",
+                            "type": "string",
+                            "required": true
+                          },
+                          "guardHint": {
+                            "name": "guardHint",
+                            "type": "string",
+                            "required": false
+                          },
+                          "event": {
+                            "name": "event",
+                            "type": "string",
+                            "required": true
+                          }
+                        }
+                      }
+                    },
+                    "description": {
+                      "name": "description",
+                      "type": "string",
+                      "required": false
+                    },
+                    "name": {
+                      "name": "name",
+                      "type": "string",
+                      "required": true
+                    },
+                    "states": {
+                      "name": "states",
+                      "type": "array",
+                      "required": true,
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "currentState": {
+                      "name": "currentState",
+                      "type": "string",
+                      "required": true
+                    }
+                  }
+                }
+              }
+            },
+            "categoryColors": {
+              "type": "json",
+              "label": "Category Colors",
+              "description": "Category → color mapping",
+              "tier": "presentation"
+            },
+            "feedback": {
+              "type": "string",
+              "default": "correct",
+              "label": "Feedback",
+              "description": "Per-slot correctness feedback after a failed attempt",
+              "tier": "presentation",
+              "values": [
+                "correct",
+                "wrong"
+              ]
+            },
+            "showTooltip": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Tooltip",
+              "description": "Show tooltip on hover",
               "tier": "presentation"
             },
             "size": {
@@ -191,168 +341,18 @@
                 "lg"
               ]
             },
+            "draggable": {
+              "type": "boolean",
+              "default": false,
+              "label": "Draggable",
+              "description": "Whether this slot's equipped item is draggable",
+              "tier": "presentation"
+            },
             "className": {
               "type": "string",
               "default": "",
               "label": "Class Name",
               "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "slotNumber": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Slot Number",
-              "description": "Slot index (1-based)",
-              "tier": "presentation"
-            },
-            "equippedItem": {
-              "type": "TraitSlotEquippedItem",
-              "label": "Equipped Item",
-              "description": "Currently equipped item, if any",
-              "tier": "presentation",
-              "properties": {
-                "id": {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": true
-                },
-                "category": {
-                  "name": "category",
-                  "type": "string",
-                  "required": true
-                },
-                "description": {
-                  "name": "description",
-                  "type": "string",
-                  "required": false
-                },
-                "iconEmoji": {
-                  "name": "iconEmoji",
-                  "type": "string",
-                  "required": false
-                },
-                "stateMachine": {
-                  "name": "stateMachine",
-                  "type": "object",
-                  "required": false,
-                  "properties": {
-                    "description": {
-                      "name": "description",
-                      "type": "string",
-                      "required": false
-                    },
-                    "transitions": {
-                      "name": "transitions",
-                      "type": "array",
-                      "required": true,
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "from": {
-                            "name": "from",
-                            "type": "string",
-                            "required": true
-                          },
-                          "event": {
-                            "name": "event",
-                            "type": "string",
-                            "required": true
-                          },
-                          "to": {
-                            "name": "to",
-                            "type": "string",
-                            "required": true
-                          },
-                          "guardHint": {
-                            "name": "guardHint",
-                            "type": "string",
-                            "required": false
-                          }
-                        }
-                      }
-                    },
-                    "currentState": {
-                      "name": "currentState",
-                      "type": "string",
-                      "required": true
-                    },
-                    "name": {
-                      "name": "name",
-                      "type": "string",
-                      "required": true
-                    },
-                    "states": {
-                      "name": "states",
-                      "type": "array",
-                      "required": true,
-                      "items": {
-                        "type": "string"
-                      }
-                    }
-                  }
-                },
-                "iconUrl": {
-                  "name": "iconUrl",
-                  "type": "string",
-                  "required": false
-                }
-              }
-            },
-            "locked": {
-              "type": "boolean",
-              "default": false,
-              "label": "Locked",
-              "description": "Whether slot is locked",
-              "tier": "presentation"
-            },
-            "lockLabel": {
-              "type": "string",
-              "default": "",
-              "label": "Lock Label",
-              "description": "Label shown when locked",
-              "tier": "presentation"
-            },
-            "categoryColors": {
-              "type": "json",
-              "label": "Category Colors",
-              "description": "Category → color mapping",
-              "tier": "presentation"
-            },
-            "tooltipFrameUrl": {
-              "type": "string",
-              "default": "",
-              "label": "Tooltip Frame Url",
-              "description": "Optional tooltip frame image URL",
-              "tier": "presentation"
-            },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state",
-              "tier": "presentation"
-            },
-            "feedback": {
-              "type": "string",
-              "default": "correct",
-              "label": "Feedback",
-              "description": "Per-slot correctness feedback after a failed attempt",
-              "tier": "presentation",
-              "values": [
-                "correct",
-                "wrong"
-              ]
-            },
-            "selected": {
-              "type": "boolean",
-              "default": false,
-              "label": "Selected",
-              "description": "Whether slot is selected",
               "tier": "presentation"
             }
           },
