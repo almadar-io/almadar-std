@@ -46,25 +46,24 @@ export interface StdUiGameOverScreenActionPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiGameOverScreenConfig {
-  /** Default: `"neutral"` */
-  variant?: 'victory' | 'defeat' | 'neutral';
-  eventBus?: unknown;
   /** Default: `[]` */
   actions?: EntityRow[];
   /** Default: `""` */
-  highScore?: string;
-  /** Default: `""` */
   currentScore?: string;
   /** Default: `""` */
-  className?: string;
+  title?: string;
   /** Default: `[]` */
   menuItems?: EntityRow[];
   /** Default: `""` */
+  highScore?: string;
+  /** Default: `"neutral"` */
+  variant?: 'victory' | 'defeat' | 'neutral';
+  /** Default: `""` */
   message?: string;
+  /** Default: `""` */
+  className?: string;
   /** Default: `[]` */
   stats?: EntityRow[];
-  /** Default: `""` */
-  title?: string;
 }
 
 /**

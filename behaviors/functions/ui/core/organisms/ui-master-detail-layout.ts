@@ -39,19 +39,19 @@ export type StdUiMasterDetailLayoutEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiMasterDetailLayoutConfig {
-  /** Default: `false` */
-  hasSelection?: boolean;
+  /** Default: `""` */
+  detailClassName?: string;
   detail?: unknown;
+  emptyDetail?: unknown;
+  master?: unknown;
   /** Default: `"350px"` */
   masterWidth?: string;
   /** Default: `""` */
   className?: string;
-  /** Default: `""` */
-  detailClassName?: string;
+  /** Default: `false` */
+  hasSelection?: boolean;
   /** Default: `""` */
   masterClassName?: string;
-  emptyDetail?: unknown;
-  master?: unknown;
 }
 
 /**
@@ -155,15 +155,15 @@ export function stdUiMasterDetailLayoutMasterDetailLayoutOrbital(params: StdUiMa
                   'render-ui',
                   'main',
                   {
-                    'emptyDetail': '@config.emptyDetail',
                     'master': '@config.master',
-                    'className': '@config.className',
-                    'type': 'master-detail-layout',
                     'masterClassName': '@config.masterClassName',
-                    'detail': '@config.detail',
                     'detailClassName': '@config.detailClassName',
-                    'hasSelection': '@config.hasSelection',
+                    'type': 'master-detail-layout',
+                    'detail': '@config.detail',
+                    'className': '@config.className',
+                    'emptyDetail': '@config.emptyDetail',
                     'masterWidth': '@config.masterWidth',
+                    'hasSelection': '@config.hasSelection',
                   },
                 ],
               ],
@@ -171,17 +171,29 @@ export function stdUiMasterDetailLayoutMasterDetailLayoutOrbital(params: StdUiMa
           ],
         },
         'config': {
-          'hasSelection': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Has Selection',
-            'description': 'Whether an item is currently selected',
+          'detailClassName': {
+            'type': 'string',
+            'default': '',
+            'label': 'Detail Class Name',
+            'description': 'Class for detail pane',
             'tier': 'presentation',
           },
           'detail': {
             'type': 'node',
             'label': 'Detail',
             'description': 'Detail panel content',
+            'tier': 'presentation',
+          },
+          'emptyDetail': {
+            'type': 'node',
+            'label': 'Empty Detail',
+            'description': 'Content shown when nothing is selected',
+            'tier': 'presentation',
+          },
+          'master': {
+            'type': 'node',
+            'label': 'Master',
+            'description': 'Master panel content (usually a list)',
             'tier': 'presentation',
           },
           'masterWidth': {
@@ -198,11 +210,11 @@ export function stdUiMasterDetailLayoutMasterDetailLayoutOrbital(params: StdUiMa
             'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
-          'detailClassName': {
-            'type': 'string',
-            'default': '',
-            'label': 'Detail Class Name',
-            'description': 'Class for detail pane',
+          'hasSelection': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Has Selection',
+            'description': 'Whether an item is currently selected',
             'tier': 'presentation',
           },
           'masterClassName': {
@@ -210,18 +222,6 @@ export function stdUiMasterDetailLayoutMasterDetailLayoutOrbital(params: StdUiMa
             'default': '',
             'label': 'Master Class Name',
             'description': 'Class for master pane',
-            'tier': 'presentation',
-          },
-          'emptyDetail': {
-            'type': 'node',
-            'label': 'Empty Detail',
-            'description': 'Content shown when nothing is selected',
-            'tier': 'presentation',
-          },
-          'master': {
-            'type': 'node',
-            'label': 'Master',
-            'description': 'Master panel content (usually a list)',
             'tier': 'presentation',
           },
         },

@@ -53,14 +53,14 @@ export interface StdUiLightboxIndexChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiLightboxConfig {
+  /** Default: `""` */
+  closeAction?: string;
+  /** Default: `true` */
+  showCounter?: boolean;
   /** Default: `[]` */
   images?: EntityRow[];
   /** Default: `0` */
   currentIndex?: number;
-  /** Default: `true` */
-  showCounter?: boolean;
-  /** Default: `""` */
-  closeAction?: string;
   /** Default: `""` */
   className?: string;
   /** Default: `false` */

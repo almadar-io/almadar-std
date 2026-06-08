@@ -39,15 +39,6 @@ export type StdUiSplitPaneEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiSplitPaneConfig {
-  /** Default: `100` */
-  minSize?: number;
-  /** Default: `"horizontal"` */
-  direction?: 'horizontal' | 'vertical';
-  left?: unknown;
-  /** Default: `true` */
-  resizable?: boolean;
-  /** Default: `""` */
-  leftClassName?: string;
   /** Default: `""` */
   rightClassName?: string;
   /** Default: `0` */
@@ -55,6 +46,15 @@ export interface StdUiSplitPaneConfig {
   /** Default: `""` */
   className?: string;
   right?: unknown;
+  /** Default: `""` */
+  leftClassName?: string;
+  /** Default: `"horizontal"` */
+  direction?: 'horizontal' | 'vertical';
+  /** Default: `true` */
+  resizable?: boolean;
+  /** Default: `100` */
+  minSize?: number;
+  left?: unknown;
 }
 
 /**
@@ -158,16 +158,16 @@ export function stdUiSplitPaneSplitPaneOrbital(params: StdUiSplitPaneSplitPaneOr
                   'render-ui',
                   'main',
                   {
-                    'minSize': '@config.minSize',
-                    'direction': '@config.direction',
-                    'ratio': '@config.ratio',
-                    'resizable': '@config.resizable',
                     'right': '@config.right',
+                    'ratio': '@config.ratio',
+                    'className': '@config.className',
+                    'resizable': '@config.resizable',
                     'left': '@config.left',
                     'leftClassName': '@config.leftClassName',
-                    'rightClassName': '@config.rightClassName',
                     'type': 'split-pane',
-                    'className': '@config.className',
+                    'minSize': '@config.minSize',
+                    'rightClassName': '@config.rightClassName',
+                    'direction': '@config.direction',
                   },
                 ],
               ],
@@ -175,44 +175,6 @@ export function stdUiSplitPaneSplitPaneOrbital(params: StdUiSplitPaneSplitPaneOr
           ],
         },
         'config': {
-          'minSize': {
-            'type': 'number',
-            'default': 100,
-            'label': 'Min Size',
-            'description': 'Minimum size of either pane in pixels',
-            'tier': 'presentation',
-          },
-          'direction': {
-            'type': 'string',
-            'default': 'horizontal',
-            'label': 'Direction',
-            'description': 'Direction of the split',
-            'tier': 'presentation',
-            'values': [
-              'horizontal',
-              'vertical',
-            ],
-          },
-          'left': {
-            'type': 'node',
-            'label': 'Left',
-            'description': 'Content for the left/top pane',
-            'tier': 'presentation',
-          },
-          'resizable': {
-            'type': 'boolean',
-            'default': true,
-            'label': 'Resizable',
-            'description': 'Allow user resizing',
-            'tier': 'presentation',
-          },
-          'leftClassName': {
-            'type': 'string',
-            'default': '',
-            'label': 'Left Class Name',
-            'description': 'Class for left/top pane',
-            'tier': 'presentation',
-          },
           'rightClassName': {
             'type': 'string',
             'default': '',
@@ -238,6 +200,44 @@ export function stdUiSplitPaneSplitPaneOrbital(params: StdUiSplitPaneSplitPaneOr
             'type': 'node',
             'label': 'Right',
             'description': 'Content for the right/bottom pane',
+            'tier': 'presentation',
+          },
+          'leftClassName': {
+            'type': 'string',
+            'default': '',
+            'label': 'Left Class Name',
+            'description': 'Class for left/top pane',
+            'tier': 'presentation',
+          },
+          'direction': {
+            'type': 'string',
+            'default': 'horizontal',
+            'label': 'Direction',
+            'description': 'Direction of the split',
+            'tier': 'presentation',
+            'values': [
+              'horizontal',
+              'vertical',
+            ],
+          },
+          'resizable': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Resizable',
+            'description': 'Allow user resizing',
+            'tier': 'presentation',
+          },
+          'minSize': {
+            'type': 'number',
+            'default': 100,
+            'label': 'Min Size',
+            'description': 'Minimum size of either pane in pixels',
+            'tier': 'presentation',
+          },
+          'left': {
+            'type': 'node',
+            'label': 'Left',
+            'description': 'Content for the left/top pane',
             'tier': 'presentation',
           },
         },

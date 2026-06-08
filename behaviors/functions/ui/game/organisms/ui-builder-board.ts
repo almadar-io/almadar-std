@@ -41,6 +41,16 @@ export interface StdUiBuilderBoardCompletePayload {
 }
 
 /**
+ * Typed call-site config block for this trait — every
+ * field maps to a `config { ... }` entry in the source
+ * .lolo. The agent fills these to specialise the trait
+ * without modifying its state-machine topology.
+ */
+export interface StdUiBuilderBoardConfig {
+  entityProp?: EntityRow;
+}
+
+/**
  * Tunable params for the BuilderBoardOrbital orbital.
  *
  * Canonical entity: BuilderBoardItem — overridable via
@@ -155,6 +165,18 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
               'name': 'Complete',
               'description': 'completeEvent prop',
               'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'success',
+                  'type': 'boolean',
+                  'required': true,
+                },
+                {
+                  'name': 'attempts',
+                  'type': 'number',
+                  'required': true,
+                },
+              ],
             },
           ],
           'transitions': [
@@ -164,15 +186,10 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
               'event': 'INIT',
               'effects': [
                 [
-                  'fetch',
-                  'BuilderBoardItem',
-                  {},
-                ],
-                [
                   'render-ui',
                   'main',
                   {
-                    'entity': '@entity',
+                    'entity': '@config.entityProp',
                     'completeEvent': 'COMPLETE',
                     'type': 'builder-board',
                   },
@@ -180,6 +197,139 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
               ],
             },
           ],
+        },
+        'config': {
+          'entityProp': {
+            'type': 'BuilderBoardEntity',
+            'label': 'Entity',
+            'description': 'The compiler binds the generic `EntityRow`, so the inlet accepts it (and',
+            'synonyms': 'entity',
+            'tier': 'presentation',
+            'properties': {
+              'slots': {
+                'name': 'slots',
+                'type': 'array',
+                'required': true,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'id': {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'description': {
+                      'name': 'description',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'label': {
+                      'name': 'label',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'acceptsComponentId': {
+                      'name': 'acceptsComponentId',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  },
+                },
+              },
+              'id': {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              'theme': {
+                'name': 'theme',
+                'type': 'object',
+                'required': false,
+                'properties': {
+                  'accentColor': {
+                    'name': 'accentColor',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'background': {
+                    'name': 'background',
+                    'type': 'string',
+                    'required': false,
+                  },
+                },
+              },
+              'successMessage': {
+                'name': 'successMessage',
+                'type': 'string',
+                'required': false,
+              },
+              'components': {
+                'name': 'components',
+                'type': 'array',
+                'required': true,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'id': {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'description': {
+                      'name': 'description',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'category': {
+                      'name': 'category',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'label': {
+                      'name': 'label',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'iconEmoji': {
+                      'name': 'iconEmoji',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'iconUrl': {
+                      'name': 'iconUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                  },
+                },
+              },
+              'hint': {
+                'name': 'hint',
+                'type': 'string',
+                'required': false,
+              },
+              'failMessage': {
+                'name': 'failMessage',
+                'type': 'string',
+                'required': false,
+              },
+              'headerImage': {
+                'name': 'headerImage',
+                'type': 'string',
+                'required': false,
+              },
+              'description': {
+                'name': 'description',
+                'type': 'string',
+                'required': true,
+              },
+              'title': {
+                'name': 'title',
+                'type': 'string',
+                'required': true,
+              },
+            },
+          },
         },
         'scope': 'instance',
       } as never, 'BuilderBoardItem', canonicalName) as never,

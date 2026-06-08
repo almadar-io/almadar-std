@@ -40,11 +40,11 @@ export type StdUiUnitCommandBarEventKey = 'INIT';
  */
 export interface StdUiUnitCommandBarConfig {
   /** Default: `""` */
+  selectedUnitId?: string;
+  /** Default: `""` */
   className?: string;
   /** Default: `[]` */
   commands?: EntityRow[];
-  /** Default: `""` */
-  selectedUnitId?: string;
 }
 
 /**

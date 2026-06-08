@@ -30,14 +30,7 @@ const ALIAS = 'UiTable';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiTableEventKey = 'INIT' | 'ROW_ACTIONS';
-
-/**
- * Payload shape for the `ROW_ACTIONS` event.
- */
-export interface StdUiTableRowActionsPayload {
-  row?: EntityRow;
-}
+export type StdUiTableEventKey = 'INIT';
 
 /**
  * Typed call-site config block for this trait — every
@@ -46,48 +39,48 @@ export interface StdUiTableRowActionsPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiTableConfig {
-  /** Default: `false` */
-  sortable?: boolean;
-  /** Default: `"asc"` */
-  sortDirection?: 'asc' | 'desc';
-  /** Default: `false` */
-  paginated?: boolean;
-  /** Default: `false` */
-  selectable?: boolean;
-  /** Default: `0` */
-  currentPage?: number;
-  /** Default: `""` */
-  emptyMessage?: string;
-  /** Default: `""` */
-  searchPlaceholder?: string;
-  /** Default: `[]` */
-  selectedIds?: string[];
-  /** Default: `false` */
-  loading?: boolean;
+  error?: EntityRow;
   /** Default: `0` */
   pageSize?: number;
-  error?: unknown;
-  /** Default: `""` */
-  sortBy?: string;
   /** Default: `[]` */
   columns?: EntityRow[];
   /** Default: `""` */
+  searchPlaceholder?: string;
+  /** Default: `""` */
   searchValue?: string;
-  /** Default: `0` */
-  totalPages?: number;
-  /** Default: `false` */
-  searchable?: boolean;
-  /** Default: `false` */
-  isLoading?: boolean;
+  /** Default: `[]` */
+  selectedIds?: string[];
   /** Default: `0` */
   pageProp?: number;
-  activeFilters?: unknown;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `false` */
+  sortable?: boolean;
+  /** Default: `false` */
+  searchable?: boolean;
   /** Default: `""` */
-  sortColumn?: string;
+  sortBy?: string;
+  activeFilters?: unknown;
+  /** Default: `false` */
+  paginated?: boolean;
+  /** Default: `false` */
+  loading?: boolean;
   /** Default: `0` */
   totalCount?: number;
   /** Default: `""` */
+  sortColumn?: string;
+  /** Default: `""` */
+  emptyMessage?: string;
+  /** Default: `0` */
+  currentPage?: number;
+  /** Default: `false` */
+  selectable?: boolean;
+  /** Default: `"asc"` */
+  sortDirection?: 'asc' | 'desc';
+  /** Default: `""` */
   className?: string;
+  /** Default: `0` */
+  totalPages?: number;
 }
 
 /**
@@ -168,20 +161,6 @@ export function stdUiTableTableOrbital(params: StdUiTableTableOrbitalParams = {}
         },
         'category': 'interaction',
         'linkedEntity': 'TableItem',
-        'emits': [
-          {
-            'event': 'ROW_ACTIONS',
-            'description': 'Row actions menu items',
-            'tier': 'essential',
-            'scope': 'external',
-            'payloadSchema': [
-              {
-                'name': 'row',
-                'type': 'object',
-              },
-            ],
-          },
-        ],
         'stateMachine': {
           'states': [
             {
@@ -193,12 +172,6 @@ export function stdUiTableTableOrbital(params: StdUiTableTableOrbitalParams = {}
             {
               'key': 'INIT',
               'name': 'Initialize',
-            },
-            {
-              'key': 'ROW_ACTIONS',
-              'name': 'Row Actions',
-              'description': 'Row actions menu items',
-              'tier': 'essential',
             },
           ],
           'transitions': [
@@ -216,31 +189,30 @@ export function stdUiTableTableOrbital(params: StdUiTableTableOrbitalParams = {}
                   'render-ui',
                   'main',
                   {
-                    'searchValue': '@config.searchValue',
-                    'columns': '@config.columns',
-                    'className': '@config.className',
-                    'isLoading': '@config.isLoading',
-                    'sortBy': '@config.sortBy',
-                    'totalCount': '@config.totalCount',
-                    'selectable': '@config.selectable',
-                    'sortable': '@config.sortable',
-                    'searchable': '@config.searchable',
-                    'rowActions': 'ROW_ACTIONS',
-                    'totalPages': '@config.totalPages',
-                    'selectedIds': '@config.selectedIds',
-                    'activeFilters': '@config.activeFilters',
-                    'entity': '@entity',
-                    'sortDirection': '@config.sortDirection',
-                    'emptyMessage': '@config.emptyMessage',
                     'searchPlaceholder': '@config.searchPlaceholder',
-                    'sortColumn': '@config.sortColumn',
-                    'page': '@config.pageProp',
-                    'error': '@config.error',
                     'pageSize': '@config.pageSize',
-                    'paginated': '@config.paginated',
-                    'currentPage': '@config.currentPage',
+                    'sortable': '@config.sortable',
+                    'emptyMessage': '@config.emptyMessage',
+                    'totalCount': '@config.totalCount',
+                    'searchValue': '@config.searchValue',
+                    'isLoading': '@config.isLoading',
+                    'selectedIds': '@config.selectedIds',
+                    'selectable': '@config.selectable',
+                    'error': '@config.error',
+                    'page': '@config.pageProp',
                     'loading': '@config.loading',
                     'type': 'table',
+                    'paginated': '@config.paginated',
+                    'columns': '@config.columns',
+                    'totalPages': '@config.totalPages',
+                    'sortBy': '@config.sortBy',
+                    'sortDirection': '@config.sortDirection',
+                    'entity': '@entity',
+                    'activeFilters': '@config.activeFilters',
+                    'sortColumn': '@config.sortColumn',
+                    'className': '@config.className',
+                    'searchable': '@config.searchable',
+                    'currentPage': '@config.currentPage',
                   },
                 ],
               ],
@@ -248,94 +220,39 @@ export function stdUiTableTableOrbital(params: StdUiTableTableOrbitalParams = {}
           ],
         },
         'config': {
-          'sortable': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Sortable',
-            'description': 'Enable sorting',
+          'error': {
+            'type': 'TableError',
+            'label': 'Error',
+            'description': 'Error state (UiError)',
             'tier': 'presentation',
-          },
-          'sortDirection': {
-            'type': 'string',
-            'default': 'asc',
-            'label': 'Sort Direction',
-            'description': 'Current sort direction (display hint)',
-            'tier': 'presentation',
-            'values': [
-              'asc',
-              'desc',
-            ],
-          },
-          'paginated': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Paginated',
-            'description': 'Enable pagination',
-            'tier': 'presentation',
-          },
-          'selectable': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Selectable',
-            'description': 'Enable row selection',
-            'tier': 'presentation',
-          },
-          'currentPage': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Current Page',
-            'description': 'Current page (display hint)',
-            'tier': 'presentation',
-          },
-          'emptyMessage': {
-            'type': 'string',
-            'default': '',
-            'label': 'Empty Message',
-            'description': 'Empty state message',
-            'tier': 'presentation',
-          },
-          'searchPlaceholder': {
-            'type': 'string',
-            'default': '',
-            'label': 'Search Placeholder',
-            'description': 'Search placeholder',
-            'tier': 'presentation',
-          },
-          'selectedIds': {
-            'type': '[string]',
-            'default': [],
-            'label': 'Selected Ids',
-            'description': 'Currently selected item IDs',
-            'tier': 'presentation',
-            'items': {
-              'type': 'string',
+            'properties': {
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
             },
-          },
-          'loading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Loading',
-            'description': 'Loading state',
-            'tier': 'presentation',
           },
           'pageSize': {
             'type': 'number',
             'default': 0,
             'label': 'Page Size',
             'description': 'Number of items per page',
-            'tier': 'presentation',
-          },
-          'error': {
-            'type': 'json',
-            'label': 'Error',
-            'description': 'Error state',
-            'tier': 'presentation',
-          },
-          'sortBy': {
-            'type': 'string',
-            'default': '',
-            'label': 'Sort By',
-            'description': 'Current sort field',
             'tier': 'presentation',
           },
           'columns': {
@@ -357,18 +274,25 @@ export function stdUiTableTableOrbital(params: StdUiTableTableOrbitalParams = {}
                   'type': 'boolean',
                   'required': false,
                 },
-                'width': {
-                  'name': 'width',
-                  'type': 'string',
-                  'required': false,
-                },
                 'label': {
                   'name': 'label',
                   'type': 'string',
                   'required': true,
                 },
+                'width': {
+                  'name': 'width',
+                  'type': 'string',
+                  'required': false,
+                },
               },
             },
+          },
+          'searchPlaceholder': {
+            'type': 'string',
+            'default': '',
+            'label': 'Search Placeholder',
+            'description': 'Search placeholder',
+            'tier': 'presentation',
           },
           'searchValue': {
             'type': 'string',
@@ -377,26 +301,15 @@ export function stdUiTableTableOrbital(params: StdUiTableTableOrbitalParams = {}
             'description': 'Current search query value',
             'tier': 'presentation',
           },
-          'totalPages': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Total Pages',
-            'description': 'Total pages (display hint)',
+          'selectedIds': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Selected Ids',
+            'description': 'Currently selected item IDs',
             'tier': 'presentation',
-          },
-          'searchable': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Searchable',
-            'description': 'Enable search/filter',
-            'tier': 'presentation',
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
-            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
           },
           'pageProp': {
             'type': 'number',
@@ -406,17 +319,52 @@ export function stdUiTableTableOrbital(params: StdUiTableTableOrbitalParams = {}
             'synonyms': 'page',
             'tier': 'presentation',
           },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
+          'sortable': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Sortable',
+            'description': 'Enable sorting',
+            'tier': 'presentation',
+          },
+          'searchable': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Searchable',
+            'description': 'Enable search/filter',
+            'tier': 'presentation',
+          },
+          'sortBy': {
+            'type': 'string',
+            'default': '',
+            'label': 'Sort By',
+            'description': 'Current sort field',
+            'tier': 'presentation',
+          },
           'activeFilters': {
             'type': 'json',
             'label': 'Active Filters',
             'description': 'Active filters',
             'tier': 'presentation',
           },
-          'sortColumn': {
-            'type': 'string',
-            'default': '',
-            'label': 'Sort Column',
-            'description': 'Current sort column (display hint, mapped from sortBy)',
+          'paginated': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Paginated',
+            'description': 'Enable pagination',
+            'tier': 'presentation',
+          },
+          'loading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Loading',
+            'description': 'Loading state',
             'tier': 'presentation',
           },
           'totalCount': {
@@ -426,11 +374,57 @@ export function stdUiTableTableOrbital(params: StdUiTableTableOrbitalParams = {}
             'description': 'Total number of items',
             'tier': 'presentation',
           },
+          'sortColumn': {
+            'type': 'string',
+            'default': '',
+            'label': 'Sort Column',
+            'description': 'Current sort column (display hint, mapped from sortBy)',
+            'tier': 'presentation',
+          },
+          'emptyMessage': {
+            'type': 'string',
+            'default': '',
+            'label': 'Empty Message',
+            'description': 'Empty state message',
+            'tier': 'presentation',
+          },
+          'currentPage': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Current Page',
+            'description': 'Current page (display hint)',
+            'tier': 'presentation',
+          },
+          'selectable': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Selectable',
+            'description': 'Enable row selection',
+            'tier': 'presentation',
+          },
+          'sortDirection': {
+            'type': 'string',
+            'default': 'asc',
+            'label': 'Sort Direction',
+            'description': 'Current sort direction (display hint)',
+            'tier': 'presentation',
+            'values': [
+              'asc',
+              'desc',
+            ],
+          },
           'className': {
             'type': 'string',
             'default': '',
             'label': 'Class Name',
             'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'totalPages': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Total Pages',
+            'description': 'Total pages (display hint)',
             'tier': 'presentation',
           },
         },

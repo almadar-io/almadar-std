@@ -30,7 +30,7 @@ const ALIAS = 'UiUploadDropZone';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiUploadDropZoneEventKey = 'ACTION' | 'FILES' | 'INIT';
+export type StdUiUploadDropZoneEventKey = 'ACTION' | 'INIT';
 
 /**
  * Payload shape for the `ACTION` event.
@@ -40,36 +40,29 @@ export interface StdUiUploadDropZoneActionPayload {
 }
 
 /**
- * Payload shape for the `FILES` event.
- */
-export interface StdUiUploadDropZoneFilesPayload {
-  files?: EntityRow[];
-}
-
-/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait
  * without modifying its state-machine topology.
  */
 export interface StdUiUploadDropZoneConfig {
-  /** Default: `""` */
-  className?: string;
+  actionPayload?: unknown;
   /** Default: `"circle"` */
   icon?: string;
-  /** Default: `1` */
-  maxFiles?: number;
+  /** Default: `""` */
+  description?: string;
   /** Default: `0` */
   maxSize?: number;
-  actionPayload?: unknown;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"Drop files here or click to browse"` */
+  label?: string;
   /** Default: `false` */
   disabled?: boolean;
   /** Default: `""` */
   accept?: string;
-  /** Default: `"Drop files here or click to browse"` */
-  label?: string;
-  /** Default: `""` */
-  description?: string;
+  /** Default: `1` */
+  maxFiles?: number;
 }
 
 /**

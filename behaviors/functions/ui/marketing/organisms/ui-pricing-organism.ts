@@ -40,29 +40,29 @@ export type StdUiPricingOrganismEventKey = 'INIT';
  */
 export interface StdUiPricingOrganismConfig {
   /** Default: `""` */
-  className?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `""` */
   sortBy?: string;
+  /** Default: `0` */
+  pageSize?: number;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"asc"` */
+  sortDirection?: 'asc' | 'desc';
+  /** Default: `0` */
+  totalCount?: number;
   /** Default: `""` */
   searchValue?: string;
   /** Default: `0` */
-  pageSize?: number;
-  activeFilters?: unknown;
-  /** Default: `0` */
   pageProp?: number;
-  error?: unknown;
-  /** Default: `""` */
-  heading?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  activeFilters?: unknown;
   /** Default: `""` */
   subtitle?: string;
   /** Default: `[]` */
   selectedIds?: string[];
   /** Default: `""` */
-  sortDirection?: string;
-  /** Default: `0` */
-  totalCount?: number;
+  heading?: string;
+  error?: EntityRow;
 }
 
 /**
@@ -171,21 +171,21 @@ export function stdUiPricingOrganismPricingOrganismOrbital(params: StdUiPricingO
                   'render-ui',
                   'main',
                   {
-                    'sortBy': '@config.sortBy',
-                    'className': '@config.className',
-                    'searchValue': '@config.searchValue',
-                    'heading': '@config.heading',
-                    'pageSize': '@config.pageSize',
-                    'type': 'pricing-organism',
                     'entity': '@entity',
-                    'sortDirection': '@config.sortDirection',
-                    'error': '@config.error',
-                    'selectedIds': '@config.selectedIds',
                     'isLoading': '@config.isLoading',
+                    'sortDirection': '@config.sortDirection',
+                    'searchValue': '@config.searchValue',
                     'page': '@config.pageProp',
-                    'subtitle': '@config.subtitle',
-                    'activeFilters': '@config.activeFilters',
+                    'selectedIds': '@config.selectedIds',
                     'totalCount': '@config.totalCount',
+                    'type': 'pricing-organism',
+                    'error': '@config.error',
+                    'pageSize': '@config.pageSize',
+                    'className': '@config.className',
+                    'sortBy': '@config.sortBy',
+                    'heading': '@config.heading',
+                    'activeFilters': '@config.activeFilters',
+                    'subtitle': '@config.subtitle',
                   },
                 ],
               ],
@@ -193,32 +193,11 @@ export function stdUiPricingOrganismPricingOrganismOrbital(params: StdUiPricingO
           ],
         },
         'config': {
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
-            'tier': 'presentation',
-          },
           'sortBy': {
             'type': 'string',
             'default': '',
             'label': 'Sort By',
             'description': 'Current sort field',
-            'tier': 'presentation',
-          },
-          'searchValue': {
-            'type': 'string',
-            'default': '',
-            'label': 'Search Value',
-            'description': 'Current search query value',
             'tier': 'presentation',
           },
           'pageSize': {
@@ -228,10 +207,36 @@ export function stdUiPricingOrganismPricingOrganismOrbital(params: StdUiPricingO
             'description': 'Number of items per page',
             'tier': 'presentation',
           },
-          'activeFilters': {
-            'type': 'json',
-            'label': 'Active Filters',
-            'description': 'Active filters',
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'sortDirection': {
+            'type': 'string',
+            'default': 'asc',
+            'label': 'Sort Direction',
+            'description': 'Current sort direction',
+            'tier': 'presentation',
+            'values': [
+              'asc',
+              'desc',
+            ],
+          },
+          'totalCount': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Total Count',
+            'description': 'Total number of items',
+            'tier': 'presentation',
+          },
+          'searchValue': {
+            'type': 'string',
+            'default': '',
+            'label': 'Search Value',
+            'description': 'Current search query value',
             'tier': 'presentation',
           },
           'pageProp': {
@@ -242,17 +247,17 @@ export function stdUiPricingOrganismPricingOrganismOrbital(params: StdUiPricingO
             'synonyms': 'page',
             'tier': 'presentation',
           },
-          'error': {
-            'type': 'json',
-            'label': 'Error',
-            'description': 'Error state',
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
             'tier': 'presentation',
           },
-          'heading': {
-            'type': 'string',
-            'default': '',
-            'label': 'Heading',
-            'description': 'heading prop',
+          'activeFilters': {
+            'type': 'json',
+            'label': 'Active Filters',
+            'description': 'Active filters',
             'tier': 'presentation',
           },
           'subtitle': {
@@ -272,19 +277,40 @@ export function stdUiPricingOrganismPricingOrganismOrbital(params: StdUiPricingO
               'type': 'string',
             },
           },
-          'sortDirection': {
+          'heading': {
             'type': 'string',
             'default': '',
-            'label': 'Sort Direction',
-            'description': 'Current sort direction',
+            'label': 'Heading',
+            'description': 'heading prop',
             'tier': 'presentation',
           },
-          'totalCount': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Total Count',
-            'description': 'Total number of items',
+          'error': {
+            'type': 'PricingOrganismError',
+            'label': 'Error',
+            'description': 'Error state (UiError)',
             'tier': 'presentation',
+            'properties': {
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+            },
           },
         },
         'scope': 'instance',

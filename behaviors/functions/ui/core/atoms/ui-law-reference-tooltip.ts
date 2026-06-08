@@ -41,10 +41,10 @@ export type StdUiLawReferenceTooltipEventKey = 'INIT';
 export interface StdUiLawReferenceTooltipConfig {
   /** Default: `""` */
   className?: string;
+  /** Default: `{"article":"","law":""}` */
   reference?: EntityRow;
   /** Default: `"top"` */
   position?: 'top' | 'bottom' | 'left' | 'right';
-  children?: unknown;
 }
 
 /**

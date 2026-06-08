@@ -53,25 +53,25 @@ export interface StdUiPageHeaderTabChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiPageHeaderConfig {
+  /** Default: `""` */
+  className?: string;
   /** Default: `[]` */
   tabs?: EntityRow[];
   /** Default: `[]` */
-  actions?: EntityRow[];
+  breadcrumbs?: EntityRow[];
   /** Default: `false` */
-  showBack?: boolean;
+  isLoading?: boolean;
+  /** Default: `[]` */
+  actions?: EntityRow[];
   subtitle?: unknown;
   /** Default: `""` */
   activeTab?: string;
-  /** Default: `""` */
-  className?: string;
   title?: unknown;
-  children?: unknown;
-  status?: EntityRow;
-  /** Default: `[]` */
-  breadcrumbs?: EntityRow[];
   error?: EntityRow;
+  status?: EntityRow;
   /** Default: `false` */
-  isLoading?: boolean;
+  showBack?: boolean;
+  children?: unknown;
 }
 
 /**
@@ -195,12 +195,24 @@ export function stdUiPageHeaderPageHeaderOrbital(params: StdUiPageHeaderPageHead
               'name': 'Back',
               'description': 'Event to emit when back is clicked (default: BACK)',
               'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
             },
             {
               'key': 'TAB_CHANGE',
               'name': 'Tab Change',
               'description': 'onTabChange prop',
               'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'value',
+                  'type': 'string',
+                },
+              ],
             },
           ],
           'transitions': [
@@ -218,22 +230,22 @@ export function stdUiPageHeaderPageHeaderOrbital(params: StdUiPageHeaderPageHead
                   'render-ui',
                   'main',
                   {
-                    'onTabChange': 'TAB_CHANGE',
-                    'actions': '@config.actions',
-                    'children': '@config.children',
-                    'activeTab': '@config.activeTab',
-                    'breadcrumbs': '@config.breadcrumbs',
-                    'subtitle': '@config.subtitle',
-                    'title': '@config.title',
-                    'tabs': '@config.tabs',
-                    'entity': 'PageHeaderItem',
-                    'backEvent': 'BACK',
-                    'showBack': '@config.showBack',
-                    'status': '@config.status',
                     'isLoading': '@config.isLoading',
-                    'className': '@config.className',
+                    'onTabChange': 'TAB_CHANGE',
+                    'backEvent': 'BACK',
                     'type': 'page-header',
+                    'subtitle': '@config.subtitle',
+                    'activeTab': '@config.activeTab',
+                    'className': '@config.className',
                     'error': '@config.error',
+                    'actions': '@config.actions',
+                    'status': '@config.status',
+                    'tabs': '@config.tabs',
+                    'children': '@config.children',
+                    'title': '@config.title',
+                    'entity': 'PageHeaderItem',
+                    'breadcrumbs': '@config.breadcrumbs',
+                    'showBack': '@config.showBack',
                   },
                 ],
               ],
@@ -241,6 +253,13 @@ export function stdUiPageHeaderPageHeaderOrbital(params: StdUiPageHeaderPageHead
           ],
         },
         'config': {
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'className prop',
+            'tier': 'presentation',
+          },
           'tabs': {
             'type': '[PageHeaderTabsItem]',
             'default': [],
@@ -250,15 +269,15 @@ export function stdUiPageHeaderPageHeaderOrbital(params: StdUiPageHeaderPageHead
             'items': {
               'type': 'object',
               'properties': {
-                'count': {
-                  'name': 'count',
-                  'type': 'number',
-                  'required': false,
-                },
                 'label': {
                   'name': 'label',
                   'type': 'string',
                   'required': true,
+                },
+                'count': {
+                  'name': 'count',
+                  'type': 'number',
+                  'required': false,
                 },
                 'value': {
                   'name': 'value',
@@ -267,6 +286,35 @@ export function stdUiPageHeaderPageHeaderOrbital(params: StdUiPageHeaderPageHead
                 },
               },
             },
+          },
+          'breadcrumbs': {
+            'type': '[PageHeaderBreadcrumbsItem]',
+            'default': [],
+            'label': 'Breadcrumbs',
+            'description': 'Breadcrumbs',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': true,
+                },
+                'href': {
+                  'name': 'href',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
           },
           'actions': {
             'type': '[PageHeaderActionsItem]',
@@ -277,10 +325,25 @@ export function stdUiPageHeaderPageHeaderOrbital(params: StdUiPageHeaderPageHead
             'items': {
               'type': 'object',
               'properties': {
+                'loading': {
+                  'name': 'loading',
+                  'type': 'boolean',
+                  'required': false,
+                },
+                'disabled': {
+                  'name': 'disabled',
+                  'type': 'boolean',
+                  'required': false,
+                },
                 'event': {
                   'name': 'event',
                   'type': 'string',
                   'required': false,
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': true,
                 },
                 'variant': {
                   'name': 'variant',
@@ -293,40 +356,18 @@ export function stdUiPageHeaderPageHeaderOrbital(params: StdUiPageHeaderPageHead
                     'danger',
                   ],
                 },
-                'icon': {
-                  'name': 'icon',
-                  'type': 'string',
-                  'required': false,
-                },
-                'label': {
-                  'name': 'label',
-                  'type': 'string',
-                  'required': true,
-                },
-                'disabled': {
-                  'name': 'disabled',
-                  'type': 'boolean',
-                  'required': false,
-                },
-                'loading': {
-                  'name': 'loading',
-                  'type': 'boolean',
-                  'required': false,
-                },
                 'navigatesTo': {
                   'name': 'navigatesTo',
                   'type': 'string',
                   'required': false,
                 },
+                'icon': {
+                  'name': 'icon',
+                  'type': 'string',
+                  'required': false,
+                },
               },
             },
-          },
-          'showBack': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Show Back',
-            'description': 'Show back button',
-            'tier': 'presentation',
           },
           'subtitle': {
             'type': 'json',
@@ -341,71 +382,11 @@ export function stdUiPageHeaderPageHeaderOrbital(params: StdUiPageHeaderPageHead
             'description': 'activeTab prop',
             'tier': 'presentation',
           },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'className prop',
-            'tier': 'presentation',
-          },
           'title': {
             'type': 'json',
             'label': 'Title',
             'description': 'Page title - accepts unknown to handle generated code accessing dynamic entity data',
             'tier': 'presentation',
-          },
-          'children': {
-            'type': 'node',
-            'label': 'Children',
-            'description': 'Custom content in the header',
-            'tier': 'presentation',
-          },
-          'status': {
-            'type': 'PageHeaderStatus',
-            'label': 'Status',
-            'description': 'Status badge',
-            'tier': 'presentation',
-            'properties': {
-              'label': {
-                'name': 'label',
-                'type': 'string',
-                'required': true,
-              },
-              'variant': {
-                'name': 'variant',
-                'type': 'string',
-                'required': false,
-                'values': [
-                  'default',
-                  'success',
-                  'warning',
-                  'danger',
-                  'info',
-                ],
-              },
-            },
-          },
-          'breadcrumbs': {
-            'type': '[PageHeaderBreadcrumbsItem]',
-            'default': [],
-            'label': 'Breadcrumbs',
-            'description': 'Breadcrumbs',
-            'tier': 'presentation',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'href': {
-                  'name': 'href',
-                  'type': 'string',
-                  'required': false,
-                },
-                'label': {
-                  'name': 'label',
-                  'type': 'string',
-                  'required': true,
-                },
-              },
-            },
           },
           'error': {
             'type': 'PageHeaderError',
@@ -423,23 +404,54 @@ export function stdUiPageHeaderPageHeaderOrbital(params: StdUiPageHeaderPageHead
                 'type': 'string',
                 'required': false,
               },
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
               'code': {
                 'name': 'code',
                 'type': 'string',
                 'required': false,
               },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
             },
           },
-          'isLoading': {
+          'status': {
+            'type': 'PageHeaderStatus',
+            'label': 'Status',
+            'description': 'Status badge',
+            'tier': 'presentation',
+            'properties': {
+              'variant': {
+                'name': 'variant',
+                'type': 'string',
+                'required': false,
+                'values': [
+                  'default',
+                  'success',
+                  'warning',
+                  'danger',
+                  'info',
+                ],
+              },
+              'label': {
+                'name': 'label',
+                'type': 'string',
+                'required': true,
+              },
+            },
+          },
+          'showBack': {
             'type': 'boolean',
             'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
+            'label': 'Show Back',
+            'description': 'Show back button',
+            'tier': 'presentation',
+          },
+          'children': {
+            'type': 'node',
+            'label': 'Children',
+            'description': 'Custom content in the header',
             'tier': 'presentation',
           },
         },

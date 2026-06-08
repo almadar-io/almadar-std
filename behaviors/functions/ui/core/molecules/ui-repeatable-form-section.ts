@@ -30,15 +30,7 @@ const ALIAS = 'UiRepeatableFormSection';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiRepeatableFormSectionEventKey = 'ADD' | 'INIT' | 'REMOVE' | 'RENDER_ITEM' | 'REORDER';
-
-/**
- * Payload shape for the `RENDER_ITEM` event.
- */
-export interface StdUiRepeatableFormSectionRenderItemPayload {
-  item?: EntityRow;
-  index?: number;
-}
+export type StdUiRepeatableFormSectionEventKey = 'ADD' | 'INIT' | 'REMOVE' | 'REORDER';
 
 /**
  * Payload shape for the `ADD` event.
@@ -70,32 +62,32 @@ export interface StdUiRepeatableFormSectionReorderPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiRepeatableFormSectionConfig {
-  /** Default: `[]` */
-  items?: EntityRow[];
-  /** Default: `""` */
-  sectionType?: string;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `""` */
-  addLabel?: string;
-  /** Default: `0` */
-  minItems?: number;
-  /** Default: `""` */
-  emptyMessage?: string;
   /** Default: `false` */
   readOnly?: boolean;
   /** Default: `""` */
+  className?: string;
+  /** Default: `""` */
   currentState?: string;
-  /** Default: `false` */
-  allowReorder?: boolean;
   /** Default: `0` */
   maxItems?: number;
+  /** Default: `""` */
+  title?: string;
   /** Default: `false` */
   trackAddedInState?: boolean;
   /** Default: `false` */
+  allowReorder?: boolean;
+  /** Default: `false` */
   showAuditInfo?: boolean;
   /** Default: `""` */
-  title?: string;
+  sectionType?: string;
+  /** Default: `0` */
+  minItems?: number;
+  /** Default: `""` */
+  addLabel?: string;
+  /** Default: `[]` */
+  items?: EntityRow[];
+  /** Default: `""` */
+  emptyMessage?: string;
 }
 
 /**

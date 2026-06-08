@@ -42,9 +42,9 @@ export interface StdUiLoadingStateConfig {
   /** Default: `""` */
   title?: string;
   /** Default: `""` */
-  className?: string;
-  /** Default: `""` */
   message?: string;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

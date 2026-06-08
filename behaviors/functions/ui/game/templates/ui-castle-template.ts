@@ -39,10 +39,10 @@ export type StdUiCastleTemplateEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiCastleTemplateConfig {
-  /** Default: `0.45` */
-  scale?: number;
   /** Default: `""` */
   className?: string;
+  /** Default: `0.45` */
+  scale?: number;
 }
 
 /**

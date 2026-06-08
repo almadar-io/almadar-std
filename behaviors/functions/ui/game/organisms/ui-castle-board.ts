@@ -30,35 +30,7 @@ const ALIAS = 'UiCastleBoard';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiCastleBoardEventKey = 'FEATURE_CLICK' | 'FOOTER' | 'HEADER' | 'INIT' | 'OVERLAY' | 'SIDE_PANEL' | 'TILE_CLICK' | 'UNIT_CLICK';
-
-/**
- * Payload shape for the `HEADER` event.
- */
-export interface StdUiCastleBoardHeaderPayload {
-  ctx?: EntityRow;
-}
-
-/**
- * Payload shape for the `SIDE_PANEL` event.
- */
-export interface StdUiCastleBoardSidePanelPayload {
-  ctx?: EntityRow;
-}
-
-/**
- * Payload shape for the `OVERLAY` event.
- */
-export interface StdUiCastleBoardOverlayPayload {
-  ctx?: EntityRow;
-}
-
-/**
- * Payload shape for the `FOOTER` event.
- */
-export interface StdUiCastleBoardFooterPayload {
-  ctx?: EntityRow;
-}
+export type StdUiCastleBoardEventKey = 'FEATURE_CLICK' | 'INIT' | 'TILE_CLICK' | 'UNIT_CLICK';
 
 /**
  * Payload shape for the `FEATURE_CLICK` event.
@@ -94,10 +66,11 @@ export interface StdUiCastleBoardTileClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiCastleBoardConfig {
-  /** Default: `""` */
-  className?: string;
   /** Default: `0.45` */
   scale?: number;
+  entityProp?: EntityRow;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**
@@ -180,54 +153,6 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
         'linkedEntity': 'CastleBoardItem',
         'emits': [
           {
-            'event': 'HEADER',
-            'description': '-- Render-prop slots --',
-            'tier': 'essential',
-            'scope': 'external',
-            'payloadSchema': [
-              {
-                'name': 'ctx',
-                'type': 'object',
-              },
-            ],
-          },
-          {
-            'event': 'SIDE_PANEL',
-            'description': 'Side panel content (buildings list, recruit tab, garrison tab)',
-            'tier': 'essential',
-            'scope': 'external',
-            'payloadSchema': [
-              {
-                'name': 'ctx',
-                'type': 'object',
-              },
-            ],
-          },
-          {
-            'event': 'OVERLAY',
-            'description': 'Canvas overlay (hover tooltips, etc.)',
-            'tier': 'essential',
-            'scope': 'external',
-            'payloadSchema': [
-              {
-                'name': 'ctx',
-                'type': 'object',
-              },
-            ],
-          },
-          {
-            'event': 'FOOTER',
-            'description': 'Bottom bar (income summary, etc.)',
-            'tier': 'essential',
-            'scope': 'external',
-            'payloadSchema': [
-              {
-                'name': 'ctx',
-                'type': 'object',
-              },
-            ],
-          },
-          {
             'event': 'FEATURE_CLICK',
             'description': '-- Callback overrides --',
             'tier': 'essential',
@@ -236,6 +161,47 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
               {
                 'name': 'feature',
                 'type': 'object',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'x',
+                    'type': 'number',
+                    'required': true,
+                  },
+                  {
+                    'name': 'y',
+                    'type': 'number',
+                    'required': true,
+                  },
+                  {
+                    'name': 'z',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'type',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'sprite',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'assetUrl',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'color',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'elevation',
+                    'type': 'number',
+                  },
+                ],
               },
               {
                 'name': 'featureId',
@@ -268,6 +234,119 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
               {
                 'name': 'unit',
                 'type': 'object',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'position',
+                    'type': 'object',
+                    'properties': [
+                      {
+                        'name': 'x',
+                        'type': 'number',
+                        'required': true,
+                      },
+                      {
+                        'name': 'y',
+                        'type': 'number',
+                        'required': true,
+                      },
+                    ],
+                  },
+                  {
+                    'name': 'x',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'y',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'z',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'sprite',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'unitType',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'heroId',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'name',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'team',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'faction',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'health',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'maxHealth',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'traits',
+                    'type': '[object]',
+                    'properties': [
+                      {
+                        'name': 'name',
+                        'type': 'string',
+                        'required': true,
+                      },
+                      {
+                        'name': 'currentState',
+                        'type': 'string',
+                        'required': true,
+                      },
+                      {
+                        'name': 'states',
+                        'type': '[string]',
+                        'required': true,
+                      },
+                      {
+                        'name': 'cooldown',
+                        'type': 'number',
+                        'required': true,
+                      },
+                    ],
+                  },
+                  {
+                    'name': 'previousPosition',
+                    'type': 'object',
+                    'properties': [
+                      {
+                        'name': 'x',
+                        'type': 'number',
+                        'required': true,
+                      },
+                      {
+                        'name': 'y',
+                        'type': 'number',
+                        'required': true,
+                      },
+                    ],
+                  },
+                  {
+                    'name': 'elevation',
+                    'type': 'number',
+                  },
+                ],
               },
               {
                 'name': 'unitId',
@@ -306,46 +385,223 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
               'name': 'Initialize',
             },
             {
-              'key': 'HEADER',
-              'name': 'Header',
-              'description': '-- Render-prop slots --',
-              'tier': 'essential',
-            },
-            {
-              'key': 'SIDE_PANEL',
-              'name': 'Side Panel',
-              'description': 'Side panel content (buildings list, recruit tab, garrison tab)',
-              'tier': 'essential',
-            },
-            {
-              'key': 'OVERLAY',
-              'name': 'Overlay',
-              'description': 'Canvas overlay (hover tooltips, etc.)',
-              'tier': 'essential',
-            },
-            {
-              'key': 'FOOTER',
-              'name': 'Footer',
-              'description': 'Bottom bar (income summary, etc.)',
-              'tier': 'essential',
-            },
-            {
               'key': 'FEATURE_CLICK',
               'name': 'Feature Click',
               'description': '-- Callback overrides --',
               'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'feature',
+                  'type': 'object',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'x',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    {
+                      'name': 'y',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    {
+                      'name': 'z',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'type',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'sprite',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'assetUrl',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'color',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'elevation',
+                      'type': 'number',
+                    },
+                  ],
+                },
+                {
+                  'name': 'featureId',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'featureType',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'x',
+                  'type': 'number',
+                  'required': true,
+                },
+                {
+                  'name': 'y',
+                  'type': 'number',
+                  'required': true,
+                },
+              ],
             },
             {
               'key': 'UNIT_CLICK',
               'name': 'Unit Click',
               'description': 'Called when a unit is clicked',
               'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'unit',
+                  'type': 'object',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'position',
+                      'type': 'object',
+                      'properties': [
+                        {
+                          'name': 'x',
+                          'type': 'number',
+                          'required': true,
+                        },
+                        {
+                          'name': 'y',
+                          'type': 'number',
+                          'required': true,
+                        },
+                      ],
+                    },
+                    {
+                      'name': 'x',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'y',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'z',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'sprite',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'unitType',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'heroId',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'name',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'team',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'faction',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'health',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'maxHealth',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'traits',
+                      'type': '[object]',
+                      'properties': [
+                        {
+                          'name': 'name',
+                          'type': 'string',
+                          'required': true,
+                        },
+                        {
+                          'name': 'currentState',
+                          'type': 'string',
+                          'required': true,
+                        },
+                        {
+                          'name': 'states',
+                          'type': '[string]',
+                          'required': true,
+                        },
+                        {
+                          'name': 'cooldown',
+                          'type': 'number',
+                          'required': true,
+                        },
+                      ],
+                    },
+                    {
+                      'name': 'previousPosition',
+                      'type': 'object',
+                      'properties': [
+                        {
+                          'name': 'x',
+                          'type': 'number',
+                          'required': true,
+                        },
+                        {
+                          'name': 'y',
+                          'type': 'number',
+                          'required': true,
+                        },
+                      ],
+                    },
+                    {
+                      'name': 'elevation',
+                      'type': 'number',
+                    },
+                  ],
+                },
+                {
+                  'name': 'unitId',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
             },
             {
               'key': 'TILE_CLICK',
               'name': 'Tile Click',
               'description': 'Called when any tile is clicked',
               'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'x',
+                  'type': 'number',
+                },
+                {
+                  'name': 'y',
+                  'type': 'number',
+                },
+              ],
             },
           ],
           'transitions': [
@@ -355,28 +611,19 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
               'event': 'INIT',
               'effects': [
                 [
-                  'fetch',
-                  'CastleBoardItem',
-                  {},
-                ],
-                [
                   'render-ui',
                   'main',
                   {
-                    'footer': 'FOOTER',
+                    'onUnitClick': 'UNIT_CLICK',
+                    'tileClickEvent': 'TILE_CLICK',
+                    'type': 'castle-board',
+                    'scale': '@config.scale',
                     'featureClickEvent': 'FEATURE_CLICK',
                     'className': '@config.className',
-                    'unitClickEvent': 'UNIT_CLICK',
-                    'overlay': 'OVERLAY',
-                    'sidePanel': 'SIDE_PANEL',
+                    'entity': '@config.entityProp',
                     'onFeatureClick': 'FEATURE_CLICK',
                     'onTileClick': 'TILE_CLICK',
-                    'header': 'HEADER',
-                    'entity': '@entity',
-                    'tileClickEvent': 'TILE_CLICK',
-                    'scale': '@config.scale',
-                    'type': 'castle-board',
-                    'onUnitClick': 'UNIT_CLICK',
+                    'unitClickEvent': 'UNIT_CLICK',
                   },
                 ],
               ],
@@ -384,18 +631,345 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
           ],
         },
         'config': {
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'className prop',
-            'tier': 'presentation',
-          },
           'scale': {
             'type': 'number',
             'default': 0.45,
             'label': 'Scale',
             'description': 'Canvas render scale',
+            'tier': 'presentation',
+          },
+          'entityProp': {
+            'type': 'CastleBoardEntity',
+            'label': 'Entity',
+            'description': 'Castle entity data. Also accepts the canonical `EntityRow` the compiler binds (and arrays); narrowed to `CastleEntity` internally.',
+            'synonyms': 'entity',
+            'tier': 'presentation',
+            'properties': {
+              'id': {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              'features': {
+                'name': 'features',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'type': {
+                      'name': 'type',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'y': {
+                      'name': 'y',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'x': {
+                      'name': 'x',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'id': {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'assetUrl': {
+                      'name': 'assetUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'z': {
+                      'name': 'z',
+                      'type': 'number',
+                      'required': false,
+                    },
+                    'elevation': {
+                      'name': 'elevation',
+                      'type': 'number',
+                      'required': false,
+                    },
+                    'color': {
+                      'name': 'color',
+                      'type': 'string',
+                      'required': false,
+                    },
+                  },
+                },
+              },
+              'tiles': {
+                'name': 'tiles',
+                'type': 'array',
+                'required': true,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'y': {
+                      'name': 'y',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'tileType': {
+                      'name': 'tileType',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'elevation': {
+                      'name': 'elevation',
+                      'type': 'number',
+                      'required': false,
+                    },
+                    'x': {
+                      'name': 'x',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'z': {
+                      'name': 'z',
+                      'type': 'number',
+                      'required': false,
+                    },
+                    'passable': {
+                      'name': 'passable',
+                      'type': 'boolean',
+                      'required': false,
+                    },
+                    'id': {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'type': {
+                      'name': 'type',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'terrainSprite': {
+                      'name': 'terrainSprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'terrain': {
+                      'name': 'terrain',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'movementCost': {
+                      'name': 'movementCost',
+                      'type': 'number',
+                      'required': false,
+                    },
+                  },
+                },
+              },
+              'units': {
+                'name': 'units',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'traits': {
+                      'name': 'traits',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'object',
+                        'properties': {
+                          'currentState': {
+                            'name': 'currentState',
+                            'type': 'string',
+                            'required': true,
+                          },
+                          'cooldown': {
+                            'name': 'cooldown',
+                            'type': 'number',
+                            'required': true,
+                          },
+                          'states': {
+                            'name': 'states',
+                            'type': 'array',
+                            'required': true,
+                            'items': {
+                              'type': 'string',
+                            },
+                          },
+                          'name': {
+                            'name': 'name',
+                            'type': 'string',
+                            'required': true,
+                          },
+                        },
+                      },
+                    },
+                    'z': {
+                      'name': 'z',
+                      'type': 'number',
+                      'required': false,
+                    },
+                    'heroId': {
+                      'name': 'heroId',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'faction': {
+                      'name': 'faction',
+                      'type': 'string',
+                      'required': false,
+                      'values': [
+                        'player',
+                        'enemy',
+                        'neutral',
+                      ],
+                    },
+                    'previousPosition': {
+                      'name': 'previousPosition',
+                      'type': 'object',
+                      'required': false,
+                      'properties': {
+                        'x': {
+                          'name': 'x',
+                          'type': 'number',
+                          'required': true,
+                        },
+                        'y': {
+                          'name': 'y',
+                          'type': 'number',
+                          'required': true,
+                        },
+                      },
+                    },
+                    'y': {
+                      'name': 'y',
+                      'type': 'number',
+                      'required': false,
+                    },
+                    'maxHealth': {
+                      'name': 'maxHealth',
+                      'type': 'number',
+                      'required': false,
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'unitType': {
+                      'name': 'unitType',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'team': {
+                      'name': 'team',
+                      'type': 'string',
+                      'required': false,
+                      'values': [
+                        'player',
+                        'enemy',
+                        'neutral',
+                      ],
+                    },
+                    'health': {
+                      'name': 'health',
+                      'type': 'number',
+                      'required': false,
+                    },
+                    'elevation': {
+                      'name': 'elevation',
+                      'type': 'number',
+                      'required': false,
+                    },
+                    'x': {
+                      'name': 'x',
+                      'type': 'number',
+                      'required': false,
+                    },
+                    'position': {
+                      'name': 'position',
+                      'type': 'object',
+                      'required': false,
+                      'properties': {
+                        'x': {
+                          'name': 'x',
+                          'type': 'number',
+                          'required': true,
+                        },
+                        'y': {
+                          'name': 'y',
+                          'type': 'number',
+                          'required': true,
+                        },
+                      },
+                    },
+                    'id': {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  },
+                },
+              },
+              'assetManifest': {
+                'name': 'assetManifest',
+                'type': 'object',
+                'required': false,
+                'properties': {
+                  'features': {
+                    'name': 'features',
+                    'type': 'object',
+                    'required': false,
+                    'items': {
+                      'type': 'string',
+                    },
+                  },
+                  'baseUrl': {
+                    'name': 'baseUrl',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  'terrains': {
+                    'name': 'terrains',
+                    'type': 'object',
+                    'required': false,
+                    'items': {
+                      'type': 'string',
+                    },
+                  },
+                  'units': {
+                    'name': 'units',
+                    'type': 'object',
+                    'required': false,
+                    'items': {
+                      'type': 'string',
+                    },
+                  },
+                },
+              },
+              'backgroundImage': {
+                'name': 'backgroundImage',
+                'type': 'string',
+                'required': false,
+              },
+            },
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'className prop',
             'tier': 'presentation',
           },
         },

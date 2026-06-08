@@ -30,23 +30,7 @@ const ALIAS = 'UiCarousel';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiCarouselEventKey = 'CHILDREN' | 'INIT' | 'RENDER_ITEM' | 'SLIDE_CHANGE';
-
-/**
- * Payload shape for the `RENDER_ITEM` event.
- */
-export interface StdUiCarouselRenderItemPayload {
-  item?: EntityRow;
-  index?: number;
-}
-
-/**
- * Payload shape for the `CHILDREN` event.
- */
-export interface StdUiCarouselChildrenPayload {
-  item?: EntityRow;
-  index?: number;
-}
+export type StdUiCarouselEventKey = 'INIT' | 'SLIDE_CHANGE';
 
 /**
  * Payload shape for the `SLIDE_CHANGE` event.
@@ -63,20 +47,20 @@ export interface StdUiCarouselSlideChangePayload {
  */
 export interface StdUiCarouselConfig {
   /** Default: `false` */
-  autoPlay?: boolean;
-  /** Default: `false` */
   loop?: boolean;
+  slideChangePayload?: unknown;
+  /** Default: `false` */
+  autoPlay?: boolean;
   /** Default: `""` */
   className?: string;
+  /** Default: `true` */
+  showArrows?: boolean;
+  /** Default: `5000` */
+  autoPlayInterval?: number;
   /** Default: `true` */
   showDots?: boolean;
   /** Default: `[]` */
   items?: EntityRow[];
-  slideChangePayload?: unknown;
-  /** Default: `5000` */
-  autoPlayInterval?: number;
-  /** Default: `true` */
-  showArrows?: boolean;
 }
 
 /**

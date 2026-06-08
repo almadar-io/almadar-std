@@ -30,7 +30,7 @@ const ALIAS = 'UiTableView';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiTableViewEventKey = 'CHILDREN' | 'INIT' | 'RENDER_ITEM' | 'SELECT' | 'SORT';
+export type StdUiTableViewEventKey = 'INIT' | 'SELECT' | 'SORT';
 
 /**
  * Payload shape for the `SELECT` event.
@@ -47,71 +47,55 @@ export interface StdUiTableViewSortPayload {
 }
 
 /**
- * Payload shape for the `CHILDREN` event.
- */
-export interface StdUiTableViewChildrenPayload {
-  item?: EntityRow;
-  index?: number;
-}
-
-/**
- * Payload shape for the `RENDER_ITEM` event.
- */
-export interface StdUiTableViewRenderItemPayload {
-  item?: EntityRow;
-  index?: number;
-}
-
-/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait
  * without modifying its state-machine topology.
  */
 export interface StdUiTableViewConfig {
-  /** Default: `""` */
-  dropEvent?: string;
-  /** Default: `""` */
-  groupBy?: string;
-  /** Default: `0` */
-  pageSize?: number;
-  /** Default: `""` */
-  dndItemIdField?: string;
-  /** Default: `[]` */
-  selectedIds?: string[];
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `0` */
-  maxInlineActions?: number;
-  /** Default: `false` */
-  sortable?: boolean;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `""` */
-  sortColumn?: string;
-  /** Default: `""` */
-  emptyMessage?: string;
-  /** Default: `"dense"` */
-  look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'bordered';
-  /** Default: `"asc"` */
-  sortDirection?: 'asc' | 'desc';
-  error?: EntityRow;
-  /** Default: `false` */
-  dndRoot?: boolean;
   /** Default: `[]` */
   columns?: EntityRow[];
+  /** Default: `""` */
+  dndItemIdField?: string;
+  /** Default: `false` */
+  dndRoot?: boolean;
+  /** Default: `""` */
+  sortColumn?: string;
+  /** Default: `0` */
+  maxInlineActions?: number;
+  /** Default: `""` */
+  emptyMessage?: string;
+  /** Default: `""` */
+  groupBy?: string;
   /** Default: `[]` */
   fields?: EntityRow[];
   /** Default: `[]` */
+  selectedIds?: string[];
+  /** Default: `""` */
+  dropEvent?: string;
+  /** Default: `"asc"` */
+  sortDirection?: 'asc' | 'desc';
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"dense"` */
+  look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'bordered';
+  /** Default: `""` */
+  positionEvent?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `""` */
+  dragGroup?: string;
+  /** Default: `[]` */
   itemActions?: EntityRow[];
+  /** Default: `false` */
+  sortable?: boolean;
+  /** Default: `0` */
+  pageSize?: number;
   /** Default: `false` */
   selectable?: boolean;
   /** Default: `""` */
-  positionEvent?: string;
-  /** Default: `""` */
   accepts?: string;
-  /** Default: `""` */
-  dragGroup?: string;
+  error?: EntityRow;
   /** Default: `""` */
   reorderEvent?: string;
 }

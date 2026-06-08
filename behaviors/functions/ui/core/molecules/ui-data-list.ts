@@ -30,7 +30,7 @@ const ALIAS = 'UiDataList';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiDataListEventKey = 'CHILDREN' | 'INIT' | 'ITEM_CLICK' | 'LOAD_MORE' | 'LONG_PRESS' | 'RENDER_ITEM' | 'REORDER' | 'SWIPE_LEFT' | 'SWIPE_RIGHT';
+export type StdUiDataListEventKey = 'INIT' | 'ITEM_CLICK' | 'LOAD_MORE' | 'LONG_PRESS' | 'REORDER' | 'SWIPE_LEFT' | 'SWIPE_RIGHT';
 
 /**
  * Payload shape for the `REORDER` event.
@@ -75,79 +75,63 @@ export interface StdUiDataListLoadMorePayload {
 }
 
 /**
- * Payload shape for the `CHILDREN` event.
- */
-export interface StdUiDataListChildrenPayload {
-  item?: EntityRow;
-  index?: number;
-}
-
-/**
- * Payload shape for the `RENDER_ITEM` event.
- */
-export interface StdUiDataListRenderItemPayload {
-  item?: EntityRow;
-  index?: number;
-}
-
-/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait
  * without modifying its state-machine topology.
  */
 export interface StdUiDataListConfig {
-  /** Default: `false` */
-  sortable?: boolean;
-  /** Default: `""` */
-  dropEvent?: string;
-  /** Default: `""` */
-  dndItemIdField?: string;
-  error?: EntityRow;
-  /** Default: `false` */
-  infiniteScroll?: boolean;
-  /** Default: `"dense"` */
-  look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
   /** Default: `[]` */
   columns?: EntityRow[];
+  /** Default: `""` */
+  accepts?: string;
+  /** Default: `""` */
+  positionEvent?: string;
+  /** Default: `false` */
+  dndRoot?: boolean;
   /** Default: `false` */
   hasMore?: boolean;
   /** Default: `""` */
-  dragGroup?: string;
-  /** Default: `5` */
-  pageSize?: number;
+  senderField?: string;
+  error?: EntityRow;
   /** Default: `[]` */
   swipeLeftActions?: EntityRow[];
-  /** Default: `""` */
-  senderField?: string;
-  /** Default: `false` */
-  reorderable?: boolean;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"default"` */
-  variant?: 'default' | 'card' | 'compact' | 'message';
   /** Default: `[]` */
   swipeRightActions?: EntityRow[];
   /** Default: `false` */
-  dndRoot?: boolean;
-  /** Default: `"none"` */
-  gap?: 'none' | 'sm' | 'md' | 'lg';
-  /** Default: `""` */
-  positionEvent?: string;
-  /** Default: `""` */
-  accepts?: string;
-  /** Default: `[]` */
-  itemActions?: EntityRow[];
-  /** Default: `0` */
-  maxInlineActions?: number;
-  /** Default: `""` */
-  groupBy?: string;
+  infiniteScroll?: boolean;
   /** Default: `""` */
   currentUser?: string;
+  /** Default: `"dense"` */
+  look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
+  /** Default: `false` */
+  reorderable?: boolean;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `""` */
+  groupBy?: string;
+  /** Default: `"none"` */
+  gap?: 'none' | 'sm' | 'md' | 'lg';
+  /** Default: `false` */
+  sortable?: boolean;
+  /** Default: `""` */
+  dndItemIdField?: string;
+  /** Default: `"default"` */
+  variant?: 'default' | 'card' | 'compact' | 'message';
+  /** Default: `""` */
+  dropEvent?: string;
+  /** Default: `""` */
+  dragGroup?: string;
   /** Default: `[]` */
   fields?: EntityRow[];
+  /** Default: `0` */
+  maxInlineActions?: number;
+  /** Default: `5` */
+  pageSize?: number;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `[]` */
+  itemActions?: EntityRow[];
 }
 
 /**

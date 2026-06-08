@@ -41,12 +41,12 @@ export type StdUiBreadcrumbEventKey = 'INIT';
 export interface StdUiBreadcrumbConfig {
   /** Default: `[]` */
   items?: EntityRow[];
-  /** Default: `0` */
-  maxItems?: number;
   /** Default: `""` */
   className?: string;
   /** Default: `"chevron-right"` */
   separator?: string;
+  /** Default: `0` */
+  maxItems?: number;
 }
 
 /**

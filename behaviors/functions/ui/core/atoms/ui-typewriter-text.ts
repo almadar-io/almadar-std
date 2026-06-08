@@ -50,10 +50,10 @@ export interface StdUiTypewriterTextConfig {
   speed?: number;
   /** Default: `""` */
   text?: string;
-  /** Default: `""` */
-  className?: string;
   /** Default: `0` */
   startDelay?: number;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

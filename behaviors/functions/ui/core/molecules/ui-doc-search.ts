@@ -30,14 +30,7 @@ const ALIAS = 'UiDocSearch';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiDocSearchEventKey = 'INIT' | 'SEARCH';
-
-/**
- * Payload shape for the `SEARCH` event.
- */
-export interface StdUiDocSearchSearchPayload {
-  query?: string;
-}
+export type StdUiDocSearchEventKey = 'INIT';
 
 /**
  * Typed call-site config block for this trait — every
@@ -46,10 +39,10 @@ export interface StdUiDocSearchSearchPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiDocSearchConfig {
-  /** Default: `"Search documentation..."` */
-  placeholder?: string;
   /** Default: `""` */
   className?: string;
+  /** Default: `"Search documentation..."` */
+  placeholder?: string;
 }
 
 /**

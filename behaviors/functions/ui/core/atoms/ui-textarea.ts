@@ -49,11 +49,11 @@ export interface StdUiTextareaConfig {
   /** Default: `0` */
   rows?: number;
   /** Default: `""` */
-  error?: string;
-  /** Default: `""` */
   className?: string;
   /** Default: `""` */
   placeholder?: string;
+  /** Default: `""` */
+  error?: string;
 }
 
 /**

@@ -39,17 +39,16 @@ export type StdUiSimpleGridEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiSimpleGridConfig {
-  /** Default: `"md"` */
-  gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl';
-  /** Default: `""` */
-  minChildWidth?: string;
-  /** Default: `0` */
-  maxCols?: number;
-  children?: unknown;
   /** Default: `""` */
   className?: string;
-  /** Default: `0` */
+  /** Default: `""` */
+  minChildWidth?: string;
+  /** Default: `1` */
+  maxCols?: number;
+  /** Default: `1` */
   cols?: number;
+  /** Default: `"md"` */
+  gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 }
 
 /**

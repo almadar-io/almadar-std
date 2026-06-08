@@ -40,14 +40,13 @@ export type StdUiGenericAppTemplateEventKey = 'INIT';
  */
 export interface StdUiGenericAppTemplateConfig {
   /** Default: `""` */
-  subtitle?: string;
-  children?: unknown;
+  className?: string;
   headerActions?: unknown;
   footer?: unknown;
   /** Default: `""` */
-  title?: string;
+  subtitle?: string;
   /** Default: `""` */
-  className?: string;
+  title?: string;
 }
 
 /**

@@ -53,6 +53,7 @@ export interface StdUiEventHandlerBoardCompletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiEventHandlerBoardConfig {
+  entityProp?: EntityRow;
   /** Default: `800` */
   stepDurationMs?: number;
 }
@@ -179,12 +180,25 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
               'name': 'Play',
               'description': 'Emits UI:{playEvent}',
               'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
             },
             {
               'key': 'COMPLETE',
               'name': 'Complete',
               'description': 'Emits UI:{completeEvent} with { success }',
               'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'success',
+                  'type': 'boolean',
+                  'required': true,
+                },
+              ],
             },
           ],
           'transitions': [
@@ -194,19 +208,14 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
               'event': 'INIT',
               'effects': [
                 [
-                  'fetch',
-                  'EventHandlerBoardItem',
-                  {},
-                ],
-                [
                   'render-ui',
                   'main',
                   {
-                    'stepDurationMs': '@config.stepDurationMs',
-                    'entity': '@entity',
                     'type': 'event-handler-board',
-                    'completeEvent': 'COMPLETE',
                     'playEvent': 'PLAY',
+                    'completeEvent': 'COMPLETE',
+                    'entity': '@config.entityProp',
+                    'stepDurationMs': '@config.stepDurationMs',
                   },
                 ],
               ],
@@ -214,6 +223,198 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
           ],
         },
         'config': {
+          'entityProp': {
+            'type': 'EventHandlerBoardEntity',
+            'label': 'Entity',
+            'description': 'Puzzle data. The compiler binds the generic `EntityRow`, so the inlet accepts it (and arrays) as union members; the component narrows to its curated `EventHandlerPuzzleEntity` read-shape below (a valid union-narrow) and renders nothing until a puzzle entity is present.',
+            'synonyms': 'entity',
+            'tier': 'presentation',
+            'properties': {
+              'description': {
+                'name': 'description',
+                'type': 'string',
+                'required': true,
+              },
+              'title': {
+                'name': 'title',
+                'type': 'string',
+                'required': true,
+              },
+              'id': {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              'goalCondition': {
+                'name': 'goalCondition',
+                'type': 'string',
+                'required': true,
+              },
+              'hint': {
+                'name': 'hint',
+                'type': 'string',
+                'required': false,
+              },
+              'successMessage': {
+                'name': 'successMessage',
+                'type': 'string',
+                'required': false,
+              },
+              'headerImage': {
+                'name': 'headerImage',
+                'type': 'string',
+                'required': false,
+              },
+              'theme': {
+                'name': 'theme',
+                'type': 'object',
+                'required': false,
+                'properties': {
+                  'accentColor': {
+                    'name': 'accentColor',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'background': {
+                    'name': 'background',
+                    'type': 'string',
+                    'required': false,
+                  },
+                },
+              },
+              'objects': {
+                'name': 'objects',
+                'type': 'array',
+                'required': true,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'id': {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'maxRules': {
+                      'name': 'maxRules',
+                      'type': 'number',
+                      'required': false,
+                    },
+                    'states': {
+                      'name': 'states',
+                      'type': 'array',
+                      'required': true,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
+                    'currentState': {
+                      'name': 'currentState',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'availableActions': {
+                      'name': 'availableActions',
+                      'type': 'array',
+                      'required': true,
+                      'items': {
+                        'type': 'object',
+                        'properties': {
+                          'value': {
+                            'name': 'value',
+                            'type': 'string',
+                            'required': true,
+                          },
+                          'label': {
+                            'name': 'label',
+                            'type': 'string',
+                            'required': true,
+                          },
+                        },
+                      },
+                    },
+                    'availableEvents': {
+                      'name': 'availableEvents',
+                      'type': 'array',
+                      'required': true,
+                      'items': {
+                        'type': 'object',
+                        'properties': {
+                          'value': {
+                            'name': 'value',
+                            'type': 'string',
+                            'required': true,
+                          },
+                          'label': {
+                            'name': 'label',
+                            'type': 'string',
+                            'required': true,
+                          },
+                        },
+                      },
+                    },
+                    'icon': {
+                      'name': 'icon',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'rules': {
+                      'name': 'rules',
+                      'type': 'array',
+                      'required': true,
+                      'items': {
+                        'type': 'object',
+                        'properties': {
+                          'thenAction': {
+                            'name': 'thenAction',
+                            'type': 'string',
+                            'required': true,
+                          },
+                          'whenEvent': {
+                            'name': 'whenEvent',
+                            'type': 'string',
+                            'required': true,
+                          },
+                          'id': {
+                            'name': 'id',
+                            'type': 'string',
+                            'required': true,
+                          },
+                        },
+                      },
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'initialState': {
+                      'name': 'initialState',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  },
+                },
+              },
+              'triggerEvents': {
+                'name': 'triggerEvents',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'string',
+                },
+              },
+              'failMessage': {
+                'name': 'failMessage',
+                'type': 'string',
+                'required': false,
+              },
+              'goalEvent': {
+                'name': 'goalEvent',
+                'type': 'string',
+                'required': true,
+              },
+            },
+          },
           'stepDurationMs': {
             'type': 'number',
             'default': 800,

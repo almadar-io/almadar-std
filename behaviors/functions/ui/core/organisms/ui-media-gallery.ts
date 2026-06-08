@@ -46,42 +46,42 @@ export interface StdUiMediaGallerySelectionPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiMediaGalleryConfig {
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `false` */
-  showUpload?: boolean;
-  /** Default: `[]` */
-  selectedIds?: string[];
-  /** Default: `0` */
-  totalCount?: number;
   /** Default: `0` */
   pageSize?: number;
-  /** Default: `[]` */
-  items?: EntityRow[];
-  /** Default: `[]` */
-  selectedItems?: string[];
-  /** Default: `"square"` */
-  aspectRatio?: 'square' | 'landscape' | 'portrait';
-  /** Default: `""` */
-  className?: string;
-  activeFilters?: unknown;
+  /** Default: `false` */
+  isLoading?: boolean;
   /** Default: `""` */
   sortBy?: string;
   /** Default: `0` */
   pageProp?: number;
-  /** Default: `false` */
-  selectable?: boolean;
   /** Default: `""` */
-  sortDirection?: string;
-  /** Default: `3` */
-  columns?: number;
+  className?: string;
+  /** Default: `"square"` */
+  aspectRatio?: 'square' | 'landscape' | 'portrait';
+  activeFilters?: unknown;
   /** Default: `""` */
   searchValue?: string;
-  error?: unknown;
-  /** Default: `[]` */
-  actions?: EntityRow[];
   /** Default: `""` */
   title?: string;
+  error?: EntityRow;
+  /** Default: `3` */
+  columns?: number;
+  /** Default: `[]` */
+  selectedItems?: string[];
+  /** Default: `false` */
+  selectable?: boolean;
+  /** Default: `false` */
+  showUpload?: boolean;
+  /** Default: `[]` */
+  selectedIds?: string[];
+  /** Default: `[]` */
+  actions?: EntityRow[];
+  /** Default: `[]` */
+  items?: EntityRow[];
+  /** Default: `0` */
+  totalCount?: number;
+  /** Default: `"asc"` */
+  sortDirection?: 'asc' | 'desc';
 }
 
 /**
@@ -194,6 +194,13 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
               'name': 'Selection',
               'description': 'Event name emitted when selection changes (emitted as UI:{selectionEvent})',
               'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'selection',
+                  'type': '[object]',
+                  'required': true,
+                },
+              ],
             },
           ],
           'transitions': [
@@ -211,28 +218,28 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
                   'render-ui',
                   'main',
                   {
-                    'items': '@config.items',
-                    'totalCount': '@config.totalCount',
-                    'page': '@config.pageProp',
-                    'pageSize': '@config.pageSize',
-                    'entity': '@entity',
-                    'title': '@config.title',
-                    'selectable': '@config.selectable',
-                    'selectionEvent': 'SELECTION',
-                    'aspectRatio': '@config.aspectRatio',
-                    'selectedIds': '@config.selectedIds',
-                    'showUpload': '@config.showUpload',
-                    'error': '@config.error',
                     'actions': '@config.actions',
-                    'sortDirection': '@config.sortDirection',
-                    'selectedItems': '@config.selectedItems',
-                    'type': 'media-gallery',
-                    'isLoading': '@config.isLoading',
-                    'className': '@config.className',
                     'sortBy': '@config.sortBy',
-                    'searchValue': '@config.searchValue',
-                    'columns': '@config.columns',
+                    'className': '@config.className',
+                    'selectedItems': '@config.selectedItems',
+                    'error': '@config.error',
+                    'aspectRatio': '@config.aspectRatio',
+                    'isLoading': '@config.isLoading',
+                    'type': 'media-gallery',
+                    'selectable': '@config.selectable',
                     'activeFilters': '@config.activeFilters',
+                    'selectedIds': '@config.selectedIds',
+                    'page': '@config.pageProp',
+                    'entity': '@entity',
+                    'columns': '@config.columns',
+                    'totalCount': '@config.totalCount',
+                    'sortDirection': '@config.sortDirection',
+                    'title': '@config.title',
+                    'items': '@config.items',
+                    'showUpload': '@config.showUpload',
+                    'searchValue': '@config.searchValue',
+                    'selectionEvent': 'SELECTION',
+                    'pageSize': '@config.pageSize',
                   },
                 ],
               ],
@@ -240,11 +247,124 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
           ],
         },
         'config': {
+          'pageSize': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page Size',
+            'description': 'Number of items per page',
+            'tier': 'presentation',
+          },
           'isLoading': {
             'type': 'boolean',
             'default': false,
             'label': 'Is Loading',
             'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
+          'sortBy': {
+            'type': 'string',
+            'default': '',
+            'label': 'Sort By',
+            'description': 'Current sort field',
+            'tier': 'presentation',
+          },
+          'pageProp': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page',
+            'description': 'Current page number',
+            'synonyms': 'page',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'aspectRatio': {
+            'type': 'string',
+            'default': 'square',
+            'label': 'Aspect Ratio',
+            'description': 'Aspect ratio for thumbnails',
+            'tier': 'presentation',
+            'values': [
+              'square',
+              'landscape',
+              'portrait',
+            ],
+          },
+          'activeFilters': {
+            'type': 'json',
+            'label': 'Active Filters',
+            'description': 'Active filters',
+            'tier': 'presentation',
+          },
+          'searchValue': {
+            'type': 'string',
+            'default': '',
+            'label': 'Search Value',
+            'description': 'Current search query value',
+            'tier': 'presentation',
+          },
+          'title': {
+            'type': 'string',
+            'default': '',
+            'label': 'Title',
+            'description': 'Gallery title',
+            'tier': 'presentation',
+          },
+          'error': {
+            'type': 'MediaGalleryError',
+            'label': 'Error',
+            'description': 'Error state (UiError)',
+            'tier': 'presentation',
+            'properties': {
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+            },
+          },
+          'columns': {
+            'type': 'number',
+            'default': 3,
+            'label': 'Columns',
+            'description': 'Column count',
+            'tier': 'presentation',
+          },
+          'selectedItems': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Selected Items',
+            'description': 'Selected item IDs',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'selectable': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Selectable',
+            'description': 'Enable item selection',
             'tier': 'presentation',
           },
           'showUpload': {
@@ -264,19 +384,42 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
               'type': 'string',
             },
           },
-          'totalCount': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Total Count',
-            'description': 'Total number of items',
+          'actions': {
+            'type': '[MediaGalleryActionsItem]',
+            'default': [],
+            'label': 'Actions',
+            'description': 'Actions',
             'tier': 'presentation',
-          },
-          'pageSize': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page Size',
-            'description': 'Number of items per page',
-            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'variant': {
+                  'name': 'variant',
+                  'type': 'string',
+                  'required': false,
+                  'values': [
+                    'primary',
+                    'secondary',
+                    'ghost',
+                  ],
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': true,
+                },
+                'event': {
+                  'name': 'event',
+                  'type': 'string',
+                  'required': false,
+                },
+                'navigatesTo': {
+                  'name': 'navigatesTo',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
           },
           'items': {
             'type': '[MediaGalleryItemsItem]',
@@ -287,8 +430,27 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
             'items': {
               'type': 'object',
               'properties': {
-                'fileSize': {
-                  'name': 'fileSize',
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                'thumbnail': {
+                  'name': 'thumbnail',
+                  'type': 'string',
+                  'required': false,
+                },
+                'mediaType': {
+                  'name': 'mediaType',
+                  'type': 'string',
+                  'required': false,
+                  'values': [
+                    'image',
+                    'video',
+                  ],
+                },
+                'caption': {
+                  'name': 'caption',
                   'type': 'string',
                   'required': false,
                 },
@@ -302,160 +464,31 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
                   'type': 'string',
                   'required': false,
                 },
-                'id': {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': true,
-                },
-                'mediaType': {
-                  'name': 'mediaType',
-                  'type': 'string',
-                  'required': false,
-                  'values': [
-                    'image',
-                    'video',
-                  ],
-                },
-                'thumbnail': {
-                  'name': 'thumbnail',
-                  'type': 'string',
-                  'required': false,
-                },
-                'caption': {
-                  'name': 'caption',
+                'fileSize': {
+                  'name': 'fileSize',
                   'type': 'string',
                   'required': false,
                 },
               },
             },
           },
-          'selectedItems': {
-            'type': '[string]',
-            'default': [],
-            'label': 'Selected Items',
-            'description': 'Selected item IDs',
-            'tier': 'presentation',
-            'items': {
-              'type': 'string',
-            },
-          },
-          'aspectRatio': {
-            'type': 'string',
-            'default': 'square',
-            'label': 'Aspect Ratio',
-            'description': 'Aspect ratio for thumbnails',
-            'tier': 'presentation',
-            'values': [
-              'square',
-              'landscape',
-              'portrait',
-            ],
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'activeFilters': {
-            'type': 'json',
-            'label': 'Active Filters',
-            'description': 'Active filters',
-            'tier': 'presentation',
-          },
-          'sortBy': {
-            'type': 'string',
-            'default': '',
-            'label': 'Sort By',
-            'description': 'Current sort field',
-            'tier': 'presentation',
-          },
-          'pageProp': {
+          'totalCount': {
             'type': 'number',
             'default': 0,
-            'label': 'Page',
-            'description': 'Current page number',
-            'synonyms': 'page',
-            'tier': 'presentation',
-          },
-          'selectable': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Selectable',
-            'description': 'Enable item selection',
+            'label': 'Total Count',
+            'description': 'Total number of items',
             'tier': 'presentation',
           },
           'sortDirection': {
             'type': 'string',
-            'default': '',
+            'default': 'asc',
             'label': 'Sort Direction',
             'description': 'Current sort direction',
             'tier': 'presentation',
-          },
-          'columns': {
-            'type': 'number',
-            'default': 3,
-            'label': 'Columns',
-            'description': 'Column count',
-            'tier': 'presentation',
-          },
-          'searchValue': {
-            'type': 'string',
-            'default': '',
-            'label': 'Search Value',
-            'description': 'Current search query value',
-            'tier': 'presentation',
-          },
-          'error': {
-            'type': 'json',
-            'label': 'Error',
-            'description': 'Error state',
-            'tier': 'presentation',
-          },
-          'actions': {
-            'type': '[MediaGalleryActionsItem]',
-            'default': [],
-            'label': 'Actions',
-            'description': 'Actions',
-            'tier': 'presentation',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'navigatesTo': {
-                  'name': 'navigatesTo',
-                  'type': 'string',
-                  'required': false,
-                },
-                'label': {
-                  'name': 'label',
-                  'type': 'string',
-                  'required': true,
-                },
-                'event': {
-                  'name': 'event',
-                  'type': 'string',
-                  'required': false,
-                },
-                'variant': {
-                  'name': 'variant',
-                  'type': 'string',
-                  'required': false,
-                  'values': [
-                    'primary',
-                    'secondary',
-                    'ghost',
-                  ],
-                },
-              },
-            },
-          },
-          'title': {
-            'type': 'string',
-            'default': '',
-            'label': 'Title',
-            'description': 'Gallery title',
-            'tier': 'presentation',
+            'values': [
+              'asc',
+              'desc',
+            ],
           },
         },
         'scope': 'instance',

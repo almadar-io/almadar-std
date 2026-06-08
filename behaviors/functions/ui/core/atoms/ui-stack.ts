@@ -30,21 +30,7 @@ const ALIAS = 'UiStack';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiStackEventKey = 'ACTION' | 'CLICK' | 'INIT' | 'KEY_DOWN';
-
-/**
- * Payload shape for the `CLICK` event.
- */
-export interface StdUiStackClickPayload {
-  e?: EntityRow;
-}
-
-/**
- * Payload shape for the `KEY_DOWN` event.
- */
-export interface StdUiStackKeyDownPayload {
-  e?: EntityRow;
-}
+export type StdUiStackEventKey = 'ACTION' | 'INIT';
 
 /**
  * Payload shape for the `ACTION` event.
@@ -60,32 +46,33 @@ export interface StdUiStackActionPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiStackConfig {
-  /** Default: `""` */
-  role?: string;
-  children?: unknown;
-  /** Default: `"stretch"` */
-  align?: 'start' | 'center' | 'end' | 'stretch' | 'baseline';
-  style?: unknown;
-  /** Default: `false` */
-  flex?: boolean;
-  /** Default: `"md"` */
-  gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
-  /** Default: `"vertical"` */
-  direction?: 'horizontal' | 'vertical';
+  /** Default: `"start"` */
+  justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';
   /** Default: `0` */
   tabIndex?: number;
   /** Default: `false` */
-  wrap?: boolean;
-  asProp?: unknown;
+  flex?: boolean;
+  /** Default: `"vertical"` */
+  direction?: 'horizontal' | 'vertical';
+  /** Default: `false` */
+  responsive?: boolean;
+  /** Default: `"md"` */
+  gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   /** Default: `""` */
   className?: string;
   actionPayload?: unknown;
-  /** Default: `false` */
-  responsive?: boolean;
-  /** Default: `"start"` */
-  justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';
+  /** Default: `""` */
+  role?: string;
   /** Default: `false` */
   reverse?: boolean;
+  /** Default: `"div"` */
+  asProp?: string;
+  /** Default: `"stretch"` */
+  align?: 'start' | 'center' | 'end' | 'stretch' | 'baseline';
+  children?: unknown;
+  style?: unknown;
+  /** Default: `false` */
+  wrap?: boolean;
 }
 
 /**

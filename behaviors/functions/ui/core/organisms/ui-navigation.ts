@@ -39,15 +39,15 @@ export type StdUiNavigationEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiNavigationConfig {
-  error?: EntityRow;
   /** Default: `""` */
   className?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `"horizontal"` */
-  orientation?: 'horizontal' | 'vertical';
   /** Default: `[]` */
   items?: EntityRow[];
+  error?: EntityRow;
+  /** Default: `"horizontal"` */
+  orientation?: 'horizontal' | 'vertical';
+  /** Default: `false` */
+  isLoading?: boolean;
 }
 
 /**
@@ -156,13 +156,13 @@ export function stdUiNavigationNavigationOrbital(params: StdUiNavigationNavigati
                   'render-ui',
                   'main',
                   {
-                    'orientation': '@config.orientation',
-                    'isLoading': '@config.isLoading',
-                    'type': 'navigation',
-                    'entity': 'NavigationItem',
+                    'error': '@config.error',
                     'className': '@config.className',
                     'items': '@config.items',
-                    'error': '@config.error',
+                    'isLoading': '@config.isLoading',
+                    'orientation': '@config.orientation',
+                    'type': 'navigation',
+                    'entity': 'NavigationItem',
                   },
                 ],
               ],
@@ -170,58 +170,12 @@ export function stdUiNavigationNavigationOrbital(params: StdUiNavigationNavigati
           ],
         },
         'config': {
-          'error': {
-            'type': 'NavigationError',
-            'label': 'Error',
-            'description': 'Error state',
-            'tier': 'presentation',
-            'properties': {
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-            },
-          },
           'className': {
             'type': 'string',
             'default': '',
             'label': 'Class Name',
             'description': 'Additional CSS classes',
             'tier': 'presentation',
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
-            'tier': 'presentation',
-          },
-          'orientation': {
-            'type': 'string',
-            'default': 'horizontal',
-            'label': 'Orientation',
-            'description': 'Navigation orientation',
-            'tier': 'presentation',
-            'values': [
-              'horizontal',
-              'vertical',
-            ],
           },
           'items': {
             'type': '[NavigationItemsItem]',
@@ -237,6 +191,36 @@ export function stdUiNavigationNavigationOrbital(params: StdUiNavigationNavigati
                   'type': 'string',
                   'required': true,
                 },
+                'isActive': {
+                  'name': 'isActive',
+                  'type': 'boolean',
+                  'required': false,
+                },
+                'badge': {
+                  'name': 'badge',
+                  'type': 'string',
+                  'required': false,
+                },
+                'icon': {
+                  'name': 'icon',
+                  'type': 'string',
+                  'required': false,
+                },
+                'href': {
+                  'name': 'href',
+                  'type': 'string',
+                  'required': false,
+                },
+                'disabled': {
+                  'name': 'disabled',
+                  'type': 'boolean',
+                  'required': false,
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
                 'subMenu': {
                   'name': 'subMenu',
                   'type': 'array',
@@ -245,38 +229,54 @@ export function stdUiNavigationNavigationOrbital(params: StdUiNavigationNavigati
                     'type': 'string',
                   },
                 },
-                'badge': {
-                  'name': 'badge',
-                  'type': 'string',
-                  'required': false,
-                },
-                'id': {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': true,
-                },
-                'href': {
-                  'name': 'href',
-                  'type': 'string',
-                  'required': false,
-                },
-                'isActive': {
-                  'name': 'isActive',
-                  'type': 'boolean',
-                  'required': false,
-                },
-                'disabled': {
-                  'name': 'disabled',
-                  'type': 'boolean',
-                  'required': false,
-                },
-                'icon': {
-                  'name': 'icon',
-                  'type': 'string',
-                  'required': false,
-                },
               },
             },
+          },
+          'error': {
+            'type': 'NavigationError',
+            'label': 'Error',
+            'description': 'Error state',
+            'tier': 'presentation',
+            'properties': {
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+            },
+          },
+          'orientation': {
+            'type': 'string',
+            'default': 'horizontal',
+            'label': 'Orientation',
+            'description': 'Navigation orientation',
+            'tier': 'presentation',
+            'values': [
+              'horizontal',
+              'vertical',
+            ],
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
           },
         },
         'scope': 'instance',

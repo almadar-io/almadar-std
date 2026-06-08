@@ -39,21 +39,21 @@ export type StdUiGeometricPatternEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiGeometricPatternConfig {
-  /** Default: `"star8"` */
-  variant?: 'star8' | 'star6' | 'khatam' | 'star10' | 'star12' | 'rosette-double' | 'rosette-filled' | 'seigaiha' | 'greek-key' | 'celtic-knot' | 'kolam' | 'arch' | 'arabesque-vine' | 'arabesque-net';
-  /** Default: `"background"` */
-  mode?: 'background' | 'left' | 'right' | 'dual' | 'around' | 'frame';
+  children?: unknown;
+  /** Default: `1` */
+  scale?: number;
   /** Default: `0.06` */
   opacity?: number;
-  /** Default: `""` */
-  className?: string;
-  children?: unknown;
+  /** Default: `"background"` */
+  mode?: 'background' | 'left' | 'right' | 'dual' | 'around' | 'frame';
   /** Default: `"var(--color-primary)"` */
   color?: string;
   /** Default: `0.5` */
   strokeWidth?: number;
-  /** Default: `1` */
-  scale?: number;
+  /** Default: `"star8"` */
+  variant?: 'star8' | 'star6' | 'khatam' | 'star10' | 'star12' | 'rosette-double' | 'rosette-filled' | 'seigaiha' | 'greek-key' | 'celtic-knot' | 'kolam' | 'arch' | 'arabesque-vine' | 'arabesque-net';
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

@@ -54,33 +54,33 @@ export interface StdUiSpriteActionPayload {
  */
 export interface StdUiSpriteConfig {
   /** Default: `0` */
-  frameHeight?: number;
-  /** Default: `0` */
-  zIndex?: number;
-  /** Default: `16` */
-  columns?: number;
-  /** Default: `0` */
-  x?: number;
-  /** Default: `0` */
   frame?: number;
-  /** Default: `false` */
-  flipX?: boolean;
   /** Default: `1` */
   scale?: number;
+  /** Default: `0` */
+  frameHeight?: number;
+  /** Default: `""` */
+  spritesheet?: string;
+  /** Default: `false` */
+  flipX?: boolean;
+  /** Default: `false` */
+  flipY?: boolean;
+  /** Default: `0` */
+  y?: number;
+  /** Default: `0` */
+  rotation?: number;
   /** Default: `1` */
   opacity?: number;
   /** Default: `0` */
-  y?: number;
-  /** Default: `""` */
-  spritesheet?: string;
-  /** Default: `0` */
   frameWidth?: number;
   /** Default: `0` */
-  rotation?: number;
+  x?: number;
+  /** Default: `0` */
+  zIndex?: number;
   /** Default: `""` */
   className?: string;
-  /** Default: `false` */
-  flipY?: boolean;
+  /** Default: `16` */
+  columns?: number;
 }
 
 /**

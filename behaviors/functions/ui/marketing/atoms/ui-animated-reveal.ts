@@ -30,14 +30,7 @@ const ALIAS = 'UiAnimatedReveal';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiAnimatedRevealEventKey = 'CHILDREN' | 'INIT';
-
-/**
- * Payload shape for the `CHILDREN` event.
- */
-export interface StdUiAnimatedRevealChildrenPayload {
-  id?: string;
-}
+export type StdUiAnimatedRevealEventKey = 'INIT';
 
 /**
  * Typed call-site config block for this trait — every
@@ -48,22 +41,22 @@ export interface StdUiAnimatedRevealChildrenPayload {
 export interface StdUiAnimatedRevealConfig {
   /** Default: `0.15` */
   threshold?: number;
-  /** Default: `"fade-up"` */
-  animation?: 'fade-up' | 'fade-down' | 'fade-in' | 'fade-left' | 'fade-right' | 'scale' | 'scale-up' | 'none';
-  /** Default: `600` */
-  duration?: number;
   /** Default: `"scroll"` */
   trigger?: 'scroll' | 'hover' | 'manual';
-  /** Default: `true` */
-  once?: boolean;
+  /** Default: `"fade-up"` */
+  animation?: 'fade-up' | 'fade-down' | 'fade-in' | 'fade-left' | 'fade-right' | 'scale' | 'scale-up' | 'none';
   /** Default: `false` */
   animate?: boolean;
-  /** Default: `""` */
-  className?: string;
   /** Default: `"cubic-bezier(0.16, 1, 0.3, 1)"` */
   easing?: string;
   /** Default: `0` */
   delay?: number;
+  /** Default: `true` */
+  once?: boolean;
+  /** Default: `600` */
+  duration?: number;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

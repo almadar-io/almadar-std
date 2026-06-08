@@ -30,15 +30,7 @@ const ALIAS = 'UiStateMachineView';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiStateMachineViewEventKey = 'INIT' | 'RENDER_STATE_NODE';
-
-/**
- * Payload shape for the `RENDER_STATE_NODE` event.
- */
-export interface StdUiStateMachineViewRenderStateNodePayload {
-  state?: EntityRow;
-  config?: EntityRow;
-}
+export type StdUiStateMachineViewEventKey = 'INIT';
 
 /**
  * Typed call-site config block for this trait — every
@@ -49,10 +41,9 @@ export interface StdUiStateMachineViewRenderStateNodePayload {
 export interface StdUiStateMachineViewConfig {
   /** Default: `false` */
   isLoading?: boolean;
+  error?: EntityRow;
   /** Default: `""` */
   className?: string;
-  layoutData?: unknown;
-  error?: EntityRow;
 }
 
 /**
@@ -133,24 +124,6 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
         },
         'category': 'interaction',
         'linkedEntity': 'StateMachineViewItem',
-        'emits': [
-          {
-            'event': 'RENDER_STATE_NODE',
-            'description': 'Custom state node renderer — when provided, replaces the default circle nodes',
-            'tier': 'essential',
-            'scope': 'external',
-            'payloadSchema': [
-              {
-                'name': 'state',
-                'type': 'object',
-              },
-              {
-                'name': 'config',
-                'type': 'object',
-              },
-            ],
-          },
-        ],
         'stateMachine': {
           'states': [
             {
@@ -163,12 +136,6 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
               'key': 'INIT',
               'name': 'Initialize',
             },
-            {
-              'key': 'RENDER_STATE_NODE',
-              'name': 'Render State Node',
-              'description': 'Custom state node renderer — when provided, replaces the default circle nodes',
-              'tier': 'essential',
-            },
           ],
           'transitions': [
             {
@@ -180,12 +147,10 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
                   'render-ui',
                   'main',
                   {
-                    'className': '@config.className',
                     'isLoading': '@config.isLoading',
                     'error': '@config.error',
-                    'layoutData': '@config.layoutData',
-                    'renderStateNode': 'RENDER_STATE_NODE',
                     'type': 'state-machine-view',
+                    'className': '@config.className',
                   },
                 ],
               ],
@@ -200,27 +165,24 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
             'description': 'Loading state indicator',
             'tier': 'presentation',
           },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'layoutData': {
-            'type': 'json',
-            'label': 'Layout Data',
-            'description': 'layoutData prop',
-            'tier': 'presentation',
-          },
           'error': {
             'type': 'StateMachineViewError',
             'label': 'Error',
             'description': 'Error state',
             'tier': 'presentation',
             'properties': {
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
               'stack': {
                 'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
                 'type': 'string',
                 'required': false,
               },
@@ -229,17 +191,14 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
                 'type': 'string',
                 'required': false,
               },
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
             },
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
           },
         },
         'scope': 'instance',

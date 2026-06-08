@@ -46,23 +46,22 @@ export interface StdUiCodeBlockChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiCodeBlockConfig {
-  /** Default: `""` */
-  code?: string;
   /** Default: `true` */
   showCopyButton?: boolean;
-  /** Default: `"text"` */
-  language?: string;
+  /** Default: `false` */
+  foldable?: boolean;
   /** Default: `false` */
   editable?: boolean;
-  errorLines?: unknown;
+  /** Default: `"text"` */
+  language?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `true` */
+  showLanguageBadge?: boolean;
   /** Default: `"60vh"` */
   maxHeight?: string;
   /** Default: `""` */
-  className?: string;
-  /** Default: `false` */
-  foldable?: boolean;
-  /** Default: `true` */
-  showLanguageBadge?: boolean;
+  code?: string;
 }
 
 /**

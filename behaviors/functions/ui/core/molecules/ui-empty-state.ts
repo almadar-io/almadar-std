@@ -47,23 +47,23 @@ export interface StdUiEmptyStateActionPayload {
  */
 export interface StdUiEmptyStateConfig {
   /** Default: `""` */
-  title?: string;
-  /** Default: `"icon-only"` */
-  look?: 'illustrated' | 'icon-only' | 'text-only' | 'mascot';
-  /** Default: `"circle"` */
-  icon?: string;
-  /** Default: `"default"` */
-  variant?: 'default' | 'success' | 'error' | 'warning' | 'info';
-  /** Default: `""` */
-  className?: string;
-  /** Default: `""` */
-  actionLabel?: string;
-  /** Default: `""` */
-  message?: string;
-  /** Default: `""` */
   description?: string;
   /** Default: `false` */
   destructive?: boolean;
+  /** Default: `""` */
+  message?: string;
+  /** Default: `"circle"` */
+  icon?: string;
+  /** Default: `""` */
+  actionLabel?: string;
+  /** Default: `"icon-only"` */
+  look?: 'illustrated' | 'icon-only' | 'text-only' | 'mascot';
+  /** Default: `"default"` */
+  variant?: 'default' | 'success' | 'error' | 'warning' | 'info';
+  /** Default: `""` */
+  title?: string;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

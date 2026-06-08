@@ -46,14 +46,14 @@ export interface StdUiSelectActionPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiSelectConfig {
+  /** Default: `[]` */
+  options?: EntityRow[];
   /** Default: `""` */
   error?: string;
   /** Default: `""` */
-  placeholder?: string;
-  /** Default: `""` */
   value?: string;
-  /** Default: `[]` */
-  options?: EntityRow[];
+  /** Default: `""` */
+  placeholder?: string;
   /** Default: `""` */
   className?: string;
 }

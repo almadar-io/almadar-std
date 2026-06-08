@@ -41,6 +41,16 @@ export interface StdUiNegotiatorBoardCompletePayload {
 }
 
 /**
+ * Typed call-site config block for this trait — every
+ * field maps to a `config { ... }` entry in the source
+ * .lolo. The agent fills these to specialise the trait
+ * without modifying its state-machine topology.
+ */
+export interface StdUiNegotiatorBoardConfig {
+  entityProp?: EntityRow;
+}
+
+/**
  * Tunable params for the NegotiatorBoardOrbital orbital.
  *
  * Canonical entity: NegotiatorBoardItem — overridable via
@@ -155,6 +165,18 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
               'name': 'Complete',
               'description': 'completeEvent prop',
               'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'success',
+                  'type': 'boolean',
+                  'required': true,
+                },
+                {
+                  'name': 'score',
+                  'type': 'number',
+                  'required': true,
+                },
+              ],
             },
           ],
           'transitions': [
@@ -164,22 +186,150 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
               'event': 'INIT',
               'effects': [
                 [
-                  'fetch',
-                  'NegotiatorBoardItem',
-                  {},
-                ],
-                [
                   'render-ui',
                   'main',
                   {
                     'type': 'negotiator-board',
-                    'entity': '@entity',
+                    'entity': '@config.entityProp',
                     'completeEvent': 'COMPLETE',
                   },
                 ],
               ],
             },
           ],
+        },
+        'config': {
+          'entityProp': {
+            'type': 'NegotiatorBoardEntity',
+            'label': 'Entity',
+            'description': 'The compiler binds the generic `EntityRow`, so the inlet accepts it (and',
+            'synonyms': 'entity',
+            'tier': 'presentation',
+            'properties': {
+              'id': {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              'title': {
+                'name': 'title',
+                'type': 'string',
+                'required': true,
+              },
+              'successMessage': {
+                'name': 'successMessage',
+                'type': 'string',
+                'required': false,
+              },
+              'headerImage': {
+                'name': 'headerImage',
+                'type': 'string',
+                'required': false,
+              },
+              'theme': {
+                'name': 'theme',
+                'type': 'object',
+                'required': false,
+                'properties': {
+                  'accentColor': {
+                    'name': 'accentColor',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'background': {
+                    'name': 'background',
+                    'type': 'string',
+                    'required': false,
+                  },
+                },
+              },
+              'payoffMatrix': {
+                'name': 'payoffMatrix',
+                'type': 'array',
+                'required': true,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'opponentAction': {
+                      'name': 'opponentAction',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'opponentPayoff': {
+                      'name': 'opponentPayoff',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'playerPayoff': {
+                      'name': 'playerPayoff',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'playerAction': {
+                      'name': 'playerAction',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  },
+                },
+              },
+              'hint': {
+                'name': 'hint',
+                'type': 'string',
+                'required': false,
+              },
+              'failMessage': {
+                'name': 'failMessage',
+                'type': 'string',
+                'required': false,
+              },
+              'actions': {
+                'name': 'actions',
+                'type': 'array',
+                'required': true,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'label': {
+                      'name': 'label',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'description': {
+                      'name': 'description',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'id': {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  },
+                },
+              },
+              'targetScore': {
+                'name': 'targetScore',
+                'type': 'number',
+                'required': true,
+              },
+              'totalRounds': {
+                'name': 'totalRounds',
+                'type': 'number',
+                'required': true,
+              },
+              'opponentStrategy': {
+                'name': 'opponentStrategy',
+                'type': 'string',
+                'required': true,
+              },
+              'description': {
+                'name': 'description',
+                'type': 'string',
+                'required': true,
+              },
+            },
+          },
         },
         'scope': 'instance',
       } as never, 'NegotiatorBoardItem', canonicalName) as never,

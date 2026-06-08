@@ -45,11 +45,11 @@ export interface StdUiTeamCardConfig {
   nameAr?: string;
   /** Default: `""` */
   role?: string;
-  /** Default: `""` */
-  bio?: string;
   avatar?: EntityRow;
   /** Default: `""` */
   className?: string;
+  /** Default: `""` */
+  bio?: string;
 }
 
 /**

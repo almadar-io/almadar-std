@@ -30,22 +30,7 @@ const ALIAS = 'UiErrorBoundary';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiErrorBoundaryEventKey = 'ERROR' | 'FALLBACK' | 'INIT';
-
-/**
- * Payload shape for the `FALLBACK` event.
- */
-export interface StdUiErrorBoundaryFallbackPayload {
-  id?: string;
-}
-
-/**
- * Payload shape for the `ERROR` event.
- */
-export interface StdUiErrorBoundaryErrorPayload {
-  error?: EntityRow;
-  errorInfo?: EntityRow;
-}
+export type StdUiErrorBoundaryEventKey = 'INIT';
 
 /**
  * Typed call-site config block for this trait — every
@@ -54,7 +39,6 @@ export interface StdUiErrorBoundaryErrorPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiErrorBoundaryConfig {
-  children?: unknown;
   /** Default: `""` */
   className?: string;
 }

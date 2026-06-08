@@ -30,14 +30,7 @@ const ALIAS = 'UiProgressDots';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiProgressDotsEventKey = 'DOT_CLICK' | 'GET_STATE' | 'INIT';
-
-/**
- * Payload shape for the `GET_STATE` event.
- */
-export interface StdUiProgressDotsGetStatePayload {
-  index?: number;
-}
+export type StdUiProgressDotsEventKey = 'DOT_CLICK' | 'INIT';
 
 /**
  * Payload shape for the `DOT_CLICK` event.
@@ -53,12 +46,12 @@ export interface StdUiProgressDotsDotClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiProgressDotsConfig {
-  /** Default: `0` */
-  count?: number;
   /** Default: `""` */
   className?: string;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
+  /** Default: `0` */
+  count?: number;
   /** Default: `0` */
   currentIndex?: number;
 }

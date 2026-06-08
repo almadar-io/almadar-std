@@ -47,13 +47,13 @@ export interface StdUiFlipCardFlipPayload {
  */
 export interface StdUiFlipCardConfig {
   back?: unknown;
-  /** Default: `"h-64"` */
-  height?: string;
-  front?: unknown;
   /** Default: `""` */
   className?: string;
+  front?: unknown;
   /** Default: `false` */
   flipped?: boolean;
+  /** Default: `"h-64"` */
+  height?: string;
 }
 
 /**

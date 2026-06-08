@@ -39,37 +39,37 @@ export type StdUiCodeViewerEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiCodeViewerConfig {
-  /** Default: `"code"` */
-  mode?: 'code' | 'diff';
-  /** Default: `[]` */
-  actions?: EntityRow[];
   /** Default: `""` */
-  title?: string;
+  className?: string;
+  /** Default: `false` */
+  wordWrap?: boolean;
   /** Default: `""` */
   maxHeight?: string;
+  error?: EntityRow;
+  /** Default: `[]` */
+  actions?: EntityRow[];
+  /** Default: `[]` */
+  files?: EntityRow[];
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `true` */
+  showCopy?: boolean;
+  /** Default: `""` */
+  language?: string;
+  /** Default: `""` */
+  code?: string;
+  /** Default: `"code"` */
+  mode?: 'code' | 'diff';
   /** Default: `""` */
   newValue?: string;
   /** Default: `""` */
-  code?: string;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `true` */
-  showLineNumbers?: boolean;
-  /** Default: `[]` */
-  files?: EntityRow[];
-  error?: EntityRow;
-  /** Default: `""` */
-  oldValue?: string;
+  title?: string;
   /** Default: `[]` */
   diff?: EntityRow[];
-  /** Default: `true` */
-  showCopy?: boolean;
-  /** Default: `false` */
-  wordWrap?: boolean;
-  /** Default: `false` */
-  isLoading?: boolean;
   /** Default: `""` */
-  language?: string;
+  oldValue?: string;
+  /** Default: `true` */
+  showLineNumbers?: boolean;
 }
 
 /**
@@ -178,24 +178,24 @@ export function stdUiCodeViewerCodeViewerOrbital(params: StdUiCodeViewerCodeView
                   'render-ui',
                   'main',
                   {
-                    'actions': '@config.actions',
-                    'language': '@config.language',
-                    'newValue': '@config.newValue',
-                    'showCopy': '@config.showCopy',
-                    'error': '@config.error',
-                    'mode': '@config.mode',
-                    'oldValue': '@config.oldValue',
-                    'entity': 'CodeViewerItem',
                     'title': '@config.title',
-                    'maxHeight': '@config.maxHeight',
-                    'diff': '@config.diff',
-                    'wordWrap': '@config.wordWrap',
                     'isLoading': '@config.isLoading',
+                    'wordWrap': '@config.wordWrap',
+                    'showCopy': '@config.showCopy',
+                    'language': '@config.language',
+                    'diff': '@config.diff',
+                    'maxHeight': '@config.maxHeight',
+                    'entity': 'CodeViewerItem',
                     'className': '@config.className',
-                    'files': '@config.files',
+                    'error': '@config.error',
                     'code': '@config.code',
-                    'type': 'code-viewer',
+                    'actions': '@config.actions',
+                    'oldValue': '@config.oldValue',
                     'showLineNumbers': '@config.showLineNumbers',
+                    'files': '@config.files',
+                    'type': 'code-viewer',
+                    'newValue': '@config.newValue',
+                    'mode': '@config.mode',
                   },
                 ],
               ],
@@ -203,16 +203,54 @@ export function stdUiCodeViewerCodeViewerOrbital(params: StdUiCodeViewerCodeView
           ],
         },
         'config': {
-          'mode': {
+          'className': {
             'type': 'string',
-            'default': 'code',
-            'label': 'Mode',
-            'description': 'Display mode',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
             'tier': 'presentation',
-            'values': [
-              'code',
-              'diff',
-            ],
+          },
+          'wordWrap': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Word Wrap',
+            'description': 'Enable word wrap',
+            'tier': 'presentation',
+          },
+          'maxHeight': {
+            'type': 'string',
+            'default': '',
+            'label': 'Max Height',
+            'description': 'Max height before scrolling',
+            'tier': 'presentation',
+          },
+          'error': {
+            'type': 'CodeViewerError',
+            'label': 'Error',
+            'description': 'Error state',
+            'tier': 'presentation',
+            'properties': {
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+            },
           },
           'actions': {
             'type': '[CodeViewerActionsItem]',
@@ -223,6 +261,11 @@ export function stdUiCodeViewerCodeViewerOrbital(params: StdUiCodeViewerCodeView
             'items': {
               'type': 'object',
               'properties': {
+                'navigatesTo': {
+                  'name': 'navigatesTo',
+                  'type': 'string',
+                  'required': false,
+                },
                 'variant': {
                   'name': 'variant',
                   'type': 'string',
@@ -233,65 +276,18 @@ export function stdUiCodeViewerCodeViewerOrbital(params: StdUiCodeViewerCodeView
                     'ghost',
                   ],
                 },
-                'event': {
-                  'name': 'event',
-                  'type': 'string',
-                  'required': false,
-                },
-                'navigatesTo': {
-                  'name': 'navigatesTo',
-                  'type': 'string',
-                  'required': false,
-                },
                 'label': {
                   'name': 'label',
                   'type': 'string',
                   'required': true,
                 },
+                'event': {
+                  'name': 'event',
+                  'type': 'string',
+                  'required': false,
+                },
               },
             },
-          },
-          'title': {
-            'type': 'string',
-            'default': '',
-            'label': 'Title',
-            'description': 'Viewer title',
-            'tier': 'presentation',
-          },
-          'maxHeight': {
-            'type': 'string',
-            'default': '',
-            'label': 'Max Height',
-            'description': 'Max height before scrolling',
-            'tier': 'presentation',
-          },
-          'newValue': {
-            'type': 'string',
-            'default': '',
-            'label': 'New Value',
-            'description': 'New value (for generating diff)',
-            'tier': 'presentation',
-          },
-          'code': {
-            'type': 'string',
-            'default': '',
-            'label': 'Code',
-            'description': 'Code content',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'showLineNumbers': {
-            'type': 'boolean',
-            'default': true,
-            'label': 'Show Line Numbers',
-            'description': 'Show line numbers',
-            'tier': 'presentation',
           },
           'files': {
             'type': '[CodeViewerFilesItem]',
@@ -320,39 +316,57 @@ export function stdUiCodeViewerCodeViewerOrbital(params: StdUiCodeViewerCodeView
               },
             },
           },
-          'error': {
-            'type': 'CodeViewerError',
-            'label': 'Error',
-            'description': 'Error state',
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state',
             'tier': 'presentation',
-            'properties': {
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-            },
           },
-          'oldValue': {
+          'showCopy': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Show Copy',
+            'description': 'Show copy button',
+            'tier': 'presentation',
+          },
+          'language': {
             'type': 'string',
             'default': '',
-            'label': 'Old Value',
-            'description': 'Old value (for generating diff)',
+            'label': 'Language',
+            'description': 'Language for display label',
+            'tier': 'presentation',
+          },
+          'code': {
+            'type': 'string',
+            'default': '',
+            'label': 'Code',
+            'description': 'Code content',
+            'tier': 'presentation',
+          },
+          'mode': {
+            'type': 'string',
+            'default': 'code',
+            'label': 'Mode',
+            'description': 'Display mode',
+            'tier': 'presentation',
+            'values': [
+              'code',
+              'diff',
+            ],
+          },
+          'newValue': {
+            'type': 'string',
+            'default': '',
+            'label': 'New Value',
+            'description': 'New value (for generating diff)',
+            'tier': 'presentation',
+          },
+          'title': {
+            'type': 'string',
+            'default': '',
+            'label': 'Title',
+            'description': 'Viewer title',
             'tier': 'presentation',
           },
           'diff': {
@@ -369,16 +383,6 @@ export function stdUiCodeViewerCodeViewerOrbital(params: StdUiCodeViewerCodeView
                   'type': 'number',
                   'required': false,
                 },
-                'content': {
-                  'name': 'content',
-                  'type': 'string',
-                  'required': true,
-                },
-                'afterLineNumber': {
-                  'name': 'afterLineNumber',
-                  'type': 'number',
-                  'required': false,
-                },
                 'type': {
                   'name': 'type',
                   'type': 'string',
@@ -390,35 +394,31 @@ export function stdUiCodeViewerCodeViewerOrbital(params: StdUiCodeViewerCodeView
                     'context',
                   ],
                 },
+                'content': {
+                  'name': 'content',
+                  'type': 'string',
+                  'required': true,
+                },
+                'afterLineNumber': {
+                  'name': 'afterLineNumber',
+                  'type': 'number',
+                  'required': false,
+                },
               },
             },
           },
-          'showCopy': {
-            'type': 'boolean',
-            'default': true,
-            'label': 'Show Copy',
-            'description': 'Show copy button',
-            'tier': 'presentation',
-          },
-          'wordWrap': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Word Wrap',
-            'description': 'Enable word wrap',
-            'tier': 'presentation',
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state',
-            'tier': 'presentation',
-          },
-          'language': {
+          'oldValue': {
             'type': 'string',
             'default': '',
-            'label': 'Language',
-            'description': 'Language for display label',
+            'label': 'Old Value',
+            'description': 'Old value (for generating diff)',
+            'tier': 'presentation',
+          },
+          'showLineNumbers': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Show Line Numbers',
+            'description': 'Show line numbers',
             'tier': 'presentation',
           },
         },

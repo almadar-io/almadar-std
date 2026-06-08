@@ -41,20 +41,20 @@ export type StdUiFeatureCardEventKey = 'INIT';
 export interface StdUiFeatureCardConfig {
   /** Default: `"circle"` */
   icon?: string;
-  /** Default: `""` */
-  href?: string;
-  /** Default: `""` */
-  description?: string;
-  /** Default: `"Learn more"` */
-  linkLabel?: string;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
-  /** Default: `"bordered"` */
-  variant?: 'default' | 'bordered' | 'elevated' | 'interactive';
   /** Default: `""` */
   className?: string;
   /** Default: `""` */
+  href?: string;
+  /** Default: `""` */
   title?: string;
+  /** Default: `""` */
+  description?: string;
+  /** Default: `"bordered"` */
+  variant?: 'default' | 'bordered' | 'elevated' | 'interactive';
+  /** Default: `"Learn more"` */
+  linkLabel?: string;
 }
 
 /**

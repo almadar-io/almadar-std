@@ -39,9 +39,9 @@ export type StdUiDialogEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiDialogConfig {
-  children?: unknown;
   /** Default: `""` */
   className?: string;
+  children?: unknown;
 }
 
 /**

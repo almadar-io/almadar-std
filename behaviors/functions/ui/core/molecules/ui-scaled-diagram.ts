@@ -39,7 +39,6 @@ export type StdUiScaledDiagramEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiScaledDiagramConfig {
-  children?: unknown;
   /** Default: `""` */
   className?: string;
 }

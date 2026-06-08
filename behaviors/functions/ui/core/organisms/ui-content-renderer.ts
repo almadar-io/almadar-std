@@ -39,32 +39,32 @@ export type StdUiContentRendererEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiContentRendererConfig {
-  /** Default: `""` */
-  searchValue?: string;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `0` */
-  totalCount?: number;
-  /** Default: `0` */
-  pageProp?: number;
-  /** Default: `0` */
-  pageSize?: number;
-  /** Default: `""` */
-  sortBy?: string;
-  /** Default: `[]` */
-  selectedIds?: string[];
-  error?: unknown;
-  /** Default: `""` */
-  content?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
   /** Default: `[]` */
   segments?: EntityRow[];
   /** Default: `"rtl"` */
   direction?: 'rtl' | 'ltr';
-  /** Default: `""` */
-  sortDirection?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `0` */
+  pageSize?: number;
   activeFilters?: unknown;
+  /** Default: `""` */
+  content?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `""` */
+  sortBy?: string;
+  /** Default: `""` */
+  searchValue?: string;
+  /** Default: `0` */
+  pageProp?: number;
+  /** Default: `[]` */
+  selectedIds?: string[];
+  error?: EntityRow;
+  /** Default: `0` */
+  totalCount?: number;
+  /** Default: `"asc"` */
+  sortDirection?: 'asc' | 'desc';
 }
 
 /**
@@ -173,22 +173,22 @@ export function stdUiContentRendererContentRendererOrbital(params: StdUiContentR
                   'render-ui',
                   'main',
                   {
-                    'sortDirection': '@config.sortDirection',
-                    'page': '@config.pageProp',
-                    'totalCount': '@config.totalCount',
-                    'activeFilters': '@config.activeFilters',
-                    'sortBy': '@config.sortBy',
+                    'className': '@config.className',
                     'type': 'content-renderer',
+                    'isLoading': '@config.isLoading',
+                    'totalCount': '@config.totalCount',
+                    'sortDirection': '@config.sortDirection',
+                    'sortBy': '@config.sortBy',
+                    'segments': '@config.segments',
+                    'activeFilters': '@config.activeFilters',
+                    'page': '@config.pageProp',
+                    'selectedIds': '@config.selectedIds',
+                    'content': '@config.content',
+                    'error': '@config.error',
                     'entity': '@entity',
                     'searchValue': '@config.searchValue',
-                    'selectedIds': '@config.selectedIds',
-                    'className': '@config.className',
-                    'isLoading': '@config.isLoading',
                     'pageSize': '@config.pageSize',
-                    'segments': '@config.segments',
-                    'error': '@config.error',
                     'direction': '@config.direction',
-                    'content': '@config.content',
                   },
                 ],
               ],
@@ -196,79 +196,6 @@ export function stdUiContentRendererContentRendererOrbital(params: StdUiContentR
           ],
         },
         'config': {
-          'searchValue': {
-            'type': 'string',
-            'default': '',
-            'label': 'Search Value',
-            'description': 'Current search query value',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'totalCount': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Total Count',
-            'description': 'Total number of items',
-            'tier': 'presentation',
-          },
-          'pageProp': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page',
-            'description': 'Current page number',
-            'synonyms': 'page',
-            'tier': 'presentation',
-          },
-          'pageSize': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page Size',
-            'description': 'Number of items per page',
-            'tier': 'presentation',
-          },
-          'sortBy': {
-            'type': 'string',
-            'default': '',
-            'label': 'Sort By',
-            'description': 'Current sort field',
-            'tier': 'presentation',
-          },
-          'selectedIds': {
-            'type': '[string]',
-            'default': [],
-            'label': 'Selected Ids',
-            'description': 'Currently selected item IDs',
-            'tier': 'presentation',
-            'items': {
-              'type': 'string',
-            },
-          },
-          'error': {
-            'type': 'json',
-            'label': 'Error',
-            'description': 'Error state',
-            'tier': 'presentation',
-          },
-          'content': {
-            'type': 'string',
-            'default': '',
-            'label': 'Content',
-            'description': 'Raw content string — auto-parsed into segments',
-            'tier': 'presentation',
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
-            'tier': 'presentation',
-          },
           'segments': {
             'type': '[json]',
             'default': [],
@@ -290,11 +217,18 @@ export function stdUiContentRendererContentRendererOrbital(params: StdUiContentR
               'ltr',
             ],
           },
-          'sortDirection': {
-            'type': 'string',
-            'default': '',
-            'label': 'Sort Direction',
-            'description': 'Current sort direction',
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
+          'pageSize': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page Size',
+            'description': 'Number of items per page',
             'tier': 'presentation',
           },
           'activeFilters': {
@@ -302,6 +236,98 @@ export function stdUiContentRendererContentRendererOrbital(params: StdUiContentR
             'label': 'Active Filters',
             'description': 'Active filters',
             'tier': 'presentation',
+          },
+          'content': {
+            'type': 'string',
+            'default': '',
+            'label': 'Content',
+            'description': 'Raw content string — auto-parsed into segments',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'sortBy': {
+            'type': 'string',
+            'default': '',
+            'label': 'Sort By',
+            'description': 'Current sort field',
+            'tier': 'presentation',
+          },
+          'searchValue': {
+            'type': 'string',
+            'default': '',
+            'label': 'Search Value',
+            'description': 'Current search query value',
+            'tier': 'presentation',
+          },
+          'pageProp': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page',
+            'description': 'Current page number',
+            'synonyms': 'page',
+            'tier': 'presentation',
+          },
+          'selectedIds': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Selected Ids',
+            'description': 'Currently selected item IDs',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'error': {
+            'type': 'ContentRendererError',
+            'label': 'Error',
+            'description': 'Error state (UiError)',
+            'tier': 'presentation',
+            'properties': {
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+            },
+          },
+          'totalCount': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Total Count',
+            'description': 'Total number of items',
+            'tier': 'presentation',
+          },
+          'sortDirection': {
+            'type': 'string',
+            'default': 'asc',
+            'label': 'Sort Direction',
+            'description': 'Current sort direction',
+            'tier': 'presentation',
+            'values': [
+              'asc',
+              'desc',
+            ],
           },
         },
         'scope': 'instance',

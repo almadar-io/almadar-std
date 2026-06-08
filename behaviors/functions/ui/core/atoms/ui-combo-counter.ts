@@ -44,11 +44,11 @@ export interface StdUiComboCounterConfig {
   /** Default: `""` */
   className?: string;
   /** Default: `0` */
-  multiplier?: number;
+  streak?: number;
   /** Default: `0` */
   combo?: number;
   /** Default: `0` */
-  streak?: number;
+  multiplier?: number;
 }
 
 /**

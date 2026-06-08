@@ -60,28 +60,28 @@ export interface StdUiSidebarLogoClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiSidebarConfig {
-  /** Default: `""` */
-  className?: string;
-  userSection?: unknown;
-  /** Default: `false` */
-  showCloseButton?: boolean;
-  footerContent?: unknown;
-  /** Default: `false` */
-  hideCollapseButton?: boolean;
-  /** Default: `"KFlow"` */
-  brandName?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
-  logo?: unknown;
-  /** Default: `[]` */
-  items?: EntityRow[];
-  error?: EntityRow;
-  /** Default: `false` */
-  collapsed?: boolean;
   /** Default: `false` */
   defaultCollapsed?: boolean;
+  error?: EntityRow;
+  /** Default: `false` */
+  isLoading?: boolean;
+  footerContent?: unknown;
   /** Default: `""` */
   logoSrc?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"KFlow"` */
+  brandName?: string;
+  /** Default: `[]` */
+  items?: EntityRow[];
+  /** Default: `false` */
+  hideCollapseButton?: boolean;
+  logo?: unknown;
+  /** Default: `false` */
+  showCloseButton?: boolean;
+  /** Default: `false` */
+  collapsed?: boolean;
+  userSection?: unknown;
 }
 
 /**
@@ -218,18 +218,37 @@ export function stdUiSidebarSidebarOrbital(params: StdUiSidebarSidebarOrbitalPar
               'name': 'Collapse Change',
               'description': 'Event emitted when collapse state changes, payload: { collapsed: boolean }',
               'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'collapsed',
+                  'type': 'boolean',
+                  'required': true,
+                },
+              ],
             },
             {
               'key': 'CLOSE',
               'name': 'Close',
               'description': 'Event emitted when close button is clicked',
               'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
             },
             {
               'key': 'LOGO_CLICK',
               'name': 'Logo Click',
               'description': 'Event emitted when logo/brand is clicked',
               'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
             },
           ],
           'transitions': [
@@ -242,23 +261,23 @@ export function stdUiSidebarSidebarOrbital(params: StdUiSidebarSidebarOrbitalPar
                   'render-ui',
                   'main',
                   {
-                    'collapsed': '@config.collapsed',
-                    'logoSrc': '@config.logoSrc',
-                    'collapseChangeEvent': 'COLLAPSE_CHANGE',
-                    'hideCollapseButton': '@config.hideCollapseButton',
-                    'userSection': '@config.userSection',
-                    'items': '@config.items',
-                    'error': '@config.error',
-                    'className': '@config.className',
-                    'defaultCollapsed': '@config.defaultCollapsed',
-                    'logo': '@config.logo',
-                    'logoClickEvent': 'LOGO_CLICK',
-                    'isLoading': '@config.isLoading',
-                    'showCloseButton': '@config.showCloseButton',
-                    'type': 'sidebar',
-                    'footerContent': '@config.footerContent',
                     'closeEvent': 'CLOSE',
+                    'userSection': '@config.userSection',
+                    'showCloseButton': '@config.showCloseButton',
+                    'logoSrc': '@config.logoSrc',
+                    'logo': '@config.logo',
                     'brandName': '@config.brandName',
+                    'isLoading': '@config.isLoading',
+                    'footerContent': '@config.footerContent',
+                    'type': 'sidebar',
+                    'collapsed': '@config.collapsed',
+                    'collapseChangeEvent': 'COLLAPSE_CHANGE',
+                    'error': '@config.error',
+                    'hideCollapseButton': '@config.hideCollapseButton',
+                    'items': '@config.items',
+                    'logoClickEvent': 'LOGO_CLICK',
+                    'defaultCollapsed': '@config.defaultCollapsed',
+                    'className': '@config.className',
                   },
                 ],
               ],
@@ -266,45 +285,40 @@ export function stdUiSidebarSidebarOrbital(params: StdUiSidebarSidebarOrbitalPar
           ],
         },
         'config': {
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'userSection': {
-            'type': 'node',
-            'label': 'User Section',
-            'description': 'User section content',
-            'tier': 'presentation',
-          },
-          'showCloseButton': {
+          'defaultCollapsed': {
             'type': 'boolean',
             'default': false,
-            'label': 'Show Close Button',
-            'description': 'Show a close button (for mobile)',
+            'label': 'Default Collapsed',
+            'description': 'Default collapsed state',
             'tier': 'presentation',
           },
-          'footerContent': {
-            'type': 'node',
-            'label': 'Footer Content',
-            'description': 'Footer content (e.g., theme toggle)',
+          'error': {
+            'type': 'SidebarError',
+            'label': 'Error',
+            'description': 'Error state',
             'tier': 'presentation',
-          },
-          'hideCollapseButton': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Hide Collapse Button',
-            'description': 'Hide the collapse/expand button',
-            'tier': 'presentation',
-          },
-          'brandName': {
-            'type': 'string',
-            'default': 'KFlow',
-            'label': 'Brand Name',
-            'description': 'Brand/App name',
-            'tier': 'presentation',
+            'properties': {
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+            },
           },
           'isLoading': {
             'type': 'boolean',
@@ -313,10 +327,31 @@ export function stdUiSidebarSidebarOrbital(params: StdUiSidebarSidebarOrbitalPar
             'description': 'Loading state indicator',
             'tier': 'presentation',
           },
-          'logo': {
+          'footerContent': {
             'type': 'node',
-            'label': 'Logo',
-            'description': 'Logo/Brand content - can be a ReactNode or logo config',
+            'label': 'Footer Content',
+            'description': 'Footer content (e.g., theme toggle)',
+            'tier': 'presentation',
+          },
+          'logoSrc': {
+            'type': 'string',
+            'default': '',
+            'label': 'Logo Src',
+            'description': 'Logo image source',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'brandName': {
+            'type': 'string',
+            'default': 'KFlow',
+            'label': 'Brand Name',
+            'description': 'Brand/App name',
             'tier': 'presentation',
           },
           'items': {
@@ -328,6 +363,16 @@ export function stdUiSidebarSidebarOrbital(params: StdUiSidebarSidebarOrbitalPar
             'items': {
               'type': 'object',
               'properties': {
+                'icon': {
+                  'name': 'icon',
+                  'type': 'string',
+                  'required': false,
+                },
+                'isActive': {
+                  'name': 'isActive',
+                  'type': 'boolean',
+                  'required': false,
+                },
                 'subItems': {
                   'name': 'subItems',
                   'type': 'array',
@@ -335,11 +380,6 @@ export function stdUiSidebarSidebarOrbital(params: StdUiSidebarSidebarOrbitalPar
                   'items': {
                     'type': 'string',
                   },
-                },
-                'active': {
-                  'name': 'active',
-                  'type': 'boolean',
-                  'required': false,
                 },
                 'label': {
                   'name': 'label',
@@ -361,46 +401,33 @@ export function stdUiSidebarSidebarOrbital(params: StdUiSidebarSidebarOrbitalPar
                   'type': 'string',
                   'required': false,
                 },
-                'isActive': {
-                  'name': 'isActive',
+                'active': {
+                  'name': 'active',
                   'type': 'boolean',
-                  'required': false,
-                },
-                'icon': {
-                  'name': 'icon',
-                  'type': 'string',
                   'required': false,
                 },
               },
             },
           },
-          'error': {
-            'type': 'SidebarError',
-            'label': 'Error',
-            'description': 'Error state',
+          'hideCollapseButton': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Hide Collapse Button',
+            'description': 'Hide the collapse/expand button',
             'tier': 'presentation',
-            'properties': {
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-            },
+          },
+          'logo': {
+            'type': 'node',
+            'label': 'Logo',
+            'description': 'Logo/Brand content - can be a ReactNode or logo config',
+            'tier': 'presentation',
+          },
+          'showCloseButton': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Show Close Button',
+            'description': 'Show a close button (for mobile)',
+            'tier': 'presentation',
           },
           'collapsed': {
             'type': 'boolean',
@@ -409,18 +436,10 @@ export function stdUiSidebarSidebarOrbital(params: StdUiSidebarSidebarOrbitalPar
             'description': 'Collapsed state (controlled)',
             'tier': 'presentation',
           },
-          'defaultCollapsed': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Default Collapsed',
-            'description': 'Default collapsed state',
-            'tier': 'presentation',
-          },
-          'logoSrc': {
-            'type': 'string',
-            'default': '',
-            'label': 'Logo Src',
-            'description': 'Logo image source',
+          'userSection': {
+            'type': 'node',
+            'label': 'User Section',
+            'description': 'User section content',
             'tier': 'presentation',
           },
         },

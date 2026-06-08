@@ -39,28 +39,28 @@ export type StdUiSectionEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiSectionConfig {
-  /** Default: `""` */
-  title?: string;
-  /** Default: `"md"` */
-  padding?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
-  /** Default: `""` */
-  headerClassName?: string;
-  children?: unknown;
-  asProp?: unknown;
-  /** Default: `""` */
-  contentClassName?: string;
-  action?: unknown;
-  /** Default: `""` */
-  description?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
-  error?: EntityRow;
   /** Default: `"default"` */
   variant?: 'default' | 'card' | 'bordered' | 'filled';
-  /** Default: `false` */
-  divider?: boolean;
+  /** Default: `""` */
+  description?: string;
   /** Default: `""` */
   className?: string;
+  action?: unknown;
+  /** Default: `"div"` */
+  asProp?: string;
+  /** Default: `""` */
+  contentClassName?: string;
+  /** Default: `""` */
+  title?: string;
+  /** Default: `""` */
+  headerClassName?: string;
+  /** Default: `false` */
+  divider?: boolean;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `"md"` */
+  padding?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
+  error?: EntityRow;
 }
 
 /**
@@ -169,21 +169,26 @@ export function stdUiSectionSectionOrbital(params: StdUiSectionSectionOrbitalPar
                   'render-ui',
                   'main',
                   {
-                    'as': '@config.asProp',
-                    'divider': '@config.divider',
-                    'contentClassName': '@config.contentClassName',
-                    'variant': '@config.variant',
-                    'children': '@config.children',
-                    'title': '@config.title',
-                    'type': 'section',
-                    'className': '@config.className',
-                    'action': '@config.action',
                     'padding': '@config.padding',
+                    'error': '@config.error',
+                    'className': '@config.className',
+                    'as': '@config.asProp',
+                    'type': 'section',
                     'headerClassName': '@config.headerClassName',
                     'entity': 'SectionItem',
-                    'isLoading': '@config.isLoading',
-                    'error': '@config.error',
+                    'divider': '@config.divider',
+                    'children': [
+                      {
+                        'content': '',
+                        'type': 'text',
+                      },
+                    ],
+                    'variant': '@config.variant',
                     'description': '@config.description',
+                    'contentClassName': '@config.contentClassName',
+                    'action': '@config.action',
+                    'title': '@config.title',
+                    'isLoading': '@config.isLoading',
                   },
                 ],
               ],
@@ -191,11 +196,80 @@ export function stdUiSectionSectionOrbital(params: StdUiSectionSectionOrbitalPar
           ],
         },
         'config': {
+          'variant': {
+            'type': 'string',
+            'default': 'default',
+            'label': 'Variant',
+            'description': 'Visual variant',
+            'tier': 'presentation',
+            'values': [
+              'default',
+              'card',
+              'bordered',
+              'filled',
+            ],
+          },
+          'description': {
+            'type': 'string',
+            'default': '',
+            'label': 'Description',
+            'description': 'Section subtitle/description',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Custom class name',
+            'tier': 'presentation',
+          },
+          'action': {
+            'type': 'node',
+            'label': 'Action',
+            'description': 'Action element (e.g., button, link)',
+            'tier': 'presentation',
+          },
+          'asProp': {
+            'type': 'string',
+            'default': 'div',
+            'label': 'As',
+            'description': 'HTML element to render as',
+            'synonyms': 'as',
+            'tier': 'presentation',
+          },
+          'contentClassName': {
+            'type': 'string',
+            'default': '',
+            'label': 'Content Class Name',
+            'description': 'Content custom class name',
+            'tier': 'presentation',
+          },
           'title': {
             'type': 'string',
             'default': '',
             'label': 'Title',
             'description': 'Section title',
+            'tier': 'presentation',
+          },
+          'headerClassName': {
+            'type': 'string',
+            'default': '',
+            'label': 'Header Class Name',
+            'description': 'Header custom class name',
+            'tier': 'presentation',
+          },
+          'divider': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Divider',
+            'description': 'Show divider below header',
+            'tier': 'presentation',
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
             'tier': 'presentation',
           },
           'padding': {
@@ -212,73 +286,26 @@ export function stdUiSectionSectionOrbital(params: StdUiSectionSectionOrbitalPar
               'xl',
             ],
           },
-          'headerClassName': {
-            'type': 'string',
-            'default': '',
-            'label': 'Header Class Name',
-            'description': 'Header custom class name',
-            'tier': 'presentation',
-          },
-          'children': {
-            'type': 'node',
-            'label': 'Children',
-            'description': 'Children elements',
-            'tier': 'presentation',
-          },
-          'asProp': {
-            'type': 'json',
-            'label': 'As',
-            'description': 'HTML element to render as',
-            'synonyms': 'as',
-            'tier': 'presentation',
-          },
-          'contentClassName': {
-            'type': 'string',
-            'default': '',
-            'label': 'Content Class Name',
-            'description': 'Content custom class name',
-            'tier': 'presentation',
-          },
-          'action': {
-            'type': 'node',
-            'label': 'Action',
-            'description': 'Action element (e.g., button, link)',
-            'tier': 'presentation',
-          },
-          'description': {
-            'type': 'string',
-            'default': '',
-            'label': 'Description',
-            'description': 'Section subtitle/description',
-            'tier': 'presentation',
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
-            'tier': 'presentation',
-          },
           'error': {
             'type': 'SectionError',
             'label': 'Error',
             'description': 'Error state',
             'tier': 'presentation',
             'properties': {
-              'message': {
-                'name': 'message',
+              'name': {
+                'name': 'name',
                 'type': 'string',
-                'required': true,
+                'required': false,
               },
               'stack': {
                 'name': 'stack',
                 'type': 'string',
                 'required': false,
               },
-              'name': {
-                'name': 'name',
+              'message': {
+                'name': 'message',
                 'type': 'string',
-                'required': false,
+                'required': true,
               },
               'code': {
                 'name': 'code',
@@ -286,33 +313,6 @@ export function stdUiSectionSectionOrbital(params: StdUiSectionSectionOrbitalPar
                 'required': false,
               },
             },
-          },
-          'variant': {
-            'type': 'string',
-            'default': 'default',
-            'label': 'Variant',
-            'description': 'Visual variant',
-            'tier': 'presentation',
-            'values': [
-              'default',
-              'card',
-              'bordered',
-              'filled',
-            ],
-          },
-          'divider': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Divider',
-            'description': 'Show divider below header',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Custom class name',
-            'tier': 'presentation',
           },
         },
         'scope': 'instance',

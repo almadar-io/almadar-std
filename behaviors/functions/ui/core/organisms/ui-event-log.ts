@@ -150,10 +150,10 @@ export function stdUiEventLogEventLogOrbital(params: StdUiEventLogEventLogOrbita
                   'render-ui',
                   'main',
                   {
-                    'type': 'event-log',
-                    'maxHeight': '@config.maxHeight',
                     'entries': '@config.entries',
+                    'maxHeight': '@config.maxHeight',
                     'label': '@config.label',
+                    'type': 'event-log',
                     'className': '@config.className',
                   },
                 ],
@@ -201,9 +201,9 @@ export function stdUiEventLogEventLogOrbital(params: StdUiEventLogEventLogOrbita
                   'type': 'string',
                   'required': true,
                 },
-                'icon': {
-                  'name': 'icon',
-                  'type': 'string',
+                'timestamp': {
+                  'name': 'timestamp',
+                  'type': 'number',
                   'required': true,
                 },
                 'message': {
@@ -211,9 +211,9 @@ export function stdUiEventLogEventLogOrbital(params: StdUiEventLogEventLogOrbita
                   'type': 'string',
                   'required': true,
                 },
-                'timestamp': {
-                  'name': 'timestamp',
-                  'type': 'number',
+                'icon': {
+                  'name': 'icon',
+                  'type': 'string',
                   'required': true,
                 },
               },

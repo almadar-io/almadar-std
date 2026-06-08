@@ -39,24 +39,24 @@ export type StdUiSvgRingEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiSvgRingConfig {
-  /** Default: `"solid"` */
-  variant?: 'solid' | 'dashed' | 'glow';
-  /** Default: `40` */
-  r?: number;
-  /** Default: `0` */
-  cx?: number;
-  /** Default: `""` */
-  label?: string;
   /** Default: `0` */
   cy?: number;
-  /** Default: `"var(--color-primary)"` */
-  color?: string;
+  /** Default: `0` */
+  cx?: number;
   /** Default: `1` */
   opacity?: number;
-  /** Default: `""` */
-  className?: string;
+  /** Default: `40` */
+  r?: number;
+  /** Default: `"solid"` */
+  variant?: 'solid' | 'dashed' | 'glow';
   /** Default: `1.5` */
   strokeWidth?: number;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `""` */
+  label?: string;
+  /** Default: `"var(--color-primary)"` */
+  color?: string;
 }
 
 /**

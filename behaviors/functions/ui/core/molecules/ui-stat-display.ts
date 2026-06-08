@@ -39,48 +39,48 @@ export type StdUiStatDisplayEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiStatDisplayConfig {
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"default"` */
+  variant?: 'default' | 'primary' | 'success' | 'warning' | 'error' | 'info';
+  /** Default: `"elevated"` */
+  look?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
+  /** Default: `0` */
+  trend?: number;
+  /** Default: `"absolute"` */
+  trendFormat?: 'absolute' | 'percent';
+  error?: EntityRow;
+  /** Default: `""` */
+  label?: string;
+  /** Default: `"bg-muted"` */
+  iconBg?: string;
+  /** Default: `0` */
+  target?: number;
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `""` */
   prefix?: string;
-  icon?: unknown;
-  /** Default: `""` */
-  clickEvent?: string;
-  /** Default: `0` */
-  target?: number;
-  /** Default: `"bg-muted"` */
-  iconBg?: string;
-  /** Default: `""` */
-  label?: string;
-  /** Default: `"higher-is-better"` */
-  trendPolarity?: 'higher-is-better' | 'lower-is-better';
-  /** Default: `""` */
-  suffix?: string;
-  /** Default: `0` */
-  max?: number;
-  /** Default: `""` */
-  value?: string;
-  /** Default: `"elevated"` */
-  look?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
-  /** Default: `"default"` */
-  variant?: 'default' | 'primary' | 'success' | 'warning' | 'error' | 'info';
-  /** Default: `"absolute"` */
-  trendFormat?: 'absolute' | 'percent';
-  /** Default: `""` */
-  format?: string;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `0` */
-  trend?: number;
-  /** Default: `[]` */
-  sparklineData?: number[];
-  error?: EntityRow;
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
-  /** Default: `"text-foreground"` */
-  iconColor?: string;
   /** Default: `false` */
   compact?: boolean;
+  /** Default: `"text-foreground"` */
+  iconColor?: string;
+  /** Default: `""` */
+  value?: string;
+  /** Default: `0` */
+  max?: number;
+  /** Default: `"higher-is-better"` */
+  trendPolarity?: 'higher-is-better' | 'lower-is-better';
+  /** Default: `[]` */
+  sparklineData?: number[];
+  /** Default: `""` */
+  clickEvent?: string;
+  /** Default: `""` */
+  suffix?: string;
+  icon?: unknown;
+  /** Default: `""` */
+  format?: string;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
 }
 
 /**

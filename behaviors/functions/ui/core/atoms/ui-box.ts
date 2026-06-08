@@ -54,42 +54,43 @@ export interface StdUiBoxHoverPayload {
  */
 export interface StdUiBoxConfig {
   /** Default: `"none"` */
-  margin?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'auto';
-  /** Default: `"none"` */
-  shadow?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
-  children?: unknown;
-  actionPayload?: unknown;
-  /** Default: `"none"` */
-  marginY?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'auto';
-  /** Default: `""` */
-  className?: string;
+  paddingY?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   /** Default: `"none"` */
   padding?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
-  /** Default: `false` */
-  fullWidth?: boolean;
   /** Default: `"none"` */
-  rounded?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
-  /** Default: `"block"` */
-  display?: 'block' | 'inline' | 'inline-block' | 'flex' | 'inline-flex' | 'grid';
-  /** Default: `"relative"` */
-  position?: 'relative' | 'absolute' | 'fixed' | 'sticky';
-  /** Default: `"transparent"` */
-  bg?: 'transparent' | 'primary' | 'secondary' | 'muted' | 'accent' | 'surface' | 'overlay';
-  asProp?: unknown;
-  /** Default: `"none"` */
-  paddingX?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  shadow?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
   /** Default: `""` */
   maxWidth?: string;
-  /** Default: `"auto"` */
-  overflow?: 'auto' | 'hidden' | 'visible' | 'scroll';
+  actionPayload?: unknown;
+  /** Default: `"transparent"` */
+  bg?: 'transparent' | 'primary' | 'secondary' | 'muted' | 'accent' | 'surface' | 'overlay';
   /** Default: `false` */
   fullHeight?: boolean;
   /** Default: `false` */
   border?: boolean;
   /** Default: `"none"` */
   marginX?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'auto';
+  /** Default: `"block"` */
+  display?: 'block' | 'inline' | 'inline-block' | 'flex' | 'inline-flex' | 'grid';
   /** Default: `"none"` */
-  paddingY?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  paddingX?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  /** Default: `false` */
+  fullWidth?: boolean;
+  /** Default: `"relative"` */
+  position?: 'relative' | 'absolute' | 'fixed' | 'sticky';
+  /** Default: `"auto"` */
+  overflow?: 'auto' | 'hidden' | 'visible' | 'scroll';
+  /** Default: `"none"` */
+  rounded?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
+  /** Default: `"none"` */
+  margin?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'auto';
+  children?: unknown;
+  /** Default: `"none"` */
+  marginY?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'auto';
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"div"` */
+  asProp?: string;
 }
 
 /**
