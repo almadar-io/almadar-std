@@ -74,13 +74,31 @@
                 "key": "TEST",
                 "name": "Test",
                 "description": "Emits UI:{testEvent}",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "COMPLETE",
                 "name": "Complete",
                 "description": "Emits UI:{completeEvent} with { success, passedTests }",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "success",
+                    "type": "boolean",
+                    "required": true
+                  },
+                  {
+                    "name": "passedTests",
+                    "type": "number",
+                    "required": true
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -90,17 +108,12 @@
                 "event": "INIT",
                 "effects": [
                   [
-                    "fetch",
-                    "StateArchitectBoardItem",
-                    {}
-                  ],
-                  [
                     "render-ui",
                     "main",
                     {
-                      "entity": "@entity",
-                      "testEvent": "TEST",
                       "completeEvent": "COMPLETE",
+                      "entity": "@config.entityProp",
+                      "testEvent": "TEST",
                       "stepDurationMs": "@config.stepDurationMs",
                       "type": "state-architect-board"
                     }
@@ -116,6 +129,204 @@
               "label": "Step Duration Ms",
               "description": "Playback speed",
               "tier": "presentation"
+            },
+            "entityProp": {
+              "type": "StateArchitectBoardEntity",
+              "label": "Entity",
+              "description": "Puzzle data. Also accepts the canonical `EntityRow` the compiler binds (and arrays); narrowed to `StateArchitectPuzzleEntity` internally.",
+              "synonyms": "entity",
+              "tier": "presentation",
+              "properties": {
+                "headerImage": {
+                  "name": "headerImage",
+                  "type": "string",
+                  "required": false
+                },
+                "title": {
+                  "name": "title",
+                  "type": "string",
+                  "required": true
+                },
+                "hint": {
+                  "name": "hint",
+                  "type": "string",
+                  "required": true
+                },
+                "initialState": {
+                  "name": "initialState",
+                  "type": "string",
+                  "required": true
+                },
+                "transitions": {
+                  "name": "transitions",
+                  "type": "array",
+                  "required": true,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "to": {
+                        "name": "to",
+                        "type": "string",
+                        "required": true
+                      },
+                      "id": {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      "from": {
+                        "name": "from",
+                        "type": "string",
+                        "required": true
+                      },
+                      "event": {
+                        "name": "event",
+                        "type": "string",
+                        "required": true
+                      },
+                      "guardHint": {
+                        "name": "guardHint",
+                        "type": "string",
+                        "required": false
+                      }
+                    }
+                  }
+                },
+                "availableStates": {
+                  "name": "availableStates",
+                  "type": "array",
+                  "required": false,
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "failMessage": {
+                  "name": "failMessage",
+                  "type": "string",
+                  "required": false
+                },
+                "entityName": {
+                  "name": "entityName",
+                  "type": "string",
+                  "required": true
+                },
+                "states": {
+                  "name": "states",
+                  "type": "array",
+                  "required": true,
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "showCodeView": {
+                  "name": "showCodeView",
+                  "type": "boolean",
+                  "required": false
+                },
+                "variables": {
+                  "name": "variables",
+                  "type": "array",
+                  "required": true,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "min": {
+                        "name": "min",
+                        "type": "number",
+                        "required": false
+                      },
+                      "value": {
+                        "name": "value",
+                        "type": "number",
+                        "required": true
+                      },
+                      "max": {
+                        "name": "max",
+                        "type": "number",
+                        "required": false
+                      },
+                      "name": {
+                        "name": "name",
+                        "type": "string",
+                        "required": true
+                      },
+                      "unit": {
+                        "name": "unit",
+                        "type": "string",
+                        "required": false
+                      }
+                    }
+                  }
+                },
+                "availableEvents": {
+                  "name": "availableEvents",
+                  "type": "array",
+                  "required": true,
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "testCases": {
+                  "name": "testCases",
+                  "type": "array",
+                  "required": true,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "label": {
+                        "name": "label",
+                        "type": "string",
+                        "required": true
+                      },
+                      "expectedState": {
+                        "name": "expectedState",
+                        "type": "string",
+                        "required": true
+                      },
+                      "events": {
+                        "name": "events",
+                        "type": "array",
+                        "required": true,
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                },
+                "description": {
+                  "name": "description",
+                  "type": "string",
+                  "required": true
+                },
+                "theme": {
+                  "name": "theme",
+                  "type": "object",
+                  "required": false,
+                  "properties": {
+                    "accentColor": {
+                      "name": "accentColor",
+                      "type": "string",
+                      "required": false
+                    },
+                    "background": {
+                      "name": "background",
+                      "type": "string",
+                      "required": false
+                    }
+                  }
+                },
+                "id": {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                "successMessage": {
+                  "name": "successMessage",
+                  "type": "string",
+                  "required": false
+                }
+              }
             }
           },
           "scope": "instance"

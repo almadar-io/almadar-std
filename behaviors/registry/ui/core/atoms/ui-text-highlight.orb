@@ -104,31 +104,61 @@
                 "key": "CLICK",
                 "name": "Click",
                 "description": "Callback when highlight is clicked",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "MOUSE_ENTER",
                 "name": "Mouse Enter",
                 "description": "Callback when highlight is hovered",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "MOUSE_LEAVE",
                 "name": "Mouse Leave",
                 "description": "Callback when hover ends",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "ACTION",
                 "name": "Action",
                 "description": "Declarative event name — emits UI:{action} via eventBus on click",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "HOVER",
                 "name": "Hover",
                 "description": "Declarative hover event — emits UI:{hoverEvent} with { hovered: true/false }",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -141,17 +171,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "text-highlight",
-                      "className": "@config.className",
-                      "children": "@config.children",
-                      "action": "ACTION",
+                      "children": [
+                        {
+                          "content": "",
+                          "type": "text"
+                        }
+                      ],
+                      "annotationId": "@config.annotationId",
+                      "highlightType": "@config.highlightType",
                       "isActive": "@config.isActive",
                       "onClick": "CLICK",
-                      "onMouseEnter": "MOUSE_ENTER",
+                      "action": "ACTION",
+                      "type": "text-highlight",
+                      "className": "@config.className",
                       "hoverEvent": "HOVER",
                       "onMouseLeave": "MOUSE_LEAVE",
-                      "annotationId": "@config.annotationId",
-                      "highlightType": "@config.highlightType"
+                      "onMouseEnter": "MOUSE_ENTER"
                     }
                   ]
                 ]
@@ -159,11 +194,16 @@
             ]
           },
           "config": {
-            "children": {
-              "type": "node",
-              "label": "Children",
-              "description": "Highlighted text content",
-              "tier": "presentation"
+            "highlightType": {
+              "type": "string",
+              "default": "question",
+              "label": "Highlight Type",
+              "description": "Type of highlight (determines color)",
+              "tier": "presentation",
+              "values": [
+                "question",
+                "note"
+              ]
             },
             "isActive": {
               "type": "boolean",
@@ -178,17 +218,6 @@
               "label": "Annotation Id",
               "description": "Unique ID for the annotation",
               "tier": "presentation"
-            },
-            "highlightType": {
-              "type": "string",
-              "default": "question",
-              "label": "Highlight Type",
-              "description": "Type of highlight (determines color)",
-              "tier": "presentation",
-              "values": [
-                "question",
-                "note"
-              ]
             },
             "className": {
               "type": "string",

@@ -73,13 +73,30 @@
                 "key": "PAGE_CHANGE",
                 "name": "Page Change",
                 "description": "Callback when page changes (optional - can be a no-op if not interactive)",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "page",
+                    "type": "number"
+                  }
+                ]
               },
               {
                 "key": "PAGE_SIZE_CHANGE",
                 "name": "Page Size Change",
                 "description": "Callback when page size changes",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "size",
+                    "type": "number"
+                  },
+                  {
+                    "name": "pageSize",
+                    "type": "number",
+                    "required": true
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -92,21 +109,21 @@
                     "render-ui",
                     "main",
                     {
-                      "pageSizeOptions": "@config.pageSizeOptions",
                       "showPageSize": "@config.showPageSize",
-                      "pageSizeChangeEvent": "PAGE_SIZE_CHANGE",
+                      "type": "pagination",
                       "className": "@config.className",
-                      "maxVisiblePages": "@config.maxVisiblePages",
-                      "onPageSizeChange": "PAGE_SIZE_CHANGE",
+                      "pageSize": "@config.pageSize",
                       "currentPage": "@config.currentPage",
                       "onPageChange": "PAGE_CHANGE",
                       "showTotal": "@config.showTotal",
-                      "showJumpToPage": "@config.showJumpToPage",
-                      "type": "pagination",
+                      "totalPages": "@config.totalPages",
+                      "maxVisiblePages": "@config.maxVisiblePages",
                       "totalItems": "@config.totalItems",
-                      "pageSize": "@config.pageSize",
+                      "showJumpToPage": "@config.showJumpToPage",
                       "pageChangeEvent": "PAGE_CHANGE",
-                      "totalPages": "@config.totalPages"
+                      "pageSizeChangeEvent": "PAGE_SIZE_CHANGE",
+                      "pageSizeOptions": "@config.pageSizeOptions",
+                      "onPageSizeChange": "PAGE_SIZE_CHANGE"
                     }
                   ]
                 ]
@@ -114,18 +131,11 @@
             ]
           },
           "config": {
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "showJumpToPage": {
+            "showTotal": {
               "type": "boolean",
               "default": false,
-              "label": "Show Jump To Page",
-              "description": "Show jump to page input",
+              "label": "Show Total",
+              "description": "Show total count",
               "tier": "presentation"
             },
             "totalPages": {
@@ -135,18 +145,11 @@
               "description": "Total number of pages",
               "tier": "presentation"
             },
-            "pageSize": {
+            "totalItems": {
               "type": "number",
               "default": 0.0,
-              "label": "Page Size",
-              "description": "Current page size",
-              "tier": "presentation"
-            },
-            "showTotal": {
-              "type": "boolean",
-              "default": false,
-              "label": "Show Total",
-              "description": "Show total count",
+              "label": "Total Items",
+              "description": "Total items count",
               "tier": "presentation"
             },
             "pageSizeOptions": {
@@ -166,18 +169,11 @@
               "description": "Current page (1-indexed)",
               "tier": "presentation"
             },
-            "showPageSize": {
-              "type": "boolean",
-              "default": false,
-              "label": "Show Page Size",
-              "description": "Show page size selector",
-              "tier": "presentation"
-            },
-            "totalItems": {
+            "pageSize": {
               "type": "number",
               "default": 0.0,
-              "label": "Total Items",
-              "description": "Total items count",
+              "label": "Page Size",
+              "description": "Current page size",
               "tier": "presentation"
             },
             "maxVisiblePages": {
@@ -185,6 +181,27 @@
               "default": 7.0,
               "label": "Max Visible Pages",
               "description": "Maximum number of page buttons to show",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "showPageSize": {
+              "type": "boolean",
+              "default": false,
+              "label": "Show Page Size",
+              "description": "Show page size selector",
+              "tier": "presentation"
+            },
+            "showJumpToPage": {
+              "type": "boolean",
+              "default": false,
+              "label": "Show Jump To Page",
+              "description": "Show jump to page input",
               "tier": "presentation"
             }
           },

@@ -70,13 +70,27 @@
                 "key": "REMOVE",
                 "name": "Remove",
                 "description": "Called when the user clicks the remove (×) button",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
               },
               {
                 "key": "CLICK",
                 "name": "Click",
                 "description": "Click handler for the body of the pill (filter toggle)",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -89,17 +103,17 @@
                     "render-ui",
                     "main",
                     {
-                      "onClick": "CLICK",
-                      "removable": "@config.removable",
-                      "clickEvent": "CLICK",
-                      "type": "filter-pill",
-                      "removeEvent": "REMOVE",
                       "onRemove": "REMOVE",
+                      "removeEvent": "REMOVE",
+                      "clickEvent": "CLICK",
                       "size": "@config.size",
                       "className": "@config.className",
-                      "label": "@config.label",
+                      "type": "filter-pill",
+                      "removable": "@config.removable",
+                      "onClick": "CLICK",
+                      "icon": "@config.icon",
                       "variant": "@config.variant",
-                      "icon": "@config.icon"
+                      "label": "@config.label"
                     }
                   ]
                 ]
@@ -107,13 +121,6 @@
             ]
           },
           "config": {
-            "label": {
-              "type": "string",
-              "default": "",
-              "label": "Label",
-              "description": "Pill label text (alternative to children for schema-driven rendering).",
-              "tier": "presentation"
-            },
             "size": {
               "type": "string",
               "default": "sm",
@@ -126,11 +133,31 @@
                 "lg"
               ]
             },
+            "label": {
+              "type": "string",
+              "default": "",
+              "label": "Label",
+              "description": "Pill label text (alternative to children for schema-driven rendering).",
+              "tier": "presentation"
+            },
+            "removable": {
+              "type": "boolean",
+              "default": true,
+              "label": "Removable",
+              "description": "Disable the remove button (renders without × control)",
+              "tier": "presentation"
+            },
             "className": {
               "type": "string",
               "default": "",
               "label": "Class Name",
               "description": "Additional CSS classes applied to the root element.",
+              "tier": "presentation"
+            },
+            "icon": {
+              "type": "node",
+              "label": "Icon",
+              "description": "Optional icon name (Lucide icon string) or React node",
               "tier": "presentation"
             },
             "variant": {
@@ -149,19 +176,6 @@
                 "info",
                 "neutral"
               ]
-            },
-            "icon": {
-              "type": "node",
-              "label": "Icon",
-              "description": "Optional icon name (Lucide icon string) or React node",
-              "tier": "presentation"
-            },
-            "removable": {
-              "type": "boolean",
-              "default": true,
-              "label": "Removable",
-              "description": "Disable the remove button (renders without × control)",
-              "tier": "presentation"
             }
           },
           "scope": "instance"

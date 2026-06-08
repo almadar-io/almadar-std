@@ -120,37 +120,77 @@
                 "key": "PLAY",
                 "name": "Play",
                 "description": "onPlay prop",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "PAUSE",
                 "name": "Pause",
                 "description": "onPause prop",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "STEP",
                 "name": "Step",
                 "description": "onStep prop",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "RESET",
                 "name": "Reset",
                 "description": "onReset prop",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "SPEED_CHANGE",
                 "name": "Speed Change",
                 "description": "onSpeedChange prop",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "speed",
+                    "type": "number"
+                  }
+                ]
               },
               {
                 "key": "PARAMETER_CHANGE",
                 "name": "Parameter Change",
                 "description": "onParameterChange prop",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "name",
+                    "type": "string"
+                  },
+                  {
+                    "name": "value",
+                    "type": "number"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -163,17 +203,17 @@
                     "render-ui",
                     "main",
                     {
-                      "speed": "@config.speed",
-                      "parameters": "@config.parameters",
-                      "onStep": "STEP",
-                      "onSpeedChange": "SPEED_CHANGE",
-                      "type": "simulation-controls",
-                      "onPause": "PAUSE",
-                      "onPlay": "PLAY",
                       "onReset": "RESET",
-                      "onParameterChange": "PARAMETER_CHANGE",
+                      "onPlay": "PLAY",
+                      "onPause": "PAUSE",
+                      "running": "@config.running",
                       "className": "@config.className",
-                      "running": "@config.running"
+                      "onSpeedChange": "SPEED_CHANGE",
+                      "speed": "@config.speed",
+                      "type": "simulation-controls",
+                      "onStep": "STEP",
+                      "parameters": "@config.parameters",
+                      "onParameterChange": "PARAMETER_CHANGE"
                     }
                   ]
                 ]
@@ -182,10 +222,41 @@
           },
           "config": {
             "parameters": {
-              "type": "json",
+              "type": "Map<string,SimulationControlsParametersValue>",
+              "default": {},
               "label": "Parameters",
               "description": "parameters prop",
-              "tier": "presentation"
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "step": {
+                    "name": "step",
+                    "type": "number",
+                    "required": true
+                  },
+                  "max": {
+                    "name": "max",
+                    "type": "number",
+                    "required": true
+                  },
+                  "value": {
+                    "name": "value",
+                    "type": "number",
+                    "required": true
+                  },
+                  "min": {
+                    "name": "min",
+                    "type": "number",
+                    "required": true
+                  }
+                }
+              }
             },
             "running": {
               "type": "boolean",

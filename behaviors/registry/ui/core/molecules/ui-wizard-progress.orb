@@ -56,7 +56,13 @@
                 "key": "STEP_CLICK",
                 "name": "Step Click",
                 "description": "Callback when a completed step is clicked",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "stepIndex",
+                    "type": "number"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -69,14 +75,14 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "@config.className",
-                      "onStepClick": "STEP_CLICK",
+                      "steps": "@config.steps",
                       "type": "wizard-progress",
-                      "allowNavigation": "@config.allowNavigation",
                       "currentStep": "@config.currentStep",
+                      "onStepClick": "STEP_CLICK",
                       "stepClickEvent": "STEP_CLICK",
                       "compact": "@config.compact",
-                      "steps": "@config.steps"
+                      "className": "@config.className",
+                      "allowNavigation": "@config.allowNavigation"
                     }
                   ]
                 ]
@@ -84,20 +90,6 @@
             ]
           },
           "config": {
-            "currentStep": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Current Step",
-              "description": "Current step index (0-based)",
-              "tier": "presentation"
-            },
-            "compact": {
-              "type": "boolean",
-              "default": false,
-              "label": "Compact",
-              "description": "Compact mode (smaller, no titles)",
-              "tier": "presentation"
-            },
             "steps": {
               "type": "[WizardProgressStepsItem]",
               "default": [],
@@ -107,15 +99,15 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
                   "description": {
                     "name": "description",
                     "type": "string",
                     "required": false
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
                   },
                   "title": {
                     "name": "title",
@@ -130,6 +122,20 @@
               "default": "",
               "label": "Class Name",
               "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "currentStep": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Current Step",
+              "description": "Current step index (0-based)",
+              "tier": "presentation"
+            },
+            "compact": {
+              "type": "boolean",
+              "default": false,
+              "label": "Compact",
+              "description": "Compact mode (smaller, no titles)",
               "tier": "presentation"
             },
             "allowNavigation": {

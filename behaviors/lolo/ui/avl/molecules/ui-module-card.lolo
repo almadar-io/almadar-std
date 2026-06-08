@@ -8,7 +8,7 @@ orbital ModuleCardOrbital {
     fields : [ModuleCardDataFieldsItem]!
     traits : [ModuleCardDataTraitsItem]!
     pages : [ModuleCardDataPagesItem]!
-    traitDetails : json!
+    traitDetails : Map string ModuleCardDataTraitDetailsValue!
     externalLinks : [ModuleCardDataExternalLinksItem]!
   }
   type ModuleCardDataFieldsItem = {
@@ -28,6 +28,31 @@ orbital ModuleCardOrbital {
   type ModuleCardDataPagesItem = {
     name : string!
     route : string!
+  }
+  type ModuleCardDataTraitDetailsValue = {
+    name : string!
+    linkedEntity : string!
+    states : [ModuleCardDataTraitDetailsValueStatesItem]!
+    transitions : [ModuleCardDataTraitDetailsValueTransitionsItem]!
+    emittedEvents : [string]!
+    listenedEvents : [string]!
+  }
+  type ModuleCardDataTraitDetailsValueStatesItem = {
+    name : string!
+    isInitial : boolean
+    isTerminal : boolean
+  }
+  type ModuleCardDataTraitDetailsValueTransitionsItem = {
+    from : string!
+    to : string!
+    event : string!
+    guard : json
+    effects : [ModuleCardDataTraitDetailsValueTransitionsItemEffectsItem]!
+    index : number!
+  }
+  type ModuleCardDataTraitDetailsValueTransitionsItemEffectsItem = {
+    type : string!
+    args : [json]!
   }
   type ModuleCardDataExternalLinksItem = {
     targetOrbital : string!
@@ -52,7 +77,7 @@ orbital ModuleCardOrbital {
     }
 
     config {
-      data : ModuleCardData
+      data : ModuleCardData = { orbitalName: "", entityName: "", persistence: "", fields: [], traits: [], pages: [], traitDetails: {}, externalLinks: [] }
         @label "Data"
         @description "data prop"
         @tier "presentation"

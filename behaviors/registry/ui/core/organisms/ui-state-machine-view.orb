@@ -26,24 +26,6 @@
           },
           "category": "interaction",
           "linkedEntity": "StateMachineViewItem",
-          "emits": [
-            {
-              "event": "RENDER_STATE_NODE",
-              "description": "Custom state node renderer — when provided, replaces the default circle nodes",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "state",
-                  "type": "object"
-                },
-                {
-                  "name": "config",
-                  "type": "object"
-                }
-              ]
-            }
-          ],
           "stateMachine": {
             "states": [
               {
@@ -55,12 +37,6 @@
               {
                 "key": "INIT",
                 "name": "Initialize"
-              },
-              {
-                "key": "RENDER_STATE_NODE",
-                "name": "Render State Node",
-                "description": "Custom state node renderer — when provided, replaces the default circle nodes",
-                "tier": "essential"
               }
             ],
             "transitions": [
@@ -73,12 +49,10 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "@config.className",
                       "isLoading": "@config.isLoading",
                       "error": "@config.error",
-                      "layoutData": "@config.layoutData",
-                      "renderStateNode": "RENDER_STATE_NODE",
-                      "type": "state-machine-view"
+                      "type": "state-machine-view",
+                      "className": "@config.className"
                     }
                   ]
                 ]
@@ -93,27 +67,24 @@
               "description": "Loading state indicator",
               "tier": "presentation"
             },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "layoutData": {
-              "type": "json",
-              "label": "Layout Data",
-              "description": "layoutData prop",
-              "tier": "presentation"
-            },
             "error": {
               "type": "StateMachineViewError",
               "label": "Error",
               "description": "Error state",
               "tier": "presentation",
               "properties": {
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                },
                 "stack": {
                   "name": "stack",
+                  "type": "string",
+                  "required": false
+                },
+                "name": {
+                  "name": "name",
                   "type": "string",
                   "required": false
                 },
@@ -121,18 +92,15 @@
                   "name": "code",
                   "type": "string",
                   "required": false
-                },
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
                 }
               }
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
             }
           },
           "scope": "instance"

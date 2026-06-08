@@ -6,11 +6,6 @@ orbital RepeatableFormSectionOrbital {
     addedInState : string
     addedAt : string
   }
-  type RepeatableFormSectionRENDERITEMItem = {
-    id : string!
-    addedInState : string
-    addedAt : string
-  }
 
   entity RepeatableFormSectionItem [runtime] {
     id : string!
@@ -25,7 +20,7 @@ orbital RepeatableFormSectionOrbital {
           sectionType: @config.sectionType
           title: @config.title
           items: @config.items
-          renderItem: RENDER_ITEM
+          renderItem: (fn item index { content: @item.id, type: text })
           minItems: @config.minItems
           maxItems: @config.maxItems
           allowReorder: @config.allowReorder
@@ -44,12 +39,6 @@ orbital RepeatableFormSectionOrbital {
     }
 
     emits {
-      RENDER_ITEM -> external {
-        item : RepeatableFormSectionRENDERITEMItem
-        index : number
-      }
-        @description "Render function for each item"
-        @tier "essential"
       ADD -> external {
         id : string
       }

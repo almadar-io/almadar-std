@@ -1,28 +1,17 @@
 app ui-entity-list "1.0.0"
 "EntityList — UI factory (1:1 with the @almadar/ui entity-list pattern)."
 orbital EntityListOrbital {
+  type EntityListError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
+  }
   type EntityListFieldsItem = {
     key : string
     header : string
     name : string
     label : string
-  }
-  type EntityListRENDERITEMItem = {
-    id : string!
-    title : string
-    description : string
-    icon : string
-    avatar : EntityListRENDERITEMItemAvatar
-    badge : string
-    metadata : node
-    disabled : boolean
-    completed : boolean
-    _fields : json
-  }
-  type EntityListRENDERITEMItemAvatar = {
-    src : string
-    alt : string
-    initials : string
   }
 
   entity EntityListItem [runtime] {
@@ -53,7 +42,6 @@ orbital EntityListOrbital {
           showDividers: @config.showDividers
           variant: @config.variant
           emptyMessage: @config.emptyMessage
-          renderItem: RENDER_ITEM
           children: @config.children
           fields: @config.fields
           fieldNames: @config.fieldNames
@@ -69,12 +57,6 @@ orbital EntityListOrbital {
         id : string
       }
         @description "Item actions - schema-driven or function-based"
-        @tier "essential"
-      RENDER_ITEM -> external {
-        item : EntityListRENDERITEMItem
-        index : number
-      }
-        @description "renderItem prop"
         @tier "essential"
       VIEW -> external {
         id : string
@@ -92,15 +74,15 @@ orbital EntityListOrbital {
         @label "Is Loading"
         @description "Loading state indicator"
         @tier "presentation"
-      error : json
+      error : EntityListError
         @label "Error"
-        @description "Error state"
+        @description "Error state (UiError)"
         @tier "presentation"
       sortBy : string = ""
         @label "Sort By"
         @description "Current sort field"
         @tier "presentation"
-      sortDirection : string = ""
+      sortDirection : "asc" | "desc" = asc
         @label "Sort Direction"
         @description "Current sort direction"
         @tier "presentation"

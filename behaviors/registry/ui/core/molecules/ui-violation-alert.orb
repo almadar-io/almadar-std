@@ -68,13 +68,25 @@
                 "key": "DISMISS",
                 "name": "Dismiss",
                 "description": "Dismiss handler",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "NAVIGATE_TO_FIELD",
                 "name": "Navigate To Field",
                 "description": "Navigate to the field that caused violation",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "fieldId",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -87,14 +99,14 @@
                     "render-ui",
                     "main",
                     {
-                      "violation": "@config.violation",
                       "severity": "@config.severity",
-                      "onDismiss": "DISMISS",
-                      "className": "@config.className",
-                      "onNavigateToField": "NAVIGATE_TO_FIELD",
                       "dismissible": "@config.dismissible",
+                      "onDismiss": "DISMISS",
+                      "violation": "@config.violation",
+                      "type": "violation-alert",
+                      "className": "@config.className",
                       "compact": "@config.compact",
-                      "type": "violation-alert"
+                      "onNavigateToField": "NAVIGATE_TO_FIELD"
                     }
                   ]
                 ]
@@ -102,6 +114,71 @@
             ]
           },
           "config": {
+            "violation": {
+              "type": "ViolationAlertViolation",
+              "default": {
+                "law": "",
+                "id": "",
+                "actionType": "measure",
+                "message": "",
+                "article": ""
+              },
+              "label": "Violation",
+              "description": "Violation data",
+              "tier": "presentation",
+              "properties": {
+                "fieldId": {
+                  "name": "fieldId",
+                  "type": "string",
+                  "required": false
+                },
+                "actionType": {
+                  "name": "actionType",
+                  "type": "string",
+                  "required": true,
+                  "values": [
+                    "measure",
+                    "admin",
+                    "penalty"
+                  ]
+                },
+                "article": {
+                  "name": "article",
+                  "type": "string",
+                  "required": true
+                },
+                "law": {
+                  "name": "law",
+                  "type": "string",
+                  "required": true
+                },
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                },
+                "penaltyAction": {
+                  "name": "penaltyAction",
+                  "type": "string",
+                  "required": false
+                },
+                "adminAction": {
+                  "name": "adminAction",
+                  "type": "string",
+                  "required": false
+                },
+                "tabId": {
+                  "name": "tabId",
+                  "type": "string",
+                  "required": false
+                },
+                "id": {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                }
+              }
+            },
             "severity": {
               "type": "string",
               "default": "warning",
@@ -113,76 +190,18 @@
                 "error"
               ]
             },
-            "dismissible": {
-              "type": "boolean",
-              "default": false,
-              "label": "Dismissible",
-              "description": "Dismissible alert",
-              "tier": "presentation"
-            },
-            "violation": {
-              "type": "ViolationAlertViolation",
-              "label": "Violation",
-              "description": "Violation data",
-              "tier": "presentation",
-              "properties": {
-                "actionType": {
-                  "name": "actionType",
-                  "type": "string",
-                  "required": true,
-                  "values": [
-                    "measure",
-                    "admin",
-                    "penalty"
-                  ]
-                },
-                "adminAction": {
-                  "name": "adminAction",
-                  "type": "string",
-                  "required": false
-                },
-                "penaltyAction": {
-                  "name": "penaltyAction",
-                  "type": "string",
-                  "required": false
-                },
-                "article": {
-                  "name": "article",
-                  "type": "string",
-                  "required": true
-                },
-                "fieldId": {
-                  "name": "fieldId",
-                  "type": "string",
-                  "required": false
-                },
-                "tabId": {
-                  "name": "tabId",
-                  "type": "string",
-                  "required": false
-                },
-                "law": {
-                  "name": "law",
-                  "type": "string",
-                  "required": true
-                },
-                "id": {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                },
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                }
-              }
-            },
             "compact": {
               "type": "boolean",
               "default": false,
               "label": "Compact",
               "description": "Compact display mode",
+              "tier": "presentation"
+            },
+            "dismissible": {
+              "type": "boolean",
+              "default": false,
+              "label": "Dismissible",
+              "description": "Dismissible alert",
               "tier": "presentation"
             },
             "className": {

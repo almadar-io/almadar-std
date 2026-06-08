@@ -1,6 +1,12 @@
 app ui-table "1.0.0"
 "Table — UI factory (1:1 with the @almadar/ui table pattern)."
 orbital TableOrbital {
+  type TableError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
+  }
   type TableColumnsItem = {
     key : string!
     label : string!
@@ -40,19 +46,10 @@ orbital TableOrbital {
           paginated: @config.paginated
           currentPage: @config.currentPage
           totalPages: @config.totalPages
-          rowActions: ROW_ACTIONS
           emptyMessage: @config.emptyMessage
           loading: @config.loading
           type: table
         })
-    }
-
-    emits {
-      ROW_ACTIONS -> external {
-        row : object
-      }
-        @description "Row actions menu items"
-        @tier "essential"
     }
 
     config {
@@ -64,9 +61,9 @@ orbital TableOrbital {
         @label "Is Loading"
         @description "Loading state indicator"
         @tier "presentation"
-      error : json
+      error : TableError
         @label "Error"
-        @description "Error state"
+        @description "Error state (UiError)"
         @tier "presentation"
       sortBy : string = ""
         @label "Sort By"

@@ -56,7 +56,13 @@
                 "key": "CLOSE",
                 "name": "Close",
                 "description": "Callback when modal should close (injected by slot wrapper)",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -69,20 +75,20 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "@config.size",
-                      "look": "@config.look",
-                      "onClose": "CLOSE",
-                      "title": "@config.title",
-                      "closeOnEscape": "@config.closeOnEscape",
-                      "children": "@config.children",
-                      "swipeDownToClose": "@config.swipeDownToClose",
+                      "closeEvent": "CLOSE",
                       "isOpen": "@config.isOpen",
-                      "footer": "@config.footer",
-                      "className": "@config.className",
+                      "onClose": "CLOSE",
+                      "size": "@config.size",
+                      "children": "@config.children",
                       "showCloseButton": "@config.showCloseButton",
+                      "closeOnEscape": "@config.closeOnEscape",
+                      "className": "@config.className",
+                      "swipeDownToClose": "@config.swipeDownToClose",
                       "type": "modal",
-                      "closeOnOverlayClick": "@config.closeOnOverlayClick",
-                      "closeEvent": "CLOSE"
+                      "look": "@config.look",
+                      "title": "@config.title",
+                      "footer": "@config.footer",
+                      "closeOnOverlayClick": "@config.closeOnOverlayClick"
                     }
                   ]
                 ]
@@ -90,18 +96,52 @@
             ]
           },
           "config": {
-            "look": {
+            "size": {
               "type": "string",
-              "default": "centered-card",
-              "label": "Look",
-              "description": "Layer 2 visual treatment — orthogonal to the semantic variant.",
+              "default": "md",
+              "label": "Size",
+              "description": "size prop",
               "tier": "presentation",
               "values": [
-                "centered-card",
-                "top-sheet",
-                "side-drawer",
-                "full-screen"
+                "sm",
+                "md",
+                "lg",
+                "xl",
+                "full"
               ]
+            },
+            "isOpen": {
+              "type": "boolean",
+              "default": true,
+              "label": "Is Open",
+              "description": "Whether the modal is open (defaults to true when rendered by slot wrapper)",
+              "tier": "presentation"
+            },
+            "footer": {
+              "type": "node",
+              "label": "Footer",
+              "description": "footer prop",
+              "tier": "presentation"
+            },
+            "title": {
+              "type": "string",
+              "default": "",
+              "label": "Title",
+              "description": "title prop",
+              "tier": "presentation"
+            },
+            "children": {
+              "type": "node",
+              "label": "Children",
+              "description": "Modal content (can be empty if using slot content)",
+              "tier": "presentation"
+            },
+            "closeOnOverlayClick": {
+              "type": "boolean",
+              "default": true,
+              "label": "Close On Overlay Click",
+              "description": "closeOnOverlayClick prop",
+              "tier": "presentation"
             },
             "showCloseButton": {
               "type": "boolean",
@@ -117,40 +157,12 @@
               "description": "closeOnEscape prop",
               "tier": "presentation"
             },
-            "isOpen": {
-              "type": "boolean",
-              "default": true,
-              "label": "Is Open",
-              "description": "Whether the modal is open (defaults to true when rendered by slot wrapper)",
-              "tier": "presentation"
-            },
-            "title": {
+            "className": {
               "type": "string",
               "default": "",
-              "label": "Title",
-              "description": "title prop",
+              "label": "Class Name",
+              "description": "className prop",
               "tier": "presentation"
-            },
-            "closeOnOverlayClick": {
-              "type": "boolean",
-              "default": true,
-              "label": "Close On Overlay Click",
-              "description": "closeOnOverlayClick prop",
-              "tier": "presentation"
-            },
-            "size": {
-              "type": "string",
-              "default": "md",
-              "label": "Size",
-              "description": "size prop",
-              "tier": "presentation",
-              "values": [
-                "sm",
-                "md",
-                "lg",
-                "xl",
-                "full"
-              ]
             },
             "swipeDownToClose": {
               "type": "boolean",
@@ -159,24 +171,18 @@
               "description": "Enable swipe-down-to-close on mobile bottom sheet (default: true)",
               "tier": "presentation"
             },
-            "footer": {
-              "type": "node",
-              "label": "Footer",
-              "description": "footer prop",
-              "tier": "presentation"
-            },
-            "children": {
-              "type": "node",
-              "label": "Children",
-              "description": "Modal content (can be empty if using slot content)",
-              "tier": "presentation"
-            },
-            "className": {
+            "look": {
               "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "className prop",
-              "tier": "presentation"
+              "default": "centered-card",
+              "label": "Look",
+              "description": "Layer 2 visual treatment — orthogonal to the semantic variant.",
+              "tier": "presentation",
+              "values": [
+                "centered-card",
+                "top-sheet",
+                "side-drawer",
+                "full-screen"
+              ]
             }
           },
           "scope": "instance"

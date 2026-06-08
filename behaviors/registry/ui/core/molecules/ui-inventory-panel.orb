@@ -47,7 +47,36 @@
               "payloadSchema": [
                 {
                   "name": "item",
-                  "type": "object"
+                  "type": "object",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "type": "string",
+                      "required": true
+                    },
+                    {
+                      "name": "type",
+                      "type": "string",
+                      "required": true
+                    },
+                    {
+                      "name": "quantity",
+                      "type": "number",
+                      "required": true
+                    },
+                    {
+                      "name": "sprite",
+                      "type": "string"
+                    },
+                    {
+                      "name": "name",
+                      "type": "string"
+                    },
+                    {
+                      "name": "description",
+                      "type": "string"
+                    }
+                  ]
                 }
               ]
             },
@@ -59,7 +88,36 @@
               "payloadSchema": [
                 {
                   "name": "item",
-                  "type": "object"
+                  "type": "object",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "type": "string",
+                      "required": true
+                    },
+                    {
+                      "name": "type",
+                      "type": "string",
+                      "required": true
+                    },
+                    {
+                      "name": "quantity",
+                      "type": "number",
+                      "required": true
+                    },
+                    {
+                      "name": "sprite",
+                      "type": "string"
+                    },
+                    {
+                      "name": "name",
+                      "type": "string"
+                    },
+                    {
+                      "name": "description",
+                      "type": "string"
+                    }
+                  ]
                 }
               ]
             }
@@ -80,19 +138,95 @@
                 "key": "SELECT_SLOT",
                 "name": "Select Slot",
                 "description": "Called when a slot is selected",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "index",
+                    "type": "number"
+                  }
+                ]
               },
               {
                 "key": "USE_ITEM",
                 "name": "Use Item",
                 "description": "Called when an item is used (double-click or Enter)",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "item",
+                    "type": "object",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "type",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "quantity",
+                        "type": "number",
+                        "required": true
+                      },
+                      {
+                        "name": "sprite",
+                        "type": "string"
+                      },
+                      {
+                        "name": "name",
+                        "type": "string"
+                      },
+                      {
+                        "name": "description",
+                        "type": "string"
+                      }
+                    ]
+                  }
+                ]
               },
               {
                 "key": "DROP_ITEM",
                 "name": "Drop Item",
                 "description": "Called when an item is dropped",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "item",
+                    "type": "object",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "type",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "quantity",
+                        "type": "number",
+                        "required": true
+                      },
+                      {
+                        "name": "sprite",
+                        "type": "string"
+                      },
+                      {
+                        "name": "name",
+                        "type": "string"
+                      },
+                      {
+                        "name": "description",
+                        "type": "string"
+                      }
+                    ]
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -106,19 +240,19 @@
                     "main",
                     {
                       "columns": "@config.columns",
-                      "selectSlotEvent": "SELECT_SLOT",
-                      "className": "@config.className",
-                      "onSelectSlot": "SELECT_SLOT",
-                      "onDropItem": "DROP_ITEM",
-                      "slots": "@config.slots",
-                      "dropItemEvent": "DROP_ITEM",
-                      "items": "@config.items",
-                      "selectedSlot": "@config.selectedSlot",
-                      "slotSize": "@config.slotSize",
-                      "useItemEvent": "USE_ITEM",
-                      "onUseItem": "USE_ITEM",
                       "type": "inventory-panel",
-                      "showTooltips": "@config.showTooltips"
+                      "selectSlotEvent": "SELECT_SLOT",
+                      "onSelectSlot": "SELECT_SLOT",
+                      "onUseItem": "USE_ITEM",
+                      "slots": "@config.slots",
+                      "items": "@config.items",
+                      "useItemEvent": "USE_ITEM",
+                      "dropItemEvent": "DROP_ITEM",
+                      "showTooltips": "@config.showTooltips",
+                      "className": "@config.className",
+                      "slotSize": "@config.slotSize",
+                      "selectedSlot": "@config.selectedSlot",
+                      "onDropItem": "DROP_ITEM"
                     }
                   ]
                 ]
@@ -126,11 +260,11 @@
             ]
           },
           "config": {
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Optional className",
+            "slotSize": {
+              "type": "number",
+              "default": 48.0,
+              "label": "Slot Size",
+              "description": "Slot size in pixels",
               "tier": "presentation"
             },
             "slots": {
@@ -140,13 +274,6 @@
               "description": "Total number of slots",
               "tier": "presentation"
             },
-            "selectedSlot": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Selected Slot",
-              "description": "Currently selected slot index",
-              "tier": "presentation"
-            },
             "columns": {
               "type": "number",
               "default": 0.0,
@@ -154,11 +281,11 @@
               "description": "Number of columns in grid",
               "tier": "presentation"
             },
-            "slotSize": {
-              "type": "number",
-              "default": 48.0,
-              "label": "Slot Size",
-              "description": "Slot size in pixels",
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Optional className",
               "tier": "presentation"
             },
             "items": {
@@ -170,20 +297,10 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "type": {
-                    "name": "type",
+                  "sprite": {
+                    "name": "sprite",
                     "type": "string",
-                    "required": true
-                  },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  "quantity": {
-                    "name": "quantity",
-                    "type": "number",
-                    "required": true
+                    "required": false
                   },
                   "name": {
                     "name": "name",
@@ -195,10 +312,20 @@
                     "type": "string",
                     "required": false
                   },
-                  "sprite": {
-                    "name": "sprite",
+                  "id": {
+                    "name": "id",
                     "type": "string",
-                    "required": false
+                    "required": true
+                  },
+                  "quantity": {
+                    "name": "quantity",
+                    "type": "number",
+                    "required": true
+                  },
+                  "type": {
+                    "name": "type",
+                    "type": "string",
+                    "required": true
                   }
                 }
               }
@@ -208,6 +335,13 @@
               "default": true,
               "label": "Show Tooltips",
               "description": "Show item tooltips on hover",
+              "tier": "presentation"
+            },
+            "selectedSlot": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Selected Slot",
+              "description": "Currently selected slot index",
               "tier": "presentation"
             }
           },

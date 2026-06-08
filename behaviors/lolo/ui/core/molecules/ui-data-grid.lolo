@@ -7,7 +7,7 @@ orbital DataGridOrbital {
     icon : string
     variant : "h3" | "h4" | "body" | "caption" | "badge" | "small" | "progress"
     format : "date" | "currency" | "number" | "boolean" | "percent"
-    colorMap : json
+    colorMap : Map string string
   }
   type DataGridColumnsItem = {
     name : string!
@@ -15,7 +15,7 @@ orbital DataGridOrbital {
     icon : string
     variant : "h3" | "h4" | "body" | "caption" | "badge" | "small" | "progress"
     format : "date" | "currency" | "number" | "boolean" | "percent"
-    colorMap : json
+    colorMap : Map string string
   }
   type DataGridItemActionsItem = {
     label : string!
@@ -67,8 +67,6 @@ orbital DataGridOrbital {
           infiniteScroll: @config.infiniteScroll
           loadMoreEvent: LOAD_MORE
           hasMore: @config.hasMore
-          children: CHILDREN
-          renderItem: RENDER_ITEM
           pageSize: @config.pageSize
           look: @config.look
           type: data-grid
@@ -85,18 +83,6 @@ orbital DataGridOrbital {
         id : string
       }
         @description "Event emitted when more items needed: UI:{loadMoreEvent}"
-        @tier "essential"
-      CHILDREN -> external {
-        item : object
-        index : number
-      }
-        @description "Render prop for custom per-card content, typed to the grid's entity shape `T`. When provided, `fields` and `itemActions` are ignored."
-        @tier "essential"
-      RENDER_ITEM -> external {
-        item : object
-        index : number
-      }
-        @description "Per-item render function (schema-level alias for children render prop). In .orb schemas: ['fn', 'item', { pattern tree with @item.field bindings }] The compiler converts this to the children render prop."
         @tier "essential"
     }
 
@@ -153,7 +139,7 @@ orbital DataGridOrbital {
         @label "Scroll X"
         @description "Lay items in a single horizontally-scrolling row (kanban columns) sized to `minCardWidth` instead of a wrapping grid."
         @tier "presentation"
-      cols : number = 0
+      cols : number = 1
         @label "Cols"
         @description "Number of columns (uses auto-fit if omitted)"
         @tier "presentation"

@@ -35,13 +35,19 @@ orbital FormOrbital {
     code : string
     stack : string
   }
+  type FormRelationsDataValueItem = {
+    value : string!
+    label : string!
+    description : string
+    disabled : boolean
+  }
   type FormHiddenCalculationsItem = {
     variableName : string!
-    expression : json!
+    expression : SExpr!
     triggerFields : [string]!
   }
   type FormViolationTriggersItem = {
-    condition : json!
+    condition : SExpr!
     violation : FormViolationTriggersItemViolation!
     fieldId : string
   }
@@ -60,7 +66,7 @@ orbital FormOrbital {
   type FormSectionsItem = {
     id : string!
     title : string!
-    condition : json
+    condition : SExpr
     fields : [FormSectionsItemFieldsItem]!
     collapsible : boolean
   }
@@ -95,7 +101,7 @@ orbital FormOrbital {
   type FormFIELDCHANGEChange = {
     fieldId : string!
     value : json!
-    formValues : json!
+    formValues : Map string json!
   }
 
   entity FormItem [runtime] {
@@ -185,7 +191,7 @@ orbital FormOrbital {
         @label "Class Name"
         @description "Additional CSS classes"
         @tier "presentation"
-      mode : string = ""
+      mode : "create" | "edit" = create
         @label "Mode"
         @description "Form mode — 'create' for new records, 'edit' for updating existing. Accepts `string` so schema-driven callers (whose `config.mode` is typed as `string` per the trait's declared config block) compile cleanly. The runtime treats anything other than 'edit' as 'create'."
         @tier "presentation"
@@ -225,15 +231,15 @@ orbital FormOrbital {
         @label "Title"
         @description "Form title (used by ModalSlot to extract title)"
         @tier "presentation"
-      relationsData : json
+      relationsData : Map string [FormRelationsDataValueItem] = {}
         @label "Relations Data"
         @description "Relation data props"
         @tier "presentation"
-      relationsLoading : json
+      relationsLoading : Map string boolean = {}
         @label "Relations Loading"
         @description "Loading state for relation data: { fieldName: boolean }"
         @tier "presentation"
-      conditionalFields : json
+      conditionalFields : Map string SExpr = {}
         @label "Conditional Fields"
         @description "Inspection form extensions"
         @tier "presentation"

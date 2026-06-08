@@ -11,33 +11,13 @@ orbital ErrorBoundaryOrbital {
     state idle {
       INIT -> idle
         (render-ui main {
-          children: @config.children
-          fallback: FALLBACK
+          children: [{ content: "", type: text }]
           className: @config.className
-          onError: ERROR
           type: error-boundary
         })
     }
 
-    emits {
-      FALLBACK -> external {
-        id : string
-      }
-        @description "Fallback UI when an error is caught — ReactNode or render function"
-        @tier "essential"
-      ERROR -> external {
-        error : object
-        errorInfo : object
-      }
-        @description "Called when an error is caught (for logging/telemetry)"
-        @tier "essential"
-    }
-
     config {
-      children : node
-        @label "Children"
-        @description "Content to render when no error"
-        @tier "presentation"
       className : string = ""
         @label "Class Name"
         @description "Additional CSS classes for the wrapper"

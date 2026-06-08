@@ -35,7 +35,42 @@
               "payloadSchema": [
                 {
                   "name": "option",
-                  "type": "object"
+                  "type": "object",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "type": "string"
+                    },
+                    {
+                      "name": "label",
+                      "type": "string",
+                      "required": true
+                    },
+                    {
+                      "name": "event",
+                      "type": "string"
+                    },
+                    {
+                      "name": "navigatesTo",
+                      "type": "string"
+                    },
+                    {
+                      "name": "variant",
+                      "type": "string"
+                    },
+                    {
+                      "name": "disabled",
+                      "type": "boolean"
+                    },
+                    {
+                      "name": "subLabel",
+                      "type": "string"
+                    },
+                    {
+                      "name": "action",
+                      "type": "string"
+                    }
+                  ]
                 }
               ]
             }
@@ -56,7 +91,48 @@
                 "key": "SELECT",
                 "name": "Select",
                 "description": "Called when an option is selected (legacy callback, prefer event bus)",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "option",
+                    "type": "object",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "label",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "event",
+                        "type": "string"
+                      },
+                      {
+                        "name": "navigatesTo",
+                        "type": "string"
+                      },
+                      {
+                        "name": "variant",
+                        "type": "string"
+                      },
+                      {
+                        "name": "disabled",
+                        "type": "boolean"
+                      },
+                      {
+                        "name": "subLabel",
+                        "type": "string"
+                      },
+                      {
+                        "name": "action",
+                        "type": "string"
+                      }
+                    ]
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -69,16 +145,15 @@
                     "render-ui",
                     "main",
                     {
-                      "logo": "@config.logo",
-                      "className": "@config.className",
-                      "menuItems": "@config.menuItems",
-                      "type": "game-menu",
-                      "background": "@config.background",
                       "subtitle": "@config.subtitle",
+                      "background": "@config.background",
+                      "logo": "@config.logo",
+                      "menuItems": "@config.menuItems",
+                      "className": "@config.className",
+                      "type": "game-menu",
                       "title": "@config.title",
                       "options": "@config.options",
-                      "onSelect": "SELECT",
-                      "eventBus": "@config.eventBus"
+                      "onSelect": "SELECT"
                     }
                   ]
                 ]
@@ -86,6 +161,41 @@
             ]
           },
           "config": {
+            "background": {
+              "type": "string",
+              "default": "",
+              "label": "Background",
+              "description": "Background image or gradient",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "subtitle": {
+              "type": "string",
+              "default": "",
+              "label": "Subtitle",
+              "description": "Optional subtitle or version",
+              "tier": "presentation"
+            },
+            "title": {
+              "type": "string",
+              "default": "",
+              "label": "Title",
+              "description": "Menu title",
+              "tier": "presentation"
+            },
+            "logo": {
+              "type": "string",
+              "default": "",
+              "label": "Logo",
+              "description": "Logo image URL",
+              "tier": "presentation"
+            },
             "options": {
               "type": "[GameMenuOptionsItem]",
               "default": [],
@@ -100,14 +210,14 @@
                     "type": "string",
                     "required": false
                   },
-                  "action": {
-                    "name": "action",
+                  "navigatesTo": {
+                    "name": "navigatesTo",
                     "type": "string",
                     "required": false
                   },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
+                  "disabled": {
+                    "name": "disabled",
+                    "type": "boolean",
                     "required": false
                   },
                   "subLabel": {
@@ -120,20 +230,25 @@
                     "type": "string",
                     "required": true
                   },
-                  "disabled": {
-                    "name": "disabled",
-                    "type": "boolean",
+                  "action": {
+                    "name": "action",
+                    "type": "string",
                     "required": false
                   },
-                  "navigatesTo": {
-                    "name": "navigatesTo",
+                  "id": {
+                    "name": "id",
                     "type": "string",
                     "required": false
                   },
                   "variant": {
                     "name": "variant",
                     "type": "string",
-                    "required": false
+                    "required": false,
+                    "values": [
+                      "primary",
+                      "secondary",
+                      "ghost"
+                    ]
                   }
                 }
               }
@@ -147,28 +262,18 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "subLabel": {
-                    "name": "subLabel",
+                  "label": {
+                    "name": "label",
                     "type": "string",
-                    "required": false
+                    "required": true
                   },
                   "disabled": {
                     "name": "disabled",
                     "type": "boolean",
                     "required": false
                   },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
-                  },
-                  "action": {
-                    "name": "action",
-                    "type": "string",
-                    "required": false
-                  },
-                  "id": {
-                    "name": "id",
+                  "subLabel": {
+                    "name": "subLabel",
                     "type": "string",
                     "required": false
                   },
@@ -182,54 +287,28 @@
                     "type": "string",
                     "required": false
                   },
-                  "label": {
-                    "name": "label",
+                  "action": {
+                    "name": "action",
                     "type": "string",
-                    "required": true
+                    "required": false
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": false
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "primary",
+                      "secondary",
+                      "ghost"
+                    ]
                   }
                 }
               }
-            },
-            "title": {
-              "type": "string",
-              "default": "",
-              "label": "Title",
-              "description": "Menu title",
-              "tier": "presentation"
-            },
-            "subtitle": {
-              "type": "string",
-              "default": "",
-              "label": "Subtitle",
-              "description": "Optional subtitle or version",
-              "tier": "presentation"
-            },
-            "eventBus": {
-              "type": "json",
-              "label": "Event Bus",
-              "description": "Event bus for emitting UI events (optional, uses hook if not provided)",
-              "tier": "presentation"
-            },
-            "logo": {
-              "type": "string",
-              "default": "",
-              "label": "Logo",
-              "description": "Logo image URL",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "background": {
-              "type": "string",
-              "default": "",
-              "label": "Background",
-              "description": "Background image or gradient",
-              "tier": "presentation"
             }
           },
           "scope": "instance"

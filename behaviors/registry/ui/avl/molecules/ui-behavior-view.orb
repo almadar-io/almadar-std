@@ -49,8 +49,8 @@
                     "render-ui",
                     "main",
                     {
-                      "data": "@config.data",
-                      "type": "behavior-view"
+                      "type": "behavior-view",
+                      "data": "@config.data"
                     }
                   ]
                 ]
@@ -60,10 +60,30 @@
           "config": {
             "data": {
               "type": "BehaviorViewData",
+              "default": {
+                "orbitalName": "",
+                "fields": [],
+                "entityName": "",
+                "pages": [],
+                "externalLinks": [],
+                "persistence": "",
+                "traitDetails": {},
+                "traits": []
+              },
               "label": "Data",
               "description": "data prop",
               "tier": "presentation",
               "properties": {
+                "orbitalName": {
+                  "name": "orbitalName",
+                  "type": "string",
+                  "required": true
+                },
+                "entityName": {
+                  "name": "entityName",
+                  "type": "string",
+                  "required": true
+                },
                 "fields": {
                   "name": "fields",
                   "type": "array",
@@ -71,13 +91,13 @@
                   "items": {
                     "type": "object",
                     "properties": {
-                      "required": {
-                        "name": "required",
-                        "type": "boolean",
-                        "required": true
-                      },
                       "name": {
                         "name": "name",
+                        "type": "string",
+                        "required": true
+                      },
+                      "type": {
+                        "name": "type",
                         "type": "string",
                         "required": true
                       },
@@ -86,23 +106,13 @@
                         "type": "boolean",
                         "required": true
                       },
-                      "type": {
-                        "name": "type",
-                        "type": "string",
+                      "required": {
+                        "name": "required",
+                        "type": "boolean",
                         "required": true
                       }
                     }
                   }
-                },
-                "traitDetails": {
-                  "name": "traitDetails",
-                  "type": "string",
-                  "required": true
-                },
-                "persistence": {
-                  "name": "persistence",
-                  "type": "string",
-                  "required": true
                 },
                 "traits": {
                   "name": "traits",
@@ -111,26 +121,13 @@
                   "items": {
                     "type": "object",
                     "properties": {
-                      "emits": {
-                        "name": "emits",
-                        "type": "array",
-                        "required": true,
-                        "items": {
-                          "type": "string"
-                        }
-                      },
-                      "transitionCount": {
-                        "name": "transitionCount",
-                        "type": "number",
-                        "required": true
-                      },
                       "stateCount": {
                         "name": "stateCount",
                         "type": "number",
                         "required": true
                       },
-                      "eventCount": {
-                        "name": "eventCount",
+                      "transitionCount": {
+                        "name": "transitionCount",
                         "type": "number",
                         "required": true
                       },
@@ -139,8 +136,179 @@
                         "type": "string",
                         "required": true
                       },
+                      "eventCount": {
+                        "name": "eventCount",
+                        "type": "number",
+                        "required": true
+                      },
+                      "emits": {
+                        "name": "emits",
+                        "type": "array",
+                        "required": true,
+                        "items": {
+                          "type": "string"
+                        }
+                      },
                       "listens": {
                         "name": "listens",
+                        "type": "array",
+                        "required": true,
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                },
+                "persistence": {
+                  "name": "persistence",
+                  "type": "string",
+                  "required": true
+                },
+                "externalLinks": {
+                  "name": "externalLinks",
+                  "type": "array",
+                  "required": true,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "traitName": {
+                        "name": "traitName",
+                        "type": "string",
+                        "required": true
+                      },
+                      "targetOrbital": {
+                        "name": "targetOrbital",
+                        "type": "string",
+                        "required": true
+                      },
+                      "direction": {
+                        "name": "direction",
+                        "type": "string",
+                        "required": true,
+                        "values": [
+                          "out",
+                          "in"
+                        ]
+                      },
+                      "eventName": {
+                        "name": "eventName",
+                        "type": "string",
+                        "required": true
+                      }
+                    }
+                  }
+                },
+                "traitDetails": {
+                  "name": "traitDetails",
+                  "type": "object",
+                  "required": true,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "emittedEvents": {
+                        "name": "emittedEvents",
+                        "type": "array",
+                        "required": true,
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "name": {
+                        "name": "name",
+                        "type": "string",
+                        "required": true
+                      },
+                      "linkedEntity": {
+                        "name": "linkedEntity",
+                        "type": "string",
+                        "required": true
+                      },
+                      "states": {
+                        "name": "states",
+                        "type": "array",
+                        "required": true,
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "isTerminal": {
+                              "name": "isTerminal",
+                              "type": "boolean",
+                              "required": false
+                            },
+                            "name": {
+                              "name": "name",
+                              "type": "string",
+                              "required": true
+                            },
+                            "isInitial": {
+                              "name": "isInitial",
+                              "type": "boolean",
+                              "required": false
+                            }
+                          }
+                        }
+                      },
+                      "transitions": {
+                        "name": "transitions",
+                        "type": "array",
+                        "required": true,
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "from": {
+                              "name": "from",
+                              "type": "string",
+                              "required": true
+                            },
+                            "event": {
+                              "name": "event",
+                              "type": "string",
+                              "required": true
+                            },
+                            "guard": {
+                              "name": "guard",
+                              "type": "string",
+                              "required": false
+                            },
+                            "to": {
+                              "name": "to",
+                              "type": "string",
+                              "required": true
+                            },
+                            "effects": {
+                              "name": "effects",
+                              "type": "array",
+                              "required": true,
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "args": {
+                                    "name": "args",
+                                    "type": "array",
+                                    "required": true,
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "type": {
+                                    "name": "type",
+                                    "type": "string",
+                                    "required": true
+                                  }
+                                }
+                              }
+                            },
+                            "index": {
+                              "name": "index",
+                              "type": "number",
+                              "required": true
+                            }
+                          }
+                        }
+                      },
+                      "listenedEvents": {
+                        "name": "listenedEvents",
                         "type": "array",
                         "required": true,
                         "items": {
@@ -166,50 +334,6 @@
                         "name": "name",
                         "type": "string",
                         "required": true
-                      }
-                    }
-                  }
-                },
-                "orbitalName": {
-                  "name": "orbitalName",
-                  "type": "string",
-                  "required": true
-                },
-                "entityName": {
-                  "name": "entityName",
-                  "type": "string",
-                  "required": true
-                },
-                "externalLinks": {
-                  "name": "externalLinks",
-                  "type": "array",
-                  "required": true,
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "targetOrbital": {
-                        "name": "targetOrbital",
-                        "type": "string",
-                        "required": true
-                      },
-                      "traitName": {
-                        "name": "traitName",
-                        "type": "string",
-                        "required": true
-                      },
-                      "eventName": {
-                        "name": "eventName",
-                        "type": "string",
-                        "required": true
-                      },
-                      "direction": {
-                        "name": "direction",
-                        "type": "string",
-                        "required": true,
-                        "values": [
-                          "out",
-                          "in"
-                        ]
                       }
                     }
                   }

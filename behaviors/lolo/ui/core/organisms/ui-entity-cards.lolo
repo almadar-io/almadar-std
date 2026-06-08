@@ -1,6 +1,12 @@
 app ui-entity-cards "1.0.0"
 "EntityCards — UI factory (1:1 with the @almadar/ui entity-cards pattern)."
 orbital EntityCardsOrbital {
+  type EntityCardsError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
+  }
   type EntityCardsFieldsItem = {
     key : string
     header : string
@@ -18,8 +24,8 @@ orbital EntityCardsOrbital {
     event : string
     navigatesTo : string
     action : string
-    placement : string
-    variant : string
+    placement : "card" | "footer" | "row"
+    variant : "primary" | "secondary" | "ghost" | "danger"
   }
 
   entity EntityCardsItem [runtime] {
@@ -81,15 +87,15 @@ orbital EntityCardsOrbital {
         @label "Is Loading"
         @description "Loading state indicator"
         @tier "presentation"
-      error : json
+      error : EntityCardsError
         @label "Error"
-        @description "Error state"
+        @description "Error state (UiError)"
         @tier "presentation"
       sortBy : string = ""
         @label "Sort By"
         @description "Current sort field"
         @tier "presentation"
-      sortDirection : string = ""
+      sortDirection : "asc" | "desc" = asc
         @label "Sort Direction"
         @description "Current sort direction"
         @tier "presentation"
@@ -122,7 +128,7 @@ orbital EntityCardsOrbital {
         @label "Min Card Width"
         @description "Minimum width of each card (default: 280px)"
         @tier "presentation"
-      maxCols : number = 0
+      maxCols : number = 1
         @label "Max Cols"
         @description "Maximum number of columns"
         @tier "presentation"

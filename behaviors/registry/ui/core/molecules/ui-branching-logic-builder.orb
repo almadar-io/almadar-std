@@ -56,7 +56,13 @@
                 "key": "RULES_CHANGE",
                 "name": "Rules Change",
                 "description": "onRulesChange prop",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "rules",
+                    "type": "[object]"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -69,13 +75,13 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "@config.className",
-                      "type": "branching-logic-builder",
-                      "rules": "@config.rules",
-                      "onRulesChange": "RULES_CHANGE",
-                      "readOnly": "@config.readOnly",
                       "questions": "@config.questions",
-                      "rulesChangeEvent": "RULES_CHANGE"
+                      "rules": "@config.rules",
+                      "rulesChangeEvent": "RULES_CHANGE",
+                      "readOnly": "@config.readOnly",
+                      "onRulesChange": "RULES_CHANGE",
+                      "className": "@config.className",
+                      "type": "branching-logic-builder"
                     }
                   ]
                 ]
@@ -85,18 +91,13 @@
           "config": {
             "questions": {
               "type": "[BranchingLogicBuilderQuestionsItem]",
-              "default": [],
+              "default": {},
               "label": "Questions",
               "description": "questions prop",
               "tier": "presentation",
               "items": {
                 "type": "object",
                 "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
                   "optionValues": {
                     "name": "optionValues",
                     "type": "array",
@@ -104,6 +105,11 @@
                     "items": {
                       "type": "string"
                     }
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
                   },
                   "id": {
                     "name": "id",
@@ -113,16 +119,9 @@
                 }
               }
             },
-            "readOnly": {
-              "type": "boolean",
-              "default": false,
-              "label": "Read Only",
-              "description": "readOnly prop",
-              "tier": "presentation"
-            },
             "rules": {
               "type": "[BranchingLogicBuilderRulesItem]",
-              "default": [],
+              "default": {},
               "label": "Rules",
               "description": "Rules. Accepts either a typed array (direct consumers) or the runtime payload shape from a render-ui binding (`@payload.data`). Narrowed to `[]` internally when the value isn't an array.",
               "tier": "presentation",
@@ -136,11 +135,6 @@
                     "items": {
                       "type": "string"
                     }
-                  },
-                  "targetQuestionId": {
-                    "name": "targetQuestionId",
-                    "type": "string",
-                    "required": true
                   },
                   "operator": {
                     "name": "operator",
@@ -158,6 +152,11 @@
                     "type": "string",
                     "required": true
                   },
+                  "targetQuestionId": {
+                    "name": "targetQuestionId",
+                    "type": "string",
+                    "required": true
+                  },
                   "sourceQuestionId": {
                     "name": "sourceQuestionId",
                     "type": "string",
@@ -171,6 +170,13 @@
               "default": "",
               "label": "Class Name",
               "description": "className prop",
+              "tier": "presentation"
+            },
+            "readOnly": {
+              "type": "boolean",
+              "default": false,
+              "label": "Read Only",
+              "description": "readOnly prop",
               "tier": "presentation"
             }
           },

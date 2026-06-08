@@ -1,12 +1,12 @@
 {
-  "name": "ui-social-proof",
+  "name": "ui-step-flow",
   "version": "1.0.0",
-  "description": "SocialProof — UI factory (1:1 with the @almadar/ui social-proof pattern).",
+  "description": "StepFlow — UI factory (1:1 with the @almadar/ui step-flow pattern).",
   "orbitals": [
     {
-      "name": "SocialProofOrbital",
+      "name": "StepFlowOrbital",
       "entity": {
-        "name": "SocialProofItem",
+        "name": "StepFlowItem",
         "persistence": "runtime",
         "fields": [
           {
@@ -18,14 +18,14 @@
       },
       "traits": [
         {
-          "name": "SocialProofRender",
+          "name": "StepFlowRender",
           "entityRebindable": true,
           "entityContract": {
             "requires": [],
             "provides": []
           },
           "category": "interaction",
-          "linkedEntity": "SocialProofItem",
+          "linkedEntity": "StepFlowItem",
           "stateMachine": {
             "states": [
               {
@@ -49,10 +49,11 @@
                     "render-ui",
                     "main",
                     {
+                      "steps": "@config.steps",
                       "className": "@config.className",
-                      "items": "@config.items",
-                      "type": "social-proof",
-                      "variant": "@config.variant"
+                      "showConnectors": "@config.showConnectors",
+                      "orientation": "@config.orientation",
+                      "type": "step-flow"
                     }
                   ]
                 ]
@@ -60,51 +61,62 @@
             ]
           },
           "config": {
-            "items": {
-              "type": "[SocialProofItemsItem]",
+            "steps": {
+              "type": "[StepFlowStepsItem]",
               "default": [],
-              "label": "Items",
-              "description": "List of social proof items",
+              "label": "Steps",
+              "description": "steps prop",
               "tier": "presentation",
               "items": {
                 "type": "object",
                 "properties": {
-                  "name": {
-                    "name": "name",
+                  "title": {
+                    "name": "title",
                     "type": "string",
                     "required": true
                   },
-                  "quote": {
-                    "name": "quote",
+                  "description": {
+                    "name": "description",
                     "type": "string",
+                    "required": true
+                  },
+                  "number": {
+                    "name": "number",
+                    "type": "number",
                     "required": false
                   },
-                  "logo": {
-                    "name": "logo",
+                  "icon": {
+                    "name": "icon",
                     "type": "string",
                     "required": false
                   }
                 }
               }
             },
+            "showConnectors": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Connectors",
+              "description": "showConnectors prop",
+              "tier": "presentation"
+            },
+            "orientation": {
+              "type": "string",
+              "default": "horizontal",
+              "label": "Orientation",
+              "description": "orientation prop",
+              "tier": "presentation",
+              "values": [
+                "horizontal",
+                "vertical"
+              ]
+            },
             "className": {
               "type": "string",
               "default": "",
               "label": "Class Name",
-              "description": "Additional class names",
+              "description": "className prop",
               "tier": "presentation"
-            },
-            "variant": {
-              "type": "string",
-              "default": "logos",
-              "label": "Variant",
-              "description": "Display variant",
-              "tier": "presentation",
-              "values": [
-                "logos",
-                "quotes",
-                "badges"
-              ]
             }
           },
           "scope": "instance"
@@ -112,11 +124,11 @@
       ],
       "pages": [
         {
-          "name": "SocialProofPage",
-          "path": "/social-proof",
+          "name": "StepFlowPage",
+          "path": "/step-flow",
           "traits": [
             {
-              "ref": "SocialProofRender"
+              "ref": "StepFlowRender"
             }
           ]
         }

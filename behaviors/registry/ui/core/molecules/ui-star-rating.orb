@@ -68,13 +68,25 @@
                 "key": "ACTION",
                 "name": "Action",
                 "description": "Declarative event name for rating changes",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "CHANGE",
                 "name": "Change",
                 "description": "Direct onChange callback",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "type": "number"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -87,17 +99,17 @@
                     "render-ui",
                     "main",
                     {
-                      "readOnly": "@config.readOnly",
-                      "actionPayload": "@config.actionPayload",
                       "className": "@config.className",
-                      "label": "@config.label",
+                      "precision": "@config.precision",
+                      "actionPayload": "@config.actionPayload",
                       "value": "@config.value",
-                      "type": "star-rating",
+                      "readOnly": "@config.readOnly",
                       "size": "@config.size",
                       "action": "ACTION",
                       "onChange": "CHANGE",
-                      "max": "@config.max",
-                      "precision": "@config.precision"
+                      "label": "@config.label",
+                      "type": "star-rating",
+                      "max": "@config.max"
                     }
                   ]
                 ]
@@ -105,11 +117,11 @@
             ]
           },
           "config": {
-            "label": {
+            "className": {
               "type": "string",
               "default": "",
-              "label": "Label",
-              "description": "Accessible label",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
               "tier": "presentation"
             },
             "size": {
@@ -124,11 +136,18 @@
                 "lg"
               ]
             },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
+            "value": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Value",
+              "description": "Current rating value",
+              "tier": "presentation"
+            },
+            "max": {
+              "type": "number",
+              "default": 5.0,
+              "label": "Max",
+              "description": "Maximum number of stars",
               "tier": "presentation"
             },
             "precision": {
@@ -142,6 +161,12 @@
                 "half"
               ]
             },
+            "actionPayload": {
+              "type": "json",
+              "label": "Action Payload",
+              "description": "Payload to include with the action event",
+              "tier": "presentation"
+            },
             "readOnly": {
               "type": "boolean",
               "default": false,
@@ -149,24 +174,11 @@
               "description": "Read-only display mode",
               "tier": "presentation"
             },
-            "value": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Value",
-              "description": "Current rating value",
-              "tier": "presentation"
-            },
-            "actionPayload": {
-              "type": "json",
-              "label": "Action Payload",
-              "description": "Payload to include with the action event",
-              "tier": "presentation"
-            },
-            "max": {
-              "type": "number",
-              "default": 5.0,
-              "label": "Max",
-              "description": "Maximum number of stars",
+            "label": {
+              "type": "string",
+              "default": "",
+              "label": "Label",
+              "description": "Accessible label",
               "tier": "presentation"
             }
           },

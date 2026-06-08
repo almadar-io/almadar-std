@@ -56,7 +56,13 @@
                 "key": "FILE_SELECT",
                 "name": "File Select",
                 "description": "Called when a file is clicked",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "path",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -69,12 +75,12 @@
                     "render-ui",
                     "main",
                     {
-                      "onFileSelect": "FILE_SELECT",
-                      "indent": "@config.indent",
                       "tree": "@config.tree",
-                      "type": "file-tree",
                       "selectedPath": "@config.selectedPath",
-                      "className": "@config.className"
+                      "onFileSelect": "FILE_SELECT",
+                      "className": "@config.className",
+                      "indent": "@config.indent",
+                      "type": "file-tree"
                     }
                   ]
                 ]
@@ -91,6 +97,16 @@
               "items": {
                 "type": "object",
                 "properties": {
+                  "path": {
+                    "name": "path",
+                    "type": "string",
+                    "required": true
+                  },
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
+                  },
                   "type": {
                     "name": "type",
                     "type": "string",
@@ -110,16 +126,6 @@
                     "type": "string",
                     "required": false
                   },
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
-                  },
-                  "path": {
-                    "name": "path",
-                    "type": "string",
-                    "required": true
-                  },
                   "children": {
                     "name": "children",
                     "type": "array",
@@ -131,18 +137,18 @@
                 }
               }
             },
-            "indent": {
-              "type": "number",
-              "default": 16.0,
-              "label": "Indent",
-              "description": "Indent size per level in px (default: 16)",
-              "tier": "presentation"
-            },
             "className": {
               "type": "string",
               "default": "",
               "label": "Class Name",
               "description": "CSS class",
+              "tier": "presentation"
+            },
+            "indent": {
+              "type": "number",
+              "default": 16.0,
+              "label": "Indent",
+              "description": "Indent size per level in px (default: 16)",
               "tier": "presentation"
             },
             "selectedPath": {

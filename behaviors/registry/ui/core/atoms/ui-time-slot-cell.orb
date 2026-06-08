@@ -56,7 +56,13 @@
                 "key": "CLICK",
                 "name": "Click",
                 "description": "Called when the slot is clicked",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "time",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -69,12 +75,12 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "time-slot-cell",
-                      "children": "@config.children",
-                      "onClick": "CLICK",
-                      "time": "@config.time",
+                      "isOccupied": "@config.isOccupied",
                       "className": "@config.className",
-                      "isOccupied": "@config.isOccupied"
+                      "time": "@config.time",
+                      "children": "@config.children",
+                      "type": "time-slot-cell",
+                      "onClick": "CLICK"
                     }
                   ]
                 ]
@@ -82,11 +88,10 @@
             ]
           },
           "config": {
-            "isOccupied": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Occupied",
-              "description": "Whether this slot contains an event",
+            "children": {
+              "type": "node",
+              "label": "Children",
+              "description": "Event content placed inside the slot",
               "tier": "presentation"
             },
             "time": {
@@ -96,10 +101,11 @@
               "description": "Time label for this slot (e.g. '09:00')",
               "tier": "presentation"
             },
-            "children": {
-              "type": "node",
-              "label": "Children",
-              "description": "Event content placed inside the slot",
+            "isOccupied": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Occupied",
+              "description": "Whether this slot contains an event",
               "tier": "presentation"
             },
             "className": {

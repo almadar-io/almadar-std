@@ -49,8 +49,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "module-card",
-                      "data": "@config.data"
+                      "data": "@config.data",
+                      "type": "module-card"
                     }
                   ]
                 ]
@@ -60,40 +60,30 @@
           "config": {
             "data": {
               "type": "ModuleCardData",
+              "default": {
+                "orbitalName": "",
+                "externalLinks": [],
+                "traits": [],
+                "pages": [],
+                "persistence": "",
+                "fields": [],
+                "traitDetails": {},
+                "entityName": ""
+              },
               "label": "Data",
               "description": "data prop",
               "tier": "presentation",
               "properties": {
-                "orbitalName": {
-                  "name": "orbitalName",
-                  "type": "string",
-                  "required": true
-                },
-                "persistence": {
-                  "name": "persistence",
-                  "type": "string",
-                  "required": true
-                },
-                "fields": {
-                  "name": "fields",
+                "pages": {
+                  "name": "pages",
                   "type": "array",
                   "required": true,
                   "items": {
                     "type": "object",
                     "properties": {
-                      "type": {
-                        "name": "type",
+                      "route": {
+                        "name": "route",
                         "type": "string",
-                        "required": true
-                      },
-                      "hasDefault": {
-                        "name": "hasDefault",
-                        "type": "boolean",
-                        "required": true
-                      },
-                      "required": {
-                        "name": "required",
-                        "type": "boolean",
                         "required": true
                       },
                       "name": {
@@ -111,21 +101,13 @@
                   "items": {
                     "type": "object",
                     "properties": {
-                      "stateCount": {
-                        "name": "stateCount",
+                      "eventCount": {
+                        "name": "eventCount",
                         "type": "number",
                         "required": true
                       },
-                      "listens": {
-                        "name": "listens",
-                        "type": "array",
-                        "required": true,
-                        "items": {
-                          "type": "string"
-                        }
-                      },
-                      "eventCount": {
-                        "name": "eventCount",
+                      "stateCount": {
+                        "name": "stateCount",
                         "type": "number",
                         "required": true
                       },
@@ -139,6 +121,14 @@
                         "type": "string",
                         "required": true
                       },
+                      "listens": {
+                        "name": "listens",
+                        "type": "array",
+                        "required": true,
+                        "items": {
+                          "type": "string"
+                        }
+                      },
                       "emits": {
                         "name": "emits",
                         "type": "array",
@@ -150,8 +140,127 @@
                     }
                   }
                 },
-                "pages": {
-                  "name": "pages",
+                "traitDetails": {
+                  "name": "traitDetails",
+                  "type": "object",
+                  "required": true,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "name": "name",
+                        "type": "string",
+                        "required": true
+                      },
+                      "linkedEntity": {
+                        "name": "linkedEntity",
+                        "type": "string",
+                        "required": true
+                      },
+                      "transitions": {
+                        "name": "transitions",
+                        "type": "array",
+                        "required": true,
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "index": {
+                              "name": "index",
+                              "type": "number",
+                              "required": true
+                            },
+                            "from": {
+                              "name": "from",
+                              "type": "string",
+                              "required": true
+                            },
+                            "to": {
+                              "name": "to",
+                              "type": "string",
+                              "required": true
+                            },
+                            "event": {
+                              "name": "event",
+                              "type": "string",
+                              "required": true
+                            },
+                            "guard": {
+                              "name": "guard",
+                              "type": "string",
+                              "required": false
+                            },
+                            "effects": {
+                              "name": "effects",
+                              "type": "array",
+                              "required": true,
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "args": {
+                                    "name": "args",
+                                    "type": "array",
+                                    "required": true,
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "type": {
+                                    "name": "type",
+                                    "type": "string",
+                                    "required": true
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "emittedEvents": {
+                        "name": "emittedEvents",
+                        "type": "array",
+                        "required": true,
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "listenedEvents": {
+                        "name": "listenedEvents",
+                        "type": "array",
+                        "required": true,
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "states": {
+                        "name": "states",
+                        "type": "array",
+                        "required": true,
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "isInitial": {
+                              "name": "isInitial",
+                              "type": "boolean",
+                              "required": false
+                            },
+                            "name": {
+                              "name": "name",
+                              "type": "string",
+                              "required": true
+                            },
+                            "isTerminal": {
+                              "name": "isTerminal",
+                              "type": "boolean",
+                              "required": false
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "fields": {
+                  "name": "fields",
                   "type": "array",
                   "required": true,
                   "items": {
@@ -162,9 +271,19 @@
                         "type": "string",
                         "required": true
                       },
-                      "route": {
-                        "name": "route",
+                      "type": {
+                        "name": "type",
                         "type": "string",
+                        "required": true
+                      },
+                      "required": {
+                        "name": "required",
+                        "type": "boolean",
+                        "required": true
+                      },
+                      "hasDefault": {
+                        "name": "hasDefault",
+                        "type": "boolean",
                         "required": true
                       }
                     }
@@ -204,13 +323,18 @@
                     }
                   }
                 },
+                "persistence": {
+                  "name": "persistence",
+                  "type": "string",
+                  "required": true
+                },
                 "entityName": {
                   "name": "entityName",
                   "type": "string",
                   "required": true
                 },
-                "traitDetails": {
-                  "name": "traitDetails",
+                "orbitalName": {
+                  "name": "orbitalName",
                   "type": "string",
                   "required": true
                 }

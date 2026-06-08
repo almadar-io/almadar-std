@@ -72,13 +72,29 @@
                 "key": "FILTER_CHANGE",
                 "name": "Filter Change",
                 "description": "Callback when a filter changes - for EntityStore integration",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "field",
+                    "type": "string"
+                  },
+                  {
+                    "name": "value",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "CLEAR_ALL",
                 "name": "Clear All",
                 "description": "Callback to clear all filters",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -96,17 +112,17 @@
                     "render-ui",
                     "main",
                     {
-                      "isLoading": "@config.isLoading",
-                      "filters": "@config.filters",
-                      "query": "@config.query",
+                      "onFilterChange": "FILTER_CHANGE",
                       "look": "@config.look",
                       "type": "filter-group",
+                      "showIcon": "@config.showIcon",
+                      "entity": "FilterGroupItem",
                       "onClearAll": "CLEAR_ALL",
                       "className": "@config.className",
-                      "entity": "FilterGroupItem",
-                      "onFilterChange": "FILTER_CHANGE",
-                      "showIcon": "@config.showIcon",
-                      "variant": "@config.variant"
+                      "variant": "@config.variant",
+                      "isLoading": "@config.isLoading",
+                      "filters": "@config.filters",
+                      "query": "@config.query"
                     }
                   ]
                 ]
@@ -114,19 +130,45 @@
             ]
           },
           "config": {
-            "query": {
-              "type": "string",
-              "default": "",
-              "label": "Query",
-              "description": "Query singleton binding for state management. When provided, syncs filter state with the query singleton. Example: '@TaskQuery'",
-              "tier": "presentation"
-            },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state indicator",
-              "tier": "presentation"
+            "filters": {
+              "type": "[FilterGroupFiltersItem]",
+              "default": [],
+              "label": "Filters",
+              "description": "Filter definitions from schema",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "field": {
+                    "name": "field",
+                    "type": "string",
+                    "required": true
+                  },
+                  "options": {
+                    "name": "options",
+                    "type": "array",
+                    "required": false,
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "type": {
+                    "name": "type",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "checkbox",
+                      "select",
+                      "toggle"
+                    ]
+                  }
+                }
+              }
             },
             "look": {
               "type": "string",
@@ -142,45 +184,26 @@
                 "inline-column-header"
               ]
             },
-            "filters": {
-              "type": "[FilterGroupFiltersItem]",
-              "default": [],
-              "label": "Filters",
-              "description": "Filter definitions from schema",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "type": {
-                    "name": "type",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "checkbox",
-                      "select",
-                      "toggle"
-                    ]
-                  },
-                  "field": {
-                    "name": "field",
-                    "type": "string",
-                    "required": true
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "options": {
-                    "name": "options",
-                    "type": "array",
-                    "required": false,
-                    "items": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
+            "query": {
+              "type": "string",
+              "default": "",
+              "label": "Query",
+              "description": "Query singleton binding for state management. When provided, syncs filter state with the query singleton. Example: '@TaskQuery'",
+              "tier": "presentation"
+            },
+            "showIcon": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Icon",
+              "description": "Show filter icon",
+              "tier": "presentation"
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
+              "tier": "presentation"
             },
             "variant": {
               "type": "string",
@@ -200,13 +223,6 @@
               "default": "",
               "label": "Class Name",
               "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "showIcon": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Icon",
-              "description": "Show filter icon",
               "tier": "presentation"
             }
           },

@@ -94,25 +94,51 @@
                 "key": "LEFT",
                 "name": "Left",
                 "description": "Event names for keyboard controls",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "direction",
+                    "type": "number",
+                    "required": true
+                  }
+                ]
               },
               {
                 "key": "RIGHT",
                 "name": "Right",
                 "description": "rightEvent prop",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "direction",
+                    "type": "number",
+                    "required": true
+                  }
+                ]
               },
               {
                 "key": "JUMP",
                 "name": "Jump",
                 "description": "jumpEvent prop",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "STOP",
                 "name": "Stop",
                 "description": "stopEvent prop",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -125,24 +151,24 @@
                     "render-ui",
                     "main",
                     {
-                      "jumpEvent": "JUMP",
-                      "player": "@config.player",
-                      "worldHeight": "@config.worldHeight",
-                      "leftEvent": "LEFT",
-                      "className": "@config.className",
-                      "playerSprite": "@config.playerSprite",
-                      "type": "platformer-canvas",
+                      "bgColor": "@config.bgColor",
                       "canvasHeight": "@config.canvasHeight",
+                      "canvasWidth": "@config.canvasWidth",
+                      "playerSprite": "@config.playerSprite",
+                      "player": "@config.player",
+                      "className": "@config.className",
                       "tileSprites": "@config.tileSprites",
+                      "leftEvent": "LEFT",
+                      "followCamera": "@config.followCamera",
+                      "rightEvent": "RIGHT",
+                      "worldHeight": "@config.worldHeight",
+                      "backgroundImage": "@config.backgroundImage",
+                      "stopEvent": "STOP",
                       "assetBaseUrl": "@config.assetBaseUrl",
                       "platforms": "@config.platforms",
-                      "bgColor": "@config.bgColor",
-                      "canvasWidth": "@config.canvasWidth",
-                      "backgroundImage": "@config.backgroundImage",
+                      "type": "platformer-canvas",
                       "worldWidth": "@config.worldWidth",
-                      "followCamera": "@config.followCamera",
-                      "stopEvent": "STOP",
-                      "rightEvent": "RIGHT"
+                      "jumpEvent": "JUMP"
                     }
                   ]
                 ]
@@ -150,17 +176,11 @@
             ]
           },
           "config": {
-            "backgroundImage": {
-              "type": "string",
-              "default": "",
-              "label": "Background Image",
-              "description": "Background image URL",
-              "tier": "presentation"
-            },
-            "tileSprites": {
-              "type": "json",
-              "label": "Tile Sprites",
-              "description": "Map of platform type to tile sprite URL",
+            "canvasWidth": {
+              "type": "number",
+              "default": 800.0,
+              "label": "Canvas Width",
+              "description": "Canvas display size",
               "tier": "presentation"
             },
             "assetBaseUrl": {
@@ -170,73 +190,18 @@
               "description": "Base URL prefix for asset URLs",
               "tier": "presentation"
             },
-            "playerSprite": {
+            "className": {
               "type": "string",
               "default": "",
-              "label": "Player Sprite",
-              "description": "Player sprite image URL",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
               "tier": "presentation"
             },
-            "player": {
-              "type": "PlatformerCanvasPlayer",
-              "label": "Player",
-              "description": "Player state data",
-              "tier": "presentation",
-              "properties": {
-                "y": {
-                  "name": "y",
-                  "type": "number",
-                  "required": true
-                },
-                "height": {
-                  "name": "height",
-                  "type": "number",
-                  "required": false
-                },
-                "width": {
-                  "name": "width",
-                  "type": "number",
-                  "required": false
-                },
-                "vy": {
-                  "name": "vy",
-                  "type": "number",
-                  "required": false
-                },
-                "facingRight": {
-                  "name": "facingRight",
-                  "type": "boolean",
-                  "required": false
-                },
-                "grounded": {
-                  "name": "grounded",
-                  "type": "boolean",
-                  "required": false
-                },
-                "vx": {
-                  "name": "vx",
-                  "type": "number",
-                  "required": false
-                },
-                "x": {
-                  "name": "x",
-                  "type": "number",
-                  "required": true
-                }
-              }
-            },
-            "worldWidth": {
-              "type": "number",
-              "default": 800.0,
-              "label": "World Width",
-              "description": "World dimensions",
-              "tier": "presentation"
-            },
-            "canvasHeight": {
-              "type": "number",
-              "default": 400.0,
-              "label": "Canvas Height",
-              "description": "canvasHeight prop",
+            "backgroundImage": {
+              "type": "string",
+              "default": "",
+              "label": "Background Image",
+              "description": "Background image URL",
               "tier": "presentation"
             },
             "platforms": {
@@ -248,13 +213,13 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "width": {
-                    "name": "width",
+                  "y": {
+                    "name": "y",
                     "type": "number",
                     "required": true
                   },
-                  "height": {
-                    "name": "height",
+                  "width": {
+                    "name": "width",
                     "type": "number",
                     "required": true
                   },
@@ -274,8 +239,8 @@
                     "type": "number",
                     "required": true
                   },
-                  "y": {
-                    "name": "y",
+                  "height": {
+                    "name": "height",
                     "type": "number",
                     "required": true
                   }
@@ -289,25 +254,25 @@
               "description": "Background color",
               "tier": "presentation"
             },
-            "canvasWidth": {
+            "worldWidth": {
               "type": "number",
               "default": 800.0,
-              "label": "Canvas Width",
-              "description": "Canvas display size",
+              "label": "World Width",
+              "description": "World dimensions",
               "tier": "presentation"
             },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "worldHeight": {
+            "canvasHeight": {
               "type": "number",
               "default": 400.0,
-              "label": "World Height",
-              "description": "worldHeight prop",
+              "label": "Canvas Height",
+              "description": "canvasHeight prop",
+              "tier": "presentation"
+            },
+            "playerSprite": {
+              "type": "string",
+              "default": "",
+              "label": "Player Sprite",
+              "description": "Player sprite image URL",
               "tier": "presentation"
             },
             "followCamera": {
@@ -315,6 +280,71 @@
               "default": true,
               "label": "Follow Camera",
               "description": "Camera follows player",
+              "tier": "presentation"
+            },
+            "player": {
+              "type": "PlatformerCanvasPlayer",
+              "label": "Player",
+              "description": "Player state data",
+              "tier": "presentation",
+              "properties": {
+                "height": {
+                  "name": "height",
+                  "type": "number",
+                  "required": false
+                },
+                "vy": {
+                  "name": "vy",
+                  "type": "number",
+                  "required": false
+                },
+                "width": {
+                  "name": "width",
+                  "type": "number",
+                  "required": false
+                },
+                "x": {
+                  "name": "x",
+                  "type": "number",
+                  "required": true
+                },
+                "y": {
+                  "name": "y",
+                  "type": "number",
+                  "required": true
+                },
+                "vx": {
+                  "name": "vx",
+                  "type": "number",
+                  "required": false
+                },
+                "grounded": {
+                  "name": "grounded",
+                  "type": "boolean",
+                  "required": false
+                },
+                "facingRight": {
+                  "name": "facingRight",
+                  "type": "boolean",
+                  "required": false
+                }
+              }
+            },
+            "tileSprites": {
+              "type": "Map<string,string>",
+              "default": {},
+              "label": "Tile Sprites",
+              "description": "Map of platform type to tile sprite URL",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "worldHeight": {
+              "type": "number",
+              "default": 400.0,
+              "label": "World Height",
+              "description": "worldHeight prop",
               "tier": "presentation"
             }
           },

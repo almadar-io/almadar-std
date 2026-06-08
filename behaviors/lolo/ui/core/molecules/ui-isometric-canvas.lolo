@@ -76,42 +76,10 @@ orbital IsometricCanvasOrbital {
     y : number!
   }
   type IsometricCanvasAssetManifest = {
-    terrains : json
-    units : json
-    features : json
-    effects : json
-  }
-  type IsometricCanvasGETUNITSPRITEUnit = {
-    id : string!
-    position : IsometricCanvasGETUNITSPRITEUnitPosition
-    x : number
-    y : number
-    z : number
-    sprite : string
-    unitType : string
-    heroId : string
-    name : string
-    team : "player" | "enemy" | "neutral"
-    faction : "player" | "enemy" | "neutral"
-    health : number
-    maxHealth : number
-    traits : [IsometricCanvasGETUNITSPRITEUnitTraitsItem]
-    previousPosition : IsometricCanvasGETUNITSPRITEUnitPreviousPosition
-    elevation : number
-  }
-  type IsometricCanvasGETUNITSPRITEUnitPosition = {
-    x : number!
-    y : number!
-  }
-  type IsometricCanvasGETUNITSPRITEUnitTraitsItem = {
-    name : string!
-    currentState : string!
-    states : [string]!
-    cooldown : number!
-  }
-  type IsometricCanvasGETUNITSPRITEUnitPreviousPosition = {
-    x : number!
-    y : number!
+    terrains : Map string string
+    units : Map string string
+    features : Map string string
+    effects : Map string string
   }
 
   entity IsometricCanvasItem [runtime] {
@@ -151,12 +119,7 @@ orbital IsometricCanvasOrbital {
           boardWidth: @config.boardWidth
           boardHeight: @config.boardHeight
           diamondTopY: @config.diamondTopY
-          getTerrainSprite: GET_TERRAIN_SPRITE
-          getFeatureSprite: GET_FEATURE_SPRITE
-          getUnitSprite: GET_UNIT_SPRITE
-          resolveUnitFrame: RESOLVE_UNIT_FRAME
           effectSpriteUrls: @config.effectSpriteUrls
-          onDrawEffects: DRAW_EFFECTS
           hasActiveEffects: @config.hasActiveEffects
           assetBaseUrl: @config.assetBaseUrl
           assetManifest: @config.assetManifest
@@ -186,33 +149,6 @@ orbital IsometricCanvasOrbital {
         id : string
       }
         @description "onTileLeave prop"
-        @tier "essential"
-      GET_TERRAIN_SPRITE -> external {
-        terrain : string
-      }
-        @description "--- Asset resolution (project-agnostic) ---"
-        @tier "essential"
-      GET_FEATURE_SPRITE -> external {
-        featureType : string
-      }
-        @description "Resolve feature sprite URL from feature type key"
-        @tier "essential"
-      GET_UNIT_SPRITE -> external {
-        unit : IsometricCanvasGETUNITSPRITEUnit
-      }
-        @description "Resolve unit static sprite URL"
-        @tier "essential"
-      RESOLVE_UNIT_FRAME -> external {
-        unitId : string
-      }
-        @description "Resolve animated sprite sheet frame for a unit"
-        @tier "essential"
-      DRAW_EFFECTS -> external {
-        ctx : object
-        animTime : number
-        getImage : any
-      }
-        @description "Callback to draw canvas effects after units (canvas-specific: cannot be declarative)"
         @tier "essential"
     }
 

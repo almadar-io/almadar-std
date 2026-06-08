@@ -57,7 +57,14 @@
                 "key": "CRAFT",
                 "name": "Craft",
                 "description": "Callback when the craft button is clicked",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "output",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -70,13 +77,13 @@
                     "render-ui",
                     "main",
                     {
-                      "canCraft": "@config.canCraft",
+                      "output": "@config.output",
                       "inputs": "@config.inputs",
                       "craftEvent": "CRAFT",
                       "type": "crafting-recipe",
-                      "className": "@config.className",
+                      "canCraft": "@config.canCraft",
                       "onCraft": "CRAFT",
-                      "output": "@config.output"
+                      "className": "@config.className"
                     }
                   ]
                 ]
@@ -84,11 +91,11 @@
             ]
           },
           "config": {
-            "canCraft": {
-              "type": "boolean",
-              "default": false,
-              "label": "Can Craft",
-              "description": "Whether the player has enough ingredients to craft",
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
               "tier": "presentation"
             },
             "inputs": {
@@ -100,14 +107,14 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
                   "label": {
                     "name": "label",
                     "type": "string",
+                    "required": true
+                  },
+                  "available": {
+                    "name": "available",
+                    "type": "number",
                     "required": true
                   },
                   "required": {
@@ -115,27 +122,28 @@
                     "type": "number",
                     "required": true
                   },
-                  "available": {
-                    "name": "available",
-                    "type": "number",
-                    "required": true
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
                   }
                 }
               }
             },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
             "output": {
               "type": "CraftingRecipeOutput",
+              "default": {
+                "label": ""
+              },
               "label": "Output",
               "description": "Output item produced by the recipe",
               "tier": "presentation",
               "properties": {
+                "icon": {
+                  "name": "icon",
+                  "type": "string",
+                  "required": false
+                },
                 "rarity": {
                   "name": "rarity",
                   "type": "string",
@@ -145,13 +153,15 @@
                   "name": "label",
                   "type": "string",
                   "required": true
-                },
-                "icon": {
-                  "name": "icon",
-                  "type": "string",
-                  "required": false
                 }
               }
+            },
+            "canCraft": {
+              "type": "boolean",
+              "default": false,
+              "label": "Can Craft",
+              "description": "Whether the player has enough ingredients to craft",
+              "tier": "presentation"
             }
           },
           "scope": "instance"

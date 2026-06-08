@@ -28,22 +28,6 @@
           "linkedEntity": "SortableListItem",
           "emits": [
             {
-              "event": "RENDER_ITEM",
-              "description": "renderItem prop",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "item",
-                  "type": "object"
-                },
-                {
-                  "name": "index",
-                  "type": "number"
-                }
-              ]
-            },
-            {
               "event": "REORDER",
               "description": "reorderEvent prop",
               "tier": "essential",
@@ -69,16 +53,16 @@
                 "name": "Initialize"
               },
               {
-                "key": "RENDER_ITEM",
-                "name": "Render Item",
-                "description": "renderItem prop",
-                "tier": "essential"
-              },
-              {
                 "key": "REORDER",
                 "name": "Reorder",
                 "description": "reorderEvent prop",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -97,12 +81,20 @@
                     "main",
                     {
                       "dragHandlePosition": "@config.dragHandlePosition",
-                      "type": "sortable-list",
+                      "className": "@config.className",
+                      "items": "@entity",
+                      "renderItem": [
+                        "fn",
+                        "item",
+                        "index",
+                        {
+                          "type": "text",
+                          "content": "@item.id"
+                        }
+                      ],
                       "reorderEvent": "REORDER",
                       "reorderPayload": "@config.reorderPayload",
-                      "renderItem": "RENDER_ITEM",
-                      "className": "@config.className",
-                      "items": "@entity"
+                      "type": "sortable-list"
                     }
                   ]
                 ]
@@ -116,13 +108,6 @@
               "description": "reorderPayload prop",
               "tier": "presentation"
             },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "className prop",
-              "tier": "presentation"
-            },
             "dragHandlePosition": {
               "type": "string",
               "default": "left",
@@ -133,6 +118,13 @@
                 "left",
                 "right"
               ]
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "className prop",
+              "tier": "presentation"
             }
           },
           "scope": "instance"

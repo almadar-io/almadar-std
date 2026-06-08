@@ -28,22 +28,6 @@
           "linkedEntity": "GameCanvas2dItem",
           "emits": [
             {
-              "event": "DRAW",
-              "description": "Called each frame with the 2D context and current frame count",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "ctx",
-                  "type": "object"
-                },
-                {
-                  "name": "frame",
-                  "type": "number"
-                }
-              ]
-            },
-            {
               "event": "TICK",
               "description": "Called each tick with delta time in seconds",
               "tier": "essential",
@@ -69,16 +53,16 @@
                 "name": "Initialize"
               },
               {
-                "key": "DRAW",
-                "name": "Draw",
-                "description": "Called each frame with the 2D context and current frame count",
-                "tier": "essential"
-              },
-              {
                 "key": "TICK",
                 "name": "Tick",
                 "description": "Called each tick with delta time in seconds",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "dt",
+                    "type": "number"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -91,17 +75,16 @@
                     "render-ui",
                     "main",
                     {
-                      "onDraw": "DRAW",
-                      "fps": "@config.fps",
+                      "tickEvent": "@config.tickEvent",
+                      "drawEvent": "@config.drawEvent",
                       "type": "game-canvas-2d",
                       "backgroundImage": "@config.backgroundImage",
                       "assetBaseUrl": "@config.assetBaseUrl",
-                      "drawEvent": "@config.drawEvent",
-                      "className": "@config.className",
+                      "width": "@config.width",
                       "onTick": "TICK",
-                      "tickEvent": "@config.tickEvent",
                       "height": "@config.height",
-                      "width": "@config.width"
+                      "className": "@config.className",
+                      "fps": "@config.fps"
                     }
                   ]
                 ]
@@ -116,18 +99,18 @@
               "description": "Event name emitted each tick with { dt, frame } — for closed-circuit .orb integration",
               "tier": "presentation"
             },
-            "height": {
-              "type": "number",
-              "default": 600.0,
-              "label": "Height",
-              "description": "Canvas height in pixels",
-              "tier": "presentation"
-            },
             "drawEvent": {
               "type": "string",
               "default": "",
               "label": "Draw Event",
               "description": "Event name emitted each draw frame with { frame } — for closed-circuit .orb integration",
+              "tier": "presentation"
+            },
+            "height": {
+              "type": "number",
+              "default": 600.0,
+              "label": "Height",
+              "description": "Canvas height in pixels",
               "tier": "presentation"
             },
             "backgroundImage": {
@@ -137,11 +120,11 @@
               "description": "Background image URL",
               "tier": "presentation"
             },
-            "width": {
-              "type": "number",
-              "default": 800.0,
-              "label": "Width",
-              "description": "Canvas width in pixels",
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
               "tier": "presentation"
             },
             "assetBaseUrl": {
@@ -158,11 +141,11 @@
               "description": "Target frames per second",
               "tier": "presentation"
             },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
+            "width": {
+              "type": "number",
+              "default": 800.0,
+              "label": "Width",
+              "description": "Canvas width in pixels",
               "tier": "presentation"
             }
           },

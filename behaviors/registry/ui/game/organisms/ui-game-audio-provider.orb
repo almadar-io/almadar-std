@@ -54,15 +54,20 @@
                     "render-ui",
                     "main",
                     {
-                      "children": "@config.children",
-                      "error": "@config.error",
-                      "initialMuted": "@config.initialMuted",
+                      "children": [
+                        {
+                          "type": "text",
+                          "content": ""
+                        }
+                      ],
+                      "isLoading": "@config.isLoading",
                       "type": "game-audio-provider",
                       "className": "@config.className",
-                      "isLoading": "@config.isLoading",
+                      "manifest": "@config.manifest",
+                      "error": "@config.error",
+                      "initialMuted": "@config.initialMuted",
                       "baseUrl": "@config.baseUrl",
-                      "entity": "GameAudioProviderItem",
-                      "manifest": "@config.manifest"
+                      "entity": "GameAudioProviderItem"
                     }
                   ]
                 ]
@@ -70,24 +75,18 @@
             ]
           },
           "config": {
+            "baseUrl": {
+              "type": "string",
+              "default": "",
+              "label": "Base Url",
+              "description": "Base URL prepended to all sound paths (default '')",
+              "tier": "presentation"
+            },
             "className": {
               "type": "string",
               "default": "",
               "label": "Class Name",
               "description": "Closed-circuit props (unused, accepted for runtime compatibility)",
-              "tier": "presentation"
-            },
-            "children": {
-              "type": "node",
-              "label": "Children",
-              "description": "Children to render",
-              "tier": "presentation"
-            },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "isLoading prop",
               "tier": "presentation"
             },
             "initialMuted": {
@@ -97,11 +96,61 @@
               "description": "Initial muted state",
               "tier": "presentation"
             },
-            "baseUrl": {
-              "type": "string",
-              "default": "",
-              "label": "Base Url",
-              "description": "Base URL prepended to all sound paths (default '')",
+            "manifest": {
+              "type": "Map<string,GameAudioProviderManifestValue>",
+              "default": {},
+              "label": "Manifest",
+              "description": "Sound manifest — keys mapped to SoundEntry definitions",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "loop": {
+                    "name": "loop",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "path": {
+                    "name": "path",
+                    "type": "array",
+                    "required": true,
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "volume": {
+                    "name": "volume",
+                    "type": "number",
+                    "required": false
+                  },
+                  "autostart": {
+                    "name": "autostart",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "crossfade": {
+                    "name": "crossfade",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "poolSize": {
+                    "name": "poolSize",
+                    "type": "number",
+                    "required": false
+                  },
+                  "crossfadeDurationMs": {
+                    "name": "crossfadeDurationMs",
+                    "type": "number",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "isLoading prop",
               "tier": "presentation"
             },
             "error": {
@@ -110,13 +159,13 @@
               "description": "error prop",
               "tier": "presentation",
               "properties": {
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                },
                 "code": {
                   "name": "code",
-                  "type": "string",
-                  "required": false
-                },
-                "name": {
-                  "name": "name",
                   "type": "string",
                   "required": false
                 },
@@ -125,18 +174,12 @@
                   "type": "string",
                   "required": false
                 },
-                "message": {
-                  "name": "message",
+                "name": {
+                  "name": "name",
                   "type": "string",
-                  "required": true
+                  "required": false
                 }
               }
-            },
-            "manifest": {
-              "type": "json",
-              "label": "Manifest",
-              "description": "Sound manifest — keys mapped to SoundEntry definitions",
-              "tier": "presentation"
             }
           },
           "scope": "instance"
