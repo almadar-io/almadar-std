@@ -1,6 +1,13 @@
 app ui-master-detail "1.0.0"
 "MasterDetail — UI factory (1:1 with the @almadar/ui master-detail pattern)."
 orbital MasterDetailOrbital {
+  type MasterDetailError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
+  }
+
   entity MasterDetailItem [runtime] {
     id : string!
   }
@@ -40,15 +47,15 @@ orbital MasterDetailOrbital {
         @label "Is Loading"
         @description "Loading state indicator"
         @tier "presentation"
-      error : json
+      error : MasterDetailError
         @label "Error"
-        @description "Error state"
+        @description "Error state (UiError)"
         @tier "presentation"
       sortBy : string = ""
         @label "Sort By"
         @description "Current sort field"
         @tier "presentation"
-      sortDirection : string = ""
+      sortDirection : "asc" | "desc" = asc
         @label "Sort Direction"
         @description "Current sort direction"
         @tier "presentation"

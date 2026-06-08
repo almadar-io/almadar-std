@@ -35,7 +35,24 @@
               "payloadSchema": [
                 {
                   "name": "rule",
-                  "type": "object"
+                  "type": "object",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "type": "string",
+                      "required": true
+                    },
+                    {
+                      "name": "whenEvent",
+                      "type": "string",
+                      "required": true
+                    },
+                    {
+                      "name": "thenAction",
+                      "type": "string",
+                      "required": true
+                    }
+                  ]
                 }
               ]
             },
@@ -68,13 +85,42 @@
                 "key": "CHANGE",
                 "name": "Change",
                 "description": "Called when rule changes",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "rule",
+                    "type": "object",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "whenEvent",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "thenAction",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  }
+                ]
               },
               {
                 "key": "REMOVE",
                 "name": "Remove",
                 "description": "Called when rule is removed",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -87,14 +133,14 @@
                     "render-ui",
                     "main",
                     {
-                      "availableEvents": "@config.availableEvents",
-                      "onRemove": "REMOVE",
-                      "availableActions": "@config.availableActions",
-                      "className": "@config.className",
                       "type": "rule-editor",
+                      "availableEvents": "@config.availableEvents",
+                      "className": "@config.className",
                       "rule": "@config.rule",
                       "disabled": "@config.disabled",
-                      "onChange": "CHANGE"
+                      "onChange": "CHANGE",
+                      "availableActions": "@config.availableActions",
+                      "onRemove": "REMOVE"
                     }
                   ]
                 ]
@@ -102,33 +148,11 @@
             ]
           },
           "config": {
-            "availableActions": {
-              "type": "[RuleEditorAvailableActionsItem]",
-              "default": [],
-              "label": "Available Actions",
-              "description": "Available actions to perform",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "value": {
-                    "name": "value",
-                    "type": "string",
-                    "required": true
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
+            "disabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Disabled",
+              "description": "Whether editing is disabled (during playback)",
               "tier": "presentation"
             },
             "availableEvents": {
@@ -153,26 +177,24 @@
                 }
               }
             },
-            "disabled": {
-              "type": "boolean",
-              "default": false,
-              "label": "Disabled",
-              "description": "Whether editing is disabled (during playback)",
-              "tier": "presentation"
-            },
             "rule": {
               "type": "RuleEditorRule",
+              "default": {
+                "thenAction": "",
+                "whenEvent": "",
+                "id": ""
+              },
               "label": "Rule",
               "description": "The current rule",
               "tier": "presentation",
               "properties": {
-                "thenAction": {
-                  "name": "thenAction",
+                "whenEvent": {
+                  "name": "whenEvent",
                   "type": "string",
                   "required": true
                 },
-                "whenEvent": {
-                  "name": "whenEvent",
+                "thenAction": {
+                  "name": "thenAction",
                   "type": "string",
                   "required": true
                 },
@@ -180,6 +202,35 @@
                   "name": "id",
                   "type": "string",
                   "required": true
+                }
+              }
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "availableActions": {
+              "type": "[RuleEditorAvailableActionsItem]",
+              "default": [],
+              "label": "Available Actions",
+              "description": "Available actions to perform",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "value": {
+                    "name": "value",
+                    "type": "string",
+                    "required": true
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  }
                 }
               }
             }

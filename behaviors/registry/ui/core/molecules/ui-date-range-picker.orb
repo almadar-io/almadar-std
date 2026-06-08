@@ -53,7 +53,19 @@
               "payloadSchema": [
                 {
                   "name": "range",
-                  "type": "object"
+                  "type": "object",
+                  "properties": [
+                    {
+                      "name": "from",
+                      "type": "string",
+                      "required": true
+                    },
+                    {
+                      "name": "to",
+                      "type": "string",
+                      "required": true
+                    }
+                  ]
                 }
               ]
             }
@@ -74,13 +86,43 @@
                 "key": "EVENT",
                 "name": "Event",
                 "description": "Event name emitted as `UI:{event}` with payload `{ from, to }`. Optional — when omitted, only the `onChange` callback fires.",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "from",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "to",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
               },
               {
                 "key": "CHANGE",
                 "name": "Change",
                 "description": "Callback fired alongside the bus emit.",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "range",
+                    "type": "object",
+                    "properties": [
+                      {
+                        "name": "from",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "to",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -93,14 +135,14 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "date-range-picker",
                       "className": "@config.className",
                       "to": "@config.toProp",
                       "event": "EVENT",
-                      "onChange": "CHANGE",
-                      "presets": "@config.presets",
                       "fromLabel": "@config.fromLabel",
                       "from": "@config.fromProp",
+                      "onChange": "CHANGE",
+                      "type": "date-range-picker",
+                      "presets": "@config.presets",
                       "toLabel": "@config.toLabel"
                     }
                   ]
@@ -109,6 +151,28 @@
             ]
           },
           "config": {
+            "fromLabel": {
+              "type": "string",
+              "default": "From",
+              "label": "From Label",
+              "description": "From-input label.",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes.",
+              "tier": "presentation"
+            },
+            "toProp": {
+              "type": "string",
+              "default": "",
+              "label": "To",
+              "description": "Controlled `to` (ISO date YYYY-MM-DD).",
+              "synonyms": "to",
+              "tier": "presentation"
+            },
             "presets": {
               "type": "[DateRangePickerPresetsItem]",
               "default": [],
@@ -131,21 +195,6 @@
                 }
               }
             },
-            "fromProp": {
-              "type": "string",
-              "default": "",
-              "label": "From",
-              "description": "Controlled `from` (ISO date YYYY-MM-DD).",
-              "synonyms": "from",
-              "tier": "presentation"
-            },
-            "fromLabel": {
-              "type": "string",
-              "default": "From",
-              "label": "From Label",
-              "description": "From-input label.",
-              "tier": "presentation"
-            },
             "toLabel": {
               "type": "string",
               "default": "To",
@@ -153,19 +202,12 @@
               "description": "To-input label.",
               "tier": "presentation"
             },
-            "className": {
+            "fromProp": {
               "type": "string",
               "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes.",
-              "tier": "presentation"
-            },
-            "toProp": {
-              "type": "string",
-              "default": "",
-              "label": "To",
-              "description": "Controlled `to` (ISO date YYYY-MM-DD).",
-              "synonyms": "to",
+              "label": "From",
+              "description": "Controlled `from` (ISO date YYYY-MM-DD).",
+              "synonyms": "from",
               "tier": "presentation"
             }
           },

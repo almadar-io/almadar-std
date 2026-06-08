@@ -26,36 +26,6 @@
           },
           "category": "interaction",
           "linkedEntity": "ErrorBoundaryItem",
-          "emits": [
-            {
-              "event": "FALLBACK",
-              "description": "Fallback UI when an error is caught — ReactNode or render function",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "ERROR",
-              "description": "Called when an error is caught (for logging/telemetry)",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "object"
-                },
-                {
-                  "name": "errorInfo",
-                  "type": "object"
-                }
-              ]
-            }
-          ],
           "stateMachine": {
             "states": [
               {
@@ -67,18 +37,6 @@
               {
                 "key": "INIT",
                 "name": "Initialize"
-              },
-              {
-                "key": "FALLBACK",
-                "name": "Fallback",
-                "description": "Fallback UI when an error is caught — ReactNode or render function",
-                "tier": "essential"
-              },
-              {
-                "key": "ERROR",
-                "name": "Error",
-                "description": "Called when an error is caught (for logging/telemetry)",
-                "tier": "essential"
               }
             ],
             "transitions": [
@@ -91,10 +49,13 @@
                     "render-ui",
                     "main",
                     {
-                      "fallback": "FALLBACK",
-                      "onError": "ERROR",
                       "className": "@config.className",
-                      "children": "@config.children",
+                      "children": [
+                        {
+                          "type": "text",
+                          "content": ""
+                        }
+                      ],
                       "type": "error-boundary"
                     }
                   ]
@@ -103,12 +64,6 @@
             ]
           },
           "config": {
-            "children": {
-              "type": "node",
-              "label": "Children",
-              "description": "Content to render when no error",
-              "tier": "presentation"
-            },
             "className": {
               "type": "string",
               "default": "",

@@ -1,6 +1,15 @@
 app ui-game-audio-provider "1.0.0"
 "GameAudioProvider — UI factory (1:1 with the @almadar/ui game-audio-provider pattern)."
 orbital GameAudioProviderOrbital {
+  type GameAudioProviderManifestValue = {
+    path : [string]!
+    volume : number
+    loop : boolean
+    poolSize : number
+    autostart : boolean
+    crossfade : boolean
+    crossfadeDurationMs : number
+  }
   type GameAudioProviderError = {
     message : string!
     name : string
@@ -21,7 +30,7 @@ orbital GameAudioProviderOrbital {
         (render-ui main {
           manifest: @config.manifest
           baseUrl: @config.baseUrl
-          children: @config.children
+          children: [{ content: "", type: text }]
           initialMuted: @config.initialMuted
           className: @config.className
           isLoading: @config.isLoading
@@ -32,17 +41,13 @@ orbital GameAudioProviderOrbital {
     }
 
     config {
-      manifest : json
+      manifest : Map string GameAudioProviderManifestValue = {}
         @label "Manifest"
         @description "Sound manifest — keys mapped to SoundEntry definitions"
         @tier "presentation"
       baseUrl : string = ""
         @label "Base Url"
         @description "Base URL prepended to all sound paths (default '')"
-        @tier "presentation"
-      children : node
-        @label "Children"
-        @description "Children to render"
         @tier "presentation"
       initialMuted : boolean = false
         @label "Initial Muted"

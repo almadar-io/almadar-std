@@ -68,13 +68,25 @@
                 "key": "CHANGE",
                 "name": "Change",
                 "description": "Direct onChange callback",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "type": "number"
+                  }
+                ]
               },
               {
                 "key": "ACTION",
                 "name": "Action",
                 "description": "Declarative event name for value changes",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -87,18 +99,18 @@
                     "render-ui",
                     "main",
                     {
+                      "max": "@config.max",
                       "actionPayload": "@config.actionPayload",
                       "label": "@config.label",
-                      "type": "number-stepper",
-                      "step": "@config.step",
-                      "size": "@config.size",
-                      "max": "@config.max",
-                      "value": "@config.value",
                       "min": "@config.min",
-                      "onChange": "CHANGE",
+                      "value": "@config.value",
                       "className": "@config.className",
+                      "size": "@config.size",
+                      "onChange": "CHANGE",
+                      "type": "number-stepper",
                       "disabled": "@config.disabled",
-                      "action": "ACTION"
+                      "action": "ACTION",
+                      "step": "@config.step"
                     }
                   ]
                 ]
@@ -106,11 +118,10 @@
             ]
           },
           "config": {
-            "max": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Max",
-              "description": "Maximum value",
+            "actionPayload": {
+              "type": "json",
+              "label": "Action Payload",
+              "description": "Payload to include with the action event",
               "tier": "presentation"
             },
             "step": {
@@ -127,12 +138,6 @@
               "description": "Accessible label",
               "tier": "presentation"
             },
-            "actionPayload": {
-              "type": "json",
-              "label": "Action Payload",
-              "description": "Payload to include with the action event",
-              "tier": "presentation"
-            },
             "value": {
               "type": "number",
               "default": 0.0,
@@ -140,11 +145,11 @@
               "description": "Current value",
               "tier": "presentation"
             },
-            "disabled": {
-              "type": "boolean",
-              "default": false,
-              "label": "Disabled",
-              "description": "Disabled state",
+            "max": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Max",
+              "description": "Maximum value",
               "tier": "presentation"
             },
             "min": {
@@ -165,6 +170,13 @@
                 "md",
                 "lg"
               ]
+            },
+            "disabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Disabled",
+              "description": "Disabled state",
+              "tier": "presentation"
             },
             "className": {
               "type": "string",

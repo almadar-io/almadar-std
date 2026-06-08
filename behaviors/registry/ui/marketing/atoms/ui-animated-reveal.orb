@@ -26,20 +26,6 @@
           },
           "category": "interaction",
           "linkedEntity": "AnimatedRevealItem",
-          "emits": [
-            {
-              "event": "CHILDREN",
-              "description": "Children: ReactNode or render function receiving animated state",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
           "stateMachine": {
             "states": [
               {
@@ -51,12 +37,6 @@
               {
                 "key": "INIT",
                 "name": "Initialize"
-              },
-              {
-                "key": "CHILDREN",
-                "name": "Children",
-                "description": "Children: ReactNode or render function receiving animated state",
-                "tier": "essential"
               }
             ],
             "transitions": [
@@ -69,17 +49,22 @@
                     "render-ui",
                     "main",
                     {
-                      "trigger": "@config.trigger",
-                      "children": "CHILDREN",
-                      "type": "animated-reveal",
-                      "animation": "@config.animation",
-                      "duration": "@config.duration",
-                      "animate": "@config.animate",
-                      "delay": "@config.delay",
-                      "threshold": "@config.threshold",
-                      "once": "@config.once",
                       "className": "@config.className",
-                      "easing": "@config.easing"
+                      "duration": "@config.duration",
+                      "threshold": "@config.threshold",
+                      "animate": "@config.animate",
+                      "children": [
+                        {
+                          "content": "",
+                          "type": "text"
+                        }
+                      ],
+                      "easing": "@config.easing",
+                      "type": "animated-reveal",
+                      "trigger": "@config.trigger",
+                      "animation": "@config.animation",
+                      "delay": "@config.delay",
+                      "once": "@config.once"
                     }
                   ]
                 ]
@@ -93,6 +78,18 @@
               "label": "Threshold",
               "description": "How much of the element must be visible before triggering, 0-1 (default: 0.15)",
               "tier": "presentation"
+            },
+            "trigger": {
+              "type": "string",
+              "default": "scroll",
+              "label": "Trigger",
+              "description": "What triggers the animation",
+              "tier": "presentation",
+              "values": [
+                "scroll",
+                "hover",
+                "manual"
+              ]
             },
             "animation": {
               "type": "string",
@@ -111,44 +108,11 @@
                 "none"
               ]
             },
-            "duration": {
-              "type": "number",
-              "default": 600.0,
-              "label": "Duration",
-              "description": "Animation duration in ms (default: 600)",
-              "tier": "presentation"
-            },
-            "trigger": {
-              "type": "string",
-              "default": "scroll",
-              "label": "Trigger",
-              "description": "What triggers the animation",
-              "tier": "presentation",
-              "values": [
-                "scroll",
-                "hover",
-                "manual"
-              ]
-            },
-            "once": {
-              "type": "boolean",
-              "default": true,
-              "label": "Once",
-              "description": "Animate only the first time the element enters the viewport (default: true)",
-              "tier": "presentation"
-            },
             "animate": {
               "type": "boolean",
               "default": false,
               "label": "Animate",
               "description": "Manual control: when trigger='manual', set this to true to animate",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes applied to the root element.",
               "tier": "presentation"
             },
             "easing": {
@@ -163,6 +127,27 @@
               "default": 0.0,
               "label": "Delay",
               "description": "Delay before animation starts in ms (default: 0)",
+              "tier": "presentation"
+            },
+            "once": {
+              "type": "boolean",
+              "default": true,
+              "label": "Once",
+              "description": "Animate only the first time the element enters the viewport (default: true)",
+              "tier": "presentation"
+            },
+            "duration": {
+              "type": "number",
+              "default": 600.0,
+              "label": "Duration",
+              "description": "Animation duration in ms (default: 600)",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes applied to the root element.",
               "tier": "presentation"
             }
           },

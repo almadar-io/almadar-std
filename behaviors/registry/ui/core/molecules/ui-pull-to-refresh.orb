@@ -56,7 +56,13 @@
                 "key": "REFRESH",
                 "name": "Refresh",
                 "description": "Event name to emit on refresh (emitted as UI:{refreshEvent})",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -70,10 +76,15 @@
                     "main",
                     {
                       "refreshPayload": "@config.refreshPayload",
-                      "children": "@config.children",
-                      "className": "@config.className",
                       "type": "pull-to-refresh",
                       "refreshEvent": "REFRESH",
+                      "children": [
+                        {
+                          "content": "",
+                          "type": "text"
+                        }
+                      ],
+                      "className": "@config.className",
                       "threshold": "@config.threshold"
                     }
                   ]
@@ -82,10 +93,11 @@
             ]
           },
           "config": {
-            "children": {
-              "type": "node",
-              "label": "Children",
-              "description": "Content to wrap",
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
               "tier": "presentation"
             },
             "refreshPayload": {
@@ -99,13 +111,6 @@
               "default": 60.0,
               "label": "Threshold",
               "description": "Pull distance threshold to trigger refresh in px (default: 60)",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
               "tier": "presentation"
             }
           },

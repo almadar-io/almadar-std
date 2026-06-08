@@ -35,33 +35,27 @@
               "payloadSchema": [
                 {
                   "name": "result",
-                  "type": "object"
+                  "type": "object",
+                  "properties": [
+                    {
+                      "name": "text",
+                      "type": "string",
+                      "required": true
+                    },
+                    {
+                      "name": "format",
+                      "type": "string",
+                      "required": true
+                    },
+                    {
+                      "name": "timestamp",
+                      "type": "number",
+                      "required": true
+                    }
+                  ]
                 },
                 {
-                  "name": "text",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "format",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "timestamp",
-                  "type": "number",
-                  "required": true
-                }
-              ]
-            },
-            {
-              "event": "ERROR",
-              "description": "onError prop",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "error",
+                  "name": "_payload",
                   "type": "object"
                 }
               ]
@@ -83,13 +77,34 @@
                 "key": "SCAN",
                 "name": "Scan",
                 "description": "onScan prop",
-                "tier": "essential"
-              },
-              {
-                "key": "ERROR",
-                "name": "Error",
-                "description": "onError prop",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "result",
+                    "type": "object",
+                    "properties": [
+                      {
+                        "name": "text",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "format",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "timestamp",
+                        "type": "number",
+                        "required": true
+                      }
+                    ]
+                  },
+                  {
+                    "name": "_payload",
+                    "type": "object"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -102,16 +117,15 @@
                     "render-ui",
                     "main",
                     {
-                      "onScan": "SCAN",
-                      "fallback": "@config.fallback",
-                      "onError": "ERROR",
-                      "className": "@config.className",
-                      "facingMode": "@config.facingMode",
                       "paused": "@config.paused",
+                      "onScan": "SCAN",
+                      "facingMode": "@config.facingMode",
+                      "className": "@config.className",
+                      "fallback": "@config.fallback",
+                      "scanEvent": "SCAN",
                       "showOverlay": "@config.showOverlay",
-                      "type": "qr-scanner",
                       "showCameraControls": "@config.showCameraControls",
-                      "scanEvent": "SCAN"
+                      "type": "qr-scanner"
                     }
                   ]
                 ]
@@ -119,6 +133,13 @@
             ]
           },
           "config": {
+            "showOverlay": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Overlay",
+              "description": "showOverlay prop",
+              "tier": "presentation"
+            },
             "facingMode": {
               "type": "string",
               "default": "environment",
@@ -130,11 +151,10 @@
                 "user"
               ]
             },
-            "showCameraControls": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Camera Controls",
-              "description": "showCameraControls prop",
+            "fallback": {
+              "type": "node",
+              "label": "Fallback",
+              "description": "fallback prop",
               "tier": "presentation"
             },
             "className": {
@@ -144,10 +164,11 @@
               "description": "className prop",
               "tier": "presentation"
             },
-            "fallback": {
-              "type": "node",
-              "label": "Fallback",
-              "description": "fallback prop",
+            "showCameraControls": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Camera Controls",
+              "description": "showCameraControls prop",
               "tier": "presentation"
             },
             "paused": {
@@ -155,13 +176,6 @@
               "default": false,
               "label": "Paused",
               "description": "paused prop",
-              "tier": "presentation"
-            },
-            "showOverlay": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Overlay",
-              "description": "showOverlay prop",
               "tier": "presentation"
             }
           },

@@ -134,37 +134,91 @@
                 "key": "BACK",
                 "name": "Back",
                 "description": "Event to emit on Back click — emits UI:{onBack} with { currentStep, totalSteps }",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "currentStep",
+                    "type": "number",
+                    "required": true
+                  },
+                  {
+                    "name": "totalSteps",
+                    "type": "number",
+                    "required": true
+                  }
+                ]
               },
               {
                 "key": "NEXT",
                 "name": "Next",
                 "description": "Event to emit on Next click — emits UI:{onNext} with { currentStep, totalSteps }",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "currentStep",
+                    "type": "number",
+                    "required": true
+                  },
+                  {
+                    "name": "totalSteps",
+                    "type": "number",
+                    "required": true
+                  }
+                ]
               },
               {
                 "key": "COMPLETE",
                 "name": "Complete",
                 "description": "Event to emit on Complete click — emits UI:{onComplete} with { currentStep, totalSteps }",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "currentStep",
+                    "type": "number",
+                    "required": true
+                  },
+                  {
+                    "name": "totalSteps",
+                    "type": "number",
+                    "required": true
+                  }
+                ]
               },
               {
                 "key": "BACK_CLICK",
                 "name": "Back Click",
                 "description": "Direct callback for Back (alternative to event)",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "NEXT_CLICK",
                 "name": "Next Click",
                 "description": "Direct callback for Next (alternative to event)",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "COMPLETE_CLICK",
                 "name": "Complete Click",
                 "description": "Direct callback for Complete (alternative to event)",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -177,24 +231,24 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "@config.className",
-                      "onBack": "BACK",
-                      "totalSteps": "@config.totalSteps",
-                      "onCompleteClick": "COMPLETE_CLICK",
-                      "isValid": "@config.isValid",
-                      "onNextClick": "NEXT_CLICK",
-                      "onComplete": "COMPLETE",
-                      "type": "wizard-navigation",
-                      "onBackClick": "BACK_CLICK",
-                      "showNext": "@config.showNext",
-                      "backLabel": "@config.backLabel",
-                      "completeLabel": "@config.completeLabel",
-                      "currentStep": "@config.currentStep",
-                      "onNext": "NEXT",
-                      "nextLabel": "@config.nextLabel",
                       "showComplete": "@config.showComplete",
+                      "totalSteps": "@config.totalSteps",
+                      "showBack": "@config.showBack",
+                      "onNext": "NEXT",
+                      "onComplete": "COMPLETE",
+                      "onNextClick": "NEXT_CLICK",
+                      "backLabel": "@config.backLabel",
+                      "onCompleteClick": "COMPLETE_CLICK",
+                      "className": "@config.className",
+                      "isValid": "@config.isValid",
+                      "currentStep": "@config.currentStep",
+                      "onBackClick": "BACK_CLICK",
                       "compact": "@config.compact",
-                      "showBack": "@config.showBack"
+                      "onBack": "BACK",
+                      "nextLabel": "@config.nextLabel",
+                      "completeLabel": "@config.completeLabel",
+                      "type": "wizard-navigation",
+                      "showNext": "@config.showNext"
                     }
                   ]
                 ]
@@ -202,11 +256,11 @@
             ]
           },
           "config": {
-            "showBack": {
+            "isValid": {
               "type": "boolean",
               "default": true,
-              "label": "Show Back",
-              "description": "Show the Back button",
+              "label": "Is Valid",
+              "description": "Whether the current step is valid (enables Next/Complete)",
               "tier": "presentation"
             },
             "totalSteps": {
@@ -216,25 +270,11 @@
               "description": "Total number of steps",
               "tier": "presentation"
             },
-            "showNext": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Next",
-              "description": "Show the Next button",
-              "tier": "presentation"
-            },
-            "className": {
+            "nextLabel": {
               "type": "string",
               "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "showComplete": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Complete",
-              "description": "Show the Complete button (on last step)",
+              "label": "Next Label",
+              "description": "Custom label for Next button",
               "tier": "presentation"
             },
             "compact": {
@@ -244,25 +284,18 @@
               "description": "Compact mode (smaller padding)",
               "tier": "presentation"
             },
-            "currentStep": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Current Step",
-              "description": "Current step index (0-based)",
-              "tier": "presentation"
-            },
-            "isValid": {
+            "showBack": {
               "type": "boolean",
               "default": true,
-              "label": "Is Valid",
-              "description": "Whether the current step is valid (enables Next/Complete)",
+              "label": "Show Back",
+              "description": "Show the Back button",
               "tier": "presentation"
             },
-            "completeLabel": {
+            "className": {
               "type": "string",
               "default": "",
-              "label": "Complete Label",
-              "description": "Custom label for Complete button",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
               "tier": "presentation"
             },
             "backLabel": {
@@ -272,11 +305,32 @@
               "description": "Custom label for Back button",
               "tier": "presentation"
             },
-            "nextLabel": {
+            "completeLabel": {
               "type": "string",
               "default": "",
-              "label": "Next Label",
-              "description": "Custom label for Next button",
+              "label": "Complete Label",
+              "description": "Custom label for Complete button",
+              "tier": "presentation"
+            },
+            "showComplete": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Complete",
+              "description": "Show the Complete button (on last step)",
+              "tier": "presentation"
+            },
+            "showNext": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Next",
+              "description": "Show the Next button",
+              "tier": "presentation"
+            },
+            "currentStep": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Current Step",
+              "description": "Current step index (0-based)",
               "tier": "presentation"
             }
           },

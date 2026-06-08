@@ -47,7 +47,26 @@
               "payloadSchema": [
                 {
                   "name": "choice",
-                  "type": "object"
+                  "type": "object",
+                  "properties": [
+                    {
+                      "name": "text",
+                      "type": "string",
+                      "required": true
+                    },
+                    {
+                      "name": "action",
+                      "type": "string"
+                    },
+                    {
+                      "name": "next",
+                      "type": "string"
+                    },
+                    {
+                      "name": "disabled",
+                      "type": "boolean"
+                    }
+                  ]
                 }
               ]
             },
@@ -80,19 +99,56 @@
                 "key": "COMPLETE",
                 "name": "Complete",
                 "description": "Called when text animation completes",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "CHOICE",
                 "name": "Choice",
                 "description": "Called when a choice is selected",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "choice",
+                    "type": "object",
+                    "properties": [
+                      {
+                        "name": "text",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "action",
+                        "type": "string"
+                      },
+                      {
+                        "name": "next",
+                        "type": "string"
+                      },
+                      {
+                        "name": "disabled",
+                        "type": "boolean"
+                      }
+                    ]
+                  }
+                ]
               },
               {
                 "key": "ADVANCE",
                 "name": "Advance",
                 "description": "Called when dialogue is advanced (no choices)",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -105,17 +161,17 @@
                     "render-ui",
                     "main",
                     {
-                      "position": "@config.position",
-                      "onAdvance": "ADVANCE",
+                      "onChoice": "CHOICE",
+                      "typewriterSpeed": "@config.typewriterSpeed",
                       "onComplete": "COMPLETE",
-                      "choiceEvent": "CHOICE",
+                      "onAdvance": "ADVANCE",
+                      "type": "dialogue-box",
                       "advanceEvent": "ADVANCE",
                       "className": "@config.className",
-                      "type": "dialogue-box",
-                      "completeEvent": "COMPLETE",
-                      "onChoice": "CHOICE",
                       "dialogue": "@config.dialogue",
-                      "typewriterSpeed": "@config.typewriterSpeed"
+                      "completeEvent": "COMPLETE",
+                      "choiceEvent": "CHOICE",
+                      "position": "@config.position"
                     }
                   ]
                 ]
@@ -129,69 +185,6 @@
               "label": "Class Name",
               "description": "Optional className",
               "tier": "presentation"
-            },
-            "dialogue": {
-              "type": "DialogueBoxDialogue",
-              "label": "Dialogue",
-              "description": "Current dialogue node to display",
-              "tier": "presentation",
-              "properties": {
-                "text": {
-                  "name": "text",
-                  "type": "string",
-                  "required": true
-                },
-                "speaker": {
-                  "name": "speaker",
-                  "type": "string",
-                  "required": true
-                },
-                "autoAdvance": {
-                  "name": "autoAdvance",
-                  "type": "number",
-                  "required": false
-                },
-                "choices": {
-                  "name": "choices",
-                  "type": "array",
-                  "required": false,
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "disabled": {
-                        "name": "disabled",
-                        "type": "boolean",
-                        "required": false
-                      },
-                      "next": {
-                        "name": "next",
-                        "type": "string",
-                        "required": false
-                      },
-                      "action": {
-                        "name": "action",
-                        "type": "string",
-                        "required": false
-                      },
-                      "text": {
-                        "name": "text",
-                        "type": "string",
-                        "required": true
-                      }
-                    }
-                  }
-                },
-                "id": {
-                  "name": "id",
-                  "type": "string",
-                  "required": false
-                },
-                "portrait": {
-                  "name": "portrait",
-                  "type": "string",
-                  "required": false
-                }
-              }
             },
             "typewriterSpeed": {
               "type": "number",
@@ -210,6 +203,73 @@
                 "top",
                 "bottom"
               ]
+            },
+            "dialogue": {
+              "type": "DialogueBoxDialogue",
+              "default": {
+                "speaker": "",
+                "text": ""
+              },
+              "label": "Dialogue",
+              "description": "Current dialogue node to display",
+              "tier": "presentation",
+              "properties": {
+                "speaker": {
+                  "name": "speaker",
+                  "type": "string",
+                  "required": true
+                },
+                "choices": {
+                  "name": "choices",
+                  "type": "array",
+                  "required": false,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "next": {
+                        "name": "next",
+                        "type": "string",
+                        "required": false
+                      },
+                      "action": {
+                        "name": "action",
+                        "type": "string",
+                        "required": false
+                      },
+                      "disabled": {
+                        "name": "disabled",
+                        "type": "boolean",
+                        "required": false
+                      },
+                      "text": {
+                        "name": "text",
+                        "type": "string",
+                        "required": true
+                      }
+                    }
+                  }
+                },
+                "id": {
+                  "name": "id",
+                  "type": "string",
+                  "required": false
+                },
+                "text": {
+                  "name": "text",
+                  "type": "string",
+                  "required": true
+                },
+                "portrait": {
+                  "name": "portrait",
+                  "type": "string",
+                  "required": false
+                },
+                "autoAdvance": {
+                  "name": "autoAdvance",
+                  "type": "number",
+                  "required": false
+                }
+              }
             }
           },
           "scope": "instance"

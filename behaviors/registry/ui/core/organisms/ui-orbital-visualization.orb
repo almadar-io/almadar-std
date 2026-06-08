@@ -56,7 +56,13 @@
                 "key": "CLICK",
                 "name": "Click",
                 "description": "Click handler",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -74,17 +80,17 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "orbital-visualization",
-                      "entity": "OrbitalVisualizationItem",
-                      "complexity": "@config.complexity",
-                      "onClick": "CLICK",
-                      "className": "@config.className",
-                      "schema": "@config.schema",
-                      "animated": "@config.animated",
                       "error": "@config.error",
-                      "showLabel": "@config.showLabel",
+                      "isLoading": "@config.isLoading",
+                      "entity": "OrbitalVisualizationItem",
+                      "animated": "@config.animated",
+                      "schema": "@config.schema",
+                      "type": "orbital-visualization",
                       "size": "@config.size",
-                      "isLoading": "@config.isLoading"
+                      "complexity": "@config.complexity",
+                      "showLabel": "@config.showLabel",
+                      "onClick": "CLICK",
+                      "className": "@config.className"
                     }
                   ]
                 ]
@@ -92,54 +98,28 @@
             ]
           },
           "config": {
-            "showLabel": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Label",
-              "description": "Show complexity label",
-              "tier": "presentation"
-            },
-            "complexity": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Complexity",
-              "description": "Direct complexity override (1-100+)",
-              "tier": "presentation"
-            },
-            "error": {
-              "type": "OrbitalVisualizationError",
-              "label": "Error",
-              "description": "Error state",
-              "tier": "presentation",
-              "properties": {
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                },
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                },
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                }
-              }
-            },
             "schema": {
               "type": "OrbitalVisualizationSchema",
               "label": "Schema",
               "description": "Full KFlow schema object",
               "tier": "presentation",
               "properties": {
+                "traits": {
+                  "name": "traits",
+                  "type": "array",
+                  "required": false,
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "dataEntities": {
+                  "name": "dataEntities",
+                  "type": "array",
+                  "required": false,
+                  "items": {
+                    "type": "string"
+                  }
+                },
                 "ui": {
                   "name": "ui",
                   "type": "object",
@@ -164,24 +144,50 @@
                       }
                     }
                   }
-                },
-                "traits": {
-                  "name": "traits",
-                  "type": "array",
-                  "required": false,
-                  "items": {
-                    "type": "string"
-                  }
-                },
-                "dataEntities": {
-                  "name": "dataEntities",
-                  "type": "array",
-                  "required": false,
-                  "items": {
-                    "type": "string"
-                  }
                 }
               }
+            },
+            "error": {
+              "type": "OrbitalVisualizationError",
+              "label": "Error",
+              "description": "Error state",
+              "tier": "presentation",
+              "properties": {
+                "stack": {
+                  "name": "stack",
+                  "type": "string",
+                  "required": false
+                },
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                },
+                "code": {
+                  "name": "code",
+                  "type": "string",
+                  "required": false
+                },
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": false
+                }
+              }
+            },
+            "complexity": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Complexity",
+              "description": "Direct complexity override (1-100+)",
+              "tier": "presentation"
+            },
+            "showLabel": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Label",
+              "description": "Show complexity label",
+              "tier": "presentation"
             },
             "size": {
               "type": "string",
@@ -196,11 +202,11 @@
                 "xl"
               ]
             },
-            "animated": {
-              "type": "boolean",
-              "default": true,
-              "label": "Animated",
-              "description": "Animation enabled",
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
               "tier": "presentation"
             },
             "isLoading": {
@@ -210,11 +216,11 @@
               "description": "Loading state indicator",
               "tier": "presentation"
             },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
+            "animated": {
+              "type": "boolean",
+              "default": true,
+              "label": "Animated",
+              "description": "Animation enabled",
               "tier": "presentation"
             }
           },

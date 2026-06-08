@@ -28,26 +28,6 @@
           "linkedEntity": "WorldMapBoardItem",
           "emits": [
             {
-              "event": "IS_IN_RANGE",
-              "description": "Custom movement range validator",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "from",
-                  "type": "object"
-                },
-                {
-                  "name": "to",
-                  "type": "object"
-                },
-                {
-                  "name": "range",
-                  "type": "number"
-                }
-              ]
-            },
-            {
               "event": "HERO_SELECT",
               "description": "-- Declarative event props --",
               "tier": "essential",
@@ -141,66 +121,6 @@
                   "required": true
                 }
               ]
-            },
-            {
-              "event": "HEADER",
-              "description": "-- Slots --",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "ctx",
-                  "type": "object"
-                }
-              ]
-            },
-            {
-              "event": "SIDE_PANEL",
-              "description": "Side panel (hero detail, hero lists, etc.)",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "ctx",
-                  "type": "object"
-                }
-              ]
-            },
-            {
-              "event": "OVERLAY",
-              "description": "Canvas overlay (tooltips, popups)",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "ctx",
-                  "type": "object"
-                }
-              ]
-            },
-            {
-              "event": "FOOTER",
-              "description": "Footer",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "ctx",
-                  "type": "object"
-                }
-              ]
-            },
-            {
-              "event": "RESOLVE_UNIT_FRAME",
-              "description": "resolveUnitFrame prop",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "unitId",
-                  "type": "string"
-                }
-              ]
             }
           ],
           "stateMachine": {
@@ -216,70 +136,99 @@
                 "name": "Initialize"
               },
               {
-                "key": "IS_IN_RANGE",
-                "name": "Is In Range",
-                "description": "Custom movement range validator",
-                "tier": "essential"
-              },
-              {
                 "key": "HERO_SELECT",
                 "name": "Hero Select",
                 "description": "-- Declarative event props --",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "heroId",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
               },
               {
                 "key": "HERO_MOVE",
                 "name": "Hero Move",
                 "description": "Emits UI:{heroMoveEvent} with { heroId, toX, toY }",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "heroId",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "toX",
+                    "type": "number",
+                    "required": true
+                  },
+                  {
+                    "name": "toY",
+                    "type": "number",
+                    "required": true
+                  }
+                ]
               },
               {
                 "key": "BATTLE_ENCOUNTER",
                 "name": "Battle Encounter",
                 "description": "Emits UI:{battleEncounterEvent} with { attackerId, defenderId }",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "attackerId",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "defenderId",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
               },
               {
                 "key": "FEATURE_ENTER",
                 "name": "Feature Enter",
                 "description": "Emits UI:{featureEnterEvent} with { heroId, feature, hex }",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "heroId",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "feature",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "hex",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
               },
               {
                 "key": "TILE_CLICK",
                 "name": "Tile Click",
                 "description": "Emits UI:{tileClickEvent} with { x, y }",
-                "tier": "essential"
-              },
-              {
-                "key": "HEADER",
-                "name": "Header",
-                "description": "-- Slots --",
-                "tier": "essential"
-              },
-              {
-                "key": "SIDE_PANEL",
-                "name": "Side Panel",
-                "description": "Side panel (hero detail, hero lists, etc.)",
-                "tier": "essential"
-              },
-              {
-                "key": "OVERLAY",
-                "name": "Overlay",
-                "description": "Canvas overlay (tooltips, popups)",
-                "tier": "essential"
-              },
-              {
-                "key": "FOOTER",
-                "name": "Footer",
-                "description": "Footer",
-                "tier": "essential"
-              },
-              {
-                "key": "RESOLVE_UNIT_FRAME",
-                "name": "Resolve Unit Frame",
-                "description": "resolveUnitFrame prop",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "x",
+                    "type": "number",
+                    "required": true
+                  },
+                  {
+                    "name": "y",
+                    "type": "number",
+                    "required": true
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -289,40 +238,29 @@
                 "event": "INIT",
                 "effects": [
                   [
-                    "fetch",
-                    "WorldMapBoardItem",
-                    {}
-                  ],
-                  [
                     "render-ui",
                     "main",
                     {
-                      "effectSpriteUrls": "@config.effectSpriteUrls",
-                      "className": "@config.className",
-                      "allowMoveAllHeroes": "@config.allowMoveAllHeroes",
-                      "header": "HEADER",
-                      "sidePanel": "SIDE_PANEL",
-                      "onBattleEncounter": "BATTLE_ENCOUNTER",
-                      "footer": "FOOTER",
-                      "featureEnterEvent": "FEATURE_ENTER",
-                      "onFeatureEnter": "FEATURE_ENTER",
-                      "enableCamera": "@config.enableCamera",
-                      "diamondTopY": "@config.diamondTopY",
-                      "entity": "@entity",
-                      "isInRange": "IS_IN_RANGE",
-                      "onHeroSelect": "HERO_SELECT",
-                      "resolveUnitFrame": "RESOLVE_UNIT_FRAME",
-                      "type": "world-map-board",
-                      "overlay": "OVERLAY",
-                      "battleEncounterEvent": "BATTLE_ENCOUNTER",
-                      "scale": "@config.scale",
                       "isLoading": "@config.isLoading",
-                      "unitScale": "@config.unitScale",
-                      "tileClickEvent": "TILE_CLICK",
                       "error": "@config.error",
                       "heroSelectEvent": "HERO_SELECT",
+                      "onHeroMove": "HERO_MOVE",
+                      "tileClickEvent": "TILE_CLICK",
                       "heroMoveEvent": "HERO_MOVE",
-                      "onHeroMove": "HERO_MOVE"
+                      "onFeatureEnter": "FEATURE_ENTER",
+                      "diamondTopY": "@config.diamondTopY",
+                      "effectSpriteUrls": "@config.effectSpriteUrls",
+                      "type": "world-map-board",
+                      "entity": "@config.entityProp",
+                      "unitScale": "@config.unitScale",
+                      "featureEnterEvent": "FEATURE_ENTER",
+                      "battleEncounterEvent": "BATTLE_ENCOUNTER",
+                      "onBattleEncounter": "BATTLE_ENCOUNTER",
+                      "enableCamera": "@config.enableCamera",
+                      "className": "@config.className",
+                      "scale": "@config.scale",
+                      "allowMoveAllHeroes": "@config.allowMoveAllHeroes",
+                      "onHeroSelect": "HERO_SELECT"
                     }
                   ]
                 ]
@@ -336,13 +274,18 @@
               "description": "Error state",
               "tier": "presentation",
               "properties": {
+                "stack": {
+                  "name": "stack",
+                  "type": "string",
+                  "required": false
+                },
                 "name": {
                   "name": "name",
                   "type": "string",
                   "required": false
                 },
-                "stack": {
-                  "name": "stack",
+                "code": {
+                  "name": "code",
                   "type": "string",
                   "required": false
                 },
@@ -350,11 +293,278 @@
                   "name": "message",
                   "type": "string",
                   "required": true
+                }
+              }
+            },
+            "enableCamera": {
+              "type": "boolean",
+              "default": false,
+              "label": "Enable Camera",
+              "description": "Disable pan/zoom camera (default: true). Set false for fixed maps where overlay labels need stable positions.",
+              "tier": "presentation"
+            },
+            "allowMoveAllHeroes": {
+              "type": "boolean",
+              "default": false,
+              "label": "Allow Move All Heroes",
+              "description": "Allow selecting / moving ALL heroes (including enemy). For testing.",
+              "tier": "presentation"
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
+              "tier": "presentation"
+            },
+            "entityProp": {
+              "type": "WorldMapBoardEntity",
+              "label": "Entity",
+              "description": "World map entity data. Also accepts the canonical `EntityRow` the compiler binds; the component narrows to `WorldMapEntity` below.",
+              "synonyms": "entity",
+              "tier": "presentation",
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
                 },
-                "code": {
-                  "name": "code",
+                "assetManifest": {
+                  "name": "assetManifest",
+                  "type": "object",
+                  "required": false,
+                  "properties": {
+                    "features": {
+                      "name": "features",
+                      "type": "object",
+                      "required": false,
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "units": {
+                      "name": "units",
+                      "type": "object",
+                      "required": false,
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "baseUrl": {
+                      "name": "baseUrl",
+                      "type": "string",
+                      "required": true
+                    },
+                    "terrains": {
+                      "name": "terrains",
+                      "type": "object",
+                      "required": false,
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "selectedHeroId": {
+                  "name": "selectedHeroId",
                   "type": "string",
                   "required": false
+                },
+                "heroes": {
+                  "name": "heroes",
+                  "type": "array",
+                  "required": true,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "owner": {
+                        "name": "owner",
+                        "type": "string",
+                        "required": true,
+                        "values": [
+                          "player",
+                          "enemy"
+                        ]
+                      },
+                      "position": {
+                        "name": "position",
+                        "type": "object",
+                        "required": true,
+                        "properties": {
+                          "x": {
+                            "name": "x",
+                            "type": "number",
+                            "required": true
+                          },
+                          "y": {
+                            "name": "y",
+                            "type": "number",
+                            "required": true
+                          }
+                        }
+                      },
+                      "spriteSheet": {
+                        "name": "spriteSheet",
+                        "type": "object",
+                        "required": false,
+                        "properties": {
+                          "frameWidth": {
+                            "name": "frameWidth",
+                            "type": "number",
+                            "required": true
+                          },
+                          "sw": {
+                            "name": "sw",
+                            "type": "string",
+                            "required": true
+                          },
+                          "se": {
+                            "name": "se",
+                            "type": "string",
+                            "required": true
+                          },
+                          "frameHeight": {
+                            "name": "frameHeight",
+                            "type": "number",
+                            "required": true
+                          }
+                        }
+                      },
+                      "movement": {
+                        "name": "movement",
+                        "type": "number",
+                        "required": true
+                      },
+                      "sprite": {
+                        "name": "sprite",
+                        "type": "string",
+                        "required": false
+                      },
+                      "name": {
+                        "name": "name",
+                        "type": "string",
+                        "required": true
+                      },
+                      "level": {
+                        "name": "level",
+                        "type": "number",
+                        "required": false
+                      },
+                      "id": {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    }
+                  }
+                },
+                "backgroundImage": {
+                  "name": "backgroundImage",
+                  "type": "string",
+                  "required": false
+                },
+                "hexes": {
+                  "name": "hexes",
+                  "type": "array",
+                  "required": true,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "feature": {
+                        "name": "feature",
+                        "type": "string",
+                        "required": false
+                      },
+                      "featureData": {
+                        "name": "featureData",
+                        "type": "object",
+                        "required": false,
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "x": {
+                        "name": "x",
+                        "type": "number",
+                        "required": true
+                      },
+                      "terrainSprite": {
+                        "name": "terrainSprite",
+                        "type": "string",
+                        "required": false
+                      },
+                      "terrain": {
+                        "name": "terrain",
+                        "type": "string",
+                        "required": true
+                      },
+                      "passable": {
+                        "name": "passable",
+                        "type": "boolean",
+                        "required": false
+                      },
+                      "y": {
+                        "name": "y",
+                        "type": "number",
+                        "required": true
+                      }
+                    }
+                  }
+                },
+                "features": {
+                  "name": "features",
+                  "type": "array",
+                  "required": false,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "y": {
+                        "name": "y",
+                        "type": "number",
+                        "required": true
+                      },
+                      "sprite": {
+                        "name": "sprite",
+                        "type": "string",
+                        "required": false
+                      },
+                      "elevation": {
+                        "name": "elevation",
+                        "type": "number",
+                        "required": false
+                      },
+                      "assetUrl": {
+                        "name": "assetUrl",
+                        "type": "string",
+                        "required": false
+                      },
+                      "x": {
+                        "name": "x",
+                        "type": "number",
+                        "required": true
+                      },
+                      "z": {
+                        "name": "z",
+                        "type": "number",
+                        "required": false
+                      },
+                      "color": {
+                        "name": "color",
+                        "type": "string",
+                        "required": false
+                      },
+                      "id": {
+                        "name": "id",
+                        "type": "string",
+                        "required": false
+                      },
+                      "type": {
+                        "name": "type",
+                        "type": "string",
+                        "required": true
+                      }
+                    }
+                  }
                 }
               }
             },
@@ -363,6 +573,27 @@
               "default": 2.5,
               "label": "Unit Scale",
               "description": "Unit draw-size multiplier",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "diamondTopY": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Diamond Top Y",
+              "description": "-- Canvas pass-through --",
+              "tier": "presentation"
+            },
+            "scale": {
+              "type": "number",
+              "default": 0.4,
+              "label": "Scale",
+              "description": "Canvas render scale",
               "tier": "presentation"
             },
             "effectSpriteUrls": {
@@ -374,48 +605,6 @@
               "items": {
                 "type": "string"
               }
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "allowMoveAllHeroes": {
-              "type": "boolean",
-              "default": false,
-              "label": "Allow Move All Heroes",
-              "description": "Allow selecting / moving ALL heroes (including enemy). For testing.",
-              "tier": "presentation"
-            },
-            "scale": {
-              "type": "number",
-              "default": 0.4,
-              "label": "Scale",
-              "description": "Canvas render scale",
-              "tier": "presentation"
-            },
-            "enableCamera": {
-              "type": "boolean",
-              "default": false,
-              "label": "Enable Camera",
-              "description": "Disable pan/zoom camera (default: true). Set false for fixed maps where overlay labels need stable positions.",
-              "tier": "presentation"
-            },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state indicator",
-              "tier": "presentation"
-            },
-            "diamondTopY": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Diamond Top Y",
-              "description": "-- Canvas pass-through --",
-              "tier": "presentation"
             }
           },
           "scope": "instance"

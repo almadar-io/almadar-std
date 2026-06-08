@@ -78,13 +78,35 @@
                 "key": "ITEM_TOGGLE",
                 "name": "Item Toggle",
                 "description": "Callback when item opens/closes",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "itemId",
+                    "type": "string"
+                  },
+                  {
+                    "name": "isOpen",
+                    "type": "boolean"
+                  }
+                ]
               },
               {
                 "key": "TOGGLE",
                 "name": "Toggle",
                 "description": "Declarative toggle event — emits UI:{toggleEvent} with { itemId, isOpen }",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "itemId",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "isOpen",
+                    "type": "boolean",
+                    "required": true
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -97,15 +119,15 @@
                     "render-ui",
                     "main",
                     {
-                      "multiple": "@config.multiple",
-                      "toggleEvent": "TOGGLE",
+                      "defaultOpen": "@config.defaultOpen",
                       "onItemToggle": "ITEM_TOGGLE",
                       "type": "accordion",
-                      "openItems": "@config.openItems",
-                      "defaultOpenItems": "@config.defaultOpenItems",
-                      "defaultOpen": "@config.defaultOpen",
                       "items": "@config.items",
-                      "className": "@config.className"
+                      "toggleEvent": "TOGGLE",
+                      "className": "@config.className",
+                      "defaultOpenItems": "@config.defaultOpenItems",
+                      "openItems": "@config.openItems",
+                      "multiple": "@config.multiple"
                     }
                   ]
                 ]
@@ -113,14 +135,14 @@
             ]
           },
           "config": {
-            "openItems": {
-              "type": "[string]",
+            "defaultOpen": {
+              "type": "[number]",
               "default": [],
-              "label": "Open Items",
-              "description": "Controlled open items (IDs)",
+              "label": "Default Open",
+              "description": "Default open items by index (pattern compatibility)",
               "tier": "presentation",
               "items": {
-                "type": "string"
+                "type": "number"
               }
             },
             "className": {
@@ -128,6 +150,13 @@
               "default": "",
               "label": "Class Name",
               "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "multiple": {
+              "type": "boolean",
+              "default": false,
+              "label": "Multiple",
+              "description": "Allow multiple items open at once",
               "tier": "presentation"
             },
             "items": {
@@ -139,45 +168,48 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "content": {
-                    "name": "content",
-                    "type": "string",
-                    "required": true
+                  "defaultOpen": {
+                    "name": "defaultOpen",
+                    "type": "boolean",
+                    "required": false
                   },
                   "disabled": {
                     "name": "disabled",
                     "type": "boolean",
                     "required": false
                   },
-                  "defaultOpen": {
-                    "name": "defaultOpen",
-                    "type": "boolean",
-                    "required": false
-                  },
-                  "id": {
-                    "name": "id",
+                  "header": {
+                    "name": "header",
                     "type": "string",
                     "required": false
+                  },
+                  "content": {
+                    "name": "content",
+                    "type": "string",
+                    "required": true
                   },
                   "title": {
                     "name": "title",
                     "type": "string",
                     "required": false
                   },
-                  "header": {
-                    "name": "header",
+                  "id": {
+                    "name": "id",
                     "type": "string",
                     "required": false
                   }
                 }
               }
             },
-            "multiple": {
-              "type": "boolean",
-              "default": false,
-              "label": "Multiple",
-              "description": "Allow multiple items open at once",
-              "tier": "presentation"
+            "openItems": {
+              "type": "[string]",
+              "default": [],
+              "label": "Open Items",
+              "description": "Controlled open items (IDs)",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
             },
             "defaultOpenItems": {
               "type": "[string]",
@@ -187,16 +219,6 @@
               "tier": "presentation",
               "items": {
                 "type": "string"
-              }
-            },
-            "defaultOpen": {
-              "type": "[number]",
-              "default": [],
-              "label": "Default Open",
-              "description": "Default open items by index (pattern compatibility)",
-              "tier": "presentation",
-              "items": {
-                "type": "number"
               }
             }
           },

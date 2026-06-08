@@ -49,12 +49,17 @@
                     "render-ui",
                     "main",
                     {
-                      "children": "@config.children",
-                      "animate": "@config.animate",
-                      "type": "conditional-wrapper",
-                      "fallback": "@config.fallback",
                       "condition": "@config.condition",
-                      "context": "@config.context"
+                      "animate": "@config.animate",
+                      "context": "@config.context",
+                      "fallback": "@config.fallback",
+                      "type": "conditional-wrapper",
+                      "children": [
+                        {
+                          "type": "text",
+                          "content": ""
+                        }
+                      ]
                     }
                   ]
                 ]
@@ -62,23 +67,35 @@
             ]
           },
           "config": {
-            "children": {
+            "condition": {
+              "type": "SExpr",
+              "label": "Condition",
+              "description": "The S-expression condition to evaluate",
+              "tier": "presentation"
+            },
+            "fallback": {
               "type": "node",
-              "label": "Children",
-              "description": "Children to render when condition is true (or when no condition is provided)",
+              "label": "Fallback",
+              "description": "Optional fallback to render when condition is false",
+              "tier": "presentation"
+            },
+            "animate": {
+              "type": "boolean",
+              "default": false,
+              "label": "Animate",
+              "description": "Whether to animate the transition (uses CSS transitions)",
               "tier": "presentation"
             },
             "context": {
               "type": "ConditionalWrapperContext",
+              "default": {
+                "formValues": {},
+                "globalVariables": {}
+              },
               "label": "Context",
               "description": "Context for evaluating the condition",
               "tier": "presentation",
               "properties": {
-                "entity": {
-                  "name": "entity",
-                  "type": "string",
-                  "required": false
-                },
                 "formValues": {
                   "name": "formValues",
                   "type": "string",
@@ -89,31 +106,17 @@
                   "type": "string",
                   "required": true
                 },
+                "entity": {
+                  "name": "entity",
+                  "type": "string",
+                  "required": false
+                },
                 "localVariables": {
                   "name": "localVariables",
                   "type": "string",
                   "required": false
                 }
               }
-            },
-            "animate": {
-              "type": "boolean",
-              "default": false,
-              "label": "Animate",
-              "description": "Whether to animate the transition (uses CSS transitions)",
-              "tier": "presentation"
-            },
-            "fallback": {
-              "type": "node",
-              "label": "Fallback",
-              "description": "Optional fallback to render when condition is false",
-              "tier": "presentation"
-            },
-            "condition": {
-              "type": "json",
-              "label": "Condition",
-              "description": "The S-expression condition to evaluate",
-              "tier": "presentation"
             }
           },
           "scope": "instance"

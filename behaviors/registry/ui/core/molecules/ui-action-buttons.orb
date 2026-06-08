@@ -60,7 +60,17 @@
                 "key": "ACTION",
                 "name": "Action",
                 "description": "Called when a button is pressed/released",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  },
+                  {
+                    "name": "pressed",
+                    "type": "boolean"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -73,14 +83,14 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "action-buttons",
-                      "buttons": "@config.buttons",
-                      "size": "@config.size",
                       "disabled": "@config.disabled",
-                      "onAction": "ACTION",
+                      "actionEvent": "ACTION",
                       "className": "@config.className",
                       "layout": "@config.layout",
-                      "actionEvent": "ACTION"
+                      "buttons": "@config.buttons",
+                      "size": "@config.size",
+                      "type": "action-buttons",
+                      "onAction": "ACTION"
                     }
                   ]
                 ]
@@ -88,6 +98,43 @@
             ]
           },
           "config": {
+            "buttons": {
+              "type": "[ActionButtonsButtonsItem]",
+              "default": [],
+              "label": "Buttons",
+              "description": "Button configurations",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "primary",
+                      "secondary",
+                      "ghost"
+                    ]
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
             "layout": {
               "type": "string",
               "default": "horizontal",
@@ -106,38 +153,6 @@
               "label": "Class Name",
               "description": "Additional CSS classes",
               "tier": "presentation"
-            },
-            "buttons": {
-              "type": "[ActionButtonsButtonsItem]",
-              "default": [],
-              "label": "Buttons",
-              "description": "Button configurations",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
-                  },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
             },
             "disabled": {
               "type": "boolean",

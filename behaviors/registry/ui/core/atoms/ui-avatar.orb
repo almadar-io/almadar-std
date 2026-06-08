@@ -68,13 +68,25 @@
                 "key": "CLICK",
                 "name": "Click",
                 "description": "Click handler",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "ACTION",
                 "name": "Action",
                 "description": "Declarative event name — emits UI:{action} via eventBus on click",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -87,19 +99,19 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "@config.size",
-                      "badge": "@config.badge",
-                      "onClick": "CLICK",
-                      "name": "@config.name",
                       "actionPayload": "@config.actionPayload",
-                      "icon": "@config.icon",
+                      "onClick": "CLICK",
+                      "src": "@config.src",
+                      "status": "@config.status",
+                      "badge": "@config.badge",
+                      "size": "@config.size",
+                      "alt": "@config.alt",
                       "className": "@config.className",
-                      "initials": "@config.initials",
                       "action": "ACTION",
                       "type": "avatar",
-                      "status": "@config.status",
-                      "alt": "@config.alt",
-                      "src": "@config.src"
+                      "icon": "@config.icon",
+                      "initials": "@config.initials",
+                      "name": "@config.name"
                     }
                   ]
                 ]
@@ -107,25 +119,11 @@
             ]
           },
           "config": {
-            "initials": {
-              "type": "string",
-              "default": "",
-              "label": "Initials",
-              "description": "Initials to display (e.g., 'JD' for John Doe) If not provided but name is, initials will be auto-generated",
-              "tier": "presentation"
-            },
-            "src": {
-              "type": "string",
-              "default": "",
-              "label": "Src",
-              "description": "Image source URL",
-              "tier": "presentation"
-            },
             "icon": {
               "type": "string",
               "default": "circle",
               "label": "Icon",
-              "description": "Icon to display when no image or initials",
+              "description": "Icon to display when no image or initials. Accepts a Lucide component directly, or a canonical kebab-case icon name string (resolved via `resolveIcon`) so trait/factory authors can pass an icon by name.",
               "tier": "presentation"
             },
             "status": {
@@ -141,11 +139,25 @@
                 "busy"
               ]
             },
+            "initials": {
+              "type": "string",
+              "default": "",
+              "label": "Initials",
+              "description": "Initials to display (e.g., 'JD' for John Doe) If not provided but name is, initials will be auto-generated",
+              "tier": "presentation"
+            },
             "name": {
               "type": "string",
               "default": "",
               "label": "Name",
               "description": "Full name - initials will be generated automatically",
+              "tier": "presentation"
+            },
+            "alt": {
+              "type": "string",
+              "default": "",
+              "label": "Alt",
+              "description": "Alt text for the image",
               "tier": "presentation"
             },
             "badge": {
@@ -155,11 +167,18 @@
               "description": "Badge content (e.g., notification count)",
               "tier": "presentation"
             },
-            "alt": {
+            "className": {
               "type": "string",
               "default": "",
-              "label": "Alt",
-              "description": "Alt text for the image",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "src": {
+              "type": "string",
+              "default": "",
+              "label": "Src",
+              "description": "Image source URL",
               "tier": "presentation"
             },
             "actionPayload": {
@@ -181,13 +200,6 @@
                 "lg",
                 "xl"
               ]
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
             }
           },
           "scope": "instance"

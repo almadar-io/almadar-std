@@ -28,18 +28,6 @@
           "linkedEntity": "ProgressDotsItem",
           "emits": [
             {
-              "event": "GET_STATE",
-              "description": "Custom state resolver per dot index",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "index",
-                  "type": "number"
-                }
-              ]
-            },
-            {
               "event": "DOT_CLICK",
               "description": "Callback when a dot is clicked",
               "tier": "essential",
@@ -65,16 +53,16 @@
                 "name": "Initialize"
               },
               {
-                "key": "GET_STATE",
-                "name": "Get State",
-                "description": "Custom state resolver per dot index",
-                "tier": "essential"
-              },
-              {
                 "key": "DOT_CLICK",
                 "name": "Dot Click",
                 "description": "Callback when a dot is clicked",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "index",
+                    "type": "number"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -87,13 +75,12 @@
                     "render-ui",
                     "main",
                     {
-                      "currentIndex": "@config.currentIndex",
-                      "count": "@config.count",
+                      "onDotClick": "DOT_CLICK",
                       "size": "@config.size",
-                      "getState": "GET_STATE",
-                      "type": "progress-dots",
+                      "currentIndex": "@config.currentIndex",
                       "className": "@config.className",
-                      "onDotClick": "DOT_CLICK"
+                      "type": "progress-dots",
+                      "count": "@config.count"
                     }
                   ]
                 ]
@@ -101,13 +88,6 @@
             ]
           },
           "config": {
-            "count": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Count",
-              "description": "Total number of dots",
-              "tier": "presentation"
-            },
             "className": {
               "type": "string",
               "default": "",
@@ -126,6 +106,13 @@
                 "md",
                 "lg"
               ]
+            },
+            "count": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Count",
+              "description": "Total number of dots",
+              "tier": "presentation"
             },
             "currentIndex": {
               "type": "number",

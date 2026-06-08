@@ -60,7 +60,17 @@
                 "key": "RULES_CHANGE",
                 "name": "Rules Change",
                 "description": "Called when rules change",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "objectId",
+                    "type": "string"
+                  },
+                  {
+                    "name": "rules",
+                    "type": "[object]"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -74,10 +84,10 @@
                     "main",
                     {
                       "object": "@config.object",
-                      "disabled": "@config.disabled",
+                      "onRulesChange": "RULES_CHANGE",
                       "className": "@config.className",
-                      "type": "object-rule-panel",
-                      "onRulesChange": "RULES_CHANGE"
+                      "disabled": "@config.disabled",
+                      "type": "object-rule-panel"
                     }
                   ]
                 ]
@@ -85,14 +95,57 @@
             ]
           },
           "config": {
+            "disabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Disabled",
+              "description": "Whether editing is disabled",
+              "tier": "presentation"
+            },
             "object": {
               "type": "ObjectRulePanelObject",
+              "default": {
+                "availableActions": [],
+                "currentState": "",
+                "availableEvents": [],
+                "icon": "",
+                "rules": [],
+                "id": "",
+                "initialState": "",
+                "name": "",
+                "states": []
+              },
               "label": "Object",
               "description": "The selected object",
               "tier": "presentation",
               "properties": {
-                "availableActions": {
-                  "name": "availableActions",
+                "maxRules": {
+                  "name": "maxRules",
+                  "type": "number",
+                  "required": false
+                },
+                "icon": {
+                  "name": "icon",
+                  "type": "string",
+                  "required": true
+                },
+                "id": {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                "initialState": {
+                  "name": "initialState",
+                  "type": "string",
+                  "required": true
+                },
+                "currentState": {
+                  "name": "currentState",
+                  "type": "string",
+                  "required": true
+                },
+                "availableEvents": {
+                  "name": "availableEvents",
                   "type": "array",
                   "required": true,
                   "items": {
@@ -111,15 +164,33 @@
                     }
                   }
                 },
-                "id": {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
+                "states": {
+                  "name": "states",
+                  "type": "array",
+                  "required": true,
+                  "items": {
+                    "type": "string"
+                  }
                 },
-                "currentState": {
-                  "name": "currentState",
-                  "type": "string",
-                  "required": true
+                "availableActions": {
+                  "name": "availableActions",
+                  "type": "array",
+                  "required": true,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "value": {
+                        "name": "value",
+                        "type": "string",
+                        "required": true
+                      },
+                      "label": {
+                        "name": "label",
+                        "type": "string",
+                        "required": true
+                      }
+                    }
+                  }
                 },
                 "rules": {
                   "name": "rules",
@@ -146,62 +217,12 @@
                     }
                   }
                 },
-                "states": {
-                  "name": "states",
-                  "type": "array",
-                  "required": true,
-                  "items": {
-                    "type": "string"
-                  }
-                },
-                "maxRules": {
-                  "name": "maxRules",
-                  "type": "number",
-                  "required": false
-                },
                 "name": {
                   "name": "name",
                   "type": "string",
                   "required": true
-                },
-                "icon": {
-                  "name": "icon",
-                  "type": "string",
-                  "required": true
-                },
-                "initialState": {
-                  "name": "initialState",
-                  "type": "string",
-                  "required": true
-                },
-                "availableEvents": {
-                  "name": "availableEvents",
-                  "type": "array",
-                  "required": true,
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "value": {
-                        "name": "value",
-                        "type": "string",
-                        "required": true
-                      },
-                      "label": {
-                        "name": "label",
-                        "type": "string",
-                        "required": true
-                      }
-                    }
-                  }
                 }
               }
-            },
-            "disabled": {
-              "type": "boolean",
-              "default": false,
-              "label": "Disabled",
-              "description": "Whether editing is disabled",
-              "tier": "presentation"
             },
             "className": {
               "type": "string",

@@ -68,13 +68,25 @@
                 "key": "CLOSE",
                 "name": "Close",
                 "description": "Direct onClose callback",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "INDEX_CHANGE",
                 "name": "Index Change",
                 "description": "Direct onIndexChange callback",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "index",
+                    "type": "number"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -88,14 +100,14 @@
                     "main",
                     {
                       "onIndexChange": "INDEX_CHANGE",
-                      "currentIndex": "@config.currentIndex",
+                      "images": "@config.images",
                       "isOpen": "@config.isOpen",
                       "onClose": "CLOSE",
                       "showCounter": "@config.showCounter",
+                      "type": "lightbox",
+                      "currentIndex": "@config.currentIndex",
                       "closeAction": "@config.closeAction",
-                      "className": "@config.className",
-                      "images": "@config.images",
-                      "type": "lightbox"
+                      "className": "@config.className"
                     }
                   ]
                 ]
@@ -103,6 +115,20 @@
             ]
           },
           "config": {
+            "closeAction": {
+              "type": "string",
+              "default": "",
+              "label": "Close Action",
+              "description": "Declarative close event name",
+              "tier": "presentation"
+            },
+            "showCounter": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Counter",
+              "description": "Show image counter (e.g., '3 of 12')",
+              "tier": "presentation"
+            },
             "images": {
               "type": "[LightboxImagesItem]",
               "default": [],
@@ -112,13 +138,13 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "src": {
-                    "name": "src",
+                  "alt": {
+                    "name": "alt",
                     "type": "string",
                     "required": false
                   },
-                  "alt": {
-                    "name": "alt",
+                  "src": {
+                    "name": "src",
                     "type": "string",
                     "required": false
                   },
@@ -135,20 +161,6 @@
               "default": 0.0,
               "label": "Current Index",
               "description": "Current image index",
-              "tier": "presentation"
-            },
-            "showCounter": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Counter",
-              "description": "Show image counter (e.g., '3 of 12')",
-              "tier": "presentation"
-            },
-            "closeAction": {
-              "type": "string",
-              "default": "",
-              "label": "Close Action",
-              "description": "Declarative close event name",
               "tier": "presentation"
             },
             "className": {

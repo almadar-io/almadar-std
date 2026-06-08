@@ -1,0 +1,50 @@
+app ui-step-flow "1.0.0"
+"StepFlow — UI factory (1:1 with the @almadar/ui step-flow pattern)."
+orbital StepFlowOrbital {
+  type StepFlowStepsItem = {
+    number : number
+    title : string!
+    description : string!
+    icon : string
+  }
+
+  entity StepFlowItem [runtime] {
+    id : string!
+  }
+
+  trait StepFlowRender -> @rebindable StepFlowItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          steps: @config.steps
+          orientation: @config.orientation
+          showConnectors: @config.showConnectors
+          className: @config.className
+          type: step-flow
+        })
+    }
+
+    config {
+      steps : [StepFlowStepsItem] = []
+        @label "Steps"
+        @description "steps prop"
+        @tier "presentation"
+      orientation : "horizontal" | "vertical" = horizontal
+        @label "Orientation"
+        @description "orientation prop"
+        @tier "presentation"
+      showConnectors : boolean = true
+        @label "Show Connectors"
+        @description "showConnectors prop"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/step-flow" as StepFlowPage -> StepFlowRender
+}

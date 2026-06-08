@@ -1,6 +1,12 @@
 app ui-entity-table "1.0.0"
 "EntityTable — UI factory (1:1 with the @almadar/ui entity-table pattern)."
 orbital EntityTableOrbital {
+  type EntityTableError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
+  }
   type EntityTableFieldsItem = {
     key : string!
     header : string!
@@ -22,9 +28,9 @@ orbital EntityTableOrbital {
     event : string
     navigatesTo : string
     action : string
-    placement : string
+    placement : "row" | "bulk"
     icon : string
-    variant : string
+    variant : "default" | "primary" | "secondary" | "ghost" | "danger"
   }
   type EntityTableEmptyAction = {
     label : string!
@@ -103,15 +109,15 @@ orbital EntityTableOrbital {
         @label "Is Loading"
         @description "Loading state indicator"
         @tier "presentation"
-      error : json
+      error : EntityTableError
         @label "Error"
-        @description "Error state"
+        @description "Error state (UiError)"
         @tier "presentation"
       sortBy : string = ""
         @label "Sort By"
         @description "Current sort field"
         @tier "presentation"
-      sortDirection : string = asc
+      sortDirection : "asc" | "desc" = asc
         @label "Sort Direction"
         @description "Current sort direction"
         @tier "presentation"
@@ -152,7 +158,7 @@ orbital EntityTableOrbital {
         @label "Item Actions"
         @description "Item actions from generated code - maps to rowActions"
         @tier "presentation"
-      emptyIcon : string = "circle"
+      emptyIcon : string = ""
         @label "Empty Icon"
         @description "emptyIcon prop"
         @tier "presentation"

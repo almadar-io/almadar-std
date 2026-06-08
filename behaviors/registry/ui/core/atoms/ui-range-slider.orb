@@ -50,18 +50,6 @@
                   "type": "number"
                 }
               ]
-            },
-            {
-              "event": "FORMAT_VALUE",
-              "description": "Format function for tooltip display",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "value",
-                  "type": "number"
-                }
-              ]
             }
           ],
           "stateMachine": {
@@ -80,19 +68,25 @@
                 "key": "ACTION",
                 "name": "Action",
                 "description": "Declarative event name for value changes",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "CHANGE",
                 "name": "Change",
                 "description": "Direct onChange callback",
-                "tier": "essential"
-              },
-              {
-                "key": "FORMAT_VALUE",
-                "name": "Format Value",
-                "description": "Format function for tooltip display",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "type": "number"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -105,21 +99,20 @@
                     "render-ui",
                     "main",
                     {
-                      "showTicks": "@config.showTicks",
-                      "showTooltip": "@config.showTooltip",
-                      "formatValue": "FORMAT_VALUE",
-                      "onChange": "CHANGE",
-                      "actionPayload": "@config.actionPayload",
                       "disabled": "@config.disabled",
-                      "buffered": "@config.buffered",
-                      "step": "@config.step",
-                      "size": "@config.size",
-                      "className": "@config.className",
                       "type": "range-slider",
+                      "showTicks": "@config.showTicks",
+                      "onChange": "CHANGE",
+                      "max": "@config.max",
+                      "step": "@config.step",
+                      "buffered": "@config.buffered",
+                      "size": "@config.size",
+                      "actionPayload": "@config.actionPayload",
+                      "min": "@config.min",
                       "value": "@config.value",
                       "action": "ACTION",
-                      "min": "@config.min",
-                      "max": "@config.max"
+                      "showTooltip": "@config.showTooltip",
+                      "className": "@config.className"
                     }
                   ]
                 ]
@@ -127,24 +120,11 @@
             ]
           },
           "config": {
-            "max": {
+            "step": {
               "type": "number",
-              "default": 100.0,
-              "label": "Max",
-              "description": "Maximum value",
-              "tier": "presentation"
-            },
-            "actionPayload": {
-              "type": "json",
-              "label": "Action Payload",
-              "description": "Payload to include with the action event",
-              "tier": "presentation"
-            },
-            "min": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Min",
-              "description": "Minimum value",
+              "default": 1.0,
+              "label": "Step",
+              "description": "Step increment",
               "tier": "presentation"
             },
             "showTicks": {
@@ -154,37 +134,11 @@
               "description": "Show tick marks at step intervals",
               "tier": "presentation"
             },
-            "buffered": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Buffered",
-              "description": "Buffered range (0-100), for media seek bars",
-              "tier": "presentation"
-            },
             "disabled": {
               "type": "boolean",
               "default": false,
               "label": "Disabled",
               "description": "Disabled state",
-              "tier": "presentation"
-            },
-            "size": {
-              "type": "string",
-              "default": "md",
-              "label": "Size",
-              "description": "Slider size",
-              "tier": "presentation",
-              "values": [
-                "sm",
-                "md",
-                "lg"
-              ]
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes applied to the root element.",
               "tier": "presentation"
             },
             "value": {
@@ -201,11 +155,50 @@
               "description": "Show tooltip with current value on drag",
               "tier": "presentation"
             },
-            "step": {
+            "min": {
               "type": "number",
-              "default": 1.0,
-              "label": "Step",
-              "description": "Step increment",
+              "default": 0.0,
+              "label": "Min",
+              "description": "Minimum value",
+              "tier": "presentation"
+            },
+            "buffered": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Buffered",
+              "description": "Buffered range (0-100), for media seek bars",
+              "tier": "presentation"
+            },
+            "actionPayload": {
+              "type": "json",
+              "label": "Action Payload",
+              "description": "Payload to include with the action event",
+              "tier": "presentation"
+            },
+            "size": {
+              "type": "string",
+              "default": "md",
+              "label": "Size",
+              "description": "Slider size",
+              "tier": "presentation",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            },
+            "max": {
+              "type": "number",
+              "default": 100.0,
+              "label": "Max",
+              "description": "Maximum value",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes applied to the root element.",
               "tier": "presentation"
             }
           },

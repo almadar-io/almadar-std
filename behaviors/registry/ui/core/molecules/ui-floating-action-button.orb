@@ -68,13 +68,25 @@
                 "key": "ACTION",
                 "name": "Action",
                 "description": "Declarative event name. When set, clicking the FAB emits `UI:{action}` via the event bus and (if also provided) calls `onClick`. Mirrors the Button atom's `action` prop so schemas can write `{ type: 'floating-action-button', action: 'INIT' }` uniformly.",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "CLICK",
                 "name": "Click",
                 "description": "Optional direct click handler. Runs after the action emit when both are present.",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -88,13 +100,13 @@
                     "main",
                     {
                       "action": "ACTION",
-                      "actions": "@config.actions",
-                      "icon": "@config.icon",
-                      "variant": "@config.variant",
-                      "position": "@config.position",
-                      "actionPayload": "@config.actionPayload",
                       "onClick": "CLICK",
                       "className": "@config.className",
+                      "actionPayload": "@config.actionPayload",
+                      "icon": "@config.icon",
+                      "variant": "@config.variant",
+                      "actions": "@config.actions",
+                      "position": "@config.position",
                       "type": "floating-action-button",
                       "label": "@config.label"
                     }
@@ -109,13 +121,27 @@
               "default": "bottom-right",
               "label": "Position",
               "description": "Button position",
+              "tier": "presentation",
+              "values": [
+                "bottom-right",
+                "bottom-left",
+                "bottom-center",
+                "top-right",
+                "top-left",
+                "top-center"
+              ]
+            },
+            "icon": {
+              "type": "string",
+              "default": "circle",
+              "label": "Icon",
+              "description": "Icon name (resolves to a Lucide icon by PascalCase / kebab-case lookup).",
               "tier": "presentation"
             },
-            "label": {
-              "type": "string",
-              "default": "",
-              "label": "Label",
-              "description": "Optional label shown via `aria-label` (visually hidden in single-action mode; rendered as a tooltip beside expanded actions in multi-action mode).",
+            "actionPayload": {
+              "type": "json",
+              "label": "Action Payload",
+              "description": "Payload to include with the dispatched action event.",
               "tier": "presentation"
             },
             "className": {
@@ -123,6 +149,13 @@
               "default": "",
               "label": "Class Name",
               "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "label": {
+              "type": "string",
+              "default": "",
+              "label": "Label",
+              "description": "Optional label shown via `aria-label` (visually hidden in single-action mode; rendered as a tooltip beside expanded actions in multi-action mode).",
               "tier": "presentation"
             },
             "actions": {
@@ -134,16 +167,6 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
                   "event": {
                     "name": "event",
                     "type": "string",
@@ -165,6 +188,16 @@
                       "danger",
                       "warning"
                     ]
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
                   }
                 }
               }
@@ -182,19 +215,6 @@
                 "danger",
                 "warning"
               ]
-            },
-            "icon": {
-              "type": "string",
-              "default": "circle",
-              "label": "Icon",
-              "description": "Icon name (resolves to a Lucide icon by PascalCase / kebab-case lookup).",
-              "tier": "presentation"
-            },
-            "actionPayload": {
-              "type": "json",
-              "label": "Action Payload",
-              "description": "Payload to include with the dispatched action event.",
-              "tier": "presentation"
             }
           },
           "scope": "instance"

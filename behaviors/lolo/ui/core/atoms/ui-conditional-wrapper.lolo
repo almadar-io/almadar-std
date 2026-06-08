@@ -20,7 +20,7 @@ orbital ConditionalWrapperOrbital {
         (render-ui main {
           condition: @config.condition
           context: @config.context
-          children: @config.children
+          children: [{ content: "", type: text }]
           fallback: @config.fallback
           animate: @config.animate
           type: conditional-wrapper
@@ -28,17 +28,13 @@ orbital ConditionalWrapperOrbital {
     }
 
     config {
-      condition : json
+      condition : SExpr
         @label "Condition"
         @description "The S-expression condition to evaluate"
         @tier "presentation"
-      context : ConditionalWrapperContext
+      context : ConditionalWrapperContext = { formValues: {}, globalVariables: {} }
         @label "Context"
         @description "Context for evaluating the condition"
-        @tier "presentation"
-      children : node
-        @label "Children"
-        @description "Children to render when condition is true (or when no condition is provided)"
         @tier "presentation"
       fallback : node
         @label "Fallback"

@@ -56,7 +56,13 @@
                 "key": "STATE_CLICK",
                 "name": "State Click",
                 "description": "Click handler for states",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "state",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -74,17 +80,17 @@
                     "render-ui",
                     "main",
                     {
-                      "entity": "TraitStateViewerItem",
-                      "variant": "@config.variant",
-                      "size": "@config.size",
                       "trait": "@config.traitProp",
                       "onStateClick": "STATE_CLICK",
-                      "stateStyles": "@config.stateStyles",
-                      "isLoading": "@config.isLoading",
                       "className": "@config.className",
                       "error": "@config.error",
+                      "entity": "TraitStateViewerItem",
+                      "size": "@config.size",
+                      "type": "trait-state-viewer",
+                      "variant": "@config.variant",
                       "showTransitions": "@config.showTransitions",
-                      "type": "trait-state-viewer"
+                      "stateStyles": "@config.stateStyles",
+                      "isLoading": "@config.isLoading"
                     }
                   ]
                 ]
@@ -92,13 +98,6 @@
             ]
           },
           "config": {
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state",
-              "tier": "presentation"
-            },
             "variant": {
               "type": "string",
               "default": "compact",
@@ -111,12 +110,17 @@
                 "full"
               ]
             },
-            "className": {
+            "size": {
               "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
+              "default": "md",
+              "label": "Size",
+              "description": "Size variant",
+              "tier": "presentation",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
             },
             "showTransitions": {
               "type": "boolean",
@@ -125,60 +129,33 @@
               "description": "Whether to show transition labels",
               "tier": "presentation"
             },
-            "stateStyles": {
-              "type": "json",
-              "label": "State Styles",
-              "description": "Custom state styles passed to StateIndicator",
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state",
               "tier": "presentation"
             },
-            "error": {
-              "type": "TraitStateViewerError",
-              "label": "Error",
-              "description": "Error state",
-              "tier": "presentation",
-              "properties": {
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                },
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                }
-              }
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
             },
             "traitProp": {
               "type": "TraitStateViewerTrait",
+              "default": {
+                "states": [],
+                "name": "",
+                "transitions": [],
+                "currentState": ""
+              },
               "label": "Trait",
               "description": "The trait / state machine to visualize",
               "synonyms": "trait",
               "tier": "presentation",
               "properties": {
-                "states": {
-                  "name": "states",
-                  "type": "array",
-                  "required": true,
-                  "items": {
-                    "type": "string"
-                  }
-                },
-                "currentState": {
-                  "name": "currentState",
-                  "type": "string",
-                  "required": true
-                },
                 "transitions": {
                   "name": "transitions",
                   "type": "array",
@@ -209,29 +186,80 @@
                     }
                   }
                 },
+                "currentState": {
+                  "name": "currentState",
+                  "type": "string",
+                  "required": true
+                },
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": true
+                },
                 "description": {
                   "name": "description",
+                  "type": "string",
+                  "required": false
+                },
+                "states": {
+                  "name": "states",
+                  "type": "array",
+                  "required": true,
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "error": {
+              "type": "TraitStateViewerError",
+              "label": "Error",
+              "description": "Error state",
+              "tier": "presentation",
+              "properties": {
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                },
+                "code": {
+                  "name": "code",
+                  "type": "string",
+                  "required": false
+                },
+                "stack": {
+                  "name": "stack",
                   "type": "string",
                   "required": false
                 },
                 "name": {
                   "name": "name",
                   "type": "string",
-                  "required": true
+                  "required": false
                 }
               }
             },
-            "size": {
-              "type": "string",
-              "default": "md",
-              "label": "Size",
-              "description": "Size variant",
+            "stateStyles": {
+              "type": "Map<string,TraitStateViewerStateStylesValue>",
+              "default": {},
+              "label": "State Styles",
+              "description": "Custom state styles passed to StateIndicator",
               "tier": "presentation",
-              "values": [
-                "sm",
-                "md",
-                "lg"
-              ]
+              "items": {
+                "type": "object",
+                "properties": {
+                  "bgClass": {
+                    "name": "bgClass",
+                    "type": "string",
+                    "required": true
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
             }
           },
           "scope": "instance"

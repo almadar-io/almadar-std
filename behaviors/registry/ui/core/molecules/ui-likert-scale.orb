@@ -56,7 +56,13 @@
                 "key": "CHANGE",
                 "name": "Change",
                 "description": "Change callback",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "type": "number"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -69,15 +75,15 @@
                     "render-ui",
                     "main",
                     {
-                      "options": "@config.options",
-                      "className": "@config.className",
-                      "value": "@config.value",
-                      "type": "likert-scale",
-                      "disabled": "@config.disabled",
                       "onChange": "CHANGE",
-                      "changeEvent": "CHANGE",
                       "variant": "@config.variant",
+                      "value": "@config.value",
+                      "disabled": "@config.disabled",
                       "size": "@config.size",
+                      "type": "likert-scale",
+                      "className": "@config.className",
+                      "options": "@config.options",
+                      "changeEvent": "CHANGE",
                       "question": "@config.question"
                     }
                   ]
@@ -86,6 +92,47 @@
             ]
           },
           "config": {
+            "options": {
+              "type": "[LikertScaleOptionsItem]",
+              "default": [],
+              "label": "Options",
+              "description": "Scale points (defaults to a 5-point agree/disagree set)",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "value": {
+                    "name": "value",
+                    "type": "string",
+                    "required": true
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "disabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Disabled",
+              "description": "Disabled state",
+              "tier": "presentation"
+            },
+            "size": {
+              "type": "string",
+              "default": "md",
+              "label": "Size",
+              "description": "Size variant",
+              "tier": "presentation",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            },
             "variant": {
               "type": "string",
               "default": "radios",
@@ -116,47 +163,6 @@
               "default": "",
               "label": "Question",
               "description": "Optional row prompt above the scale",
-              "tier": "presentation"
-            },
-            "size": {
-              "type": "string",
-              "default": "md",
-              "label": "Size",
-              "description": "Size variant",
-              "tier": "presentation",
-              "values": [
-                "sm",
-                "md",
-                "lg"
-              ]
-            },
-            "options": {
-              "type": "[LikertScaleOptionsItem]",
-              "default": [],
-              "label": "Options",
-              "description": "Scale points (defaults to a 5-point agree/disagree set)",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "value": {
-                    "name": "value",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            },
-            "disabled": {
-              "type": "boolean",
-              "default": false,
-              "label": "Disabled",
-              "description": "Disabled state",
               "tier": "presentation"
             }
           },

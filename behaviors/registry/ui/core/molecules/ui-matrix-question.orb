@@ -60,7 +60,17 @@
                 "key": "CHANGE",
                 "name": "Change",
                 "description": "Change handler invoked with rowId and selected column value",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "rowId",
+                    "type": "string"
+                  },
+                  {
+                    "name": "value",
+                    "type": "number"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -73,16 +83,16 @@
                     "render-ui",
                     "main",
                     {
-                      "columns": "@config.columns",
-                      "onChange": "CHANGE",
-                      "className": "@config.className",
-                      "disabled": "@config.disabled",
                       "values": "@config.values",
-                      "type": "matrix-question",
+                      "className": "@config.className",
                       "rows": "@config.rows",
                       "title": "@config.title",
-                      "changeEvent": "CHANGE",
-                      "size": "@config.size"
+                      "disabled": "@config.disabled",
+                      "type": "matrix-question",
+                      "columns": "@config.columns",
+                      "size": "@config.size",
+                      "onChange": "CHANGE",
+                      "changeEvent": "CHANGE"
                     }
                   ]
                 ]
@@ -90,12 +100,6 @@
             ]
           },
           "config": {
-            "values": {
-              "type": "json",
-              "label": "Values",
-              "description": "Selected value per row, keyed by rowId",
-              "tier": "presentation"
-            },
             "rows": {
               "type": "[MatrixQuestionRowsItem]",
               "default": [],
@@ -118,24 +122,6 @@
                 }
               }
             },
-            "size": {
-              "type": "string",
-              "default": "md",
-              "label": "Size",
-              "description": "Visual size",
-              "tier": "presentation",
-              "values": [
-                "sm",
-                "md"
-              ]
-            },
-            "disabled": {
-              "type": "boolean",
-              "default": false,
-              "label": "Disabled",
-              "description": "Disable all inputs",
-              "tier": "presentation"
-            },
             "columns": {
               "type": "[MatrixQuestionColumnsItem]",
               "default": [],
@@ -157,6 +143,34 @@
                   }
                 }
               }
+            },
+            "values": {
+              "type": "Map<string,string>",
+              "default": {},
+              "label": "Values",
+              "description": "Selected value per row, keyed by rowId",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "size": {
+              "type": "string",
+              "default": "md",
+              "label": "Size",
+              "description": "Visual size",
+              "tier": "presentation",
+              "values": [
+                "sm",
+                "md"
+              ]
+            },
+            "disabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Disabled",
+              "description": "Disable all inputs",
+              "tier": "presentation"
             },
             "className": {
               "type": "string",

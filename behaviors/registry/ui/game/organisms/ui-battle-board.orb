@@ -464,22 +464,6 @@
               ]
             },
             {
-              "event": "DRAW_EFFECTS",
-              "description": "-- Canvas pass-through --",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "ctx",
-                  "type": "object"
-                },
-                {
-                  "name": "timestamp",
-                  "type": "number"
-                }
-              ]
-            },
-            {
               "event": "TILE_CLICK",
               "description": "-- Declarative event props --",
               "tier": "essential",
@@ -996,22 +980,6 @@
                 ]
               },
               {
-                "key": "DRAW_EFFECTS",
-                "name": "Draw Effects",
-                "description": "-- Canvas pass-through --",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "ctx",
-                    "type": "object"
-                  },
-                  {
-                    "name": "timestamp",
-                    "type": "number"
-                  }
-                ]
-              },
-              {
                 "key": "TILE_CLICK",
                 "name": "Tile Click",
                 "description": "-- Declarative event props --",
@@ -1089,24 +1057,23 @@
                     "render-ui",
                     "main",
                     {
-                      "hasActiveEffects": "@config.hasActiveEffects",
-                      "unitClickEvent": "UNIT_CLICK",
-                      "scale": "@config.scale",
-                      "onDrawEffects": "DRAW_EFFECTS",
-                      "effectSpriteUrls": "@config.effectSpriteUrls",
                       "attackEvent": "ATTACK",
-                      "type": "battle-board",
-                      "gameEndEvent": "GAME_END",
-                      "endTurnEvent": "END_TURN",
                       "cancelEvent": "CANCEL",
-                      "onAttack": "ATTACK",
-                      "className": "@config.className",
                       "entity": "@config.entityProp",
-                      "onGameEnd": "GAME_END",
-                      "unitScale": "@config.unitScale",
-                      "onUnitMove": "UNIT_MOVE",
+                      "type": "battle-board",
+                      "className": "@config.className",
+                      "unitClickEvent": "UNIT_CLICK",
+                      "gameEndEvent": "GAME_END",
+                      "scale": "@config.scale",
+                      "onAttack": "ATTACK",
+                      "playAgainEvent": "PLAY_AGAIN",
                       "tileClickEvent": "TILE_CLICK",
-                      "playAgainEvent": "PLAY_AGAIN"
+                      "hasActiveEffects": "@config.hasActiveEffects",
+                      "onGameEnd": "GAME_END",
+                      "onUnitMove": "UNIT_MOVE",
+                      "unitScale": "@config.unitScale",
+                      "effectSpriteUrls": "@config.effectSpriteUrls",
+                      "endTurnEvent": "END_TURN"
                     }
                   ]
                 ]
@@ -1128,99 +1095,99 @@
               "description": "hasActiveEffects prop",
               "tier": "presentation"
             },
+            "effectSpriteUrls": {
+              "type": "[string]",
+              "default": [],
+              "label": "Effect Sprite Urls",
+              "description": "effectSpriteUrls prop",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "scale": {
+              "type": "number",
+              "default": 0.45,
+              "label": "Scale",
+              "description": "Canvas render scale",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "className prop",
+              "tier": "presentation"
+            },
             "entityProp": {
               "type": "BattleBoardEntity",
+              "default": {
+                "gameResult": "victory",
+                "units": [],
+                "selectedUnitId": "",
+                "id": "",
+                "tiles": [],
+                "turn": 0.0,
+                "phase": "observation"
+              },
               "label": "Entity",
               "description": "Entity containing all board data",
               "synonyms": "entity",
               "tier": "presentation",
               "properties": {
-                "features": {
-                  "name": "features",
-                  "type": "array",
-                  "required": false,
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "sprite": {
-                        "name": "sprite",
-                        "type": "string",
-                        "required": false
-                      },
-                      "id": {
-                        "name": "id",
-                        "type": "string",
-                        "required": false
-                      },
-                      "type": {
-                        "name": "type",
-                        "type": "string",
-                        "required": true
-                      },
-                      "elevation": {
-                        "name": "elevation",
-                        "type": "number",
-                        "required": false
-                      },
-                      "color": {
-                        "name": "color",
-                        "type": "string",
-                        "required": false
-                      },
-                      "z": {
-                        "name": "z",
-                        "type": "number",
-                        "required": false
-                      },
-                      "assetUrl": {
-                        "name": "assetUrl",
-                        "type": "string",
-                        "required": false
-                      },
-                      "x": {
-                        "name": "x",
-                        "type": "number",
-                        "required": true
-                      },
-                      "y": {
-                        "name": "y",
-                        "type": "number",
-                        "required": true
-                      }
-                    }
-                  }
-                },
                 "assetManifest": {
                   "name": "assetManifest",
                   "type": "object",
                   "required": false,
                   "properties": {
-                    "effects": {
-                      "name": "effects",
-                      "type": "string",
-                      "required": false
+                    "units": {
+                      "name": "units",
+                      "type": "object",
+                      "required": false,
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "features": {
+                      "name": "features",
+                      "type": "object",
+                      "required": false,
+                      "items": {
+                        "type": "string"
+                      }
                     },
                     "baseUrl": {
                       "name": "baseUrl",
                       "type": "string",
                       "required": true
                     },
-                    "units": {
-                      "name": "units",
-                      "type": "string",
-                      "required": false
-                    },
                     "terrains": {
                       "name": "terrains",
-                      "type": "string",
-                      "required": false
+                      "type": "object",
+                      "required": false,
+                      "items": {
+                        "type": "string"
+                      }
                     },
-                    "features": {
-                      "name": "features",
-                      "type": "string",
-                      "required": false
+                    "effects": {
+                      "name": "effects",
+                      "type": "object",
+                      "required": false,
+                      "items": {
+                        "type": "string"
+                      }
                     }
                   }
+                },
+                "id": {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                "turn": {
+                  "name": "turn",
+                  "type": "number",
+                  "required": true
                 },
                 "units": {
                   "name": "units",
@@ -1229,31 +1196,23 @@
                   "items": {
                     "type": "object",
                     "properties": {
-                      "position": {
-                        "name": "position",
-                        "type": "object",
-                        "required": true,
-                        "properties": {
-                          "x": {
-                            "name": "x",
-                            "type": "number",
-                            "required": true
-                          },
-                          "y": {
-                            "name": "y",
-                            "type": "number",
-                            "required": true
-                          }
-                        }
-                      },
-                      "defense": {
-                        "name": "defense",
-                        "type": "number",
-                        "required": true
-                      },
-                      "id": {
-                        "name": "id",
+                      "team": {
+                        "name": "team",
                         "type": "string",
+                        "required": true,
+                        "values": [
+                          "player",
+                          "enemy"
+                        ]
+                      },
+                      "sprite": {
+                        "name": "sprite",
+                        "type": "string",
+                        "required": false
+                      },
+                      "maxHealth": {
+                        "name": "maxHealth",
+                        "type": "number",
                         "required": true
                       },
                       "health": {
@@ -1266,6 +1225,11 @@
                         "type": "object",
                         "required": false,
                         "properties": {
+                          "frameWidth": {
+                            "name": "frameWidth",
+                            "type": "number",
+                            "required": true
+                          },
                           "sw": {
                             "name": "sw",
                             "type": "string",
@@ -1276,11 +1240,6 @@
                             "type": "string",
                             "required": true
                           },
-                          "frameWidth": {
-                            "name": "frameWidth",
-                            "type": "number",
-                            "required": true
-                          },
                           "frameHeight": {
                             "name": "frameHeight",
                             "type": "number",
@@ -1288,20 +1247,10 @@
                           }
                         }
                       },
-                      "maxHealth": {
-                        "name": "maxHealth",
-                        "type": "number",
-                        "required": true
-                      },
                       "attack": {
                         "name": "attack",
                         "type": "number",
                         "required": true
-                      },
-                      "heroId": {
-                        "name": "heroId",
-                        "type": "string",
-                        "required": false
                       },
                       "name": {
                         "name": "name",
@@ -1315,6 +1264,16 @@
                         "items": {
                           "type": "object",
                           "properties": {
+                            "currentState": {
+                              "name": "currentState",
+                              "type": "string",
+                              "required": true
+                            },
+                            "cooldown": {
+                              "name": "cooldown",
+                              "type": "number",
+                              "required": false
+                            },
                             "states": {
                               "name": "states",
                               "type": "array",
@@ -1327,133 +1286,51 @@
                               "name": "name",
                               "type": "string",
                               "required": true
-                            },
-                            "cooldown": {
-                              "name": "cooldown",
-                              "type": "number",
-                              "required": false
-                            },
-                            "currentState": {
-                              "name": "currentState",
-                              "type": "string",
-                              "required": true
                             }
                           }
                         }
                       },
-                      "unitType": {
-                        "name": "unitType",
+                      "id": {
+                        "name": "id",
                         "type": "string",
-                        "required": false
+                        "required": true
                       },
                       "movement": {
                         "name": "movement",
                         "type": "number",
                         "required": true
                       },
-                      "sprite": {
-                        "name": "sprite",
+                      "defense": {
+                        "name": "defense",
+                        "type": "number",
+                        "required": true
+                      },
+                      "unitType": {
+                        "name": "unitType",
                         "type": "string",
                         "required": false
                       },
-                      "team": {
-                        "name": "team",
+                      "heroId": {
+                        "name": "heroId",
                         "type": "string",
+                        "required": false
+                      },
+                      "position": {
+                        "name": "position",
+                        "type": "object",
                         "required": true,
-                        "values": [
-                          "player",
-                          "enemy"
-                        ]
-                      }
-                    }
-                  }
-                },
-                "backgroundImage": {
-                  "name": "backgroundImage",
-                  "type": "string",
-                  "required": false
-                },
-                "id": {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                },
-                "turn": {
-                  "name": "turn",
-                  "type": "number",
-                  "required": true
-                },
-                "boardWidth": {
-                  "name": "boardWidth",
-                  "type": "number",
-                  "required": false
-                },
-                "boardHeight": {
-                  "name": "boardHeight",
-                  "type": "number",
-                  "required": false
-                },
-                "tiles": {
-                  "name": "tiles",
-                  "type": "array",
-                  "required": true,
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "tileType": {
-                        "name": "tileType",
-                        "type": "string",
-                        "required": false
-                      },
-                      "x": {
-                        "name": "x",
-                        "type": "number",
-                        "required": true
-                      },
-                      "terrainSprite": {
-                        "name": "terrainSprite",
-                        "type": "string",
-                        "required": false
-                      },
-                      "movementCost": {
-                        "name": "movementCost",
-                        "type": "number",
-                        "required": false
-                      },
-                      "z": {
-                        "name": "z",
-                        "type": "number",
-                        "required": false
-                      },
-                      "id": {
-                        "name": "id",
-                        "type": "string",
-                        "required": false
-                      },
-                      "elevation": {
-                        "name": "elevation",
-                        "type": "number",
-                        "required": false
-                      },
-                      "y": {
-                        "name": "y",
-                        "type": "number",
-                        "required": true
-                      },
-                      "passable": {
-                        "name": "passable",
-                        "type": "boolean",
-                        "required": false
-                      },
-                      "terrain": {
-                        "name": "terrain",
-                        "type": "string",
-                        "required": false
-                      },
-                      "type": {
-                        "name": "type",
-                        "type": "string",
-                        "required": false
+                        "properties": {
+                          "y": {
+                            "name": "y",
+                            "type": "number",
+                            "required": true
+                          },
+                          "x": {
+                            "name": "x",
+                            "type": "number",
+                            "required": true
+                          }
+                        }
                       }
                     }
                   }
@@ -1467,10 +1344,65 @@
                     "defeat"
                   ]
                 },
-                "selectedUnitId": {
-                  "name": "selectedUnitId",
-                  "type": "string",
-                  "required": true
+                "features": {
+                  "name": "features",
+                  "type": "array",
+                  "required": false,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "z": {
+                        "name": "z",
+                        "type": "number",
+                        "required": false
+                      },
+                      "y": {
+                        "name": "y",
+                        "type": "number",
+                        "required": true
+                      },
+                      "color": {
+                        "name": "color",
+                        "type": "string",
+                        "required": false
+                      },
+                      "elevation": {
+                        "name": "elevation",
+                        "type": "number",
+                        "required": false
+                      },
+                      "assetUrl": {
+                        "name": "assetUrl",
+                        "type": "string",
+                        "required": false
+                      },
+                      "x": {
+                        "name": "x",
+                        "type": "number",
+                        "required": true
+                      },
+                      "type": {
+                        "name": "type",
+                        "type": "string",
+                        "required": true
+                      },
+                      "sprite": {
+                        "name": "sprite",
+                        "type": "string",
+                        "required": false
+                      },
+                      "id": {
+                        "name": "id",
+                        "type": "string",
+                        "required": false
+                      }
+                    }
+                  }
+                },
+                "boardWidth": {
+                  "name": "boardWidth",
+                  "type": "number",
+                  "required": false
                 },
                 "phase": {
                   "name": "phase",
@@ -1484,32 +1416,88 @@
                     "enemy_turn",
                     "game_over"
                   ]
+                },
+                "boardHeight": {
+                  "name": "boardHeight",
+                  "type": "number",
+                  "required": false
+                },
+                "tiles": {
+                  "name": "tiles",
+                  "type": "array",
+                  "required": true,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "elevation": {
+                        "name": "elevation",
+                        "type": "number",
+                        "required": false
+                      },
+                      "y": {
+                        "name": "y",
+                        "type": "number",
+                        "required": true
+                      },
+                      "tileType": {
+                        "name": "tileType",
+                        "type": "string",
+                        "required": false
+                      },
+                      "terrainSprite": {
+                        "name": "terrainSprite",
+                        "type": "string",
+                        "required": false
+                      },
+                      "type": {
+                        "name": "type",
+                        "type": "string",
+                        "required": false
+                      },
+                      "x": {
+                        "name": "x",
+                        "type": "number",
+                        "required": true
+                      },
+                      "id": {
+                        "name": "id",
+                        "type": "string",
+                        "required": false
+                      },
+                      "movementCost": {
+                        "name": "movementCost",
+                        "type": "number",
+                        "required": false
+                      },
+                      "z": {
+                        "name": "z",
+                        "type": "number",
+                        "required": false
+                      },
+                      "terrain": {
+                        "name": "terrain",
+                        "type": "string",
+                        "required": false
+                      },
+                      "passable": {
+                        "name": "passable",
+                        "type": "boolean",
+                        "required": false
+                      }
+                    }
+                  }
+                },
+                "backgroundImage": {
+                  "name": "backgroundImage",
+                  "type": "string",
+                  "required": false
+                },
+                "selectedUnitId": {
+                  "name": "selectedUnitId",
+                  "type": "string",
+                  "required": true
                 }
               }
-            },
-            "scale": {
-              "type": "number",
-              "default": 0.45,
-              "label": "Scale",
-              "description": "Canvas render scale",
-              "tier": "presentation"
-            },
-            "effectSpriteUrls": {
-              "type": "[string]",
-              "default": [],
-              "label": "Effect Sprite Urls",
-              "description": "effectSpriteUrls prop",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "className prop",
-              "tier": "presentation"
             }
           },
           "scope": "instance"

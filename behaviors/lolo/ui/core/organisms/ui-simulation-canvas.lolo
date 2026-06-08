@@ -11,7 +11,7 @@ orbital SimulationCanvasOrbital {
     constraints : [SimulationCanvasPresetConstraintsItem]
     backgroundColor : string
     showVelocity : boolean
-    parameters : json!
+    parameters : Map string SimulationCanvasPresetParametersValue!
   }
   type SimulationCanvasPresetGravity = {
     x : number!
@@ -33,6 +33,13 @@ orbital SimulationCanvasOrbital {
     bodyB : number!
     length : number!
     stiffness : number!
+  }
+  type SimulationCanvasPresetParametersValue = {
+    value : number!
+    min : number!
+    max : number!
+    step : number!
+    label : string!
   }
 
   entity SimulationCanvasItem [runtime] {
@@ -56,7 +63,7 @@ orbital SimulationCanvasOrbital {
     }
 
     config {
-      preset : SimulationCanvasPreset
+      preset : SimulationCanvasPreset = { id: "", name: "", description: "", domain: "", bodies: [], parameters: {} }
         @label "Preset"
         @description "preset prop"
         @tier "presentation"

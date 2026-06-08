@@ -68,13 +68,25 @@
                 "key": "DISMISS",
                 "name": "Dismiss",
                 "description": "Callback when toast is dismissed",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "ACTION",
                 "name": "Action",
                 "description": "Action button click handler",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -87,19 +99,19 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "notification",
+                      "dismissible": "@config.dismissible",
+                      "className": "@config.className",
                       "onDismiss": "DISMISS",
-                      "actionLabel": "@config.actionLabel",
-                      "badge": "@config.badge",
                       "variant": "@config.variant",
                       "title": "@config.title",
-                      "duration": "@config.duration",
-                      "onAction": "ACTION",
-                      "actionEvent": "ACTION",
-                      "dismissible": "@config.dismissible",
-                      "dismissEvent": "DISMISS",
                       "message": "@config.message",
-                      "className": "@config.className"
+                      "onAction": "ACTION",
+                      "duration": "@config.duration",
+                      "badge": "@config.badge",
+                      "actionEvent": "ACTION",
+                      "dismissEvent": "DISMISS",
+                      "actionLabel": "@config.actionLabel",
+                      "type": "notification"
                     }
                   ]
                 ]
@@ -107,13 +119,6 @@
             ]
           },
           "config": {
-            "duration": {
-              "type": "number",
-              "default": 5000.0,
-              "label": "Duration",
-              "description": "Auto-dismiss duration in milliseconds (0 = no auto-dismiss)",
-              "tier": "presentation"
-            },
             "title": {
               "type": "string",
               "default": "",
@@ -128,20 +133,6 @@
               "description": "Action button label",
               "tier": "presentation"
             },
-            "badge": {
-              "type": "string",
-              "default": "",
-              "label": "Badge",
-              "description": "Badge count (optional)",
-              "tier": "presentation"
-            },
-            "dismissible": {
-              "type": "boolean",
-              "default": true,
-              "label": "Dismissible",
-              "description": "Show dismiss button",
-              "tier": "presentation"
-            },
             "className": {
               "type": "string",
               "default": "",
@@ -149,11 +140,25 @@
               "description": "Additional CSS classes",
               "tier": "presentation"
             },
+            "badge": {
+              "type": "string",
+              "default": "",
+              "label": "Badge",
+              "description": "Badge count (optional)",
+              "tier": "presentation"
+            },
             "message": {
               "type": "string",
               "default": "",
               "label": "Message",
               "description": "Toast message",
+              "tier": "presentation"
+            },
+            "dismissible": {
+              "type": "boolean",
+              "default": true,
+              "label": "Dismissible",
+              "description": "Show dismiss button",
               "tier": "presentation"
             },
             "variant": {
@@ -168,6 +173,13 @@
                 "info",
                 "warning"
               ]
+            },
+            "duration": {
+              "type": "number",
+              "default": 5000.0,
+              "label": "Duration",
+              "description": "Auto-dismiss duration in milliseconds (0 = no auto-dismiss)",
+              "tier": "presentation"
             }
           },
           "scope": "instance"
