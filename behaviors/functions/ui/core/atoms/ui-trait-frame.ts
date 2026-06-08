@@ -39,9 +39,9 @@ export type StdUiTraitFrameEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiTraitFrameConfig {
+  fallback?: unknown;
   /** Default: `""` */
   traitName?: string;
-  fallback?: unknown;
 }
 
 /**

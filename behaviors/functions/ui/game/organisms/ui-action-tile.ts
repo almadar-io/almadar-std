@@ -39,12 +39,14 @@ export type StdUiActionTileEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiActionTileConfig {
+  /** Default: `{}` */
+  categoryColors?: unknown;
+  /** Default: `{"category":"","id":"","name":""}` */
   action?: EntityRow;
-  /** Default: `false` */
-  disabled?: boolean;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
-  categoryColors?: unknown;
+  /** Default: `false` */
+  disabled?: boolean;
 }
 
 /**
@@ -149,10 +151,10 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
                   'main',
                   {
                     'action': '@config.action',
+                    'size': '@config.size',
+                    'disabled': '@config.disabled',
                     'categoryColors': '@config.categoryColors',
                     'type': 'action-tile',
-                    'disabled': '@config.disabled',
-                    'size': '@config.size',
                   },
                 ],
               ],
@@ -160,19 +162,41 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
           ],
         },
         'config': {
+          'categoryColors': {
+            'type': 'Map<string,ActionTileCategoryColorsValue>',
+            'default': {},
+            'label': 'Category Colors',
+            'description': 'Category → color mapping',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'bg': {
+                  'name': 'bg',
+                  'type': 'string',
+                  'required': true,
+                },
+                'border': {
+                  'name': 'border',
+                  'type': 'string',
+                  'required': true,
+                },
+              },
+            },
+          },
           'action': {
             'type': 'ActionTileAction',
+            'default': {
+              'category': '',
+              'id': '',
+              'name': '',
+            },
             'label': 'Action',
             'description': 'The action data',
             'tier': 'presentation',
             'properties': {
-              'iconEmoji': {
-                'name': 'iconEmoji',
-                'type': 'string',
-                'required': false,
-              },
-              'iconUrl': {
-                'name': 'iconUrl',
+              'description': {
+                'name': 'description',
                 'type': 'string',
                 'required': false,
               },
@@ -181,21 +205,6 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
                 'type': 'object',
                 'required': false,
                 'properties': {
-                  'currentState': {
-                    'name': 'currentState',
-                    'type': 'string',
-                    'required': true,
-                  },
-                  'description': {
-                    'name': 'description',
-                    'type': 'string',
-                    'required': false,
-                  },
-                  'name': {
-                    'name': 'name',
-                    'type': 'string',
-                    'required': true,
-                  },
                   'states': {
                     'name': 'states',
                     'type': 'array',
@@ -221,18 +230,33 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
                           'type': 'string',
                           'required': true,
                         },
-                        'guardHint': {
-                          'name': 'guardHint',
-                          'type': 'string',
-                          'required': false,
-                        },
                         'event': {
                           'name': 'event',
                           'type': 'string',
                           'required': true,
                         },
+                        'guardHint': {
+                          'name': 'guardHint',
+                          'type': 'string',
+                          'required': false,
+                        },
                       },
                     },
+                  },
+                  'name': {
+                    'name': 'name',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  'description': {
+                    'name': 'description',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'currentState': {
+                    'name': 'currentState',
+                    'type': 'string',
+                    'required': true,
                   },
                 },
               },
@@ -251,19 +275,17 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
                 'type': 'string',
                 'required': true,
               },
-              'description': {
-                'name': 'description',
+              'iconEmoji': {
+                'name': 'iconEmoji',
+                'type': 'string',
+                'required': false,
+              },
+              'iconUrl': {
+                'name': 'iconUrl',
                 'type': 'string',
                 'required': false,
               },
             },
-          },
-          'disabled': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Disabled',
-            'description': 'Whether the tile is disabled / already used',
-            'tier': 'presentation',
           },
           'size': {
             'type': 'string',
@@ -277,10 +299,11 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
               'lg',
             ],
           },
-          'categoryColors': {
-            'type': 'json',
-            'label': 'Category Colors',
-            'description': 'Category → color mapping',
+          'disabled': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Disabled',
+            'description': 'Whether the tile is disabled / already used',
             'tier': 'presentation',
           },
         },

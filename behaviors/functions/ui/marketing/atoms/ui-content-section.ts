@@ -39,13 +39,12 @@ export type StdUiContentSectionEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiContentSectionConfig {
-  /** Default: `"default"` */
-  background?: 'default' | 'alt' | 'dark' | 'gradient';
   /** Default: `""` */
   className?: string;
   /** Default: `"lg"` */
   padding?: 'sm' | 'md' | 'lg';
-  children?: unknown;
+  /** Default: `"default"` */
+  background?: 'default' | 'alt' | 'dark' | 'gradient';
 }
 
 /**

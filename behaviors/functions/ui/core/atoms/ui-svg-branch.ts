@@ -39,22 +39,22 @@ export type StdUiSvgBranchEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiSvgBranchConfig {
-  /** Default: `"fork"` */
-  variant?: 'fork' | 'merge' | 'diamond';
-  /** Default: `1` */
-  size?: number;
-  /** Default: `0` */
-  x?: number;
   /** Default: `"var(--color-primary)"` */
   color?: string;
   /** Default: `0` */
   y?: number;
   /** Default: `1` */
+  size?: number;
+  /** Default: `"fork"` */
+  variant?: 'fork' | 'merge' | 'diamond';
+  /** Default: `1` */
   opacity?: number;
-  /** Default: `""` */
-  className?: string;
+  /** Default: `0` */
+  x?: number;
   /** Default: `2` */
   branches?: number;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

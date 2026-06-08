@@ -30,7 +30,7 @@ const ALIAS = 'UiRangeSlider';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiRangeSliderEventKey = 'ACTION' | 'CHANGE' | 'FORMAT_VALUE' | 'INIT';
+export type StdUiRangeSliderEventKey = 'ACTION' | 'CHANGE' | 'INIT';
 
 /**
  * Payload shape for the `ACTION` event.
@@ -47,40 +47,33 @@ export interface StdUiRangeSliderChangePayload {
 }
 
 /**
- * Payload shape for the `FORMAT_VALUE` event.
- */
-export interface StdUiRangeSliderFormatValuePayload {
-  value?: number;
-}
-
-/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait
  * without modifying its state-machine topology.
  */
 export interface StdUiRangeSliderConfig {
-  /** Default: `100` */
-  max?: number;
-  actionPayload?: unknown;
-  /** Default: `0` */
-  min?: number;
+  /** Default: `1` */
+  step?: number;
   /** Default: `false` */
   showTicks?: boolean;
-  /** Default: `0` */
-  buffered?: number;
   /** Default: `false` */
   disabled?: boolean;
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
-  /** Default: `""` */
-  className?: string;
   /** Default: `0` */
   value?: number;
   /** Default: `false` */
   showTooltip?: boolean;
-  /** Default: `1` */
-  step?: number;
+  /** Default: `0` */
+  min?: number;
+  /** Default: `0` */
+  buffered?: number;
+  actionPayload?: unknown;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
+  /** Default: `100` */
+  max?: number;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

@@ -39,16 +39,16 @@ export type StdUiStatusDotEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiStatusDotConfig {
-  /** Default: `"offline"` */
-  status?: 'online' | 'offline' | 'away' | 'busy' | 'warning' | 'critical';
-  /** Default: `""` */
-  label?: string;
   /** Default: `""` */
   className?: string;
-  /** Default: `false` */
-  pulse?: boolean;
+  /** Default: `"offline"` */
+  status?: 'online' | 'offline' | 'away' | 'busy' | 'warning' | 'critical';
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
+  /** Default: `false` */
+  pulse?: boolean;
+  /** Default: `""` */
+  label?: string;
 }
 
 /**

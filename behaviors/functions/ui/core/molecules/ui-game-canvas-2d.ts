@@ -30,15 +30,7 @@ const ALIAS = 'UiGameCanvas2d';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiGameCanvas2dEventKey = 'DRAW' | 'INIT' | 'TICK';
-
-/**
- * Payload shape for the `DRAW` event.
- */
-export interface StdUiGameCanvas2dDrawPayload {
-  ctx?: EntityRow;
-  frame?: number;
-}
+export type StdUiGameCanvas2dEventKey = 'INIT' | 'TICK';
 
 /**
  * Payload shape for the `TICK` event.
@@ -56,20 +48,20 @@ export interface StdUiGameCanvas2dTickPayload {
 export interface StdUiGameCanvas2dConfig {
   /** Default: `""` */
   tickEvent?: string;
+  /** Default: `""` */
+  drawEvent?: string;
   /** Default: `600` */
   height?: number;
   /** Default: `""` */
-  drawEvent?: string;
-  /** Default: `""` */
   backgroundImage?: string;
-  /** Default: `800` */
-  width?: number;
+  /** Default: `""` */
+  className?: string;
   /** Default: `""` */
   assetBaseUrl?: string;
   /** Default: `60` */
   fps?: number;
-  /** Default: `""` */
-  className?: string;
+  /** Default: `800` */
+  width?: number;
 }
 
 /**

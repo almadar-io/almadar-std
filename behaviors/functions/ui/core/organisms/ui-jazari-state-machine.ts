@@ -39,19 +39,17 @@ export type StdUiJazariStateMachineEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiJazariStateMachineConfig {
-  traitProp?: unknown;
-  /** Default: `""` */
-  className?: string;
-  schema?: unknown;
-  error?: EntityRow;
   /** Default: `0` */
   traitIndex?: number;
-  /** Default: `[]` */
-  entityFields?: string[];
-  /** Default: `false` */
-  isLoading?: boolean;
   /** Default: `"ltr"` */
   direction?: 'ltr' | 'rtl';
+  /** Default: `false` */
+  isLoading?: boolean;
+  error?: EntityRow;
+  /** Default: `[]` */
+  entityFields?: string[];
+  /** Default: `""` */
+  className?: string;
 }
 
 /**
@@ -155,15 +153,13 @@ export function stdUiJazariStateMachineJazariStateMachineOrbital(params: StdUiJa
                   'render-ui',
                   'main',
                   {
-                    'schema': '@config.schema',
+                    'className': '@config.className',
+                    'traitIndex': '@config.traitIndex',
                     'entityFields': '@config.entityFields',
+                    'direction': '@config.direction',
                     'type': 'jazari-state-machine',
                     'isLoading': '@config.isLoading',
-                    'traitIndex': '@config.traitIndex',
-                    'direction': '@config.direction',
-                    'trait': '@config.traitProp',
                     'error': '@config.error',
-                    'className': '@config.className',
                   },
                 ],
               ],
@@ -171,76 +167,11 @@ export function stdUiJazariStateMachineJazariStateMachineOrbital(params: StdUiJa
           ],
         },
         'config': {
-          'traitProp': {
-            'type': 'json',
-            'label': 'Trait',
-            'description': 'Or pass a single trait directly',
-            'synonyms': 'trait',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'schema': {
-            'type': 'json',
-            'label': 'Schema',
-            'description': 'Full schema — extracts first trait\'s state machine',
-            'tier': 'presentation',
-          },
-          'error': {
-            'type': 'JazariStateMachineError',
-            'label': 'Error',
-            'description': 'Error state',
-            'tier': 'presentation',
-            'properties': {
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-            },
-          },
           'traitIndex': {
             'type': 'number',
             'default': 0,
             'label': 'Trait Index',
             'description': 'Which trait to visualize (default: 0)',
-            'tier': 'presentation',
-          },
-          'entityFields': {
-            'type': '[string]',
-            'default': [],
-            'label': 'Entity Fields',
-            'description': 'Override entity field labels',
-            'tier': 'presentation',
-            'items': {
-              'type': 'string',
-            },
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
             'tier': 'presentation',
           },
           'direction': {
@@ -253,6 +184,58 @@ export function stdUiJazariStateMachineJazariStateMachineOrbital(params: StdUiJa
               'ltr',
               'rtl',
             ],
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
+          'error': {
+            'type': 'JazariStateMachineError',
+            'label': 'Error',
+            'description': 'Error state',
+            'tier': 'presentation',
+            'properties': {
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+            },
+          },
+          'entityFields': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Entity Fields',
+            'description': 'Override entity field labels',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
           },
         },
         'scope': 'instance',

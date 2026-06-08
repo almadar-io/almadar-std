@@ -30,7 +30,7 @@ const ALIAS = 'UiDataGrid';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiDataGridEventKey = 'CHILDREN' | 'INIT' | 'LOAD_MORE' | 'RENDER_ITEM' | 'SELECTION';
+export type StdUiDataGridEventKey = 'INIT' | 'LOAD_MORE' | 'SELECTION';
 
 /**
  * Payload shape for the `SELECTION` event.
@@ -47,77 +47,61 @@ export interface StdUiDataGridLoadMorePayload {
 }
 
 /**
- * Payload shape for the `CHILDREN` event.
- */
-export interface StdUiDataGridChildrenPayload {
-  item?: EntityRow;
-  index?: number;
-}
-
-/**
- * Payload shape for the `RENDER_ITEM` event.
- */
-export interface StdUiDataGridRenderItemPayload {
-  item?: EntityRow;
-  index?: number;
-}
-
-/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait
  * without modifying its state-machine topology.
  */
 export interface StdUiDataGridConfig {
-  /** Default: `false` */
-  scrollX?: boolean;
-  error?: EntityRow;
-  /** Default: `false` */
-  selectable?: boolean;
-  /** Default: `false` */
-  infiniteScroll?: boolean;
+  /** Default: `""` */
+  accepts?: string;
   /** Default: `""` */
   positionEvent?: string;
+  /** Default: `false` */
+  infiniteScroll?: boolean;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `false` */
+  dndRoot?: boolean;
+  error?: EntityRow;
+  /** Default: `""` */
+  dragGroup?: string;
+  /** Default: `false` */
+  hasMore?: boolean;
+  /** Default: `""` */
+  reorderEvent?: string;
+  /** Default: `1` */
+  cols?: number;
+  /** Default: `""` */
+  dndItemIdField?: string;
+  /** Default: `[]` */
+  itemActions?: EntityRow[];
+  /** Default: `false` */
+  sortable?: boolean;
+  /** Default: `false` */
+  scrollX?: boolean;
+  /** Default: `""` */
+  imageField?: string;
+  /** Default: `0` */
+  maxInlineActions?: number;
+  /** Default: `""` */
+  dropEvent?: string;
+  /** Default: `[]` */
+  columns?: EntityRow[];
+  /** Default: `""` */
+  className?: string;
   /** Default: `0` */
   pageSize?: number;
   /** Default: `"md"` */
   gap?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
-  /** Default: `""` */
-  reorderEvent?: string;
-  /** Default: `[]` */
-  itemActions?: EntityRow[];
-  /** Default: `""` */
-  dropEvent?: string;
-  /** Default: `""` */
-  dragGroup?: string;
-  /** Default: `""` */
-  dndItemIdField?: string;
-  /** Default: `false` */
-  dndRoot?: boolean;
-  /** Default: `0` */
-  maxInlineActions?: number;
   /** Default: `280` */
   minCardWidth?: number;
   /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `0` */
-  cols?: number;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `[]` */
-  columns?: EntityRow[];
-  /** Default: `false` */
-  hasMore?: boolean;
-  /** Default: `""` */
-  accepts?: string;
-  /** Default: `false` */
-  sortable?: boolean;
+  selectable?: boolean;
   /** Default: `[]` */
   fields?: EntityRow[];
   /** Default: `"dense"` */
   look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
-  /** Default: `""` */
-  imageField?: string;
 }
 
 /**

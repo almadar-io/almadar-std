@@ -46,24 +46,24 @@ export interface StdUiFormSectionHeaderTogglePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiFormSectionHeaderConfig {
-  /** Default: `""` */
-  title?: string;
-  /** Default: `false` */
-  isCollapsed?: boolean;
-  /** Default: `false` */
-  hasErrors?: boolean;
   /** Default: `false` */
   isComplete?: boolean;
-  /** Default: `""` */
-  badge?: string;
-  /** Default: `""` */
-  className?: string;
   /** Default: `""` */
   subtitle?: string;
   /** Default: `"default"` */
   badgeVariant?: 'default' | 'primary' | 'success' | 'warning' | 'danger';
   /** Default: `"circle"` */
   icon?: string;
+  /** Default: `false` */
+  isCollapsed?: boolean;
+  /** Default: `""` */
+  badge?: string;
+  /** Default: `""` */
+  title?: string;
+  /** Default: `false` */
+  hasErrors?: boolean;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

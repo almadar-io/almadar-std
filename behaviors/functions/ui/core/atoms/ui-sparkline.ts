@@ -41,18 +41,18 @@ export type StdUiSparklineEventKey = 'INIT';
 export interface StdUiSparklineConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `80` */
-  width?: number;
-  /** Default: `false` */
-  fill?: boolean;
-  /** Default: `"auto"` */
-  color?: 'auto' | 'primary' | 'success' | 'warning' | 'error' | 'info' | 'muted';
-  /** Default: `[]` */
-  data?: number[];
   /** Default: `2` */
   strokeWidth?: number;
+  /** Default: `80` */
+  width?: number;
+  /** Default: `"auto"` */
+  color?: 'auto' | 'primary' | 'success' | 'warning' | 'error' | 'info' | 'muted';
   /** Default: `32` */
   height?: number;
+  /** Default: `[]` */
+  data?: number[];
+  /** Default: `false` */
+  fill?: boolean;
 }
 
 /**

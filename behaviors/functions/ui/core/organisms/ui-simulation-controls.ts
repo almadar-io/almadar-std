@@ -82,6 +82,7 @@ export interface StdUiSimulationControlsParameterChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiSimulationControlsConfig {
+  /** Default: `{}` */
   parameters?: unknown;
   /** Default: `false` */
   running?: boolean;
@@ -264,36 +265,76 @@ export function stdUiSimulationControlsSimulationControlsOrbital(params: StdUiSi
               'name': 'Play',
               'description': 'onPlay prop',
               'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
             },
             {
               'key': 'PAUSE',
               'name': 'Pause',
               'description': 'onPause prop',
               'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
             },
             {
               'key': 'STEP',
               'name': 'Step',
               'description': 'onStep prop',
               'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
             },
             {
               'key': 'RESET',
               'name': 'Reset',
               'description': 'onReset prop',
               'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
             },
             {
               'key': 'SPEED_CHANGE',
               'name': 'Speed Change',
               'description': 'onSpeedChange prop',
               'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'speed',
+                  'type': 'number',
+                },
+              ],
             },
             {
               'key': 'PARAMETER_CHANGE',
               'name': 'Parameter Change',
               'description': 'onParameterChange prop',
               'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'name',
+                  'type': 'string',
+                },
+                {
+                  'name': 'value',
+                  'type': 'number',
+                },
+              ],
             },
           ],
           'transitions': [
@@ -306,17 +347,17 @@ export function stdUiSimulationControlsSimulationControlsOrbital(params: StdUiSi
                   'render-ui',
                   'main',
                   {
-                    'speed': '@config.speed',
-                    'parameters': '@config.parameters',
-                    'onStep': 'STEP',
-                    'onSpeedChange': 'SPEED_CHANGE',
-                    'type': 'simulation-controls',
-                    'onPause': 'PAUSE',
-                    'onPlay': 'PLAY',
                     'onReset': 'RESET',
-                    'onParameterChange': 'PARAMETER_CHANGE',
-                    'className': '@config.className',
+                    'onPlay': 'PLAY',
+                    'onPause': 'PAUSE',
                     'running': '@config.running',
+                    'className': '@config.className',
+                    'onSpeedChange': 'SPEED_CHANGE',
+                    'speed': '@config.speed',
+                    'type': 'simulation-controls',
+                    'onStep': 'STEP',
+                    'parameters': '@config.parameters',
+                    'onParameterChange': 'PARAMETER_CHANGE',
                   },
                 ],
               ],
@@ -325,10 +366,41 @@ export function stdUiSimulationControlsSimulationControlsOrbital(params: StdUiSi
         },
         'config': {
           'parameters': {
-            'type': 'json',
+            'type': 'Map<string,SimulationControlsParametersValue>',
+            'default': {},
             'label': 'Parameters',
             'description': 'parameters prop',
             'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': true,
+                },
+                'step': {
+                  'name': 'step',
+                  'type': 'number',
+                  'required': true,
+                },
+                'max': {
+                  'name': 'max',
+                  'type': 'number',
+                  'required': true,
+                },
+                'value': {
+                  'name': 'value',
+                  'type': 'number',
+                  'required': true,
+                },
+                'min': {
+                  'name': 'min',
+                  'type': 'number',
+                  'required': true,
+                },
+              },
+            },
           },
           'running': {
             'type': 'boolean',

@@ -46,20 +46,20 @@ export interface StdUiOrbitalVisualizationClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiOrbitalVisualizationConfig {
-  /** Default: `true` */
-  showLabel?: boolean;
+  schema?: EntityRow;
+  error?: EntityRow;
   /** Default: `0` */
   complexity?: number;
-  error?: EntityRow;
-  schema?: EntityRow;
+  /** Default: `true` */
+  showLabel?: boolean;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg' | 'xl';
-  /** Default: `true` */
-  animated?: boolean;
-  /** Default: `false` */
-  isLoading?: boolean;
   /** Default: `""` */
   className?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `true` */
+  animated?: boolean;
 }
 
 /**
@@ -171,6 +171,12 @@ export function stdUiOrbitalVisualizationOrbitalVisualizationOrbital(params: Std
               'name': 'Click',
               'description': 'Click handler',
               'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
             },
           ],
           'transitions': [
@@ -188,17 +194,17 @@ export function stdUiOrbitalVisualizationOrbitalVisualizationOrbital(params: Std
                   'render-ui',
                   'main',
                   {
-                    'type': 'orbital-visualization',
+                    'error': '@config.error',
+                    'isLoading': '@config.isLoading',
                     'entity': 'OrbitalVisualizationItem',
+                    'animated': '@config.animated',
+                    'schema': '@config.schema',
+                    'type': 'orbital-visualization',
+                    'size': '@config.size',
                     'complexity': '@config.complexity',
+                    'showLabel': '@config.showLabel',
                     'onClick': 'CLICK',
                     'className': '@config.className',
-                    'schema': '@config.schema',
-                    'animated': '@config.animated',
-                    'error': '@config.error',
-                    'showLabel': '@config.showLabel',
-                    'size': '@config.size',
-                    'isLoading': '@config.isLoading',
                   },
                 ],
               ],
@@ -206,54 +212,28 @@ export function stdUiOrbitalVisualizationOrbitalVisualizationOrbital(params: Std
           ],
         },
         'config': {
-          'showLabel': {
-            'type': 'boolean',
-            'default': true,
-            'label': 'Show Label',
-            'description': 'Show complexity label',
-            'tier': 'presentation',
-          },
-          'complexity': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Complexity',
-            'description': 'Direct complexity override (1-100+)',
-            'tier': 'presentation',
-          },
-          'error': {
-            'type': 'OrbitalVisualizationError',
-            'label': 'Error',
-            'description': 'Error state',
-            'tier': 'presentation',
-            'properties': {
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-            },
-          },
           'schema': {
             'type': 'OrbitalVisualizationSchema',
             'label': 'Schema',
             'description': 'Full KFlow schema object',
             'tier': 'presentation',
             'properties': {
+              'traits': {
+                'name': 'traits',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'string',
+                },
+              },
+              'dataEntities': {
+                'name': 'dataEntities',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'string',
+                },
+              },
               'ui': {
                 'name': 'ui',
                 'type': 'object',
@@ -279,23 +259,49 @@ export function stdUiOrbitalVisualizationOrbitalVisualizationOrbital(params: Std
                   },
                 },
               },
-              'traits': {
-                'name': 'traits',
-                'type': 'array',
+            },
+          },
+          'error': {
+            'type': 'OrbitalVisualizationError',
+            'label': 'Error',
+            'description': 'Error state',
+            'tier': 'presentation',
+            'properties': {
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
                 'required': false,
-                'items': {
-                  'type': 'string',
-                },
               },
-              'dataEntities': {
-                'name': 'dataEntities',
-                'type': 'array',
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
                 'required': false,
-                'items': {
-                  'type': 'string',
-                },
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
               },
             },
+          },
+          'complexity': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Complexity',
+            'description': 'Direct complexity override (1-100+)',
+            'tier': 'presentation',
+          },
+          'showLabel': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Show Label',
+            'description': 'Show complexity label',
+            'tier': 'presentation',
           },
           'size': {
             'type': 'string',
@@ -310,11 +316,11 @@ export function stdUiOrbitalVisualizationOrbitalVisualizationOrbital(params: Std
               'xl',
             ],
           },
-          'animated': {
-            'type': 'boolean',
-            'default': true,
-            'label': 'Animated',
-            'description': 'Animation enabled',
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
           'isLoading': {
@@ -324,11 +330,11 @@ export function stdUiOrbitalVisualizationOrbitalVisualizationOrbital(params: Std
             'description': 'Loading state indicator',
             'tier': 'presentation',
           },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
+          'animated': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Animated',
+            'description': 'Animation enabled',
             'tier': 'presentation',
           },
         },

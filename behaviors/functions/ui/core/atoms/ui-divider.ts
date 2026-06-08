@@ -40,13 +40,13 @@ export type StdUiDividerEventKey = 'INIT';
  */
 export interface StdUiDividerConfig {
   /** Default: `""` */
-  label?: string;
-  /** Default: `"horizontal"` */
-  orientation?: 'horizontal' | 'vertical';
-  /** Default: `""` */
   className?: string;
   /** Default: `"solid"` */
   variant?: 'solid' | 'dashed' | 'dotted';
+  /** Default: `""` */
+  label?: string;
+  /** Default: `"horizontal"` */
+  orientation?: 'horizontal' | 'vertical';
 }
 
 /**

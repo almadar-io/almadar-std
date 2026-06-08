@@ -39,29 +39,27 @@ export type StdUiSplitEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiSplitConfig {
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `"md"` */
-  stackBreakpoint?: 'sm' | 'md' | 'lg' | 'xl';
   /** Default: `""` */
   className?: string;
   /** Default: `false` */
   reverse?: boolean;
   /** Default: `true` */
   stackOnMobile?: boolean;
-  /** Default: `""` */
-  rightClassName?: string;
   /** Default: `"md"` */
   gap?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
-  /** Default: `[]` */
-  children?: EntityRow[];
+  /** Default: `""` */
+  rightClassName?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `""` */
+  leftClassName?: string;
+  /** Default: `"stretch"` */
+  align?: 'start' | 'center' | 'end' | 'stretch';
   error?: EntityRow;
   /** Default: `"1:1"` */
   ratio?: '1:1' | '1:2' | '2:1' | '1:3' | '3:1' | '1:4' | '4:1' | '2:3' | '3:2';
-  /** Default: `"stretch"` */
-  align?: 'start' | 'center' | 'end' | 'stretch';
-  /** Default: `""` */
-  leftClassName?: string;
+  /** Default: `"md"` */
+  stackBreakpoint?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
 /**
@@ -170,20 +168,29 @@ export function stdUiSplitSplitOrbital(params: StdUiSplitSplitOrbitalParams = {}
                   'render-ui',
                   'main',
                   {
-                    'isLoading': '@config.isLoading',
-                    'reverse': '@config.reverse',
-                    'stackOnMobile': '@config.stackOnMobile',
-                    'children': '@config.children',
-                    'className': '@config.className',
-                    'entity': 'SplitItem',
-                    'type': 'split',
-                    'gap': '@config.gap',
-                    'align': '@config.align',
-                    'ratio': '@config.ratio',
-                    'rightClassName': '@config.rightClassName',
                     'leftClassName': '@config.leftClassName',
+                    'rightClassName': '@config.rightClassName',
+                    'entity': 'SplitItem',
                     'stackBreakpoint': '@config.stackBreakpoint',
+                    'gap': '@config.gap',
+                    'type': 'split',
+                    'align': '@config.align',
+                    'className': '@config.className',
+                    'stackOnMobile': '@config.stackOnMobile',
+                    'isLoading': '@config.isLoading',
+                    'ratio': '@config.ratio',
+                    'reverse': '@config.reverse',
                     'error': '@config.error',
+                    'children': [
+                      {
+                        'content': '',
+                        'type': 'text',
+                      },
+                      {
+                        'content': '',
+                        'type': 'text',
+                      },
+                    ],
                   },
                 ],
               ],
@@ -191,26 +198,6 @@ export function stdUiSplitSplitOrbital(params: StdUiSplitSplitOrbitalParams = {}
           ],
         },
         'config': {
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
-            'tier': 'presentation',
-          },
-          'stackBreakpoint': {
-            'type': 'string',
-            'default': 'md',
-            'label': 'Stack Breakpoint',
-            'description': 'Breakpoint to switch from stacked to side-by-side',
-            'tier': 'presentation',
-            'values': [
-              'sm',
-              'md',
-              'lg',
-              'xl',
-            ],
-          },
           'className': {
             'type': 'string',
             'default': '',
@@ -232,13 +219,6 @@ export function stdUiSplitSplitOrbital(params: StdUiSplitSplitOrbitalParams = {}
             'description': 'Stack vertically on mobile',
             'tier': 'presentation',
           },
-          'rightClassName': {
-            'type': 'string',
-            'default': '',
-            'label': 'Right Class Name',
-            'description': 'Right/second panel class name',
-            'tier': 'presentation',
-          },
           'gap': {
             'type': 'string',
             'default': 'md',
@@ -253,15 +233,39 @@ export function stdUiSplitSplitOrbital(params: StdUiSplitSplitOrbitalParams = {}
               'xl',
             ],
           },
-          'children': {
-            'type': '[node]',
-            'default': [],
-            'label': 'Children',
-            'description': 'Exactly two children: [left, right]',
+          'rightClassName': {
+            'type': 'string',
+            'default': '',
+            'label': 'Right Class Name',
+            'description': 'Right/second panel class name',
             'tier': 'presentation',
-            'items': {
-              'type': 'string',
-            },
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
+          'leftClassName': {
+            'type': 'string',
+            'default': '',
+            'label': 'Left Class Name',
+            'description': 'Left/first panel class name',
+            'tier': 'presentation',
+          },
+          'align': {
+            'type': 'string',
+            'default': 'stretch',
+            'label': 'Align',
+            'description': 'Align items vertically',
+            'tier': 'presentation',
+            'values': [
+              'start',
+              'center',
+              'end',
+              'stretch',
+            ],
           },
           'error': {
             'type': 'SplitError',
@@ -269,16 +273,6 @@ export function stdUiSplitSplitOrbital(params: StdUiSplitSplitOrbitalParams = {}
             'description': 'Error state',
             'tier': 'presentation',
             'properties': {
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
               'name': {
                 'name': 'name',
                 'type': 'string',
@@ -288,6 +282,16 @@ export function stdUiSplitSplitOrbital(params: StdUiSplitSplitOrbitalParams = {}
                 'name': 'message',
                 'type': 'string',
                 'required': true,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
               },
             },
           },
@@ -309,25 +313,18 @@ export function stdUiSplitSplitOrbital(params: StdUiSplitSplitOrbitalParams = {}
               '3:2',
             ],
           },
-          'align': {
+          'stackBreakpoint': {
             'type': 'string',
-            'default': 'stretch',
-            'label': 'Align',
-            'description': 'Align items vertically',
+            'default': 'md',
+            'label': 'Stack Breakpoint',
+            'description': 'Breakpoint to switch from stacked to side-by-side',
             'tier': 'presentation',
             'values': [
-              'start',
-              'center',
-              'end',
-              'stretch',
+              'sm',
+              'md',
+              'lg',
+              'xl',
             ],
-          },
-          'leftClassName': {
-            'type': 'string',
-            'default': '',
-            'label': 'Left Class Name',
-            'description': 'Left/first panel class name',
-            'tier': 'presentation',
           },
         },
         'scope': 'instance',

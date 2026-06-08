@@ -42,14 +42,13 @@ export interface StdUiFormFieldConfig {
   /** Default: `""` */
   error?: string;
   /** Default: `""` */
-  label?: string;
+  hint?: string;
+  /** Default: `""` */
+  className?: string;
   /** Default: `false` */
   required?: boolean;
   /** Default: `""` */
-  hint?: string;
-  children?: unknown;
-  /** Default: `""` */
-  className?: string;
+  label?: string;
 }
 
 /**

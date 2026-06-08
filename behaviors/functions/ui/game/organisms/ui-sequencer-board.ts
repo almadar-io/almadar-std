@@ -54,9 +54,11 @@ export interface StdUiSequencerBoardCompletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiSequencerBoardConfig {
+  /** Default: `{}` */
+  categoryColors?: unknown;
   /** Default: `1000` */
   stepDurationMs?: number;
-  categoryColors?: unknown;
+  entityProp?: EntityRow;
 }
 
 /**
@@ -187,12 +189,31 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
               'name': 'Play',
               'description': 'Emits UI:{playEvent} with { sequence: string[] }',
               'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'sequence',
+                  'type': '[object]',
+                  'required': true,
+                },
+              ],
             },
             {
               'key': 'COMPLETE',
               'name': 'Complete',
               'description': 'Emits UI:{completeEvent} with { success: boolean }',
               'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'success',
+                  'type': 'boolean',
+                  'required': true,
+                },
+                {
+                  'name': 'sequence',
+                  'type': '[object]',
+                  'required': true,
+                },
+              ],
             },
           ],
           'transitions': [
@@ -202,20 +223,15 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
               'event': 'INIT',
               'effects': [
                 [
-                  'fetch',
-                  'SequencerBoardItem',
-                  {},
-                ],
-                [
                   'render-ui',
                   'main',
                   {
-                    'completeEvent': 'COMPLETE',
                     'playEvent': 'PLAY',
                     'type': 'sequencer-board',
-                    'entity': '@entity',
-                    'categoryColors': '@config.categoryColors',
+                    'entity': '@config.entityProp',
+                    'completeEvent': 'COMPLETE',
                     'stepDurationMs': '@config.stepDurationMs',
+                    'categoryColors': '@config.categoryColors',
                   },
                 ],
               ],
@@ -223,6 +239,28 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
           ],
         },
         'config': {
+          'categoryColors': {
+            'type': 'Map<string,SequencerBoardCategoryColorsValue>',
+            'default': {},
+            'label': 'Category Colors',
+            'description': 'Category → color mapping',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'border': {
+                  'name': 'border',
+                  'type': 'string',
+                  'required': true,
+                },
+                'bg': {
+                  'name': 'bg',
+                  'type': 'string',
+                  'required': true,
+                },
+              },
+            },
+          },
           'stepDurationMs': {
             'type': 'number',
             'default': 1000,
@@ -230,11 +268,207 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
             'description': 'Playback speed in ms per step',
             'tier': 'presentation',
           },
-          'categoryColors': {
-            'type': 'json',
-            'label': 'Category Colors',
-            'description': 'Category → color mapping',
+          'entityProp': {
+            'type': 'SequencerBoardEntity',
+            'label': 'Entity',
+            'description': 'Puzzle data. Also accepts the canonical `EntityRow` the compiler binds (and arrays); narrowed to `SequencerPuzzleEntity` internally.',
+            'synonyms': 'entity',
             'tier': 'presentation',
+            'properties': {
+              'maxSlots': {
+                'name': 'maxSlots',
+                'type': 'number',
+                'required': true,
+              },
+              'path': {
+                'name': 'path',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'y': {
+                      'name': 'y',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'x': {
+                      'name': 'x',
+                      'type': 'number',
+                      'required': true,
+                    },
+                  },
+                },
+              },
+              'allowDuplicates': {
+                'name': 'allowDuplicates',
+                'type': 'boolean',
+                'required': false,
+              },
+              'solutions': {
+                'name': 'solutions',
+                'type': 'array',
+                'required': true,
+                'items': {
+                  'type': 'array',
+                  'items': {
+                    'type': 'string',
+                  },
+                },
+              },
+              'description': {
+                'name': 'description',
+                'type': 'string',
+                'required': true,
+              },
+              'headerImage': {
+                'name': 'headerImage',
+                'type': 'string',
+                'required': false,
+              },
+              'theme': {
+                'name': 'theme',
+                'type': 'object',
+                'required': false,
+                'properties': {
+                  'background': {
+                    'name': 'background',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'accentColor': {
+                    'name': 'accentColor',
+                    'type': 'string',
+                    'required': false,
+                  },
+                },
+              },
+              'availableActions': {
+                'name': 'availableActions',
+                'type': 'array',
+                'required': true,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'stateMachine': {
+                      'name': 'stateMachine',
+                      'type': 'object',
+                      'required': false,
+                      'properties': {
+                        'transitions': {
+                          'name': 'transitions',
+                          'type': 'array',
+                          'required': true,
+                          'items': {
+                            'type': 'object',
+                            'properties': {
+                              'from': {
+                                'name': 'from',
+                                'type': 'string',
+                                'required': true,
+                              },
+                              'event': {
+                                'name': 'event',
+                                'type': 'string',
+                                'required': true,
+                              },
+                              'to': {
+                                'name': 'to',
+                                'type': 'string',
+                                'required': true,
+                              },
+                              'guardHint': {
+                                'name': 'guardHint',
+                                'type': 'string',
+                                'required': false,
+                              },
+                            },
+                          },
+                        },
+                        'currentState': {
+                          'name': 'currentState',
+                          'type': 'string',
+                          'required': true,
+                        },
+                        'description': {
+                          'name': 'description',
+                          'type': 'string',
+                          'required': false,
+                        },
+                        'states': {
+                          'name': 'states',
+                          'type': 'array',
+                          'required': true,
+                          'items': {
+                            'type': 'string',
+                          },
+                        },
+                        'name': {
+                          'name': 'name',
+                          'type': 'string',
+                          'required': true,
+                        },
+                      },
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'category': {
+                      'name': 'category',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'description': {
+                      'name': 'description',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'iconUrl': {
+                      'name': 'iconUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'id': {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'iconEmoji': {
+                      'name': 'iconEmoji',
+                      'type': 'string',
+                      'required': false,
+                    },
+                  },
+                },
+              },
+              'title': {
+                'name': 'title',
+                'type': 'string',
+                'required': true,
+              },
+              'successMessage': {
+                'name': 'successMessage',
+                'type': 'string',
+                'required': false,
+              },
+              'failMessage': {
+                'name': 'failMessage',
+                'type': 'string',
+                'required': false,
+              },
+              'hint': {
+                'name': 'hint',
+                'type': 'string',
+                'required': false,
+              },
+              'id': {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+            },
           },
         },
         'scope': 'instance',

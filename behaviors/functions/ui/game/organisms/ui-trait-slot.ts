@@ -67,31 +67,32 @@ export interface StdUiTraitSlotRemovePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiTraitSlotConfig {
+  /** Default: `{}` */
   categoryColors?: unknown;
-  /** Default: `true` */
-  showTooltip?: boolean;
+  error?: EntityRow;
+  equippedItem?: EntityRow;
+  /** Default: `"correct"` */
+  feedback?: 'correct' | 'wrong';
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
+  /** Default: `0` */
+  slotNumber?: number;
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `""` */
   className?: string;
-  equippedItem?: EntityRow;
-  /** Default: `"correct"` */
-  feedback?: 'correct' | 'wrong';
-  error?: EntityRow;
-  /** Default: `""` */
-  lockLabel?: string;
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
   /** Default: `false` */
   draggable?: boolean;
+  /** Default: `true` */
+  showTooltip?: boolean;
+  /** Default: `false` */
+  locked?: boolean;
   /** Default: `false` */
   selected?: boolean;
   /** Default: `""` */
   tooltipFrameUrl?: string;
-  /** Default: `0` */
-  slotNumber?: number;
-  /** Default: `false` */
-  locked?: boolean;
+  /** Default: `""` */
+  lockLabel?: string;
 }
 
 /**
@@ -182,6 +183,86 @@ export function stdUiTraitSlotTraitSlotOrbital(params: StdUiTraitSlotTraitSlotOr
               {
                 'name': 'item',
                 'type': 'object',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'name',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'category',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'description',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'iconEmoji',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'iconUrl',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'stateMachine',
+                    'type': 'object',
+                    'properties': [
+                      {
+                        'name': 'name',
+                        'type': 'string',
+                        'required': true,
+                      },
+                      {
+                        'name': 'states',
+                        'type': '[string]',
+                        'required': true,
+                      },
+                      {
+                        'name': 'currentState',
+                        'type': 'string',
+                        'required': true,
+                      },
+                      {
+                        'name': 'transitions',
+                        'type': '[object]',
+                        'required': true,
+                        'properties': [
+                          {
+                            'name': 'from',
+                            'type': 'string',
+                            'required': true,
+                          },
+                          {
+                            'name': 'to',
+                            'type': 'string',
+                            'required': true,
+                          },
+                          {
+                            'name': 'event',
+                            'type': 'string',
+                            'required': true,
+                          },
+                          {
+                            'name': 'guardHint',
+                            'type': 'string',
+                          },
+                        ],
+                      },
+                      {
+                        'name': 'description',
+                        'type': 'string',
+                      },
+                    ],
+                  },
+                ],
               },
             ],
           },
@@ -194,6 +275,86 @@ export function stdUiTraitSlotTraitSlotOrbital(params: StdUiTraitSlotTraitSlotOr
               {
                 'name': 'item',
                 'type': 'object',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'name',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'category',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'description',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'iconEmoji',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'iconUrl',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'stateMachine',
+                    'type': 'object',
+                    'properties': [
+                      {
+                        'name': 'name',
+                        'type': 'string',
+                        'required': true,
+                      },
+                      {
+                        'name': 'states',
+                        'type': '[string]',
+                        'required': true,
+                      },
+                      {
+                        'name': 'currentState',
+                        'type': 'string',
+                        'required': true,
+                      },
+                      {
+                        'name': 'transitions',
+                        'type': '[object]',
+                        'required': true,
+                        'properties': [
+                          {
+                            'name': 'from',
+                            'type': 'string',
+                            'required': true,
+                          },
+                          {
+                            'name': 'to',
+                            'type': 'string',
+                            'required': true,
+                          },
+                          {
+                            'name': 'event',
+                            'type': 'string',
+                            'required': true,
+                          },
+                          {
+                            'name': 'guardHint',
+                            'type': 'string',
+                          },
+                        ],
+                      },
+                      {
+                        'name': 'description',
+                        'type': 'string',
+                      },
+                    ],
+                  },
+                ],
               },
             ],
           },
@@ -241,24 +402,210 @@ export function stdUiTraitSlotTraitSlotOrbital(params: StdUiTraitSlotTraitSlotOr
               'name': 'Item Drop',
               'description': '-- Drag and drop --',
               'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'item',
+                  'type': 'object',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'category',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'description',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'iconEmoji',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'iconUrl',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'stateMachine',
+                      'type': 'object',
+                      'properties': [
+                        {
+                          'name': 'name',
+                          'type': 'string',
+                          'required': true,
+                        },
+                        {
+                          'name': 'states',
+                          'type': '[string]',
+                          'required': true,
+                        },
+                        {
+                          'name': 'currentState',
+                          'type': 'string',
+                          'required': true,
+                        },
+                        {
+                          'name': 'transitions',
+                          'type': '[object]',
+                          'required': true,
+                          'properties': [
+                            {
+                              'name': 'from',
+                              'type': 'string',
+                              'required': true,
+                            },
+                            {
+                              'name': 'to',
+                              'type': 'string',
+                              'required': true,
+                            },
+                            {
+                              'name': 'event',
+                              'type': 'string',
+                              'required': true,
+                            },
+                            {
+                              'name': 'guardHint',
+                              'type': 'string',
+                            },
+                          ],
+                        },
+                        {
+                          'name': 'description',
+                          'type': 'string',
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
             },
             {
               'key': 'DRAG_START',
               'name': 'Drag Start',
               'description': 'Called when drag starts from this slot',
               'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'item',
+                  'type': 'object',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'category',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'description',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'iconEmoji',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'iconUrl',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'stateMachine',
+                      'type': 'object',
+                      'properties': [
+                        {
+                          'name': 'name',
+                          'type': 'string',
+                          'required': true,
+                        },
+                        {
+                          'name': 'states',
+                          'type': '[string]',
+                          'required': true,
+                        },
+                        {
+                          'name': 'currentState',
+                          'type': 'string',
+                          'required': true,
+                        },
+                        {
+                          'name': 'transitions',
+                          'type': '[object]',
+                          'required': true,
+                          'properties': [
+                            {
+                              'name': 'from',
+                              'type': 'string',
+                              'required': true,
+                            },
+                            {
+                              'name': 'to',
+                              'type': 'string',
+                              'required': true,
+                            },
+                            {
+                              'name': 'event',
+                              'type': 'string',
+                              'required': true,
+                            },
+                            {
+                              'name': 'guardHint',
+                              'type': 'string',
+                            },
+                          ],
+                        },
+                        {
+                          'name': 'description',
+                          'type': 'string',
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
             },
             {
               'key': 'CLICK',
               'name': 'Click',
               'description': '-- Callbacks --',
               'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'slotNumber',
+                  'type': 'number',
+                  'required': true,
+                },
+              ],
             },
             {
               'key': 'REMOVE',
               'name': 'Remove',
               'description': 'Remove handler',
               'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'slotNumber',
+                  'type': 'number',
+                  'required': true,
+                },
+              ],
             },
           ],
           'transitions': [
@@ -276,28 +623,28 @@ export function stdUiTraitSlotTraitSlotOrbital(params: StdUiTraitSlotTraitSlotOr
                   'render-ui',
                   'main',
                   {
-                    'onDragStart': 'DRAG_START',
-                    'className': '@config.className',
-                    'size': '@config.size',
-                    'tooltipFrameUrl': '@config.tooltipFrameUrl',
-                    'showTooltip': '@config.showTooltip',
                     'selected': '@config.selected',
-                    'onClick': 'CLICK',
-                    'clickEvent': 'CLICK',
                     'removeEvent': 'REMOVE',
-                    'entity': 'TraitSlotItem',
-                    'onItemDrop': 'ITEM_DROP',
-                    'slotNumber': '@config.slotNumber',
-                    'onRemove': 'REMOVE',
-                    'isLoading': '@config.isLoading',
-                    'draggable': '@config.draggable',
-                    'feedback': '@config.feedback',
-                    'type': 'trait-slot',
-                    'lockLabel': '@config.lockLabel',
+                    'className': '@config.className',
+                    'tooltipFrameUrl': '@config.tooltipFrameUrl',
                     'categoryColors': '@config.categoryColors',
-                    'equippedItem': '@config.equippedItem',
+                    'clickEvent': 'CLICK',
+                    'showTooltip': '@config.showTooltip',
+                    'onItemDrop': 'ITEM_DROP',
+                    'lockLabel': '@config.lockLabel',
+                    'type': 'trait-slot',
+                    'onDragStart': 'DRAG_START',
                     'error': '@config.error',
                     'locked': '@config.locked',
+                    'draggable': '@config.draggable',
+                    'size': '@config.size',
+                    'isLoading': '@config.isLoading',
+                    'feedback': '@config.feedback',
+                    'entity': 'TraitSlotItem',
+                    'equippedItem': '@config.equippedItem',
+                    'slotNumber': '@config.slotNumber',
+                    'onClick': 'CLICK',
+                    'onRemove': 'REMOVE',
                   },
                 ],
               ],
@@ -306,16 +653,181 @@ export function stdUiTraitSlotTraitSlotOrbital(params: StdUiTraitSlotTraitSlotOr
         },
         'config': {
           'categoryColors': {
-            'type': 'json',
+            'type': 'Map<string,TraitSlotCategoryColorsValue>',
+            'default': {},
             'label': 'Category Colors',
             'description': 'Category → color mapping',
             'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'border': {
+                  'name': 'border',
+                  'type': 'string',
+                  'required': true,
+                },
+                'bg': {
+                  'name': 'bg',
+                  'type': 'string',
+                  'required': true,
+                },
+              },
+            },
           },
-          'showTooltip': {
-            'type': 'boolean',
-            'default': true,
-            'label': 'Show Tooltip',
-            'description': 'Show tooltip on hover',
+          'error': {
+            'type': 'TraitSlotError',
+            'label': 'Error',
+            'description': 'Error state',
+            'tier': 'presentation',
+            'properties': {
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+            },
+          },
+          'equippedItem': {
+            'type': 'TraitSlotEquippedItem',
+            'label': 'Equipped Item',
+            'description': 'Currently equipped item, if any',
+            'tier': 'presentation',
+            'properties': {
+              'category': {
+                'name': 'category',
+                'type': 'string',
+                'required': true,
+              },
+              'iconEmoji': {
+                'name': 'iconEmoji',
+                'type': 'string',
+                'required': false,
+              },
+              'id': {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              'stateMachine': {
+                'name': 'stateMachine',
+                'type': 'object',
+                'required': false,
+                'properties': {
+                  'states': {
+                    'name': 'states',
+                    'type': 'array',
+                    'required': true,
+                    'items': {
+                      'type': 'string',
+                    },
+                  },
+                  'transitions': {
+                    'name': 'transitions',
+                    'type': 'array',
+                    'required': true,
+                    'items': {
+                      'type': 'object',
+                      'properties': {
+                        'to': {
+                          'name': 'to',
+                          'type': 'string',
+                          'required': true,
+                        },
+                        'guardHint': {
+                          'name': 'guardHint',
+                          'type': 'string',
+                          'required': false,
+                        },
+                        'from': {
+                          'name': 'from',
+                          'type': 'string',
+                          'required': true,
+                        },
+                        'event': {
+                          'name': 'event',
+                          'type': 'string',
+                          'required': true,
+                        },
+                      },
+                    },
+                  },
+                  'name': {
+                    'name': 'name',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  'currentState': {
+                    'name': 'currentState',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  'description': {
+                    'name': 'description',
+                    'type': 'string',
+                    'required': false,
+                  },
+                },
+              },
+              'description': {
+                'name': 'description',
+                'type': 'string',
+                'required': false,
+              },
+              'iconUrl': {
+                'name': 'iconUrl',
+                'type': 'string',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': true,
+              },
+            },
+          },
+          'feedback': {
+            'type': 'string',
+            'default': 'correct',
+            'label': 'Feedback',
+            'description': 'Per-slot correctness feedback after a failed attempt',
+            'tier': 'presentation',
+            'values': [
+              'correct',
+              'wrong',
+            ],
+          },
+          'size': {
+            'type': 'string',
+            'default': 'md',
+            'label': 'Size',
+            'description': 'Size variant',
+            'tier': 'presentation',
+            'values': [
+              'sm',
+              'md',
+              'lg',
+            ],
+          },
+          'slotNumber': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Slot Number',
+            'description': 'Slot index (1-based)',
             'tier': 'presentation',
           },
           'isLoading': {
@@ -332,167 +844,25 @@ export function stdUiTraitSlotTraitSlotOrbital(params: StdUiTraitSlotTraitSlotOr
             'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
-          'equippedItem': {
-            'type': 'TraitSlotEquippedItem',
-            'label': 'Equipped Item',
-            'description': 'Currently equipped item, if any',
-            'tier': 'presentation',
-            'properties': {
-              'iconEmoji': {
-                'name': 'iconEmoji',
-                'type': 'string',
-                'required': false,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': true,
-              },
-              'iconUrl': {
-                'name': 'iconUrl',
-                'type': 'string',
-                'required': false,
-              },
-              'id': {
-                'name': 'id',
-                'type': 'string',
-                'required': true,
-              },
-              'description': {
-                'name': 'description',
-                'type': 'string',
-                'required': false,
-              },
-              'category': {
-                'name': 'category',
-                'type': 'string',
-                'required': true,
-              },
-              'stateMachine': {
-                'name': 'stateMachine',
-                'type': 'object',
-                'required': false,
-                'properties': {
-                  'currentState': {
-                    'name': 'currentState',
-                    'type': 'string',
-                    'required': true,
-                  },
-                  'name': {
-                    'name': 'name',
-                    'type': 'string',
-                    'required': true,
-                  },
-                  'states': {
-                    'name': 'states',
-                    'type': 'array',
-                    'required': true,
-                    'items': {
-                      'type': 'string',
-                    },
-                  },
-                  'transitions': {
-                    'name': 'transitions',
-                    'type': 'array',
-                    'required': true,
-                    'items': {
-                      'type': 'object',
-                      'properties': {
-                        'guardHint': {
-                          'name': 'guardHint',
-                          'type': 'string',
-                          'required': false,
-                        },
-                        'event': {
-                          'name': 'event',
-                          'type': 'string',
-                          'required': true,
-                        },
-                        'from': {
-                          'name': 'from',
-                          'type': 'string',
-                          'required': true,
-                        },
-                        'to': {
-                          'name': 'to',
-                          'type': 'string',
-                          'required': true,
-                        },
-                      },
-                    },
-                  },
-                  'description': {
-                    'name': 'description',
-                    'type': 'string',
-                    'required': false,
-                  },
-                },
-              },
-            },
-          },
-          'feedback': {
-            'type': 'string',
-            'default': 'correct',
-            'label': 'Feedback',
-            'description': 'Per-slot correctness feedback after a failed attempt',
-            'tier': 'presentation',
-            'values': [
-              'correct',
-              'wrong',
-            ],
-          },
-          'error': {
-            'type': 'TraitSlotError',
-            'label': 'Error',
-            'description': 'Error state',
-            'tier': 'presentation',
-            'properties': {
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-            },
-          },
-          'lockLabel': {
-            'type': 'string',
-            'default': '',
-            'label': 'Lock Label',
-            'description': 'Label shown when locked',
-            'tier': 'presentation',
-          },
-          'size': {
-            'type': 'string',
-            'default': 'md',
-            'label': 'Size',
-            'description': 'Size variant',
-            'tier': 'presentation',
-            'values': [
-              'sm',
-              'md',
-              'lg',
-            ],
-          },
           'draggable': {
             'type': 'boolean',
             'default': false,
             'label': 'Draggable',
             'description': 'Whether this slot\'s equipped item is draggable',
+            'tier': 'presentation',
+          },
+          'showTooltip': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Show Tooltip',
+            'description': 'Show tooltip on hover',
+            'tier': 'presentation',
+          },
+          'locked': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Locked',
+            'description': 'Whether slot is locked',
             'tier': 'presentation',
           },
           'selected': {
@@ -509,18 +879,11 @@ export function stdUiTraitSlotTraitSlotOrbital(params: StdUiTraitSlotTraitSlotOr
             'description': 'Optional tooltip frame image URL',
             'tier': 'presentation',
           },
-          'slotNumber': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Slot Number',
-            'description': 'Slot index (1-based)',
-            'tier': 'presentation',
-          },
-          'locked': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Locked',
-            'description': 'Whether slot is locked',
+          'lockLabel': {
+            'type': 'string',
+            'default': '',
+            'label': 'Lock Label',
+            'description': 'Label shown when locked',
             'tier': 'presentation',
           },
         },

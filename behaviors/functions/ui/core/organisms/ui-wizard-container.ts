@@ -53,18 +53,18 @@ export interface StdUiWizardContainerCompletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiWizardContainerConfig {
+  error?: EntityRow;
   /** Default: `true` */
   allowBack?: boolean;
   currentStep?: unknown;
   /** Default: `true` */
   showProgress?: boolean;
-  /** Default: `false` */
-  compact?: boolean;
-  /** Default: `""` */
-  className?: string;
   /** Default: `[]` */
   steps?: EntityRow[];
-  error?: EntityRow;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `false` */
+  compact?: boolean;
   /** Default: `false` */
   isLoading?: boolean;
 }
@@ -190,12 +190,24 @@ export function stdUiWizardContainerWizardContainerOrbital(params: StdUiWizardCo
               'name': 'Step Change',
               'description': 'Callback when step changes',
               'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'stepIndex',
+                  'type': 'number',
+                },
+              ],
             },
             {
               'key': 'COMPLETE',
               'name': 'Complete',
               'description': 'Callback when wizard is completed',
               'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
             },
           ],
           'transitions': [
@@ -213,18 +225,18 @@ export function stdUiWizardContainerWizardContainerOrbital(params: StdUiWizardCo
                   'render-ui',
                   'main',
                   {
-                    'error': '@config.error',
-                    'onComplete': 'COMPLETE',
-                    'currentStep': '@config.currentStep',
-                    'allowBack': '@config.allowBack',
-                    'onStepChange': 'STEP_CHANGE',
-                    'steps': '@config.steps',
-                    'showProgress': '@config.showProgress',
-                    'entity': 'WizardContainerItem',
-                    'className': '@config.className',
                     'type': 'wizard-container',
-                    'compact': '@config.compact',
+                    'showProgress': '@config.showProgress',
+                    'className': '@config.className',
                     'isLoading': '@config.isLoading',
+                    'compact': '@config.compact',
+                    'currentStep': '@config.currentStep',
+                    'onComplete': 'COMPLETE',
+                    'allowBack': '@config.allowBack',
+                    'error': '@config.error',
+                    'entity': 'WizardContainerItem',
+                    'steps': '@config.steps',
+                    'onStepChange': 'STEP_CHANGE',
                   },
                 ],
               ],
@@ -232,6 +244,34 @@ export function stdUiWizardContainerWizardContainerOrbital(params: StdUiWizardCo
           ],
         },
         'config': {
+          'error': {
+            'type': 'WizardContainerError',
+            'label': 'Error',
+            'description': 'Error state',
+            'tier': 'presentation',
+            'properties': {
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+            },
+          },
           'allowBack': {
             'type': 'boolean',
             'default': true,
@@ -252,20 +292,6 @@ export function stdUiWizardContainerWizardContainerOrbital(params: StdUiWizardCo
             'description': 'Show progress indicator',
             'tier': 'presentation',
           },
-          'compact': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Compact',
-            'description': 'Modal mode (compact header, no padding)',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
           'steps': {
             'type': '[WizardContainerStepsItem]',
             'default': [],
@@ -275,38 +301,13 @@ export function stdUiWizardContainerWizardContainerOrbital(params: StdUiWizardCo
             'items': {
               'type': 'object',
               'properties': {
-                'lawReferences': {
-                  'name': 'lawReferences',
-                  'type': 'array',
-                  'required': false,
-                  'items': {
-                    'type': 'object',
-                    'properties': {
-                      'description': {
-                        'name': 'description',
-                        'type': 'string',
-                        'required': false,
-                      },
-                      'article': {
-                        'name': 'article',
-                        'type': 'string',
-                        'required': true,
-                      },
-                      'law': {
-                        'name': 'law',
-                        'type': 'string',
-                        'required': true,
-                      },
-                    },
-                  },
-                },
-                'id': {
-                  'name': 'id',
+                'phase': {
+                  'name': 'phase',
                   'type': 'string',
                   'required': false,
                 },
-                'phase': {
-                  'name': 'phase',
+                'content': {
+                  'name': 'content',
                   'type': 'string',
                   'required': false,
                 },
@@ -316,46 +317,6 @@ export function stdUiWizardContainerWizardContainerOrbital(params: StdUiWizardCo
                   'required': false,
                   'items': {
                     'type': 'string',
-                  },
-                },
-                'description': {
-                  'name': 'description',
-                  'type': 'string',
-                  'required': false,
-                },
-                'contextMenu': {
-                  'name': 'contextMenu',
-                  'type': 'array',
-                  'required': false,
-                  'items': {
-                    'type': 'string',
-                  },
-                },
-                'entityMapping': {
-                  'name': 'entityMapping',
-                  'type': 'object',
-                  'required': false,
-                  'properties': {
-                    'idField': {
-                      'name': 'idField',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'parentField': {
-                      'name': 'parentField',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'entity': {
-                      'name': 'entity',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'mode': {
-                      'name': 'mode',
-                      'type': 'string',
-                      'required': true,
-                    },
                   },
                 },
                 'validationRules': {
@@ -381,6 +342,11 @@ export function stdUiWizardContainerWizardContainerOrbital(params: StdUiWizardCo
                     },
                   },
                 },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': false,
+                },
                 'localVariables': {
                   'name': 'localVariables',
                   'type': 'array',
@@ -389,11 +355,6 @@ export function stdUiWizardContainerWizardContainerOrbital(params: StdUiWizardCo
                     'type': 'string',
                   },
                 },
-                'tabId': {
-                  'name': 'tabId',
-                  'type': 'string',
-                  'required': false,
-                },
                 'sections': {
                   'name': 'sections',
                   'type': 'array',
@@ -401,10 +362,31 @@ export function stdUiWizardContainerWizardContainerOrbital(params: StdUiWizardCo
                   'items': {
                     'type': 'object',
                     'properties': {
+                      'condition': {
+                        'name': 'condition',
+                        'type': 'array',
+                        'required': false,
+                        'items': {
+                          'type': 'string',
+                        },
+                      },
                       'dataSource': {
                         'name': 'dataSource',
                         'type': 'string',
                         'required': false,
+                      },
+                      'title': {
+                        'name': 'title',
+                        'type': 'string',
+                        'required': false,
+                      },
+                      'subsections': {
+                        'name': 'subsections',
+                        'type': 'array',
+                        'required': false,
+                        'items': {
+                          'type': 'string',
+                        },
                       },
                       'minItems': {
                         'name': 'minItems',
@@ -416,9 +398,39 @@ export function stdUiWizardContainerWizardContainerOrbital(params: StdUiWizardCo
                         'type': 'string',
                         'required': false,
                       },
+                      'hiddenCalculations': {
+                        'name': 'hiddenCalculations',
+                        'type': 'array',
+                        'required': false,
+                        'items': {
+                          'type': 'object',
+                          'properties': {
+                            'expression': {
+                              'name': 'expression',
+                              'type': 'string',
+                              'required': true,
+                            },
+                            'scope': {
+                              'name': 'scope',
+                              'type': 'string',
+                              'required': false,
+                            },
+                            'variable': {
+                              'name': 'variable',
+                              'type': 'string',
+                              'required': true,
+                            },
+                          },
+                        },
+                      },
                       'description': {
                         'name': 'description',
                         'type': 'string',
+                        'required': false,
+                      },
+                      'readOnly': {
+                        'name': 'readOnly',
+                        'type': 'boolean',
                         'required': false,
                       },
                       'fields': {
@@ -428,13 +440,8 @@ export function stdUiWizardContainerWizardContainerOrbital(params: StdUiWizardCo
                         'items': {
                           'type': 'object',
                           'properties': {
-                            'repeatable': {
-                              'name': 'repeatable',
-                              'type': 'boolean',
-                              'required': false,
-                            },
-                            'minDate': {
-                              'name': 'minDate',
+                            'label': {
+                              'name': 'label',
                               'type': 'string',
                               'required': false,
                             },
@@ -450,43 +457,23 @@ export function stdUiWizardContainerWizardContainerOrbital(params: StdUiWizardCo
                                     'type': 'string',
                                     'required': true,
                                   },
-                                  'value': {
-                                    'name': 'value',
-                                    'type': 'string',
-                                    'required': true,
-                                  },
                                   'icon': {
                                     'name': 'icon',
                                     'type': 'string',
                                     'required': false,
                                   },
+                                  'value': {
+                                    'name': 'value',
+                                    'type': 'string',
+                                    'required': true,
+                                  },
                                 },
                               },
                             },
-                            'items': {
-                              'name': 'items',
-                              'type': 'array',
+                            'required': {
+                              'name': 'required',
+                              'type': 'boolean',
                               'required': false,
-                              'items': {
-                                'type': 'object',
-                                'properties': {
-                                  'autoCheck': {
-                                    'name': 'autoCheck',
-                                    'type': 'string',
-                                    'required': false,
-                                  },
-                                  'id': {
-                                    'name': 'id',
-                                    'type': 'string',
-                                    'required': true,
-                                  },
-                                  'label': {
-                                    'name': 'label',
-                                    'type': 'string',
-                                    'required': true,
-                                  },
-                                },
-                              },
                             },
                             'options': {
                               'name': 'options',
@@ -513,79 +500,8 @@ export function stdUiWizardContainerWizardContainerOrbital(params: StdUiWizardCo
                                 },
                               },
                             },
-                            'type': {
-                              'name': 'type',
-                              'type': 'string',
-                              'required': true,
-                            },
-                            'label': {
-                              'name': 'label',
-                              'type': 'string',
-                              'required': false,
-                            },
-                            'required': {
-                              'name': 'required',
-                              'type': 'boolean',
-                              'required': false,
-                            },
-                            'entityField': {
-                              'name': 'entityField',
-                              'type': 'string',
-                              'required': false,
-                            },
-                            'minLength': {
-                              'name': 'minLength',
-                              'type': 'number',
-                              'required': false,
-                            },
-                            'dataSource': {
-                              'name': 'dataSource',
-                              'type': 'string',
-                              'required': false,
-                            },
-                            'defaultValue': {
-                              'name': 'defaultValue',
-                              'type': 'string',
-                              'required': false,
-                            },
-                            'signatureConfig': {
-                              'name': 'signatureConfig',
-                              'type': 'string',
-                              'required': false,
-                            },
-                            'contextMenu': {
-                              'name': 'contextMenu',
-                              'type': 'array',
-                              'required': false,
-                              'items': {
-                                'type': 'string',
-                              },
-                            },
-                            'searchConfig': {
-                              'name': 'searchConfig',
-                              'type': 'string',
-                              'required': false,
-                            },
-                            'condition': {
-                              'name': 'condition',
-                              'type': 'array',
-                              'required': false,
-                              'items': {
-                                'type': 'string',
-                              },
-                            },
-                            'maxLength': {
-                              'name': 'maxLength',
-                              'type': 'number',
-                              'required': false,
-                            },
-                            'lawReference': {
-                              'name': 'lawReference',
-                              'type': 'string',
-                              'required': false,
-                            },
-                            'readOnly': {
-                              'name': 'readOnly',
+                            'repeatable': {
+                              'name': 'repeatable',
                               'type': 'boolean',
                               'required': false,
                             },
@@ -594,18 +510,20 @@ export function stdUiWizardContainerWizardContainerOrbital(params: StdUiWizardCo
                               'type': 'string',
                               'required': false,
                             },
-                            'displayTemplate': {
-                              'name': 'displayTemplate',
+                            'searchConfig': {
+                              'name': 'searchConfig',
                               'type': 'string',
                               'required': false,
                             },
-                            'displayFields': {
-                              'name': 'displayFields',
-                              'type': 'array',
+                            'minDate': {
+                              'name': 'minDate',
+                              'type': 'string',
                               'required': false,
-                              'items': {
-                                'type': 'string',
-                              },
+                            },
+                            'minLength': {
+                              'name': 'minLength',
+                              'type': 'number',
+                              'required': false,
                             },
                             'hiddenCalculations': {
                               'name': 'hiddenCalculations',
@@ -632,69 +550,112 @@ export function stdUiWizardContainerWizardContainerOrbital(params: StdUiWizardCo
                                 },
                               },
                             },
-                            'calculated': {
-                              'name': 'calculated',
+                            'entityField': {
+                              'name': 'entityField',
                               'type': 'string',
                               'required': false,
+                            },
+                            'items': {
+                              'name': 'items',
+                              'type': 'array',
+                              'required': false,
+                              'items': {
+                                'type': 'object',
+                                'properties': {
+                                  'label': {
+                                    'name': 'label',
+                                    'type': 'string',
+                                    'required': true,
+                                  },
+                                  'id': {
+                                    'name': 'id',
+                                    'type': 'string',
+                                    'required': true,
+                                  },
+                                  'autoCheck': {
+                                    'name': 'autoCheck',
+                                    'type': 'string',
+                                    'required': false,
+                                  },
+                                },
+                              },
+                            },
+                            'displayFields': {
+                              'name': 'displayFields',
+                              'type': 'array',
+                              'required': false,
+                              'items': {
+                                'type': 'string',
+                              },
+                            },
+                            'maxLength': {
+                              'name': 'maxLength',
+                              'type': 'number',
+                              'required': false,
+                            },
+                            'type': {
+                              'name': 'type',
+                              'type': 'string',
+                              'required': true,
                             },
                             'id': {
                               'name': 'id',
                               'type': 'string',
                               'required': true,
                             },
-                          },
-                        },
-                      },
-                      'title': {
-                        'name': 'title',
-                        'type': 'string',
-                        'required': false,
-                      },
-                      'hiddenCalculations': {
-                        'name': 'hiddenCalculations',
-                        'type': 'array',
-                        'required': false,
-                        'items': {
-                          'type': 'object',
-                          'properties': {
-                            'variable': {
-                              'name': 'variable',
+                            'calculated': {
+                              'name': 'calculated',
                               'type': 'string',
-                              'required': true,
+                              'required': false,
                             },
-                            'expression': {
-                              'name': 'expression',
+                            'readOnly': {
+                              'name': 'readOnly',
+                              'type': 'boolean',
+                              'required': false,
+                            },
+                            'condition': {
+                              'name': 'condition',
+                              'type': 'array',
+                              'required': false,
+                              'items': {
+                                'type': 'string',
+                              },
+                            },
+                            'contextMenu': {
+                              'name': 'contextMenu',
+                              'type': 'array',
+                              'required': false,
+                              'items': {
+                                'type': 'string',
+                              },
+                            },
+                            'dataSource': {
+                              'name': 'dataSource',
                               'type': 'string',
-                              'required': true,
+                              'required': false,
                             },
-                            'scope': {
-                              'name': 'scope',
+                            'displayTemplate': {
+                              'name': 'displayTemplate',
+                              'type': 'string',
+                              'required': false,
+                            },
+                            'lawReference': {
+                              'name': 'lawReference',
+                              'type': 'string',
+                              'required': false,
+                            },
+                            'defaultValue': {
+                              'name': 'defaultValue',
+                              'type': 'string',
+                              'required': false,
+                            },
+                            'signatureConfig': {
+                              'name': 'signatureConfig',
                               'type': 'string',
                               'required': false,
                             },
                           },
                         },
-                      },
-                      'subsections': {
-                        'name': 'subsections',
-                        'type': 'array',
-                        'required': false,
-                        'items': {
-                          'type': 'string',
-                        },
-                      },
-                      'condition': {
-                        'name': 'condition',
-                        'type': 'array',
-                        'required': false,
-                        'items': {
-                          'type': 'string',
-                        },
-                      },
-                      'readOnly': {
-                        'name': 'readOnly',
-                        'type': 'boolean',
-                        'required': false,
                       },
                       'repeatable': {
                         'name': 'repeatable',
@@ -709,6 +670,52 @@ export function stdUiWizardContainerWizardContainerOrbital(params: StdUiWizardCo
                     },
                   },
                 },
+                'entityMapping': {
+                  'name': 'entityMapping',
+                  'type': 'object',
+                  'required': false,
+                  'properties': {
+                    'mode': {
+                      'name': 'mode',
+                      'type': 'string',
+                      'required': true,
+                      'values': [
+                        'search_or_create',
+                        'create_multiple',
+                        'select_one',
+                        'update',
+                      ],
+                    },
+                    'entity': {
+                      'name': 'entity',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'idField': {
+                      'name': 'idField',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'parentField': {
+                      'name': 'parentField',
+                      'type': 'string',
+                      'required': false,
+                    },
+                  },
+                },
+                'contextMenu': {
+                  'name': 'contextMenu',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
+                    'type': 'string',
+                  },
+                },
+                'title': {
+                  'name': 'title',
+                  'type': 'string',
+                  'required': false,
+                },
                 'globalVariablesSet': {
                   'name': 'globalVariablesSet',
                   'type': 'array',
@@ -717,8 +724,8 @@ export function stdUiWizardContainerWizardContainerOrbital(params: StdUiWizardCo
                     'type': 'string',
                   },
                 },
-                'content': {
-                  'name': 'content',
+                'description': {
+                  'name': 'description',
                   'type': 'string',
                   'required': false,
                 },
@@ -727,8 +734,33 @@ export function stdUiWizardContainerWizardContainerOrbital(params: StdUiWizardCo
                   'type': 'string',
                   'required': false,
                 },
-                'title': {
-                  'name': 'title',
+                'lawReferences': {
+                  'name': 'lawReferences',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
+                    'type': 'object',
+                    'properties': {
+                      'law': {
+                        'name': 'law',
+                        'type': 'string',
+                        'required': true,
+                      },
+                      'article': {
+                        'name': 'article',
+                        'type': 'string',
+                        'required': true,
+                      },
+                      'description': {
+                        'name': 'description',
+                        'type': 'string',
+                        'required': false,
+                      },
+                    },
+                  },
+                },
+                'tabId': {
+                  'name': 'tabId',
                   'type': 'string',
                   'required': false,
                 },
@@ -740,33 +772,19 @@ export function stdUiWizardContainerWizardContainerOrbital(params: StdUiWizardCo
               },
             },
           },
-          'error': {
-            'type': 'WizardContainerError',
-            'label': 'Error',
-            'description': 'Error state',
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
             'tier': 'presentation',
-            'properties': {
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-            },
+          },
+          'compact': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Compact',
+            'description': 'Modal mode (compact header, no padding)',
+            'tier': 'presentation',
           },
           'isLoading': {
             'type': 'boolean',

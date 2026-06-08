@@ -86,13 +86,13 @@
                   "required": false,
                   "type": "string"
                 },
-                "label": {
-                  "name": "label",
+                "name": {
+                  "name": "name",
                   "required": false,
                   "type": "string"
                 },
-                "name": {
-                  "name": "name",
+                "label": {
+                  "name": "label",
                   "required": false,
                   "type": "string"
                 }
@@ -102,10 +102,32 @@
           },
           {
             "key": "error",
-            "type": "json",
+            "type": "EntityCardsError",
             "label": "Error",
-            "description": "Error state",
-            "tier": "presentation"
+            "description": "Error state (UiError)",
+            "tier": "presentation",
+            "properties": {
+              "code": {
+                "name": "code",
+                "required": false,
+                "type": "string"
+              },
+              "stack": {
+                "name": "stack",
+                "required": false,
+                "type": "string"
+              },
+              "message": {
+                "name": "message",
+                "required": true,
+                "type": "string"
+              },
+              "name": {
+                "name": "name",
+                "required": false,
+                "type": "string"
+              }
+            }
           },
           {
             "key": "fieldNames",
@@ -132,6 +154,11 @@
                   "required": false,
                   "type": "string"
                 },
+                "key": {
+                  "name": "key",
+                  "required": false,
+                  "type": "string"
+                },
                 "name": {
                   "name": "name",
                   "required": false,
@@ -139,11 +166,6 @@
                 },
                 "header": {
                   "name": "header",
-                  "required": false,
-                  "type": "string"
-                },
-                "key": {
-                  "name": "key",
                   "required": false,
                   "type": "string"
                 }
@@ -191,30 +213,41 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "variant": {
-                  "name": "variant",
-                  "required": false,
-                  "type": "string"
-                },
                 "label": {
                   "name": "label",
                   "required": true,
-                  "type": "string"
-                },
-                "placement": {
-                  "name": "placement",
-                  "required": false,
-                  "type": "string"
-                },
-                "event": {
-                  "name": "event",
-                  "required": false,
                   "type": "string"
                 },
                 "navigatesTo": {
                   "name": "navigatesTo",
                   "required": false,
                   "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "primary",
+                    "secondary",
+                    "ghost",
+                    "danger"
+                  ]
+                },
+                "event": {
+                  "name": "event",
+                  "required": false,
+                  "type": "string"
+                },
+                "placement": {
+                  "name": "placement",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "card",
+                    "footer",
+                    "row"
+                  ]
                 },
                 "action": {
                   "name": "action",
@@ -228,7 +261,7 @@
           {
             "key": "maxCols",
             "type": "number",
-            "default": 0,
+            "default": 1,
             "label": "Max Cols",
             "description": "Maximum number of columns",
             "tier": "presentation"
@@ -304,10 +337,14 @@
           {
             "key": "sortDirection",
             "type": "string",
-            "default": "",
+            "default": "asc",
             "label": "Sort Direction",
             "description": "Current sort direction",
-            "tier": "presentation"
+            "tier": "presentation",
+            "enumValues": [
+              "asc",
+              "desc"
+            ]
           },
           {
             "key": "totalCount",

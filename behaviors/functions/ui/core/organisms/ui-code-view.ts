@@ -39,11 +39,12 @@ export type StdUiCodeViewEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiCodeViewConfig {
+  /** Default: `{}` */
+  data?: unknown;
   /** Default: `""` */
   className?: string;
   /** Default: `false` */
   defaultExpanded?: boolean;
-  data?: unknown;
   /** Default: `""` */
   label?: string;
 }
@@ -149,11 +150,11 @@ export function stdUiCodeViewCodeViewOrbital(params: StdUiCodeViewCodeViewOrbita
                   'render-ui',
                   'main',
                   {
-                    'label': '@config.label',
-                    'data': '@config.data',
                     'type': 'code-view',
-                    'className': '@config.className',
+                    'label': '@config.label',
                     'defaultExpanded': '@config.defaultExpanded',
+                    'data': '@config.data',
+                    'className': '@config.className',
                   },
                 ],
               ],
@@ -161,6 +162,13 @@ export function stdUiCodeViewCodeViewOrbital(params: StdUiCodeViewCodeViewOrbita
           ],
         },
         'config': {
+          'data': {
+            'type': 'json',
+            'default': {},
+            'label': 'Data',
+            'description': 'JSON data to display',
+            'tier': 'presentation',
+          },
           'className': {
             'type': 'string',
             'default': '',
@@ -173,12 +181,6 @@ export function stdUiCodeViewCodeViewOrbital(params: StdUiCodeViewCodeViewOrbita
             'default': false,
             'label': 'Default Expanded',
             'description': 'Whether the code is expanded by default',
-            'tier': 'presentation',
-          },
-          'data': {
-            'type': 'json',
-            'label': 'Data',
-            'description': 'JSON data to display',
             'tier': 'presentation',
           },
           'label': {

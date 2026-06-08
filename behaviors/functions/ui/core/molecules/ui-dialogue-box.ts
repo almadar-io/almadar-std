@@ -62,11 +62,12 @@ export interface StdUiDialogueBoxAdvancePayload {
 export interface StdUiDialogueBoxConfig {
   /** Default: `""` */
   className?: string;
-  dialogue?: EntityRow;
   /** Default: `30` */
   typewriterSpeed?: number;
   /** Default: `"bottom"` */
   position?: 'top' | 'bottom';
+  /** Default: `{"speaker":"","text":""}` */
+  dialogue?: EntityRow;
 }
 
 /**

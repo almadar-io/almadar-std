@@ -42,13 +42,13 @@ export interface StdUiDocCodeBlockConfig {
   /** Default: `""` */
   language?: string;
   /** Default: `""` */
-  className?: string;
-  /** Default: `""` */
   code?: string;
-  /** Default: `""` */
-  title?: string;
   /** Default: `false` */
   showLineNumbers?: boolean;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `""` */
+  title?: string;
 }
 
 /**

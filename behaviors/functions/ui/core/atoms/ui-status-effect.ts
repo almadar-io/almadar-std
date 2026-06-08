@@ -39,19 +39,19 @@ export type StdUiStatusEffectEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiStatusEffectConfig {
-  icon?: unknown;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"neutral"` */
-  variant?: 'buff' | 'debuff' | 'neutral';
-  /** Default: `0` */
-  duration?: number;
   /** Default: `""` */
   label?: string;
+  /** Default: `"neutral"` */
+  variant?: 'buff' | 'debuff' | 'neutral';
+  icon?: unknown;
+  /** Default: `0` */
+  stacks?: number;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
   /** Default: `0` */
-  stacks?: number;
+  duration?: number;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

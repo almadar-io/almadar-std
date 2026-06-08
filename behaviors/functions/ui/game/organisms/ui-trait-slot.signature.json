@@ -54,10 +54,26 @@
         "overridableConfigKeys": [
           {
             "key": "categoryColors",
-            "type": "json",
+            "type": "Map<string,TraitSlotCategoryColorsValue>",
+            "default": {},
             "label": "Category Colors",
             "description": "Category → color mapping",
-            "tier": "presentation"
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "border": {
+                  "name": "border",
+                  "required": true,
+                  "type": "string"
+                },
+                "bg": {
+                  "name": "bg",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
           },
           {
             "key": "className",
@@ -82,18 +98,13 @@
             "description": "Currently equipped item, if any",
             "tier": "presentation",
             "properties": {
-              "iconEmoji": {
-                "name": "iconEmoji",
-                "required": false,
-                "type": "string"
-              },
-              "name": {
-                "name": "name",
+              "category": {
+                "name": "category",
                 "required": true,
                 "type": "string"
               },
-              "iconUrl": {
-                "name": "iconUrl",
+              "iconEmoji": {
+                "name": "iconEmoji",
                 "required": false,
                 "type": "string"
               },
@@ -102,30 +113,10 @@
                 "required": true,
                 "type": "string"
               },
-              "description": {
-                "name": "description",
-                "required": false,
-                "type": "string"
-              },
-              "category": {
-                "name": "category",
-                "required": true,
-                "type": "string"
-              },
               "stateMachine": {
                 "name": "stateMachine",
                 "required": false,
                 "properties": {
-                  "currentState": {
-                    "name": "currentState",
-                    "required": true,
-                    "type": "string"
-                  },
-                  "name": {
-                    "name": "name",
-                    "required": true,
-                    "type": "string"
-                  },
                   "states": {
                     "name": "states",
                     "required": true,
@@ -140,14 +131,14 @@
                     "type": "array",
                     "items": {
                       "properties": {
+                        "to": {
+                          "name": "to",
+                          "required": true,
+                          "type": "string"
+                        },
                         "guardHint": {
                           "name": "guardHint",
                           "required": false,
-                          "type": "string"
-                        },
-                        "event": {
-                          "name": "event",
-                          "required": true,
                           "type": "string"
                         },
                         "from": {
@@ -155,14 +146,24 @@
                           "required": true,
                           "type": "string"
                         },
-                        "to": {
-                          "name": "to",
+                        "event": {
+                          "name": "event",
                           "required": true,
                           "type": "string"
                         }
                       },
                       "type": "object"
                     }
+                  },
+                  "name": {
+                    "name": "name",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "currentState": {
+                    "name": "currentState",
+                    "required": true,
+                    "type": "string"
                   },
                   "description": {
                     "name": "description",
@@ -171,6 +172,21 @@
                   }
                 },
                 "type": "object"
+              },
+              "description": {
+                "name": "description",
+                "required": false,
+                "type": "string"
+              },
+              "iconUrl": {
+                "name": "iconUrl",
+                "required": false,
+                "type": "string"
+              },
+              "name": {
+                "name": "name",
+                "required": true,
+                "type": "string"
               }
             }
           },
@@ -181,8 +197,13 @@
             "description": "Error state",
             "tier": "presentation",
             "properties": {
-              "stack": {
-                "name": "stack",
+              "message": {
+                "name": "message",
+                "required": true,
+                "type": "string"
+              },
+              "code": {
+                "name": "code",
                 "required": false,
                 "type": "string"
               },
@@ -191,14 +212,9 @@
                 "required": false,
                 "type": "string"
               },
-              "code": {
-                "name": "code",
+              "stack": {
+                "name": "stack",
                 "required": false,
-                "type": "string"
-              },
-              "message": {
-                "name": "message",
-                "required": true,
                 "type": "string"
               }
             }

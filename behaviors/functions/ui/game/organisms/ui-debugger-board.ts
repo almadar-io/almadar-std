@@ -41,6 +41,16 @@ export interface StdUiDebuggerBoardCompletePayload {
 }
 
 /**
+ * Typed call-site config block for this trait — every
+ * field maps to a `config { ... }` entry in the source
+ * .lolo. The agent fills these to specialise the trait
+ * without modifying its state-machine topology.
+ */
+export interface StdUiDebuggerBoardConfig {
+  entityProp?: EntityRow;
+}
+
+/**
  * Tunable params for the DebuggerBoardOrbital orbital.
  *
  * Canonical entity: DebuggerBoardItem — overridable via
@@ -155,6 +165,18 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
               'name': 'Complete',
               'description': 'completeEvent prop',
               'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'success',
+                  'type': 'boolean',
+                  'required': true,
+                },
+                {
+                  'name': 'attempts',
+                  'type': 'number',
+                  'required': true,
+                },
+              ],
             },
           ],
           'transitions': [
@@ -164,22 +186,120 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
               'event': 'INIT',
               'effects': [
                 [
-                  'fetch',
-                  'DebuggerBoardItem',
-                  {},
-                ],
-                [
                   'render-ui',
                   'main',
                   {
                     'completeEvent': 'COMPLETE',
+                    'entity': '@config.entityProp',
                     'type': 'debugger-board',
-                    'entity': '@entity',
                   },
                 ],
               ],
             },
           ],
+        },
+        'config': {
+          'entityProp': {
+            'type': 'DebuggerBoardEntity',
+            'label': 'Entity',
+            'description': 'The compiler binds the generic `EntityRow`, so the inlet accepts it (and',
+            'synonyms': 'entity',
+            'tier': 'presentation',
+            'properties': {
+              'successMessage': {
+                'name': 'successMessage',
+                'type': 'string',
+                'required': false,
+              },
+              'description': {
+                'name': 'description',
+                'type': 'string',
+                'required': true,
+              },
+              'title': {
+                'name': 'title',
+                'type': 'string',
+                'required': true,
+              },
+              'id': {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              'failMessage': {
+                'name': 'failMessage',
+                'type': 'string',
+                'required': false,
+              },
+              'hint': {
+                'name': 'hint',
+                'type': 'string',
+                'required': false,
+              },
+              'lines': {
+                'name': 'lines',
+                'type': 'array',
+                'required': true,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'isBug': {
+                      'name': 'isBug',
+                      'type': 'boolean',
+                      'required': true,
+                    },
+                    'id': {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'explanation': {
+                      'name': 'explanation',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'content': {
+                      'name': 'content',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  },
+                },
+              },
+              'bugCount': {
+                'name': 'bugCount',
+                'type': 'number',
+                'required': true,
+              },
+              'headerImage': {
+                'name': 'headerImage',
+                'type': 'string',
+                'required': false,
+              },
+              'language': {
+                'name': 'language',
+                'type': 'string',
+                'required': false,
+              },
+              'theme': {
+                'name': 'theme',
+                'type': 'object',
+                'required': false,
+                'properties': {
+                  'background': {
+                    'name': 'background',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'accentColor': {
+                    'name': 'accentColor',
+                    'type': 'string',
+                    'required': false,
+                  },
+                },
+              },
+            },
+          },
         },
         'scope': 'instance',
       } as never, 'DebuggerBoardItem', canonicalName) as never,

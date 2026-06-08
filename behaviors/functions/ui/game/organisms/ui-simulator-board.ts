@@ -41,6 +41,16 @@ export interface StdUiSimulatorBoardCompletePayload {
 }
 
 /**
+ * Typed call-site config block for this trait — every
+ * field maps to a `config { ... }` entry in the source
+ * .lolo. The agent fills these to specialise the trait
+ * without modifying its state-machine topology.
+ */
+export interface StdUiSimulatorBoardConfig {
+  entityProp?: EntityRow;
+}
+
+/**
  * Tunable params for the SimulatorBoardOrbital orbital.
  *
  * Canonical entity: SimulatorBoardItem — overridable via
@@ -155,6 +165,18 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
               'name': 'Complete',
               'description': 'completeEvent prop',
               'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'success',
+                  'type': 'boolean',
+                  'required': true,
+                },
+                {
+                  'name': 'attempts',
+                  'type': 'number',
+                  'required': true,
+                },
+              ],
             },
           ],
           'transitions': [
@@ -164,22 +186,160 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
               'event': 'INIT',
               'effects': [
                 [
-                  'fetch',
-                  'SimulatorBoardItem',
-                  {},
-                ],
-                [
                   'render-ui',
                   'main',
                   {
+                    'entity': '@config.entityProp',
                     'type': 'simulator-board',
                     'completeEvent': 'COMPLETE',
-                    'entity': '@entity',
                   },
                 ],
               ],
             },
           ],
+        },
+        'config': {
+          'entityProp': {
+            'type': 'SimulatorBoardEntity',
+            'label': 'Entity',
+            'description': 'The compiler binds the generic `EntityRow`, so the inlet accepts it (and',
+            'synonyms': 'entity',
+            'tier': 'presentation',
+            'properties': {
+              'computeExpression': {
+                'name': 'computeExpression',
+                'type': 'string',
+                'required': true,
+              },
+              'hint': {
+                'name': 'hint',
+                'type': 'string',
+                'required': false,
+              },
+              'parameters': {
+                'name': 'parameters',
+                'type': 'array',
+                'required': true,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'initial': {
+                      'name': 'initial',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'unit': {
+                      'name': 'unit',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'step': {
+                      'name': 'step',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'correct': {
+                      'name': 'correct',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'min': {
+                      'name': 'min',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'id': {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'max': {
+                      'name': 'max',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'tolerance': {
+                      'name': 'tolerance',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'label': {
+                      'name': 'label',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  },
+                },
+              },
+              'successMessage': {
+                'name': 'successMessage',
+                'type': 'string',
+                'required': false,
+              },
+              'theme': {
+                'name': 'theme',
+                'type': 'object',
+                'required': false,
+                'properties': {
+                  'accentColor': {
+                    'name': 'accentColor',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'background': {
+                    'name': 'background',
+                    'type': 'string',
+                    'required': false,
+                  },
+                },
+              },
+              'outputUnit': {
+                'name': 'outputUnit',
+                'type': 'string',
+                'required': true,
+              },
+              'headerImage': {
+                'name': 'headerImage',
+                'type': 'string',
+                'required': false,
+              },
+              'outputLabel': {
+                'name': 'outputLabel',
+                'type': 'string',
+                'required': true,
+              },
+              'id': {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              'title': {
+                'name': 'title',
+                'type': 'string',
+                'required': true,
+              },
+              'description': {
+                'name': 'description',
+                'type': 'string',
+                'required': true,
+              },
+              'targetValue': {
+                'name': 'targetValue',
+                'type': 'number',
+                'required': true,
+              },
+              'targetTolerance': {
+                'name': 'targetTolerance',
+                'type': 'number',
+                'required': true,
+              },
+              'failMessage': {
+                'name': 'failMessage',
+                'type': 'string',
+                'required': false,
+              },
+            },
+          },
         },
         'scope': 'instance',
       } as never, 'SimulatorBoardItem', canonicalName) as never,

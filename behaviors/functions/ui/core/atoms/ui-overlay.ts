@@ -30,14 +30,7 @@ const ALIAS = 'UiOverlay';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiOverlayEventKey = 'ACTION' | 'CLICK' | 'INIT';
-
-/**
- * Payload shape for the `CLICK` event.
- */
-export interface StdUiOverlayClickPayload {
-  e?: EntityRow;
-}
+export type StdUiOverlayEventKey = 'ACTION' | 'INIT';
 
 /**
  * Payload shape for the `ACTION` event.
@@ -55,10 +48,10 @@ export interface StdUiOverlayActionPayload {
 export interface StdUiOverlayConfig {
   /** Default: `true` */
   isVisible?: boolean;
-  /** Default: `false` */
-  blur?: boolean;
   /** Default: `""` */
   className?: string;
+  /** Default: `false` */
+  blur?: boolean;
 }
 
 /**

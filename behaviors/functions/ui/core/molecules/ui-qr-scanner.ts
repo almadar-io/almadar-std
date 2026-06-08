@@ -30,23 +30,14 @@ const ALIAS = 'UiQrScanner';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiQrScannerEventKey = 'ERROR' | 'INIT' | 'SCAN';
+export type StdUiQrScannerEventKey = 'INIT' | 'SCAN';
 
 /**
  * Payload shape for the `SCAN` event.
  */
 export interface StdUiQrScannerScanPayload {
   result?: EntityRow;
-  text: string;
-  format: string;
-  timestamp: number;
-}
-
-/**
- * Payload shape for the `ERROR` event.
- */
-export interface StdUiQrScannerErrorPayload {
-  error?: EntityRow;
+  _payload?: EntityRow;
 }
 
 /**
@@ -56,17 +47,17 @@ export interface StdUiQrScannerErrorPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiQrScannerConfig {
-  /** Default: `"environment"` */
-  facingMode?: 'environment' | 'user';
-  /** Default: `true` */
-  showCameraControls?: boolean;
-  /** Default: `""` */
-  className?: string;
-  fallback?: unknown;
-  /** Default: `false` */
-  paused?: boolean;
   /** Default: `true` */
   showOverlay?: boolean;
+  /** Default: `"environment"` */
+  facingMode?: 'environment' | 'user';
+  fallback?: unknown;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `true` */
+  showCameraControls?: boolean;
+  /** Default: `false` */
+  paused?: boolean;
 }
 
 /**

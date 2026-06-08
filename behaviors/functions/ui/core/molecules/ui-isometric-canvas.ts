@@ -30,7 +30,7 @@ const ALIAS = 'UiIsometricCanvas';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiIsometricCanvasEventKey = 'DRAW_EFFECTS' | 'GET_FEATURE_SPRITE' | 'GET_TERRAIN_SPRITE' | 'GET_UNIT_SPRITE' | 'INIT' | 'RESOLVE_UNIT_FRAME' | 'TILE_CLICK' | 'TILE_HOVER' | 'TILE_LEAVE' | 'UNIT_CLICK';
+export type StdUiIsometricCanvasEventKey = 'INIT' | 'TILE_CLICK' | 'TILE_HOVER' | 'TILE_LEAVE' | 'UNIT_CLICK';
 
 /**
  * Payload shape for the `TILE_CLICK` event.
@@ -63,92 +63,55 @@ export interface StdUiIsometricCanvasTileLeavePayload {
 }
 
 /**
- * Payload shape for the `GET_TERRAIN_SPRITE` event.
- */
-export interface StdUiIsometricCanvasGetTerrainSpritePayload {
-  terrain?: string;
-}
-
-/**
- * Payload shape for the `GET_FEATURE_SPRITE` event.
- */
-export interface StdUiIsometricCanvasGetFeatureSpritePayload {
-  featureType?: string;
-}
-
-/**
- * Payload shape for the `GET_UNIT_SPRITE` event.
- */
-export interface StdUiIsometricCanvasGetUnitSpritePayload {
-  unit?: EntityRow;
-}
-
-/**
- * Payload shape for the `RESOLVE_UNIT_FRAME` event.
- */
-export interface StdUiIsometricCanvasResolveUnitFramePayload {
-  unitId?: string;
-}
-
-/**
- * Payload shape for the `DRAW_EFFECTS` event.
- */
-export interface StdUiIsometricCanvasDrawEffectsPayload {
-  ctx?: EntityRow;
-  animTime?: number;
-  getImage?: unknown;
-}
-
-/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait
  * without modifying its state-machine topology.
  */
 export interface StdUiIsometricCanvasConfig {
-  /** Default: `true` */
-  showMinimap?: boolean;
   /** Default: `0` */
-  diamondTopY?: number;
-  assetManifest?: EntityRow;
+  boardWidth?: number;
   /** Default: `""` */
-  className?: string;
+  assetBaseUrl?: string;
+  /** Default: `1` */
+  unitScale?: number;
+  /** Default: `true` */
+  enableCamera?: boolean;
+  assetManifest?: EntityRow;
+  /** Default: `false` */
+  debug?: boolean;
+  /** Default: `[]` */
+  features?: EntityRow[];
+  error?: EntityRow;
+  /** Default: `[]` */
+  validMoves?: EntityRow[];
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `[]` */
+  tiles?: EntityRow[];
   /** Default: `[]` */
   units?: EntityRow[];
-  /** Default: `[]` */
-  attackTargets?: EntityRow[];
+  /** Default: `0.4` */
+  scale?: number;
   /** Default: `""` */
   backgroundImage?: string;
+  /** Default: `true` */
+  showMinimap?: boolean;
+  /** Default: `""` */
+  selectedUnitId?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `0` */
+  boardHeight?: number;
+  hoveredTile?: EntityRow;
   /** Default: `[]` */
   effectSpriteUrls?: string[];
   /** Default: `false` */
   hasActiveEffects?: boolean;
+  /** Default: `[]` */
+  attackTargets?: EntityRow[];
   /** Default: `0` */
-  boardWidth?: number;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `false` */
-  debug?: boolean;
-  error?: EntityRow;
-  /** Default: `true` */
-  enableCamera?: boolean;
-  /** Default: `""` */
-  selectedUnitId?: string;
-  /** Default: `[]` */
-  validMoves?: EntityRow[];
-  hoveredTile?: EntityRow;
-  /** Default: `1` */
-  unitScale?: number;
-  /** Default: `[]` */
-  features?: EntityRow[];
-  /** Default: `""` */
-  assetBaseUrl?: string;
-  /** Default: `0` */
-  boardHeight?: number;
-  /** Default: `[]` */
-  tiles?: EntityRow[];
-  /** Default: `0.4` */
-  scale?: number;
+  diamondTopY?: number;
 }
 
 /**

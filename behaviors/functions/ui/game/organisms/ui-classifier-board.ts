@@ -41,6 +41,16 @@ export interface StdUiClassifierBoardCompletePayload {
 }
 
 /**
+ * Typed call-site config block for this trait — every
+ * field maps to a `config { ... }` entry in the source
+ * .lolo. The agent fills these to specialise the trait
+ * without modifying its state-machine topology.
+ */
+export interface StdUiClassifierBoardConfig {
+  entityProp?: EntityRow;
+}
+
+/**
  * Tunable params for the ClassifierBoardOrbital orbital.
  *
  * Canonical entity: ClassifierBoardItem — overridable via
@@ -155,6 +165,18 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
               'name': 'Complete',
               'description': 'completeEvent prop',
               'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'success',
+                  'type': 'boolean',
+                  'required': true,
+                },
+                {
+                  'name': 'attempts',
+                  'type': 'number',
+                  'required': true,
+                },
+              ],
             },
           ],
           'transitions': [
@@ -164,22 +186,145 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
               'event': 'INIT',
               'effects': [
                 [
-                  'fetch',
-                  'ClassifierBoardItem',
-                  {},
-                ],
-                [
                   'render-ui',
                   'main',
                   {
-                    'completeEvent': 'COMPLETE',
                     'type': 'classifier-board',
-                    'entity': '@entity',
+                    'completeEvent': 'COMPLETE',
+                    'entity': '@config.entityProp',
                   },
                 ],
               ],
             },
           ],
+        },
+        'config': {
+          'entityProp': {
+            'type': 'ClassifierBoardEntity',
+            'label': 'Entity',
+            'description': 'The compiler binds the generic `EntityRow`, so the inlet accepts it (and',
+            'synonyms': 'entity',
+            'tier': 'presentation',
+            'properties': {
+              'title': {
+                'name': 'title',
+                'type': 'string',
+                'required': true,
+              },
+              'items': {
+                'name': 'items',
+                'type': 'array',
+                'required': true,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'label': {
+                      'name': 'label',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'description': {
+                      'name': 'description',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'id': {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'correctCategory': {
+                      'name': 'correctCategory',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'iconUrl': {
+                      'name': 'iconUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                  },
+                },
+              },
+              'failMessage': {
+                'name': 'failMessage',
+                'type': 'string',
+                'required': false,
+              },
+              'id': {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              'categories': {
+                'name': 'categories',
+                'type': 'array',
+                'required': true,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'label': {
+                      'name': 'label',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'color': {
+                      'name': 'color',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'id': {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'imageUrl': {
+                      'name': 'imageUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                  },
+                },
+              },
+              'headerImage': {
+                'name': 'headerImage',
+                'type': 'string',
+                'required': false,
+              },
+              'theme': {
+                'name': 'theme',
+                'type': 'object',
+                'required': false,
+                'properties': {
+                  'accentColor': {
+                    'name': 'accentColor',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'background': {
+                    'name': 'background',
+                    'type': 'string',
+                    'required': false,
+                  },
+                },
+              },
+              'hint': {
+                'name': 'hint',
+                'type': 'string',
+                'required': false,
+              },
+              'successMessage': {
+                'name': 'successMessage',
+                'type': 'string',
+                'required': false,
+              },
+              'description': {
+                'name': 'description',
+                'type': 'string',
+                'required': true,
+              },
+            },
+          },
         },
         'scope': 'instance',
       } as never, 'ClassifierBoardItem', canonicalName) as never,

@@ -39,13 +39,13 @@ export type StdUiMenuEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiMenuConfig {
+  trigger?: unknown;
+  /** Default: `[]` */
+  items?: EntityRow[];
   /** Default: `""` */
   className?: string;
   /** Default: `"bottom-left"` */
   position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'top-start' | 'top-end' | 'bottom-start' | 'bottom-end';
-  /** Default: `[]` */
-  items?: EntityRow[];
-  trigger?: unknown;
 }
 
 /**
