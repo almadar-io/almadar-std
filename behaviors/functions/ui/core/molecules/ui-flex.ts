@@ -39,28 +39,26 @@ export type StdUiFlexEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiFlexConfig {
-  /** Default: `"div"` */
-  asProp?: string;
-  /** Default: `false` */
-  inline?: boolean;
-  /** Default: `0` */
-  grow?: number;
   /** Default: `"stretch"` */
   align?: 'start' | 'center' | 'end' | 'stretch' | 'baseline';
-  /** Default: `""` */
-  className?: string;
   /** Default: `"start"` */
   justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';
   /** Default: `0` */
+  grow?: number;
+  /** Default: `0` */
   shrink?: number;
   /** Default: `""` */
-  basis?: string;
+  className?: string;
   /** Default: `"row"` */
   direction?: 'row' | 'row-reverse' | 'col' | 'col-reverse';
-  /** Default: `"none"` */
-  gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   /** Default: `"nowrap"` */
   wrap?: 'nowrap' | 'wrap' | 'wrap-reverse';
+  /** Default: `""` */
+  basis?: string;
+  /** Default: `false` */
+  inline?: boolean;
+  /** Default: `"none"` */
+  gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
 }
 
 /**

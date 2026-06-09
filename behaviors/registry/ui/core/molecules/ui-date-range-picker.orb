@@ -13,6 +13,16 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "fromProp",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "toProp",
+            "type": "string",
+            "default": ""
           }
         ]
       },
@@ -22,7 +32,10 @@
           "entityRebindable": true,
           "entityContract": {
             "requires": [],
-            "provides": []
+            "provides": [
+              "fromProp",
+              "toProp"
+            ]
           },
           "category": "interaction",
           "linkedEntity": "DateRangePickerItem",
@@ -132,17 +145,59 @@
                 "event": "INIT",
                 "effects": [
                   [
+                    "set",
+                    "@entity.fromProp",
+                    "@config.fromProp"
+                  ],
+                  [
+                    "set",
+                    "@entity.toProp",
+                    "@config.toProp"
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "className": "@config.className",
-                      "to": "@config.toProp",
-                      "event": "EVENT",
-                      "fromLabel": "@config.fromLabel",
-                      "from": "@config.fromProp",
-                      "onChange": "CHANGE",
-                      "type": "date-range-picker",
                       "presets": "@config.presets",
+                      "toLabel": "@config.toLabel",
+                      "className": "@config.className",
+                      "type": "date-range-picker",
+                      "onChange": "CHANGE",
+                      "to": "@entity.toProp",
+                      "from": "@entity.fromProp",
+                      "fromLabel": "@config.fromLabel",
+                      "event": "EVENT"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "EVENT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.fromProp",
+                    "@payload.from"
+                  ],
+                  [
+                    "set",
+                    "@entity.toProp",
+                    "@payload.to"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "event": "EVENT",
+                      "from": "@entity.fromProp",
+                      "onChange": "CHANGE",
+                      "to": "@entity.toProp",
+                      "presets": "@config.presets",
+                      "fromLabel": "@config.fromLabel",
+                      "type": "date-range-picker",
+                      "className": "@config.className",
                       "toLabel": "@config.toLabel"
                     }
                   ]
@@ -151,26 +206,12 @@
             ]
           },
           "config": {
-            "fromLabel": {
-              "type": "string",
-              "default": "From",
-              "label": "From Label",
-              "description": "From-input label.",
-              "tier": "presentation"
-            },
-            "className": {
+            "fromProp": {
               "type": "string",
               "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes.",
-              "tier": "presentation"
-            },
-            "toProp": {
-              "type": "string",
-              "default": "",
-              "label": "To",
-              "description": "Controlled `to` (ISO date YYYY-MM-DD).",
-              "synonyms": "to",
+              "label": "From",
+              "description": "Controlled `from` (ISO date YYYY-MM-DD).",
+              "synonyms": "from",
               "tier": "presentation"
             },
             "presets": {
@@ -202,12 +243,26 @@
               "description": "To-input label.",
               "tier": "presentation"
             },
-            "fromProp": {
+            "fromLabel": {
+              "type": "string",
+              "default": "From",
+              "label": "From Label",
+              "description": "From-input label.",
+              "tier": "presentation"
+            },
+            "className": {
               "type": "string",
               "default": "",
-              "label": "From",
-              "description": "Controlled `from` (ISO date YYYY-MM-DD).",
-              "synonyms": "from",
+              "label": "Class Name",
+              "description": "Additional CSS classes.",
+              "tier": "presentation"
+            },
+            "toProp": {
+              "type": "string",
+              "default": "",
+              "label": "To",
+              "description": "Controlled `to` (ISO date YYYY-MM-DD).",
+              "synonyms": "to",
               "tier": "presentation"
             }
           },

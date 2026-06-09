@@ -3,6 +3,7 @@ app ui-switch "1.0.0"
 orbital SwitchOrbital {
   entity SwitchItem [runtime] {
     id : string!
+    checked : boolean = false
   }
 
   trait SwitchRender -> @rebindable SwitchItem [interaction, instance] {
@@ -10,8 +11,21 @@ orbital SwitchOrbital {
 
     state idle {
       INIT -> idle
+        (set @entity.checked @config.checked)
         (render-ui main {
-          checked: @config.checked
+          checked: @entity.checked
+          defaultChecked: @config.defaultChecked
+          onChange: CHANGE
+          disabled: @config.disabled
+          label: @config.label
+          name: @config.name
+          className: @config.className
+          type: switch
+        })
+      CHANGE -> idle
+        (set @entity.checked ?checked)
+        (render-ui main {
+          checked: @entity.checked
           defaultChecked: @config.defaultChecked
           onChange: CHANGE
           disabled: @config.disabled
@@ -28,6 +42,12 @@ orbital SwitchOrbital {
       }
         @description "onChange prop"
         @tier "essential"
+    }
+
+    listens {
+      CHANGE {
+        checked : boolean
+      }
     }
 
     config {

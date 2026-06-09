@@ -46,33 +46,31 @@ export interface StdUiStackActionPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiStackConfig {
-  /** Default: `"start"` */
-  justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';
+  /** Default: `false` */
+  wrap?: boolean;
+  /** Default: `false` */
+  responsive?: boolean;
   /** Default: `0` */
   tabIndex?: number;
   /** Default: `false` */
   flex?: boolean;
+  /** Default: `"start"` */
+  justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';
   /** Default: `"vertical"` */
   direction?: 'horizontal' | 'vertical';
-  /** Default: `false` */
-  responsive?: boolean;
   /** Default: `"md"` */
   gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   /** Default: `""` */
   className?: string;
-  actionPayload?: unknown;
-  /** Default: `""` */
-  role?: string;
   /** Default: `false` */
   reverse?: boolean;
-  /** Default: `"div"` */
-  asProp?: string;
+  style?: unknown;
   /** Default: `"stretch"` */
   align?: 'start' | 'center' | 'end' | 'stretch' | 'baseline';
   children?: unknown;
-  style?: unknown;
-  /** Default: `false` */
-  wrap?: boolean;
+  /** Default: `""` */
+  role?: string;
+  actionPayload?: unknown;
 }
 
 /**

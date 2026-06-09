@@ -41,18 +41,18 @@ export type StdUiCaseStudyCardEventKey = 'INIT';
 export interface StdUiCaseStudyCardConfig {
   /** Default: `""` */
   categoryColor?: string;
-  /** Default: `""` */
-  href?: string;
-  /** Default: `""` */
+  /** Default: `"Description"` */
   description?: string;
-  /** Default: `""` */
-  category?: string;
-  /** Default: `"Read more"` */
-  linkLabel?: string;
+  /** Default: `"Title"` */
+  title?: string;
   /** Default: `""` */
   className?: string;
-  /** Default: `""` */
-  title?: string;
+  /** Default: `"Category"` */
+  category?: string;
+  /** Default: `"Href"` */
+  href?: string;
+  /** Default: `"Read more"` */
+  linkLabel?: string;
 }
 
 /**

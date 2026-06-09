@@ -13,6 +13,11 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "value",
+            "type": "number",
+            "default": 0.0
           }
         ]
       },
@@ -22,7 +27,9 @@
           "entityRebindable": true,
           "entityContract": {
             "requires": [],
-            "provides": []
+            "provides": [
+              "value"
+            ]
           },
           "category": "interaction",
           "linkedEntity": "NumberStepperItem",
@@ -96,21 +103,56 @@
                 "event": "INIT",
                 "effects": [
                   [
+                    "set",
+                    "@entity.value",
+                    "@config.value"
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "max": "@config.max",
+                      "action": "ACTION",
                       "actionPayload": "@config.actionPayload",
+                      "max": "@config.max",
                       "label": "@config.label",
                       "min": "@config.min",
-                      "value": "@config.value",
+                      "type": "number-stepper",
                       "className": "@config.className",
                       "size": "@config.size",
                       "onChange": "CHANGE",
-                      "type": "number-stepper",
+                      "value": "@entity.value",
+                      "step": "@config.step",
+                      "disabled": "@config.disabled"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "CHANGE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.value",
+                    "@payload.value"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "size": "@config.size",
                       "disabled": "@config.disabled",
-                      "action": "ACTION",
-                      "step": "@config.step"
+                      "value": "@entity.value",
+                      "label": "@config.label",
+                      "onChange": "CHANGE",
+                      "min": "@config.min",
+                      "actionPayload": "@config.actionPayload",
+                      "max": "@config.max",
+                      "className": "@config.className",
+                      "type": "number-stepper",
+                      "step": "@config.step",
+                      "action": "ACTION"
                     }
                   ]
                 ]
@@ -118,31 +160,18 @@
             ]
           },
           "config": {
-            "actionPayload": {
-              "type": "json",
-              "label": "Action Payload",
-              "description": "Payload to include with the action event",
-              "tier": "presentation"
-            },
-            "step": {
-              "type": "number",
-              "default": 1.0,
-              "label": "Step",
-              "description": "Step increment",
-              "tier": "presentation"
-            },
-            "label": {
-              "type": "string",
-              "default": "",
-              "label": "Label",
-              "description": "Accessible label",
-              "tier": "presentation"
-            },
-            "value": {
+            "min": {
               "type": "number",
               "default": 0.0,
-              "label": "Value",
-              "description": "Current value",
+              "label": "Min",
+              "description": "Minimum value",
+              "tier": "presentation"
+            },
+            "disabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Disabled",
+              "description": "Disabled state",
               "tier": "presentation"
             },
             "max": {
@@ -152,11 +181,38 @@
               "description": "Maximum value",
               "tier": "presentation"
             },
-            "min": {
+            "step": {
+              "type": "number",
+              "default": 1.0,
+              "label": "Step",
+              "description": "Step increment",
+              "tier": "presentation"
+            },
+            "actionPayload": {
+              "type": "json",
+              "label": "Action Payload",
+              "description": "Payload to include with the action event",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "value": {
               "type": "number",
               "default": 0.0,
-              "label": "Min",
-              "description": "Minimum value",
+              "label": "Value",
+              "description": "Current value",
+              "tier": "presentation"
+            },
+            "label": {
+              "type": "string",
+              "default": "",
+              "label": "Label",
+              "description": "Accessible label",
               "tier": "presentation"
             },
             "size": {
@@ -170,20 +226,6 @@
                 "md",
                 "lg"
               ]
-            },
-            "disabled": {
-              "type": "boolean",
-              "default": false,
-              "label": "Disabled",
-              "description": "Disabled state",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
             }
           },
           "scope": "instance"

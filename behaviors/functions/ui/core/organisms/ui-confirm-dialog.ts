@@ -53,29 +53,29 @@ export interface StdUiConfirmDialogConfirmPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiConfirmDialogConfig {
-  /** Default: `""` */
-  className?: string;
-  /** Default: `""` */
-  confirmText?: string;
+  message?: unknown;
   /** Default: `""` */
   cancelLabel?: string;
-  /** Default: `"sm"` */
-  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
-  /** Default: `""` */
-  confirmLabel?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
-  error?: EntityRow;
   /** Default: `"danger"` */
   variant?: 'danger' | 'warning' | 'info' | 'default';
   /** Default: `""` */
-  title?: string;
-  message?: unknown;
-  description?: unknown;
+  cancelText?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `""` */
+  confirmLabel?: string;
+  /** Default: `""` */
+  confirmText?: string;
+  error?: EntityRow;
   /** Default: `true` */
   isOpen?: boolean;
   /** Default: `""` */
-  cancelText?: string;
+  className?: string;
+  /** Default: `"Title"` */
+  title?: string;
+  /** Default: `"sm"` */
+  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  description?: unknown;
 }
 
 /**
@@ -234,23 +234,23 @@ export function stdUiConfirmDialogConfirmDialogOrbital(params: StdUiConfirmDialo
                   'render-ui',
                   'main',
                   {
-                    'isOpen': '@config.isOpen',
                     'size': '@config.size',
-                    'variant': '@config.variant',
-                    'message': '@config.message',
-                    'entity': 'ConfirmDialogItem',
-                    'onConfirm': 'CONFIRM',
-                    'error': '@config.error',
-                    'description': '@config.description',
-                    'confirmText': '@config.confirmText',
                     'title': '@config.title',
+                    'isOpen': '@config.isOpen',
                     'cancelText': '@config.cancelText',
-                    'isLoading': '@config.isLoading',
                     'confirmLabel': '@config.confirmLabel',
-                    'type': 'confirm-dialog',
-                    'onClose': 'CLOSE',
                     'cancelLabel': '@config.cancelLabel',
+                    'onConfirm': 'CONFIRM',
+                    'description': '@config.description',
+                    'onClose': 'CLOSE',
+                    'confirmText': '@config.confirmText',
+                    'type': 'confirm-dialog',
+                    'isLoading': '@config.isLoading',
+                    'message': '@config.message',
                     'className': '@config.className',
+                    'variant': '@config.variant',
+                    'entity': 'ConfirmDialogItem',
+                    'error': '@config.error',
                   },
                 ],
               ],
@@ -258,11 +258,51 @@ export function stdUiConfirmDialogConfirmDialogOrbital(params: StdUiConfirmDialo
           ],
         },
         'config': {
-          'className': {
+          'message': {
+            'type': 'node',
+            'label': 'Message',
+            'description': 'Dialog message/description',
+            'tier': 'presentation',
+          },
+          'cancelLabel': {
             'type': 'string',
             'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
+            'label': 'Cancel Label',
+            'description': 'Alias for cancelText (schema compatibility)',
+            'tier': 'presentation',
+          },
+          'variant': {
+            'type': 'string',
+            'default': 'danger',
+            'label': 'Variant',
+            'description': 'Dialog variant',
+            'tier': 'presentation',
+            'values': [
+              'danger',
+              'warning',
+              'info',
+              'default',
+            ],
+          },
+          'cancelText': {
+            'type': 'string',
+            'default': '',
+            'label': 'Cancel Text',
+            'description': 'Cancel button text',
+            'tier': 'presentation',
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state for confirm button',
+            'tier': 'presentation',
+          },
+          'confirmLabel': {
+            'type': 'string',
+            'default': '',
+            'label': 'Confirm Label',
+            'description': 'Alias for confirmText (schema compatibility)',
             'tier': 'presentation',
           },
           'confirmText': {
@@ -272,11 +312,53 @@ export function stdUiConfirmDialogConfirmDialogOrbital(params: StdUiConfirmDialo
             'description': 'Confirm button text',
             'tier': 'presentation',
           },
-          'cancelLabel': {
+          'error': {
+            'type': 'ConfirmDialogError',
+            'label': 'Error',
+            'description': 'Error state',
+            'tier': 'presentation',
+            'properties': {
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+            },
+          },
+          'isOpen': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Is Open',
+            'description': 'Whether the dialog is open (defaults to true when rendered by slot wrapper)',
+            'tier': 'presentation',
+          },
+          'className': {
             'type': 'string',
             'default': '',
-            'label': 'Cancel Label',
-            'description': 'Alias for cancelText (schema compatibility)',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'title': {
+            'type': 'string',
+            'default': 'Title',
+            'label': 'Title',
+            'description': 'Dialog title',
             'tier': 'presentation',
           },
           'size': {
@@ -293,92 +375,10 @@ export function stdUiConfirmDialogConfirmDialogOrbital(params: StdUiConfirmDialo
               'full',
             ],
           },
-          'confirmLabel': {
-            'type': 'string',
-            'default': '',
-            'label': 'Confirm Label',
-            'description': 'Alias for confirmText (schema compatibility)',
-            'tier': 'presentation',
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state for confirm button',
-            'tier': 'presentation',
-          },
-          'error': {
-            'type': 'ConfirmDialogError',
-            'label': 'Error',
-            'description': 'Error state',
-            'tier': 'presentation',
-            'properties': {
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-            },
-          },
-          'variant': {
-            'type': 'string',
-            'default': 'danger',
-            'label': 'Variant',
-            'description': 'Dialog variant',
-            'tier': 'presentation',
-            'values': [
-              'danger',
-              'warning',
-              'info',
-              'default',
-            ],
-          },
-          'title': {
-            'type': 'string',
-            'default': '',
-            'label': 'Title',
-            'description': 'Dialog title',
-            'tier': 'presentation',
-          },
-          'message': {
-            'type': 'node',
-            'label': 'Message',
-            'description': 'Dialog message/description',
-            'tier': 'presentation',
-          },
           'description': {
             'type': 'node',
             'label': 'Description',
             'description': 'Alias for message (schema compatibility)',
-            'tier': 'presentation',
-          },
-          'isOpen': {
-            'type': 'boolean',
-            'default': true,
-            'label': 'Is Open',
-            'description': 'Whether the dialog is open (defaults to true when rendered by slot wrapper)',
-            'tier': 'presentation',
-          },
-          'cancelText': {
-            'type': 'string',
-            'default': '',
-            'label': 'Cancel Text',
-            'description': 'Cancel button text',
             'tier': 'presentation',
           },
         },

@@ -39,20 +39,20 @@ export type StdUiPricingCardEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiPricingCardConfig {
-  /** Default: `{"label":"","href":""}` */
+  /** Default: `{"href":"","label":""}` */
   action?: EntityRow;
-  /** Default: `""` */
-  price?: string;
   /** Default: `false` */
   highlighted?: boolean;
   /** Default: `""` */
-  badge?: string;
-  /** Default: `""` */
   description?: string;
-  /** Default: `[]` */
+  /** Default: `["Item"]` */
   features?: string[];
   /** Default: `""` */
+  badge?: string;
+  /** Default: `"Name"` */
   name?: string;
+  /** Default: `"Price"` */
+  price?: string;
   /** Default: `""` */
   className?: string;
 }

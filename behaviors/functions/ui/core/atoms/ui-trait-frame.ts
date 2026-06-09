@@ -40,7 +40,7 @@ export type StdUiTraitFrameEventKey = 'INIT';
  */
 export interface StdUiTraitFrameConfig {
   fallback?: unknown;
-  /** Default: `""` */
+  /** Default: `"Trait Name"` */
   traitName?: string;
 }
 

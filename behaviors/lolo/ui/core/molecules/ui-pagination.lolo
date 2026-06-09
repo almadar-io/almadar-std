@@ -3,6 +3,7 @@ app ui-pagination "1.0.0"
 orbital PaginationOrbital {
   entity PaginationItem [runtime] {
     id : string!
+    pageSize : number = 0
   }
 
   trait PaginationRender -> @rebindable PaginationItem [interaction, instance] {
@@ -10,13 +11,33 @@ orbital PaginationOrbital {
 
     state idle {
       INIT -> idle
+        (set @entity.pageSize @config.pageSize)
         (render-ui main {
           currentPage: @config.currentPage
           totalPages: @config.totalPages
           onPageChange: PAGE_CHANGE
           showPageSize: @config.showPageSize
           pageSizeOptions: @config.pageSizeOptions
-          pageSize: @config.pageSize
+          pageSize: @entity.pageSize
+          onPageSizeChange: PAGE_SIZE_CHANGE
+          showJumpToPage: @config.showJumpToPage
+          showTotal: @config.showTotal
+          totalItems: @config.totalItems
+          maxVisiblePages: @config.maxVisiblePages
+          className: @config.className
+          pageChangeEvent: PAGE_CHANGE
+          pageSizeChangeEvent: PAGE_SIZE_CHANGE
+          type: pagination
+        })
+      PAGE_SIZE_CHANGE -> idle
+        (set @entity.pageSize ?pageSize)
+        (render-ui main {
+          currentPage: @config.currentPage
+          totalPages: @config.totalPages
+          onPageChange: PAGE_CHANGE
+          showPageSize: @config.showPageSize
+          pageSizeOptions: @config.pageSizeOptions
+          pageSize: @entity.pageSize
           onPageSizeChange: PAGE_SIZE_CHANGE
           showJumpToPage: @config.showJumpToPage
           showTotal: @config.showTotal
@@ -41,6 +62,13 @@ orbital PaginationOrbital {
       }
         @description "Callback when page size changes"
         @tier "essential"
+    }
+
+    listens {
+      PAGE_SIZE_CHANGE {
+        size : number
+        pageSize : number!
+      }
     }
 
     config {

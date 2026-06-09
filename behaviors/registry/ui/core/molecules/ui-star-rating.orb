@@ -13,6 +13,11 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "value",
+            "type": "number",
+            "default": 0.0
           }
         ]
       },
@@ -22,7 +27,9 @@
           "entityRebindable": true,
           "entityContract": {
             "requires": [],
-            "provides": []
+            "provides": [
+              "value"
+            ]
           },
           "category": "interaction",
           "linkedEntity": "StarRatingItem",
@@ -65,18 +72,6 @@
                 "name": "Initialize"
               },
               {
-                "key": "ACTION",
-                "name": "Action",
-                "description": "Declarative event name for rating changes",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
                 "key": "CHANGE",
                 "name": "Change",
                 "description": "Direct onChange callback",
@@ -85,6 +80,18 @@
                   {
                     "name": "value",
                     "type": "number"
+                  }
+                ]
+              },
+              {
+                "key": "ACTION",
+                "name": "Action",
+                "description": "Declarative event name for rating changes",
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
                   }
                 ]
               }
@@ -96,20 +103,54 @@
                 "event": "INIT",
                 "effects": [
                   [
+                    "set",
+                    "@entity.value",
+                    "@config.value"
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "className": "@config.className",
+                      "value": "@entity.value",
                       "precision": "@config.precision",
+                      "className": "@config.className",
+                      "label": "@config.label",
+                      "action": "ACTION",
                       "actionPayload": "@config.actionPayload",
-                      "value": "@config.value",
+                      "onChange": "CHANGE",
                       "readOnly": "@config.readOnly",
                       "size": "@config.size",
-                      "action": "ACTION",
-                      "onChange": "CHANGE",
-                      "label": "@config.label",
                       "type": "star-rating",
                       "max": "@config.max"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "CHANGE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.value",
+                    "@payload.value"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "readOnly": "@config.readOnly",
+                      "size": "@config.size",
+                      "actionPayload": "@config.actionPayload",
+                      "value": "@entity.value",
+                      "onChange": "CHANGE",
+                      "type": "star-rating",
+                      "precision": "@config.precision",
+                      "label": "@config.label",
+                      "action": "ACTION",
+                      "max": "@config.max",
+                      "className": "@config.className"
                     }
                   ]
                 ]
@@ -117,37 +158,11 @@
             ]
           },
           "config": {
-            "className": {
+            "label": {
               "type": "string",
               "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "size": {
-              "type": "string",
-              "default": "md",
-              "label": "Size",
-              "description": "Star size",
-              "tier": "presentation",
-              "values": [
-                "sm",
-                "md",
-                "lg"
-              ]
-            },
-            "value": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Value",
-              "description": "Current rating value",
-              "tier": "presentation"
-            },
-            "max": {
-              "type": "number",
-              "default": 5.0,
-              "label": "Max",
-              "description": "Maximum number of stars",
+              "label": "Label",
+              "description": "Accessible label",
               "tier": "presentation"
             },
             "precision": {
@@ -167,18 +182,44 @@
               "description": "Payload to include with the action event",
               "tier": "presentation"
             },
+            "size": {
+              "type": "string",
+              "default": "md",
+              "label": "Size",
+              "description": "Star size",
+              "tier": "presentation",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            },
+            "max": {
+              "type": "number",
+              "default": 5.0,
+              "label": "Max",
+              "description": "Maximum number of stars",
+              "tier": "presentation"
+            },
+            "value": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Value",
+              "description": "Current rating value",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
             "readOnly": {
               "type": "boolean",
               "default": false,
               "label": "Read Only",
               "description": "Read-only display mode",
-              "tier": "presentation"
-            },
-            "label": {
-              "type": "string",
-              "default": "",
-              "label": "Label",
-              "description": "Accessible label",
               "tier": "presentation"
             }
           },

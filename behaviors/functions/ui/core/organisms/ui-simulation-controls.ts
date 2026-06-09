@@ -84,12 +84,12 @@ export interface StdUiSimulationControlsParameterChangePayload {
 export interface StdUiSimulationControlsConfig {
   /** Default: `{}` */
   parameters?: unknown;
-  /** Default: `false` */
-  running?: boolean;
   /** Default: `0` */
   speed?: number;
   /** Default: `""` */
   className?: string;
+  /** Default: `false` */
+  running?: boolean;
 }
 
 /**
@@ -153,6 +153,11 @@ export function stdUiSimulationControlsSimulationControlsOrbital(params: StdUiSi
             'type': 'string',
             'required': true,
           },
+          {
+            'name': 'speed',
+            'type': 'number',
+            'default': 0,
+          },
         ];
         const extras = params.fields ?? [];
         if (extras.length === 0) return canonical;
@@ -166,7 +171,9 @@ export function stdUiSimulationControlsSimulationControlsOrbital(params: StdUiSi
         'entityRebindable': true,
         'entityContract': {
           'requires': [],
-          'provides': [],
+          'provides': [
+            'speed',
+          ],
         },
         'category': 'interaction',
         'linkedEntity': 'SimulationControlsItem',
@@ -261,6 +268,18 @@ export function stdUiSimulationControlsSimulationControlsOrbital(params: StdUiSi
               'name': 'Initialize',
             },
             {
+              'key': 'SPEED_CHANGE',
+              'name': 'Speed Change',
+              'description': 'onSpeedChange prop',
+              'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'speed',
+                  'type': 'number',
+                },
+              ],
+            },
+            {
               'key': 'PLAY',
               'name': 'Play',
               'description': 'onPlay prop',
@@ -309,18 +328,6 @@ export function stdUiSimulationControlsSimulationControlsOrbital(params: StdUiSi
               ],
             },
             {
-              'key': 'SPEED_CHANGE',
-              'name': 'Speed Change',
-              'description': 'onSpeedChange prop',
-              'tier': 'essential',
-              'payloadSchema': [
-                {
-                  'name': 'speed',
-                  'type': 'number',
-                },
-              ],
-            },
-            {
               'key': 'PARAMETER_CHANGE',
               'name': 'Parameter Change',
               'description': 'onParameterChange prop',
@@ -344,20 +351,54 @@ export function stdUiSimulationControlsSimulationControlsOrbital(params: StdUiSi
               'event': 'INIT',
               'effects': [
                 [
+                  'set',
+                  '@entity.speed',
+                  '@config.speed',
+                ],
+                [
                   'render-ui',
                   'main',
                   {
-                    'onReset': 'RESET',
-                    'onPlay': 'PLAY',
-                    'onPause': 'PAUSE',
-                    'running': '@config.running',
                     'className': '@config.className',
-                    'onSpeedChange': 'SPEED_CHANGE',
-                    'speed': '@config.speed',
-                    'type': 'simulation-controls',
-                    'onStep': 'STEP',
+                    'speed': '@entity.speed',
                     'parameters': '@config.parameters',
                     'onParameterChange': 'PARAMETER_CHANGE',
+                    'type': 'simulation-controls',
+                    'onSpeedChange': 'SPEED_CHANGE',
+                    'running': '@config.running',
+                    'onPlay': 'PLAY',
+                    'onPause': 'PAUSE',
+                    'onStep': 'STEP',
+                    'onReset': 'RESET',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'SPEED_CHANGE',
+              'effects': [
+                [
+                  'set',
+                  '@entity.speed',
+                  '@payload.speed',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'onSpeedChange': 'SPEED_CHANGE',
+                    'onPlay': 'PLAY',
+                    'onParameterChange': 'PARAMETER_CHANGE',
+                    'onPause': 'PAUSE',
+                    'className': '@config.className',
+                    'onReset': 'RESET',
+                    'parameters': '@config.parameters',
+                    'type': 'simulation-controls',
+                    'running': '@config.running',
+                    'onStep': 'STEP',
+                    'speed': '@entity.speed',
                   },
                 ],
               ],
@@ -374,13 +415,8 @@ export function stdUiSimulationControlsSimulationControlsOrbital(params: StdUiSi
             'items': {
               'type': 'object',
               'properties': {
-                'label': {
-                  'name': 'label',
-                  'type': 'string',
-                  'required': true,
-                },
-                'step': {
-                  'name': 'step',
+                'value': {
+                  'name': 'value',
                   'type': 'number',
                   'required': true,
                 },
@@ -389,25 +425,23 @@ export function stdUiSimulationControlsSimulationControlsOrbital(params: StdUiSi
                   'type': 'number',
                   'required': true,
                 },
-                'value': {
-                  'name': 'value',
-                  'type': 'number',
-                  'required': true,
-                },
                 'min': {
                   'name': 'min',
                   'type': 'number',
                   'required': true,
                 },
+                'step': {
+                  'name': 'step',
+                  'type': 'number',
+                  'required': true,
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': true,
+                },
               },
             },
-          },
-          'running': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Running',
-            'description': 'running prop',
-            'tier': 'presentation',
           },
           'speed': {
             'type': 'number',
@@ -421,6 +455,13 @@ export function stdUiSimulationControlsSimulationControlsOrbital(params: StdUiSi
             'default': '',
             'label': 'Class Name',
             'description': 'className prop',
+            'tier': 'presentation',
+          },
+          'running': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Running',
+            'description': 'running prop',
             'tier': 'presentation',
           },
         },

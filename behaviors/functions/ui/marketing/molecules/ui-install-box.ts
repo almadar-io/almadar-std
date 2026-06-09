@@ -39,12 +39,12 @@ export type StdUiInstallBoxEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiInstallBoxConfig {
-  /** Default: `""` */
-  className?: string;
-  /** Default: `""` */
+  /** Default: `"Command"` */
   command?: string;
   /** Default: `""` */
   label?: string;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

@@ -41,14 +41,14 @@ export type StdUiDialogueBubbleEventKey = 'INIT';
 export interface StdUiDialogueBubbleConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `""` */
-  speaker?: string;
+  /** Default: `"Text"` */
+  text?: string;
   /** Default: `""` */
   portrait?: string;
-  /** Default: `""` */
-  text?: string;
   /** Default: `"bottom"` */
   position?: 'top' | 'bottom';
+  /** Default: `""` */
+  speaker?: string;
 }
 
 /**

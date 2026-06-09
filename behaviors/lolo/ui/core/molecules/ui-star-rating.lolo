@@ -3,6 +3,7 @@ app ui-star-rating "1.0.0"
 orbital StarRatingOrbital {
   entity StarRatingItem [runtime] {
     id : string!
+    value : number = 0
   }
 
   trait StarRatingRender -> @rebindable StarRatingItem [interaction, instance] {
@@ -10,8 +11,24 @@ orbital StarRatingOrbital {
 
     state idle {
       INIT -> idle
+        (set @entity.value @config.value)
         (render-ui main {
-          value: @config.value
+          value: @entity.value
+          max: @config.max
+          readOnly: @config.readOnly
+          precision: @config.precision
+          size: @config.size
+          action: ACTION
+          actionPayload: @config.actionPayload
+          onChange: CHANGE
+          className: @config.className
+          label: @config.label
+          type: star-rating
+        })
+      CHANGE -> idle
+        (set @entity.value ?value)
+        (render-ui main {
+          value: @entity.value
           max: @config.max
           readOnly: @config.readOnly
           precision: @config.precision
@@ -36,6 +53,12 @@ orbital StarRatingOrbital {
       }
         @description "Direct onChange callback"
         @tier "essential"
+    }
+
+    listens {
+      CHANGE {
+        value : number
+      }
     }
 
     config {

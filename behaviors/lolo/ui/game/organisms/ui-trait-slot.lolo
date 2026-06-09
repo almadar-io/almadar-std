@@ -80,6 +80,7 @@ orbital TraitSlotOrbital {
 
   entity TraitSlotItem [runtime] {
     id : string!
+    slotNumber : number = 0
   }
 
   trait TraitSlotRender -> @rebindable TraitSlotItem [interaction, instance] {
@@ -88,8 +89,61 @@ orbital TraitSlotOrbital {
     state idle {
       INIT -> idle
         (fetch TraitSlotItem {})
+        (set @entity.slotNumber @config.slotNumber)
         (render-ui main {
-          slotNumber: @config.slotNumber
+          slotNumber: @entity.slotNumber
+          equippedItem: @config.equippedItem
+          locked: @config.locked
+          lockLabel: @config.lockLabel
+          selected: @config.selected
+          size: @config.size
+          showTooltip: @config.showTooltip
+          categoryColors: @config.categoryColors
+          tooltipFrameUrl: @config.tooltipFrameUrl
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          entity: TraitSlotItem
+          onItemDrop: ITEM_DROP
+          draggable: @config.draggable
+          onDragStart: DRAG_START
+          feedback: @config.feedback
+          onClick: CLICK
+          onRemove: REMOVE
+          clickEvent: CLICK
+          removeEvent: REMOVE
+          type: trait-slot
+        })
+      CLICK -> idle
+        (set @entity.slotNumber ?slotNumber)
+        (render-ui main {
+          slotNumber: @entity.slotNumber
+          equippedItem: @config.equippedItem
+          locked: @config.locked
+          lockLabel: @config.lockLabel
+          selected: @config.selected
+          size: @config.size
+          showTooltip: @config.showTooltip
+          categoryColors: @config.categoryColors
+          tooltipFrameUrl: @config.tooltipFrameUrl
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          entity: TraitSlotItem
+          onItemDrop: ITEM_DROP
+          draggable: @config.draggable
+          onDragStart: DRAG_START
+          feedback: @config.feedback
+          onClick: CLICK
+          onRemove: REMOVE
+          clickEvent: CLICK
+          removeEvent: REMOVE
+          type: trait-slot
+        })
+      REMOVE -> idle
+        (set @entity.slotNumber ?slotNumber)
+        (render-ui main {
+          slotNumber: @entity.slotNumber
           equippedItem: @config.equippedItem
           locked: @config.locked
           lockLabel: @config.lockLabel
@@ -135,6 +189,15 @@ orbital TraitSlotOrbital {
       }
         @description "Remove handler"
         @tier "essential"
+    }
+
+    listens {
+      CLICK {
+        slotNumber : number!
+      }
+      REMOVE {
+        slotNumber : number!
+      }
     }
 
     config {

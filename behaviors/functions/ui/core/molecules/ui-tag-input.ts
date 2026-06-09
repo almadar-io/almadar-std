@@ -62,18 +62,18 @@ export interface StdUiTagInputRemovePayload {
 export interface StdUiTagInputConfig {
   /** Default: `"default"` */
   variant?: 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'error' | 'info' | 'neutral';
-  /** Default: `""` */
-  className?: string;
-  /** Default: `""` */
-  helperText?: string;
-  /** Default: `false` */
-  disabled?: boolean;
   /** Default: `true` */
   unique?: boolean;
-  /** Default: `[]` */
-  value?: string[];
   /** Default: `""` */
   placeholder?: string;
+  /** Default: `""` */
+  helperText?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `false` */
+  disabled?: boolean;
+  /** Default: `["Item"]` */
+  value?: string[];
 }
 
 /**

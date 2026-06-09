@@ -39,18 +39,18 @@ export type StdUiCtaBannerEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiCtaBannerConfig {
-  /** Default: `"alt"` */
-  background?: 'default' | 'alt' | 'dark' | 'gradient' | 'primary';
-  secondaryAction?: EntityRow;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"center"` */
-  align?: 'center' | 'left';
-  /** Default: `""` */
+  /** Default: `"Title"` */
   title?: string;
   /** Default: `""` */
-  subtitle?: string;
+  className?: string;
+  /** Default: `"alt"` */
+  background?: 'default' | 'alt' | 'dark' | 'gradient' | 'primary';
+  /** Default: `"center"` */
+  align?: 'center' | 'left';
   primaryAction?: EntityRow;
+  /** Default: `""` */
+  subtitle?: string;
+  secondaryAction?: EntityRow;
 }
 
 /**

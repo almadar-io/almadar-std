@@ -13,6 +13,11 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "checked",
+            "type": "boolean",
+            "default": false
           }
         ]
       },
@@ -22,7 +27,9 @@
           "entityRebindable": true,
           "entityContract": {
             "requires": [],
-            "provides": []
+            "provides": [
+              "checked"
+            ]
           },
           "category": "interaction",
           "linkedEntity": "SwitchItem",
@@ -72,17 +79,48 @@
                 "event": "INIT",
                 "effects": [
                   [
+                    "set",
+                    "@entity.checked",
+                    "@config.checked"
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "checked": "@config.checked",
-                      "name": "@config.name",
-                      "type": "switch",
-                      "className": "@config.className",
+                      "label": "@config.label",
                       "onChange": "CHANGE",
                       "disabled": "@config.disabled",
                       "defaultChecked": "@config.defaultChecked",
-                      "label": "@config.label"
+                      "className": "@config.className",
+                      "type": "switch",
+                      "name": "@config.name",
+                      "checked": "@entity.checked"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "CHANGE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.checked",
+                    "@payload.checked"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "disabled": "@config.disabled",
+                      "checked": "@entity.checked",
+                      "className": "@config.className",
+                      "onChange": "CHANGE",
+                      "name": "@config.name",
+                      "label": "@config.label",
+                      "type": "switch",
+                      "defaultChecked": "@config.defaultChecked"
                     }
                   ]
                 ]
@@ -97,11 +135,11 @@
               "description": "defaultChecked prop",
               "tier": "presentation"
             },
-            "checked": {
+            "disabled": {
               "type": "boolean",
               "default": false,
-              "label": "Checked",
-              "description": "checked prop",
+              "label": "Disabled",
+              "description": "disabled prop",
               "tier": "presentation"
             },
             "name": {
@@ -118,18 +156,18 @@
               "description": "className prop",
               "tier": "presentation"
             },
+            "checked": {
+              "type": "boolean",
+              "default": false,
+              "label": "Checked",
+              "description": "checked prop",
+              "tier": "presentation"
+            },
             "label": {
               "type": "string",
               "default": "",
               "label": "Label",
               "description": "label prop",
-              "tier": "presentation"
-            },
-            "disabled": {
-              "type": "boolean",
-              "default": false,
-              "label": "Disabled",
-              "description": "disabled prop",
               "tier": "presentation"
             }
           },

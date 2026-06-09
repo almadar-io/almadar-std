@@ -41,14 +41,14 @@ export type StdUiDocCodeBlockEventKey = 'INIT';
 export interface StdUiDocCodeBlockConfig {
   /** Default: `""` */
   language?: string;
-  /** Default: `""` */
-  code?: string;
   /** Default: `false` */
   showLineNumbers?: boolean;
-  /** Default: `""` */
-  className?: string;
+  /** Default: `"Code"` */
+  code?: string;
   /** Default: `""` */
   title?: string;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

@@ -13,6 +13,11 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "value",
+            "type": "number",
+            "default": 0.0
           }
         ]
       },
@@ -22,7 +27,9 @@
           "entityRebindable": true,
           "entityContract": {
             "requires": [],
-            "provides": []
+            "provides": [
+              "value"
+            ]
           },
           "category": "interaction",
           "linkedEntity": "RangeSliderItem",
@@ -65,18 +72,6 @@
                 "name": "Initialize"
               },
               {
-                "key": "ACTION",
-                "name": "Action",
-                "description": "Declarative event name for value changes",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
                 "key": "CHANGE",
                 "name": "Change",
                 "description": "Direct onChange callback",
@@ -85,6 +80,18 @@
                   {
                     "name": "value",
                     "type": "number"
+                  }
+                ]
+              },
+              {
+                "key": "ACTION",
+                "name": "Action",
+                "description": "Declarative event name for value changes",
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
                   }
                 ]
               }
@@ -96,23 +103,60 @@
                 "event": "INIT",
                 "effects": [
                   [
+                    "set",
+                    "@entity.value",
+                    "@config.value"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "onChange": "CHANGE",
+                      "value": "@entity.value",
+                      "disabled": "@config.disabled",
+                      "type": "range-slider",
+                      "showTicks": "@config.showTicks",
+                      "min": "@config.min",
+                      "step": "@config.step",
+                      "buffered": "@config.buffered",
+                      "size": "@config.size",
+                      "action": "ACTION",
+                      "max": "@config.max",
+                      "showTooltip": "@config.showTooltip",
+                      "actionPayload": "@config.actionPayload",
+                      "className": "@config.className"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "CHANGE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.value",
+                    "@payload.value"
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
                       "disabled": "@config.disabled",
-                      "type": "range-slider",
-                      "showTicks": "@config.showTicks",
-                      "onChange": "CHANGE",
-                      "max": "@config.max",
                       "step": "@config.step",
-                      "buffered": "@config.buffered",
-                      "size": "@config.size",
-                      "actionPayload": "@config.actionPayload",
-                      "min": "@config.min",
-                      "value": "@config.value",
                       "action": "ACTION",
+                      "className": "@config.className",
+                      "actionPayload": "@config.actionPayload",
+                      "onChange": "CHANGE",
+                      "type": "range-slider",
+                      "max": "@config.max",
+                      "min": "@config.min",
+                      "buffered": "@config.buffered",
+                      "value": "@entity.value",
                       "showTooltip": "@config.showTooltip",
-                      "className": "@config.className"
+                      "showTicks": "@config.showTicks",
+                      "size": "@config.size"
                     }
                   ]
                 ]
@@ -120,27 +164,6 @@
             ]
           },
           "config": {
-            "step": {
-              "type": "number",
-              "default": 1.0,
-              "label": "Step",
-              "description": "Step increment",
-              "tier": "presentation"
-            },
-            "showTicks": {
-              "type": "boolean",
-              "default": false,
-              "label": "Show Ticks",
-              "description": "Show tick marks at step intervals",
-              "tier": "presentation"
-            },
-            "disabled": {
-              "type": "boolean",
-              "default": false,
-              "label": "Disabled",
-              "description": "Disabled state",
-              "tier": "presentation"
-            },
             "value": {
               "type": "number",
               "default": 0.0,
@@ -155,11 +178,10 @@
               "description": "Show tooltip with current value on drag",
               "tier": "presentation"
             },
-            "min": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Min",
-              "description": "Minimum value",
+            "actionPayload": {
+              "type": "json",
+              "label": "Action Payload",
+              "description": "Payload to include with the action event",
               "tier": "presentation"
             },
             "buffered": {
@@ -169,10 +191,39 @@
               "description": "Buffered range (0-100), for media seek bars",
               "tier": "presentation"
             },
-            "actionPayload": {
-              "type": "json",
-              "label": "Action Payload",
-              "description": "Payload to include with the action event",
+            "disabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Disabled",
+              "description": "Disabled state",
+              "tier": "presentation"
+            },
+            "max": {
+              "type": "number",
+              "default": 100.0,
+              "label": "Max",
+              "description": "Maximum value",
+              "tier": "presentation"
+            },
+            "showTicks": {
+              "type": "boolean",
+              "default": false,
+              "label": "Show Ticks",
+              "description": "Show tick marks at step intervals",
+              "tier": "presentation"
+            },
+            "step": {
+              "type": "number",
+              "default": 1.0,
+              "label": "Step",
+              "description": "Step increment",
+              "tier": "presentation"
+            },
+            "min": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Min",
+              "description": "Minimum value",
               "tier": "presentation"
             },
             "size": {
@@ -186,13 +237,6 @@
                 "md",
                 "lg"
               ]
-            },
-            "max": {
-              "type": "number",
-              "default": 100.0,
-              "label": "Max",
-              "description": "Maximum value",
-              "tier": "presentation"
             },
             "className": {
               "type": "string",

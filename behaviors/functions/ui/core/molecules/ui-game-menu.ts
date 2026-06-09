@@ -46,20 +46,20 @@ export interface StdUiGameMenuSelectPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiGameMenuConfig {
+  /** Default: `"Title"` */
+  title?: string;
+  /** Default: `""` */
+  subtitle?: string;
+  /** Default: `""` */
+  logo?: string;
+  /** Default: `[]` */
+  menuItems?: EntityRow[];
+  /** Default: `[]` */
+  options?: EntityRow[];
   /** Default: `""` */
   background?: string;
   /** Default: `""` */
   className?: string;
-  /** Default: `""` */
-  subtitle?: string;
-  /** Default: `""` */
-  title?: string;
-  /** Default: `""` */
-  logo?: string;
-  /** Default: `[]` */
-  options?: EntityRow[];
-  /** Default: `[]` */
-  menuItems?: EntityRow[];
 }
 
 /**
