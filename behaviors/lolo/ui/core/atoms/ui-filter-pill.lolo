@@ -3,6 +3,7 @@ app ui-filter-pill "1.0.0"
 orbital FilterPillOrbital {
   entity FilterPillItem [runtime] {
     id : string!
+    label : string = ""
   }
 
   trait FilterPillRender -> @rebindable FilterPillItem [interaction, instance] {
@@ -10,11 +11,42 @@ orbital FilterPillOrbital {
 
     state idle {
       INIT -> idle
+        (set @entity.label @config.label)
         (render-ui main {
           className: @config.className
           variant: @config.variant
           size: @config.size
-          label: @config.label
+          label: @entity.label
+          icon: @config.icon
+          onRemove: REMOVE
+          removable: @config.removable
+          onClick: CLICK
+          clickEvent: CLICK
+          removeEvent: REMOVE
+          type: filter-pill
+        })
+      REMOVE -> idle
+        (set @entity.label ?label)
+        (render-ui main {
+          className: @config.className
+          variant: @config.variant
+          size: @config.size
+          label: @entity.label
+          icon: @config.icon
+          onRemove: REMOVE
+          removable: @config.removable
+          onClick: CLICK
+          clickEvent: CLICK
+          removeEvent: REMOVE
+          type: filter-pill
+        })
+      CLICK -> idle
+        (set @entity.label ?label)
+        (render-ui main {
+          className: @config.className
+          variant: @config.variant
+          size: @config.size
+          label: @entity.label
           icon: @config.icon
           onRemove: REMOVE
           removable: @config.removable
@@ -36,6 +68,15 @@ orbital FilterPillOrbital {
       }
         @description "Click handler for the body of the pill (filter toggle)"
         @tier "essential"
+    }
+
+    listens {
+      REMOVE {
+        label : string!
+      }
+      CLICK {
+        label : string!
+      }
     }
 
     config {

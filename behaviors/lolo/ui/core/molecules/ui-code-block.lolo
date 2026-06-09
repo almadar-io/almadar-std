@@ -3,6 +3,7 @@ app ui-code-block "1.0.0"
 orbital CodeBlockOrbital {
   entity CodeBlockItem [runtime] {
     id : string!
+    code : string = "Code"
   }
 
   trait CodeBlockRender -> @rebindable CodeBlockItem [interaction, instance] {
@@ -10,8 +11,23 @@ orbital CodeBlockOrbital {
 
     state idle {
       INIT -> idle
+        (set @entity.code @config.code)
         (render-ui main {
-          code: @config.code
+          code: @entity.code
+          language: @config.language
+          showCopyButton: @config.showCopyButton
+          showLanguageBadge: @config.showLanguageBadge
+          maxHeight: @config.maxHeight
+          foldable: @config.foldable
+          className: @config.className
+          editable: @config.editable
+          onChange: CHANGE
+          type: code-block
+        })
+      CHANGE -> idle
+        (set @entity.code ?code)
+        (render-ui main {
+          code: @entity.code
           language: @config.language
           showCopyButton: @config.showCopyButton
           showLanguageBadge: @config.showLanguageBadge
@@ -32,8 +48,14 @@ orbital CodeBlockOrbital {
         @tier "essential"
     }
 
+    listens {
+      CHANGE {
+        code : string
+      }
+    }
+
     config {
-      code : string = ""
+      code : string = "Code"
         @label "Code"
         @description "The code content to display"
         @tier "presentation"

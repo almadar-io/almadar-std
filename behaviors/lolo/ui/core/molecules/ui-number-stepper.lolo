@@ -3,6 +3,7 @@ app ui-number-stepper "1.0.0"
 orbital NumberStepperOrbital {
   entity NumberStepperItem [runtime] {
     id : string!
+    value : number = 0
   }
 
   trait NumberStepperRender -> @rebindable NumberStepperItem [interaction, instance] {
@@ -10,8 +11,25 @@ orbital NumberStepperOrbital {
 
     state idle {
       INIT -> idle
+        (set @entity.value @config.value)
         (render-ui main {
-          value: @config.value
+          value: @entity.value
+          min: @config.min
+          max: @config.max
+          step: @config.step
+          size: @config.size
+          disabled: @config.disabled
+          onChange: CHANGE
+          action: ACTION
+          actionPayload: @config.actionPayload
+          className: @config.className
+          label: @config.label
+          type: number-stepper
+        })
+      CHANGE -> idle
+        (set @entity.value ?value)
+        (render-ui main {
+          value: @entity.value
           min: @config.min
           max: @config.max
           step: @config.step
@@ -37,6 +55,12 @@ orbital NumberStepperOrbital {
       }
         @description "Declarative event name for value changes"
         @tier "essential"
+    }
+
+    listens {
+      CHANGE {
+        value : number
+      }
     }
 
     config {

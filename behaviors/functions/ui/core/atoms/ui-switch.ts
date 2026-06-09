@@ -49,15 +49,15 @@ export interface StdUiSwitchConfig {
   /** Default: `false` */
   defaultChecked?: boolean;
   /** Default: `false` */
-  checked?: boolean;
+  disabled?: boolean;
   /** Default: `""` */
   name?: string;
   /** Default: `""` */
   className?: string;
+  /** Default: `false` */
+  checked?: boolean;
   /** Default: `""` */
   label?: string;
-  /** Default: `false` */
-  disabled?: boolean;
 }
 
 /**

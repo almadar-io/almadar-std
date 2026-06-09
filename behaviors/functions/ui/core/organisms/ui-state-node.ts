@@ -46,18 +46,18 @@ export interface StdUiStateNodeClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiStateNodeConfig {
-  /** Default: `""` */
-  className?: string;
-  /** Default: `""` */
-  name?: string;
   /** Default: `false` */
   isSelected?: boolean;
-  /** Default: `{"y":0,"x":0}` */
-  position?: EntityRow;
+  /** Default: `"Name"` */
+  name?: string;
   /** Default: `false` */
   isCurrent?: boolean;
   /** Default: `false` */
   isInitial?: boolean;
+  /** Default: `{"x":0,"y":0}` */
+  position?: EntityRow;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**
@@ -187,14 +187,14 @@ export function stdUiStateNodeStateNodeOrbital(params: StdUiStateNodeStateNodeOr
                   'render-ui',
                   'main',
                   {
-                    'position': '@config.position',
-                    'onClick': 'CLICK',
-                    'className': '@config.className',
+                    'isCurrent': '@config.isCurrent',
+                    'isSelected': '@config.isSelected',
                     'name': '@config.name',
                     'isInitial': '@config.isInitial',
+                    'onClick': 'CLICK',
+                    'position': '@config.position',
                     'type': 'state-node',
-                    'isSelected': '@config.isSelected',
-                    'isCurrent': '@config.isCurrent',
+                    'className': '@config.className',
                   },
                 ],
               ],
@@ -202,20 +202,6 @@ export function stdUiStateNodeStateNodeOrbital(params: StdUiStateNodeStateNodeOr
           ],
         },
         'config': {
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'name': {
-            'type': 'string',
-            'default': '',
-            'label': 'Name',
-            'description': 'State name',
-            'tier': 'presentation',
-          },
           'isSelected': {
             'type': 'boolean',
             'default': false,
@@ -223,11 +209,32 @@ export function stdUiStateNodeStateNodeOrbital(params: StdUiStateNodeStateNodeOr
             'description': 'Whether this node is selected for editing',
             'tier': 'presentation',
           },
+          'name': {
+            'type': 'string',
+            'default': 'Name',
+            'label': 'Name',
+            'description': 'State name',
+            'tier': 'presentation',
+          },
+          'isCurrent': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Current',
+            'description': 'Whether this is the current active state',
+            'tier': 'presentation',
+          },
+          'isInitial': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Initial',
+            'description': 'Whether this is the initial state',
+            'tier': 'presentation',
+          },
           'position': {
             'type': 'StateNodePosition',
             'default': {
-              'y': 0,
               'x': 0,
+              'y': 0,
             },
             'label': 'Position',
             'description': 'Position on the graph canvas',
@@ -245,18 +252,11 @@ export function stdUiStateNodeStateNodeOrbital(params: StdUiStateNodeStateNodeOr
               },
             },
           },
-          'isCurrent': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Current',
-            'description': 'Whether this is the current active state',
-            'tier': 'presentation',
-          },
-          'isInitial': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Initial',
-            'description': 'Whether this is the initial state',
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
         },

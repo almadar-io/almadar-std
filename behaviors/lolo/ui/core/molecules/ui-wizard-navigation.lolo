@@ -3,6 +3,8 @@ app ui-wizard-navigation "1.0.0"
 orbital WizardNavigationOrbital {
   entity WizardNavigationItem [runtime] {
     id : string!
+    currentStep : number = 0
+    totalSteps : number = 0
   }
 
   trait WizardNavigationRender -> @rebindable WizardNavigationItem [interaction, instance] {
@@ -10,9 +12,80 @@ orbital WizardNavigationOrbital {
 
     state idle {
       INIT -> idle
+        (set @entity.currentStep @config.currentStep)
+        (set @entity.totalSteps @config.totalSteps)
         (render-ui main {
-          currentStep: @config.currentStep
-          totalSteps: @config.totalSteps
+          currentStep: @entity.currentStep
+          totalSteps: @entity.totalSteps
+          isValid: @config.isValid
+          showBack: @config.showBack
+          showNext: @config.showNext
+          showComplete: @config.showComplete
+          backLabel: @config.backLabel
+          nextLabel: @config.nextLabel
+          completeLabel: @config.completeLabel
+          onBack: BACK
+          onNext: NEXT
+          onComplete: COMPLETE
+          onBackClick: BACK_CLICK
+          onNextClick: NEXT_CLICK
+          onCompleteClick: COMPLETE_CLICK
+          compact: @config.compact
+          className: @config.className
+          type: wizard-navigation
+        })
+      BACK -> idle
+        (set @entity.currentStep ?currentStep)
+        (set @entity.totalSteps ?totalSteps)
+        (render-ui main {
+          currentStep: @entity.currentStep
+          totalSteps: @entity.totalSteps
+          isValid: @config.isValid
+          showBack: @config.showBack
+          showNext: @config.showNext
+          showComplete: @config.showComplete
+          backLabel: @config.backLabel
+          nextLabel: @config.nextLabel
+          completeLabel: @config.completeLabel
+          onBack: BACK
+          onNext: NEXT
+          onComplete: COMPLETE
+          onBackClick: BACK_CLICK
+          onNextClick: NEXT_CLICK
+          onCompleteClick: COMPLETE_CLICK
+          compact: @config.compact
+          className: @config.className
+          type: wizard-navigation
+        })
+      NEXT -> idle
+        (set @entity.currentStep ?currentStep)
+        (set @entity.totalSteps ?totalSteps)
+        (render-ui main {
+          currentStep: @entity.currentStep
+          totalSteps: @entity.totalSteps
+          isValid: @config.isValid
+          showBack: @config.showBack
+          showNext: @config.showNext
+          showComplete: @config.showComplete
+          backLabel: @config.backLabel
+          nextLabel: @config.nextLabel
+          completeLabel: @config.completeLabel
+          onBack: BACK
+          onNext: NEXT
+          onComplete: COMPLETE
+          onBackClick: BACK_CLICK
+          onNextClick: NEXT_CLICK
+          onCompleteClick: COMPLETE_CLICK
+          compact: @config.compact
+          className: @config.className
+          type: wizard-navigation
+        })
+      COMPLETE -> idle
+        (set @entity.currentStep ?currentStep)
+        (set @entity.totalSteps ?totalSteps)
+        (render-ui main {
+          currentStep: @entity.currentStep
+          totalSteps: @entity.totalSteps
           isValid: @config.isValid
           showBack: @config.showBack
           showNext: @config.showNext
@@ -66,6 +139,21 @@ orbital WizardNavigationOrbital {
       }
         @description "Direct callback for Complete (alternative to event)"
         @tier "essential"
+    }
+
+    listens {
+      BACK {
+        currentStep : number!
+        totalSteps : number!
+      }
+      NEXT {
+        currentStep : number!
+        totalSteps : number!
+      }
+      COMPLETE {
+        currentStep : number!
+        totalSteps : number!
+      }
     }
 
     config {

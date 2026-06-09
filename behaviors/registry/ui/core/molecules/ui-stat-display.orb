@@ -49,29 +49,29 @@
                     "render-ui",
                     "main",
                     {
-                      "max": "@config.max",
-                      "className": "@config.className",
                       "error": "@config.error",
-                      "suffix": "@config.suffix",
-                      "icon": "@config.icon",
-                      "look": "@config.look",
-                      "trend": "@config.trend",
-                      "value": "@config.value",
-                      "type": "stat-display",
-                      "clickEvent": "@config.clickEvent",
-                      "isLoading": "@config.isLoading",
-                      "label": "@config.label",
-                      "format": "@config.format",
-                      "compact": "@config.compact",
-                      "target": "@config.target",
-                      "iconColor": "@config.iconColor",
                       "variant": "@config.variant",
-                      "size": "@config.size",
-                      "trendPolarity": "@config.trendPolarity",
-                      "prefix": "@config.prefix",
-                      "iconBg": "@config.iconBg",
+                      "suffix": "@config.suffix",
                       "trendFormat": "@config.trendFormat",
-                      "sparklineData": "@config.sparklineData"
+                      "icon": "@config.icon",
+                      "trendPolarity": "@config.trendPolarity",
+                      "trend": "@config.trend",
+                      "iconColor": "@config.iconColor",
+                      "value": "@config.value",
+                      "format": "@config.format",
+                      "type": "stat-display",
+                      "size": "@config.size",
+                      "iconBg": "@config.iconBg",
+                      "target": "@config.target",
+                      "look": "@config.look",
+                      "sparklineData": "@config.sparklineData",
+                      "className": "@config.className",
+                      "max": "@config.max",
+                      "compact": "@config.compact",
+                      "prefix": "@config.prefix",
+                      "label": "@config.label",
+                      "isLoading": "@config.isLoading",
+                      "clickEvent": "@config.clickEvent"
                     }
                   ]
                 ]
@@ -79,12 +79,41 @@
             ]
           },
           "config": {
-            "className": {
+            "look": {
               "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
+              "default": "elevated",
+              "label": "Look",
+              "description": "Layer 2 visual treatment.",
+              "tier": "presentation",
+              "values": [
+                "elevated",
+                "flat",
+                "progress-backed",
+                "gauge",
+                "sparkline"
+              ]
+            },
+            "trendFormat": {
+              "type": "string",
+              "default": "absolute",
+              "label": "Trend Format",
+              "description": "When `'percent'`, renders trend with a `%` suffix (e.g. `↓ 3.3%`); default is `'absolute'`.",
+              "tier": "presentation",
+              "values": [
+                "absolute",
+                "percent"
+              ]
+            },
+            "trendPolarity": {
+              "type": "string",
+              "default": "higher-is-better",
+              "label": "Trend Polarity",
+              "description": "Controls whether `trend > 0` is 'good' (default) or 'bad'. `lower-is-better` inverts the color logic.",
+              "tier": "presentation",
+              "values": [
+                "higher-is-better",
+                "lower-is-better"
+              ]
             },
             "variant": {
               "type": "string",
@@ -101,19 +130,19 @@
                 "info"
               ]
             },
-            "look": {
+            "value": {
               "type": "string",
-              "default": "elevated",
-              "label": "Look",
-              "description": "Layer 2 visual treatment.",
-              "tier": "presentation",
-              "values": [
-                "elevated",
-                "flat",
-                "progress-backed",
-                "gauge",
-                "sparkline"
-              ]
+              "default": "Value",
+              "label": "Value",
+              "description": "Primary value (number or formatted string)",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
             },
             "trend": {
               "type": "number",
@@ -122,51 +151,17 @@
               "description": "Signed delta vs previous period. >0 renders ↑ green, <0 renders ↓ red, 0 hides. Polarity reversal via `trendPolarity`.",
               "tier": "presentation"
             },
-            "trendFormat": {
+            "size": {
               "type": "string",
-              "default": "absolute",
-              "label": "Trend Format",
-              "description": "When `'percent'`, renders trend with a `%` suffix (e.g. `↓ 3.3%`); default is `'absolute'`.",
+              "default": "md",
+              "label": "Size",
+              "description": "Size variant",
               "tier": "presentation",
               "values": [
-                "absolute",
-                "percent"
+                "sm",
+                "md",
+                "lg"
               ]
-            },
-            "error": {
-              "type": "StatDisplayError",
-              "label": "Error",
-              "description": "Error state",
-              "tier": "presentation",
-              "properties": {
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                },
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                },
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                }
-              }
-            },
-            "label": {
-              "type": "string",
-              "default": "",
-              "label": "Label",
-              "description": "Display label (e.g., 'Total', 'Remaining')",
-              "tier": "presentation"
             },
             "iconBg": {
               "type": "string",
@@ -175,11 +170,21 @@
               "description": "Icon background color class",
               "tier": "presentation"
             },
-            "target": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Target",
-              "description": "Optional progress target. >0 renders a progress bar at value/target.",
+            "sparklineData": {
+              "type": "[number]",
+              "default": [],
+              "label": "Sparkline Data",
+              "description": "Optional inline sparkline data appended to the trend row. Length < 2 renders nothing.",
+              "tier": "presentation",
+              "items": {
+                "type": "number"
+              }
+            },
+            "suffix": {
+              "type": "string",
+              "default": "",
+              "label": "Suffix",
+              "description": "Suffix appended to the formatted value (e.g. ' /mo', ' ms').",
               "tier": "presentation"
             },
             "isLoading": {
@@ -187,13 +192,6 @@
               "default": false,
               "label": "Is Loading",
               "description": "Loading state",
-              "tier": "presentation"
-            },
-            "prefix": {
-              "type": "string",
-              "default": "",
-              "label": "Prefix",
-              "description": "Prefix prepended to the formatted value (e.g. '≈ ').",
               "tier": "presentation"
             },
             "compact": {
@@ -210,11 +208,66 @@
               "description": "Icon color class",
               "tier": "presentation"
             },
-            "value": {
+            "label": {
+              "type": "string",
+              "default": "Label",
+              "label": "Label",
+              "description": "Display label (e.g., 'Total', 'Remaining')",
+              "tier": "presentation"
+            },
+            "clickEvent": {
               "type": "string",
               "default": "",
-              "label": "Value",
-              "description": "Primary value (number or formatted string)",
+              "label": "Click Event",
+              "description": "Event name emitted as `UI:{clickEvent}` with `{ metricLabel }` when the card is clicked.",
+              "tier": "presentation"
+            },
+            "error": {
+              "type": "StatDisplayError",
+              "label": "Error",
+              "description": "Error state",
+              "tier": "presentation",
+              "properties": {
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                },
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": false
+                },
+                "stack": {
+                  "name": "stack",
+                  "type": "string",
+                  "required": false
+                },
+                "code": {
+                  "name": "code",
+                  "type": "string",
+                  "required": false
+                }
+              }
+            },
+            "target": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Target",
+              "description": "Optional progress target. >0 renders a progress bar at value/target.",
+              "tier": "presentation"
+            },
+            "prefix": {
+              "type": "string",
+              "default": "",
+              "label": "Prefix",
+              "description": "Prefix prepended to the formatted value (e.g. '≈ ').",
+              "tier": "presentation"
+            },
+            "icon": {
+              "type": "node",
+              "label": "Icon",
+              "description": "Lucide icon name or React node",
               "tier": "presentation"
             },
             "max": {
@@ -224,65 +277,12 @@
               "description": "Optional denominator. >0 renders 'value / max'; 0 or omitted hides the divider.",
               "tier": "presentation"
             },
-            "trendPolarity": {
-              "type": "string",
-              "default": "higher-is-better",
-              "label": "Trend Polarity",
-              "description": "Controls whether `trend > 0` is 'good' (default) or 'bad'. `lower-is-better` inverts the color logic.",
-              "tier": "presentation",
-              "values": [
-                "higher-is-better",
-                "lower-is-better"
-              ]
-            },
-            "sparklineData": {
-              "type": "[number]",
-              "default": [],
-              "label": "Sparkline Data",
-              "description": "Optional inline sparkline data appended to the trend row. Length < 2 renders nothing.",
-              "tier": "presentation",
-              "items": {
-                "type": "number"
-              }
-            },
-            "clickEvent": {
-              "type": "string",
-              "default": "",
-              "label": "Click Event",
-              "description": "Event name emitted as `UI:{clickEvent}` with `{ metricLabel }` when the card is clicked.",
-              "tier": "presentation"
-            },
-            "suffix": {
-              "type": "string",
-              "default": "",
-              "label": "Suffix",
-              "description": "Suffix appended to the formatted value (e.g. ' /mo', ' ms').",
-              "tier": "presentation"
-            },
-            "icon": {
-              "type": "node",
-              "label": "Icon",
-              "description": "Lucide icon name or React node",
-              "tier": "presentation"
-            },
             "format": {
               "type": "string",
               "default": "",
               "label": "Format",
               "description": "Display format: 'number', 'currency', 'percent'",
               "tier": "presentation"
-            },
-            "size": {
-              "type": "string",
-              "default": "md",
-              "label": "Size",
-              "description": "Size variant",
-              "tier": "presentation",
-              "values": [
-                "sm",
-                "md",
-                "lg"
-              ]
             }
           },
           "scope": "instance"

@@ -113,17 +113,17 @@
                     "render-ui",
                     "main",
                     {
-                      "actions": "@config.actions",
-                      "message": "@config.message",
-                      "menuItems": "@config.menuItems",
-                      "variant": "@config.variant",
-                      "onAction": "ACTION",
                       "className": "@config.className",
-                      "type": "game-over-screen",
                       "stats": "@config.stats",
-                      "highScore": "@config.highScore",
+                      "variant": "@config.variant",
+                      "menuItems": "@config.menuItems",
+                      "type": "game-over-screen",
+                      "currentScore": "@config.currentScore",
+                      "actions": "@config.actions",
                       "title": "@config.title",
-                      "currentScore": "@config.currentScore"
+                      "message": "@config.message",
+                      "onAction": "ACTION",
+                      "highScore": "@config.highScore"
                     }
                   ]
                 ]
@@ -131,6 +131,62 @@
             ]
           },
           "config": {
+            "stats": {
+              "type": "[GameOverScreenStatsItem]",
+              "default": [],
+              "label": "Stats",
+              "description": "Stats to display",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "format": {
+                    "name": "format",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "number",
+                      "time",
+                      "text"
+                    ]
+                  },
+                  "bind": {
+                    "name": "bind",
+                    "type": "string",
+                    "required": false
+                  },
+                  "value": {
+                    "name": "value",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "title": {
+              "type": "string",
+              "default": "Title",
+              "label": "Title",
+              "description": "Screen title (e.g., 'Game Over', 'Victory!')",
+              "tier": "presentation"
+            },
+            "highScore": {
+              "type": "string",
+              "default": "",
+              "label": "High Score",
+              "description": "High score (optional, shows 'NEW HIGH SCORE!' if exceeded)",
+              "tier": "presentation"
+            },
             "actions": {
               "type": "[GameOverScreenActionsItem]",
               "default": [],
@@ -140,62 +196,6 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "navigatesTo": {
-                    "name": "navigatesTo",
-                    "type": "string",
-                    "required": false
-                  },
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "primary",
-                      "secondary",
-                      "ghost"
-                    ]
-                  }
-                }
-              }
-            },
-            "currentScore": {
-              "type": "string",
-              "default": "",
-              "label": "Current Score",
-              "description": "Current score for high score comparison (accepts string for schema bindings)",
-              "tier": "presentation"
-            },
-            "title": {
-              "type": "string",
-              "default": "",
-              "label": "Title",
-              "description": "Screen title (e.g., 'Game Over', 'Victory!')",
-              "tier": "presentation"
-            },
-            "menuItems": {
-              "type": "[GameOverScreenMenuItemsItem]",
-              "default": [],
-              "label": "Menu Items",
-              "description": "Alias for actions (schema compatibility)",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "navigatesTo": {
-                    "name": "navigatesTo",
-                    "type": "string",
-                    "required": false
-                  },
                   "event": {
                     "name": "event",
                     "type": "string",
@@ -215,16 +215,14 @@
                     "name": "label",
                     "type": "string",
                     "required": true
+                  },
+                  "navigatesTo": {
+                    "name": "navigatesTo",
+                    "type": "string",
+                    "required": false
                   }
                 }
               }
-            },
-            "highScore": {
-              "type": "string",
-              "default": "",
-              "label": "High Score",
-              "description": "High score (optional, shows 'NEW HIGH SCORE!' if exceeded)",
-              "tier": "presentation"
             },
             "variant": {
               "type": "string",
@@ -245,54 +243,56 @@
               "description": "Optional message",
               "tier": "presentation"
             },
+            "currentScore": {
+              "type": "string",
+              "default": "",
+              "label": "Current Score",
+              "description": "Current score for high score comparison (accepts string for schema bindings)",
+              "tier": "presentation"
+            },
+            "menuItems": {
+              "type": "[GameOverScreenMenuItemsItem]",
+              "default": [],
+              "label": "Menu Items",
+              "description": "Alias for actions (schema compatibility)",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "primary",
+                      "secondary",
+                      "ghost"
+                    ]
+                  },
+                  "navigatesTo": {
+                    "name": "navigatesTo",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
             "className": {
               "type": "string",
               "default": "",
               "label": "Class Name",
               "description": "Additional CSS classes",
               "tier": "presentation"
-            },
-            "stats": {
-              "type": "[GameOverScreenStatsItem]",
-              "default": [],
-              "label": "Stats",
-              "description": "Stats to display",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "value": {
-                    "name": "value",
-                    "type": "string",
-                    "required": false
-                  },
-                  "bind": {
-                    "name": "bind",
-                    "type": "string",
-                    "required": false
-                  },
-                  "format": {
-                    "name": "format",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "number",
-                      "time",
-                      "text"
-                    ]
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
             }
           },
           "scope": "instance"

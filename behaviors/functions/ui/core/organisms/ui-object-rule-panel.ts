@@ -49,7 +49,7 @@ export interface StdUiObjectRulePanelRulesChangePayload {
 export interface StdUiObjectRulePanelConfig {
   /** Default: `false` */
   disabled?: boolean;
-  /** Default: `{"availableActions":[],"currentState":"","availableEvents":[],"icon":"","rules":[],"id":"","initialState":"","name":"","states":[]}` */
+  /** Default: `{"id":"","availableEvents":[],"icon":"circle","name":"","initialState":"","rules":[],"availableActions":[],"states":[],"currentState":""}` */
   object?: EntityRow;
   /** Default: `""` */
   className?: string;
@@ -191,10 +191,10 @@ export function stdUiObjectRulePanelObjectRulePanelOrbital(params: StdUiObjectRu
                   'main',
                   {
                     'object': '@config.object',
-                    'onRulesChange': 'RULES_CHANGE',
-                    'className': '@config.className',
                     'disabled': '@config.disabled',
+                    'className': '@config.className',
                     'type': 'object-rule-panel',
+                    'onRulesChange': 'RULES_CHANGE',
                   },
                 ],
               ],
@@ -212,29 +212,47 @@ export function stdUiObjectRulePanelObjectRulePanelOrbital(params: StdUiObjectRu
           'object': {
             'type': 'ObjectRulePanelObject',
             'default': {
-              'availableActions': [],
-              'currentState': '',
-              'availableEvents': [],
-              'icon': '',
-              'rules': [],
               'id': '',
-              'initialState': '',
+              'availableEvents': [],
+              'icon': 'circle',
               'name': '',
+              'initialState': '',
+              'rules': [],
+              'availableActions': [],
               'states': [],
+              'currentState': '',
             },
             'label': 'Object',
             'description': 'The selected object',
             'tier': 'presentation',
             'properties': {
-              'maxRules': {
-                'name': 'maxRules',
-                'type': 'number',
-                'required': false,
-              },
-              'icon': {
-                'name': 'icon',
-                'type': 'string',
+              'states': {
+                'name': 'states',
+                'type': 'array',
                 'required': true,
+                'items': {
+                  'type': 'string',
+                },
+              },
+              'availableActions': {
+                'name': 'availableActions',
+                'type': 'array',
+                'required': true,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'label': {
+                      'name': 'label',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'value': {
+                      'name': 'value',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  },
+                },
               },
               'id': {
                 'name': 'id',
@@ -251,53 +269,10 @@ export function stdUiObjectRulePanelObjectRulePanelOrbital(params: StdUiObjectRu
                 'type': 'string',
                 'required': true,
               },
-              'availableEvents': {
-                'name': 'availableEvents',
-                'type': 'array',
+              'name': {
+                'name': 'name',
+                'type': 'string',
                 'required': true,
-                'items': {
-                  'type': 'object',
-                  'properties': {
-                    'label': {
-                      'name': 'label',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'value': {
-                      'name': 'value',
-                      'type': 'string',
-                      'required': true,
-                    },
-                  },
-                },
-              },
-              'states': {
-                'name': 'states',
-                'type': 'array',
-                'required': true,
-                'items': {
-                  'type': 'string',
-                },
-              },
-              'availableActions': {
-                'name': 'availableActions',
-                'type': 'array',
-                'required': true,
-                'items': {
-                  'type': 'object',
-                  'properties': {
-                    'value': {
-                      'name': 'value',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'label': {
-                      'name': 'label',
-                      'type': 'string',
-                      'required': true,
-                    },
-                  },
-                },
               },
               'rules': {
                 'name': 'rules',
@@ -311,23 +286,48 @@ export function stdUiObjectRulePanelObjectRulePanelOrbital(params: StdUiObjectRu
                       'type': 'string',
                       'required': true,
                     },
-                    'id': {
-                      'name': 'id',
+                    'whenEvent': {
+                      'name': 'whenEvent',
                       'type': 'string',
                       'required': true,
                     },
-                    'whenEvent': {
-                      'name': 'whenEvent',
+                    'id': {
+                      'name': 'id',
                       'type': 'string',
                       'required': true,
                     },
                   },
                 },
               },
-              'name': {
-                'name': 'name',
+              'icon': {
+                'name': 'icon',
                 'type': 'string',
                 'required': true,
+              },
+              'availableEvents': {
+                'name': 'availableEvents',
+                'type': 'array',
+                'required': true,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'value': {
+                      'name': 'value',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'label': {
+                      'name': 'label',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  },
+                },
+              },
+              'maxRules': {
+                'name': 'maxRules',
+                'type': 'number',
+                'required': false,
               },
             },
           },

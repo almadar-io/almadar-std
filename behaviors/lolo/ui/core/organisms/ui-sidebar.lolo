@@ -20,6 +20,7 @@ orbital SidebarOrbital {
 
   entity SidebarItem [runtime] {
     id : string!
+    collapsed : boolean = false
   }
 
   trait SidebarRender -> @rebindable SidebarItem [interaction, instance] {
@@ -27,6 +28,7 @@ orbital SidebarOrbital {
 
     state idle {
       INIT -> idle
+        (set @entity.collapsed @config.collapsed)
         (render-ui main {
           className: @config.className
           isLoading: @config.isLoading
@@ -37,7 +39,28 @@ orbital SidebarOrbital {
           items: @config.items
           userSection: @config.userSection
           footerContent: @config.footerContent
-          collapsed: @config.collapsed
+          collapsed: @entity.collapsed
+          defaultCollapsed: @config.defaultCollapsed
+          collapseChangeEvent: COLLAPSE_CHANGE
+          hideCollapseButton: @config.hideCollapseButton
+          showCloseButton: @config.showCloseButton
+          closeEvent: CLOSE
+          logoClickEvent: LOGO_CLICK
+          type: sidebar
+        })
+      COLLAPSE_CHANGE -> idle
+        (set @entity.collapsed ?collapsed)
+        (render-ui main {
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          logo: @config.logo
+          logoSrc: @config.logoSrc
+          brandName: @config.brandName
+          items: @config.items
+          userSection: @config.userSection
+          footerContent: @config.footerContent
+          collapsed: @entity.collapsed
           defaultCollapsed: @config.defaultCollapsed
           collapseChangeEvent: COLLAPSE_CHANGE
           hideCollapseButton: @config.hideCollapseButton
@@ -64,6 +87,12 @@ orbital SidebarOrbital {
       }
         @description "Event emitted when logo/brand is clicked"
         @tier "essential"
+    }
+
+    listens {
+      COLLAPSE_CHANGE {
+        collapsed : boolean!
+      }
     }
 
     config {

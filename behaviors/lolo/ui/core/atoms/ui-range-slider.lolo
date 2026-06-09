@@ -3,6 +3,7 @@ app ui-range-slider "1.0.0"
 orbital RangeSliderOrbital {
   entity RangeSliderItem [runtime] {
     id : string!
+    value : number = 0
   }
 
   trait RangeSliderRender -> @rebindable RangeSliderItem [interaction, instance] {
@@ -10,11 +11,30 @@ orbital RangeSliderOrbital {
 
     state idle {
       INIT -> idle
+        (set @entity.value @config.value)
         (render-ui main {
           className: @config.className
           min: @config.min
           max: @config.max
-          value: @config.value
+          value: @entity.value
+          step: @config.step
+          showTooltip: @config.showTooltip
+          showTicks: @config.showTicks
+          buffered: @config.buffered
+          size: @config.size
+          disabled: @config.disabled
+          action: ACTION
+          actionPayload: @config.actionPayload
+          onChange: CHANGE
+          type: range-slider
+        })
+      CHANGE -> idle
+        (set @entity.value ?value)
+        (render-ui main {
+          className: @config.className
+          min: @config.min
+          max: @config.max
+          value: @entity.value
           step: @config.step
           showTooltip: @config.showTooltip
           showTicks: @config.showTicks
@@ -39,6 +59,12 @@ orbital RangeSliderOrbital {
       }
         @description "Direct onChange callback"
         @tier "essential"
+    }
+
+    listens {
+      CHANGE {
+        value : number
+      }
     }
 
     config {

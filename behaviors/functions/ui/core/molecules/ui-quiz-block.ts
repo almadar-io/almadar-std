@@ -39,12 +39,12 @@ export type StdUiQuizBlockEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiQuizBlockConfig {
+  /** Default: `"Answer"` */
+  answer?: string;
   /** Default: `""` */
   className?: string;
-  /** Default: `""` */
+  /** Default: `"Question"` */
   question?: string;
-  /** Default: `""` */
-  answer?: string;
 }
 
 /**

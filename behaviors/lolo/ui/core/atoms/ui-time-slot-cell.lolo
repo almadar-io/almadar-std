@@ -3,6 +3,7 @@ app ui-time-slot-cell "1.0.0"
 orbital TimeSlotCellOrbital {
   entity TimeSlotCellItem [runtime] {
     id : string!
+    time : string = "Time"
   }
 
   trait TimeSlotCellRender -> @rebindable TimeSlotCellItem [interaction, instance] {
@@ -10,8 +11,19 @@ orbital TimeSlotCellOrbital {
 
     state idle {
       INIT -> idle
+        (set @entity.time @config.time)
         (render-ui main {
-          time: @config.time
+          time: @entity.time
+          onClick: CLICK
+          className: @config.className
+          children: @config.children
+          isOccupied: @config.isOccupied
+          type: time-slot-cell
+        })
+      CLICK -> idle
+        (set @entity.time ?time)
+        (render-ui main {
+          time: @entity.time
           onClick: CLICK
           className: @config.className
           children: @config.children
@@ -28,8 +40,14 @@ orbital TimeSlotCellOrbital {
         @tier "essential"
     }
 
+    listens {
+      CLICK {
+        time : string
+      }
+    }
+
     config {
-      time : string = ""
+      time : string = "Time"
         @label "Time"
         @description "Time label for this slot (e.g. '09:00')"
         @tier "presentation"

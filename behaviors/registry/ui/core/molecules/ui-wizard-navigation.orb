@@ -13,6 +13,16 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "currentStep",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "totalSteps",
+            "type": "number",
+            "default": 0.0
           }
         ]
       },
@@ -22,7 +32,10 @@
           "entityRebindable": true,
           "entityContract": {
             "requires": [],
-            "provides": []
+            "provides": [
+              "currentStep",
+              "totalSteps"
+            ]
           },
           "category": "interaction",
           "linkedEntity": "WizardNavigationItem",
@@ -228,27 +241,160 @@
                 "event": "INIT",
                 "effects": [
                   [
+                    "set",
+                    "@entity.currentStep",
+                    "@config.currentStep"
+                  ],
+                  [
+                    "set",
+                    "@entity.totalSteps",
+                    "@config.totalSteps"
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "showComplete": "@config.showComplete",
-                      "totalSteps": "@config.totalSteps",
-                      "showBack": "@config.showBack",
-                      "onNext": "NEXT",
+                      "onBack": "BACK",
                       "onComplete": "COMPLETE",
-                      "onNextClick": "NEXT_CLICK",
                       "backLabel": "@config.backLabel",
+                      "currentStep": "@entity.currentStep",
+                      "totalSteps": "@entity.totalSteps",
+                      "completeLabel": "@config.completeLabel",
+                      "onNext": "NEXT",
+                      "compact": "@config.compact",
+                      "showNext": "@config.showNext",
+                      "showBack": "@config.showBack",
+                      "type": "wizard-navigation",
+                      "onBackClick": "BACK_CLICK",
+                      "showComplete": "@config.showComplete",
                       "onCompleteClick": "COMPLETE_CLICK",
                       "className": "@config.className",
                       "isValid": "@config.isValid",
-                      "currentStep": "@config.currentStep",
+                      "nextLabel": "@config.nextLabel",
+                      "onNextClick": "NEXT_CLICK"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "BACK",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.currentStep",
+                    "@payload.currentStep"
+                  ],
+                  [
+                    "set",
+                    "@entity.totalSteps",
+                    "@payload.totalSteps"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "showNext": "@config.showNext",
+                      "className": "@config.className",
+                      "showComplete": "@config.showComplete",
+                      "onNext": "NEXT",
+                      "nextLabel": "@config.nextLabel",
+                      "onCompleteClick": "COMPLETE_CLICK",
+                      "type": "wizard-navigation",
+                      "showBack": "@config.showBack",
                       "onBackClick": "BACK_CLICK",
                       "compact": "@config.compact",
+                      "completeLabel": "@config.completeLabel",
                       "onBack": "BACK",
-                      "nextLabel": "@config.nextLabel",
+                      "isValid": "@config.isValid",
+                      "currentStep": "@entity.currentStep",
+                      "backLabel": "@config.backLabel",
+                      "totalSteps": "@entity.totalSteps",
+                      "onNextClick": "NEXT_CLICK",
+                      "onComplete": "COMPLETE"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "NEXT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.currentStep",
+                    "@payload.currentStep"
+                  ],
+                  [
+                    "set",
+                    "@entity.totalSteps",
+                    "@payload.totalSteps"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "onCompleteClick": "COMPLETE_CLICK",
+                      "compact": "@config.compact",
+                      "className": "@config.className",
+                      "backLabel": "@config.backLabel",
+                      "totalSteps": "@entity.totalSteps",
+                      "currentStep": "@entity.currentStep",
+                      "onNext": "NEXT",
+                      "showNext": "@config.showNext",
                       "completeLabel": "@config.completeLabel",
                       "type": "wizard-navigation",
-                      "showNext": "@config.showNext"
+                      "onComplete": "COMPLETE",
+                      "isValid": "@config.isValid",
+                      "nextLabel": "@config.nextLabel",
+                      "onNextClick": "NEXT_CLICK",
+                      "showBack": "@config.showBack",
+                      "showComplete": "@config.showComplete",
+                      "onBack": "BACK",
+                      "onBackClick": "BACK_CLICK"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "COMPLETE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.currentStep",
+                    "@payload.currentStep"
+                  ],
+                  [
+                    "set",
+                    "@entity.totalSteps",
+                    "@payload.totalSteps"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "completeLabel": "@config.completeLabel",
+                      "className": "@config.className",
+                      "showNext": "@config.showNext",
+                      "isValid": "@config.isValid",
+                      "showComplete": "@config.showComplete",
+                      "onBackClick": "BACK_CLICK",
+                      "showBack": "@config.showBack",
+                      "currentStep": "@entity.currentStep",
+                      "backLabel": "@config.backLabel",
+                      "onComplete": "COMPLETE",
+                      "compact": "@config.compact",
+                      "type": "wizard-navigation",
+                      "nextLabel": "@config.nextLabel",
+                      "totalSteps": "@entity.totalSteps",
+                      "onBack": "BACK",
+                      "onNext": "NEXT",
+                      "onCompleteClick": "COMPLETE_CLICK",
+                      "onNextClick": "NEXT_CLICK"
                     }
                   ]
                 ]
@@ -256,32 +402,11 @@
             ]
           },
           "config": {
-            "isValid": {
-              "type": "boolean",
-              "default": true,
-              "label": "Is Valid",
-              "description": "Whether the current step is valid (enables Next/Complete)",
-              "tier": "presentation"
-            },
             "totalSteps": {
               "type": "number",
               "default": 0.0,
               "label": "Total Steps",
               "description": "Total number of steps",
-              "tier": "presentation"
-            },
-            "nextLabel": {
-              "type": "string",
-              "default": "",
-              "label": "Next Label",
-              "description": "Custom label for Next button",
-              "tier": "presentation"
-            },
-            "compact": {
-              "type": "boolean",
-              "default": false,
-              "label": "Compact",
-              "description": "Compact mode (smaller padding)",
               "tier": "presentation"
             },
             "showBack": {
@@ -291,11 +416,11 @@
               "description": "Show the Back button",
               "tier": "presentation"
             },
-            "className": {
+            "completeLabel": {
               "type": "string",
               "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
+              "label": "Complete Label",
+              "description": "Custom label for Complete button",
               "tier": "presentation"
             },
             "backLabel": {
@@ -305,11 +430,11 @@
               "description": "Custom label for Back button",
               "tier": "presentation"
             },
-            "completeLabel": {
-              "type": "string",
-              "default": "",
-              "label": "Complete Label",
-              "description": "Custom label for Complete button",
+            "isValid": {
+              "type": "boolean",
+              "default": true,
+              "label": "Is Valid",
+              "description": "Whether the current step is valid (enables Next/Complete)",
               "tier": "presentation"
             },
             "showComplete": {
@@ -319,11 +444,11 @@
               "description": "Show the Complete button (on last step)",
               "tier": "presentation"
             },
-            "showNext": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Next",
-              "description": "Show the Next button",
+            "nextLabel": {
+              "type": "string",
+              "default": "",
+              "label": "Next Label",
+              "description": "Custom label for Next button",
               "tier": "presentation"
             },
             "currentStep": {
@@ -331,6 +456,27 @@
               "default": 0.0,
               "label": "Current Step",
               "description": "Current step index (0-based)",
+              "tier": "presentation"
+            },
+            "showNext": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Next",
+              "description": "Show the Next button",
+              "tier": "presentation"
+            },
+            "compact": {
+              "type": "boolean",
+              "default": false,
+              "label": "Compact",
+              "description": "Compact mode (smaller padding)",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
               "tier": "presentation"
             }
           },

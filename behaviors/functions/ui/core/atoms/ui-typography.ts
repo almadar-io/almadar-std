@@ -39,29 +39,27 @@ export type StdUiTypographyEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiTypographyConfig {
-  /** Default: `2` */
-  level?: number;
   style?: unknown;
-  /** Default: `"body"` */
-  variant?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'heading' | 'subheading' | 'body1' | 'body2' | 'body' | 'caption' | 'overline' | 'small' | 'large' | 'label';
+  content?: unknown;
+  children?: unknown;
+  /** Default: `"left"` */
+  align?: 'left' | 'center' | 'right';
   /** Default: `false` */
   truncate?: boolean;
   /** Default: `"primary"` */
   color?: 'primary' | 'secondary' | 'muted' | 'error' | 'success' | 'warning' | 'inherit';
-  /** Default: `"visible"` */
-  overflow?: 'visible' | 'hidden' | 'wrap' | 'clamp-2' | 'clamp-3';
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"left"` */
-  align?: 'left' | 'center' | 'right';
-  content?: unknown;
-  /** Default: `"light"` */
-  weight?: 'light' | 'normal' | 'medium' | 'semibold' | 'bold';
-  children?: unknown;
   /** Default: `"xs"` */
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
-  /** Default: `"div"` */
-  asProp?: string;
+  /** Default: `2` */
+  level?: number;
+  /** Default: `"light"` */
+  weight?: 'light' | 'normal' | 'medium' | 'semibold' | 'bold';
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"visible"` */
+  overflow?: 'visible' | 'hidden' | 'wrap' | 'clamp-2' | 'clamp-3';
+  /** Default: `"body"` */
+  variant?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'heading' | 'subheading' | 'body1' | 'body2' | 'body' | 'caption' | 'overline' | 'small' | 'large' | 'label';
 }
 
 /**

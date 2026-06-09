@@ -13,6 +13,11 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "value",
+            "type": "string",
+            "default": ""
           }
         ]
       },
@@ -22,7 +27,9 @@
           "entityRebindable": true,
           "entityContract": {
             "requires": [],
-            "provides": []
+            "provides": [
+              "value"
+            ]
           },
           "category": "interaction",
           "linkedEntity": "SearchInputItem",
@@ -77,20 +84,54 @@
                     {}
                   ],
                   [
+                    "set",
+                    "@entity.value",
+                    "@config.value"
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
+                      "onSearch": "SEARCH",
+                      "className": "@config.className",
                       "clearable": "@config.clearable",
+                      "entity": "SearchInputItem",
+                      "value": "@entity.value",
+                      "query": "@config.query",
+                      "type": "search-input",
+                      "debounceMs": "@config.debounceMs",
                       "isLoading": "@config.isLoading",
+                      "placeholder": "@config.placeholder",
+                      "event": "@config.event"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "SEARCH",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.value",
+                    "@payload.value"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "debounceMs": "@config.debounceMs",
+                      "isLoading": "@config.isLoading",
+                      "value": "@entity.value",
+                      "placeholder": "@config.placeholder",
                       "className": "@config.className",
                       "event": "@config.event",
+                      "entity": "SearchInputItem",
                       "query": "@config.query",
                       "onSearch": "SEARCH",
-                      "placeholder": "@config.placeholder",
-                      "entity": "SearchInputItem",
-                      "value": "@config.value",
-                      "debounceMs": "@config.debounceMs",
-                      "type": "search-input"
+                      "type": "search-input",
+                      "clearable": "@config.clearable"
                     }
                   ]
                 ]
@@ -98,25 +139,11 @@
             ]
           },
           "config": {
-            "className": {
+            "value": {
               "type": "string",
               "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "placeholder": {
-              "type": "string",
-              "default": "",
-              "label": "Placeholder",
-              "description": "Placeholder text",
-              "tier": "presentation"
-            },
-            "query": {
-              "type": "string",
-              "default": "",
-              "label": "Query",
-              "description": "Query singleton binding for state management. When provided, syncs search state with the query singleton. Example: '@TaskQuery'",
+              "label": "Value",
+              "description": "Search value (controlled mode)",
               "tier": "presentation"
             },
             "debounceMs": {
@@ -126,11 +153,18 @@
               "description": "Debounce delay in milliseconds",
               "tier": "presentation"
             },
-            "value": {
+            "event": {
               "type": "string",
               "default": "",
-              "label": "Value",
-              "description": "Search value (controlled mode)",
+              "label": "Event",
+              "description": "Event name to dispatch on search (schema metadata, wired by trait) This is metadata used by the trait generator, not by the component.",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
               "tier": "presentation"
             },
             "clearable": {
@@ -147,11 +181,18 @@
               "description": "Show loading state",
               "tier": "presentation"
             },
-            "event": {
+            "placeholder": {
               "type": "string",
               "default": "",
-              "label": "Event",
-              "description": "Event name to dispatch on search (schema metadata, wired by trait) This is metadata used by the trait generator, not by the component.",
+              "label": "Placeholder",
+              "description": "Placeholder text",
+              "tier": "presentation"
+            },
+            "query": {
+              "type": "string",
+              "default": "",
+              "label": "Query",
+              "description": "Query singleton binding for state management. When provided, syncs search state with the query singleton. Example: '@TaskQuery'",
               "tier": "presentation"
             }
           },

@@ -10,6 +10,7 @@ orbital RelationSelectOrbital {
 
   entity RelationSelectItem [runtime] {
     id : string!
+    value : string = ""
   }
 
   trait RelationSelectRender -> @rebindable RelationSelectItem [interaction, instance] {
@@ -17,8 +18,27 @@ orbital RelationSelectOrbital {
 
     state idle {
       INIT -> idle
+        (set @entity.value @config.value)
         (render-ui main {
-          value: @config.value
+          value: @entity.value
+          onChange: CHANGE
+          options: @config.options
+          placeholder: @config.placeholder
+          required: @config.required
+          disabled: @config.disabled
+          isLoading: @config.isLoading
+          error: @config.error
+          clearable: @config.clearable
+          name: @config.name
+          className: @config.className
+          searchPlaceholder: @config.searchPlaceholder
+          emptyMessage: @config.emptyMessage
+          type: relation-select
+        })
+      CHANGE -> idle
+        (set @entity.value ?value)
+        (render-ui main {
+          value: @entity.value
           onChange: CHANGE
           options: @config.options
           placeholder: @config.placeholder
@@ -43,12 +63,18 @@ orbital RelationSelectOrbital {
         @tier "essential"
     }
 
+    listens {
+      CHANGE {
+        value : string
+      }
+    }
+
     config {
       value : string = ""
         @label "Value"
         @description "Current value (ID)"
         @tier "presentation"
-      options : [RelationSelectOptionsItem] = []
+      options : [RelationSelectOptionsItem] = [{ value: "Value", label: "Label" }]
         @label "Options"
         @description "Available options - accepts readonly for compatibility with generated const arrays"
         @tier "presentation"

@@ -3,6 +3,7 @@ app ui-search-input "1.0.0"
 orbital SearchInputOrbital {
   entity SearchInputItem [runtime] {
     id : string!
+    value : string = ""
   }
 
   trait SearchInputRender -> @rebindable SearchInputItem [interaction, instance] {
@@ -11,8 +12,24 @@ orbital SearchInputOrbital {
     state idle {
       INIT -> idle
         (fetch SearchInputItem {})
+        (set @entity.value @config.value)
         (render-ui main {
-          value: @config.value
+          value: @entity.value
+          onSearch: SEARCH
+          debounceMs: @config.debounceMs
+          isLoading: @config.isLoading
+          placeholder: @config.placeholder
+          clearable: @config.clearable
+          className: @config.className
+          event: @config.event
+          entity: SearchInputItem
+          query: @config.query
+          type: search-input
+        })
+      SEARCH -> idle
+        (set @entity.value ?value)
+        (render-ui main {
+          value: @entity.value
           onSearch: SEARCH
           debounceMs: @config.debounceMs
           isLoading: @config.isLoading
@@ -32,6 +49,12 @@ orbital SearchInputOrbital {
       }
         @description "Callback when search value changes"
         @tier "essential"
+    }
+
+    listens {
+      SEARCH {
+        value : string
+      }
     }
 
     config {

@@ -46,30 +46,30 @@ export interface StdUiRelationSelectChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiRelationSelectConfig {
+  /** Default: `""` */
+  value?: string;
+  /** Default: `""` */
+  error?: string;
   /** Default: `false` */
   required?: boolean;
   /** Default: `true` */
   clearable?: boolean;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `""` */
+  emptyMessage?: string;
   /** Default: `"Select..."` */
   placeholder?: string;
   /** Default: `""` */
   name?: string;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `""` */
-  searchPlaceholder?: string;
-  /** Default: `""` */
-  emptyMessage?: string;
   /** Default: `false` */
   disabled?: boolean;
-  /** Default: `[]` */
+  /** Default: `[{"value":"Value","label":"Label"}]` */
   options?: EntityRow[];
   /** Default: `""` */
-  value?: string;
+  searchPlaceholder?: string;
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `""` */
-  error?: string;
 }
 
 /**

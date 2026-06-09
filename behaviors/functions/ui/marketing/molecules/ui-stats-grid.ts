@@ -41,10 +41,10 @@ export type StdUiStatsGridEventKey = 'INIT';
 export interface StdUiStatsGridConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `[]` */
-  stats?: EntityRow[];
   /** Default: `3` */
   columns?: number;
+  /** Default: `[{"label":"Label","value":"Value"}]` */
+  stats?: EntityRow[];
 }
 
 /**

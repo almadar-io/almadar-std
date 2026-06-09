@@ -11,6 +11,7 @@ orbital SimulationControlsOrbital {
 
   entity SimulationControlsItem [runtime] {
     id : string!
+    speed : number = 0
   }
 
   trait SimulationControlsRender -> @rebindable SimulationControlsItem [interaction, instance] {
@@ -18,9 +19,25 @@ orbital SimulationControlsOrbital {
 
     state idle {
       INIT -> idle
+        (set @entity.speed @config.speed)
         (render-ui main {
           running: @config.running
-          speed: @config.speed
+          speed: @entity.speed
+          parameters: @config.parameters
+          onPlay: PLAY
+          onPause: PAUSE
+          onStep: STEP
+          onReset: RESET
+          onSpeedChange: SPEED_CHANGE
+          onParameterChange: PARAMETER_CHANGE
+          className: @config.className
+          type: simulation-controls
+        })
+      SPEED_CHANGE -> idle
+        (set @entity.speed ?speed)
+        (render-ui main {
+          running: @config.running
+          speed: @entity.speed
           parameters: @config.parameters
           onPlay: PLAY
           onPause: PAUSE
@@ -65,6 +82,12 @@ orbital SimulationControlsOrbital {
       }
         @description "onParameterChange prop"
         @tier "essential"
+    }
+
+    listens {
+      SPEED_CHANGE {
+        speed : number
+      }
     }
 
     config {
