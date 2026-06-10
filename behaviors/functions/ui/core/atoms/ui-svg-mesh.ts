@@ -43,18 +43,18 @@ export interface StdUiSvgMeshConfig {
   cx?: number;
   /** Default: `6` */
   nodes?: number;
+  /** Default: `1` */
+  opacity?: number;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `0` */
+  cy?: number;
   /** Default: `50` */
   radius?: number;
   /** Default: `"var(--color-primary)"` */
   color?: string;
   /** Default: `0.5` */
   connectionDensity?: number;
-  /** Default: `0` */
-  cy?: number;
-  /** Default: `1` */
-  opacity?: number;
-  /** Default: `""` */
-  className?: string;
 }
 
 /**

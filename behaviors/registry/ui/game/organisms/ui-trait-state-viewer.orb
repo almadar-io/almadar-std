@@ -80,17 +80,17 @@
                     "render-ui",
                     "main",
                     {
-                      "showTransitions": "@config.showTransitions",
-                      "stateStyles": "@config.stateStyles",
-                      "entity": "TraitStateViewerItem",
                       "isLoading": "@config.isLoading",
-                      "size": "@config.size",
                       "onStateClick": "STATE_CLICK",
-                      "variant": "@config.variant",
                       "type": "trait-state-viewer",
+                      "entity": "TraitStateViewerItem",
                       "className": "@config.className",
                       "trait": "@config.traitProp",
-                      "error": "@config.error"
+                      "size": "@config.size",
+                      "error": "@config.error",
+                      "variant": "@config.variant",
+                      "stateStyles": "@config.stateStyles",
+                      "showTransitions": "@config.showTransitions"
                     }
                   ]
                 ]
@@ -98,14 +98,92 @@
             ]
           },
           "config": {
+            "traitProp": {
+              "type": "TraitStateViewerTrait",
+              "default": {
+                "name": "",
+                "currentState": "",
+                "states": [],
+                "transitions": []
+              },
+              "label": "Trait",
+              "description": "The trait / state machine to visualize",
+              "synonyms": "trait",
+              "tier": "presentation",
+              "properties": {
+                "description": {
+                  "name": "description",
+                  "type": "string",
+                  "required": false
+                },
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": true
+                },
+                "currentState": {
+                  "name": "currentState",
+                  "type": "string",
+                  "required": true
+                },
+                "transitions": {
+                  "name": "transitions",
+                  "type": "array",
+                  "required": true,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "guardHint": {
+                        "name": "guardHint",
+                        "type": "string",
+                        "required": false
+                      },
+                      "from": {
+                        "name": "from",
+                        "type": "string",
+                        "required": true
+                      },
+                      "event": {
+                        "name": "event",
+                        "type": "string",
+                        "required": true
+                      },
+                      "to": {
+                        "name": "to",
+                        "type": "string",
+                        "required": true
+                      }
+                    }
+                  }
+                },
+                "states": {
+                  "name": "states",
+                  "type": "array",
+                  "required": true,
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
             "error": {
               "type": "TraitStateViewerError",
               "label": "Error",
               "description": "Error state",
               "tier": "presentation",
               "properties": {
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                },
                 "code": {
                   "name": "code",
+                  "type": "string",
+                  "required": false
+                },
+                "name": {
+                  "name": "name",
                   "type": "string",
                   "required": false
                 },
@@ -113,32 +191,42 @@
                   "name": "stack",
                   "type": "string",
                   "required": false
-                },
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
                 }
               }
             },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state",
-              "tier": "presentation"
+            "stateStyles": {
+              "type": "Map<string,TraitStateViewerStateStylesValue>",
+              "default": {},
+              "label": "State Styles",
+              "description": "Custom state styles passed to StateIndicator",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": true
+                  },
+                  "bgClass": {
+                    "name": "bgClass",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
             },
-            "className": {
+            "variant": {
               "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
+              "default": "compact",
+              "label": "Variant",
+              "description": "Display variant",
+              "tier": "presentation",
+              "values": [
+                "linear",
+                "compact",
+                "full"
+              ]
             },
             "size": {
               "type": "string",
@@ -159,107 +247,19 @@
               "description": "Whether to show transition labels",
               "tier": "presentation"
             },
-            "stateStyles": {
-              "type": "Map<string,TraitStateViewerStateStylesValue>",
-              "default": {},
-              "label": "State Styles",
-              "description": "Custom state styles passed to StateIndicator",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "bgClass": {
-                    "name": "bgClass",
-                    "type": "string",
-                    "required": true
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            },
-            "variant": {
+            "className": {
               "type": "string",
-              "default": "compact",
-              "label": "Variant",
-              "description": "Display variant",
-              "tier": "presentation",
-              "values": [
-                "linear",
-                "compact",
-                "full"
-              ]
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
             },
-            "traitProp": {
-              "type": "TraitStateViewerTrait",
-              "default": {
-                "currentState": "",
-                "states": [],
-                "transitions": [],
-                "name": ""
-              },
-              "label": "Trait",
-              "description": "The trait / state machine to visualize",
-              "synonyms": "trait",
-              "tier": "presentation",
-              "properties": {
-                "currentState": {
-                  "name": "currentState",
-                  "type": "string",
-                  "required": true
-                },
-                "states": {
-                  "name": "states",
-                  "type": "array",
-                  "required": true,
-                  "items": {
-                    "type": "string"
-                  }
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": true
-                },
-                "description": {
-                  "name": "description",
-                  "type": "string",
-                  "required": false
-                },
-                "transitions": {
-                  "name": "transitions",
-                  "type": "array",
-                  "required": true,
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "from": {
-                        "name": "from",
-                        "type": "string",
-                        "required": true
-                      },
-                      "guardHint": {
-                        "name": "guardHint",
-                        "type": "string",
-                        "required": false
-                      },
-                      "to": {
-                        "name": "to",
-                        "type": "string",
-                        "required": true
-                      },
-                      "event": {
-                        "name": "event",
-                        "type": "string",
-                        "required": true
-                      }
-                    }
-                  }
-                }
-              }
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state",
+              "tier": "presentation"
             }
           },
           "scope": "instance"

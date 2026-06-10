@@ -189,9 +189,9 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
                   'render-ui',
                   'main',
                   {
-                    'entity': '@config.entityProp',
                     'type': 'simulator-board',
                     'completeEvent': 'COMPLETE',
+                    'entity': '@config.entityProp',
                   },
                 ],
               ],
@@ -206,73 +206,23 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
             'synonyms': 'entity',
             'tier': 'presentation',
             'properties': {
-              'computeExpression': {
-                'name': 'computeExpression',
-                'type': 'string',
-                'required': true,
-              },
-              'hint': {
-                'name': 'hint',
+              'successMessage': {
+                'name': 'successMessage',
                 'type': 'string',
                 'required': false,
               },
-              'parameters': {
-                'name': 'parameters',
-                'type': 'array',
-                'required': true,
-                'items': {
-                  'type': 'object',
-                  'properties': {
-                    'initial': {
-                      'name': 'initial',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'unit': {
-                      'name': 'unit',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'step': {
-                      'name': 'step',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'correct': {
-                      'name': 'correct',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'min': {
-                      'name': 'min',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'id': {
-                      'name': 'id',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'max': {
-                      'name': 'max',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'tolerance': {
-                      'name': 'tolerance',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'label': {
-                      'name': 'label',
-                      'type': 'string',
-                      'required': true,
-                    },
-                  },
-                },
+              'headerImage': {
+                'name': 'headerImage',
+                'type': 'string',
+                'required': false,
               },
-              'successMessage': {
-                'name': 'successMessage',
+              'outputLabel': {
+                'name': 'outputLabel',
+                'type': 'string',
+                'required': true,
+              },
+              'failMessage': {
+                'name': 'failMessage',
                 'type': 'string',
                 'required': false,
               },
@@ -293,18 +243,73 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
                   },
                 },
               },
+              'targetValue': {
+                'name': 'targetValue',
+                'type': 'number',
+                'required': true,
+              },
               'outputUnit': {
                 'name': 'outputUnit',
                 'type': 'string',
                 'required': true,
               },
-              'headerImage': {
-                'name': 'headerImage',
-                'type': 'string',
-                'required': false,
+              'parameters': {
+                'name': 'parameters',
+                'type': 'array',
+                'required': true,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'tolerance': {
+                      'name': 'tolerance',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'min': {
+                      'name': 'min',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'max': {
+                      'name': 'max',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'label': {
+                      'name': 'label',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'correct': {
+                      'name': 'correct',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'unit': {
+                      'name': 'unit',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'id': {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'initial': {
+                      'name': 'initial',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'step': {
+                      'name': 'step',
+                      'type': 'number',
+                      'required': true,
+                    },
+                  },
+                },
               },
-              'outputLabel': {
-                'name': 'outputLabel',
+              'title': {
+                'name': 'title',
                 'type': 'string',
                 'required': true,
               },
@@ -313,30 +318,25 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
                 'type': 'string',
                 'required': true,
               },
-              'title': {
-                'name': 'title',
+              'computeExpression': {
+                'name': 'computeExpression',
                 'type': 'string',
                 'required': true,
+              },
+              'hint': {
+                'name': 'hint',
+                'type': 'string',
+                'required': false,
               },
               'description': {
                 'name': 'description',
                 'type': 'string',
                 'required': true,
               },
-              'targetValue': {
-                'name': 'targetValue',
-                'type': 'number',
-                'required': true,
-              },
               'targetTolerance': {
                 'name': 'targetTolerance',
                 'type': 'number',
                 'required': true,
-              },
-              'failMessage': {
-                'name': 'failMessage',
-                'type': 'string',
-                'required': false,
               },
             },
           },

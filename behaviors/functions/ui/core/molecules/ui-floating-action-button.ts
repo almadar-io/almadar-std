@@ -53,19 +53,19 @@ export interface StdUiFloatingActionButtonClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiFloatingActionButtonConfig {
-  /** Default: `"bottom-right"` */
-  position?: 'bottom-right' | 'bottom-left' | 'bottom-center' | 'top-right' | 'top-left' | 'top-center';
-  /** Default: `"circle"` */
-  icon?: string;
-  actionPayload?: unknown;
+  /** Default: `"Label"` */
+  label?: string;
   /** Default: `""` */
   className?: string;
-  /** Default: `""` */
-  label?: string;
-  /** Default: `[]` */
-  actions?: EntityRow[];
+  actionPayload?: unknown;
+  /** Default: `"bottom-right"` */
+  position?: 'bottom-right' | 'bottom-left' | 'bottom-center' | 'top-right' | 'top-left' | 'top-center';
   /** Default: `"primary"` */
   variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'warning';
+  /** Default: `[]` */
+  actions?: EntityRow[];
+  /** Default: `"circle"` */
+  icon?: string;
 }
 
 /**

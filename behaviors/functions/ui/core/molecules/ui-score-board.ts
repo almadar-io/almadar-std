@@ -39,18 +39,18 @@ export type StdUiScoreBoardEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiScoreBoardConfig {
-  /** Default: `""` */
-  className?: string;
   /** Default: `0` */
-  combo?: number;
+  multiplier?: number;
   /** Default: `0` */
   highScore?: number;
   /** Default: `0` */
   score?: number;
+  /** Default: `""` */
+  className?: string;
   /** Default: `0` */
   level?: number;
   /** Default: `0` */
-  multiplier?: number;
+  combo?: number;
 }
 
 /**

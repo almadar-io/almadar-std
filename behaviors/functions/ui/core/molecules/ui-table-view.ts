@@ -53,51 +53,51 @@ export interface StdUiTableViewSortPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiTableViewConfig {
-  /** Default: `[]` */
-  columns?: EntityRow[];
-  /** Default: `""` */
-  dndItemIdField?: string;
-  /** Default: `false` */
-  dndRoot?: boolean;
-  /** Default: `""` */
-  sortColumn?: string;
-  /** Default: `0` */
-  maxInlineActions?: number;
-  /** Default: `""` */
-  emptyMessage?: string;
-  /** Default: `""` */
+  /** Default: `"Drag Group"` */
+  dragGroup?: string;
+  error?: EntityRow;
+  /** Default: `"Group By"` */
   groupBy?: string;
   /** Default: `[]` */
-  fields?: EntityRow[];
-  /** Default: `[]` */
-  selectedIds?: string[];
-  /** Default: `""` */
-  dropEvent?: string;
+  itemActions?: EntityRow[];
   /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
-  /** Default: `""` */
-  className?: string;
+  /** Default: `"Position Event"` */
+  positionEvent?: string;
   /** Default: `"dense"` */
   look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'bordered';
-  /** Default: `""` */
-  positionEvent?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `""` */
-  dragGroup?: string;
-  /** Default: `[]` */
-  itemActions?: EntityRow[];
   /** Default: `false` */
   sortable?: boolean;
+  /** Default: `false` */
+  dndRoot?: boolean;
   /** Default: `0` */
   pageSize?: number;
+  /** Default: `"Accepts"` */
+  accepts?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `[]` */
+  columns?: EntityRow[];
+  /** Default: `"Reorder Event"` */
+  reorderEvent?: string;
+  /** Default: `"Empty Message"` */
+  emptyMessage?: string;
+  /** Default: `"Sort Column"` */
+  sortColumn?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `"Dnd Item Id Field"` */
+  dndItemIdField?: string;
+  /** Default: `0` */
+  maxInlineActions?: number;
+  /** Default: `[]` */
+  fields?: EntityRow[];
   /** Default: `false` */
   selectable?: boolean;
-  /** Default: `""` */
-  accepts?: string;
-  error?: EntityRow;
-  /** Default: `""` */
-  reorderEvent?: string;
+  /** Default: `[]` */
+  selectedIds?: string[];
+  /** Default: `"Drop Event"` */
+  dropEvent?: string;
 }
 
 /**

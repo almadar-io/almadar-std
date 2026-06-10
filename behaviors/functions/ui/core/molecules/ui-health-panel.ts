@@ -40,21 +40,21 @@ export type StdUiHealthPanelEventKey = 'INIT';
  */
 export interface StdUiHealthPanelConfig {
   /** Default: `0` */
-  shield?: number;
-  /** Default: `0` */
   current?: number;
-  /** Default: `true` */
-  showNumbers?: boolean;
   /** Default: `""` */
   className?: string;
-  /** Default: `""` */
-  label?: string;
-  /** Default: `0` */
-  max?: number;
   /** Default: `[]` */
   effects?: EntityRow[];
+  /** Default: `0` */
+  shield?: number;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
+  /** Default: `true` */
+  showNumbers?: boolean;
+  /** Default: `0` */
+  max?: number;
+  /** Default: `"Label"` */
+  label?: string;
 }
 
 /**

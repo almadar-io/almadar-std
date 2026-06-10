@@ -55,18 +55,18 @@ export interface StdUiAccordionTogglePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiAccordionConfig {
+  /** Default: `[{"content":"Content"}]` */
+  items?: EntityRow[];
+  /** Default: `[]` */
+  defaultOpenItems?: string[];
+  /** Default: `false` */
+  multiple?: boolean;
   /** Default: `[]` */
   defaultOpen?: number[];
   /** Default: `[]` */
   openItems?: string[];
   /** Default: `""` */
   className?: string;
-  /** Default: `[]` */
-  defaultOpenItems?: string[];
-  /** Default: `[{"content":"Content"}]` */
-  items?: EntityRow[];
-  /** Default: `false` */
-  multiple?: boolean;
 }
 
 /**

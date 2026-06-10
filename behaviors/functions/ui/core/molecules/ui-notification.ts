@@ -55,20 +55,20 @@ export interface StdUiNotificationActionPayload {
 export interface StdUiNotificationConfig {
   /** Default: `"Message"` */
   message?: string;
-  /** Default: `""` */
+  /** Default: `"Action Label"` */
   actionLabel?: string;
-  /** Default: `"info"` */
-  variant?: 'success' | 'error' | 'info' | 'warning';
   /** Default: `true` */
   dismissible?: boolean;
-  /** Default: `""` */
-  title?: string;
+  /** Default: `"info"` */
+  variant?: 'success' | 'error' | 'info' | 'warning';
   /** Default: `""` */
   className?: string;
   /** Default: `5000` */
   duration?: number;
-  /** Default: `""` */
+  /** Default: `"Badge"` */
   badge?: string;
+  /** Default: `"Title"` */
+  title?: string;
 }
 
 /**

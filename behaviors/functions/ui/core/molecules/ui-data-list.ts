@@ -81,57 +81,57 @@ export interface StdUiDataListLoadMorePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiDataListConfig {
+  /** Default: `"Dnd Item Id Field"` */
+  dndItemIdField?: string;
+  /** Default: `false` */
+  reorderable?: boolean;
+  /** Default: `[]` */
+  swipeLeftActions?: EntityRow[];
+  /** Default: `"dense"` */
+  look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
   /** Default: `[]` */
   columns?: EntityRow[];
   /** Default: `""` */
-  accepts?: string;
-  /** Default: `""` */
-  positionEvent?: string;
-  /** Default: `false` */
-  dndRoot?: boolean;
+  className?: string;
   /** Default: `false` */
   hasMore?: boolean;
-  /** Default: `""` */
-  senderField?: string;
-  error?: EntityRow;
+  /** Default: `"Drag Group"` */
+  dragGroup?: string;
+  /** Default: `"Accepts"` */
+  accepts?: string;
+  /** Default: `"default"` */
+  variant?: 'default' | 'card' | 'compact' | 'message';
+  /** Default: `false` */
+  dndRoot?: boolean;
   /** Default: `[]` */
-  swipeLeftActions?: EntityRow[];
+  itemActions?: EntityRow[];
+  /** Default: `"Position Event"` */
+  positionEvent?: string;
+  /** Default: `"Drop Event"` */
+  dropEvent?: string;
+  /** Default: `[]` */
+  fields?: EntityRow[];
+  /** Default: `"Current User"` */
+  currentUser?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `false` */
+  sortable?: boolean;
+  error?: EntityRow;
+  /** Default: `"Group By"` */
+  groupBy?: string;
   /** Default: `[]` */
   swipeRightActions?: EntityRow[];
   /** Default: `false` */
   infiniteScroll?: boolean;
-  /** Default: `""` */
-  currentUser?: string;
-  /** Default: `"dense"` */
-  look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
-  /** Default: `false` */
-  reorderable?: boolean;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `""` */
-  groupBy?: string;
   /** Default: `"none"` */
   gap?: 'none' | 'sm' | 'md' | 'lg';
-  /** Default: `false` */
-  sortable?: boolean;
-  /** Default: `""` */
-  dndItemIdField?: string;
-  /** Default: `"default"` */
-  variant?: 'default' | 'card' | 'compact' | 'message';
-  /** Default: `""` */
-  dropEvent?: string;
-  /** Default: `""` */
-  dragGroup?: string;
-  /** Default: `[]` */
-  fields?: EntityRow[];
-  /** Default: `0` */
-  maxInlineActions?: number;
+  /** Default: `"Sender Field"` */
+  senderField?: string;
   /** Default: `5` */
   pageSize?: number;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `[]` */
-  itemActions?: EntityRow[];
+  /** Default: `0` */
+  maxInlineActions?: number;
 }
 
 /**

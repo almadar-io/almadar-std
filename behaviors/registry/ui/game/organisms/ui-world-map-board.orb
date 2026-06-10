@@ -242,25 +242,25 @@
                     "main",
                     {
                       "battleEncounterEvent": "BATTLE_ENCOUNTER",
-                      "onHeroSelect": "HERO_SELECT",
-                      "unitScale": "@config.unitScale",
+                      "className": "@config.className",
+                      "diamondTopY": "@config.diamondTopY",
+                      "entity": "@config.entityProp",
+                      "enableCamera": "@config.enableCamera",
+                      "error": "@config.error",
+                      "heroSelectEvent": "HERO_SELECT",
+                      "onBattleEncounter": "BATTLE_ENCOUNTER",
+                      "onFeatureEnter": "FEATURE_ENTER",
+                      "onHeroMove": "HERO_MOVE",
+                      "allowMoveAllHeroes": "@config.allowMoveAllHeroes",
                       "heroMoveEvent": "HERO_MOVE",
                       "scale": "@config.scale",
-                      "tileClickEvent": "TILE_CLICK",
-                      "onBattleEncounter": "BATTLE_ENCOUNTER",
-                      "error": "@config.error",
-                      "onHeroMove": "HERO_MOVE",
-                      "className": "@config.className",
-                      "heroSelectEvent": "HERO_SELECT",
                       "isLoading": "@config.isLoading",
-                      "effectSpriteUrls": "@config.effectSpriteUrls",
-                      "allowMoveAllHeroes": "@config.allowMoveAllHeroes",
+                      "unitScale": "@config.unitScale",
+                      "tileClickEvent": "TILE_CLICK",
+                      "onHeroSelect": "HERO_SELECT",
                       "type": "world-map-board",
-                      "featureEnterEvent": "FEATURE_ENTER",
-                      "diamondTopY": "@config.diamondTopY",
-                      "onFeatureEnter": "FEATURE_ENTER",
-                      "enableCamera": "@config.enableCamera",
-                      "entity": "@config.entityProp"
+                      "effectSpriteUrls": "@config.effectSpriteUrls",
+                      "featureEnterEvent": "FEATURE_ENTER"
                     }
                   ]
                 ]
@@ -275,11 +275,46 @@
               "description": "Additional CSS classes",
               "tier": "presentation"
             },
-            "allowMoveAllHeroes": {
+            "error": {
+              "type": "WorldMapBoardError",
+              "label": "Error",
+              "description": "Error state",
+              "tier": "presentation",
+              "properties": {
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                },
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": false
+                },
+                "stack": {
+                  "name": "stack",
+                  "type": "string",
+                  "required": false
+                },
+                "code": {
+                  "name": "code",
+                  "type": "string",
+                  "required": false
+                }
+              }
+            },
+            "isLoading": {
               "type": "boolean",
               "default": false,
-              "label": "Allow Move All Heroes",
-              "description": "Allow selecting / moving ALL heroes (including enemy). For testing.",
+              "label": "Is Loading",
+              "description": "Loading state indicator",
+              "tier": "presentation"
+            },
+            "enableCamera": {
+              "type": "boolean",
+              "default": false,
+              "label": "Enable Camera",
+              "description": "Disable pan/zoom camera (default: true). Set false for fixed maps where overlay labels need stable positions.",
               "tier": "presentation"
             },
             "effectSpriteUrls": {
@@ -292,13 +327,6 @@
                 "type": "string"
               }
             },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state indicator",
-              "tier": "presentation"
-            },
             "entityProp": {
               "type": "WorldMapBoardEntity",
               "label": "Entity",
@@ -306,50 +334,67 @@
               "synonyms": "entity",
               "tier": "presentation",
               "properties": {
-                "hexes": {
-                  "name": "hexes",
+                "selectedHeroId": {
+                  "name": "selectedHeroId",
+                  "type": "string",
+                  "required": false
+                },
+                "backgroundImage": {
+                  "name": "backgroundImage",
+                  "type": "string",
+                  "required": false
+                },
+                "features": {
+                  "name": "features",
                   "type": "array",
-                  "required": true,
+                  "required": false,
                   "items": {
                     "type": "object",
                     "properties": {
-                      "x": {
-                        "name": "x",
-                        "type": "number",
-                        "required": true
-                      },
                       "y": {
                         "name": "y",
                         "type": "number",
                         "required": true
                       },
-                      "passable": {
-                        "name": "passable",
-                        "type": "boolean",
-                        "required": false
-                      },
-                      "terrainSprite": {
-                        "name": "terrainSprite",
+                      "assetUrl": {
+                        "name": "assetUrl",
                         "type": "string",
                         "required": false
                       },
-                      "terrain": {
-                        "name": "terrain",
+                      "elevation": {
+                        "name": "elevation",
+                        "type": "number",
+                        "required": false
+                      },
+                      "z": {
+                        "name": "z",
+                        "type": "number",
+                        "required": false
+                      },
+                      "color": {
+                        "name": "color",
+                        "type": "string",
+                        "required": false
+                      },
+                      "sprite": {
+                        "name": "sprite",
+                        "type": "string",
+                        "required": false
+                      },
+                      "id": {
+                        "name": "id",
+                        "type": "string",
+                        "required": false
+                      },
+                      "type": {
+                        "name": "type",
                         "type": "string",
                         "required": true
                       },
-                      "feature": {
-                        "name": "feature",
-                        "type": "string",
-                        "required": false
-                      },
-                      "featureData": {
-                        "name": "featureData",
-                        "type": "object",
-                        "required": false,
-                        "items": {
-                          "type": "string"
-                        }
+                      "x": {
+                        "name": "x",
+                        "type": "number",
+                        "required": true
                       }
                     }
                   }
@@ -359,11 +404,6 @@
                   "type": "object",
                   "required": false,
                   "properties": {
-                    "baseUrl": {
-                      "name": "baseUrl",
-                      "type": "string",
-                      "required": true
-                    },
                     "terrains": {
                       "name": "terrains",
                       "type": "object",
@@ -371,6 +411,11 @@
                       "items": {
                         "type": "string"
                       }
+                    },
+                    "baseUrl": {
+                      "name": "baseUrl",
+                      "type": "string",
+                      "required": true
                     },
                     "units": {
                       "name": "units",
@@ -395,6 +440,54 @@
                   "type": "string",
                   "required": true
                 },
+                "hexes": {
+                  "name": "hexes",
+                  "type": "array",
+                  "required": true,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "y": {
+                        "name": "y",
+                        "type": "number",
+                        "required": true
+                      },
+                      "feature": {
+                        "name": "feature",
+                        "type": "string",
+                        "required": false
+                      },
+                      "terrainSprite": {
+                        "name": "terrainSprite",
+                        "type": "string",
+                        "required": false
+                      },
+                      "featureData": {
+                        "name": "featureData",
+                        "type": "object",
+                        "required": false,
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "terrain": {
+                        "name": "terrain",
+                        "type": "string",
+                        "required": true
+                      },
+                      "passable": {
+                        "name": "passable",
+                        "type": "boolean",
+                        "required": false
+                      },
+                      "x": {
+                        "name": "x",
+                        "type": "number",
+                        "required": true
+                      }
+                    }
+                  }
+                },
                 "heroes": {
                   "name": "heroes",
                   "type": "array",
@@ -402,41 +495,9 @@
                   "items": {
                     "type": "object",
                     "properties": {
-                      "spriteSheet": {
-                        "name": "spriteSheet",
-                        "type": "object",
-                        "required": false,
-                        "properties": {
-                          "se": {
-                            "name": "se",
-                            "type": "string",
-                            "required": true
-                          },
-                          "frameHeight": {
-                            "name": "frameHeight",
-                            "type": "number",
-                            "required": true
-                          },
-                          "sw": {
-                            "name": "sw",
-                            "type": "string",
-                            "required": true
-                          },
-                          "frameWidth": {
-                            "name": "frameWidth",
-                            "type": "number",
-                            "required": true
-                          }
-                        }
-                      },
-                      "level": {
-                        "name": "level",
+                      "movement": {
+                        "name": "movement",
                         "type": "number",
-                        "required": false
-                      },
-                      "id": {
-                        "name": "id",
-                        "type": "string",
                         "required": true
                       },
                       "owner": {
@@ -448,9 +509,9 @@
                           "enemy"
                         ]
                       },
-                      "movement": {
-                        "name": "movement",
-                        "type": "number",
+                      "id": {
+                        "name": "id",
+                        "type": "string",
                         "required": true
                       },
                       "position": {
@@ -470,98 +531,58 @@
                           }
                         }
                       },
+                      "sprite": {
+                        "name": "sprite",
+                        "type": "string",
+                        "required": false
+                      },
+                      "level": {
+                        "name": "level",
+                        "type": "number",
+                        "required": false
+                      },
                       "name": {
                         "name": "name",
                         "type": "string",
                         "required": true
                       },
-                      "sprite": {
-                        "name": "sprite",
-                        "type": "string",
-                        "required": false
-                      }
-                    }
-                  }
-                },
-                "selectedHeroId": {
-                  "name": "selectedHeroId",
-                  "type": "string",
-                  "required": false
-                },
-                "backgroundImage": {
-                  "name": "backgroundImage",
-                  "type": "string",
-                  "required": false
-                },
-                "features": {
-                  "name": "features",
-                  "type": "array",
-                  "required": false,
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "color": {
-                        "name": "color",
-                        "type": "string",
-                        "required": false
-                      },
-                      "elevation": {
-                        "name": "elevation",
-                        "type": "number",
-                        "required": false
-                      },
-                      "x": {
-                        "name": "x",
-                        "type": "number",
-                        "required": true
-                      },
-                      "assetUrl": {
-                        "name": "assetUrl",
-                        "type": "string",
-                        "required": false
-                      },
-                      "id": {
-                        "name": "id",
-                        "type": "string",
-                        "required": false
-                      },
-                      "y": {
-                        "name": "y",
-                        "type": "number",
-                        "required": true
-                      },
-                      "sprite": {
-                        "name": "sprite",
-                        "type": "string",
-                        "required": false
-                      },
-                      "z": {
-                        "name": "z",
-                        "type": "number",
-                        "required": false
-                      },
-                      "type": {
-                        "name": "type",
-                        "type": "string",
-                        "required": true
+                      "spriteSheet": {
+                        "name": "spriteSheet",
+                        "type": "object",
+                        "required": false,
+                        "properties": {
+                          "frameHeight": {
+                            "name": "frameHeight",
+                            "type": "number",
+                            "required": true
+                          },
+                          "frameWidth": {
+                            "name": "frameWidth",
+                            "type": "number",
+                            "required": true
+                          },
+                          "sw": {
+                            "name": "sw",
+                            "type": "string",
+                            "required": true
+                          },
+                          "se": {
+                            "name": "se",
+                            "type": "string",
+                            "required": true
+                          }
+                        }
                       }
                     }
                   }
                 }
               }
             },
-            "diamondTopY": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Diamond Top Y",
-              "description": "-- Canvas pass-through --",
-              "tier": "presentation"
-            },
-            "enableCamera": {
+            "allowMoveAllHeroes": {
               "type": "boolean",
               "default": false,
-              "label": "Enable Camera",
-              "description": "Disable pan/zoom camera (default: true). Set false for fixed maps where overlay labels need stable positions.",
+              "label": "Allow Move All Heroes",
+              "description": "Allow selecting / moving ALL heroes (including enemy). For testing.",
               "tier": "presentation"
             },
             "scale": {
@@ -578,33 +599,12 @@
               "description": "Unit draw-size multiplier",
               "tier": "presentation"
             },
-            "error": {
-              "type": "WorldMapBoardError",
-              "label": "Error",
-              "description": "Error state",
-              "tier": "presentation",
-              "properties": {
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                },
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                },
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                }
-              }
+            "diamondTopY": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Diamond Top Y",
+              "description": "-- Canvas pass-through --",
+              "tier": "presentation"
             }
           },
           "scope": "instance"

@@ -143,8 +143,8 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'render-ui',
                   'main',
                   {
-                    'entity': '@config.entityProp',
                     'type': 'uncontrolled-battle-board',
+                    'entity': '@config.entityProp',
                   },
                 ],
               ],
@@ -166,40 +166,41 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                 'items': {
                   'type': 'object',
                   'properties': {
-                    'defense': {
-                      'name': 'defense',
+                    'health': {
+                      'name': 'health',
                       'type': 'number',
                       'required': true,
                     },
-                    'heroId': {
-                      'name': 'heroId',
-                      'type': 'string',
+                    'traits': {
+                      'name': 'traits',
+                      'type': 'array',
                       'required': false,
-                    },
-                    'spriteSheet': {
-                      'name': 'spriteSheet',
-                      'type': 'object',
-                      'required': false,
-                      'properties': {
-                        'sw': {
-                          'name': 'sw',
-                          'type': 'string',
-                          'required': true,
-                        },
-                        'frameHeight': {
-                          'name': 'frameHeight',
-                          'type': 'number',
-                          'required': true,
-                        },
-                        'se': {
-                          'name': 'se',
-                          'type': 'string',
-                          'required': true,
-                        },
-                        'frameWidth': {
-                          'name': 'frameWidth',
-                          'type': 'number',
-                          'required': true,
+                      'items': {
+                        'type': 'object',
+                        'properties': {
+                          'cooldown': {
+                            'name': 'cooldown',
+                            'type': 'number',
+                            'required': false,
+                          },
+                          'states': {
+                            'name': 'states',
+                            'type': 'array',
+                            'required': true,
+                            'items': {
+                              'type': 'string',
+                            },
+                          },
+                          'currentState': {
+                            'name': 'currentState',
+                            'type': 'string',
+                            'required': true,
+                          },
+                          'name': {
+                            'name': 'name',
+                            'type': 'string',
+                            'required': true,
+                          },
                         },
                       },
                     },
@@ -220,40 +221,15 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                         },
                       },
                     },
-                    'name': {
-                      'name': 'name',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'health': {
-                      'name': 'health',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'id': {
-                      'name': 'id',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'unitType': {
-                      'name': 'unitType',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'type': 'string',
-                      'required': false,
-                    },
                     'movement': {
                       'name': 'movement',
                       'type': 'number',
                       'required': true,
                     },
-                    'maxHealth': {
-                      'name': 'maxHealth',
-                      'type': 'number',
-                      'required': true,
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
                     },
                     'team': {
                       'name': 'team',
@@ -264,43 +240,67 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                         'enemy',
                       ],
                     },
+                    'heroId': {
+                      'name': 'heroId',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'spriteSheet': {
+                      'name': 'spriteSheet',
+                      'type': 'object',
+                      'required': false,
+                      'properties': {
+                        'frameWidth': {
+                          'name': 'frameWidth',
+                          'type': 'number',
+                          'required': true,
+                        },
+                        'se': {
+                          'name': 'se',
+                          'type': 'string',
+                          'required': true,
+                        },
+                        'frameHeight': {
+                          'name': 'frameHeight',
+                          'type': 'number',
+                          'required': true,
+                        },
+                        'sw': {
+                          'name': 'sw',
+                          'type': 'string',
+                          'required': true,
+                        },
+                      },
+                    },
+                    'maxHealth': {
+                      'name': 'maxHealth',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'id': {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
                     'attack': {
                       'name': 'attack',
                       'type': 'number',
                       'required': true,
                     },
-                    'traits': {
-                      'name': 'traits',
-                      'type': 'array',
+                    'defense': {
+                      'name': 'defense',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'unitType': {
+                      'name': 'unitType',
+                      'type': 'string',
                       'required': false,
-                      'items': {
-                        'type': 'object',
-                        'properties': {
-                          'name': {
-                            'name': 'name',
-                            'type': 'string',
-                            'required': true,
-                          },
-                          'cooldown': {
-                            'name': 'cooldown',
-                            'type': 'number',
-                            'required': false,
-                          },
-                          'states': {
-                            'name': 'states',
-                            'type': 'array',
-                            'required': true,
-                            'items': {
-                              'type': 'string',
-                            },
-                          },
-                          'currentState': {
-                            'name': 'currentState',
-                            'type': 'string',
-                            'required': true,
-                          },
-                        },
-                      },
                     },
                   },
                 },

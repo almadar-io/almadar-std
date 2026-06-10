@@ -101,11 +101,11 @@
                     "render-ui",
                     "main",
                     {
-                      "playEvent": "PLAY",
-                      "type": "event-handler-board",
-                      "entity": "@config.entityProp",
                       "completeEvent": "COMPLETE",
-                      "stepDurationMs": "@config.stepDurationMs"
+                      "type": "event-handler-board",
+                      "playEvent": "PLAY",
+                      "stepDurationMs": "@config.stepDurationMs",
+                      "entity": "@config.entityProp"
                     }
                   ]
                 ]
@@ -120,41 +120,40 @@
               "synonyms": "entity",
               "tier": "presentation",
               "properties": {
-                "triggerEvents": {
-                  "name": "triggerEvents",
-                  "type": "array",
-                  "required": false,
-                  "items": {
-                    "type": "string"
-                  }
+                "hint": {
+                  "name": "hint",
+                  "type": "string",
+                  "required": false
                 },
                 "title": {
                   "name": "title",
                   "type": "string",
                   "required": true
                 },
-                "failMessage": {
-                  "name": "failMessage",
-                  "type": "string",
-                  "required": false
-                },
-                "headerImage": {
-                  "name": "headerImage",
-                  "type": "string",
-                  "required": false
-                },
-                "goalCondition": {
-                  "name": "goalCondition",
-                  "type": "string",
-                  "required": true
+                "theme": {
+                  "name": "theme",
+                  "type": "object",
+                  "required": false,
+                  "properties": {
+                    "background": {
+                      "name": "background",
+                      "type": "string",
+                      "required": false
+                    },
+                    "accentColor": {
+                      "name": "accentColor",
+                      "type": "string",
+                      "required": false
+                    }
+                  }
                 },
                 "goalEvent": {
                   "name": "goalEvent",
                   "type": "string",
                   "required": true
                 },
-                "hint": {
-                  "name": "hint",
+                "successMessage": {
+                  "name": "successMessage",
                   "type": "string",
                   "required": false
                 },
@@ -165,22 +164,34 @@
                   "items": {
                     "type": "object",
                     "properties": {
-                      "name": {
-                        "name": "name",
-                        "type": "string",
-                        "required": true
-                      },
                       "icon": {
                         "name": "icon",
                         "type": "string",
                         "required": true
                       },
-                      "states": {
-                        "name": "states",
+                      "currentState": {
+                        "name": "currentState",
+                        "type": "string",
+                        "required": true
+                      },
+                      "availableEvents": {
+                        "name": "availableEvents",
                         "type": "array",
                         "required": true,
                         "items": {
-                          "type": "string"
+                          "type": "object",
+                          "properties": {
+                            "label": {
+                              "name": "label",
+                              "type": "string",
+                              "required": true
+                            },
+                            "value": {
+                              "name": "value",
+                              "type": "string",
+                              "required": true
+                            }
+                          }
                         }
                       },
                       "maxRules": {
@@ -188,38 +199,8 @@
                         "type": "number",
                         "required": false
                       },
-                      "rules": {
-                        "name": "rules",
-                        "type": "array",
-                        "required": true,
-                        "items": {
-                          "type": "object",
-                          "properties": {
-                            "whenEvent": {
-                              "name": "whenEvent",
-                              "type": "string",
-                              "required": true
-                            },
-                            "thenAction": {
-                              "name": "thenAction",
-                              "type": "string",
-                              "required": true
-                            },
-                            "id": {
-                              "name": "id",
-                              "type": "string",
-                              "required": true
-                            }
-                          }
-                        }
-                      },
-                      "id": {
-                        "name": "id",
-                        "type": "string",
-                        "required": true
-                      },
-                      "currentState": {
-                        "name": "currentState",
+                      "name": {
+                        "name": "name",
                         "type": "string",
                         "required": true
                       },
@@ -243,30 +224,48 @@
                           }
                         }
                       },
-                      "availableEvents": {
-                        "name": "availableEvents",
+                      "rules": {
+                        "name": "rules",
                         "type": "array",
                         "required": true,
                         "items": {
                           "type": "object",
                           "properties": {
-                            "label": {
-                              "name": "label",
+                            "thenAction": {
+                              "name": "thenAction",
                               "type": "string",
                               "required": true
                             },
-                            "value": {
-                              "name": "value",
+                            "id": {
+                              "name": "id",
+                              "type": "string",
+                              "required": true
+                            },
+                            "whenEvent": {
+                              "name": "whenEvent",
                               "type": "string",
                               "required": true
                             }
                           }
                         }
                       },
+                      "id": {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
                       "initialState": {
                         "name": "initialState",
                         "type": "string",
                         "required": true
+                      },
+                      "states": {
+                        "name": "states",
+                        "type": "array",
+                        "required": true,
+                        "items": {
+                          "type": "string"
+                        }
                       }
                     }
                   }
@@ -281,26 +280,27 @@
                   "type": "string",
                   "required": true
                 },
-                "successMessage": {
-                  "name": "successMessage",
+                "failMessage": {
+                  "name": "failMessage",
                   "type": "string",
                   "required": false
                 },
-                "theme": {
-                  "name": "theme",
-                  "type": "object",
+                "headerImage": {
+                  "name": "headerImage",
+                  "type": "string",
+                  "required": false
+                },
+                "goalCondition": {
+                  "name": "goalCondition",
+                  "type": "string",
+                  "required": true
+                },
+                "triggerEvents": {
+                  "name": "triggerEvents",
+                  "type": "array",
                   "required": false,
-                  "properties": {
-                    "background": {
-                      "name": "background",
-                      "type": "string",
-                      "required": false
-                    },
-                    "accentColor": {
-                      "name": "accentColor",
-                      "type": "string",
-                      "required": false
-                    }
+                  "items": {
+                    "type": "string"
                   }
                 }
               }

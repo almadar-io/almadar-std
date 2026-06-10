@@ -47,29 +47,28 @@ export interface StdUiStackActionPayload {
  */
 export interface StdUiStackConfig {
   /** Default: `false` */
-  wrap?: boolean;
+  flex?: boolean;
+  /** Default: `""` */
+  className?: string;
   /** Default: `false` */
   responsive?: boolean;
+  /** Default: `false` */
+  wrap?: boolean;
+  /** Default: `false` */
+  reverse?: boolean;
+  style?: unknown;
   /** Default: `0` */
   tabIndex?: number;
-  /** Default: `false` */
-  flex?: boolean;
+  /** Default: `"stretch"` */
+  align?: 'start' | 'center' | 'end' | 'stretch' | 'baseline';
   /** Default: `"start"` */
   justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';
+  /** Default: `"Role"` */
+  role?: string;
   /** Default: `"vertical"` */
   direction?: 'horizontal' | 'vertical';
   /** Default: `"md"` */
   gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
-  /** Default: `""` */
-  className?: string;
-  /** Default: `false` */
-  reverse?: boolean;
-  style?: unknown;
-  /** Default: `"stretch"` */
-  align?: 'start' | 'center' | 'end' | 'stretch' | 'baseline';
-  children?: unknown;
-  /** Default: `""` */
-  role?: string;
   actionPayload?: unknown;
 }
 

@@ -76,14 +76,14 @@
                     "main",
                     {
                       "items": "@config.items",
-                      "defaultActiveTab": "@config.defaultActiveTab",
-                      "className": "@config.className",
-                      "activeTab": "@config.activeTab",
+                      "onTabChange": "TAB_CHANGE",
                       "tabChangeEvent": "TAB_CHANGE",
                       "variant": "@config.variant",
+                      "defaultActiveTab": "@config.defaultActiveTab",
+                      "activeTab": "@config.activeTab",
+                      "className": "@config.className",
                       "orientation": "@config.orientation",
                       "tabs": "@config.tabs",
-                      "onTabChange": "TAB_CHANGE",
                       "type": "tabs"
                     }
                   ]
@@ -92,6 +92,13 @@
             ]
           },
           "config": {
+            "activeTab": {
+              "type": "string",
+              "default": "Active Tab",
+              "label": "Active Tab",
+              "description": "Controlled active tab ID",
+              "tier": "presentation"
+            },
             "orientation": {
               "type": "string",
               "default": "horizontal",
@@ -103,19 +110,62 @@
                 "vertical"
               ]
             },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "defaultActiveTab": {
-              "type": "string",
-              "default": "",
-              "label": "Default Active Tab",
-              "description": "Default active tab ID",
-              "tier": "presentation"
+            "tabs": {
+              "type": "[TabsTabsItem]",
+              "default": [],
+              "label": "Tabs",
+              "description": "Tab items (alias for items - used by generated code)",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "badge": {
+                    "name": "badge",
+                    "type": "string",
+                    "required": false
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": false
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "disabled": {
+                    "name": "disabled",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "value": {
+                    "name": "value",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "active": {
+                    "name": "active",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "content": {
+                    "name": "content",
+                    "type": "string",
+                    "required": false
+                  },
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
             },
             "items": {
               "type": "[TabsItemsItem]",
@@ -126,29 +176,19 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "content": {
-                    "name": "content",
-                    "type": "string",
-                    "required": false
-                  },
                   "active": {
                     "name": "active",
                     "type": "boolean",
                     "required": false
                   },
+                  "content": {
+                    "name": "content",
+                    "type": "string",
+                    "required": false
+                  },
                   "badge": {
                     "name": "badge",
                     "type": "string",
-                    "required": false
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "disabled": {
-                    "name": "disabled",
-                    "type": "boolean",
                     "required": false
                   },
                   "value": {
@@ -161,55 +201,18 @@
                     "type": "string",
                     "required": true
                   },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": false
-                  },
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "tabs": {
-              "type": "[TabsTabsItem]",
-              "default": [],
-              "label": "Tabs",
-              "description": "Tab items (alias for items - used by generated code)",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "value": {
-                    "name": "value",
-                    "type": "string",
-                    "required": false
-                  },
-                  "badge": {
-                    "name": "badge",
-                    "type": "string",
-                    "required": false
-                  },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": false
-                  },
                   "disabled": {
                     "name": "disabled",
                     "type": "boolean",
                     "required": false
                   },
-                  "content": {
-                    "name": "content",
+                  "event": {
+                    "name": "event",
                     "type": "string",
                     "required": false
                   },
-                  "event": {
-                    "name": "event",
+                  "id": {
+                    "name": "id",
                     "type": "string",
                     "required": false
                   },
@@ -217,25 +220,15 @@
                     "name": "icon",
                     "type": "string",
                     "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "active": {
-                    "name": "active",
-                    "type": "boolean",
-                    "required": false
                   }
                 }
               }
             },
-            "activeTab": {
+            "defaultActiveTab": {
               "type": "string",
-              "default": "",
-              "label": "Active Tab",
-              "description": "Controlled active tab ID",
+              "default": "Default Active Tab",
+              "label": "Default Active Tab",
+              "description": "Default active tab ID",
               "tier": "presentation"
             },
             "variant": {
@@ -249,6 +242,13 @@
                 "pills",
                 "underline"
               ]
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
             }
           },
           "scope": "instance"

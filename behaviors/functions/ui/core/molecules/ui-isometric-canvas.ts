@@ -70,48 +70,48 @@ export interface StdUiIsometricCanvasTileLeavePayload {
  */
 export interface StdUiIsometricCanvasConfig {
   /** Default: `0` */
-  boardWidth?: number;
-  /** Default: `""` */
-  assetBaseUrl?: string;
-  /** Default: `1` */
-  unitScale?: number;
-  /** Default: `true` */
-  enableCamera?: boolean;
-  assetManifest?: EntityRow;
+  diamondTopY?: number;
+  /** Default: `false` */
+  hasActiveEffects?: boolean;
+  /** Default: `[]` */
+  effectSpriteUrls?: string[];
   /** Default: `false` */
   debug?: boolean;
-  /** Default: `[]` */
-  features?: EntityRow[];
-  error?: EntityRow;
+  /** Default: `true` */
+  enableCamera?: boolean;
+  /** Default: `1` */
+  unitScale?: number;
+  /** Default: `0` */
+  boardWidth?: number;
   /** Default: `[]` */
   validMoves?: EntityRow[];
+  /** Default: `[]` */
+  features?: EntityRow[];
+  /** Default: `true` */
+  showMinimap?: boolean;
+  /** Default: `[]` */
+  attackTargets?: EntityRow[];
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `[]` */
   tiles?: EntityRow[];
-  /** Default: `[]` */
-  units?: EntityRow[];
+  /** Default: `"Selected Unit Id"` */
+  selectedUnitId?: string;
   /** Default: `0.4` */
   scale?: number;
-  /** Default: `""` */
+  /** Default: `"Background Image"` */
   backgroundImage?: string;
-  /** Default: `true` */
-  showMinimap?: boolean;
-  /** Default: `""` */
-  selectedUnitId?: string;
-  /** Default: `""` */
-  className?: string;
   /** Default: `0` */
   boardHeight?: number;
+  /** Default: `[]` */
+  units?: EntityRow[];
+  error?: EntityRow;
+  assetManifest?: EntityRow;
+  /** Default: `"Asset Base Url"` */
+  assetBaseUrl?: string;
+  /** Default: `""` */
+  className?: string;
   hoveredTile?: EntityRow;
-  /** Default: `[]` */
-  effectSpriteUrls?: string[];
-  /** Default: `false` */
-  hasActiveEffects?: boolean;
-  /** Default: `[]` */
-  attackTargets?: EntityRow[];
-  /** Default: `0` */
-  diamondTopY?: number;
 }
 
 /**

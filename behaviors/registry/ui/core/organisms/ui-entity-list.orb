@@ -104,38 +104,38 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "@config.className",
                       "children": [
                         {
                           "content": "Sample content",
                           "type": "text"
                         }
                       ],
-                      "fieldNames": "@config.fieldNames",
+                      "activeFilters": "@config.activeFilters",
+                      "totalCount": "@config.totalCount",
+                      "selectedIds": "@config.selectedIds",
                       "entityType": "@config.entityType",
-                      "variant": "@config.variant",
+                      "entity": "@entity",
+                      "selectable": "@config.selectable",
+                      "emptyMessage": "@config.emptyMessage",
+                      "sortDirection": "@config.sortDirection",
+                      "isLoading": "@config.isLoading",
                       "type": "entity-list",
+                      "sortBy": "@config.sortBy",
+                      "className": "@config.className",
+                      "error": "@config.error",
+                      "pageSize": "@config.pageSize",
                       "showDividers": "@config.showDividers",
+                      "variant": "@config.variant",
+                      "fields": "@config.fields",
+                      "fieldNames": "@config.fieldNames",
                       "itemActions": [
                         {
                           "event": "VIEW",
                           "label": "View"
                         }
                       ],
-                      "isLoading": "@config.isLoading",
-                      "fields": "@config.fields",
-                      "emptyMessage": "@config.emptyMessage",
                       "page": "@config.pageProp",
-                      "selectedIds": "@config.selectedIds",
-                      "selectable": "@config.selectable",
-                      "activeFilters": "@config.activeFilters",
-                      "totalCount": "@config.totalCount",
-                      "searchValue": "@config.searchValue",
-                      "entity": "@entity",
-                      "sortDirection": "@config.sortDirection",
-                      "error": "@config.error",
-                      "sortBy": "@config.sortBy",
-                      "pageSize": "@config.pageSize"
+                      "searchValue": "@config.searchValue"
                     }
                   ]
                 ]
@@ -155,6 +155,48 @@
             ]
           },
           "config": {
+            "entityType": {
+              "type": "string",
+              "default": "Entity Type",
+              "label": "Entity Type",
+              "description": "Entity type name for display",
+              "tier": "presentation"
+            },
+            "error": {
+              "type": "EntityListError",
+              "label": "Error",
+              "description": "Error state (UiError)",
+              "tier": "presentation",
+              "properties": {
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                },
+                "stack": {
+                  "name": "stack",
+                  "type": "string",
+                  "required": false
+                },
+                "code": {
+                  "name": "code",
+                  "type": "string",
+                  "required": false
+                },
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": false
+                }
+              }
+            },
+            "pageSize": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Page Size",
+              "description": "Number of items per page",
+              "tier": "presentation"
+            },
             "selectedIds": {
               "type": "[string]",
               "default": [],
@@ -164,6 +206,42 @@
               "items": {
                 "type": "string"
               }
+            },
+            "searchValue": {
+              "type": "string",
+              "default": "Search Value",
+              "label": "Search Value",
+              "description": "Current search query value",
+              "tier": "presentation"
+            },
+            "sortBy": {
+              "type": "string",
+              "default": "Sort By",
+              "label": "Sort By",
+              "description": "Current sort field",
+              "tier": "presentation"
+            },
+            "showDividers": {
+              "type": "boolean",
+              "default": false,
+              "label": "Show Dividers",
+              "description": "showDividers prop",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "pageProp": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Page",
+              "description": "Current page number",
+              "synonyms": "page",
+              "tier": "presentation"
             },
             "sortDirection": {
               "type": "string",
@@ -176,33 +254,23 @@
                 "desc"
               ]
             },
-            "error": {
-              "type": "EntityListError",
-              "label": "Error",
-              "description": "Error state (UiError)",
+            "variant": {
+              "type": "string",
+              "default": "default",
+              "label": "Variant",
+              "description": "variant prop",
               "tier": "presentation",
-              "properties": {
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                },
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                },
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                }
-              }
+              "values": [
+                "default",
+                "card"
+              ]
+            },
+            "emptyMessage": {
+              "type": "string",
+              "default": "Empty Message",
+              "label": "Empty Message",
+              "description": "emptyMessage prop",
+              "tier": "presentation"
             },
             "fieldNames": {
               "type": "[string]",
@@ -214,86 +282,11 @@
                 "type": "string"
               }
             },
-            "pageProp": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Page",
-              "description": "Current page number",
-              "synonyms": "page",
-              "tier": "presentation"
-            },
-            "selectable": {
+            "isLoading": {
               "type": "boolean",
               "default": false,
-              "label": "Selectable",
-              "description": "selectable prop",
-              "tier": "presentation"
-            },
-            "fields": {
-              "type": "[EntityListFieldsItem]",
-              "default": [
-                {
-                  "header": "Header",
-                  "key": "Key",
-                  "label": "Label",
-                  "name": "Name"
-                }
-              ],
-              "label": "Fields",
-              "description": "Fields to display - accepts string[] or {key, header}[] for unified interface",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "header": {
-                    "name": "header",
-                    "type": "string",
-                    "required": false
-                  },
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "key": {
-                    "name": "key",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "totalCount": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Total Count",
-              "description": "Total number of items",
-              "tier": "presentation"
-            },
-            "searchValue": {
-              "type": "string",
-              "default": "",
-              "label": "Search Value",
-              "description": "Current search query value",
-              "tier": "presentation"
-            },
-            "entityType": {
-              "type": "string",
-              "default": "",
-              "label": "Entity Type",
-              "description": "Entity type name for display",
-              "tier": "presentation"
-            },
-            "pageSize": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Page Size",
-              "description": "Number of items per page",
+              "label": "Is Loading",
+              "description": "Loading state indicator",
               "tier": "presentation"
             },
             "activeFilters": {
@@ -302,51 +295,58 @@
               "description": "Active filters",
               "tier": "presentation"
             },
-            "sortBy": {
-              "type": "string",
-              "default": "",
-              "label": "Sort By",
-              "description": "Current sort field",
+            "totalCount": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Total Count",
+              "description": "Total number of items",
               "tier": "presentation"
             },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state indicator",
-              "tier": "presentation"
-            },
-            "showDividers": {
-              "type": "boolean",
-              "default": false,
-              "label": "Show Dividers",
-              "description": "showDividers prop",
-              "tier": "presentation"
-            },
-            "emptyMessage": {
-              "type": "string",
-              "default": "",
-              "label": "Empty Message",
-              "description": "emptyMessage prop",
-              "tier": "presentation"
-            },
-            "variant": {
-              "type": "string",
-              "default": "default",
-              "label": "Variant",
-              "description": "variant prop",
+            "fields": {
+              "type": "[EntityListFieldsItem]",
+              "default": [
+                {
+                  "key": "Key",
+                  "header": "Header",
+                  "name": "Name",
+                  "label": "Label"
+                }
+              ],
+              "label": "Fields",
+              "description": "Fields to display - accepts string[] or {key, header}[] for unified interface",
               "tier": "presentation",
-              "values": [
-                "default",
-                "card"
-              ]
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": false
+                  },
+                  "key": {
+                    "name": "key",
+                    "type": "string",
+                    "required": false
+                  },
+                  "header": {
+                    "name": "header",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "selectable": {
+              "type": "boolean",
+              "default": false,
+              "label": "Selectable",
+              "description": "selectable prop",
+              "tier": "presentation"
             }
           },
           "scope": "instance"

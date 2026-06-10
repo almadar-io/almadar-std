@@ -39,14 +39,14 @@ export type StdUiDocCodeBlockEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiDocCodeBlockConfig {
-  /** Default: `""` */
+  /** Default: `"Title"` */
+  title?: string;
+  /** Default: `"Language"` */
   language?: string;
-  /** Default: `false` */
-  showLineNumbers?: boolean;
   /** Default: `"Code"` */
   code?: string;
-  /** Default: `""` */
-  title?: string;
+  /** Default: `false` */
+  showLineNumbers?: boolean;
   /** Default: `""` */
   className?: string;
 }

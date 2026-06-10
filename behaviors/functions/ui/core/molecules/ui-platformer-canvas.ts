@@ -68,30 +68,30 @@ export interface StdUiPlatformerCanvasStopPayload {
  */
 export interface StdUiPlatformerCanvasConfig {
   /** Default: `800` */
-  canvasWidth?: number;
-  /** Default: `""` */
-  assetBaseUrl?: string;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `""` */
-  backgroundImage?: string;
-  /** Default: `[]` */
-  platforms?: EntityRow[];
-  /** Default: `""` */
-  bgColor?: string;
-  /** Default: `800` */
   worldWidth?: number;
   /** Default: `400` */
   canvasHeight?: number;
-  /** Default: `""` */
-  playerSprite?: string;
-  /** Default: `true` */
-  followCamera?: boolean;
-  player?: EntityRow;
-  /** Default: `{}` */
-  tileSprites?: unknown;
   /** Default: `400` */
   worldHeight?: number;
+  player?: EntityRow;
+  /** Default: `true` */
+  followCamera?: boolean;
+  /** Default: `"Bg Color"` */
+  bgColor?: string;
+  /** Default: `"Player Sprite"` */
+  playerSprite?: string;
+  /** Default: `{}` */
+  tileSprites?: unknown;
+  /** Default: `"Background Image"` */
+  backgroundImage?: string;
+  /** Default: `"Asset Base Url"` */
+  assetBaseUrl?: string;
+  /** Default: `800` */
+  canvasWidth?: number;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `[]` */
+  platforms?: EntityRow[];
 }
 
 /**

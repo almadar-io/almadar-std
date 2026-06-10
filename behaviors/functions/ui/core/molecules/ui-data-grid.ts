@@ -53,55 +53,55 @@ export interface StdUiDataGridLoadMorePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiDataGridConfig {
-  /** Default: `""` */
-  accepts?: string;
-  /** Default: `""` */
-  positionEvent?: string;
-  /** Default: `false` */
-  infiniteScroll?: boolean;
-  /** Default: `false` */
-  isLoading?: boolean;
   /** Default: `false` */
   dndRoot?: boolean;
-  error?: EntityRow;
-  /** Default: `""` */
-  dragGroup?: string;
-  /** Default: `false` */
-  hasMore?: boolean;
-  /** Default: `""` */
-  reorderEvent?: string;
   /** Default: `1` */
   cols?: number;
-  /** Default: `""` */
-  dndItemIdField?: string;
-  /** Default: `[]` */
-  itemActions?: EntityRow[];
-  /** Default: `false` */
-  sortable?: boolean;
-  /** Default: `false` */
-  scrollX?: boolean;
-  /** Default: `""` */
-  imageField?: string;
+  error?: EntityRow;
+  /** Default: `"Position Event"` */
+  positionEvent?: string;
   /** Default: `0` */
   maxInlineActions?: number;
-  /** Default: `""` */
-  dropEvent?: string;
-  /** Default: `[]` */
-  columns?: EntityRow[];
-  /** Default: `""` */
-  className?: string;
-  /** Default: `0` */
-  pageSize?: number;
-  /** Default: `"md"` */
-  gap?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
-  /** Default: `280` */
-  minCardWidth?: number;
-  /** Default: `false` */
-  selectable?: boolean;
-  /** Default: `[]` */
-  fields?: EntityRow[];
   /** Default: `"dense"` */
   look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
+  /** Default: `[]` */
+  fields?: EntityRow[];
+  /** Default: `"md"` */
+  gap?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
+  /** Default: `false` */
+  hasMore?: boolean;
+  /** Default: `"Reorder Event"` */
+  reorderEvent?: string;
+  /** Default: `[]` */
+  columns?: EntityRow[];
+  /** Default: `false` */
+  scrollX?: boolean;
+  /** Default: `"Drag Group"` */
+  dragGroup?: string;
+  /** Default: `false` */
+  infiniteScroll?: boolean;
+  /** Default: `[]` */
+  itemActions?: EntityRow[];
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"Image Field"` */
+  imageField?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `0` */
+  pageSize?: number;
+  /** Default: `false` */
+  selectable?: boolean;
+  /** Default: `"Accepts"` */
+  accepts?: string;
+  /** Default: `"Dnd Item Id Field"` */
+  dndItemIdField?: string;
+  /** Default: `false` */
+  sortable?: boolean;
+  /** Default: `"Drop Event"` */
+  dropEvent?: string;
+  /** Default: `280` */
+  minCardWidth?: number;
 }
 
 /**

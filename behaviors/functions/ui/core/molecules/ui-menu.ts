@@ -40,12 +40,12 @@ export type StdUiMenuEventKey = 'INIT';
  */
 export interface StdUiMenuConfig {
   trigger?: unknown;
+  /** Default: `"bottom-left"` */
+  position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'top-start' | 'top-end' | 'bottom-start' | 'bottom-end';
   /** Default: `[]` */
   items?: EntityRow[];
   /** Default: `""` */
   className?: string;
-  /** Default: `"bottom-left"` */
-  position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'top-start' | 'top-end' | 'bottom-start' | 'bottom-end';
 }
 
 /**

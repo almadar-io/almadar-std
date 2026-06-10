@@ -49,14 +49,14 @@
                     "render-ui",
                     "main",
                     {
-                      "label": "@config.label",
                       "allowDuplicates": "@config.allowDuplicates",
+                      "label": "@config.label",
                       "categoryColors": "@config.categoryColors",
-                      "actions": "@config.actions",
-                      "type": "action-palette",
+                      "size": "@config.size",
                       "usedActionIds": "@config.usedActionIds",
-                      "className": "@config.className",
-                      "size": "@config.size"
+                      "type": "action-palette",
+                      "actions": "@config.actions",
+                      "className": "@config.className"
                     }
                   ]
                 ]
@@ -64,12 +64,129 @@
             ]
           },
           "config": {
-            "className": {
+            "actions": {
+              "type": "[ActionPaletteActionsItem]",
+              "default": [],
+              "label": "Actions",
+              "description": "Available actions",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "description": {
+                    "name": "description",
+                    "type": "string",
+                    "required": false
+                  },
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
+                  },
+                  "iconEmoji": {
+                    "name": "iconEmoji",
+                    "type": "string",
+                    "required": false
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  "iconUrl": {
+                    "name": "iconUrl",
+                    "type": "string",
+                    "required": false
+                  },
+                  "stateMachine": {
+                    "name": "stateMachine",
+                    "type": "object",
+                    "required": false,
+                    "properties": {
+                      "description": {
+                        "name": "description",
+                        "type": "string",
+                        "required": false
+                      },
+                      "name": {
+                        "name": "name",
+                        "type": "string",
+                        "required": true
+                      },
+                      "states": {
+                        "name": "states",
+                        "type": "array",
+                        "required": true,
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "currentState": {
+                        "name": "currentState",
+                        "type": "string",
+                        "required": true
+                      },
+                      "transitions": {
+                        "name": "transitions",
+                        "type": "array",
+                        "required": true,
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "guardHint": {
+                              "name": "guardHint",
+                              "type": "string",
+                              "required": false
+                            },
+                            "from": {
+                              "name": "from",
+                              "type": "string",
+                              "required": true
+                            },
+                            "to": {
+                              "name": "to",
+                              "type": "string",
+                              "required": true
+                            },
+                            "event": {
+                              "name": "event",
+                              "type": "string",
+                              "required": true
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "category": {
+                    "name": "category",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "usedActionIds": {
+              "type": "[string]",
+              "default": [],
+              "label": "Used Action Ids",
+              "description": "IDs of actions that are already used (shown as disabled)",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "size": {
               "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
+              "default": "md",
+              "label": "Size",
+              "description": "Size variant",
+              "tier": "presentation",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
             },
             "categoryColors": {
               "type": "Map<string,ActionPaletteCategoryColorsValue>",
@@ -93,114 +210,12 @@
                 }
               }
             },
-            "label": {
+            "className": {
               "type": "string",
               "default": "",
-              "label": "Label",
-              "description": "Label above the palette",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
               "tier": "presentation"
-            },
-            "actions": {
-              "type": "[ActionPaletteActionsItem]",
-              "default": [],
-              "label": "Actions",
-              "description": "Available actions",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "iconUrl": {
-                    "name": "iconUrl",
-                    "type": "string",
-                    "required": false
-                  },
-                  "stateMachine": {
-                    "name": "stateMachine",
-                    "type": "object",
-                    "required": false,
-                    "properties": {
-                      "currentState": {
-                        "name": "currentState",
-                        "type": "string",
-                        "required": true
-                      },
-                      "states": {
-                        "name": "states",
-                        "type": "array",
-                        "required": true,
-                        "items": {
-                          "type": "string"
-                        }
-                      },
-                      "transitions": {
-                        "name": "transitions",
-                        "type": "array",
-                        "required": true,
-                        "items": {
-                          "type": "object",
-                          "properties": {
-                            "to": {
-                              "name": "to",
-                              "type": "string",
-                              "required": true
-                            },
-                            "from": {
-                              "name": "from",
-                              "type": "string",
-                              "required": true
-                            },
-                            "event": {
-                              "name": "event",
-                              "type": "string",
-                              "required": true
-                            },
-                            "guardHint": {
-                              "name": "guardHint",
-                              "type": "string",
-                              "required": false
-                            }
-                          }
-                        }
-                      },
-                      "description": {
-                        "name": "description",
-                        "type": "string",
-                        "required": false
-                      },
-                      "name": {
-                        "name": "name",
-                        "type": "string",
-                        "required": true
-                      }
-                    }
-                  },
-                  "category": {
-                    "name": "category",
-                    "type": "string",
-                    "required": true
-                  },
-                  "description": {
-                    "name": "description",
-                    "type": "string",
-                    "required": false
-                  },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
-                  },
-                  "iconEmoji": {
-                    "name": "iconEmoji",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
             },
             "allowDuplicates": {
               "type": "boolean",
@@ -209,27 +224,12 @@
               "description": "Whether each action can be used multiple times",
               "tier": "presentation"
             },
-            "usedActionIds": {
-              "type": "[string]",
-              "default": [],
-              "label": "Used Action Ids",
-              "description": "IDs of actions that are already used (shown as disabled)",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
-            },
-            "size": {
+            "label": {
               "type": "string",
-              "default": "md",
-              "label": "Size",
-              "description": "Size variant",
-              "tier": "presentation",
-              "values": [
-                "sm",
-                "md",
-                "lg"
-              ]
+              "default": "Label",
+              "label": "Label",
+              "description": "Label above the palette",
+              "tier": "presentation"
             }
           },
           "scope": "instance"

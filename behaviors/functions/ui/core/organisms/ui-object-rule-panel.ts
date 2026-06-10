@@ -47,12 +47,12 @@ export interface StdUiObjectRulePanelRulesChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiObjectRulePanelConfig {
-  /** Default: `false` */
-  disabled?: boolean;
-  /** Default: `{"id":"","availableEvents":[],"icon":"circle","name":"","initialState":"","rules":[],"availableActions":[],"states":[],"currentState":""}` */
-  object?: EntityRow;
   /** Default: `""` */
   className?: string;
+  /** Default: `false` */
+  disabled?: boolean;
+  /** Default: `{"initialState":"","id":"","name":"","currentState":"","availableEvents":[],"icon":"circle","rules":[],"states":[],"availableActions":[]}` */
+  object?: EntityRow;
 }
 
 /**
@@ -193,8 +193,8 @@ export function stdUiObjectRulePanelObjectRulePanelOrbital(params: StdUiObjectRu
                     'object': '@config.object',
                     'disabled': '@config.disabled',
                     'className': '@config.className',
-                    'type': 'object-rule-panel',
                     'onRulesChange': 'RULES_CHANGE',
+                    'type': 'object-rule-panel',
                   },
                 ],
               ],
@@ -202,6 +202,13 @@ export function stdUiObjectRulePanelObjectRulePanelOrbital(params: StdUiObjectRu
           ],
         },
         'config': {
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
           'disabled': {
             'type': 'boolean',
             'default': false,
@@ -212,15 +219,15 @@ export function stdUiObjectRulePanelObjectRulePanelOrbital(params: StdUiObjectRu
           'object': {
             'type': 'ObjectRulePanelObject',
             'default': {
+              'initialState': '',
               'id': '',
+              'name': '',
+              'currentState': '',
               'availableEvents': [],
               'icon': 'circle',
-              'name': '',
-              'initialState': '',
               'rules': [],
-              'availableActions': [],
               'states': [],
-              'currentState': '',
+              'availableActions': [],
             },
             'label': 'Object',
             'description': 'The selected object',
@@ -233,6 +240,56 @@ export function stdUiObjectRulePanelObjectRulePanelOrbital(params: StdUiObjectRu
                 'items': {
                   'type': 'string',
                 },
+              },
+              'currentState': {
+                'name': 'currentState',
+                'type': 'string',
+                'required': true,
+              },
+              'icon': {
+                'name': 'icon',
+                'type': 'string',
+                'required': true,
+              },
+              'maxRules': {
+                'name': 'maxRules',
+                'type': 'number',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': true,
+              },
+              'rules': {
+                'name': 'rules',
+                'type': 'array',
+                'required': true,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'whenEvent': {
+                      'name': 'whenEvent',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'thenAction': {
+                      'name': 'thenAction',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'id': {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  },
+                },
+              },
+              'initialState': {
+                'name': 'initialState',
+                'type': 'string',
+                'required': true,
               },
               'availableActions': {
                 'name': 'availableActions',
@@ -254,56 +311,6 @@ export function stdUiObjectRulePanelObjectRulePanelOrbital(params: StdUiObjectRu
                   },
                 },
               },
-              'id': {
-                'name': 'id',
-                'type': 'string',
-                'required': true,
-              },
-              'initialState': {
-                'name': 'initialState',
-                'type': 'string',
-                'required': true,
-              },
-              'currentState': {
-                'name': 'currentState',
-                'type': 'string',
-                'required': true,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': true,
-              },
-              'rules': {
-                'name': 'rules',
-                'type': 'array',
-                'required': true,
-                'items': {
-                  'type': 'object',
-                  'properties': {
-                    'thenAction': {
-                      'name': 'thenAction',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'whenEvent': {
-                      'name': 'whenEvent',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'id': {
-                      'name': 'id',
-                      'type': 'string',
-                      'required': true,
-                    },
-                  },
-                },
-              },
-              'icon': {
-                'name': 'icon',
-                'type': 'string',
-                'required': true,
-              },
               'availableEvents': {
                 'name': 'availableEvents',
                 'type': 'array',
@@ -324,19 +331,12 @@ export function stdUiObjectRulePanelObjectRulePanelOrbital(params: StdUiObjectRu
                   },
                 },
               },
-              'maxRules': {
-                'name': 'maxRules',
-                'type': 'number',
-                'required': false,
+              'id': {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
               },
             },
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
           },
         },
         'scope': 'instance',

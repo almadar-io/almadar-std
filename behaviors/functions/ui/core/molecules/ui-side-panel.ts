@@ -30,12 +30,19 @@ const ALIAS = 'UiSidePanel';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiSidePanelEventKey = 'CLOSE' | 'INIT';
+export type StdUiSidePanelEventKey = 'CLOSE' | 'INIT' | 'OPEN';
 
 /**
  * Payload shape for the `CLOSE` event.
  */
 export interface StdUiSidePanelClosePayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `OPEN` event.
+ */
+export interface StdUiSidePanelOpenPayload {
   id?: string;
 }
 
@@ -48,16 +55,16 @@ export interface StdUiSidePanelClosePayload {
 export interface StdUiSidePanelConfig {
   /** Default: `"w-full sm:w-96"` */
   width?: string;
-  /** Default: `"right"` */
-  position?: 'left' | 'right';
   /** Default: `true` */
   showOverlay?: boolean;
+  /** Default: `"right"` */
+  position?: 'left' | 'right';
   /** Default: `"Title"` */
   title?: string;
-  /** Default: `""` */
-  className?: string;
   /** Default: `false` */
   isOpen?: boolean;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

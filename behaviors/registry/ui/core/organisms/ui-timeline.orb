@@ -54,16 +54,16 @@
                     "render-ui",
                     "main",
                     {
-                      "fields": "@config.fields",
-                      "look": "@config.look",
-                      "items": "@config.items",
-                      "isLoading": "@config.isLoading",
                       "type": "timeline",
                       "className": "@config.className",
+                      "isLoading": "@config.isLoading",
+                      "error": "@config.error",
+                      "items": "@config.items",
                       "title": "@config.title",
                       "itemActions": "@config.itemActions",
-                      "error": "@config.error",
-                      "entity": "@entity"
+                      "fields": "@config.fields",
+                      "entity": "@entity",
+                      "look": "@config.look"
                     }
                   ]
                 ]
@@ -71,6 +71,13 @@
             ]
           },
           "config": {
+            "title": {
+              "type": "string",
+              "default": "Title",
+              "label": "Title",
+              "description": "Timeline title",
+              "tier": "presentation"
+            },
             "itemActions": {
               "type": "[TimelineItemActionsItem]",
               "default": [],
@@ -80,10 +87,10 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "label": {
-                    "name": "label",
+                  "event": {
+                    "name": "event",
                     "type": "string",
-                    "required": true
+                    "required": false
                   },
                   "variant": {
                     "name": "variant",
@@ -95,107 +102,18 @@
                       "ghost"
                     ]
                   },
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": false
-                  },
                   "navigatesTo": {
                     "name": "navigatesTo",
                     "type": "string",
                     "required": false
-                  }
-                }
-              }
-            },
-            "fields": {
-              "type": "[string]",
-              "default": [
-                "Item"
-              ],
-              "label": "Fields",
-              "description": "Fields to display",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "title": {
-              "type": "string",
-              "default": "",
-              "label": "Title",
-              "description": "Timeline title",
-              "tier": "presentation"
-            },
-            "items": {
-              "type": "[TimelineItemsItem]",
-              "default": [],
-              "label": "Items",
-              "description": "Timeline items",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "title": {
-                    "name": "title",
-                    "type": "string",
-                    "required": true
                   },
-                  "date": {
-                    "name": "date",
-                    "type": "string",
-                    "required": false
-                  },
-                  "status": {
-                    "name": "status",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "complete",
-                      "active",
-                      "pending",
-                      "error"
-                    ]
-                  },
-                  "description": {
-                    "name": "description",
-                    "type": "string",
-                    "required": false
-                  },
-                  "tags": {
-                    "name": "tags",
-                    "type": "array",
-                    "required": false,
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "id": {
-                    "name": "id",
+                  "label": {
+                    "name": "label",
                     "type": "string",
                     "required": true
                   }
                 }
               }
-            },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state indicator",
-              "tier": "presentation"
             },
             "error": {
               "type": "TimelineError",
@@ -208,8 +126,8 @@
                   "type": "string",
                   "required": true
                 },
-                "stack": {
-                  "name": "stack",
+                "name": {
+                  "name": "name",
                   "type": "string",
                   "required": false
                 },
@@ -218,10 +136,66 @@
                   "type": "string",
                   "required": false
                 },
-                "name": {
-                  "name": "name",
+                "stack": {
+                  "name": "stack",
                   "type": "string",
                   "required": false
+                }
+              }
+            },
+            "items": {
+              "type": "[TimelineItemsItem]",
+              "default": [],
+              "label": "Items",
+              "description": "Timeline items",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "description": {
+                    "name": "description",
+                    "type": "string",
+                    "required": false
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  "date": {
+                    "name": "date",
+                    "type": "string",
+                    "required": false
+                  },
+                  "tags": {
+                    "name": "tags",
+                    "type": "array",
+                    "required": false,
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "title": {
+                    "name": "title",
+                    "type": "string",
+                    "required": true
+                  },
+                  "status": {
+                    "name": "status",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "complete",
+                      "active",
+                      "pending",
+                      "error"
+                    ]
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  }
                 }
               }
             },
@@ -237,6 +211,32 @@
                 "horizontal",
                 "swimlane"
               ]
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
+              "tier": "presentation"
+            },
+            "fields": {
+              "type": "[string]",
+              "default": [
+                "Item"
+              ],
+              "label": "Fields",
+              "description": "Fields to display",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
             }
           },
           "scope": "instance"

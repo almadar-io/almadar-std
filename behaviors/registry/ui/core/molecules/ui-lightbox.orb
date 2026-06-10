@@ -126,9 +126,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "button",
                       "action": "OPEN",
-                      "label": "Open Lightbox"
+                      "label": "Open Lightbox",
+                      "type": "button"
                     }
                   ]
                 ]
@@ -142,15 +142,15 @@
                     "render-ui",
                     "overlay",
                     {
-                      "currentIndex": "@config.currentIndex",
-                      "isOpen": "@config.isOpen",
-                      "closeAction": "@config.closeAction",
-                      "images": "@config.images",
-                      "onIndexChange": "INDEX_CHANGE",
                       "type": "lightbox",
+                      "currentIndex": "@config.currentIndex",
+                      "onIndexChange": "INDEX_CHANGE",
                       "onClose": "CLOSE",
+                      "closeAction": "@config.closeAction",
+                      "isOpen": "@config.isOpen",
                       "showCounter": "@config.showCounter",
-                      "className": "@config.className"
+                      "className": "@config.className",
+                      "images": "@config.images"
                     }
                   ]
                 ]
@@ -179,11 +179,18 @@
             ]
           },
           "config": {
-            "showCounter": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Counter",
-              "description": "Show image counter (e.g., '3 of 12')",
+            "currentIndex": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Current Index",
+              "description": "Current image index",
+              "tier": "presentation"
+            },
+            "closeAction": {
+              "type": "string",
+              "default": "Close Action",
+              "label": "Close Action",
+              "description": "Declarative close event name",
               "tier": "presentation"
             },
             "className": {
@@ -193,20 +200,20 @@
               "description": "Additional CSS classes",
               "tier": "presentation"
             },
-            "closeAction": {
-              "type": "string",
-              "default": "",
-              "label": "Close Action",
-              "description": "Declarative close event name",
+            "isOpen": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Open",
+              "description": "Whether the lightbox is open",
               "tier": "presentation"
             },
             "images": {
               "type": "[LightboxImagesItem]",
               "default": [
                 {
-                  "src": "Src",
+                  "alt": "Alt",
                   "caption": "Caption",
-                  "alt": "Alt"
+                  "src": "Src"
                 }
               ],
               "label": "Images",
@@ -215,6 +222,11 @@
               "items": {
                 "type": "object",
                 "properties": {
+                  "src": {
+                    "name": "src",
+                    "type": "string",
+                    "required": false
+                  },
                   "alt": {
                     "name": "alt",
                     "type": "string",
@@ -224,27 +236,15 @@
                     "name": "caption",
                     "type": "string",
                     "required": false
-                  },
-                  "src": {
-                    "name": "src",
-                    "type": "string",
-                    "required": false
                   }
                 }
               }
             },
-            "currentIndex": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Current Index",
-              "description": "Current image index",
-              "tier": "presentation"
-            },
-            "isOpen": {
+            "showCounter": {
               "type": "boolean",
-              "default": false,
-              "label": "Is Open",
-              "description": "Whether the lightbox is open",
+              "default": true,
+              "label": "Show Counter",
+              "description": "Show image counter (e.g., '3 of 12')",
               "tier": "presentation"
             }
           },

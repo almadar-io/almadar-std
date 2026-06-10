@@ -41,10 +41,10 @@ export type StdUiDamageNumberEventKey = 'INIT';
 export interface StdUiDamageNumberConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `0` */
-  value?: number;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
+  /** Default: `0` */
+  value?: number;
 }
 
 /**

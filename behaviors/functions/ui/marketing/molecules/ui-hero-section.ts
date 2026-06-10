@@ -39,31 +39,30 @@ export type StdUiHeroSectionEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiHeroSectionConfig {
-  /** Default: `"below"` */
-  imagePosition?: 'below' | 'right' | 'background';
-  primaryAction?: EntityRow;
-  /** Default: `"Title"` */
-  title?: string;
-  /** Default: `"Subtitle"` */
-  subtitle?: string;
-  /** Default: `""` */
-  tag?: string;
-  backgroundElement?: unknown;
-  /** Default: `"center"` */
-  align?: 'center' | 'left';
-  /** Default: `""` */
-  className?: string;
-  image?: EntityRow;
-  /** Default: `""` */
-  titleAccent?: string;
   /** Default: `"primary"` */
   tagVariant?: 'primary' | 'secondary' | 'accent';
+  /** Default: `"Title"` */
+  title?: string;
+  /** Default: `"Tag"` */
+  tag?: string;
+  /** Default: `"Title Accent"` */
+  titleAccent?: string;
+  primaryAction?: EntityRow;
+  secondaryAction?: EntityRow;
+  image?: EntityRow;
+  /** Default: `"center"` */
+  align?: 'center' | 'left';
+  backgroundElement?: unknown;
+  /** Default: `"below"` */
+  imagePosition?: 'below' | 'right' | 'background';
   /** Default: `"subtle"` */
   background?: 'dark' | 'gradient' | 'subtle';
-  secondaryAction?: EntityRow;
-  /** Default: `""` */
+  /** Default: `"Install Command"` */
   installCommand?: string;
-  children?: unknown;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"Subtitle"` */
+  subtitle?: string;
 }
 
 /**

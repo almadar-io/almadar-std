@@ -41,10 +41,10 @@ export type StdUiResourceBarEventKey = 'INIT';
 export interface StdUiResourceBarConfig {
   /** Default: `[]` */
   resources?: EntityRow[];
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
   /** Default: `""` */
   className?: string;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
 }
 
 /**

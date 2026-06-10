@@ -39,6 +39,8 @@ export type StdUiTimerDisplayEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiTimerDisplayConfig {
+  /** Default: `false` */
+  running?: boolean;
   /** Default: `0` */
   seconds?: number;
   /** Default: `"md"` */
@@ -49,8 +51,6 @@ export interface StdUiTimerDisplayConfig {
   format?: 'mm:ss' | 'ss' | 'countdown';
   /** Default: `0` */
   lowThreshold?: number;
-  /** Default: `false` */
-  running?: boolean;
 }
 
 /**

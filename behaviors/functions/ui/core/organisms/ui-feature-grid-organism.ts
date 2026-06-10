@@ -39,16 +39,15 @@ export type StdUiFeatureGridOrganismEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiFeatureGridOrganismConfig {
-  /** Default: `""` */
-  searchValue?: string;
-  /** Default: `3` */
-  columns?: number;
+  /** Default: `0` */
+  pageSize?: number;
+  activeFilters?: unknown;
+  /** Default: `"Sort By"` */
+  sortBy?: string;
   /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
-  /** Default: `""` */
-  heading?: string;
-  /** Default: `""` */
-  sortBy?: string;
+  /** Default: `[]` */
+  selectedIds?: string[];
   /** Default: `0` */
   pageProp?: number;
   /** Default: `""` */
@@ -56,13 +55,14 @@ export interface StdUiFeatureGridOrganismConfig {
   /** Default: `0` */
   totalCount?: number;
   error?: EntityRow;
-  activeFilters?: unknown;
-  /** Default: `[]` */
-  selectedIds?: string[];
-  /** Default: `0` */
-  pageSize?: number;
-  /** Default: `""` */
+  /** Default: `3` */
+  columns?: number;
+  /** Default: `"Heading"` */
+  heading?: string;
+  /** Default: `"Subtitle"` */
   subtitle?: string;
+  /** Default: `"Search Value"` */
+  searchValue?: string;
   /** Default: `false` */
   isLoading?: boolean;
 }
@@ -128,6 +128,31 @@ export function stdUiFeatureGridOrganismFeatureGridOrganismOrbital(params: StdUi
             'type': 'string',
             'required': true,
           },
+          {
+            'name': 'icon',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'title',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'description',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'href',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'linkLabel',
+            'type': 'string',
+            'default': '',
+          },
         ];
         const extras = params.fields ?? [];
         if (extras.length === 0) return canonical;
@@ -173,22 +198,22 @@ export function stdUiFeatureGridOrganismFeatureGridOrganismOrbital(params: StdUi
                   'render-ui',
                   'main',
                   {
-                    'sortDirection': '@config.sortDirection',
-                    'activeFilters': '@config.activeFilters',
-                    'subtitle': '@config.subtitle',
-                    'totalCount': '@config.totalCount',
                     'type': 'feature-grid-organism',
-                    'isLoading': '@config.isLoading',
-                    'pageSize': '@config.pageSize',
-                    'columns': '@config.columns',
-                    'error': '@config.error',
-                    'heading': '@config.heading',
-                    'entity': '@entity',
-                    'className': '@config.className',
-                    'sortBy': '@config.sortBy',
-                    'searchValue': '@config.searchValue',
                     'page': '@config.pageProp',
+                    'pageSize': '@config.pageSize',
+                    'isLoading': '@config.isLoading',
                     'selectedIds': '@config.selectedIds',
+                    'error': '@config.error',
+                    'subtitle': '@config.subtitle',
+                    'className': '@config.className',
+                    'sortDirection': '@config.sortDirection',
+                    'totalCount': '@config.totalCount',
+                    'searchValue': '@config.searchValue',
+                    'sortBy': '@config.sortBy',
+                    'entity': '@entity',
+                    'activeFilters': '@config.activeFilters',
+                    'columns': '@config.columns',
+                    'heading': '@config.heading',
                   },
                 ],
               ],
@@ -196,18 +221,24 @@ export function stdUiFeatureGridOrganismFeatureGridOrganismOrbital(params: StdUi
           ],
         },
         'config': {
-          'searchValue': {
-            'type': 'string',
-            'default': '',
-            'label': 'Search Value',
-            'description': 'Current search query value',
+          'pageSize': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page Size',
+            'description': 'Number of items per page',
             'tier': 'presentation',
           },
-          'columns': {
-            'type': 'number',
-            'default': 3,
-            'label': 'Columns',
-            'description': 'columns prop',
+          'activeFilters': {
+            'type': 'json',
+            'label': 'Active Filters',
+            'description': 'Active filters',
+            'tier': 'presentation',
+          },
+          'sortBy': {
+            'type': 'string',
+            'default': 'Sort By',
+            'label': 'Sort By',
+            'description': 'Current sort field',
             'tier': 'presentation',
           },
           'sortDirection': {
@@ -221,19 +252,15 @@ export function stdUiFeatureGridOrganismFeatureGridOrganismOrbital(params: StdUi
               'desc',
             ],
           },
-          'heading': {
-            'type': 'string',
-            'default': '',
-            'label': 'Heading',
-            'description': 'heading prop',
+          'selectedIds': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Selected Ids',
+            'description': 'Currently selected item IDs',
             'tier': 'presentation',
-          },
-          'sortBy': {
-            'type': 'string',
-            'default': '',
-            'label': 'Sort By',
-            'description': 'Current sort field',
-            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
           },
           'pageProp': {
             'type': 'number',
@@ -285,34 +312,32 @@ export function stdUiFeatureGridOrganismFeatureGridOrganismOrbital(params: StdUi
               },
             },
           },
-          'activeFilters': {
-            'type': 'json',
-            'label': 'Active Filters',
-            'description': 'Active filters',
-            'tier': 'presentation',
-          },
-          'selectedIds': {
-            'type': '[string]',
-            'default': [],
-            'label': 'Selected Ids',
-            'description': 'Currently selected item IDs',
-            'tier': 'presentation',
-            'items': {
-              'type': 'string',
-            },
-          },
-          'pageSize': {
+          'columns': {
             'type': 'number',
-            'default': 0,
-            'label': 'Page Size',
-            'description': 'Number of items per page',
+            'default': 3,
+            'label': 'Columns',
+            'description': 'columns prop',
+            'tier': 'presentation',
+          },
+          'heading': {
+            'type': 'string',
+            'default': 'Heading',
+            'label': 'Heading',
+            'description': 'heading prop',
             'tier': 'presentation',
           },
           'subtitle': {
             'type': 'string',
-            'default': '',
+            'default': 'Subtitle',
             'label': 'Subtitle',
             'description': 'subtitle prop',
+            'tier': 'presentation',
+          },
+          'searchValue': {
+            'type': 'string',
+            'default': 'Search Value',
+            'label': 'Search Value',
+            'description': 'Current search query value',
             'tier': 'presentation',
           },
           'isLoading': {

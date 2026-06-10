@@ -49,11 +49,11 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "action-tile",
-                      "disabled": "@config.disabled",
                       "action": "@config.action",
+                      "size": "@config.size",
+                      "type": "action-tile",
                       "categoryColors": "@config.categoryColors",
-                      "size": "@config.size"
+                      "disabled": "@config.disabled"
                     }
                   ]
                 ]
@@ -61,12 +61,130 @@
             ]
           },
           "config": {
-            "disabled": {
-              "type": "boolean",
-              "default": false,
-              "label": "Disabled",
-              "description": "Whether the tile is disabled / already used",
-              "tier": "presentation"
+            "categoryColors": {
+              "type": "Map<string,ActionTileCategoryColorsValue>",
+              "default": {},
+              "label": "Category Colors",
+              "description": "Category → color mapping",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "bg": {
+                    "name": "bg",
+                    "type": "string",
+                    "required": true
+                  },
+                  "border": {
+                    "name": "border",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "action": {
+              "type": "ActionTileAction",
+              "default": {
+                "category": "",
+                "id": "",
+                "name": ""
+              },
+              "label": "Action",
+              "description": "The action data",
+              "tier": "presentation",
+              "properties": {
+                "description": {
+                  "name": "description",
+                  "type": "string",
+                  "required": false
+                },
+                "id": {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                "stateMachine": {
+                  "name": "stateMachine",
+                  "type": "object",
+                  "required": false,
+                  "properties": {
+                    "name": {
+                      "name": "name",
+                      "type": "string",
+                      "required": true
+                    },
+                    "states": {
+                      "name": "states",
+                      "type": "array",
+                      "required": true,
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "transitions": {
+                      "name": "transitions",
+                      "type": "array",
+                      "required": true,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "to": {
+                            "name": "to",
+                            "type": "string",
+                            "required": true
+                          },
+                          "guardHint": {
+                            "name": "guardHint",
+                            "type": "string",
+                            "required": false
+                          },
+                          "from": {
+                            "name": "from",
+                            "type": "string",
+                            "required": true
+                          },
+                          "event": {
+                            "name": "event",
+                            "type": "string",
+                            "required": true
+                          }
+                        }
+                      }
+                    },
+                    "description": {
+                      "name": "description",
+                      "type": "string",
+                      "required": false
+                    },
+                    "currentState": {
+                      "name": "currentState",
+                      "type": "string",
+                      "required": true
+                    }
+                  }
+                },
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": true
+                },
+                "category": {
+                  "name": "category",
+                  "type": "string",
+                  "required": true
+                },
+                "iconEmoji": {
+                  "name": "iconEmoji",
+                  "type": "string",
+                  "required": false
+                },
+                "iconUrl": {
+                  "name": "iconUrl",
+                  "type": "string",
+                  "required": false
+                }
+              }
             },
             "size": {
               "type": "string",
@@ -80,130 +198,12 @@
                 "lg"
               ]
             },
-            "categoryColors": {
-              "type": "Map<string,ActionTileCategoryColorsValue>",
-              "default": {},
-              "label": "Category Colors",
-              "description": "Category → color mapping",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "border": {
-                    "name": "border",
-                    "type": "string",
-                    "required": true
-                  },
-                  "bg": {
-                    "name": "bg",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            },
-            "action": {
-              "type": "ActionTileAction",
-              "default": {
-                "id": "",
-                "name": "",
-                "category": ""
-              },
-              "label": "Action",
-              "description": "The action data",
-              "tier": "presentation",
-              "properties": {
-                "iconEmoji": {
-                  "name": "iconEmoji",
-                  "type": "string",
-                  "required": false
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": true
-                },
-                "iconUrl": {
-                  "name": "iconUrl",
-                  "type": "string",
-                  "required": false
-                },
-                "stateMachine": {
-                  "name": "stateMachine",
-                  "type": "object",
-                  "required": false,
-                  "properties": {
-                    "states": {
-                      "name": "states",
-                      "type": "array",
-                      "required": true,
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "description": {
-                      "name": "description",
-                      "type": "string",
-                      "required": false
-                    },
-                    "currentState": {
-                      "name": "currentState",
-                      "type": "string",
-                      "required": true
-                    },
-                    "transitions": {
-                      "name": "transitions",
-                      "type": "array",
-                      "required": true,
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "guardHint": {
-                            "name": "guardHint",
-                            "type": "string",
-                            "required": false
-                          },
-                          "to": {
-                            "name": "to",
-                            "type": "string",
-                            "required": true
-                          },
-                          "event": {
-                            "name": "event",
-                            "type": "string",
-                            "required": true
-                          },
-                          "from": {
-                            "name": "from",
-                            "type": "string",
-                            "required": true
-                          }
-                        }
-                      }
-                    },
-                    "name": {
-                      "name": "name",
-                      "type": "string",
-                      "required": true
-                    }
-                  }
-                },
-                "category": {
-                  "name": "category",
-                  "type": "string",
-                  "required": true
-                },
-                "id": {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                },
-                "description": {
-                  "name": "description",
-                  "type": "string",
-                  "required": false
-                }
-              }
+            "disabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Disabled",
+              "description": "Whether the tile is disabled / already used",
+              "tier": "presentation"
             }
           },
           "scope": "instance"

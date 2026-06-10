@@ -30,12 +30,19 @@ const ALIAS = 'UiDrawer';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiDrawerEventKey = 'CLOSE' | 'INIT';
+export type StdUiDrawerEventKey = 'CLOSE' | 'INIT' | 'OPEN';
 
 /**
  * Payload shape for the `CLOSE` event.
  */
 export interface StdUiDrawerClosePayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `OPEN` event.
+ */
+export interface StdUiDrawerOpenPayload {
   id?: string;
 }
 
@@ -46,24 +53,23 @@ export interface StdUiDrawerClosePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiDrawerConfig {
-  footer?: unknown;
-  /** Default: `""` */
-  title?: string;
-  /** Default: `true` */
-  closeOnOverlayClick?: boolean;
   /** Default: `"md"` */
   width?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  /** Default: `true` */
+  closeOnOverlayClick?: boolean;
+  /** Default: `true` */
+  showCloseButton?: boolean;
+  /** Default: `"right"` */
+  position?: 'left' | 'right';
   /** Default: `""` */
   className?: string;
   /** Default: `true` */
   closeOnEscape?: boolean;
   /** Default: `true` */
   isOpen?: boolean;
-  /** Default: `"right"` */
-  position?: 'left' | 'right';
-  /** Default: `true` */
-  showCloseButton?: boolean;
-  children?: unknown;
+  footer?: unknown;
+  /** Default: `"Title"` */
+  title?: string;
 }
 
 /**

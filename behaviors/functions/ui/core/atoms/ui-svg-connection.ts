@@ -41,22 +41,22 @@ export type StdUiSvgConnectionEventKey = 'INIT';
 export interface StdUiSvgConnectionConfig {
   /** Default: `1` */
   opacity?: number;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `1.5` */
-  strokeWidth?: number;
   /** Default: `"solid"` */
   variant?: 'solid' | 'dashed' | 'animated';
-  /** Default: `0` */
-  x1?: number;
-  /** Default: `0` */
-  x2?: number;
   /** Default: `"var(--color-primary)"` */
   color?: string;
+  /** Default: `1.5` */
+  strokeWidth?: number;
+  /** Default: `0` */
+  x2?: number;
   /** Default: `0` */
   y2?: number;
+  /** Default: `""` */
+  className?: string;
   /** Default: `0` */
   y1?: number;
+  /** Default: `0` */
+  x1?: number;
 }
 
 /**

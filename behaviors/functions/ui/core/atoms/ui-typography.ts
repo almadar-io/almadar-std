@@ -39,27 +39,26 @@ export type StdUiTypographyEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiTypographyConfig {
-  style?: unknown;
+  /** Default: `"body"` */
+  variant?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'heading' | 'subheading' | 'body1' | 'body2' | 'body' | 'caption' | 'overline' | 'small' | 'large' | 'label';
   content?: unknown;
-  children?: unknown;
-  /** Default: `"left"` */
-  align?: 'left' | 'center' | 'right';
   /** Default: `false` */
   truncate?: boolean;
   /** Default: `"primary"` */
   color?: 'primary' | 'secondary' | 'muted' | 'error' | 'success' | 'warning' | 'inherit';
-  /** Default: `"xs"` */
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
+  /** Default: `"left"` */
+  align?: 'left' | 'center' | 'right';
   /** Default: `2` */
   level?: number;
-  /** Default: `"light"` */
-  weight?: 'light' | 'normal' | 'medium' | 'semibold' | 'bold';
+  /** Default: `"xs"` */
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
   /** Default: `""` */
   className?: string;
+  style?: unknown;
   /** Default: `"visible"` */
   overflow?: 'visible' | 'hidden' | 'wrap' | 'clamp-2' | 'clamp-3';
-  /** Default: `"body"` */
-  variant?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'heading' | 'subheading' | 'body1' | 'body2' | 'body' | 'caption' | 'overline' | 'small' | 'large' | 'label';
+  /** Default: `"light"` */
+  weight?: 'light' | 'normal' | 'medium' | 'semibold' | 'bold';
 }
 
 /**

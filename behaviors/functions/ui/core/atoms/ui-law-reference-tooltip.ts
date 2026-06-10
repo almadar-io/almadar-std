@@ -39,12 +39,12 @@ export type StdUiLawReferenceTooltipEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiLawReferenceTooltipConfig {
-  /** Default: `""` */
-  className?: string;
-  /** Default: `{"article":"","law":""}` */
+  /** Default: `{"law":"","article":""}` */
   reference?: EntityRow;
   /** Default: `"top"` */
   position?: 'top' | 'bottom' | 'left' | 'right';
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

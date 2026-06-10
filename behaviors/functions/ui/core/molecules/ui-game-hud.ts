@@ -40,19 +40,19 @@ export type StdUiGameHudEventKey = 'INIT';
  */
 export interface StdUiGameHudConfig {
   /** Default: `[]` */
+  elements?: EntityRow[];
+  /** Default: `[]` */
   stats?: EntityRow[];
+  /** Default: `[]` */
+  items?: EntityRow[];
+  /** Default: `"top"` */
+  position?: 'top' | 'bottom' | 'corners';
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
   /** Default: `""` */
   className?: string;
-  /** Default: `[]` */
-  elements?: EntityRow[];
   /** Default: `true` */
   transparent?: boolean;
-  /** Default: `"top"` */
-  position?: 'top' | 'bottom' | 'corners';
-  /** Default: `[]` */
-  items?: EntityRow[];
 }
 
 /**
