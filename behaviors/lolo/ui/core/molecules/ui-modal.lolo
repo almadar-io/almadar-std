@@ -6,11 +6,17 @@ orbital ModalOrbital {
   }
 
   trait ModalRender -> @rebindable ModalItem [interaction, instance] {
-    initial: idle
+    initial: closed
 
-    state idle {
-      INIT -> idle
+    state closed {
+      INIT -> closed
         (render-ui main {
+          label: "Open Modal"
+          action: OPEN
+          type: button
+        })
+      OPEN -> open
+        (render-ui modal {
           isOpen: @config.isOpen
           onClose: CLOSE
           title: @config.title
@@ -28,11 +34,26 @@ orbital ModalOrbital {
         })
     }
 
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (render-ui main {
+          label: "Open Modal"
+          action: OPEN
+          type: button
+        })
+    }
+
     emits {
       CLOSE -> external {
         id : string
       }
         @description "Callback when modal should close (injected by slot wrapper)"
+        @tier "essential"
+      OPEN -> external {
+        id : string
+      }
+        @description "Open the Modal."
         @tier "essential"
     }
 

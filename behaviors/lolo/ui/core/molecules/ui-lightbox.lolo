@@ -12,11 +12,17 @@ orbital LightboxOrbital {
   }
 
   trait LightboxRender -> @rebindable LightboxItem [interaction, instance] {
-    initial: idle
+    initial: closed
 
-    state idle {
-      INIT -> idle
+    state closed {
+      INIT -> closed
         (render-ui main {
+          label: "Open Lightbox"
+          action: OPEN
+          type: button
+        })
+      OPEN -> open
+        (render-ui overlay {
           images: @config.images
           currentIndex: @config.currentIndex
           isOpen: @config.isOpen
@@ -26,6 +32,16 @@ orbital LightboxOrbital {
           onIndexChange: INDEX_CHANGE
           className: @config.className
           type: lightbox
+        })
+    }
+
+    state open {
+      CLOSE -> closed
+        (render-ui overlay null)
+        (render-ui main {
+          label: "Open Lightbox"
+          action: OPEN
+          type: button
         })
     }
 
@@ -39,6 +55,11 @@ orbital LightboxOrbital {
         index : number
       }
         @description "Direct onIndexChange callback"
+        @tier "essential"
+      OPEN -> external {
+        id : string
+      }
+        @description "Open the Lightbox."
         @tier "essential"
     }
 
