@@ -38,19 +38,46 @@
                   "type": "string"
                 }
               ]
+            },
+            {
+              "event": "OPEN",
+              "description": "Open the Drawer.",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
             }
           ],
           "stateMachine": {
             "states": [
               {
-                "name": "idle",
+                "name": "closed",
                 "isInitial": true
+              },
+              {
+                "name": "open"
               }
             ],
             "events": [
               {
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "key": "OPEN",
+                "name": "Open",
+                "description": "Open the Drawer.",
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "CLOSE",
@@ -67,27 +94,69 @@
             ],
             "transitions": [
               {
-                "from": "idle",
-                "to": "idle",
+                "from": "closed",
+                "to": "closed",
                 "event": "INIT",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "width": "@config.width",
-                      "children": "@config.children",
-                      "type": "drawer",
-                      "showCloseButton": "@config.showCloseButton",
-                      "closeOnOverlayClick": "@config.closeOnOverlayClick",
-                      "isOpen": "@config.isOpen",
-                      "closeOnEscape": "@config.closeOnEscape",
-                      "closeEvent": "CLOSE",
-                      "title": "@config.title",
-                      "onClose": "CLOSE",
-                      "footer": "@config.footer",
+                      "action": "OPEN",
+                      "label": "Open Drawer",
+                      "type": "button"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "closed",
+                "to": "open",
+                "event": "OPEN",
+                "effects": [
+                  [
+                    "render-ui",
+                    "drawer",
+                    {
                       "className": "@config.className",
-                      "position": "@config.position"
+                      "isOpen": "@config.isOpen",
+                      "width": "@config.width",
+                      "onClose": "CLOSE",
+                      "closeOnOverlayClick": "@config.closeOnOverlayClick",
+                      "children": [
+                        {
+                          "type": "text",
+                          "content": "Sample content"
+                        }
+                      ],
+                      "closeOnEscape": "@config.closeOnEscape",
+                      "type": "drawer",
+                      "position": "@config.position",
+                      "title": "@config.title",
+                      "showCloseButton": "@config.showCloseButton",
+                      "closeEvent": "CLOSE",
+                      "footer": "@config.footer"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "CLOSE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "drawer",
+                    null
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "label": "Open Drawer",
+                      "action": "OPEN",
+                      "type": "button"
                     }
                   ]
                 ]
@@ -95,24 +164,11 @@
             ]
           },
           "config": {
-            "footer": {
-              "type": "node",
-              "label": "Footer",
-              "description": "Footer content",
-              "tier": "presentation"
-            },
-            "title": {
-              "type": "string",
-              "default": "",
-              "label": "Title",
-              "description": "Drawer title",
-              "tier": "presentation"
-            },
-            "closeOnOverlayClick": {
+            "isOpen": {
               "type": "boolean",
               "default": true,
-              "label": "Close On Overlay Click",
-              "description": "Close on overlay click",
+              "label": "Is Open",
+              "description": "Whether the drawer is open (defaults to true when rendered by slot wrapper)",
               "tier": "presentation"
             },
             "width": {
@@ -129,25 +185,10 @@
                 "full"
               ]
             },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional class name",
-              "tier": "presentation"
-            },
-            "closeOnEscape": {
-              "type": "boolean",
-              "default": true,
-              "label": "Close On Escape",
-              "description": "Close on escape key",
-              "tier": "presentation"
-            },
-            "isOpen": {
-              "type": "boolean",
-              "default": true,
-              "label": "Is Open",
-              "description": "Whether the drawer is open (defaults to true when rendered by slot wrapper)",
+            "footer": {
+              "type": "node",
+              "label": "Footer",
+              "description": "Footer content",
               "tier": "presentation"
             },
             "position": {
@@ -161,6 +202,20 @@
                 "right"
               ]
             },
+            "closeOnOverlayClick": {
+              "type": "boolean",
+              "default": true,
+              "label": "Close On Overlay Click",
+              "description": "Close on overlay click",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional class name",
+              "tier": "presentation"
+            },
             "showCloseButton": {
               "type": "boolean",
               "default": true,
@@ -168,10 +223,18 @@
               "description": "Show close button",
               "tier": "presentation"
             },
-            "children": {
-              "type": "node",
-              "label": "Children",
-              "description": "Drawer content (can be empty if using slot content)",
+            "closeOnEscape": {
+              "type": "boolean",
+              "default": true,
+              "label": "Close On Escape",
+              "description": "Close on escape key",
+              "tier": "presentation"
+            },
+            "title": {
+              "type": "string",
+              "default": "",
+              "label": "Title",
+              "description": "Drawer title",
               "tier": "presentation"
             }
           },

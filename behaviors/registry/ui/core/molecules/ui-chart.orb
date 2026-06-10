@@ -54,25 +54,25 @@
                     "render-ui",
                     "main",
                     {
-                      "actions": "@config.actions",
-                      "timeAxis": "@config.timeAxis",
                       "title": "@config.title",
-                      "series": "@config.series",
-                      "entity": "ChartItem",
-                      "drillEvent": "@config.drillEvent",
                       "chartType": "@config.chartType",
+                      "series": "@config.series",
+                      "stack": "@config.stack",
+                      "drillEvent": "@config.drillEvent",
                       "className": "@config.className",
-                      "showLegend": "@config.showLegend",
+                      "scatterData": "@config.scatterData",
+                      "actions": "@config.actions",
+                      "entity": "ChartItem",
                       "subtitle": "@config.subtitle",
                       "type": "chart",
-                      "scatterData": "@config.scatterData",
-                      "stack": "@config.stack",
-                      "isLoading": "@config.isLoading",
-                      "height": "@config.height",
                       "look": "@config.look",
-                      "showValues": "@config.showValues",
+                      "showLegend": "@config.showLegend",
+                      "data": "@config.data",
+                      "height": "@config.height",
                       "error": "@config.error",
-                      "data": "@config.data"
+                      "timeAxis": "@config.timeAxis",
+                      "isLoading": "@config.isLoading",
+                      "showValues": "@config.showValues"
                     }
                   ]
                 ]
@@ -87,6 +87,41 @@
               "description": "Chart title",
               "tier": "presentation"
             },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state",
+              "tier": "presentation"
+            },
+            "error": {
+              "type": "ChartError",
+              "label": "Error",
+              "description": "Error state",
+              "tier": "presentation",
+              "properties": {
+                "code": {
+                  "name": "code",
+                  "type": "string",
+                  "required": false
+                },
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                },
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": false
+                },
+                "stack": {
+                  "name": "stack",
+                  "type": "string",
+                  "required": false
+                }
+              }
+            },
             "actions": {
               "type": "[ChartActionsItem]",
               "default": [],
@@ -96,10 +131,10 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "event": {
-                    "name": "event",
+                  "label": {
+                    "name": "label",
                     "type": "string",
-                    "required": false
+                    "required": true
                   },
                   "navigatesTo": {
                     "name": "navigatesTo",
@@ -116,9 +151,196 @@
                       "ghost"
                     ]
                   },
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "series": {
+              "type": "[ChartSeriesItem]",
+              "default": [],
+              "label": "Series",
+              "description": "Multi-series data",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "dashed": {
+                    "name": "dashed",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
+                  },
+                  "data": {
+                    "name": "data",
+                    "type": "array",
+                    "required": true,
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "date": {
+                          "name": "date",
+                          "type": "date",
+                          "required": true
+                        },
+                        "label": {
+                          "name": "label",
+                          "type": "string",
+                          "required": false
+                        },
+                        "value": {
+                          "name": "value",
+                          "type": "number",
+                          "required": true
+                        }
+                      }
+                    }
+                  },
+                  "color": {
+                    "name": "color",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "height": {
+              "type": "number",
+              "default": 200.0,
+              "label": "Height",
+              "description": "Chart height in px",
+              "tier": "presentation"
+            },
+            "chartType": {
+              "type": "string",
+              "default": "bar",
+              "label": "Chart Type",
+              "description": "Chart type (legacy alias for `look`).",
+              "synonyms": "chart style, graph type, bar chart, line chart, pie chart, area chart, donut chart, scatter plot, histogram",
+              "tier": "domain",
+              "values": [
+                "bar",
+                "line",
+                "pie",
+                "area",
+                "donut",
+                "scatter",
+                "histogram"
+              ]
+            },
+            "data": {
+              "type": "[ChartDataItem]",
+              "default": [],
+              "label": "Data",
+              "description": "Simple single-series shorthand (bar/line/pie/area/donut/histogram)",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "date": {
+                    "name": "date",
+                    "type": "date",
+                    "required": true
+                  },
+                  "value": {
+                    "name": "value",
+                    "type": "number",
+                    "required": true
+                  },
                   "label": {
                     "name": "label",
                     "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "stack": {
+              "type": "string",
+              "default": "none",
+              "label": "Stack",
+              "description": "Stack mode for bar / area",
+              "tier": "presentation",
+              "values": [
+                "none",
+                "stack",
+                "normalize"
+              ]
+            },
+            "drillEvent": {
+              "type": "string",
+              "default": "",
+              "label": "Drill Event",
+              "description": "Event name emitted as `UI:{drillEvent}` with `{ label, value, seriesLabel? }` on data-point click",
+              "tier": "presentation"
+            },
+            "showLegend": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Legend",
+              "description": "Show legend",
+              "tier": "presentation"
+            },
+            "showValues": {
+              "type": "boolean",
+              "default": false,
+              "label": "Show Values",
+              "description": "Show values on chart",
+              "tier": "presentation"
+            },
+            "timeAxis": {
+              "type": "boolean",
+              "default": false,
+              "label": "Time Axis",
+              "description": "Format X-axis labels as time (ISO date in → 'Mar 2026'-style label out)",
+              "tier": "presentation"
+            },
+            "scatterData": {
+              "type": "[ChartScatterDataItem]",
+              "default": [],
+              "label": "Scatter Data",
+              "description": "Raw {x,y} points for scatter",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "name": "x",
+                    "type": "number",
+                    "required": true
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
+                  "size": {
+                    "name": "size",
+                    "type": "number",
+                    "required": false
+                  },
+                  "color": {
+                    "name": "color",
+                    "type": "string",
+                    "required": false
+                  },
+                  "y": {
+                    "name": "y",
+                    "type": "number",
                     "required": true
                   }
                 }
@@ -142,234 +364,12 @@
                 "histogram"
               ]
             },
-            "chartType": {
-              "type": "string",
-              "default": "bar",
-              "label": "Chart Type",
-              "description": "Chart type (legacy alias for `look`).",
-              "synonyms": "chart style, graph type, bar chart, line chart, pie chart, area chart, donut chart, scatter plot, histogram",
-              "tier": "domain",
-              "values": [
-                "bar",
-                "line",
-                "pie",
-                "area",
-                "donut",
-                "scatter",
-                "histogram"
-              ]
-            },
-            "showLegend": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Legend",
-              "description": "Show legend",
-              "tier": "presentation"
-            },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state",
-              "tier": "presentation"
-            },
-            "height": {
-              "type": "number",
-              "default": 200.0,
-              "label": "Height",
-              "description": "Chart height in px",
-              "tier": "presentation"
-            },
             "subtitle": {
               "type": "string",
               "default": "",
               "label": "Subtitle",
               "description": "Chart subtitle / description",
               "tier": "presentation"
-            },
-            "error": {
-              "type": "ChartError",
-              "label": "Error",
-              "description": "Error state",
-              "tier": "presentation",
-              "properties": {
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                },
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                }
-              }
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "timeAxis": {
-              "type": "boolean",
-              "default": false,
-              "label": "Time Axis",
-              "description": "Format X-axis labels as time (ISO date in → 'Mar 2026'-style label out)",
-              "tier": "presentation"
-            },
-            "data": {
-              "type": "[ChartDataItem]",
-              "default": [],
-              "label": "Data",
-              "description": "Simple single-series shorthand (bar/line/pie/area/donut/histogram)",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "date": {
-                    "name": "date",
-                    "type": "date",
-                    "required": true
-                  },
-                  "value": {
-                    "name": "value",
-                    "type": "number",
-                    "required": true
-                  }
-                }
-              }
-            },
-            "drillEvent": {
-              "type": "string",
-              "default": "",
-              "label": "Drill Event",
-              "description": "Event name emitted as `UI:{drillEvent}` with `{ label, value, seriesLabel? }` on data-point click",
-              "tier": "presentation"
-            },
-            "stack": {
-              "type": "string",
-              "default": "none",
-              "label": "Stack",
-              "description": "Stack mode for bar / area",
-              "tier": "presentation",
-              "values": [
-                "none",
-                "stack",
-                "normalize"
-              ]
-            },
-            "showValues": {
-              "type": "boolean",
-              "default": false,
-              "label": "Show Values",
-              "description": "Show values on chart",
-              "tier": "presentation"
-            },
-            "scatterData": {
-              "type": "[ChartScatterDataItem]",
-              "default": [],
-              "label": "Scatter Data",
-              "description": "Raw {x,y} points for scatter",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "color": {
-                    "name": "color",
-                    "type": "string",
-                    "required": false
-                  },
-                  "size": {
-                    "name": "size",
-                    "type": "number",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "y": {
-                    "name": "y",
-                    "type": "number",
-                    "required": true
-                  },
-                  "x": {
-                    "name": "x",
-                    "type": "number",
-                    "required": true
-                  }
-                }
-              }
-            },
-            "series": {
-              "type": "[ChartSeriesItem]",
-              "default": [],
-              "label": "Series",
-              "description": "Multi-series data",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "data": {
-                    "name": "data",
-                    "type": "array",
-                    "required": true,
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "label": {
-                          "name": "label",
-                          "type": "string",
-                          "required": false
-                        },
-                        "date": {
-                          "name": "date",
-                          "type": "date",
-                          "required": true
-                        },
-                        "value": {
-                          "name": "value",
-                          "type": "number",
-                          "required": true
-                        }
-                      }
-                    }
-                  },
-                  "color": {
-                    "name": "color",
-                    "type": "string",
-                    "required": false
-                  },
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
-                  },
-                  "dashed": {
-                    "name": "dashed",
-                    "type": "boolean",
-                    "required": false
-                  }
-                }
-              }
             }
           },
           "scope": "instance"

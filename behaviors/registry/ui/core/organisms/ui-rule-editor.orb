@@ -133,14 +133,14 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "@config.className",
+                      "rule": "@config.rule",
+                      "onRemove": "REMOVE",
+                      "availableActions": "@config.availableActions",
                       "onChange": "CHANGE",
                       "disabled": "@config.disabled",
-                      "rule": "@config.rule",
-                      "availableActions": "@config.availableActions",
-                      "type": "rule-editor",
-                      "onRemove": "REMOVE",
-                      "availableEvents": "@config.availableEvents"
+                      "availableEvents": "@config.availableEvents",
+                      "className": "@config.className",
+                      "type": "rule-editor"
                     }
                   ]
                 ]
@@ -148,12 +148,47 @@
             ]
           },
           "config": {
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "rule": {
+              "type": "RuleEditorRule",
+              "default": {
+                "whenEvent": "",
+                "thenAction": "",
+                "id": ""
+              },
+              "label": "Rule",
+              "description": "The current rule",
+              "tier": "presentation",
+              "properties": {
+                "thenAction": {
+                  "name": "thenAction",
+                  "type": "string",
+                  "required": true
+                },
+                "id": {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                "whenEvent": {
+                  "name": "whenEvent",
+                  "type": "string",
+                  "required": true
+                }
+              }
+            },
             "availableActions": {
               "type": "[RuleEditorAvailableActionsItem]",
               "default": [
                 {
-                  "value": "Value",
-                  "label": "Label"
+                  "label": "Label",
+                  "value": "Value"
                 }
               ],
               "label": "Available Actions",
@@ -175,12 +210,19 @@
                 }
               }
             },
+            "disabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Disabled",
+              "description": "Whether editing is disabled (during playback)",
+              "tier": "presentation"
+            },
             "availableEvents": {
               "type": "[RuleEditorAvailableEventsItem]",
               "default": [
                 {
-                  "label": "Label",
-                  "value": "Value"
+                  "value": "Value",
+                  "label": "Label"
                 }
               ],
               "label": "Available Events",
@@ -189,58 +231,16 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "value": {
-                    "name": "value",
-                    "type": "string",
-                    "required": true
-                  },
                   "label": {
                     "name": "label",
                     "type": "string",
                     "required": true
+                  },
+                  "value": {
+                    "name": "value",
+                    "type": "string",
+                    "required": true
                   }
-                }
-              }
-            },
-            "disabled": {
-              "type": "boolean",
-              "default": false,
-              "label": "Disabled",
-              "description": "Whether editing is disabled (during playback)",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "rule": {
-              "type": "RuleEditorRule",
-              "default": {
-                "id": "",
-                "thenAction": "",
-                "whenEvent": ""
-              },
-              "label": "Rule",
-              "description": "The current rule",
-              "tier": "presentation",
-              "properties": {
-                "thenAction": {
-                  "name": "thenAction",
-                  "type": "string",
-                  "required": true
-                },
-                "id": {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                },
-                "whenEvent": {
-                  "name": "whenEvent",
-                  "type": "string",
-                  "required": true
                 }
               }
             }

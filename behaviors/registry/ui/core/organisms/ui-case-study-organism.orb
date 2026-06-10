@@ -13,6 +13,36 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "category",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "categoryColor",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "href",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "linkLabel",
+            "type": "string",
+            "default": ""
           }
         ]
       },
@@ -54,21 +84,21 @@
                     "render-ui",
                     "main",
                     {
+                      "entity": "@entity",
+                      "error": "@config.error",
+                      "page": "@config.pageProp",
+                      "isLoading": "@config.isLoading",
                       "selectedIds": "@config.selectedIds",
                       "type": "case-study-organism",
-                      "error": "@config.error",
-                      "activeFilters": "@config.activeFilters",
-                      "className": "@config.className",
-                      "isLoading": "@config.isLoading",
-                      "searchValue": "@config.searchValue",
-                      "entity": "@entity",
-                      "sortDirection": "@config.sortDirection",
-                      "sortBy": "@config.sortBy",
-                      "totalCount": "@config.totalCount",
                       "subtitle": "@config.subtitle",
-                      "page": "@config.pageProp",
+                      "sortDirection": "@config.sortDirection",
+                      "className": "@config.className",
+                      "totalCount": "@config.totalCount",
+                      "activeFilters": "@config.activeFilters",
                       "heading": "@config.heading",
-                      "pageSize": "@config.pageSize"
+                      "pageSize": "@config.pageSize",
+                      "searchValue": "@config.searchValue",
+                      "sortBy": "@config.sortBy"
                     }
                   ]
                 ]
@@ -76,22 +106,35 @@
             ]
           },
           "config": {
-            "sortDirection": {
-              "type": "string",
-              "default": "asc",
-              "label": "Sort Direction",
-              "description": "Current sort direction",
+            "selectedIds": {
+              "type": "[string]",
+              "default": [],
+              "label": "Selected Ids",
+              "description": "Currently selected item IDs",
               "tier": "presentation",
-              "values": [
-                "asc",
-                "desc"
-              ]
+              "items": {
+                "type": "string"
+              }
             },
-            "totalCount": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Total Count",
-              "description": "Total number of items",
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "subtitle": {
+              "type": "string",
+              "default": "",
+              "label": "Subtitle",
+              "description": "subtitle prop",
+              "tier": "presentation"
+            },
+            "sortBy": {
+              "type": "string",
+              "default": "",
+              "label": "Sort By",
+              "description": "Current sort field",
               "tier": "presentation"
             },
             "pageProp": {
@@ -102,6 +145,19 @@
               "synonyms": "page",
               "tier": "presentation"
             },
+            "heading": {
+              "type": "string",
+              "default": "",
+              "label": "Heading",
+              "description": "heading prop",
+              "tier": "presentation"
+            },
+            "activeFilters": {
+              "type": "json",
+              "label": "Active Filters",
+              "description": "Active filters",
+              "tier": "presentation"
+            },
             "searchValue": {
               "type": "string",
               "default": "",
@@ -109,11 +165,11 @@
               "description": "Current search query value",
               "tier": "presentation"
             },
-            "sortBy": {
-              "type": "string",
-              "default": "",
-              "label": "Sort By",
-              "description": "Current sort field",
+            "pageSize": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Page Size",
+              "description": "Number of items per page",
               "tier": "presentation"
             },
             "error": {
@@ -122,15 +178,15 @@
               "description": "Error state (UiError)",
               "tier": "presentation",
               "properties": {
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                },
                 "message": {
                   "name": "message",
                   "type": "string",
                   "required": true
+                },
+                "code": {
+                  "name": "code",
+                  "type": "string",
+                  "required": false
                 },
                 "stack": {
                   "name": "stack",
@@ -144,13 +200,6 @@
                 }
               }
             },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
             "isLoading": {
               "type": "boolean",
               "default": false,
@@ -158,42 +207,23 @@
               "description": "Loading state indicator",
               "tier": "presentation"
             },
-            "pageSize": {
+            "totalCount": {
               "type": "number",
               "default": 0.0,
-              "label": "Page Size",
-              "description": "Number of items per page",
+              "label": "Total Count",
+              "description": "Total number of items",
               "tier": "presentation"
             },
-            "activeFilters": {
-              "type": "json",
-              "label": "Active Filters",
-              "description": "Active filters",
-              "tier": "presentation"
-            },
-            "heading": {
+            "sortDirection": {
               "type": "string",
-              "default": "",
-              "label": "Heading",
-              "description": "heading prop",
-              "tier": "presentation"
-            },
-            "selectedIds": {
-              "type": "[string]",
-              "default": [],
-              "label": "Selected Ids",
-              "description": "Currently selected item IDs",
+              "default": "asc",
+              "label": "Sort Direction",
+              "description": "Current sort direction",
               "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
-            },
-            "subtitle": {
-              "type": "string",
-              "default": "",
-              "label": "Subtitle",
-              "description": "subtitle prop",
-              "tier": "presentation"
+              "values": [
+                "asc",
+                "desc"
+              ]
             }
           },
           "scope": "instance"

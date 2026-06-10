@@ -104,33 +104,33 @@
                     "render-ui",
                     "main",
                     {
-                      "error": "@config.error",
-                      "pageSize": "@config.pageSize",
-                      "selectEvent": "SELECT",
-                      "sortEvent": "SORT",
-                      "sortDirection": "@config.sortDirection",
-                      "dragGroup": "@config.dragGroup",
-                      "dndItemIdField": "@config.dndItemIdField",
-                      "selectedIds": "@config.selectedIds",
-                      "sortColumn": "@config.sortColumn",
-                      "isLoading": "@config.isLoading",
-                      "positionEvent": "@config.positionEvent",
                       "sortable": "@config.sortable",
-                      "look": "@config.look",
-                      "emptyMessage": "@config.emptyMessage",
-                      "maxInlineActions": "@config.maxInlineActions",
-                      "className": "@config.className",
-                      "type": "table-view",
                       "dndRoot": "@config.dndRoot",
-                      "reorderEvent": "@config.reorderEvent",
-                      "columns": "@config.columns",
+                      "sortEvent": "SORT",
+                      "sortColumn": "@config.sortColumn",
+                      "sortDirection": "@config.sortDirection",
+                      "emptyMessage": "@config.emptyMessage",
+                      "itemActions": "@config.itemActions",
+                      "isLoading": "@config.isLoading",
                       "fields": "@config.fields",
+                      "groupBy": "@config.groupBy",
+                      "dndItemIdField": "@config.dndItemIdField",
+                      "look": "@config.look",
+                      "type": "table-view",
+                      "pageSize": "@config.pageSize",
+                      "entity": "@entity",
+                      "className": "@config.className",
+                      "error": "@config.error",
+                      "positionEvent": "@config.positionEvent",
+                      "columns": "@config.columns",
                       "selectable": "@config.selectable",
                       "accepts": "@config.accepts",
+                      "selectEvent": "SELECT",
+                      "dragGroup": "@config.dragGroup",
+                      "selectedIds": "@config.selectedIds",
                       "dropEvent": "@config.dropEvent",
-                      "itemActions": "@config.itemActions",
-                      "groupBy": "@config.groupBy",
-                      "entity": "@entity"
+                      "reorderEvent": "@config.reorderEvent",
+                      "maxInlineActions": "@config.maxInlineActions"
                     }
                   ]
                 ]
@@ -138,90 +138,26 @@
             ]
           },
           "config": {
-            "columns": {
-              "type": "[TableViewColumnsItem]",
-              "default": [],
-              "label": "Columns",
-              "description": "Column definitions. The compiler emits `columns`; `fields` is the alias.",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "sortable": {
-                    "name": "sortable",
-                    "type": "boolean",
-                    "required": false
-                  },
-                  "align": {
-                    "name": "align",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "left",
-                      "center",
-                      "right"
-                    ]
-                  },
-                  "weight": {
-                    "name": "weight",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "normal",
-                      "medium",
-                      "semibold"
-                    ]
-                  },
-                  "field": {
-                    "name": "field",
-                    "type": "string",
-                    "required": false
-                  },
-                  "format": {
-                    "name": "format",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "badge",
-                      "date",
-                      "currency",
-                      "number",
-                      "percent",
-                      "boolean"
-                    ]
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "header": {
-                    "name": "header",
-                    "type": "string",
-                    "required": false
-                  },
-                  "key": {
-                    "name": "key",
-                    "type": "string",
-                    "required": true
-                  },
-                  "width": {
-                    "name": "width",
-                    "type": "string",
-                    "required": false
-                  },
-                  "className": {
-                    "name": "className",
-                    "type": "string",
-                    "required": false
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
+            "sortable": {
+              "type": "boolean",
+              "default": false,
+              "label": "Sortable",
+              "description": "Enable in-container reorder; items can be dragged to new positions among siblings",
+              "tier": "presentation"
+            },
+            "pageSize": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Page Size",
+              "description": "Max rows before a 'Show More' button. Defaults to 0 (show all).",
+              "tier": "presentation"
+            },
+            "accepts": {
+              "type": "string",
+              "default": "",
+              "label": "Accepts",
+              "description": "When set, the container accepts drops whose dragGroup matches this value (or '*' for any group)",
+              "tier": "presentation"
             },
             "dndItemIdField": {
               "type": "string",
@@ -230,19 +166,57 @@
               "description": "Row field used as the @dnd-kit draggable id (default 'id')",
               "tier": "presentation"
             },
-            "dndRoot": {
-              "type": "boolean",
-              "default": false,
-              "label": "Dnd Root",
-              "description": "Mark this container as the DnD root for its subtree — descendant zones share one DndContext (cross-container drag). Use on an outer container whose own items are not draggable.",
-              "tier": "presentation"
+            "itemActions": {
+              "type": "[TableViewItemActionsItem]",
+              "default": [],
+              "label": "Item Actions",
+              "description": "Per-row action buttons (trailing column).",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "primary",
+                      "secondary",
+                      "ghost",
+                      "danger"
+                    ]
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
             },
-            "sortColumn": {
+            "look": {
               "type": "string",
-              "default": "",
-              "label": "Sort Column",
-              "description": "Current sort column (display hint for the active header arrow).",
-              "tier": "presentation"
+              "default": "dense",
+              "label": "Look",
+              "description": "Layer 2 visual treatment — mirrors the data-list / entity-table look enum so authors share one knob name across row renderers.",
+              "tier": "presentation",
+              "values": [
+                "dense",
+                "spacious",
+                "striped",
+                "borderless",
+                "bordered"
+              ]
             },
             "maxInlineActions": {
               "type": "number",
@@ -251,120 +225,11 @@
               "description": "Max inline action buttons before the rest collapse into a '⋯' overflow menu. Omit = all inline.",
               "tier": "presentation"
             },
-            "emptyMessage": {
+            "reorderEvent": {
               "type": "string",
               "default": "",
-              "label": "Empty Message",
-              "description": "Message shown when there are no rows.",
-              "tier": "presentation"
-            },
-            "groupBy": {
-              "type": "string",
-              "default": "",
-              "label": "Group By",
-              "description": "Group rows under section headers by a field value.",
-              "tier": "presentation"
-            },
-            "fields": {
-              "type": "[TableViewFieldsItem]",
-              "default": [],
-              "label": "Fields",
-              "description": "Alias for `columns`.",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "field": {
-                    "name": "field",
-                    "type": "string",
-                    "required": false
-                  },
-                  "width": {
-                    "name": "width",
-                    "type": "string",
-                    "required": false
-                  },
-                  "align": {
-                    "name": "align",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "left",
-                      "center",
-                      "right"
-                    ]
-                  },
-                  "header": {
-                    "name": "header",
-                    "type": "string",
-                    "required": false
-                  },
-                  "weight": {
-                    "name": "weight",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "normal",
-                      "medium",
-                      "semibold"
-                    ]
-                  },
-                  "key": {
-                    "name": "key",
-                    "type": "string",
-                    "required": true
-                  },
-                  "sortable": {
-                    "name": "sortable",
-                    "type": "boolean",
-                    "required": false
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "format": {
-                    "name": "format",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "badge",
-                      "date",
-                      "currency",
-                      "number",
-                      "percent",
-                      "boolean"
-                    ]
-                  },
-                  "className": {
-                    "name": "className",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "selectedIds": {
-              "type": "[string]",
-              "default": [],
-              "label": "Selected Ids",
-              "description": "Currently-selected ids (controlled). Falls back to local state when omitted.",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
-            },
-            "dropEvent": {
-              "type": "string",
-              "default": "",
-              "label": "Drop Event",
-              "description": "Bus event fired on cross-container drop. Payload: { id, sourceGroup, targetGroup, newIndex }",
+              "label": "Reorder Event",
+              "description": "Bus event fired on in-container reorder. Payload: { id, oldIndex, newIndex }",
               "tier": "presentation"
             },
             "sortDirection": {
@@ -385,106 +250,15 @@
               "description": "Additional CSS classes applied to the table root.",
               "tier": "presentation"
             },
-            "look": {
-              "type": "string",
-              "default": "dense",
-              "label": "Look",
-              "description": "Layer 2 visual treatment — mirrors the data-list / entity-table look enum so authors share one knob name across row renderers.",
-              "tier": "presentation",
-              "values": [
-                "dense",
-                "spacious",
-                "striped",
-                "borderless",
-                "bordered"
-              ]
-            },
-            "positionEvent": {
-              "type": "string",
-              "default": "",
-              "label": "Position Event",
-              "description": "Bus event fired N times per drop (one per item in affected zones) so the trait can persist new positions for the WHOLE zone, not just the moved item. Payload: { id, position }",
-              "tier": "presentation"
-            },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state.",
-              "tier": "presentation"
-            },
-            "dragGroup": {
-              "type": "string",
-              "default": "",
-              "label": "Drag Group",
-              "description": "When set, items in this container are draggable and announce this group as their source",
-              "tier": "presentation"
-            },
-            "itemActions": {
-              "type": "[TableViewItemActionsItem]",
+            "selectedIds": {
+              "type": "[string]",
               "default": [],
-              "label": "Item Actions",
-              "description": "Per-row action buttons (trailing column).",
+              "label": "Selected Ids",
+              "description": "Currently-selected ids (controlled). Falls back to local state when omitted.",
               "tier": "presentation",
               "items": {
-                "type": "object",
-                "properties": {
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "primary",
-                      "secondary",
-                      "ghost",
-                      "danger"
-                    ]
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": true
-                  }
-                }
+                "type": "string"
               }
-            },
-            "sortable": {
-              "type": "boolean",
-              "default": false,
-              "label": "Sortable",
-              "description": "Enable in-container reorder; items can be dragged to new positions among siblings",
-              "tier": "presentation"
-            },
-            "pageSize": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Page Size",
-              "description": "Max rows before a 'Show More' button. Defaults to 0 (show all).",
-              "tier": "presentation"
-            },
-            "selectable": {
-              "type": "boolean",
-              "default": false,
-              "label": "Selectable",
-              "description": "Render a leading checkbox column. Selection changes emit `selectEvent`.",
-              "tier": "presentation"
-            },
-            "accepts": {
-              "type": "string",
-              "default": "",
-              "label": "Accepts",
-              "description": "When set, the container accepts drops whose dragGroup matches this value (or '*' for any group)",
-              "tier": "presentation"
             },
             "error": {
               "type": "TableViewError",
@@ -492,6 +266,16 @@
               "description": "Error state.",
               "tier": "presentation",
               "properties": {
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": false
+                },
+                "stack": {
+                  "name": "stack",
+                  "type": "string",
+                  "required": false
+                },
                 "message": {
                   "name": "message",
                   "type": "string",
@@ -501,24 +285,240 @@
                   "name": "code",
                   "type": "string",
                   "required": false
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
                 }
               }
             },
-            "reorderEvent": {
+            "dropEvent": {
               "type": "string",
               "default": "",
-              "label": "Reorder Event",
-              "description": "Bus event fired on in-container reorder. Payload: { id, oldIndex, newIndex }",
+              "label": "Drop Event",
+              "description": "Bus event fired on cross-container drop. Payload: { id, sourceGroup, targetGroup, newIndex }",
+              "tier": "presentation"
+            },
+            "groupBy": {
+              "type": "string",
+              "default": "",
+              "label": "Group By",
+              "description": "Group rows under section headers by a field value.",
+              "tier": "presentation"
+            },
+            "dragGroup": {
+              "type": "string",
+              "default": "",
+              "label": "Drag Group",
+              "description": "When set, items in this container are draggable and announce this group as their source",
+              "tier": "presentation"
+            },
+            "columns": {
+              "type": "[TableViewColumnsItem]",
+              "default": [],
+              "label": "Columns",
+              "description": "Column definitions. The compiler emits `columns`; `fields` is the alias.",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "weight": {
+                    "name": "weight",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "normal",
+                      "medium",
+                      "semibold"
+                    ]
+                  },
+                  "className": {
+                    "name": "className",
+                    "type": "string",
+                    "required": false
+                  },
+                  "align": {
+                    "name": "align",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "left",
+                      "center",
+                      "right"
+                    ]
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
+                  "sortable": {
+                    "name": "sortable",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "format": {
+                    "name": "format",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "badge",
+                      "date",
+                      "currency",
+                      "number",
+                      "percent",
+                      "boolean"
+                    ]
+                  },
+                  "key": {
+                    "name": "key",
+                    "type": "string",
+                    "required": true
+                  },
+                  "width": {
+                    "name": "width",
+                    "type": "string",
+                    "required": false
+                  },
+                  "field": {
+                    "name": "field",
+                    "type": "string",
+                    "required": false
+                  },
+                  "header": {
+                    "name": "header",
+                    "type": "string",
+                    "required": false
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "positionEvent": {
+              "type": "string",
+              "default": "",
+              "label": "Position Event",
+              "description": "Bus event fired N times per drop (one per item in affected zones) so the trait can persist new positions for the WHOLE zone, not just the moved item. Payload: { id, position }",
+              "tier": "presentation"
+            },
+            "sortColumn": {
+              "type": "string",
+              "default": "",
+              "label": "Sort Column",
+              "description": "Current sort column (display hint for the active header arrow).",
+              "tier": "presentation"
+            },
+            "fields": {
+              "type": "[TableViewFieldsItem]",
+              "default": [],
+              "label": "Fields",
+              "description": "Alias for `columns`.",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "field": {
+                    "name": "field",
+                    "type": "string",
+                    "required": false
+                  },
+                  "key": {
+                    "name": "key",
+                    "type": "string",
+                    "required": true
+                  },
+                  "className": {
+                    "name": "className",
+                    "type": "string",
+                    "required": false
+                  },
+                  "weight": {
+                    "name": "weight",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "normal",
+                      "medium",
+                      "semibold"
+                    ]
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "sortable": {
+                    "name": "sortable",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "width": {
+                    "name": "width",
+                    "type": "string",
+                    "required": false
+                  },
+                  "format": {
+                    "name": "format",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "badge",
+                      "date",
+                      "currency",
+                      "number",
+                      "percent",
+                      "boolean"
+                    ]
+                  },
+                  "header": {
+                    "name": "header",
+                    "type": "string",
+                    "required": false
+                  },
+                  "align": {
+                    "name": "align",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "left",
+                      "center",
+                      "right"
+                    ]
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "emptyMessage": {
+              "type": "string",
+              "default": "",
+              "label": "Empty Message",
+              "description": "Message shown when there are no rows.",
+              "tier": "presentation"
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state.",
+              "tier": "presentation"
+            },
+            "dndRoot": {
+              "type": "boolean",
+              "default": false,
+              "label": "Dnd Root",
+              "description": "Mark this container as the DnD root for its subtree — descendant zones share one DndContext (cross-container drag). Use on an outer container whose own items are not draggable.",
+              "tier": "presentation"
+            },
+            "selectable": {
+              "type": "boolean",
+              "default": false,
+              "label": "Selectable",
+              "description": "Render a leading checkbox column. Selection changes emit `selectEvent`.",
               "tier": "presentation"
             }
           },

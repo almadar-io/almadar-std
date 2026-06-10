@@ -111,11 +111,11 @@
                     "render-ui",
                     "main",
                     {
-                      "completeEvent": "COMPLETE",
-                      "entity": "@config.entityProp",
                       "testEvent": "TEST",
-                      "stepDurationMs": "@config.stepDurationMs",
-                      "type": "state-architect-board"
+                      "completeEvent": "COMPLETE",
+                      "type": "state-architect-board",
+                      "entity": "@config.entityProp",
+                      "stepDurationMs": "@config.stepDurationMs"
                     }
                   ]
                 ]
@@ -123,13 +123,6 @@
             ]
           },
           "config": {
-            "stepDurationMs": {
-              "type": "number",
-              "default": 600.0,
-              "label": "Step Duration Ms",
-              "description": "Playback speed",
-              "tier": "presentation"
-            },
             "entityProp": {
               "type": "StateArchitectBoardEntity",
               "label": "Entity",
@@ -137,26 +130,6 @@
               "synonyms": "entity",
               "tier": "presentation",
               "properties": {
-                "headerImage": {
-                  "name": "headerImage",
-                  "type": "string",
-                  "required": false
-                },
-                "title": {
-                  "name": "title",
-                  "type": "string",
-                  "required": true
-                },
-                "hint": {
-                  "name": "hint",
-                  "type": "string",
-                  "required": true
-                },
-                "initialState": {
-                  "name": "initialState",
-                  "type": "string",
-                  "required": true
-                },
                 "transitions": {
                   "name": "transitions",
                   "type": "array",
@@ -179,18 +152,41 @@
                         "type": "string",
                         "required": true
                       },
-                      "event": {
-                        "name": "event",
-                        "type": "string",
-                        "required": true
-                      },
                       "guardHint": {
                         "name": "guardHint",
                         "type": "string",
                         "required": false
+                      },
+                      "event": {
+                        "name": "event",
+                        "type": "string",
+                        "required": true
                       }
                     }
                   }
+                },
+                "successMessage": {
+                  "name": "successMessage",
+                  "type": "string",
+                  "required": false
+                },
+                "availableEvents": {
+                  "name": "availableEvents",
+                  "type": "array",
+                  "required": true,
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "headerImage": {
+                  "name": "headerImage",
+                  "type": "string",
+                  "required": false
+                },
+                "description": {
+                  "name": "description",
+                  "type": "string",
+                  "required": true
                 },
                 "availableStates": {
                   "name": "availableStates",
@@ -200,13 +196,28 @@
                     "type": "string"
                   }
                 },
+                "id": {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                "showCodeView": {
+                  "name": "showCodeView",
+                  "type": "boolean",
+                  "required": false
+                },
+                "initialState": {
+                  "name": "initialState",
+                  "type": "string",
+                  "required": true
+                },
                 "failMessage": {
                   "name": "failMessage",
                   "type": "string",
                   "required": false
                 },
-                "entityName": {
-                  "name": "entityName",
+                "hint": {
+                  "name": "hint",
                   "type": "string",
                   "required": true
                 },
@@ -218,53 +229,10 @@
                     "type": "string"
                   }
                 },
-                "showCodeView": {
-                  "name": "showCodeView",
-                  "type": "boolean",
-                  "required": false
-                },
-                "variables": {
-                  "name": "variables",
-                  "type": "array",
-                  "required": true,
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "min": {
-                        "name": "min",
-                        "type": "number",
-                        "required": false
-                      },
-                      "value": {
-                        "name": "value",
-                        "type": "number",
-                        "required": true
-                      },
-                      "max": {
-                        "name": "max",
-                        "type": "number",
-                        "required": false
-                      },
-                      "name": {
-                        "name": "name",
-                        "type": "string",
-                        "required": true
-                      },
-                      "unit": {
-                        "name": "unit",
-                        "type": "string",
-                        "required": false
-                      }
-                    }
-                  }
-                },
-                "availableEvents": {
-                  "name": "availableEvents",
-                  "type": "array",
-                  "required": true,
-                  "items": {
-                    "type": "string"
-                  }
+                "title": {
+                  "name": "title",
+                  "type": "string",
+                  "required": true
                 },
                 "testCases": {
                   "name": "testCases",
@@ -273,11 +241,6 @@
                   "items": {
                     "type": "object",
                     "properties": {
-                      "label": {
-                        "name": "label",
-                        "type": "string",
-                        "required": true
-                      },
                       "expectedState": {
                         "name": "expectedState",
                         "type": "string",
@@ -290,14 +253,14 @@
                         "items": {
                           "type": "string"
                         }
+                      },
+                      "label": {
+                        "name": "label",
+                        "type": "string",
+                        "required": true
                       }
                     }
                   }
-                },
-                "description": {
-                  "name": "description",
-                  "type": "string",
-                  "required": true
                 },
                 "theme": {
                   "name": "theme",
@@ -316,17 +279,54 @@
                     }
                   }
                 },
-                "id": {
-                  "name": "id",
+                "entityName": {
+                  "name": "entityName",
                   "type": "string",
                   "required": true
                 },
-                "successMessage": {
-                  "name": "successMessage",
-                  "type": "string",
-                  "required": false
+                "variables": {
+                  "name": "variables",
+                  "type": "array",
+                  "required": true,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "value": {
+                        "name": "value",
+                        "type": "number",
+                        "required": true
+                      },
+                      "name": {
+                        "name": "name",
+                        "type": "string",
+                        "required": true
+                      },
+                      "max": {
+                        "name": "max",
+                        "type": "number",
+                        "required": false
+                      },
+                      "min": {
+                        "name": "min",
+                        "type": "number",
+                        "required": false
+                      },
+                      "unit": {
+                        "name": "unit",
+                        "type": "string",
+                        "required": false
+                      }
+                    }
+                  }
                 }
               }
+            },
+            "stepDurationMs": {
+              "type": "number",
+              "default": 600.0,
+              "label": "Step Duration Ms",
+              "description": "Playback speed",
+              "tier": "presentation"
             }
           },
           "scope": "instance"

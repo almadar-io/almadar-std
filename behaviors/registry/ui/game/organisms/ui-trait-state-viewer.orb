@@ -80,17 +80,17 @@
                     "render-ui",
                     "main",
                     {
-                      "trait": "@config.traitProp",
-                      "onStateClick": "STATE_CLICK",
-                      "className": "@config.className",
-                      "error": "@config.error",
-                      "entity": "TraitStateViewerItem",
-                      "size": "@config.size",
-                      "type": "trait-state-viewer",
-                      "variant": "@config.variant",
                       "showTransitions": "@config.showTransitions",
                       "stateStyles": "@config.stateStyles",
-                      "isLoading": "@config.isLoading"
+                      "entity": "TraitStateViewerItem",
+                      "isLoading": "@config.isLoading",
+                      "size": "@config.size",
+                      "onStateClick": "STATE_CLICK",
+                      "variant": "@config.variant",
+                      "type": "trait-state-viewer",
+                      "className": "@config.className",
+                      "trait": "@config.traitProp",
+                      "error": "@config.error"
                     }
                   ]
                 ]
@@ -98,17 +98,47 @@
             ]
           },
           "config": {
-            "variant": {
-              "type": "string",
-              "default": "compact",
-              "label": "Variant",
-              "description": "Display variant",
+            "error": {
+              "type": "TraitStateViewerError",
+              "label": "Error",
+              "description": "Error state",
               "tier": "presentation",
-              "values": [
-                "linear",
-                "compact",
-                "full"
-              ]
+              "properties": {
+                "code": {
+                  "name": "code",
+                  "type": "string",
+                  "required": false
+                },
+                "stack": {
+                  "name": "stack",
+                  "type": "string",
+                  "required": false
+                },
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                },
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": false
+                }
+              }
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
             },
             "size": {
               "type": "string",
@@ -129,116 +159,6 @@
               "description": "Whether to show transition labels",
               "tier": "presentation"
             },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "traitProp": {
-              "type": "TraitStateViewerTrait",
-              "default": {
-                "states": [],
-                "name": "",
-                "transitions": [],
-                "currentState": ""
-              },
-              "label": "Trait",
-              "description": "The trait / state machine to visualize",
-              "synonyms": "trait",
-              "tier": "presentation",
-              "properties": {
-                "transitions": {
-                  "name": "transitions",
-                  "type": "array",
-                  "required": true,
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "from": {
-                        "name": "from",
-                        "type": "string",
-                        "required": true
-                      },
-                      "event": {
-                        "name": "event",
-                        "type": "string",
-                        "required": true
-                      },
-                      "to": {
-                        "name": "to",
-                        "type": "string",
-                        "required": true
-                      },
-                      "guardHint": {
-                        "name": "guardHint",
-                        "type": "string",
-                        "required": false
-                      }
-                    }
-                  }
-                },
-                "currentState": {
-                  "name": "currentState",
-                  "type": "string",
-                  "required": true
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": true
-                },
-                "description": {
-                  "name": "description",
-                  "type": "string",
-                  "required": false
-                },
-                "states": {
-                  "name": "states",
-                  "type": "array",
-                  "required": true,
-                  "items": {
-                    "type": "string"
-                  }
-                }
-              }
-            },
-            "error": {
-              "type": "TraitStateViewerError",
-              "label": "Error",
-              "description": "Error state",
-              "tier": "presentation",
-              "properties": {
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                },
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                }
-              }
-            },
             "stateStyles": {
               "type": "Map<string,TraitStateViewerStateStylesValue>",
               "default": {},
@@ -257,6 +177,86 @@
                     "name": "icon",
                     "type": "string",
                     "required": true
+                  }
+                }
+              }
+            },
+            "variant": {
+              "type": "string",
+              "default": "compact",
+              "label": "Variant",
+              "description": "Display variant",
+              "tier": "presentation",
+              "values": [
+                "linear",
+                "compact",
+                "full"
+              ]
+            },
+            "traitProp": {
+              "type": "TraitStateViewerTrait",
+              "default": {
+                "currentState": "",
+                "states": [],
+                "transitions": [],
+                "name": ""
+              },
+              "label": "Trait",
+              "description": "The trait / state machine to visualize",
+              "synonyms": "trait",
+              "tier": "presentation",
+              "properties": {
+                "currentState": {
+                  "name": "currentState",
+                  "type": "string",
+                  "required": true
+                },
+                "states": {
+                  "name": "states",
+                  "type": "array",
+                  "required": true,
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": true
+                },
+                "description": {
+                  "name": "description",
+                  "type": "string",
+                  "required": false
+                },
+                "transitions": {
+                  "name": "transitions",
+                  "type": "array",
+                  "required": true,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "from": {
+                        "name": "from",
+                        "type": "string",
+                        "required": true
+                      },
+                      "guardHint": {
+                        "name": "guardHint",
+                        "type": "string",
+                        "required": false
+                      },
+                      "to": {
+                        "name": "to",
+                        "type": "string",
+                        "required": true
+                      },
+                      "event": {
+                        "name": "event",
+                        "type": "string",
+                        "required": true
+                      }
+                    }
                   }
                 }
               }

@@ -54,22 +54,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "@config.className",
-                      "type": "content-renderer",
-                      "isLoading": "@config.isLoading",
-                      "totalCount": "@config.totalCount",
                       "sortDirection": "@config.sortDirection",
-                      "sortBy": "@config.sortBy",
-                      "segments": "@config.segments",
-                      "activeFilters": "@config.activeFilters",
+                      "isLoading": "@config.isLoading",
                       "page": "@config.pageProp",
-                      "selectedIds": "@config.selectedIds",
-                      "content": "@config.content",
-                      "error": "@config.error",
-                      "entity": "@entity",
                       "searchValue": "@config.searchValue",
+                      "segments": "@config.segments",
+                      "className": "@config.className",
+                      "content": "@config.content",
+                      "activeFilters": "@config.activeFilters",
+                      "direction": "@config.direction",
+                      "error": "@config.error",
+                      "type": "content-renderer",
                       "pageSize": "@config.pageSize",
-                      "direction": "@config.direction"
+                      "totalCount": "@config.totalCount",
+                      "sortBy": "@config.sortBy",
+                      "entity": "@entity",
+                      "selectedIds": "@config.selectedIds"
                     }
                   ]
                 ]
@@ -77,6 +77,51 @@
             ]
           },
           "config": {
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "activeFilters": {
+              "type": "json",
+              "label": "Active Filters",
+              "description": "Active filters",
+              "tier": "presentation"
+            },
+            "selectedIds": {
+              "type": "[string]",
+              "default": [],
+              "label": "Selected Ids",
+              "description": "Currently selected item IDs",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "pageProp": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Page",
+              "description": "Current page number",
+              "synonyms": "page",
+              "tier": "presentation"
+            },
+            "pageSize": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Page Size",
+              "description": "Number of items per page",
+              "tier": "presentation"
+            },
+            "content": {
+              "type": "string",
+              "default": "",
+              "label": "Content",
+              "description": "Raw content string — auto-parsed into segments",
+              "tier": "presentation"
+            },
             "segments": {
               "type": "[json]",
               "default": [],
@@ -105,98 +150,11 @@
               "description": "Loading state indicator",
               "tier": "presentation"
             },
-            "pageSize": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Page Size",
-              "description": "Number of items per page",
-              "tier": "presentation"
-            },
-            "activeFilters": {
-              "type": "json",
-              "label": "Active Filters",
-              "description": "Active filters",
-              "tier": "presentation"
-            },
-            "content": {
-              "type": "string",
-              "default": "",
-              "label": "Content",
-              "description": "Raw content string — auto-parsed into segments",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "sortBy": {
-              "type": "string",
-              "default": "",
-              "label": "Sort By",
-              "description": "Current sort field",
-              "tier": "presentation"
-            },
             "searchValue": {
               "type": "string",
               "default": "",
               "label": "Search Value",
               "description": "Current search query value",
-              "tier": "presentation"
-            },
-            "pageProp": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Page",
-              "description": "Current page number",
-              "synonyms": "page",
-              "tier": "presentation"
-            },
-            "selectedIds": {
-              "type": "[string]",
-              "default": [],
-              "label": "Selected Ids",
-              "description": "Currently selected item IDs",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
-            },
-            "error": {
-              "type": "ContentRendererError",
-              "label": "Error",
-              "description": "Error state (UiError)",
-              "tier": "presentation",
-              "properties": {
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                },
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                }
-              }
-            },
-            "totalCount": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Total Count",
-              "description": "Total number of items",
               "tier": "presentation"
             },
             "sortDirection": {
@@ -209,6 +167,48 @@
                 "asc",
                 "desc"
               ]
+            },
+            "totalCount": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Total Count",
+              "description": "Total number of items",
+              "tier": "presentation"
+            },
+            "error": {
+              "type": "ContentRendererError",
+              "label": "Error",
+              "description": "Error state (UiError)",
+              "tier": "presentation",
+              "properties": {
+                "code": {
+                  "name": "code",
+                  "type": "string",
+                  "required": false
+                },
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": false
+                },
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                },
+                "stack": {
+                  "name": "stack",
+                  "type": "string",
+                  "required": false
+                }
+              }
+            },
+            "sortBy": {
+              "type": "string",
+              "default": "",
+              "label": "Sort By",
+              "description": "Current sort field",
+              "tier": "presentation"
             }
           },
           "scope": "instance"

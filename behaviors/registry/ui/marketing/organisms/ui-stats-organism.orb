@@ -13,6 +13,16 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "value",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "label",
+            "type": "string",
+            "default": ""
           }
         ]
       },
@@ -54,20 +64,20 @@
                     "render-ui",
                     "main",
                     {
-                      "entity": "@entity",
-                      "pageSize": "@config.pageSize",
+                      "activeFilters": "@config.activeFilters",
                       "page": "@config.pageProp",
-                      "error": "@config.error",
+                      "columns": "@config.columns",
+                      "pageSize": "@config.pageSize",
+                      "type": "stats-organism",
                       "totalCount": "@config.totalCount",
                       "selectedIds": "@config.selectedIds",
-                      "isLoading": "@config.isLoading",
-                      "activeFilters": "@config.activeFilters",
-                      "sortBy": "@config.sortBy",
-                      "columns": "@config.columns",
-                      "sortDirection": "@config.sortDirection",
-                      "type": "stats-organism",
+                      "entity": "@entity",
                       "className": "@config.className",
-                      "searchValue": "@config.searchValue"
+                      "error": "@config.error",
+                      "sortBy": "@config.sortBy",
+                      "sortDirection": "@config.sortDirection",
+                      "searchValue": "@config.searchValue",
+                      "isLoading": "@config.isLoading"
                     }
                   ]
                 ]
@@ -75,17 +85,46 @@
             ]
           },
           "config": {
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state indicator",
+            "sortBy": {
+              "type": "string",
+              "default": "",
+              "label": "Sort By",
+              "description": "Current sort field",
               "tier": "presentation"
             },
-            "activeFilters": {
-              "type": "json",
-              "label": "Active Filters",
-              "description": "Active filters",
+            "error": {
+              "type": "StatsOrganismError",
+              "label": "Error",
+              "description": "Error state (UiError)",
+              "tier": "presentation",
+              "properties": {
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": false
+                },
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                },
+                "stack": {
+                  "name": "stack",
+                  "type": "string",
+                  "required": false
+                },
+                "code": {
+                  "name": "code",
+                  "type": "string",
+                  "required": false
+                }
+              }
+            },
+            "columns": {
+              "type": "number",
+              "default": 3.0,
+              "label": "Columns",
+              "description": "columns prop",
               "tier": "presentation"
             },
             "className": {
@@ -102,46 +141,18 @@
               "description": "Number of items per page",
               "tier": "presentation"
             },
-            "columns": {
+            "totalCount": {
               "type": "number",
-              "default": 3.0,
-              "label": "Columns",
-              "description": "columns prop",
+              "default": 0.0,
+              "label": "Total Count",
+              "description": "Total number of items",
               "tier": "presentation"
             },
-            "error": {
-              "type": "StatsOrganismError",
-              "label": "Error",
-              "description": "Error state (UiError)",
-              "tier": "presentation",
-              "properties": {
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                },
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                }
-              }
-            },
-            "sortBy": {
+            "searchValue": {
               "type": "string",
               "default": "",
-              "label": "Sort By",
-              "description": "Current sort field",
+              "label": "Search Value",
+              "description": "Current search query value",
               "tier": "presentation"
             },
             "pageProp": {
@@ -150,13 +161,6 @@
               "label": "Page",
               "description": "Current page number",
               "synonyms": "page",
-              "tier": "presentation"
-            },
-            "searchValue": {
-              "type": "string",
-              "default": "",
-              "label": "Search Value",
-              "description": "Current search query value",
               "tier": "presentation"
             },
             "sortDirection": {
@@ -170,11 +174,11 @@
                 "desc"
               ]
             },
-            "totalCount": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Total Count",
-              "description": "Total number of items",
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
               "tier": "presentation"
             },
             "selectedIds": {
@@ -186,6 +190,12 @@
               "items": {
                 "type": "string"
               }
+            },
+            "activeFilters": {
+              "type": "json",
+              "label": "Active Filters",
+              "description": "Active filters",
+              "tier": "presentation"
             }
           },
           "scope": "instance"

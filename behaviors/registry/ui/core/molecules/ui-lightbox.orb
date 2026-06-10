@@ -50,19 +50,46 @@
                   "type": "number"
                 }
               ]
+            },
+            {
+              "event": "OPEN",
+              "description": "Open the Lightbox.",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
             }
           ],
           "stateMachine": {
             "states": [
               {
-                "name": "idle",
+                "name": "closed",
                 "isInitial": true
+              },
+              {
+                "name": "open"
               }
             ],
             "events": [
               {
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "key": "OPEN",
+                "name": "Open",
+                "description": "Open the Lightbox.",
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "CLOSE",
@@ -91,23 +118,60 @@
             ],
             "transitions": [
               {
-                "from": "idle",
-                "to": "idle",
+                "from": "closed",
+                "to": "closed",
                 "event": "INIT",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "images": "@config.images",
-                      "onClose": "CLOSE",
-                      "closeAction": "@config.closeAction",
-                      "isOpen": "@config.isOpen",
-                      "type": "lightbox",
+                      "type": "button",
+                      "action": "OPEN",
+                      "label": "Open Lightbox"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "closed",
+                "to": "open",
+                "event": "OPEN",
+                "effects": [
+                  [
+                    "render-ui",
+                    "overlay",
+                    {
                       "currentIndex": "@config.currentIndex",
-                      "className": "@config.className",
+                      "isOpen": "@config.isOpen",
+                      "closeAction": "@config.closeAction",
+                      "images": "@config.images",
+                      "onIndexChange": "INDEX_CHANGE",
+                      "type": "lightbox",
+                      "onClose": "CLOSE",
                       "showCounter": "@config.showCounter",
-                      "onIndexChange": "INDEX_CHANGE"
+                      "className": "@config.className"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "CLOSE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "overlay",
+                    null
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "action": "OPEN",
+                      "label": "Open Lightbox",
+                      "type": "button"
                     }
                   ]
                 ]
@@ -122,12 +186,26 @@
               "description": "Show image counter (e.g., '3 of 12')",
               "tier": "presentation"
             },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "closeAction": {
+              "type": "string",
+              "default": "",
+              "label": "Close Action",
+              "description": "Declarative close event name",
+              "tier": "presentation"
+            },
             "images": {
               "type": "[LightboxImagesItem]",
               "default": [
                 {
-                  "caption": "Caption",
                   "src": "Src",
+                  "caption": "Caption",
                   "alt": "Alt"
                 }
               ],
@@ -167,20 +245,6 @@
               "default": false,
               "label": "Is Open",
               "description": "Whether the lightbox is open",
-              "tier": "presentation"
-            },
-            "closeAction": {
-              "type": "string",
-              "default": "",
-              "label": "Close Action",
-              "description": "Declarative close event name",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
               "tier": "presentation"
             }
           },

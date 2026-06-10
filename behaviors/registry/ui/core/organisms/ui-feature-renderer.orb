@@ -263,15 +263,15 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "feature-renderer",
-                      "offsetZ": "@config.offsetZ",
+                      "cellSize": "@config.cellSize",
                       "featureColors": "@config.featureColors",
                       "onFeatureHover": "FEATURE_HOVER",
-                      "cellSize": "@config.cellSize",
-                      "onFeatureClick": "FEATURE_CLICK",
-                      "offsetX": "@config.offsetX",
+                      "selectedFeatureIds": "@config.selectedFeatureIds",
                       "features": "@config.features",
-                      "selectedFeatureIds": "@config.selectedFeatureIds"
+                      "offsetX": "@config.offsetX",
+                      "onFeatureClick": "FEATURE_CLICK",
+                      "offsetZ": "@config.offsetZ",
+                      "type": "feature-renderer"
                     }
                   ]
                 ]
@@ -279,15 +279,12 @@
             ]
           },
           "config": {
-            "featureColors": {
-              "type": "Map<string,string>",
-              "default": {},
-              "label": "Feature Colors",
-              "description": "Feature color overrides",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
+            "cellSize": {
+              "type": "number",
+              "default": 1.0,
+              "label": "Cell Size",
+              "description": "Grid cell size",
+              "tier": "presentation"
             },
             "offsetX": {
               "type": "number",
@@ -296,12 +293,15 @@
               "description": "Grid offset X",
               "tier": "presentation"
             },
-            "cellSize": {
-              "type": "number",
-              "default": 1.0,
-              "label": "Cell Size",
-              "description": "Grid cell size",
-              "tier": "presentation"
+            "selectedFeatureIds": {
+              "type": "[string]",
+              "default": [],
+              "label": "Selected Feature Ids",
+              "description": "Selected feature IDs",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
             },
             "features": {
               "type": "[FeatureRendererFeaturesItem]",
@@ -318,28 +318,8 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": false
-                  },
-                  "x": {
-                    "name": "x",
-                    "type": "number",
-                    "required": true
-                  },
-                  "z": {
-                    "name": "z",
-                    "type": "number",
-                    "required": false
-                  },
-                  "type": {
-                    "name": "type",
-                    "type": "string",
-                    "required": true
-                  },
-                  "sprite": {
-                    "name": "sprite",
+                  "assetUrl": {
+                    "name": "assetUrl",
                     "type": "string",
                     "required": false
                   },
@@ -348,15 +328,35 @@
                     "type": "string",
                     "required": false
                   },
+                  "type": {
+                    "name": "type",
+                    "type": "string",
+                    "required": true
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": false
+                  },
                   "y": {
                     "name": "y",
                     "type": "number",
                     "required": true
                   },
-                  "assetUrl": {
-                    "name": "assetUrl",
+                  "z": {
+                    "name": "z",
+                    "type": "number",
+                    "required": false
+                  },
+                  "sprite": {
+                    "name": "sprite",
                     "type": "string",
                     "required": false
+                  },
+                  "x": {
+                    "name": "x",
+                    "type": "number",
+                    "required": true
                   },
                   "elevation": {
                     "name": "elevation",
@@ -366,11 +366,11 @@
                 }
               }
             },
-            "selectedFeatureIds": {
-              "type": "[string]",
-              "default": [],
-              "label": "Selected Feature Ids",
-              "description": "Selected feature IDs",
+            "featureColors": {
+              "type": "Map<string,string>",
+              "default": {},
+              "label": "Feature Colors",
+              "description": "Feature color overrides",
               "tier": "presentation",
               "items": {
                 "type": "string"

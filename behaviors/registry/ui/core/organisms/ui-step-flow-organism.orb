@@ -13,6 +13,26 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "number",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "icon",
+            "type": "string",
+            "default": ""
           }
         ]
       },
@@ -54,23 +74,23 @@
                     "render-ui",
                     "main",
                     {
-                      "subtitle": "@config.subtitle",
-                      "isLoading": "@config.isLoading",
-                      "searchValue": "@config.searchValue",
                       "selectedIds": "@config.selectedIds",
-                      "heading": "@config.heading",
-                      "sortBy": "@config.sortBy",
-                      "page": "@config.pageProp",
-                      "className": "@config.className",
-                      "pageSize": "@config.pageSize",
                       "showConnectors": "@config.showConnectors",
                       "error": "@config.error",
-                      "totalCount": "@config.totalCount",
+                      "className": "@config.className",
+                      "pageSize": "@config.pageSize",
+                      "activeFilters": "@config.activeFilters",
+                      "isLoading": "@config.isLoading",
+                      "sortBy": "@config.sortBy",
                       "sortDirection": "@config.sortDirection",
-                      "orientation": "@config.orientation",
                       "type": "step-flow-organism",
+                      "page": "@config.pageProp",
+                      "subtitle": "@config.subtitle",
+                      "searchValue": "@config.searchValue",
                       "entity": "@entity",
-                      "activeFilters": "@config.activeFilters"
+                      "totalCount": "@config.totalCount",
+                      "orientation": "@config.orientation",
+                      "heading": "@config.heading"
                     }
                   ]
                 ]
@@ -78,67 +98,18 @@
             ]
           },
           "config": {
-            "searchValue": {
-              "type": "string",
-              "default": "",
-              "label": "Search Value",
-              "description": "Current search query value",
+            "pageSize": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Page Size",
+              "description": "Number of items per page",
               "tier": "presentation"
             },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "isLoading": {
+            "showConnectors": {
               "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state indicator",
-              "tier": "presentation"
-            },
-            "error": {
-              "type": "StepFlowOrganismError",
-              "label": "Error",
-              "description": "Error state (UiError)",
-              "tier": "presentation",
-              "properties": {
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                },
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                }
-              }
-            },
-            "subtitle": {
-              "type": "string",
-              "default": "",
-              "label": "Subtitle",
-              "description": "subtitle prop",
-              "tier": "presentation"
-            },
-            "sortBy": {
-              "type": "string",
-              "default": "",
-              "label": "Sort By",
-              "description": "Current sort field",
+              "default": true,
+              "label": "Show Connectors",
+              "description": "showConnectors prop",
               "tier": "presentation"
             },
             "orientation": {
@@ -152,6 +123,13 @@
                 "vertical"
               ]
             },
+            "totalCount": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Total Count",
+              "description": "Total number of items",
+              "tier": "presentation"
+            },
             "heading": {
               "type": "string",
               "default": "",
@@ -159,18 +137,38 @@
               "description": "heading prop",
               "tier": "presentation"
             },
-            "pageSize": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Page Size",
-              "description": "Number of items per page",
+            "sortBy": {
+              "type": "string",
+              "default": "",
+              "label": "Sort By",
+              "description": "Current sort field",
               "tier": "presentation"
             },
-            "totalCount": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Total Count",
-              "description": "Total number of items",
+            "subtitle": {
+              "type": "string",
+              "default": "",
+              "label": "Subtitle",
+              "description": "subtitle prop",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "activeFilters": {
+              "type": "json",
+              "label": "Active Filters",
+              "description": "Active filters",
+              "tier": "presentation"
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
               "tier": "presentation"
             },
             "selectedIds": {
@@ -183,13 +181,40 @@
                 "type": "string"
               }
             },
-            "pageProp": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Page",
-              "description": "Current page number",
-              "synonyms": "page",
+            "searchValue": {
+              "type": "string",
+              "default": "",
+              "label": "Search Value",
+              "description": "Current search query value",
               "tier": "presentation"
+            },
+            "error": {
+              "type": "StepFlowOrganismError",
+              "label": "Error",
+              "description": "Error state (UiError)",
+              "tier": "presentation",
+              "properties": {
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                },
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": false
+                },
+                "code": {
+                  "name": "code",
+                  "type": "string",
+                  "required": false
+                },
+                "stack": {
+                  "name": "stack",
+                  "type": "string",
+                  "required": false
+                }
+              }
             },
             "sortDirection": {
               "type": "string",
@@ -202,17 +227,12 @@
                 "desc"
               ]
             },
-            "showConnectors": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Connectors",
-              "description": "showConnectors prop",
-              "tier": "presentation"
-            },
-            "activeFilters": {
-              "type": "json",
-              "label": "Active Filters",
-              "description": "Active filters",
+            "pageProp": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Page",
+              "description": "Current page number",
+              "synonyms": "page",
               "tier": "presentation"
             }
           },
