@@ -20,7 +20,7 @@ async function loadRegistryData(): Promise<{ behaviors: Record<string, unknown> 
   try {
     const { readFileSync } = await import('fs');
     const { resolve } = await import('path');
-    const dir = resolveStdDataDir();
+    const dir = await resolveStdDataDir();
     const raw = readFileSync(resolve(dir, 'behaviors-registry.json'), 'utf-8');
     registryJsonData = JSON.parse(raw);
   } catch {
