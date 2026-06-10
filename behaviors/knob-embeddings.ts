@@ -32,7 +32,7 @@ async function loadManifest(): Promise<KnobEmbeddingsManifest | null> {
   try {
     const { readFileSync } = await import('fs');
     const { resolve } = await import('path');
-    const dir = resolveStdDataDir();
+    const dir = await resolveStdDataDir();
     const raw = readFileSync(resolve(dir, 'knob-embeddings.json'), 'utf-8');
     const parsed = JSON.parse(raw) as KnobEmbeddingsManifest;
     if (

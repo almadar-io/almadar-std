@@ -18,25 +18,32 @@
  *      the normal unbundled case and the last-resort fallback.
  */
 
-import { createRequire } from 'module';
-import { dirname, resolve } from 'path';
-import { fileURLToPath } from 'url';
-
+// Node builtins are loaded via DYNAMIC import (not static `import { … }`) so browser
+// bundlers (vite/rollup) keep `@almadar/std` bundleable — a static named/namespace
+// import of `module`/`path`/`url` makes them error on the browser stub. In the
+// browser the node branch is skipped and resolution returns "" (the data sidecars
+// aren't read there anyway — the loaders are behind their own dynamic `import('fs')`).
 let cached: string | null = null;
 
-export function resolveStdDataDir(): string {
-  if (cached) return cached;
+export async function resolveStdDataDir(): Promise<string> {
+  if (cached !== null) return cached;
 
-  const override = process.env.ALMADAR_STD_DATA_DIR;
+  const override = (typeof process !== 'undefined' && process.env?.ALMADAR_STD_DATA_DIR) || '';
   if (override) return (cached = override);
 
+  // Browser / non-Node: no filesystem, no sidecars to resolve.
+  if (typeof process === 'undefined' || !process.versions?.node) return (cached = '');
+
+  const [{ createRequire }, nodePath, nodeUrl] = await Promise.all([
+    import('module'),
+    import('path'),
+    import('url'),
+  ]);
   try {
     const req = createRequire(import.meta.url);
-    return (cached = resolve(dirname(req.resolve('@almadar/std/package.json')), 'dist'));
+    return (cached = nodePath.resolve(nodePath.dirname(req.resolve('@almadar/std/package.json')), 'dist'));
   } catch {
-    // @almadar/std not resolvable on disk (e.g. bundled with no package present
-    // and no sidecars shipped) — fall through to the module-relative path.
+    // @almadar/std not resolvable on disk (bundled w/o the package) — fall through.
   }
-
-  return (cached = dirname(fileURLToPath(import.meta.url)));
+  return (cached = nodePath.dirname(nodeUrl.fileURLToPath(import.meta.url)));
 }

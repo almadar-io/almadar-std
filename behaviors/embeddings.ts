@@ -36,7 +36,7 @@ async function loadManifest(): Promise<BehaviorEmbeddingsManifest | null> {
   try {
     const { readFileSync } = await import('fs');
     const { resolve } = await import('path');
-    const dir = resolveStdDataDir();
+    const dir = await resolveStdDataDir();
     const raw = readFileSync(resolve(dir, 'behaviors-embeddings.json'), 'utf-8');
     const parsed = JSON.parse(raw) as BehaviorEmbeddingsManifest;
     if (

@@ -26,7 +26,7 @@ async function loadCatalog(): Promise<FactorySignatureCatalog | null> {
   try {
     const { readFileSync } = await import('fs');
     const { resolve } = await import('path');
-    const dir = resolveStdDataDir();
+    const dir = await resolveStdDataDir();
     const raw = readFileSync(resolve(dir, 'registry', 'factory-signatures.json'), 'utf-8');
     const parsed = JSON.parse(raw) as FactorySignatureCatalog;
     if (
