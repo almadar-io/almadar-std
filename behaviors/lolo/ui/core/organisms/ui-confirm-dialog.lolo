@@ -13,12 +13,18 @@ orbital ConfirmDialogOrbital {
   }
 
   trait ConfirmDialogRender -> @rebindable ConfirmDialogItem [interaction, instance] {
-    initial: idle
+    initial: closed
 
-    state idle {
-      INIT -> idle
+    state closed {
+      INIT -> closed
         (fetch ConfirmDialogItem {})
         (render-ui main {
+          label: "Open Confirm-dialog"
+          action: OPEN
+          type: button
+        })
+      OPEN -> open
+        (render-ui modal {
           isOpen: @config.isOpen
           onClose: CLOSE
           onConfirm: CONFIRM
@@ -39,6 +45,16 @@ orbital ConfirmDialogOrbital {
         })
     }
 
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (render-ui main {
+          label: "Open Confirm-dialog"
+          action: OPEN
+          type: button
+        })
+    }
+
     emits {
       CLOSE -> external {
         id : string
@@ -49,6 +65,11 @@ orbital ConfirmDialogOrbital {
         id : string
       }
         @description "Callback when action is confirmed (injected by slot wrapper)"
+        @tier "essential"
+      OPEN -> external {
+        id : string
+      }
+        @description "Open the Confirm-dialog."
         @tier "essential"
     }
 

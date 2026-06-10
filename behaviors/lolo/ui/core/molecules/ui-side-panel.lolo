@@ -6,11 +6,17 @@ orbital SidePanelOrbital {
   }
 
   trait SidePanelRender -> @rebindable SidePanelItem [interaction, instance] {
-    initial: idle
+    initial: closed
 
-    state idle {
-      INIT -> idle
+    state closed {
+      INIT -> closed
         (render-ui main {
+          label: "Open Side-panel"
+          action: OPEN
+          type: button
+        })
+      OPEN -> open
+        (render-ui drawer {
           title: @config.title
           children: [{ content: "", type: text }]
           isOpen: @config.isOpen
@@ -24,11 +30,26 @@ orbital SidePanelOrbital {
         })
     }
 
+    state open {
+      CLOSE -> closed
+        (render-ui drawer null)
+        (render-ui main {
+          label: "Open Side-panel"
+          action: OPEN
+          type: button
+        })
+    }
+
     emits {
       CLOSE -> external {
         id : string
       }
         @description "On close handler"
+        @tier "essential"
+      OPEN -> external {
+        id : string
+      }
+        @description "Open the Side-panel."
         @tier "essential"
     }
 
