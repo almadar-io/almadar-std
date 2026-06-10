@@ -82,28 +82,28 @@
                     "render-ui",
                     "main",
                     {
-                      "actions": "@config.actions",
-                      "sortBy": "@config.sortBy",
-                      "className": "@config.className",
-                      "selectedItems": "@config.selectedItems",
-                      "error": "@config.error",
-                      "aspectRatio": "@config.aspectRatio",
-                      "isLoading": "@config.isLoading",
-                      "type": "media-gallery",
-                      "selectable": "@config.selectable",
+                      "pageSize": "@config.pageSize",
                       "activeFilters": "@config.activeFilters",
-                      "selectedIds": "@config.selectedIds",
                       "page": "@config.pageProp",
-                      "entity": "@entity",
-                      "columns": "@config.columns",
-                      "totalCount": "@config.totalCount",
                       "sortDirection": "@config.sortDirection",
+                      "entity": "@entity",
+                      "aspectRatio": "@config.aspectRatio",
+                      "selectedIds": "@config.selectedIds",
                       "title": "@config.title",
+                      "totalCount": "@config.totalCount",
                       "items": "@config.items",
-                      "showUpload": "@config.showUpload",
                       "searchValue": "@config.searchValue",
+                      "error": "@config.error",
+                      "selectable": "@config.selectable",
+                      "isLoading": "@config.isLoading",
+                      "sortBy": "@config.sortBy",
+                      "columns": "@config.columns",
+                      "className": "@config.className",
                       "selectionEvent": "SELECTION",
-                      "pageSize": "@config.pageSize"
+                      "selectedItems": "@config.selectedItems",
+                      "type": "media-gallery",
+                      "actions": "@config.actions",
+                      "showUpload": "@config.showUpload"
                     }
                   ]
                 ]
@@ -111,18 +111,66 @@
             ]
           },
           "config": {
+            "error": {
+              "type": "MediaGalleryError",
+              "label": "Error",
+              "description": "Error state (UiError)",
+              "tier": "presentation",
+              "properties": {
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": false
+                },
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                },
+                "stack": {
+                  "name": "stack",
+                  "type": "string",
+                  "required": false
+                },
+                "code": {
+                  "name": "code",
+                  "type": "string",
+                  "required": false
+                }
+              }
+            },
+            "activeFilters": {
+              "type": "json",
+              "label": "Active Filters",
+              "description": "Active filters",
+              "tier": "presentation"
+            },
+            "sortDirection": {
+              "type": "string",
+              "default": "asc",
+              "label": "Sort Direction",
+              "description": "Current sort direction",
+              "tier": "presentation",
+              "values": [
+                "asc",
+                "desc"
+              ]
+            },
+            "selectedItems": {
+              "type": "[string]",
+              "default": [],
+              "label": "Selected Items",
+              "description": "Selected item IDs",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
             "pageSize": {
               "type": "number",
               "default": 0.0,
               "label": "Page Size",
               "description": "Number of items per page",
-              "tier": "presentation"
-            },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state indicator",
               "tier": "presentation"
             },
             "sortBy": {
@@ -132,19 +180,11 @@
               "description": "Current sort field",
               "tier": "presentation"
             },
-            "pageProp": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Page",
-              "description": "Current page number",
-              "synonyms": "page",
-              "tier": "presentation"
-            },
-            "className": {
+            "title": {
               "type": "string",
               "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
+              "label": "Title",
+              "description": "Gallery title",
               "tier": "presentation"
             },
             "aspectRatio": {
@@ -159,70 +199,12 @@
                 "portrait"
               ]
             },
-            "activeFilters": {
-              "type": "json",
-              "label": "Active Filters",
-              "description": "Active filters",
-              "tier": "presentation"
-            },
-            "searchValue": {
-              "type": "string",
-              "default": "",
-              "label": "Search Value",
-              "description": "Current search query value",
-              "tier": "presentation"
-            },
-            "title": {
-              "type": "string",
-              "default": "",
-              "label": "Title",
-              "description": "Gallery title",
-              "tier": "presentation"
-            },
-            "error": {
-              "type": "MediaGalleryError",
-              "label": "Error",
-              "description": "Error state (UiError)",
-              "tier": "presentation",
-              "properties": {
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                },
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                },
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                }
-              }
-            },
             "columns": {
               "type": "number",
               "default": 3.0,
               "label": "Columns",
               "description": "Column count",
               "tier": "presentation"
-            },
-            "selectedItems": {
-              "type": "[string]",
-              "default": [],
-              "label": "Selected Items",
-              "description": "Selected item IDs",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
             },
             "selectable": {
               "type": "boolean",
@@ -257,6 +239,16 @@
               "items": {
                 "type": "object",
                 "properties": {
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "navigatesTo": {
+                    "name": "navigatesTo",
+                    "type": "string",
+                    "required": false
+                  },
                   "variant": {
                     "name": "variant",
                     "type": "string",
@@ -267,23 +259,34 @@
                       "ghost"
                     ]
                   },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
                   "event": {
                     "name": "event",
-                    "type": "string",
-                    "required": false
-                  },
-                  "navigatesTo": {
-                    "name": "navigatesTo",
                     "type": "string",
                     "required": false
                   }
                 }
               }
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "searchValue": {
+              "type": "string",
+              "default": "",
+              "label": "Search Value",
+              "description": "Current search query value",
+              "tier": "presentation"
+            },
+            "totalCount": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Total Count",
+              "description": "Total number of items",
+              "tier": "presentation"
             },
             "items": {
               "type": "[MediaGalleryItemsItem]",
@@ -294,16 +297,6 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  "thumbnail": {
-                    "name": "thumbnail",
-                    "type": "string",
-                    "required": false
-                  },
                   "mediaType": {
                     "name": "mediaType",
                     "type": "string",
@@ -313,13 +306,23 @@
                       "video"
                     ]
                   },
-                  "caption": {
-                    "name": "caption",
+                  "src": {
+                    "name": "src",
+                    "type": "string",
+                    "required": true
+                  },
+                  "thumbnail": {
+                    "name": "thumbnail",
                     "type": "string",
                     "required": false
                   },
-                  "src": {
-                    "name": "src",
+                  "fileSize": {
+                    "name": "fileSize",
+                    "type": "string",
+                    "required": false
+                  },
+                  "id": {
+                    "name": "id",
                     "type": "string",
                     "required": true
                   },
@@ -328,31 +331,28 @@
                     "type": "string",
                     "required": false
                   },
-                  "fileSize": {
-                    "name": "fileSize",
+                  "caption": {
+                    "name": "caption",
                     "type": "string",
                     "required": false
                   }
                 }
               }
             },
-            "totalCount": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Total Count",
-              "description": "Total number of items",
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
               "tier": "presentation"
             },
-            "sortDirection": {
-              "type": "string",
-              "default": "asc",
-              "label": "Sort Direction",
-              "description": "Current sort direction",
-              "tier": "presentation",
-              "values": [
-                "asc",
-                "desc"
-              ]
+            "pageProp": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Page",
+              "description": "Current page number",
+              "synonyms": "page",
+              "tier": "presentation"
             }
           },
           "scope": "instance"

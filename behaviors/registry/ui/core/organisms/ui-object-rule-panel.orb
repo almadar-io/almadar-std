@@ -83,11 +83,11 @@
                     "render-ui",
                     "main",
                     {
-                      "object": "@config.object",
-                      "disabled": "@config.disabled",
                       "className": "@config.className",
+                      "object": "@config.object",
                       "type": "object-rule-panel",
-                      "onRulesChange": "RULES_CHANGE"
+                      "onRulesChange": "RULES_CHANGE",
+                      "disabled": "@config.disabled"
                     }
                   ]
                 ]
@@ -102,29 +102,78 @@
               "description": "Whether editing is disabled",
               "tier": "presentation"
             },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
             "object": {
               "type": "ObjectRulePanelObject",
               "default": {
-                "id": "",
-                "availableEvents": [],
-                "icon": "circle",
-                "name": "",
-                "initialState": "",
                 "rules": [],
-                "availableActions": [],
                 "states": [],
-                "currentState": ""
+                "availableActions": [],
+                "name": "",
+                "id": "",
+                "initialState": "",
+                "availableEvents": [],
+                "currentState": "",
+                "icon": "circle"
               },
               "label": "Object",
               "description": "The selected object",
               "tier": "presentation",
               "properties": {
-                "states": {
-                  "name": "states",
+                "rules": {
+                  "name": "rules",
                   "type": "array",
                   "required": true,
                   "items": {
-                    "type": "string"
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      "thenAction": {
+                        "name": "thenAction",
+                        "type": "string",
+                        "required": true
+                      },
+                      "whenEvent": {
+                        "name": "whenEvent",
+                        "type": "string",
+                        "required": true
+                      }
+                    }
+                  }
+                },
+                "maxRules": {
+                  "name": "maxRules",
+                  "type": "number",
+                  "required": false
+                },
+                "availableEvents": {
+                  "name": "availableEvents",
+                  "type": "array",
+                  "required": true,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "value": {
+                        "name": "value",
+                        "type": "string",
+                        "required": true
+                      },
+                      "label": {
+                        "name": "label",
+                        "type": "string",
+                        "required": true
+                      }
+                    }
                   }
                 },
                 "availableActions": {
@@ -152,84 +201,35 @@
                   "type": "string",
                   "required": true
                 },
-                "initialState": {
-                  "name": "initialState",
-                  "type": "string",
-                  "required": true
-                },
-                "currentState": {
-                  "name": "currentState",
-                  "type": "string",
-                  "required": true
-                },
                 "name": {
                   "name": "name",
                   "type": "string",
                   "required": true
-                },
-                "rules": {
-                  "name": "rules",
-                  "type": "array",
-                  "required": true,
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "thenAction": {
-                        "name": "thenAction",
-                        "type": "string",
-                        "required": true
-                      },
-                      "whenEvent": {
-                        "name": "whenEvent",
-                        "type": "string",
-                        "required": true
-                      },
-                      "id": {
-                        "name": "id",
-                        "type": "string",
-                        "required": true
-                      }
-                    }
-                  }
                 },
                 "icon": {
                   "name": "icon",
                   "type": "string",
                   "required": true
                 },
-                "availableEvents": {
-                  "name": "availableEvents",
+                "states": {
+                  "name": "states",
                   "type": "array",
                   "required": true,
                   "items": {
-                    "type": "object",
-                    "properties": {
-                      "value": {
-                        "name": "value",
-                        "type": "string",
-                        "required": true
-                      },
-                      "label": {
-                        "name": "label",
-                        "type": "string",
-                        "required": true
-                      }
-                    }
+                    "type": "string"
                   }
                 },
-                "maxRules": {
-                  "name": "maxRules",
-                  "type": "number",
-                  "required": false
+                "currentState": {
+                  "name": "currentState",
+                  "type": "string",
+                  "required": true
+                },
+                "initialState": {
+                  "name": "initialState",
+                  "type": "string",
+                  "required": true
                 }
               }
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
             }
           },
           "scope": "instance"

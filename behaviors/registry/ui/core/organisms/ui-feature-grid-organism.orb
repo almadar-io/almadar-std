@@ -13,6 +13,31 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "icon",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "href",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "linkLabel",
+            "type": "string",
+            "default": ""
           }
         ]
       },
@@ -54,22 +79,22 @@
                     "render-ui",
                     "main",
                     {
-                      "sortDirection": "@config.sortDirection",
-                      "activeFilters": "@config.activeFilters",
-                      "subtitle": "@config.subtitle",
-                      "totalCount": "@config.totalCount",
-                      "type": "feature-grid-organism",
-                      "isLoading": "@config.isLoading",
-                      "pageSize": "@config.pageSize",
-                      "columns": "@config.columns",
-                      "error": "@config.error",
-                      "heading": "@config.heading",
-                      "entity": "@entity",
-                      "className": "@config.className",
-                      "sortBy": "@config.sortBy",
                       "searchValue": "@config.searchValue",
+                      "entity": "@entity",
+                      "totalCount": "@config.totalCount",
+                      "sortDirection": "@config.sortDirection",
+                      "sortBy": "@config.sortBy",
+                      "className": "@config.className",
+                      "activeFilters": "@config.activeFilters",
+                      "type": "feature-grid-organism",
                       "page": "@config.pageProp",
-                      "selectedIds": "@config.selectedIds"
+                      "isLoading": "@config.isLoading",
+                      "subtitle": "@config.subtitle",
+                      "selectedIds": "@config.selectedIds",
+                      "heading": "@config.heading",
+                      "pageSize": "@config.pageSize",
+                      "error": "@config.error",
+                      "columns": "@config.columns"
                     }
                   ]
                 ]
@@ -77,18 +102,25 @@
             ]
           },
           "config": {
-            "searchValue": {
+            "className": {
               "type": "string",
               "default": "",
-              "label": "Search Value",
-              "description": "Current search query value",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
               "tier": "presentation"
             },
-            "columns": {
-              "type": "number",
-              "default": 3.0,
-              "label": "Columns",
-              "description": "columns prop",
+            "sortBy": {
+              "type": "string",
+              "default": "",
+              "label": "Sort By",
+              "description": "Current sort field",
+              "tier": "presentation"
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
               "tier": "presentation"
             },
             "sortDirection": {
@@ -102,6 +134,16 @@
                 "desc"
               ]
             },
+            "selectedIds": {
+              "type": "[string]",
+              "default": [],
+              "label": "Selected Ids",
+              "description": "Currently selected item IDs",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
             "heading": {
               "type": "string",
               "default": "",
@@ -109,26 +151,11 @@
               "description": "heading prop",
               "tier": "presentation"
             },
-            "sortBy": {
+            "searchValue": {
               "type": "string",
               "default": "",
-              "label": "Sort By",
-              "description": "Current sort field",
-              "tier": "presentation"
-            },
-            "pageProp": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Page",
-              "description": "Current page number",
-              "synonyms": "page",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
+              "label": "Search Value",
+              "description": "Current search query value",
               "tier": "presentation"
             },
             "totalCount": {
@@ -136,6 +163,13 @@
               "default": 0.0,
               "label": "Total Count",
               "description": "Total number of items",
+              "tier": "presentation"
+            },
+            "subtitle": {
+              "type": "string",
+              "default": "",
+              "label": "Subtitle",
+              "description": "subtitle prop",
               "tier": "presentation"
             },
             "error": {
@@ -154,32 +188,16 @@
                   "type": "string",
                   "required": false
                 },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                },
                 "message": {
                   "name": "message",
                   "type": "string",
                   "required": true
+                },
+                "stack": {
+                  "name": "stack",
+                  "type": "string",
+                  "required": false
                 }
-              }
-            },
-            "activeFilters": {
-              "type": "json",
-              "label": "Active Filters",
-              "description": "Active filters",
-              "tier": "presentation"
-            },
-            "selectedIds": {
-              "type": "[string]",
-              "default": [],
-              "label": "Selected Ids",
-              "description": "Currently selected item IDs",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
               }
             },
             "pageSize": {
@@ -189,18 +207,25 @@
               "description": "Number of items per page",
               "tier": "presentation"
             },
-            "subtitle": {
-              "type": "string",
-              "default": "",
-              "label": "Subtitle",
-              "description": "subtitle prop",
+            "columns": {
+              "type": "number",
+              "default": 3.0,
+              "label": "Columns",
+              "description": "columns prop",
               "tier": "presentation"
             },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state indicator",
+            "activeFilters": {
+              "type": "json",
+              "label": "Active Filters",
+              "description": "Active filters",
+              "tier": "presentation"
+            },
+            "pageProp": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Page",
+              "description": "Current page number",
+              "synonyms": "page",
               "tier": "presentation"
             }
           },

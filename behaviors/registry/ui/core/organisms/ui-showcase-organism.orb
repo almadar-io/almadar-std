@@ -13,6 +13,47 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "image",
+            "type": "object",
+            "properties": {
+              "alt": {
+                "name": "alt",
+                "type": "string",
+                "required": true
+              },
+              "src": {
+                "name": "src",
+                "type": "string",
+                "required": true
+              }
+            }
+          },
+          {
+            "name": "href",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "badge",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "accentColor",
+            "type": "string",
+            "default": ""
           }
         ]
       },
@@ -54,22 +95,22 @@
                     "render-ui",
                     "main",
                     {
-                      "columns": "@config.columns",
-                      "searchValue": "@config.searchValue",
-                      "heading": "@config.heading",
                       "error": "@config.error",
+                      "pageSize": "@config.pageSize",
+                      "columns": "@config.columns",
+                      "sortBy": "@config.sortBy",
+                      "activeFilters": "@config.activeFilters",
+                      "heading": "@config.heading",
+                      "isLoading": "@config.isLoading",
+                      "totalCount": "@config.totalCount",
+                      "subtitle": "@config.subtitle",
+                      "sortDirection": "@config.sortDirection",
+                      "className": "@config.className",
                       "selectedIds": "@config.selectedIds",
                       "type": "showcase-organism",
-                      "className": "@config.className",
-                      "sortBy": "@config.sortBy",
-                      "pageSize": "@config.pageSize",
-                      "page": "@config.pageProp",
-                      "isLoading": "@config.isLoading",
+                      "searchValue": "@config.searchValue",
                       "entity": "@entity",
-                      "sortDirection": "@config.sortDirection",
-                      "totalCount": "@config.totalCount",
-                      "activeFilters": "@config.activeFilters",
-                      "subtitle": "@config.subtitle"
+                      "page": "@config.pageProp"
                     }
                   ]
                 ]
@@ -77,65 +118,33 @@
             ]
           },
           "config": {
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
             "error": {
               "type": "ShowcaseOrganismError",
               "label": "Error",
               "description": "Error state (UiError)",
               "tier": "presentation",
               "properties": {
-                "name": {
-                  "name": "name",
+                "message": {
+                  "name": "message",
                   "type": "string",
-                  "required": false
+                  "required": true
                 },
                 "code": {
                   "name": "code",
                   "type": "string",
                   "required": false
                 },
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                },
                 "stack": {
                   "name": "stack",
                   "type": "string",
                   "required": false
+                },
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": false
                 }
               }
-            },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state indicator",
-              "tier": "presentation"
-            },
-            "sortBy": {
-              "type": "string",
-              "default": "",
-              "label": "Sort By",
-              "description": "Current sort field",
-              "tier": "presentation"
-            },
-            "sortDirection": {
-              "type": "string",
-              "default": "asc",
-              "label": "Sort Direction",
-              "description": "Current sort direction",
-              "tier": "presentation",
-              "values": [
-                "asc",
-                "desc"
-              ]
             },
             "searchValue": {
               "type": "string",
@@ -144,24 +153,11 @@
               "description": "Current search query value",
               "tier": "presentation"
             },
-            "totalCount": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Total Count",
-              "description": "Total number of items",
-              "tier": "presentation"
-            },
-            "activeFilters": {
-              "type": "json",
-              "label": "Active Filters",
-              "description": "Active filters",
-              "tier": "presentation"
-            },
-            "heading": {
+            "className": {
               "type": "string",
               "default": "",
-              "label": "Heading",
-              "description": "heading prop",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
               "tier": "presentation"
             },
             "pageProp": {
@@ -172,18 +168,18 @@
               "synonyms": "page",
               "tier": "presentation"
             },
-            "pageSize": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Page Size",
-              "description": "Number of items per page",
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
               "tier": "presentation"
             },
-            "subtitle": {
-              "type": "string",
-              "default": "",
-              "label": "Subtitle",
-              "description": "subtitle prop",
+            "totalCount": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Total Count",
+              "description": "Total number of items",
               "tier": "presentation"
             },
             "selectedIds": {
@@ -196,12 +192,57 @@
                 "type": "string"
               }
             },
+            "subtitle": {
+              "type": "string",
+              "default": "",
+              "label": "Subtitle",
+              "description": "subtitle prop",
+              "tier": "presentation"
+            },
+            "pageSize": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Page Size",
+              "description": "Number of items per page",
+              "tier": "presentation"
+            },
+            "activeFilters": {
+              "type": "json",
+              "label": "Active Filters",
+              "description": "Active filters",
+              "tier": "presentation"
+            },
+            "sortBy": {
+              "type": "string",
+              "default": "",
+              "label": "Sort By",
+              "description": "Current sort field",
+              "tier": "presentation"
+            },
             "columns": {
               "type": "number",
               "default": 3.0,
               "label": "Columns",
               "description": "columns prop",
               "tier": "presentation"
+            },
+            "heading": {
+              "type": "string",
+              "default": "",
+              "label": "Heading",
+              "description": "heading prop",
+              "tier": "presentation"
+            },
+            "sortDirection": {
+              "type": "string",
+              "default": "asc",
+              "label": "Sort Direction",
+              "description": "Current sort direction",
+              "tier": "presentation",
+              "values": [
+                "asc",
+                "desc"
+              ]
             }
           },
           "scope": "instance"

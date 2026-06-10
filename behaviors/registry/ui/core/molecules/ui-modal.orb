@@ -38,19 +38,46 @@
                   "type": "string"
                 }
               ]
+            },
+            {
+              "event": "OPEN",
+              "description": "Open the Modal.",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
             }
           ],
           "stateMachine": {
             "states": [
               {
-                "name": "idle",
+                "name": "closed",
                 "isInitial": true
+              },
+              {
+                "name": "open"
               }
             ],
             "events": [
               {
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "key": "OPEN",
+                "name": "Open",
+                "description": "Open the Modal.",
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "CLOSE",
@@ -67,28 +94,70 @@
             ],
             "transitions": [
               {
-                "from": "idle",
-                "to": "idle",
+                "from": "closed",
+                "to": "closed",
                 "event": "INIT",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "closeEvent": "CLOSE",
-                      "isOpen": "@config.isOpen",
-                      "onClose": "CLOSE",
-                      "size": "@config.size",
-                      "children": "@config.children",
-                      "showCloseButton": "@config.showCloseButton",
-                      "closeOnEscape": "@config.closeOnEscape",
+                      "type": "button",
+                      "action": "OPEN",
+                      "label": "Open Modal"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "closed",
+                "to": "open",
+                "event": "OPEN",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      "closeOnOverlayClick": "@config.closeOnOverlayClick",
                       "className": "@config.className",
+                      "closeOnEscape": "@config.closeOnEscape",
                       "swipeDownToClose": "@config.swipeDownToClose",
-                      "type": "modal",
                       "look": "@config.look",
-                      "title": "@config.title",
+                      "type": "modal",
                       "footer": "@config.footer",
-                      "closeOnOverlayClick": "@config.closeOnOverlayClick"
+                      "children": [
+                        {
+                          "content": "Sample content",
+                          "type": "text"
+                        }
+                      ],
+                      "closeEvent": "CLOSE",
+                      "title": "@config.title",
+                      "showCloseButton": "@config.showCloseButton",
+                      "onClose": "CLOSE",
+                      "isOpen": "@config.isOpen",
+                      "size": "@config.size"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "CLOSE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "label": "Open Modal",
+                      "type": "button",
+                      "action": "OPEN"
                     }
                   ]
                 ]
@@ -96,19 +165,12 @@
             ]
           },
           "config": {
-            "size": {
-              "type": "string",
-              "default": "md",
-              "label": "Size",
-              "description": "size prop",
-              "tier": "presentation",
-              "values": [
-                "sm",
-                "md",
-                "lg",
-                "xl",
-                "full"
-              ]
+            "showCloseButton": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Close Button",
+              "description": "showCloseButton prop",
+              "tier": "presentation"
             },
             "isOpen": {
               "type": "boolean",
@@ -117,24 +179,18 @@
               "description": "Whether the modal is open (defaults to true when rendered by slot wrapper)",
               "tier": "presentation"
             },
-            "footer": {
-              "type": "node",
-              "label": "Footer",
-              "description": "footer prop",
-              "tier": "presentation"
-            },
-            "title": {
+            "look": {
               "type": "string",
-              "default": "",
-              "label": "Title",
-              "description": "title prop",
-              "tier": "presentation"
-            },
-            "children": {
-              "type": "node",
-              "label": "Children",
-              "description": "Modal content (can be empty if using slot content)",
-              "tier": "presentation"
+              "default": "centered-card",
+              "label": "Look",
+              "description": "Layer 2 visual treatment — orthogonal to the semantic variant.",
+              "tier": "presentation",
+              "values": [
+                "centered-card",
+                "top-sheet",
+                "side-drawer",
+                "full-screen"
+              ]
             },
             "closeOnOverlayClick": {
               "type": "boolean",
@@ -143,18 +199,10 @@
               "description": "closeOnOverlayClick prop",
               "tier": "presentation"
             },
-            "showCloseButton": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Close Button",
-              "description": "showCloseButton prop",
-              "tier": "presentation"
-            },
-            "closeOnEscape": {
-              "type": "boolean",
-              "default": true,
-              "label": "Close On Escape",
-              "description": "closeOnEscape prop",
+            "footer": {
+              "type": "node",
+              "label": "Footer",
+              "description": "footer prop",
               "tier": "presentation"
             },
             "className": {
@@ -171,17 +219,32 @@
               "description": "Enable swipe-down-to-close on mobile bottom sheet (default: true)",
               "tier": "presentation"
             },
-            "look": {
+            "closeOnEscape": {
+              "type": "boolean",
+              "default": true,
+              "label": "Close On Escape",
+              "description": "closeOnEscape prop",
+              "tier": "presentation"
+            },
+            "title": {
               "type": "string",
-              "default": "centered-card",
-              "label": "Look",
-              "description": "Layer 2 visual treatment — orthogonal to the semantic variant.",
+              "default": "",
+              "label": "Title",
+              "description": "title prop",
+              "tier": "presentation"
+            },
+            "size": {
+              "type": "string",
+              "default": "md",
+              "label": "Size",
+              "description": "size prop",
               "tier": "presentation",
               "values": [
-                "centered-card",
-                "top-sheet",
-                "side-drawer",
-                "full-screen"
+                "sm",
+                "md",
+                "lg",
+                "xl",
+                "full"
               ]
             }
           },

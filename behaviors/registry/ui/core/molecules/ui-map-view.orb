@@ -223,20 +223,20 @@
                     "render-ui",
                     "main",
                     {
-                      "showAttribution": "@config.showAttribution",
-                      "height": "@config.height",
-                      "className": "@config.className",
-                      "type": "map-view",
-                      "centerLat": "@config.centerLat",
-                      "onMapClick": "MAP_CLICK",
-                      "centerLng": "@config.centerLng",
-                      "zoom": "@config.zoom",
                       "markerClickEvent": "MARKER_CLICK",
-                      "routes": "@config.routes",
-                      "onMarkerClick": "MARKER_CLICK",
-                      "markers": "@config.markers",
+                      "centerLat": "@config.centerLat",
                       "mapClickEvent": "MAP_CLICK",
-                      "showClickedPin": "@config.showClickedPin"
+                      "showAttribution": "@config.showAttribution",
+                      "showClickedPin": "@config.showClickedPin",
+                      "type": "map-view",
+                      "className": "@config.className",
+                      "height": "@config.height",
+                      "zoom": "@config.zoom",
+                      "markers": "@config.markers",
+                      "routes": "@config.routes",
+                      "centerLng": "@config.centerLng",
+                      "onMarkerClick": "MARKER_CLICK",
+                      "onMapClick": "MAP_CLICK"
                     }
                   ]
                 ]
@@ -244,6 +244,13 @@
             ]
           },
           "config": {
+            "showAttribution": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Attribution",
+              "description": "Show attribution (default true)",
+              "tier": "presentation"
+            },
             "className": {
               "type": "string",
               "default": "",
@@ -251,11 +258,55 @@
               "description": "Additional CSS classes",
               "tier": "presentation"
             },
+            "markers": {
+              "type": "[MapViewMarkersItem]",
+              "default": [],
+              "label": "Markers",
+              "description": "Array of markers to display",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "lat": {
+                    "name": "lat",
+                    "type": "number",
+                    "required": true
+                  },
+                  "lng": {
+                    "name": "lng",
+                    "type": "number",
+                    "required": true
+                  },
+                  "category": {
+                    "name": "category",
+                    "type": "string",
+                    "required": false
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
             "showClickedPin": {
               "type": "boolean",
               "default": false,
               "label": "Show Clicked Pin",
               "description": "Whether to show a pin at the clicked location",
+              "tier": "presentation"
+            },
+            "zoom": {
+              "type": "number",
+              "default": 13.0,
+              "label": "Zoom",
+              "description": "Zoom level (1-18, default 13)",
               "tier": "presentation"
             },
             "routes": {
@@ -267,6 +318,31 @@
               "items": {
                 "type": "object",
                 "properties": {
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
+                  "weight": {
+                    "name": "weight",
+                    "type": "number",
+                    "required": false
+                  },
+                  "opacity": {
+                    "name": "opacity",
+                    "type": "number",
+                    "required": false
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  "color": {
+                    "name": "color",
+                    "type": "string",
+                    "required": false
+                  },
                   "waypoints": {
                     "name": "waypoints",
                     "type": "array",
@@ -287,79 +363,10 @@
                       }
                     }
                   },
-                  "opacity": {
-                    "name": "opacity",
-                    "type": "number",
-                    "required": false
-                  },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
                   "dashArray": {
                     "name": "dashArray",
                     "type": "string",
                     "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "color": {
-                    "name": "color",
-                    "type": "string",
-                    "required": false
-                  },
-                  "weight": {
-                    "name": "weight",
-                    "type": "number",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "height": {
-              "type": "string",
-              "default": "400px",
-              "label": "Height",
-              "description": "Height of the map container (default '400px')",
-              "tier": "presentation"
-            },
-            "markers": {
-              "type": "[MapViewMarkersItem]",
-              "default": [],
-              "label": "Markers",
-              "description": "Array of markers to display",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "category": {
-                    "name": "category",
-                    "type": "string",
-                    "required": false
-                  },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  "lng": {
-                    "name": "lng",
-                    "type": "number",
-                    "required": true
-                  },
-                  "lat": {
-                    "name": "lat",
-                    "type": "number",
-                    "required": true
                   }
                 }
               }
@@ -371,13 +378,6 @@
               "description": "Map center longitude",
               "tier": "presentation"
             },
-            "zoom": {
-              "type": "number",
-              "default": 13.0,
-              "label": "Zoom",
-              "description": "Zoom level (1-18, default 13)",
-              "tier": "presentation"
-            },
             "centerLat": {
               "type": "number",
               "default": 51.505,
@@ -385,11 +385,11 @@
               "description": "Map center latitude",
               "tier": "presentation"
             },
-            "showAttribution": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Attribution",
-              "description": "Show attribution (default true)",
+            "height": {
+              "type": "string",
+              "default": "400px",
+              "label": "Height",
+              "description": "Height of the map container (default '400px')",
               "tier": "presentation"
             }
           },

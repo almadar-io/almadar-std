@@ -162,36 +162,41 @@
                     "render-ui",
                     "main",
                     {
-                      "fields": "@config.fields",
-                      "mode": "@config.mode",
-                      "cancelLabel": "@config.cancelLabel",
-                      "title": "@config.title",
-                      "submitEvent": "SUBMIT",
+                      "initialData": "@config.initialData",
                       "gap": "@config.gap",
-                      "evaluationContext": "@config.evaluationContext",
-                      "showCancel": "@config.showCancel",
-                      "repeatable": "@config.repeatable",
-                      "error": "@config.error",
-                      "cancelEvent": "CANCEL",
-                      "showSubmit": "@config.showSubmit",
                       "submitLabel": "@config.submitLabel",
-                      "isLoading": "@config.isLoading",
-                      "onFieldChange": "FIELD_CHANGE",
-                      "configPath": "@config.configPath",
-                      "sections": "@config.sections",
-                      "relationsLoading": "@config.relationsLoading",
-                      "violationTriggers": "@config.violationTriggers",
-                      "children": "@config.children",
+                      "showCancel": "@config.showCancel",
+                      "fields": "@config.fields",
+                      "submitEvent": "SUBMIT",
                       "relationsData": "@config.relationsData",
-                      "conditionalFields": "@config.conditionalFields",
+                      "evaluationContext": "@config.evaluationContext",
+                      "onFieldChange": "FIELD_CHANGE",
                       "layout": "@config.layout",
+                      "error": "@config.error",
+                      "mode": "@config.mode",
+                      "entity": "@entity",
+                      "violationTriggers": "@config.violationTriggers",
+                      "cancelLabel": "@config.cancelLabel",
+                      "showSubmit": "@config.showSubmit",
+                      "sections": "@config.sections",
+                      "configPath": "@config.configPath",
+                      "relationsLoading": "@config.relationsLoading",
+                      "conditionalFields": "@config.conditionalFields",
+                      "isLoading": "@config.isLoading",
                       "onSubmit": "@config.onSubmit",
+                      "onCancel": "@config.onCancel",
+                      "cancelEvent": "CANCEL",
+                      "repeatable": "@config.repeatable",
+                      "children": [
+                        {
+                          "type": "text",
+                          "content": "Sample content"
+                        }
+                      ],
                       "className": "@config.className",
                       "hiddenCalculations": "@config.hiddenCalculations",
-                      "onCancel": "@config.onCancel",
-                      "entity": "@entity",
                       "type": "form",
-                      "initialData": "@config.initialData"
+                      "title": "@config.title"
                     }
                   ]
                 ]
@@ -199,83 +204,54 @@
             ]
           },
           "config": {
-            "mode": {
+            "title": {
               "type": "string",
-              "default": "create",
-              "label": "Mode",
-              "description": "Form mode — 'create' for new records, 'edit' for updating existing. Accepts `string` so schema-driven callers (whose `config.mode` is typed as `string` per the trait's declared config block) compile cleanly. The runtime treats anything other than 'edit' as 'create'.",
-              "tier": "presentation",
-              "values": [
-                "create",
-                "edit"
-              ]
+              "default": "",
+              "label": "Title",
+              "description": "Form title (used by ModalSlot to extract title)",
+              "tier": "presentation"
             },
-            "relationsLoading": {
-              "type": "Map<string,boolean>",
+            "relationsData": {
+              "type": "Map<string,[FormRelationsDataValueItem]>",
               "default": {},
-              "label": "Relations Loading",
-              "description": "Loading state for relation data: { fieldName: boolean }",
+              "label": "Relations Data",
+              "description": "Relation data props",
               "tier": "presentation",
               "items": {
-                "type": "boolean"
-              }
-            },
-            "children": {
-              "type": "node",
-              "label": "Children",
-              "description": "Form fields (traditional React children)",
-              "tier": "presentation"
-            },
-            "cancelLabel": {
-              "type": "string",
-              "default": "",
-              "label": "Cancel Label",
-              "description": "Cancel button label (if provided, shows cancel button)",
-              "tier": "presentation"
-            },
-            "onCancel": {
-              "type": "string",
-              "default": "",
-              "label": "On Cancel",
-              "description": "Cancel event name for trait dispatch (emitted via eventBus as UI:{onCancel})",
-              "tier": "presentation"
-            },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state",
-              "tier": "presentation"
-            },
-            "hiddenCalculations": {
-              "type": "[FormHiddenCalculationsItem]",
-              "default": [],
-              "label": "Hidden Calculations",
-              "description": "Hidden calculations that emit GLOBAL_VARIABLE_SET on field change (boolean true means enabled but config loaded separately)",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "expression": {
-                    "name": "expression",
-                    "type": "object",
-                    "required": true
-                  },
-                  "triggerFields": {
-                    "name": "triggerFields",
-                    "type": "array",
-                    "required": true,
-                    "items": {
-                      "type": "string"
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "name": "value",
+                      "type": "string",
+                      "required": true
+                    },
+                    "disabled": {
+                      "name": "disabled",
+                      "type": "boolean",
+                      "required": false
+                    },
+                    "label": {
+                      "name": "label",
+                      "type": "string",
+                      "required": true
+                    },
+                    "description": {
+                      "name": "description",
+                      "type": "string",
+                      "required": false
                     }
-                  },
-                  "variableName": {
-                    "name": "variableName",
-                    "type": "string",
-                    "required": true
                   }
                 }
               }
+            },
+            "submitLabel": {
+              "type": "string",
+              "default": "",
+              "label": "Submit Label",
+              "description": "Submit button label",
+              "tier": "presentation"
             },
             "showSubmit": {
               "type": "boolean",
@@ -284,33 +260,12 @@
               "description": "Show submit button (defaults to true for schema forms). Set false when a parent atom owns the submit action externally (e.g. wizard footers).",
               "tier": "presentation"
             },
-            "evaluationContext": {
-              "type": "FormEvaluationContext",
-              "label": "Evaluation Context",
-              "description": "Context for S-expression evaluation - accepts flexible types from generated code",
-              "tier": "presentation",
-              "properties": {
-                "entity": {
-                  "name": "entity",
-                  "type": "string",
-                  "required": false
-                },
-                "globalVariables": {
-                  "name": "globalVariables",
-                  "type": "string",
-                  "required": true
-                },
-                "formValues": {
-                  "name": "formValues",
-                  "type": "string",
-                  "required": true
-                },
-                "localVariables": {
-                  "name": "localVariables",
-                  "type": "string",
-                  "required": false
-                }
-              }
+            "onCancel": {
+              "type": "string",
+              "default": "",
+              "label": "On Cancel",
+              "description": "Cancel event name for trait dispatch (emitted via eventBus as UI:{onCancel})",
+              "tier": "presentation"
             },
             "layout": {
               "type": "string",
@@ -324,90 +279,52 @@
                 "inline"
               ]
             },
-            "gap": {
-              "type": "string",
-              "default": "md",
-              "label": "Gap",
-              "description": "Gap between fields",
-              "tier": "presentation",
-              "values": [
-                "sm",
-                "md",
-                "lg"
-              ]
-            },
-            "repeatable": {
-              "type": "boolean",
-              "default": false,
-              "label": "Repeatable",
-              "description": "Whether the form supports repeatable entries",
-              "tier": "presentation"
-            },
-            "configPath": {
-              "type": "string",
-              "default": "",
-              "label": "Config Path",
-              "description": "Config path for form configuration (schema-driven)",
-              "tier": "presentation"
-            },
-            "conditionalFields": {
-              "type": "Map<string,SExpr>",
-              "default": {},
-              "label": "Conditional Fields",
-              "description": "Inspection form extensions",
-              "tier": "presentation",
-              "items": {
-                "type": "object"
-              }
-            },
-            "relationsData": {
-              "type": "Map<string,[FormRelationsDataValueItem]>",
-              "default": {},
-              "label": "Relations Data",
-              "description": "Relation data props",
-              "tier": "presentation",
-              "items": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "description": {
-                      "name": "description",
-                      "type": "string",
-                      "required": false
-                    },
-                    "value": {
-                      "name": "value",
-                      "type": "string",
-                      "required": true
-                    },
-                    "label": {
-                      "name": "label",
-                      "type": "string",
-                      "required": true
-                    },
-                    "disabled": {
-                      "name": "disabled",
-                      "type": "boolean",
-                      "required": false
-                    }
-                  }
-                }
-              }
-            },
-            "title": {
-              "type": "string",
-              "default": "",
-              "label": "Title",
-              "description": "Form title (used by ModalSlot to extract title)",
-              "tier": "presentation"
-            },
             "showCancel": {
               "type": "boolean",
               "default": false,
               "label": "Show Cancel",
               "description": "Show cancel button (defaults to true for schema forms)",
               "tier": "presentation"
+            },
+            "relationsLoading": {
+              "type": "Map<string,boolean>",
+              "default": {},
+              "label": "Relations Loading",
+              "description": "Loading state for relation data: { fieldName: boolean }",
+              "tier": "presentation",
+              "items": {
+                "type": "boolean"
+              }
+            },
+            "hiddenCalculations": {
+              "type": "[FormHiddenCalculationsItem]",
+              "default": [],
+              "label": "Hidden Calculations",
+              "description": "Hidden calculations that emit GLOBAL_VARIABLE_SET on field change (boolean true means enabled but config loaded separately)",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "variableName": {
+                    "name": "variableName",
+                    "type": "string",
+                    "required": true
+                  },
+                  "expression": {
+                    "name": "expression",
+                    "type": "object",
+                    "required": true
+                  },
+                  "triggerFields": {
+                    "name": "triggerFields",
+                    "type": "array",
+                    "required": true,
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
             },
             "violationTriggers": {
               "type": "[FormViolationTriggersItem]",
@@ -428,6 +345,21 @@
                     "type": "object",
                     "required": true,
                     "properties": {
+                      "message": {
+                        "name": "message",
+                        "type": "string",
+                        "required": true
+                      },
+                      "law": {
+                        "name": "law",
+                        "type": "string",
+                        "required": true
+                      },
+                      "article": {
+                        "name": "article",
+                        "type": "string",
+                        "required": true
+                      },
                       "actionType": {
                         "name": "actionType",
                         "type": "string",
@@ -437,217 +369,11 @@
                           "admin",
                           "penalty"
                         ]
-                      },
-                      "law": {
-                        "name": "law",
-                        "type": "string",
-                        "required": true
-                      },
-                      "message": {
-                        "name": "message",
-                        "type": "string",
-                        "required": true
-                      },
-                      "article": {
-                        "name": "article",
-                        "type": "string",
-                        "required": true
                       }
                     }
                   },
                   "fieldId": {
                     "name": "fieldId",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "error": {
-              "type": "FormError",
-              "label": "Error",
-              "description": "Error state",
-              "tier": "presentation",
-              "properties": {
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                },
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                }
-              }
-            },
-            "onSubmit": {
-              "type": "string",
-              "default": "",
-              "label": "On Submit",
-              "description": "Submit event name for trait dispatch (emitted via eventBus as UI:{onSubmit})",
-              "tier": "presentation"
-            },
-            "submitLabel": {
-              "type": "string",
-              "default": "",
-              "label": "Submit Label",
-              "description": "Submit button label",
-              "tier": "presentation"
-            },
-            "initialData": {
-              "type": "json",
-              "label": "Initial Data",
-              "description": "Initial form data",
-              "tier": "presentation"
-            },
-            "fields": {
-              "type": "[FormFieldsItem]",
-              "default": [],
-              "label": "Fields",
-              "description": "Fields definition (schema format) - accepts readonly for generated const arrays",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "min": {
-                    "name": "min",
-                    "type": "number",
-                    "required": false
-                  },
-                  "disabled": {
-                    "name": "disabled",
-                    "type": "boolean",
-                    "required": false
-                  },
-                  "readonly": {
-                    "name": "readonly",
-                    "type": "boolean",
-                    "required": false
-                  },
-                  "validation": {
-                    "name": "validation",
-                    "type": "string",
-                    "required": false
-                  },
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": false
-                  },
-                  "values": {
-                    "name": "values",
-                    "type": "array",
-                    "required": false,
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "pattern": {
-                    "name": "pattern",
-                    "type": "string",
-                    "required": false
-                  },
-                  "field": {
-                    "name": "field",
-                    "type": "string",
-                    "required": false
-                  },
-                  "inputType": {
-                    "name": "inputType",
-                    "type": "string",
-                    "required": false
-                  },
-                  "options": {
-                    "name": "options",
-                    "type": "array",
-                    "required": false,
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "value": {
-                          "name": "value",
-                          "type": "string",
-                          "required": true
-                        },
-                        "label": {
-                          "name": "label",
-                          "type": "string",
-                          "required": true
-                        }
-                      }
-                    }
-                  },
-                  "placeholder": {
-                    "name": "placeholder",
-                    "type": "string",
-                    "required": false
-                  },
-                  "relation": {
-                    "name": "relation",
-                    "type": "object",
-                    "required": false,
-                    "properties": {
-                      "entity": {
-                        "name": "entity",
-                        "type": "string",
-                        "required": true
-                      },
-                      "displayField": {
-                        "name": "displayField",
-                        "type": "string",
-                        "required": false
-                      },
-                      "cardinality": {
-                        "name": "cardinality",
-                        "type": "string",
-                        "required": false,
-                        "values": [
-                          "one",
-                          "many"
-                        ]
-                      }
-                    }
-                  },
-                  "required": {
-                    "name": "required",
-                    "type": "boolean",
-                    "required": false
-                  },
-                  "defaultValue": {
-                    "name": "defaultValue",
-                    "type": "string",
-                    "required": false
-                  },
-                  "max": {
-                    "name": "max",
-                    "type": "number",
-                    "required": false
-                  },
-                  "type": {
-                    "name": "type",
                     "type": "string",
                     "required": false
                   }
@@ -663,6 +389,21 @@
               "items": {
                 "type": "object",
                 "properties": {
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  "title": {
+                    "name": "title",
+                    "type": "string",
+                    "required": true
+                  },
+                  "condition": {
+                    "name": "condition",
+                    "type": "object",
+                    "required": false
+                  },
                   "fields": {
                     "name": "fields",
                     "type": "array",
@@ -672,6 +413,41 @@
                       "properties": {
                         "required": {
                           "name": "required",
+                          "type": "boolean",
+                          "required": false
+                        },
+                        "max": {
+                          "name": "max",
+                          "type": "number",
+                          "required": false
+                        },
+                        "name": {
+                          "name": "name",
+                          "type": "string",
+                          "required": false
+                        },
+                        "options": {
+                          "name": "options",
+                          "type": "array",
+                          "required": false,
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "value": {
+                                "name": "value",
+                                "type": "string",
+                                "required": true
+                              },
+                              "label": {
+                                "name": "label",
+                                "type": "string",
+                                "required": true
+                              }
+                            }
+                          }
+                        },
+                        "disabled": {
+                          "name": "disabled",
                           "type": "boolean",
                           "required": false
                         },
@@ -685,11 +461,6 @@
                               "type": "string",
                               "required": false
                             },
-                            "entity": {
-                              "name": "entity",
-                              "type": "string",
-                              "required": true
-                            },
                             "cardinality": {
                               "name": "cardinality",
                               "type": "string",
@@ -698,41 +469,11 @@
                                 "one",
                                 "many"
                               ]
-                            }
-                          }
-                        },
-                        "field": {
-                          "name": "field",
-                          "type": "string",
-                          "required": false
-                        },
-                        "min": {
-                          "name": "min",
-                          "type": "number",
-                          "required": false
-                        },
-                        "label": {
-                          "name": "label",
-                          "type": "string",
-                          "required": false
-                        },
-                        "options": {
-                          "name": "options",
-                          "type": "array",
-                          "required": false,
-                          "items": {
-                            "type": "object",
-                            "properties": {
-                              "label": {
-                                "name": "label",
-                                "type": "string",
-                                "required": true
-                              },
-                              "value": {
-                                "name": "value",
-                                "type": "string",
-                                "required": true
-                              }
+                            },
+                            "entity": {
+                              "name": "entity",
+                              "type": "string",
+                              "required": true
                             }
                           }
                         },
@@ -741,13 +482,8 @@
                           "type": "string",
                           "required": false
                         },
-                        "validation": {
-                          "name": "validation",
-                          "type": "string",
-                          "required": false
-                        },
-                        "max": {
-                          "name": "max",
+                        "min": {
+                          "name": "min",
                           "type": "number",
                           "required": false
                         },
@@ -756,28 +492,8 @@
                           "type": "string",
                           "required": false
                         },
-                        "name": {
-                          "name": "name",
-                          "type": "string",
-                          "required": false
-                        },
-                        "defaultValue": {
-                          "name": "defaultValue",
-                          "type": "string",
-                          "required": false
-                        },
-                        "readonly": {
-                          "name": "readonly",
-                          "type": "boolean",
-                          "required": false
-                        },
                         "pattern": {
                           "name": "pattern",
-                          "type": "string",
-                          "required": false
-                        },
-                        "type": {
-                          "name": "type",
                           "type": "string",
                           "required": false
                         },
@@ -789,33 +505,316 @@
                             "type": "string"
                           }
                         },
-                        "disabled": {
-                          "name": "disabled",
+                        "validation": {
+                          "name": "validation",
+                          "type": "string",
+                          "required": false
+                        },
+                        "label": {
+                          "name": "label",
+                          "type": "string",
+                          "required": false
+                        },
+                        "readonly": {
+                          "name": "readonly",
                           "type": "boolean",
+                          "required": false
+                        },
+                        "type": {
+                          "name": "type",
+                          "type": "string",
+                          "required": false
+                        },
+                        "defaultValue": {
+                          "name": "defaultValue",
+                          "type": "string",
+                          "required": false
+                        },
+                        "field": {
+                          "name": "field",
+                          "type": "string",
                           "required": false
                         }
                       }
                     }
                   },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  "condition": {
-                    "name": "condition",
-                    "type": "object",
-                    "required": false
-                  },
-                  "title": {
-                    "name": "title",
-                    "type": "string",
-                    "required": true
-                  },
                   "collapsible": {
                     "name": "collapsible",
                     "type": "boolean",
                     "required": false
+                  }
+                }
+              }
+            },
+            "configPath": {
+              "type": "string",
+              "default": "",
+              "label": "Config Path",
+              "description": "Config path for form configuration (schema-driven)",
+              "tier": "presentation"
+            },
+            "onSubmit": {
+              "type": "string",
+              "default": "",
+              "label": "On Submit",
+              "description": "Submit event name for trait dispatch (emitted via eventBus as UI:{onSubmit})",
+              "tier": "presentation"
+            },
+            "initialData": {
+              "type": "json",
+              "label": "Initial Data",
+              "description": "Initial form data",
+              "tier": "presentation"
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state",
+              "tier": "presentation"
+            },
+            "conditionalFields": {
+              "type": "Map<string,SExpr>",
+              "default": {},
+              "label": "Conditional Fields",
+              "description": "Inspection form extensions",
+              "tier": "presentation",
+              "items": {
+                "type": "object"
+              }
+            },
+            "mode": {
+              "type": "string",
+              "default": "create",
+              "label": "Mode",
+              "description": "Form mode — 'create' for new records, 'edit' for updating existing. Accepts `string` so schema-driven callers (whose `config.mode` is typed as `string` per the trait's declared config block) compile cleanly. The runtime treats anything other than 'edit' as 'create'.",
+              "tier": "presentation",
+              "values": [
+                "create",
+                "edit"
+              ]
+            },
+            "error": {
+              "type": "FormError",
+              "label": "Error",
+              "description": "Error state",
+              "tier": "presentation",
+              "properties": {
+                "stack": {
+                  "name": "stack",
+                  "type": "string",
+                  "required": false
+                },
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                },
+                "code": {
+                  "name": "code",
+                  "type": "string",
+                  "required": false
+                },
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": false
+                }
+              }
+            },
+            "repeatable": {
+              "type": "boolean",
+              "default": false,
+              "label": "Repeatable",
+              "description": "Whether the form supports repeatable entries",
+              "tier": "presentation"
+            },
+            "gap": {
+              "type": "string",
+              "default": "md",
+              "label": "Gap",
+              "description": "Gap between fields",
+              "tier": "presentation",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            },
+            "cancelLabel": {
+              "type": "string",
+              "default": "",
+              "label": "Cancel Label",
+              "description": "Cancel button label (if provided, shows cancel button)",
+              "tier": "presentation"
+            },
+            "evaluationContext": {
+              "type": "FormEvaluationContext",
+              "label": "Evaluation Context",
+              "description": "Context for S-expression evaluation - accepts flexible types from generated code",
+              "tier": "presentation",
+              "properties": {
+                "globalVariables": {
+                  "name": "globalVariables",
+                  "type": "string",
+                  "required": true
+                },
+                "entity": {
+                  "name": "entity",
+                  "type": "string",
+                  "required": false
+                },
+                "formValues": {
+                  "name": "formValues",
+                  "type": "string",
+                  "required": true
+                },
+                "localVariables": {
+                  "name": "localVariables",
+                  "type": "string",
+                  "required": false
+                }
+              }
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "fields": {
+              "type": "[FormFieldsItem]",
+              "default": [],
+              "label": "Fields",
+              "description": "Fields definition (schema format) - accepts readonly for generated const arrays",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "name": "type",
+                    "type": "string",
+                    "required": false
+                  },
+                  "max": {
+                    "name": "max",
+                    "type": "number",
+                    "required": false
+                  },
+                  "readonly": {
+                    "name": "readonly",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
+                  "field": {
+                    "name": "field",
+                    "type": "string",
+                    "required": false
+                  },
+                  "disabled": {
+                    "name": "disabled",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "required": {
+                    "name": "required",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": false
+                  },
+                  "options": {
+                    "name": "options",
+                    "type": "array",
+                    "required": false,
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "label": {
+                          "name": "label",
+                          "type": "string",
+                          "required": true
+                        },
+                        "value": {
+                          "name": "value",
+                          "type": "string",
+                          "required": true
+                        }
+                      }
+                    }
+                  },
+                  "validation": {
+                    "name": "validation",
+                    "type": "string",
+                    "required": false
+                  },
+                  "min": {
+                    "name": "min",
+                    "type": "number",
+                    "required": false
+                  },
+                  "pattern": {
+                    "name": "pattern",
+                    "type": "string",
+                    "required": false
+                  },
+                  "inputType": {
+                    "name": "inputType",
+                    "type": "string",
+                    "required": false
+                  },
+                  "values": {
+                    "name": "values",
+                    "type": "array",
+                    "required": false,
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "placeholder": {
+                    "name": "placeholder",
+                    "type": "string",
+                    "required": false
+                  },
+                  "defaultValue": {
+                    "name": "defaultValue",
+                    "type": "string",
+                    "required": false
+                  },
+                  "relation": {
+                    "name": "relation",
+                    "type": "object",
+                    "required": false,
+                    "properties": {
+                      "displayField": {
+                        "name": "displayField",
+                        "type": "string",
+                        "required": false
+                      },
+                      "entity": {
+                        "name": "entity",
+                        "type": "string",
+                        "required": true
+                      },
+                      "cardinality": {
+                        "name": "cardinality",
+                        "type": "string",
+                        "required": false,
+                        "values": [
+                          "one",
+                          "many"
+                        ]
+                      }
+                    }
                   }
                 }
               }

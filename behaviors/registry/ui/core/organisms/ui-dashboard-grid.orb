@@ -55,21 +55,21 @@
                     "main",
                     {
                       "entity": "@entity",
-                      "type": "dashboard-grid",
                       "sortBy": "@config.sortBy",
-                      "page": "@config.pageProp",
+                      "cells": "@config.cells",
+                      "sortDirection": "@config.sortDirection",
                       "pageSize": "@config.pageSize",
+                      "page": "@config.pageProp",
+                      "gap": "@config.gap",
                       "error": "@config.error",
                       "activeFilters": "@config.activeFilters",
                       "totalCount": "@config.totalCount",
-                      "isLoading": "@config.isLoading",
+                      "columns": "@config.columns",
+                      "type": "dashboard-grid",
                       "searchValue": "@config.searchValue",
                       "className": "@config.className",
-                      "gap": "@config.gap",
-                      "cells": "@config.cells",
-                      "selectedIds": "@config.selectedIds",
-                      "columns": "@config.columns",
-                      "sortDirection": "@config.sortDirection"
+                      "isLoading": "@config.isLoading",
+                      "selectedIds": "@config.selectedIds"
                     }
                   ]
                 ]
@@ -77,111 +77,18 @@
             ]
           },
           "config": {
-            "searchValue": {
+            "sortBy": {
               "type": "string",
               "default": "",
-              "label": "Search Value",
-              "description": "Current search query value",
+              "label": "Sort By",
+              "description": "Current sort field",
               "tier": "presentation"
             },
-            "totalCount": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Total Count",
-              "description": "Total number of items",
-              "tier": "presentation"
-            },
-            "error": {
-              "type": "DashboardGridError",
-              "label": "Error",
-              "description": "Error state (UiError)",
-              "tier": "presentation",
-              "properties": {
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                },
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                }
-              }
-            },
-            "cells": {
-              "type": "[DashboardGridCellsItem]",
-              "default": [
-                {
-                  "id": "Id",
-                  "rowSpan": 1.0,
-                  "content": "Content",
-                  "colSpan": 1.0
-                }
-              ],
-              "label": "Cells",
-              "description": "Cell definitions",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "colSpan": {
-                    "name": "colSpan",
-                    "type": "number",
-                    "required": false
-                  },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": false
-                  },
-                  "rowSpan": {
-                    "name": "rowSpan",
-                    "type": "number",
-                    "required": false
-                  },
-                  "content": {
-                    "name": "content",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state indicator",
-              "tier": "presentation"
-            },
-            "gap": {
+            "className": {
               "type": "string",
-              "default": "md",
-              "label": "Gap",
-              "description": "Gap between cells",
-              "tier": "presentation",
-              "values": [
-                "sm",
-                "md",
-                "lg"
-              ]
-            },
-            "columns": {
-              "type": "number",
-              "default": 3.0,
-              "label": "Columns",
-              "description": "Number of columns",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
               "tier": "presentation"
             },
             "sortDirection": {
@@ -194,28 +101,6 @@
                 "asc",
                 "desc"
               ]
-            },
-            "sortBy": {
-              "type": "string",
-              "default": "",
-              "label": "Sort By",
-              "description": "Current sort field",
-              "tier": "presentation"
-            },
-            "pageProp": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Page",
-              "description": "Current page number",
-              "synonyms": "page",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
             },
             "pageSize": {
               "type": "number",
@@ -230,6 +115,95 @@
               "description": "Active filters",
               "tier": "presentation"
             },
+            "pageProp": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Page",
+              "description": "Current page number",
+              "synonyms": "page",
+              "tier": "presentation"
+            },
+            "totalCount": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Total Count",
+              "description": "Total number of items",
+              "tier": "presentation"
+            },
+            "cells": {
+              "type": "[DashboardGridCellsItem]",
+              "default": [
+                {
+                  "rowSpan": 1.0,
+                  "colSpan": 1.0,
+                  "content": "Content",
+                  "id": "Id"
+                }
+              ],
+              "label": "Cells",
+              "description": "Cell definitions",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "rowSpan": {
+                    "name": "rowSpan",
+                    "type": "number",
+                    "required": false
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": false
+                  },
+                  "content": {
+                    "name": "content",
+                    "type": "string",
+                    "required": false
+                  },
+                  "colSpan": {
+                    "name": "colSpan",
+                    "type": "number",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "error": {
+              "type": "DashboardGridError",
+              "label": "Error",
+              "description": "Error state (UiError)",
+              "tier": "presentation",
+              "properties": {
+                "code": {
+                  "name": "code",
+                  "type": "string",
+                  "required": false
+                },
+                "stack": {
+                  "name": "stack",
+                  "type": "string",
+                  "required": false
+                },
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": false
+                },
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                }
+              }
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
+              "tier": "presentation"
+            },
             "selectedIds": {
               "type": "[string]",
               "default": [],
@@ -239,6 +213,32 @@
               "items": {
                 "type": "string"
               }
+            },
+            "columns": {
+              "type": "number",
+              "default": 3.0,
+              "label": "Columns",
+              "description": "Number of columns",
+              "tier": "presentation"
+            },
+            "searchValue": {
+              "type": "string",
+              "default": "",
+              "label": "Search Value",
+              "description": "Current search query value",
+              "tier": "presentation"
+            },
+            "gap": {
+              "type": "string",
+              "default": "md",
+              "label": "Gap",
+              "description": "Gap between cells",
+              "tier": "presentation",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
             }
           },
           "scope": "instance"

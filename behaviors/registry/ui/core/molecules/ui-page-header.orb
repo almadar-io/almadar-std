@@ -104,22 +104,27 @@
                     "render-ui",
                     "main",
                     {
-                      "isLoading": "@config.isLoading",
-                      "onTabChange": "TAB_CHANGE",
-                      "backEvent": "BACK",
-                      "type": "page-header",
-                      "subtitle": "@config.subtitle",
-                      "activeTab": "@config.activeTab",
-                      "className": "@config.className",
-                      "error": "@config.error",
-                      "actions": "@config.actions",
                       "status": "@config.status",
+                      "actions": "@config.actions",
+                      "isLoading": "@config.isLoading",
+                      "type": "page-header",
+                      "backEvent": "BACK",
                       "tabs": "@config.tabs",
-                      "children": "@config.children",
                       "title": "@config.title",
-                      "entity": "PageHeaderItem",
+                      "onTabChange": "TAB_CHANGE",
+                      "className": "@config.className",
+                      "showBack": "@config.showBack",
+                      "subtitle": "@config.subtitle",
                       "breadcrumbs": "@config.breadcrumbs",
-                      "showBack": "@config.showBack"
+                      "children": [
+                        {
+                          "type": "text",
+                          "content": "Sample content"
+                        }
+                      ],
+                      "activeTab": "@config.activeTab",
+                      "entity": "PageHeaderItem",
+                      "error": "@config.error"
                     }
                   ]
                 ]
@@ -127,12 +132,47 @@
             ]
           },
           "config": {
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "className prop",
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
               "tier": "presentation"
+            },
+            "showBack": {
+              "type": "boolean",
+              "default": false,
+              "label": "Show Back",
+              "description": "Show back button",
+              "tier": "presentation"
+            },
+            "error": {
+              "type": "PageHeaderError",
+              "label": "Error",
+              "description": "Error state",
+              "tier": "presentation",
+              "properties": {
+                "code": {
+                  "name": "code",
+                  "type": "string",
+                  "required": false
+                },
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": false
+                },
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                },
+                "stack": {
+                  "name": "stack",
+                  "type": "string",
+                  "required": false
+                }
+              }
             },
             "tabs": {
               "type": "[PageHeaderTabsItem]",
@@ -148,18 +188,31 @@
                     "type": "string",
                     "required": true
                   },
-                  "count": {
-                    "name": "count",
-                    "type": "number",
-                    "required": false
-                  },
                   "value": {
                     "name": "value",
                     "type": "string",
                     "required": true
+                  },
+                  "count": {
+                    "name": "count",
+                    "type": "number",
+                    "required": false
                   }
                 }
               }
+            },
+            "title": {
+              "type": "json",
+              "label": "Title",
+              "description": "Page title - accepts unknown to handle generated code accessing dynamic entity data",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "className prop",
+              "tier": "presentation"
             },
             "breadcrumbs": {
               "type": "[PageHeaderBreadcrumbsItem]",
@@ -183,112 +236,11 @@
                 }
               }
             },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state indicator",
-              "tier": "presentation"
-            },
-            "actions": {
-              "type": "[PageHeaderActionsItem]",
-              "default": [],
-              "label": "Actions",
-              "description": "Actions array - first action with variant='primary' (or first action) is the main action",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "loading": {
-                    "name": "loading",
-                    "type": "boolean",
-                    "required": false
-                  },
-                  "disabled": {
-                    "name": "disabled",
-                    "type": "boolean",
-                    "required": false
-                  },
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "primary",
-                      "secondary",
-                      "ghost",
-                      "danger"
-                    ]
-                  },
-                  "navigatesTo": {
-                    "name": "navigatesTo",
-                    "type": "string",
-                    "required": false
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
             "subtitle": {
               "type": "json",
               "label": "Subtitle",
               "description": "Optional subtitle/description",
               "tier": "presentation"
-            },
-            "activeTab": {
-              "type": "string",
-              "default": "",
-              "label": "Active Tab",
-              "description": "activeTab prop",
-              "tier": "presentation"
-            },
-            "title": {
-              "type": "json",
-              "label": "Title",
-              "description": "Page title - accepts unknown to handle generated code accessing dynamic entity data",
-              "tier": "presentation"
-            },
-            "error": {
-              "type": "PageHeaderError",
-              "label": "Error",
-              "description": "Error state",
-              "tier": "presentation",
-              "properties": {
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                },
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                }
-              }
             },
             "status": {
               "type": "PageHeaderStatus",
@@ -296,6 +248,11 @@
               "description": "Status badge",
               "tier": "presentation",
               "properties": {
+                "label": {
+                  "name": "label",
+                  "type": "string",
+                  "required": true
+                },
                 "variant": {
                   "name": "variant",
                   "type": "string",
@@ -307,25 +264,67 @@
                     "danger",
                     "info"
                   ]
-                },
-                "label": {
-                  "name": "label",
-                  "type": "string",
-                  "required": true
                 }
               }
             },
-            "showBack": {
-              "type": "boolean",
-              "default": false,
-              "label": "Show Back",
-              "description": "Show back button",
-              "tier": "presentation"
+            "actions": {
+              "type": "[PageHeaderActionsItem]",
+              "default": [],
+              "label": "Actions",
+              "description": "Actions array - first action with variant='primary' (or first action) is the main action",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "navigatesTo": {
+                    "name": "navigatesTo",
+                    "type": "string",
+                    "required": false
+                  },
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": false
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "loading": {
+                    "name": "loading",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "disabled": {
+                    "name": "disabled",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "primary",
+                      "secondary",
+                      "ghost",
+                      "danger"
+                    ]
+                  }
+                }
+              }
             },
-            "children": {
-              "type": "node",
-              "label": "Children",
-              "description": "Custom content in the header",
+            "activeTab": {
+              "type": "string",
+              "default": "",
+              "label": "Active Tab",
+              "description": "activeTab prop",
               "tier": "presentation"
             }
           },
