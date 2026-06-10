@@ -39,13 +39,13 @@ export type StdUiEventLogEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiEventLogConfig {
-  /** Default: `200` */
-  maxHeight?: number;
   /** Default: `""` */
   className?: string;
   /** Default: `[]` */
   entries?: EntityRow[];
-  /** Default: `""` */
+  /** Default: `200` */
+  maxHeight?: number;
+  /** Default: `"Label"` */
   label?: string;
 }
 
@@ -150,10 +150,10 @@ export function stdUiEventLogEventLogOrbital(params: StdUiEventLogEventLogOrbita
                   'render-ui',
                   'main',
                   {
-                    'entries': '@config.entries',
                     'maxHeight': '@config.maxHeight',
                     'label': '@config.label',
                     'type': 'event-log',
+                    'entries': '@config.entries',
                     'className': '@config.className',
                   },
                 ],
@@ -162,13 +162,6 @@ export function stdUiEventLogEventLogOrbital(params: StdUiEventLogEventLogOrbita
           ],
         },
         'config': {
-          'maxHeight': {
-            'type': 'number',
-            'default': 200,
-            'label': 'Max Height',
-            'description': 'Max visible height before scroll',
-            'tier': 'presentation',
-          },
           'className': {
             'type': 'string',
             'default': '',
@@ -185,6 +178,26 @@ export function stdUiEventLogEventLogOrbital(params: StdUiEventLogEventLogOrbita
             'items': {
               'type': 'object',
               'properties': {
+                'icon': {
+                  'name': 'icon',
+                  'type': 'string',
+                  'required': true,
+                },
+                'timestamp': {
+                  'name': 'timestamp',
+                  'type': 'number',
+                  'required': true,
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                'message': {
+                  'name': 'message',
+                  'type': 'string',
+                  'required': true,
+                },
                 'status': {
                   'name': 'status',
                   'type': 'string',
@@ -196,32 +209,19 @@ export function stdUiEventLogEventLogOrbital(params: StdUiEventLogEventLogOrbita
                     'error',
                   ],
                 },
-                'id': {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': true,
-                },
-                'timestamp': {
-                  'name': 'timestamp',
-                  'type': 'number',
-                  'required': true,
-                },
-                'message': {
-                  'name': 'message',
-                  'type': 'string',
-                  'required': true,
-                },
-                'icon': {
-                  'name': 'icon',
-                  'type': 'string',
-                  'required': true,
-                },
               },
             },
           },
+          'maxHeight': {
+            'type': 'number',
+            'default': 200,
+            'label': 'Max Height',
+            'description': 'Max visible height before scroll',
+            'tier': 'presentation',
+          },
           'label': {
             'type': 'string',
-            'default': '',
+            'default': 'Label',
             'label': 'Label',
             'description': 'Title label',
             'tier': 'presentation',

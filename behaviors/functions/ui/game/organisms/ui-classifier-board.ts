@@ -189,9 +189,9 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
                   'render-ui',
                   'main',
                   {
-                    'type': 'classifier-board',
-                    'completeEvent': 'COMPLETE',
                     'entity': '@config.entityProp',
+                    'completeEvent': 'COMPLETE',
+                    'type': 'classifier-board',
                   },
                 ],
               ],
@@ -206,10 +206,47 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
             'synonyms': 'entity',
             'tier': 'presentation',
             'properties': {
-              'title': {
-                'name': 'title',
+              'successMessage': {
+                'name': 'successMessage',
+                'type': 'string',
+                'required': false,
+              },
+              'id': {
+                'name': 'id',
                 'type': 'string',
                 'required': true,
+              },
+              'headerImage': {
+                'name': 'headerImage',
+                'type': 'string',
+                'required': false,
+              },
+              'hint': {
+                'name': 'hint',
+                'type': 'string',
+                'required': false,
+              },
+              'description': {
+                'name': 'description',
+                'type': 'string',
+                'required': true,
+              },
+              'theme': {
+                'name': 'theme',
+                'type': 'object',
+                'required': false,
+                'properties': {
+                  'background': {
+                    'name': 'background',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'accentColor': {
+                    'name': 'accentColor',
+                    'type': 'string',
+                    'required': false,
+                  },
+                },
               },
               'items': {
                 'name': 'items',
@@ -218,8 +255,18 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
                 'items': {
                   'type': 'object',
                   'properties': {
-                    'label': {
-                      'name': 'label',
+                    'id': {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'iconUrl': {
+                      'name': 'iconUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'correctCategory': {
+                      'name': 'correctCategory',
                       'type': 'string',
                       'required': true,
                     },
@@ -228,20 +275,10 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
                       'type': 'string',
                       'required': false,
                     },
-                    'id': {
-                      'name': 'id',
+                    'label': {
+                      'name': 'label',
                       'type': 'string',
                       'required': true,
-                    },
-                    'correctCategory': {
-                      'name': 'correctCategory',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'iconUrl': {
-                      'name': 'iconUrl',
-                      'type': 'string',
-                      'required': false,
                     },
                   },
                 },
@@ -251,8 +288,8 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
                 'type': 'string',
                 'required': false,
               },
-              'id': {
-                'name': 'id',
+              'title': {
+                'name': 'title',
                 'type': 'string',
                 'required': true,
               },
@@ -263,10 +300,10 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
                 'items': {
                   'type': 'object',
                   'properties': {
-                    'label': {
-                      'name': 'label',
+                    'imageUrl': {
+                      'name': 'imageUrl',
                       'type': 'string',
-                      'required': true,
+                      'required': false,
                     },
                     'color': {
                       'name': 'color',
@@ -278,50 +315,13 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
                       'type': 'string',
                       'required': true,
                     },
-                    'imageUrl': {
-                      'name': 'imageUrl',
+                    'label': {
+                      'name': 'label',
                       'type': 'string',
-                      'required': false,
+                      'required': true,
                     },
                   },
                 },
-              },
-              'headerImage': {
-                'name': 'headerImage',
-                'type': 'string',
-                'required': false,
-              },
-              'theme': {
-                'name': 'theme',
-                'type': 'object',
-                'required': false,
-                'properties': {
-                  'accentColor': {
-                    'name': 'accentColor',
-                    'type': 'string',
-                    'required': false,
-                  },
-                  'background': {
-                    'name': 'background',
-                    'type': 'string',
-                    'required': false,
-                  },
-                },
-              },
-              'hint': {
-                'name': 'hint',
-                'type': 'string',
-                'required': false,
-              },
-              'successMessage': {
-                'name': 'successMessage',
-                'type': 'string',
-                'required': false,
-              },
-              'description': {
-                'name': 'description',
-                'type': 'string',
-                'required': true,
               },
             },
           },

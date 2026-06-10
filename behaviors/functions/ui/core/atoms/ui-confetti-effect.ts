@@ -39,14 +39,14 @@ export type StdUiConfettiEffectEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiConfettiEffectConfig {
-  /** Default: `""` */
-  className?: string;
-  /** Default: `2000` */
-  duration?: number;
-  /** Default: `30` */
-  particleCount?: number;
   /** Default: `false` */
   trigger?: boolean;
+  /** Default: `2000` */
+  duration?: number;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `30` */
+  particleCount?: number;
 }
 
 /**

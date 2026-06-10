@@ -39,28 +39,28 @@ export type StdUiProgressBarEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiProgressBarConfig {
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
-  /** Default: `"default"` */
-  color?: 'default' | 'primary' | 'success' | 'warning' | 'danger';
+  /** Default: `0` */
+  value?: number;
+  /** Default: `false` */
+  showLabel?: boolean;
   /** Default: `100` */
   max?: number;
   /** Default: `"linear"` */
   progressType?: 'linear' | 'circular' | 'stepped';
-  /** Default: `0` */
-  value?: number;
-  /** Default: `""` */
+  /** Default: `"Label"` */
   label?: string;
-  /** Default: `false` */
-  showLabel?: boolean;
-  /** Default: `false` */
-  showPercentage?: boolean;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
   /** Default: `5` */
   steps?: number;
-  /** Default: `""` */
-  className?: string;
   /** Default: `"primary"` */
   variant?: 'default' | 'primary' | 'success' | 'warning' | 'danger';
+  /** Default: `"default"` */
+  color?: 'default' | 'primary' | 'success' | 'warning' | 'danger';
+  /** Default: `false` */
+  showPercentage?: boolean;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

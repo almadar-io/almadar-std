@@ -53,18 +53,18 @@ export interface StdUiFeatureRendererFeatureHoverPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiFeatureRendererConfig {
-  /** Default: `{}` */
-  featureColors?: unknown;
   /** Default: `0` */
   offsetX?: number;
-  /** Default: `1` */
-  cellSize?: number;
-  /** Default: `[{"y":1,"x":1,"type":"Type"}]` */
-  features?: EntityRow[];
   /** Default: `[]` */
   selectedFeatureIds?: string[];
+  /** Default: `{}` */
+  featureColors?: unknown;
+  /** Default: `[{"type":"Type","x":1,"y":1}]` */
+  features?: EntityRow[];
   /** Default: `0` */
   offsetZ?: number;
+  /** Default: `1` */
+  cellSize?: number;
 }
 
 /**
@@ -382,15 +382,15 @@ export function stdUiFeatureRendererFeatureRendererOrbital(params: StdUiFeatureR
                   'render-ui',
                   'main',
                   {
-                    'type': 'feature-renderer',
-                    'offsetZ': '@config.offsetZ',
-                    'featureColors': '@config.featureColors',
-                    'onFeatureHover': 'FEATURE_HOVER',
-                    'cellSize': '@config.cellSize',
-                    'onFeatureClick': 'FEATURE_CLICK',
-                    'offsetX': '@config.offsetX',
-                    'features': '@config.features',
                     'selectedFeatureIds': '@config.selectedFeatureIds',
+                    'offsetZ': '@config.offsetZ',
+                    'offsetX': '@config.offsetX',
+                    'type': 'feature-renderer',
+                    'onFeatureHover': 'FEATURE_HOVER',
+                    'onFeatureClick': 'FEATURE_CLICK',
+                    'features': '@config.features',
+                    'featureColors': '@config.featureColors',
+                    'cellSize': '@config.cellSize',
                   },
                 ],
               ],
@@ -398,92 +398,12 @@ export function stdUiFeatureRendererFeatureRendererOrbital(params: StdUiFeatureR
           ],
         },
         'config': {
-          'featureColors': {
-            'type': 'Map<string,string>',
-            'default': {},
-            'label': 'Feature Colors',
-            'description': 'Feature color overrides',
-            'tier': 'presentation',
-            'items': {
-              'type': 'string',
-            },
-          },
           'offsetX': {
             'type': 'number',
             'default': 0,
             'label': 'Offset X',
             'description': 'Grid offset X',
             'tier': 'presentation',
-          },
-          'cellSize': {
-            'type': 'number',
-            'default': 1,
-            'label': 'Cell Size',
-            'description': 'Grid cell size',
-            'tier': 'presentation',
-          },
-          'features': {
-            'type': '[FeatureRendererFeaturesItem]',
-            'default': [
-              {
-                'y': 1,
-                'x': 1,
-                'type': 'Type',
-              },
-            ],
-            'label': 'Features',
-            'description': 'Array of features to render',
-            'tier': 'presentation',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'id': {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': false,
-                },
-                'x': {
-                  'name': 'x',
-                  'type': 'number',
-                  'required': true,
-                },
-                'z': {
-                  'name': 'z',
-                  'type': 'number',
-                  'required': false,
-                },
-                'type': {
-                  'name': 'type',
-                  'type': 'string',
-                  'required': true,
-                },
-                'sprite': {
-                  'name': 'sprite',
-                  'type': 'string',
-                  'required': false,
-                },
-                'color': {
-                  'name': 'color',
-                  'type': 'string',
-                  'required': false,
-                },
-                'y': {
-                  'name': 'y',
-                  'type': 'number',
-                  'required': true,
-                },
-                'assetUrl': {
-                  'name': 'assetUrl',
-                  'type': 'string',
-                  'required': false,
-                },
-                'elevation': {
-                  'name': 'elevation',
-                  'type': 'number',
-                  'required': false,
-                },
-              },
-            },
           },
           'selectedFeatureIds': {
             'type': '[string]',
@@ -495,11 +415,91 @@ export function stdUiFeatureRendererFeatureRendererOrbital(params: StdUiFeatureR
               'type': 'string',
             },
           },
+          'featureColors': {
+            'type': 'Map<string,string>',
+            'default': {},
+            'label': 'Feature Colors',
+            'description': 'Feature color overrides',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'features': {
+            'type': '[FeatureRendererFeaturesItem]',
+            'default': [
+              {
+                'type': 'Type',
+                'x': 1,
+                'y': 1,
+              },
+            ],
+            'label': 'Features',
+            'description': 'Array of features to render',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'z': {
+                  'name': 'z',
+                  'type': 'number',
+                  'required': false,
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': false,
+                },
+                'elevation': {
+                  'name': 'elevation',
+                  'type': 'number',
+                  'required': false,
+                },
+                'y': {
+                  'name': 'y',
+                  'type': 'number',
+                  'required': true,
+                },
+                'x': {
+                  'name': 'x',
+                  'type': 'number',
+                  'required': true,
+                },
+                'type': {
+                  'name': 'type',
+                  'type': 'string',
+                  'required': true,
+                },
+                'sprite': {
+                  'name': 'sprite',
+                  'type': 'string',
+                  'required': false,
+                },
+                'assetUrl': {
+                  'name': 'assetUrl',
+                  'type': 'string',
+                  'required': false,
+                },
+                'color': {
+                  'name': 'color',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
+          },
           'offsetZ': {
             'type': 'number',
             'default': 0,
             'label': 'Offset Z',
             'description': 'Grid offset Z',
+            'tier': 'presentation',
+          },
+          'cellSize': {
+            'type': 'number',
+            'default': 1,
+            'label': 'Cell Size',
+            'description': 'Grid cell size',
             'tier': 'presentation',
           },
         },

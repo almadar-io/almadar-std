@@ -52,7 +52,7 @@ export interface StdUiFileTreeConfig {
   className?: string;
   /** Default: `16` */
   indent?: number;
-  /** Default: `""` */
+  /** Default: `"Selected Path"` */
   selectedPath?: string;
 }
 

@@ -104,33 +104,33 @@
                     "render-ui",
                     "main",
                     {
-                      "sortable": "@config.sortable",
-                      "dndRoot": "@config.dndRoot",
-                      "sortEvent": "SORT",
-                      "sortColumn": "@config.sortColumn",
-                      "sortDirection": "@config.sortDirection",
-                      "emptyMessage": "@config.emptyMessage",
-                      "itemActions": "@config.itemActions",
-                      "isLoading": "@config.isLoading",
-                      "fields": "@config.fields",
-                      "groupBy": "@config.groupBy",
                       "dndItemIdField": "@config.dndItemIdField",
-                      "look": "@config.look",
-                      "type": "table-view",
-                      "pageSize": "@config.pageSize",
-                      "entity": "@entity",
-                      "className": "@config.className",
-                      "error": "@config.error",
-                      "positionEvent": "@config.positionEvent",
+                      "maxInlineActions": "@config.maxInlineActions",
+                      "sortDirection": "@config.sortDirection",
                       "columns": "@config.columns",
-                      "selectable": "@config.selectable",
+                      "emptyMessage": "@config.emptyMessage",
+                      "sortEvent": "SORT",
+                      "isLoading": "@config.isLoading",
+                      "pageSize": "@config.pageSize",
+                      "look": "@config.look",
+                      "entity": "@entity",
+                      "type": "table-view",
                       "accepts": "@config.accepts",
+                      "positionEvent": "@config.positionEvent",
+                      "groupBy": "@config.groupBy",
+                      "error": "@config.error",
+                      "className": "@config.className",
+                      "sortable": "@config.sortable",
                       "selectEvent": "SELECT",
-                      "dragGroup": "@config.dragGroup",
-                      "selectedIds": "@config.selectedIds",
-                      "dropEvent": "@config.dropEvent",
                       "reorderEvent": "@config.reorderEvent",
-                      "maxInlineActions": "@config.maxInlineActions"
+                      "dragGroup": "@config.dragGroup",
+                      "fields": "@config.fields",
+                      "dropEvent": "@config.dropEvent",
+                      "dndRoot": "@config.dndRoot",
+                      "selectable": "@config.selectable",
+                      "selectedIds": "@config.selectedIds",
+                      "itemActions": "@config.itemActions",
+                      "sortColumn": "@config.sortColumn"
                     }
                   ]
                 ]
@@ -138,32 +138,46 @@
             ]
           },
           "config": {
-            "sortable": {
-              "type": "boolean",
-              "default": false,
-              "label": "Sortable",
-              "description": "Enable in-container reorder; items can be dragged to new positions among siblings",
-              "tier": "presentation"
-            },
-            "pageSize": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Page Size",
-              "description": "Max rows before a 'Show More' button. Defaults to 0 (show all).",
-              "tier": "presentation"
-            },
-            "accepts": {
+            "dragGroup": {
               "type": "string",
-              "default": "",
-              "label": "Accepts",
-              "description": "When set, the container accepts drops whose dragGroup matches this value (or '*' for any group)",
+              "default": "Drag Group",
+              "label": "Drag Group",
+              "description": "When set, items in this container are draggable and announce this group as their source",
               "tier": "presentation"
             },
-            "dndItemIdField": {
+            "error": {
+              "type": "TableViewError",
+              "label": "Error",
+              "description": "Error state.",
+              "tier": "presentation",
+              "properties": {
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": false
+                },
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                },
+                "stack": {
+                  "name": "stack",
+                  "type": "string",
+                  "required": false
+                },
+                "code": {
+                  "name": "code",
+                  "type": "string",
+                  "required": false
+                }
+              }
+            },
+            "groupBy": {
               "type": "string",
-              "default": "",
-              "label": "Dnd Item Id Field",
-              "description": "Row field used as the @dnd-kit draggable id (default 'id')",
+              "default": "Group By",
+              "label": "Group By",
+              "description": "Group rows under section headers by a field value.",
               "tier": "presentation"
             },
             "itemActions": {
@@ -175,6 +189,21 @@
               "items": {
                 "type": "object",
                 "properties": {
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": true
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
                   "variant": {
                     "name": "variant",
                     "type": "string",
@@ -185,24 +214,27 @@
                       "ghost",
                       "danger"
                     ]
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": true
                   }
                 }
               }
+            },
+            "sortDirection": {
+              "type": "string",
+              "default": "asc",
+              "label": "Sort Direction",
+              "description": "Current sort direction (display hint).",
+              "tier": "presentation",
+              "values": [
+                "asc",
+                "desc"
+              ]
+            },
+            "positionEvent": {
+              "type": "string",
+              "default": "Position Event",
+              "label": "Position Event",
+              "description": "Bus event fired N times per drop (one per item in affected zones) so the trait can persist new positions for the WHOLE zone, not just the moved item. Payload: { id, position }",
+              "tier": "presentation"
             },
             "look": {
               "type": "string",
@@ -218,95 +250,39 @@
                 "bordered"
               ]
             },
-            "maxInlineActions": {
+            "sortable": {
+              "type": "boolean",
+              "default": false,
+              "label": "Sortable",
+              "description": "Enable in-container reorder; items can be dragged to new positions among siblings",
+              "tier": "presentation"
+            },
+            "dndRoot": {
+              "type": "boolean",
+              "default": false,
+              "label": "Dnd Root",
+              "description": "Mark this container as the DnD root for its subtree — descendant zones share one DndContext (cross-container drag). Use on an outer container whose own items are not draggable.",
+              "tier": "presentation"
+            },
+            "pageSize": {
               "type": "number",
               "default": 0.0,
-              "label": "Max Inline Actions",
-              "description": "Max inline action buttons before the rest collapse into a '⋯' overflow menu. Omit = all inline.",
+              "label": "Page Size",
+              "description": "Max rows before a 'Show More' button. Defaults to 0 (show all).",
               "tier": "presentation"
             },
-            "reorderEvent": {
+            "accepts": {
               "type": "string",
-              "default": "",
-              "label": "Reorder Event",
-              "description": "Bus event fired on in-container reorder. Payload: { id, oldIndex, newIndex }",
+              "default": "Accepts",
+              "label": "Accepts",
+              "description": "When set, the container accepts drops whose dragGroup matches this value (or '*' for any group)",
               "tier": "presentation"
-            },
-            "sortDirection": {
-              "type": "string",
-              "default": "asc",
-              "label": "Sort Direction",
-              "description": "Current sort direction (display hint).",
-              "tier": "presentation",
-              "values": [
-                "asc",
-                "desc"
-              ]
             },
             "className": {
               "type": "string",
               "default": "",
               "label": "Class Name",
               "description": "Additional CSS classes applied to the table root.",
-              "tier": "presentation"
-            },
-            "selectedIds": {
-              "type": "[string]",
-              "default": [],
-              "label": "Selected Ids",
-              "description": "Currently-selected ids (controlled). Falls back to local state when omitted.",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
-            },
-            "error": {
-              "type": "TableViewError",
-              "label": "Error",
-              "description": "Error state.",
-              "tier": "presentation",
-              "properties": {
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                },
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                },
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                }
-              }
-            },
-            "dropEvent": {
-              "type": "string",
-              "default": "",
-              "label": "Drop Event",
-              "description": "Bus event fired on cross-container drop. Payload: { id, sourceGroup, targetGroup, newIndex }",
-              "tier": "presentation"
-            },
-            "groupBy": {
-              "type": "string",
-              "default": "",
-              "label": "Group By",
-              "description": "Group rows under section headers by a field value.",
-              "tier": "presentation"
-            },
-            "dragGroup": {
-              "type": "string",
-              "default": "",
-              "label": "Drag Group",
-              "description": "When set, items in this container are draggable and announce this group as their source",
               "tier": "presentation"
             },
             "columns": {
@@ -318,6 +294,26 @@
               "items": {
                 "type": "object",
                 "properties": {
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "field": {
+                    "name": "field",
+                    "type": "string",
+                    "required": false
+                  },
+                  "header": {
+                    "name": "header",
+                    "type": "string",
+                    "required": false
+                  },
+                  "width": {
+                    "name": "width",
+                    "type": "string",
+                    "required": false
+                  },
                   "weight": {
                     "name": "weight",
                     "type": "string",
@@ -328,29 +324,14 @@
                       "semibold"
                     ]
                   },
-                  "className": {
-                    "name": "className",
-                    "type": "string",
-                    "required": false
-                  },
-                  "align": {
-                    "name": "align",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "left",
-                      "center",
-                      "right"
-                    ]
-                  },
                   "label": {
                     "name": "label",
                     "type": "string",
                     "required": false
                   },
-                  "sortable": {
-                    "name": "sortable",
-                    "type": "boolean",
+                  "className": {
+                    "name": "className",
+                    "type": "string",
                     "required": false
                   },
                   "format": {
@@ -366,46 +347,69 @@
                       "boolean"
                     ]
                   },
+                  "sortable": {
+                    "name": "sortable",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "align": {
+                    "name": "align",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "left",
+                      "center",
+                      "right"
+                    ]
+                  },
                   "key": {
                     "name": "key",
                     "type": "string",
                     "required": true
-                  },
-                  "width": {
-                    "name": "width",
-                    "type": "string",
-                    "required": false
-                  },
-                  "field": {
-                    "name": "field",
-                    "type": "string",
-                    "required": false
-                  },
-                  "header": {
-                    "name": "header",
-                    "type": "string",
-                    "required": false
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
                   }
                 }
               }
             },
-            "positionEvent": {
+            "reorderEvent": {
               "type": "string",
-              "default": "",
-              "label": "Position Event",
-              "description": "Bus event fired N times per drop (one per item in affected zones) so the trait can persist new positions for the WHOLE zone, not just the moved item. Payload: { id, position }",
+              "default": "Reorder Event",
+              "label": "Reorder Event",
+              "description": "Bus event fired on in-container reorder. Payload: { id, oldIndex, newIndex }",
+              "tier": "presentation"
+            },
+            "emptyMessage": {
+              "type": "string",
+              "default": "Empty Message",
+              "label": "Empty Message",
+              "description": "Message shown when there are no rows.",
               "tier": "presentation"
             },
             "sortColumn": {
               "type": "string",
-              "default": "",
+              "default": "Sort Column",
               "label": "Sort Column",
               "description": "Current sort column (display hint for the active header arrow).",
+              "tier": "presentation"
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state.",
+              "tier": "presentation"
+            },
+            "dndItemIdField": {
+              "type": "string",
+              "default": "Dnd Item Id Field",
+              "label": "Dnd Item Id Field",
+              "description": "Row field used as the @dnd-kit draggable id (default 'id')",
+              "tier": "presentation"
+            },
+            "maxInlineActions": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Max Inline Actions",
+              "description": "Max inline action buttons before the rest collapse into a '⋯' overflow menu. Omit = all inline.",
               "tier": "presentation"
             },
             "fields": {
@@ -422,38 +426,13 @@
                     "type": "string",
                     "required": false
                   },
-                  "key": {
-                    "name": "key",
+                  "label": {
+                    "name": "label",
                     "type": "string",
-                    "required": true
+                    "required": false
                   },
                   "className": {
                     "name": "className",
-                    "type": "string",
-                    "required": false
-                  },
-                  "weight": {
-                    "name": "weight",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "normal",
-                      "medium",
-                      "semibold"
-                    ]
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "sortable": {
-                    "name": "sortable",
-                    "type": "boolean",
-                    "required": false
-                  },
-                  "width": {
-                    "name": "width",
                     "type": "string",
                     "required": false
                   },
@@ -470,8 +449,33 @@
                       "boolean"
                     ]
                   },
+                  "sortable": {
+                    "name": "sortable",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "weight": {
+                    "name": "weight",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "normal",
+                      "medium",
+                      "semibold"
+                    ]
+                  },
+                  "key": {
+                    "name": "key",
+                    "type": "string",
+                    "required": true
+                  },
                   "header": {
                     "name": "header",
+                    "type": "string",
+                    "required": false
+                  },
+                  "width": {
+                    "name": "width",
                     "type": "string",
                     "required": false
                   },
@@ -485,40 +489,36 @@
                       "right"
                     ]
                   },
-                  "label": {
-                    "name": "label",
+                  "icon": {
+                    "name": "icon",
                     "type": "string",
                     "required": false
                   }
                 }
               }
             },
-            "emptyMessage": {
-              "type": "string",
-              "default": "",
-              "label": "Empty Message",
-              "description": "Message shown when there are no rows.",
-              "tier": "presentation"
-            },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state.",
-              "tier": "presentation"
-            },
-            "dndRoot": {
-              "type": "boolean",
-              "default": false,
-              "label": "Dnd Root",
-              "description": "Mark this container as the DnD root for its subtree — descendant zones share one DndContext (cross-container drag). Use on an outer container whose own items are not draggable.",
-              "tier": "presentation"
-            },
             "selectable": {
               "type": "boolean",
               "default": false,
               "label": "Selectable",
               "description": "Render a leading checkbox column. Selection changes emit `selectEvent`.",
+              "tier": "presentation"
+            },
+            "selectedIds": {
+              "type": "[string]",
+              "default": [],
+              "label": "Selected Ids",
+              "description": "Currently-selected ids (controlled). Falls back to local state when omitted.",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "dropEvent": {
+              "type": "string",
+              "default": "Drop Event",
+              "label": "Drop Event",
+              "description": "Bus event fired on cross-container drop. Payload: { id, sourceGroup, targetGroup, newIndex }",
               "tier": "presentation"
             }
           },

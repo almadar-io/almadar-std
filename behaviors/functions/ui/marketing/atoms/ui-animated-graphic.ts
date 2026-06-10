@@ -41,29 +41,29 @@ export type StdUiAnimatedGraphicEventKey = 'INIT';
 export interface StdUiAnimatedGraphicConfig {
   /** Default: `"draw"` */
   animation?: 'draw' | 'fill' | 'pulse' | 'morph';
-  /** Default: `""` */
-  height?: string;
-  /** Default: `""` */
-  fillColor?: string;
-  /** Default: `""` */
-  width?: string;
-  /** Default: `""` */
-  strokeColor?: string;
-  /** Default: `0` */
-  delay?: number;
-  /** Default: `""` */
-  src?: string;
   /** Default: `"cubic-bezier(0.16, 1, 0.3, 1)"` */
   easing?: string;
-  /** Default: `false` */
-  animate?: boolean;
+  /** Default: `"Src"` */
+  src?: string;
+  /** Default: `"Stroke Color"` */
+  strokeColor?: string;
+  /** Default: `"Alt"` */
+  alt?: string;
+  /** Default: `"Height"` */
+  height?: string;
+  /** Default: `"Width"` */
+  width?: string;
+  /** Default: `"Fill Color"` */
+  fillColor?: string;
   /** Default: `""` */
   className?: string;
-  /** Default: `""` */
-  alt?: string;
+  /** Default: `false` */
+  animate?: boolean;
   /** Default: `1200` */
   duration?: number;
-  /** Default: `""` */
+  /** Default: `0` */
+  delay?: number;
+  /** Default: `"Svg Content"` */
   svgContent?: string;
 }
 

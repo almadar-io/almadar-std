@@ -61,12 +61,12 @@
             "data": {
               "type": "BehaviorViewData",
               "default": {
-                "entityName": "",
-                "fields": [],
-                "traitDetails": {},
                 "pages": [],
-                "persistence": "",
+                "traitDetails": {},
+                "fields": [],
+                "entityName": "",
                 "orbitalName": "",
+                "persistence": "",
                 "traits": [],
                 "externalLinks": []
               },
@@ -74,6 +74,36 @@
               "description": "data prop",
               "tier": "presentation",
               "properties": {
+                "persistence": {
+                  "name": "persistence",
+                  "type": "string",
+                  "required": true
+                },
+                "pages": {
+                  "name": "pages",
+                  "type": "array",
+                  "required": true,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "route": {
+                        "name": "route",
+                        "type": "string",
+                        "required": true
+                      },
+                      "name": {
+                        "name": "name",
+                        "type": "string",
+                        "required": true
+                      }
+                    }
+                  }
+                },
+                "orbitalName": {
+                  "name": "orbitalName",
+                  "type": "string",
+                  "required": true
+                },
                 "traitDetails": {
                   "name": "traitDetails",
                   "type": "object",
@@ -81,14 +111,6 @@
                   "items": {
                     "type": "object",
                     "properties": {
-                      "emittedEvents": {
-                        "name": "emittedEvents",
-                        "type": "array",
-                        "required": true,
-                        "items": {
-                          "type": "string"
-                        }
-                      },
                       "listenedEvents": {
                         "name": "listenedEvents",
                         "type": "array",
@@ -96,41 +118,6 @@
                         "items": {
                           "type": "string"
                         }
-                      },
-                      "name": {
-                        "name": "name",
-                        "type": "string",
-                        "required": true
-                      },
-                      "states": {
-                        "name": "states",
-                        "type": "array",
-                        "required": true,
-                        "items": {
-                          "type": "object",
-                          "properties": {
-                            "name": {
-                              "name": "name",
-                              "type": "string",
-                              "required": true
-                            },
-                            "isInitial": {
-                              "name": "isInitial",
-                              "type": "boolean",
-                              "required": false
-                            },
-                            "isTerminal": {
-                              "name": "isTerminal",
-                              "type": "boolean",
-                              "required": false
-                            }
-                          }
-                        }
-                      },
-                      "linkedEntity": {
-                        "name": "linkedEntity",
-                        "type": "string",
-                        "required": true
                       },
                       "transitions": {
                         "name": "transitions",
@@ -144,6 +131,16 @@
                               "type": "string",
                               "required": true
                             },
+                            "event": {
+                              "name": "event",
+                              "type": "string",
+                              "required": true
+                            },
+                            "index": {
+                              "name": "index",
+                              "type": "number",
+                              "required": true
+                            },
                             "to": {
                               "name": "to",
                               "type": "string",
@@ -154,16 +151,6 @@
                               "type": "string",
                               "required": false
                             },
-                            "index": {
-                              "name": "index",
-                              "type": "number",
-                              "required": true
-                            },
-                            "event": {
-                              "name": "event",
-                              "type": "string",
-                              "required": true
-                            },
                             "effects": {
                               "name": "effects",
                               "type": "array",
@@ -171,11 +158,6 @@
                               "items": {
                                 "type": "object",
                                 "properties": {
-                                  "type": {
-                                    "name": "type",
-                                    "type": "string",
-                                    "required": true
-                                  },
                                   "args": {
                                     "name": "args",
                                     "type": "array",
@@ -183,23 +165,112 @@
                                     "items": {
                                       "type": "string"
                                     }
+                                  },
+                                  "type": {
+                                    "name": "type",
+                                    "type": "string",
+                                    "required": true
                                   }
                                 }
                               }
                             }
                           }
                         }
+                      },
+                      "states": {
+                        "name": "states",
+                        "type": "array",
+                        "required": true,
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "isTerminal": {
+                              "name": "isTerminal",
+                              "type": "boolean",
+                              "required": false
+                            },
+                            "isInitial": {
+                              "name": "isInitial",
+                              "type": "boolean",
+                              "required": false
+                            },
+                            "name": {
+                              "name": "name",
+                              "type": "string",
+                              "required": true
+                            }
+                          }
+                        }
+                      },
+                      "emittedEvents": {
+                        "name": "emittedEvents",
+                        "type": "array",
+                        "required": true,
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "name": {
+                        "name": "name",
+                        "type": "string",
+                        "required": true
+                      },
+                      "linkedEntity": {
+                        "name": "linkedEntity",
+                        "type": "string",
+                        "required": true
                       }
                     }
                   }
                 },
-                "persistence": {
-                  "name": "persistence",
-                  "type": "string",
-                  "required": true
+                "traits": {
+                  "name": "traits",
+                  "type": "array",
+                  "required": true,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "eventCount": {
+                        "name": "eventCount",
+                        "type": "number",
+                        "required": true
+                      },
+                      "name": {
+                        "name": "name",
+                        "type": "string",
+                        "required": true
+                      },
+                      "transitionCount": {
+                        "name": "transitionCount",
+                        "type": "number",
+                        "required": true
+                      },
+                      "stateCount": {
+                        "name": "stateCount",
+                        "type": "number",
+                        "required": true
+                      },
+                      "emits": {
+                        "name": "emits",
+                        "type": "array",
+                        "required": true,
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "listens": {
+                        "name": "listens",
+                        "type": "array",
+                        "required": true,
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
                 },
-                "pages": {
-                  "name": "pages",
+                "fields": {
+                  "name": "fields",
                   "type": "array",
                   "required": true,
                   "items": {
@@ -210,16 +281,26 @@
                         "type": "string",
                         "required": true
                       },
-                      "route": {
-                        "name": "route",
+                      "type": {
+                        "name": "type",
                         "type": "string",
+                        "required": true
+                      },
+                      "hasDefault": {
+                        "name": "hasDefault",
+                        "type": "boolean",
+                        "required": true
+                      },
+                      "required": {
+                        "name": "required",
+                        "type": "boolean",
                         "required": true
                       }
                     }
                   }
                 },
-                "orbitalName": {
-                  "name": "orbitalName",
+                "entityName": {
+                  "name": "entityName",
                   "type": "string",
                   "required": true
                 },
@@ -253,87 +334,6 @@
                         "name": "traitName",
                         "type": "string",
                         "required": true
-                      }
-                    }
-                  }
-                },
-                "entityName": {
-                  "name": "entityName",
-                  "type": "string",
-                  "required": true
-                },
-                "fields": {
-                  "name": "fields",
-                  "type": "array",
-                  "required": true,
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "name": {
-                        "name": "name",
-                        "type": "string",
-                        "required": true
-                      },
-                      "type": {
-                        "name": "type",
-                        "type": "string",
-                        "required": true
-                      },
-                      "required": {
-                        "name": "required",
-                        "type": "boolean",
-                        "required": true
-                      },
-                      "hasDefault": {
-                        "name": "hasDefault",
-                        "type": "boolean",
-                        "required": true
-                      }
-                    }
-                  }
-                },
-                "traits": {
-                  "name": "traits",
-                  "type": "array",
-                  "required": true,
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "name": {
-                        "name": "name",
-                        "type": "string",
-                        "required": true
-                      },
-                      "stateCount": {
-                        "name": "stateCount",
-                        "type": "number",
-                        "required": true
-                      },
-                      "eventCount": {
-                        "name": "eventCount",
-                        "type": "number",
-                        "required": true
-                      },
-                      "emits": {
-                        "name": "emits",
-                        "type": "array",
-                        "required": true,
-                        "items": {
-                          "type": "string"
-                        }
-                      },
-                      "transitionCount": {
-                        "name": "transitionCount",
-                        "type": "number",
-                        "required": true
-                      },
-                      "listens": {
-                        "name": "listens",
-                        "type": "array",
-                        "required": true,
-                        "items": {
-                          "type": "string"
-                        }
                       }
                     }
                   }

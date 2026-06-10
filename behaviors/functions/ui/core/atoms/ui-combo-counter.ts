@@ -39,16 +39,16 @@ export type StdUiComboCounterEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiComboCounterConfig {
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
   /** Default: `""` */
   className?: string;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
   /** Default: `0` */
-  streak?: number;
+  multiplier?: number;
   /** Default: `0` */
   combo?: number;
   /** Default: `0` */
-  multiplier?: number;
+  streak?: number;
 }
 
 /**

@@ -82,12 +82,12 @@ export interface StdUiSimulationControlsParameterChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiSimulationControlsConfig {
-  /** Default: `{}` */
-  parameters?: unknown;
   /** Default: `0` */
   speed?: number;
   /** Default: `""` */
   className?: string;
+  /** Default: `{}` */
+  parameters?: unknown;
   /** Default: `false` */
   running?: boolean;
 }
@@ -359,17 +359,17 @@ export function stdUiSimulationControlsSimulationControlsOrbital(params: StdUiSi
                   'render-ui',
                   'main',
                   {
-                    'className': '@config.className',
-                    'speed': '@entity.speed',
-                    'parameters': '@config.parameters',
-                    'onParameterChange': 'PARAMETER_CHANGE',
                     'type': 'simulation-controls',
-                    'onSpeedChange': 'SPEED_CHANGE',
-                    'running': '@config.running',
+                    'className': '@config.className',
                     'onPlay': 'PLAY',
-                    'onPause': 'PAUSE',
                     'onStep': 'STEP',
+                    'running': '@config.running',
+                    'onSpeedChange': 'SPEED_CHANGE',
+                    'parameters': '@config.parameters',
+                    'speed': '@entity.speed',
                     'onReset': 'RESET',
+                    'onParameterChange': 'PARAMETER_CHANGE',
+                    'onPause': 'PAUSE',
                   },
                 ],
               ],
@@ -388,17 +388,17 @@ export function stdUiSimulationControlsSimulationControlsOrbital(params: StdUiSi
                   'render-ui',
                   'main',
                   {
-                    'onSpeedChange': 'SPEED_CHANGE',
-                    'onPlay': 'PLAY',
                     'onParameterChange': 'PARAMETER_CHANGE',
-                    'onPause': 'PAUSE',
-                    'className': '@config.className',
-                    'onReset': 'RESET',
-                    'parameters': '@config.parameters',
-                    'type': 'simulation-controls',
                     'running': '@config.running',
+                    'onPlay': 'PLAY',
                     'onStep': 'STEP',
+                    'type': 'simulation-controls',
+                    'parameters': '@config.parameters',
+                    'onReset': 'RESET',
+                    'className': '@config.className',
+                    'onPause': 'PAUSE',
                     'speed': '@entity.speed',
+                    'onSpeedChange': 'SPEED_CHANGE',
                   },
                 ],
               ],
@@ -406,6 +406,20 @@ export function stdUiSimulationControlsSimulationControlsOrbital(params: StdUiSi
           ],
         },
         'config': {
+          'speed': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Speed',
+            'description': 'speed prop',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'className prop',
+            'tier': 'presentation',
+          },
           'parameters': {
             'type': 'Map<string,SimulationControlsParametersValue>',
             'default': {},
@@ -420,8 +434,13 @@ export function stdUiSimulationControlsSimulationControlsOrbital(params: StdUiSi
                   'type': 'number',
                   'required': true,
                 },
-                'max': {
-                  'name': 'max',
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': true,
+                },
+                'step': {
+                  'name': 'step',
                   'type': 'number',
                   'required': true,
                 },
@@ -430,32 +449,13 @@ export function stdUiSimulationControlsSimulationControlsOrbital(params: StdUiSi
                   'type': 'number',
                   'required': true,
                 },
-                'step': {
-                  'name': 'step',
+                'max': {
+                  'name': 'max',
                   'type': 'number',
-                  'required': true,
-                },
-                'label': {
-                  'name': 'label',
-                  'type': 'string',
                   'required': true,
                 },
               },
             },
-          },
-          'speed': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Speed',
-            'description': 'speed prop',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'className prop',
-            'tier': 'presentation',
           },
           'running': {
             'type': 'boolean',

@@ -39,22 +39,22 @@ export type StdUiSvgNodeEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiSvgNodeConfig {
-  /** Default: `6` */
-  r?: number;
-  /** Default: `""` */
-  label?: string;
-  /** Default: `"filled"` */
-  variant?: 'filled' | 'stroked' | 'pulse';
-  /** Default: `""` */
-  className?: string;
-  /** Default: `1` */
-  opacity?: number;
-  /** Default: `0` */
-  x?: number;
-  /** Default: `"var(--color-primary)"` */
-  color?: string;
   /** Default: `0` */
   y?: number;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `6` */
+  r?: number;
+  /** Default: `0` */
+  x?: number;
+  /** Default: `1` */
+  opacity?: number;
+  /** Default: `"filled"` */
+  variant?: 'filled' | 'stroked' | 'pulse';
+  /** Default: `"var(--color-primary)"` */
+  color?: string;
+  /** Default: `"Label"` */
+  label?: string;
 }
 
 /**

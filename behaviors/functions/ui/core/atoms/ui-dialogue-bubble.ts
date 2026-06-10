@@ -39,16 +39,16 @@ export type StdUiDialogueBubbleEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiDialogueBubbleConfig {
+  /** Default: `"Speaker"` */
+  speaker?: string;
   /** Default: `""` */
   className?: string;
+  /** Default: `"Portrait"` */
+  portrait?: string;
   /** Default: `"Text"` */
   text?: string;
-  /** Default: `""` */
-  portrait?: string;
   /** Default: `"bottom"` */
   position?: 'top' | 'bottom';
-  /** Default: `""` */
-  speaker?: string;
 }
 
 /**

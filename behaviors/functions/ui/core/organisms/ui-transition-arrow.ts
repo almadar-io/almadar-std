@@ -47,17 +47,17 @@ export interface StdUiTransitionArrowClickPayload {
  */
 export interface StdUiTransitionArrowConfig {
   /** Default: `{"x":0,"y":0}` */
+  fromProp?: EntityRow;
+  /** Default: `{"x":0,"y":0}` */
   toProp?: EntityRow;
-  /** Default: `""` */
-  guardHint?: string;
-  /** Default: `""` */
-  className?: string;
   /** Default: `"Event Label"` */
   eventLabel?: string;
+  /** Default: `"Guard Hint"` */
+  guardHint?: string;
   /** Default: `false` */
   isActive?: boolean;
-  /** Default: `{"x":0,"y":0}` */
-  fromProp?: EntityRow;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**
@@ -187,14 +187,14 @@ export function stdUiTransitionArrowTransitionArrowOrbital(params: StdUiTransiti
                   'render-ui',
                   'main',
                   {
-                    'eventLabel': '@config.eventLabel',
                     'guardHint': '@config.guardHint',
                     'isActive': '@config.isActive',
-                    'to': '@config.toProp',
-                    'from': '@config.fromProp',
                     'type': 'transition-arrow',
-                    'className': '@config.className',
+                    'to': '@config.toProp',
                     'onClick': 'CLICK',
+                    'eventLabel': '@config.eventLabel',
+                    'className': '@config.className',
+                    'from': '@config.fromProp',
                   },
                 ],
               ],
@@ -202,6 +202,29 @@ export function stdUiTransitionArrowTransitionArrowOrbital(params: StdUiTransiti
           ],
         },
         'config': {
+          'fromProp': {
+            'type': 'TransitionArrowFrom',
+            'default': {
+              'x': 0,
+              'y': 0,
+            },
+            'label': 'From',
+            'description': 'Start position (center of from-node)',
+            'synonyms': 'from',
+            'tier': 'presentation',
+            'properties': {
+              'y': {
+                'name': 'y',
+                'type': 'number',
+                'required': true,
+              },
+              'x': {
+                'name': 'x',
+                'type': 'number',
+                'required': true,
+              },
+            },
+          },
           'toProp': {
             'type': 'TransitionArrowTo',
             'default': {
@@ -225,25 +248,18 @@ export function stdUiTransitionArrowTransitionArrowOrbital(params: StdUiTransiti
               },
             },
           },
-          'guardHint': {
-            'type': 'string',
-            'default': '',
-            'label': 'Guard Hint',
-            'description': 'Guard hint shown below event',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes for the SVG group',
-            'tier': 'presentation',
-          },
           'eventLabel': {
             'type': 'string',
             'default': 'Event Label',
             'label': 'Event Label',
             'description': 'Event label shown on the arrow',
+            'tier': 'presentation',
+          },
+          'guardHint': {
+            'type': 'string',
+            'default': 'Guard Hint',
+            'label': 'Guard Hint',
+            'description': 'Guard hint shown below event',
             'tier': 'presentation',
           },
           'isActive': {
@@ -253,28 +269,12 @@ export function stdUiTransitionArrowTransitionArrowOrbital(params: StdUiTransiti
             'description': 'Whether this transition is currently active',
             'tier': 'presentation',
           },
-          'fromProp': {
-            'type': 'TransitionArrowFrom',
-            'default': {
-              'x': 0,
-              'y': 0,
-            },
-            'label': 'From',
-            'description': 'Start position (center of from-node)',
-            'synonyms': 'from',
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes for the SVG group',
             'tier': 'presentation',
-            'properties': {
-              'y': {
-                'name': 'y',
-                'type': 'number',
-                'required': true,
-              },
-              'x': {
-                'name': 'x',
-                'type': 'number',
-                'required': true,
-              },
-            },
           },
         },
         'scope': 'instance',

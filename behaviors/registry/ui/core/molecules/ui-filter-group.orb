@@ -112,17 +112,17 @@
                     "render-ui",
                     "main",
                     {
-                      "filters": "@config.filters",
-                      "entity": "FilterGroupItem",
-                      "onClearAll": "CLEAR_ALL",
-                      "isLoading": "@config.isLoading",
-                      "showIcon": "@config.showIcon",
-                      "type": "filter-group",
-                      "query": "@config.query",
-                      "variant": "@config.variant",
                       "onFilterChange": "FILTER_CHANGE",
+                      "isLoading": "@config.isLoading",
+                      "variant": "@config.variant",
+                      "type": "filter-group",
+                      "look": "@config.look",
+                      "onClearAll": "CLEAR_ALL",
+                      "entity": "FilterGroupItem",
+                      "showIcon": "@config.showIcon",
                       "className": "@config.className",
-                      "look": "@config.look"
+                      "query": "@config.query",
+                      "filters": "@config.filters"
                     }
                   ]
                 ]
@@ -130,30 +130,16 @@
             ]
           },
           "config": {
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
+            "showIcon": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Icon",
+              "description": "Show filter icon",
               "tier": "presentation"
-            },
-            "look": {
-              "type": "string",
-              "default": "toolbar",
-              "label": "Look",
-              "description": "Layer 2 visual treatment — orthogonal to the semantic variant.",
-              "tier": "presentation",
-              "values": [
-                "toolbar",
-                "chips",
-                "pills",
-                "popover-trigger",
-                "inline-column-header"
-              ]
             },
             "query": {
               "type": "string",
-              "default": "",
+              "default": "Query",
               "label": "Query",
               "description": "Query singleton binding for state management. When provided, syncs filter state with the query singleton. Example: '@TaskQuery'",
               "tier": "presentation"
@@ -163,13 +149,6 @@
               "default": false,
               "label": "Is Loading",
               "description": "Loading state indicator",
-              "tier": "presentation"
-            },
-            "showIcon": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Icon",
-              "description": "Show filter icon",
               "tier": "presentation"
             },
             "variant": {
@@ -185,6 +164,20 @@
                 "vertical"
               ]
             },
+            "look": {
+              "type": "string",
+              "default": "toolbar",
+              "label": "Look",
+              "description": "Layer 2 visual treatment — orthogonal to the semantic variant.",
+              "tier": "presentation",
+              "values": [
+                "toolbar",
+                "chips",
+                "pills",
+                "popover-trigger",
+                "inline-column-header"
+              ]
+            },
             "filters": {
               "type": "[FilterGroupFiltersItem]",
               "default": [],
@@ -194,6 +187,11 @@
               "items": {
                 "type": "object",
                 "properties": {
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
                   "options": {
                     "name": "options",
                     "type": "array",
@@ -201,11 +199,6 @@
                     "items": {
                       "type": "string"
                     }
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
                   },
                   "field": {
                     "name": "field",
@@ -224,6 +217,13 @@
                   }
                 }
               }
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
             }
           },
           "scope": "instance"

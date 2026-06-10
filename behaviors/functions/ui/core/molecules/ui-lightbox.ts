@@ -30,7 +30,7 @@ const ALIAS = 'UiLightbox';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiLightboxEventKey = 'CLOSE' | 'INDEX_CHANGE' | 'INIT';
+export type StdUiLightboxEventKey = 'CLOSE' | 'INDEX_CHANGE' | 'INIT' | 'OPEN';
 
 /**
  * Payload shape for the `CLOSE` event.
@@ -47,24 +47,31 @@ export interface StdUiLightboxIndexChangePayload {
 }
 
 /**
+ * Payload shape for the `OPEN` event.
+ */
+export interface StdUiLightboxOpenPayload {
+  id?: string;
+}
+
+/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait
  * without modifying its state-machine topology.
  */
 export interface StdUiLightboxConfig {
-  /** Default: `true` */
-  showCounter?: boolean;
-  /** Default: `[{"caption":"Caption","src":"Src","alt":"Alt"}]` */
-  images?: EntityRow[];
   /** Default: `0` */
   currentIndex?: number;
-  /** Default: `false` */
-  isOpen?: boolean;
-  /** Default: `""` */
+  /** Default: `"Close Action"` */
   closeAction?: string;
   /** Default: `""` */
   className?: string;
+  /** Default: `false` */
+  isOpen?: boolean;
+  /** Default: `[{"alt":"Alt","caption":"Caption","src":"Src"}]` */
+  images?: EntityRow[];
+  /** Default: `true` */
+  showCounter?: boolean;
 }
 
 /**

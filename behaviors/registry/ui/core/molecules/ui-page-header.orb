@@ -104,27 +104,27 @@
                     "render-ui",
                     "main",
                     {
-                      "status": "@config.status",
+                      "onTabChange": "TAB_CHANGE",
+                      "title": "@config.title",
+                      "subtitle": "@config.subtitle",
+                      "entity": "PageHeaderItem",
+                      "breadcrumbs": "@config.breadcrumbs",
                       "actions": "@config.actions",
                       "isLoading": "@config.isLoading",
-                      "type": "page-header",
-                      "backEvent": "BACK",
+                      "activeTab": "@config.activeTab",
                       "tabs": "@config.tabs",
-                      "title": "@config.title",
-                      "onTabChange": "TAB_CHANGE",
+                      "backEvent": "BACK",
                       "className": "@config.className",
+                      "type": "page-header",
                       "showBack": "@config.showBack",
-                      "subtitle": "@config.subtitle",
-                      "breadcrumbs": "@config.breadcrumbs",
+                      "status": "@config.status",
+                      "error": "@config.error",
                       "children": [
                         {
-                          "type": "text",
-                          "content": "Sample content"
+                          "content": "Sample content",
+                          "type": "text"
                         }
-                      ],
-                      "activeTab": "@config.activeTab",
-                      "entity": "PageHeaderItem",
-                      "error": "@config.error"
+                      ]
                     }
                   ]
                 ]
@@ -132,18 +132,59 @@
             ]
           },
           "config": {
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state indicator",
-              "tier": "presentation"
-            },
             "showBack": {
               "type": "boolean",
               "default": false,
               "label": "Show Back",
               "description": "Show back button",
+              "tier": "presentation"
+            },
+            "subtitle": {
+              "type": "json",
+              "label": "Subtitle",
+              "description": "Optional subtitle/description",
+              "tier": "presentation"
+            },
+            "breadcrumbs": {
+              "type": "[PageHeaderBreadcrumbsItem]",
+              "default": [],
+              "label": "Breadcrumbs",
+              "description": "Breadcrumbs",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "href": {
+                    "name": "href",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "activeTab": {
+              "type": "string",
+              "default": "Active Tab",
+              "label": "Active Tab",
+              "description": "activeTab prop",
+              "tier": "presentation"
+            },
+            "title": {
+              "type": "json",
+              "label": "Title",
+              "description": "Page title - accepts unknown to handle generated code accessing dynamic entity data",
+              "tier": "presentation"
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
               "tier": "presentation"
             },
             "error": {
@@ -152,13 +193,13 @@
               "description": "Error state",
               "tier": "presentation",
               "properties": {
-                "code": {
-                  "name": "code",
+                "stack": {
+                  "name": "stack",
                   "type": "string",
                   "required": false
                 },
-                "name": {
-                  "name": "name",
+                "code": {
+                  "name": "code",
                   "type": "string",
                   "required": false
                 },
@@ -167,10 +208,70 @@
                   "type": "string",
                   "required": true
                 },
-                "stack": {
-                  "name": "stack",
+                "name": {
+                  "name": "name",
                   "type": "string",
                   "required": false
+                }
+              }
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "className prop",
+              "tier": "presentation"
+            },
+            "actions": {
+              "type": "[PageHeaderActionsItem]",
+              "default": [],
+              "label": "Actions",
+              "description": "Actions array - first action with variant='primary' (or first action) is the main action",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "loading": {
+                    "name": "loading",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "disabled": {
+                    "name": "disabled",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": false
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "primary",
+                      "secondary",
+                      "ghost",
+                      "danger"
+                    ]
+                  },
+                  "navigatesTo": {
+                    "name": "navigatesTo",
+                    "type": "string",
+                    "required": false
+                  }
                 }
               }
             },
@@ -183,13 +284,13 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "label": {
-                    "name": "label",
+                  "value": {
+                    "name": "value",
                     "type": "string",
                     "required": true
                   },
-                  "value": {
-                    "name": "value",
+                  "label": {
+                    "name": "label",
                     "type": "string",
                     "required": true
                   },
@@ -200,47 +301,6 @@
                   }
                 }
               }
-            },
-            "title": {
-              "type": "json",
-              "label": "Title",
-              "description": "Page title - accepts unknown to handle generated code accessing dynamic entity data",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "className prop",
-              "tier": "presentation"
-            },
-            "breadcrumbs": {
-              "type": "[PageHeaderBreadcrumbsItem]",
-              "default": [],
-              "label": "Breadcrumbs",
-              "description": "Breadcrumbs",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "href": {
-                    "name": "href",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "subtitle": {
-              "type": "json",
-              "label": "Subtitle",
-              "description": "Optional subtitle/description",
-              "tier": "presentation"
             },
             "status": {
               "type": "PageHeaderStatus",
@@ -266,66 +326,6 @@
                   ]
                 }
               }
-            },
-            "actions": {
-              "type": "[PageHeaderActionsItem]",
-              "default": [],
-              "label": "Actions",
-              "description": "Actions array - first action with variant='primary' (or first action) is the main action",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "navigatesTo": {
-                    "name": "navigatesTo",
-                    "type": "string",
-                    "required": false
-                  },
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": false
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "loading": {
-                    "name": "loading",
-                    "type": "boolean",
-                    "required": false
-                  },
-                  "disabled": {
-                    "name": "disabled",
-                    "type": "boolean",
-                    "required": false
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "primary",
-                      "secondary",
-                      "ghost",
-                      "danger"
-                    ]
-                  }
-                }
-              }
-            },
-            "activeTab": {
-              "type": "string",
-              "default": "",
-              "label": "Active Tab",
-              "description": "activeTab prop",
-              "tier": "presentation"
             }
           },
           "scope": "instance"

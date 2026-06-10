@@ -48,14 +48,14 @@ export interface StdUiChoiceButtonClickPayload {
 export interface StdUiChoiceButtonConfig {
   /** Default: `"Text"` */
   text?: string;
-  /** Default: `0` */
-  index?: number;
-  /** Default: `""` */
-  className?: string;
   /** Default: `false` */
   selected?: boolean;
   /** Default: `false` */
   disabled?: boolean;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `0` */
+  index?: number;
 }
 
 /**

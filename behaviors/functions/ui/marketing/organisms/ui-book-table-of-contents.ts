@@ -39,14 +39,14 @@ export type StdUiBookTableOfContentsEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiBookTableOfContentsConfig {
-  /** Default: `""` */
-  className?: string;
-  /** Default: `""` */
-  currentChapterId?: string;
   /** Default: `[]` */
   parts?: EntityRow[];
   /** Default: `"rtl"` */
   direction?: 'rtl' | 'ltr';
+  /** Default: `"Current Chapter Id"` */
+  currentChapterId?: string;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**
@@ -150,11 +150,11 @@ export function stdUiBookTableOfContentsBookTableOfContentsOrbital(params: StdUi
                   'render-ui',
                   'main',
                   {
-                    'parts': '@config.parts',
                     'direction': '@config.direction',
+                    'className': '@config.className',
+                    'parts': '@config.parts',
                     'currentChapterId': '@config.currentChapterId',
                     'type': 'book-table-of-contents',
-                    'className': '@config.className',
                   },
                 ],
               ],
@@ -162,20 +162,6 @@ export function stdUiBookTableOfContentsBookTableOfContentsOrbital(params: StdUi
           ],
         },
         'config': {
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'currentChapterId': {
-            'type': 'string',
-            'default': '',
-            'label': 'Current Chapter Id',
-            'description': 'currentChapterId prop',
-            'tier': 'presentation',
-          },
           'parts': {
             'type': '[BookTableOfContentsPartsItem]',
             'default': [],
@@ -185,6 +171,11 @@ export function stdUiBookTableOfContentsBookTableOfContentsOrbital(params: StdUi
             'items': {
               'type': 'object',
               'properties': {
+                'title': {
+                  'name': 'title',
+                  'type': 'string',
+                  'required': true,
+                },
                 'chapters': {
                   'name': 'chapters',
                   'type': 'array',
@@ -192,6 +183,11 @@ export function stdUiBookTableOfContentsBookTableOfContentsOrbital(params: StdUi
                   'items': {
                     'type': 'object',
                     'properties': {
+                      'orbitalSchema': {
+                        'name': 'orbitalSchema',
+                        'type': 'string',
+                        'required': false,
+                      },
                       'content': {
                         'name': 'content',
                         'type': 'string',
@@ -207,18 +203,8 @@ export function stdUiBookTableOfContentsBookTableOfContentsOrbital(params: StdUi
                         'type': 'string',
                         'required': true,
                       },
-                      'orbitalSchema': {
-                        'name': 'orbitalSchema',
-                        'type': 'string',
-                        'required': false,
-                      },
                     },
                   },
-                },
-                'title': {
-                  'name': 'title',
-                  'type': 'string',
-                  'required': true,
                 },
               },
             },
@@ -233,6 +219,20 @@ export function stdUiBookTableOfContentsBookTableOfContentsOrbital(params: StdUi
               'rtl',
               'ltr',
             ],
+          },
+          'currentChapterId': {
+            'type': 'string',
+            'default': 'Current Chapter Id',
+            'label': 'Current Chapter Id',
+            'description': 'currentChapterId prop',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
           },
         },
         'scope': 'instance',

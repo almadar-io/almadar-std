@@ -41,7 +41,6 @@ export type StdUiDialogEventKey = 'INIT';
 export interface StdUiDialogConfig {
   /** Default: `""` */
   className?: string;
-  children?: unknown;
 }
 
 /**

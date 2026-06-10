@@ -39,32 +39,32 @@ export type StdUiMasterDetailEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiMasterDetailConfig {
-  /** Default: `0` */
-  totalCount?: number;
+  error?: EntityRow;
+  activeFilters?: unknown;
+  /** Default: `["Item"]` */
+  masterFields?: string[];
   /** Default: `[]` */
-  detailFields?: string[];
+  selectedIds?: string[];
+  /** Default: `0` */
+  pageSize?: number;
   /** Default: `false` */
   loading?: boolean;
+  /** Default: `[]` */
+  detailFields?: string[];
   /** Default: `0` */
   pageProp?: number;
   /** Default: `""` */
   className?: string;
-  /** Default: `"asc"` */
-  sortDirection?: 'asc' | 'desc';
-  /** Default: `0` */
-  pageSize?: number;
-  /** Default: `""` */
-  sortBy?: string;
-  activeFilters?: unknown;
-  /** Default: `[]` */
-  selectedIds?: string[];
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `["Item"]` */
-  masterFields?: string[];
-  error?: EntityRow;
-  /** Default: `""` */
+  /** Default: `"Sort By"` */
+  sortBy?: string;
+  /** Default: `"asc"` */
+  sortDirection?: 'asc' | 'desc';
+  /** Default: `"Search Value"` */
   searchValue?: string;
+  /** Default: `0` */
+  totalCount?: number;
 }
 
 /**
@@ -173,22 +173,22 @@ export function stdUiMasterDetailMasterDetailOrbital(params: StdUiMasterDetailMa
                   'render-ui',
                   'main',
                   {
+                    'sortBy': '@config.sortBy',
+                    'totalCount': '@config.totalCount',
                     'masterFields': '@config.masterFields',
                     'sortDirection': '@config.sortDirection',
-                    'entity': '@entity',
                     'pageSize': '@config.pageSize',
                     'activeFilters': '@config.activeFilters',
-                    'className': '@config.className',
-                    'error': '@config.error',
-                    'detailFields': '@config.detailFields',
+                    'entity': '@entity',
                     'searchValue': '@config.searchValue',
-                    'type': 'master-detail',
-                    'sortBy': '@config.sortBy',
-                    'isLoading': '@config.isLoading',
-                    'totalCount': '@config.totalCount',
                     'selectedIds': '@config.selectedIds',
+                    'detailFields': '@config.detailFields',
+                    'type': 'master-detail',
                     'page': '@config.pageProp',
                     'loading': '@config.loading',
+                    'isLoading': '@config.isLoading',
+                    'className': '@config.className',
+                    'error': '@config.error',
                   },
                 ],
               ],
@@ -196,11 +196,74 @@ export function stdUiMasterDetailMasterDetailOrbital(params: StdUiMasterDetailMa
           ],
         },
         'config': {
-          'totalCount': {
+          'error': {
+            'type': 'MasterDetailError',
+            'label': 'Error',
+            'description': 'Error state (UiError)',
+            'tier': 'presentation',
+            'properties': {
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+            },
+          },
+          'activeFilters': {
+            'type': 'json',
+            'label': 'Active Filters',
+            'description': 'Active filters',
+            'tier': 'presentation',
+          },
+          'masterFields': {
+            'type': '[string]',
+            'default': [
+              'Item',
+            ],
+            'label': 'Master Fields',
+            'description': 'Fields to show in the master list (maps to DataTable columns)',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'selectedIds': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Selected Ids',
+            'description': 'Currently selected item IDs',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'pageSize': {
             'type': 'number',
             'default': 0,
-            'label': 'Total Count',
-            'description': 'Total number of items',
+            'label': 'Page Size',
+            'description': 'Number of items per page',
+            'tier': 'presentation',
+          },
+          'loading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Loading',
+            'description': 'Loading state (alias for isLoading)',
             'tier': 'presentation',
           },
           'detailFields': {
@@ -212,13 +275,6 @@ export function stdUiMasterDetailMasterDetailOrbital(params: StdUiMasterDetailMa
             'items': {
               'type': 'string',
             },
-          },
-          'loading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Loading',
-            'description': 'Loading state (alias for isLoading)',
-            'tier': 'presentation',
           },
           'pageProp': {
             'type': 'number',
@@ -235,6 +291,20 @@ export function stdUiMasterDetailMasterDetailOrbital(params: StdUiMasterDetailMa
             'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
+          'sortBy': {
+            'type': 'string',
+            'default': 'Sort By',
+            'label': 'Sort By',
+            'description': 'Current sort field',
+            'tier': 'presentation',
+          },
           'sortDirection': {
             'type': 'string',
             'default': 'asc',
@@ -246,88 +316,18 @@ export function stdUiMasterDetailMasterDetailOrbital(params: StdUiMasterDetailMa
               'desc',
             ],
           },
-          'pageSize': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page Size',
-            'description': 'Number of items per page',
-            'tier': 'presentation',
-          },
-          'sortBy': {
-            'type': 'string',
-            'default': '',
-            'label': 'Sort By',
-            'description': 'Current sort field',
-            'tier': 'presentation',
-          },
-          'activeFilters': {
-            'type': 'json',
-            'label': 'Active Filters',
-            'description': 'Active filters',
-            'tier': 'presentation',
-          },
-          'selectedIds': {
-            'type': '[string]',
-            'default': [],
-            'label': 'Selected Ids',
-            'description': 'Currently selected item IDs',
-            'tier': 'presentation',
-            'items': {
-              'type': 'string',
-            },
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
-            'tier': 'presentation',
-          },
-          'masterFields': {
-            'type': '[string]',
-            'default': [
-              'Item',
-            ],
-            'label': 'Master Fields',
-            'description': 'Fields to show in the master list (maps to DataTable columns)',
-            'tier': 'presentation',
-            'items': {
-              'type': 'string',
-            },
-          },
-          'error': {
-            'type': 'MasterDetailError',
-            'label': 'Error',
-            'description': 'Error state (UiError)',
-            'tier': 'presentation',
-            'properties': {
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-            },
-          },
           'searchValue': {
             'type': 'string',
-            'default': '',
+            'default': 'Search Value',
             'label': 'Search Value',
             'description': 'Current search query value',
+            'tier': 'presentation',
+          },
+          'totalCount': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Total Count',
+            'description': 'Total number of items',
             'tier': 'presentation',
           },
         },

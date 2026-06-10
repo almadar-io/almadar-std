@@ -206,41 +206,6 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
             'synonyms': 'entity',
             'tier': 'presentation',
             'properties': {
-              'slots': {
-                'name': 'slots',
-                'type': 'array',
-                'required': true,
-                'items': {
-                  'type': 'object',
-                  'properties': {
-                    'id': {
-                      'name': 'id',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'description': {
-                      'name': 'description',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'label': {
-                      'name': 'label',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'acceptsComponentId': {
-                      'name': 'acceptsComponentId',
-                      'type': 'string',
-                      'required': true,
-                    },
-                  },
-                },
-              },
-              'id': {
-                'name': 'id',
-                'type': 'string',
-                'required': true,
-              },
               'theme': {
                 'name': 'theme',
                 'type': 'object',
@@ -258,8 +223,8 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
                   },
                 },
               },
-              'successMessage': {
-                'name': 'successMessage',
+              'hint': {
+                'name': 'hint',
                 'type': 'string',
                 'required': false,
               },
@@ -270,10 +235,25 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
                 'items': {
                   'type': 'object',
                   'properties': {
+                    'label': {
+                      'name': 'label',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'iconEmoji': {
+                      'name': 'iconEmoji',
+                      'type': 'string',
+                      'required': false,
+                    },
                     'id': {
                       'name': 'id',
                       'type': 'string',
                       'required': true,
+                    },
+                    'iconUrl': {
+                      'name': 'iconUrl',
+                      'type': 'string',
+                      'required': false,
                     },
                     'description': {
                       'name': 'description',
@@ -285,26 +265,26 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
                       'type': 'string',
                       'required': false,
                     },
-                    'label': {
-                      'name': 'label',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'iconEmoji': {
-                      'name': 'iconEmoji',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'iconUrl': {
-                      'name': 'iconUrl',
-                      'type': 'string',
-                      'required': false,
-                    },
                   },
                 },
               },
-              'hint': {
-                'name': 'hint',
+              'successMessage': {
+                'name': 'successMessage',
+                'type': 'string',
+                'required': false,
+              },
+              'id': {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              'description': {
+                'name': 'description',
+                'type': 'string',
+                'required': true,
+              },
+              'headerImage': {
+                'name': 'headerImage',
                 'type': 'string',
                 'required': false,
               },
@@ -313,20 +293,40 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
                 'type': 'string',
                 'required': false,
               },
-              'headerImage': {
-                'name': 'headerImage',
-                'type': 'string',
-                'required': false,
-              },
-              'description': {
-                'name': 'description',
-                'type': 'string',
-                'required': true,
-              },
               'title': {
                 'name': 'title',
                 'type': 'string',
                 'required': true,
+              },
+              'slots': {
+                'name': 'slots',
+                'type': 'array',
+                'required': true,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'description': {
+                      'name': 'description',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'acceptsComponentId': {
+                      'name': 'acceptsComponentId',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'label': {
+                      'name': 'label',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'id': {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  },
+                },
               },
             },
           },

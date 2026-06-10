@@ -74,23 +74,23 @@
                     "render-ui",
                     "main",
                     {
-                      "selectedIds": "@config.selectedIds",
-                      "showConnectors": "@config.showConnectors",
-                      "error": "@config.error",
-                      "className": "@config.className",
-                      "pageSize": "@config.pageSize",
-                      "activeFilters": "@config.activeFilters",
-                      "isLoading": "@config.isLoading",
-                      "sortBy": "@config.sortBy",
-                      "sortDirection": "@config.sortDirection",
-                      "type": "step-flow-organism",
-                      "page": "@config.pageProp",
-                      "subtitle": "@config.subtitle",
                       "searchValue": "@config.searchValue",
-                      "entity": "@entity",
+                      "className": "@config.className",
+                      "page": "@config.pageProp",
+                      "type": "step-flow-organism",
+                      "showConnectors": "@config.showConnectors",
+                      "sortDirection": "@config.sortDirection",
                       "totalCount": "@config.totalCount",
+                      "selectedIds": "@config.selectedIds",
+                      "error": "@config.error",
+                      "subtitle": "@config.subtitle",
+                      "heading": "@config.heading",
+                      "pageSize": "@config.pageSize",
+                      "sortBy": "@config.sortBy",
                       "orientation": "@config.orientation",
-                      "heading": "@config.heading"
+                      "isLoading": "@config.isLoading",
+                      "entity": "@entity",
+                      "activeFilters": "@config.activeFilters"
                     }
                   ]
                 ]
@@ -98,57 +98,17 @@
             ]
           },
           "config": {
-            "pageSize": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Page Size",
-              "description": "Number of items per page",
-              "tier": "presentation"
-            },
-            "showConnectors": {
+            "isLoading": {
               "type": "boolean",
-              "default": true,
-              "label": "Show Connectors",
-              "description": "showConnectors prop",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
               "tier": "presentation"
             },
-            "orientation": {
-              "type": "string",
-              "default": "horizontal",
-              "label": "Orientation",
-              "description": "orientation prop",
-              "tier": "presentation",
-              "values": [
-                "horizontal",
-                "vertical"
-              ]
-            },
-            "totalCount": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Total Count",
-              "description": "Total number of items",
-              "tier": "presentation"
-            },
-            "heading": {
-              "type": "string",
-              "default": "",
-              "label": "Heading",
-              "description": "heading prop",
-              "tier": "presentation"
-            },
-            "sortBy": {
-              "type": "string",
-              "default": "",
-              "label": "Sort By",
-              "description": "Current sort field",
-              "tier": "presentation"
-            },
-            "subtitle": {
-              "type": "string",
-              "default": "",
-              "label": "Subtitle",
-              "description": "subtitle prop",
+            "activeFilters": {
+              "type": "json",
+              "label": "Active Filters",
+              "description": "Active filters",
               "tier": "presentation"
             },
             "className": {
@@ -158,42 +118,22 @@
               "description": "Additional CSS classes",
               "tier": "presentation"
             },
-            "activeFilters": {
-              "type": "json",
-              "label": "Active Filters",
-              "description": "Active filters",
-              "tier": "presentation"
-            },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state indicator",
-              "tier": "presentation"
-            },
-            "selectedIds": {
-              "type": "[string]",
-              "default": [],
-              "label": "Selected Ids",
-              "description": "Currently selected item IDs",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
-            },
-            "searchValue": {
-              "type": "string",
-              "default": "",
-              "label": "Search Value",
-              "description": "Current search query value",
-              "tier": "presentation"
-            },
             "error": {
               "type": "StepFlowOrganismError",
               "label": "Error",
               "description": "Error state (UiError)",
               "tier": "presentation",
               "properties": {
+                "stack": {
+                  "name": "stack",
+                  "type": "string",
+                  "required": false
+                },
+                "code": {
+                  "name": "code",
+                  "type": "string",
+                  "required": false
+                },
                 "message": {
                   "name": "message",
                   "type": "string",
@@ -203,18 +143,51 @@
                   "name": "name",
                   "type": "string",
                   "required": false
-                },
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
                 }
               }
+            },
+            "showConnectors": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Connectors",
+              "description": "showConnectors prop",
+              "tier": "presentation"
+            },
+            "heading": {
+              "type": "string",
+              "default": "Heading",
+              "label": "Heading",
+              "description": "heading prop",
+              "tier": "presentation"
+            },
+            "sortBy": {
+              "type": "string",
+              "default": "Sort By",
+              "label": "Sort By",
+              "description": "Current sort field",
+              "tier": "presentation"
+            },
+            "searchValue": {
+              "type": "string",
+              "default": "Search Value",
+              "label": "Search Value",
+              "description": "Current search query value",
+              "tier": "presentation"
+            },
+            "subtitle": {
+              "type": "string",
+              "default": "Subtitle",
+              "label": "Subtitle",
+              "description": "subtitle prop",
+              "tier": "presentation"
+            },
+            "pageProp": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Page",
+              "description": "Current page number",
+              "synonyms": "page",
+              "tier": "presentation"
             },
             "sortDirection": {
               "type": "string",
@@ -227,12 +200,39 @@
                 "desc"
               ]
             },
-            "pageProp": {
+            "totalCount": {
               "type": "number",
               "default": 0.0,
-              "label": "Page",
-              "description": "Current page number",
-              "synonyms": "page",
+              "label": "Total Count",
+              "description": "Total number of items",
+              "tier": "presentation"
+            },
+            "selectedIds": {
+              "type": "[string]",
+              "default": [],
+              "label": "Selected Ids",
+              "description": "Currently selected item IDs",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "orientation": {
+              "type": "string",
+              "default": "horizontal",
+              "label": "Orientation",
+              "description": "orientation prop",
+              "tier": "presentation",
+              "values": [
+                "horizontal",
+                "vertical"
+              ]
+            },
+            "pageSize": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Page Size",
+              "description": "Number of items per page",
               "tier": "presentation"
             }
           },

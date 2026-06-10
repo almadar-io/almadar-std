@@ -39,48 +39,48 @@ export type StdUiStatDisplayEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiStatDisplayConfig {
-  /** Default: `"elevated"` */
-  look?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
   /** Default: `"absolute"` */
   trendFormat?: 'absolute' | 'percent';
-  /** Default: `"higher-is-better"` */
-  trendPolarity?: 'higher-is-better' | 'lower-is-better';
   /** Default: `"default"` */
   variant?: 'default' | 'primary' | 'success' | 'warning' | 'error' | 'info';
-  /** Default: `"Value"` */
-  value?: string;
-  /** Default: `""` */
-  className?: string;
   /** Default: `0` */
   trend?: number;
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
-  /** Default: `"bg-muted"` */
-  iconBg?: string;
+  /** Default: `"Suffix"` */
+  suffix?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"elevated"` */
+  look?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
   /** Default: `[]` */
   sparklineData?: number[];
-  /** Default: `""` */
-  suffix?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `false` */
-  compact?: boolean;
-  /** Default: `"text-foreground"` */
-  iconColor?: string;
-  /** Default: `"Label"` */
-  label?: string;
-  /** Default: `""` */
-  clickEvent?: string;
-  error?: EntityRow;
-  /** Default: `0` */
-  target?: number;
-  /** Default: `""` */
-  prefix?: string;
-  icon?: unknown;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
   /** Default: `0` */
   max?: number;
-  /** Default: `""` */
+  error?: EntityRow;
+  /** Default: `"Label"` */
+  label?: string;
+  /** Default: `"text-foreground"` */
+  iconColor?: string;
+  /** Default: `0` */
+  target?: number;
+  /** Default: `"Prefix"` */
+  prefix?: string;
+  /** Default: `false` */
+  compact?: boolean;
+  /** Default: `"Value"` */
+  value?: string;
+  /** Default: `"bg-muted"` */
+  iconBg?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `"Click Event"` */
+  clickEvent?: string;
+  icon?: unknown;
+  /** Default: `"Format"` */
   format?: string;
+  /** Default: `"higher-is-better"` */
+  trendPolarity?: 'higher-is-better' | 'lower-is-better';
 }
 
 /**

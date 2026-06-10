@@ -39,13 +39,13 @@ export type StdUiCodeViewEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiCodeViewConfig {
+  /** Default: `false` */
+  defaultExpanded?: boolean;
   /** Default: `{}` */
   data?: unknown;
   /** Default: `""` */
   className?: string;
-  /** Default: `false` */
-  defaultExpanded?: boolean;
-  /** Default: `""` */
+  /** Default: `"Label"` */
   label?: string;
 }
 
@@ -151,9 +151,9 @@ export function stdUiCodeViewCodeViewOrbital(params: StdUiCodeViewCodeViewOrbita
                   'main',
                   {
                     'type': 'code-view',
+                    'data': '@config.data',
                     'label': '@config.label',
                     'defaultExpanded': '@config.defaultExpanded',
-                    'data': '@config.data',
                     'className': '@config.className',
                   },
                 ],
@@ -162,6 +162,13 @@ export function stdUiCodeViewCodeViewOrbital(params: StdUiCodeViewCodeViewOrbita
           ],
         },
         'config': {
+          'defaultExpanded': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Default Expanded',
+            'description': 'Whether the code is expanded by default',
+            'tier': 'presentation',
+          },
           'data': {
             'type': 'json',
             'default': {},
@@ -176,16 +183,9 @@ export function stdUiCodeViewCodeViewOrbital(params: StdUiCodeViewCodeViewOrbita
             'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
-          'defaultExpanded': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Default Expanded',
-            'description': 'Whether the code is expanded by default',
-            'tier': 'presentation',
-          },
           'label': {
             'type': 'string',
-            'default': '',
+            'default': 'Label',
             'label': 'Label',
             'description': 'Label',
             'tier': 'presentation',

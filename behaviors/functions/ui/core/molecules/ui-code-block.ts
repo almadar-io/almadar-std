@@ -47,21 +47,21 @@ export interface StdUiCodeBlockChangePayload {
  */
 export interface StdUiCodeBlockConfig {
   /** Default: `false` */
-  editable?: boolean;
-  /** Default: `false` */
   foldable?: boolean;
-  /** Default: `"text"` */
-  language?: string;
+  /** Default: `false` */
+  editable?: boolean;
+  /** Default: `"60vh"` */
+  maxHeight?: string;
   /** Default: `"Code"` */
   code?: string;
   /** Default: `true` */
-  showLanguageBadge?: boolean;
-  /** Default: `true` */
   showCopyButton?: boolean;
+  /** Default: `true` */
+  showLanguageBadge?: boolean;
   /** Default: `""` */
   className?: string;
-  /** Default: `"60vh"` */
-  maxHeight?: string;
+  /** Default: `"text"` */
+  language?: string;
 }
 
 /**

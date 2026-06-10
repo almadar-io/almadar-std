@@ -39,16 +39,16 @@ export type StdUiAnimatedCounterEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiAnimatedCounterConfig {
-  /** Default: `"Value"` */
-  value?: string;
-  /** Default: `600` */
-  duration?: number;
-  /** Default: `""` */
-  suffix?: string;
   /** Default: `""` */
   className?: string;
-  /** Default: `""` */
+  /** Default: `"Suffix"` */
+  suffix?: string;
+  /** Default: `"Prefix"` */
   prefix?: string;
+  /** Default: `600` */
+  duration?: number;
+  /** Default: `"Value"` */
+  value?: string;
 }
 
 /**

@@ -39,17 +39,16 @@ export type StdUiContainerEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiContainerConfig {
-  children?: unknown;
   /** Default: `true` */
   center?: boolean;
   /** Default: `"xs"` */
-  maxWidth?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
-  /** Default: `"md"` */
-  padding?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
   /** Default: `""` */
   className?: string;
+  /** Default: `"md"` */
+  padding?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
   /** Default: `"xs"` */
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
+  maxWidth?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
 }
 
 /**

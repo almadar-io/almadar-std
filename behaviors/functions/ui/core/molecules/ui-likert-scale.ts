@@ -50,16 +50,16 @@ export interface StdUiLikertScaleConfig {
   size?: 'sm' | 'md' | 'lg';
   /** Default: `""` */
   className?: string;
-  /** Default: `""` */
-  question?: string;
-  /** Default: `[]` */
-  options?: EntityRow[];
   /** Default: `"radios"` */
   variant?: 'radios' | 'buttons';
+  /** Default: `"Question"` */
+  question?: string;
+  /** Default: `"Value"` */
+  value?: string;
+  /** Default: `[]` */
+  options?: EntityRow[];
   /** Default: `false` */
   disabled?: boolean;
-  /** Default: `""` */
-  value?: string;
 }
 
 /**

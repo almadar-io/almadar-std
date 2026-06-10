@@ -39,11 +39,11 @@ export type StdUiBookChapterViewEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiBookChapterViewConfig {
-  /** Default: `"rtl"` */
-  direction?: 'rtl' | 'ltr';
   /** Default: `""` */
   className?: string;
-  /** Default: `{"id":"","title":"","content":""}` */
+  /** Default: `"rtl"` */
+  direction?: 'rtl' | 'ltr';
+  /** Default: `{"content":"","id":"","title":""}` */
   chapter?: EntityRow;
 }
 
@@ -148,10 +148,10 @@ export function stdUiBookChapterViewBookChapterViewOrbital(params: StdUiBookChap
                   'render-ui',
                   'main',
                   {
-                    'className': '@config.className',
-                    'chapter': '@config.chapter',
-                    'direction': '@config.direction',
                     'type': 'book-chapter-view',
+                    'chapter': '@config.chapter',
+                    'className': '@config.className',
+                    'direction': '@config.direction',
                   },
                 ],
               ],
@@ -159,6 +159,13 @@ export function stdUiBookChapterViewBookChapterViewOrbital(params: StdUiBookChap
           ],
         },
         'config': {
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
           'direction': {
             'type': 'string',
             'default': 'rtl',
@@ -170,26 +177,24 @@ export function stdUiBookChapterViewBookChapterViewOrbital(params: StdUiBookChap
               'ltr',
             ],
           },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
           'chapter': {
             'type': 'BookChapterViewChapter',
             'default': {
+              'content': '',
               'id': '',
               'title': '',
-              'content': '',
             },
             'label': 'Chapter',
             'description': 'chapter prop',
             'tier': 'presentation',
             'properties': {
-              'content': {
-                'name': 'content',
+              'id': {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              'title': {
+                'name': 'title',
                 'type': 'string',
                 'required': true,
               },
@@ -198,13 +203,8 @@ export function stdUiBookChapterViewBookChapterViewOrbital(params: StdUiBookChap
                 'type': 'string',
                 'required': false,
               },
-              'id': {
-                'name': 'id',
-                'type': 'string',
-                'required': true,
-              },
-              'title': {
-                'name': 'title',
+              'content': {
+                'name': 'content',
                 'type': 'string',
                 'required': true,
               },

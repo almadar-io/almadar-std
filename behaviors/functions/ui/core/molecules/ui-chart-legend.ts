@@ -39,10 +39,10 @@ export type StdUiChartLegendEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiChartLegendConfig {
-  /** Default: `"horizontal"` */
-  direction?: 'horizontal' | 'vertical';
   /** Default: `[{"color":"Color","label":"Label"}]` */
   items?: EntityRow[];
+  /** Default: `"horizontal"` */
+  direction?: 'horizontal' | 'vertical';
   /** Default: `""` */
   className?: string;
 }

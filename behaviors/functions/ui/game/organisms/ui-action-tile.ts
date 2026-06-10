@@ -152,9 +152,9 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
                   {
                     'action': '@config.action',
                     'size': '@config.size',
-                    'disabled': '@config.disabled',
-                    'categoryColors': '@config.categoryColors',
                     'type': 'action-tile',
+                    'categoryColors': '@config.categoryColors',
+                    'disabled': '@config.disabled',
                   },
                 ],
               ],
@@ -200,11 +200,21 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
                 'type': 'string',
                 'required': false,
               },
+              'id': {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
               'stateMachine': {
                 'name': 'stateMachine',
                 'type': 'object',
                 'required': false,
                 'properties': {
+                  'name': {
+                    'name': 'name',
+                    'type': 'string',
+                    'required': true,
+                  },
                   'states': {
                     'name': 'states',
                     'type': 'array',
@@ -220,18 +230,8 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
                     'items': {
                       'type': 'object',
                       'properties': {
-                        'from': {
-                          'name': 'from',
-                          'type': 'string',
-                          'required': true,
-                        },
                         'to': {
                           'name': 'to',
-                          'type': 'string',
-                          'required': true,
-                        },
-                        'event': {
-                          'name': 'event',
                           'type': 'string',
                           'required': true,
                         },
@@ -240,13 +240,18 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
                           'type': 'string',
                           'required': false,
                         },
+                        'from': {
+                          'name': 'from',
+                          'type': 'string',
+                          'required': true,
+                        },
+                        'event': {
+                          'name': 'event',
+                          'type': 'string',
+                          'required': true,
+                        },
                       },
                     },
-                  },
-                  'name': {
-                    'name': 'name',
-                    'type': 'string',
-                    'required': true,
                   },
                   'description': {
                     'name': 'description',
@@ -262,11 +267,6 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
               },
               'name': {
                 'name': 'name',
-                'type': 'string',
-                'required': true,
-              },
-              'id': {
-                'name': 'id',
                 'type': 'string',
                 'required': true,
               },

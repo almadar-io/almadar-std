@@ -189,9 +189,9 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
                   'render-ui',
                   'main',
                   {
-                    'type': 'negotiator-board',
                     'entity': '@config.entityProp',
                     'completeEvent': 'COMPLETE',
+                    'type': 'negotiator-board',
                   },
                 ],
               ],
@@ -206,40 +206,48 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
             'synonyms': 'entity',
             'tier': 'presentation',
             'properties': {
-              'id': {
-                'name': 'id',
-                'type': 'string',
-                'required': true,
-              },
-              'title': {
-                'name': 'title',
-                'type': 'string',
-                'required': true,
-              },
-              'successMessage': {
-                'name': 'successMessage',
-                'type': 'string',
-                'required': false,
-              },
               'headerImage': {
                 'name': 'headerImage',
                 'type': 'string',
                 'required': false,
               },
-              'theme': {
-                'name': 'theme',
-                'type': 'object',
+              'hint': {
+                'name': 'hint',
+                'type': 'string',
                 'required': false,
-                'properties': {
-                  'accentColor': {
-                    'name': 'accentColor',
-                    'type': 'string',
-                    'required': false,
-                  },
-                  'background': {
-                    'name': 'background',
-                    'type': 'string',
-                    'required': false,
+              },
+              'totalRounds': {
+                'name': 'totalRounds',
+                'type': 'number',
+                'required': true,
+              },
+              'description': {
+                'name': 'description',
+                'type': 'string',
+                'required': true,
+              },
+              'actions': {
+                'name': 'actions',
+                'type': 'array',
+                'required': true,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'description': {
+                      'name': 'description',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'id': {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'label': {
+                      'name': 'label',
+                      'type': 'string',
+                      'required': true,
+                    },
                   },
                 },
               },
@@ -250,6 +258,11 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
                 'items': {
                   'type': 'object',
                   'properties': {
+                    'playerPayoff': {
+                      'name': 'playerPayoff',
+                      'type': 'number',
+                      'required': true,
+                    },
                     'opponentAction': {
                       'name': 'opponentAction',
                       'type': 'string',
@@ -257,11 +270,6 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
                     },
                     'opponentPayoff': {
                       'name': 'opponentPayoff',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'playerPayoff': {
-                      'name': 'playerPayoff',
                       'type': 'number',
                       'required': true,
                     },
@@ -273,60 +281,52 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
                   },
                 },
               },
-              'hint': {
-                'name': 'hint',
-                'type': 'string',
-                'required': false,
-              },
-              'failMessage': {
-                'name': 'failMessage',
-                'type': 'string',
-                'required': false,
-              },
-              'actions': {
-                'name': 'actions',
-                'type': 'array',
-                'required': true,
-                'items': {
-                  'type': 'object',
-                  'properties': {
-                    'label': {
-                      'name': 'label',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'description': {
-                      'name': 'description',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'id': {
-                      'name': 'id',
-                      'type': 'string',
-                      'required': true,
-                    },
-                  },
-                },
-              },
               'targetScore': {
                 'name': 'targetScore',
                 'type': 'number',
                 'required': true,
               },
-              'totalRounds': {
-                'name': 'totalRounds',
-                'type': 'number',
-                'required': true,
+              'successMessage': {
+                'name': 'successMessage',
+                'type': 'string',
+                'required': false,
               },
               'opponentStrategy': {
                 'name': 'opponentStrategy',
                 'type': 'string',
                 'required': true,
               },
-              'description': {
-                'name': 'description',
+              'theme': {
+                'name': 'theme',
+                'type': 'object',
+                'required': false,
+                'properties': {
+                  'background': {
+                    'name': 'background',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'accentColor': {
+                    'name': 'accentColor',
+                    'type': 'string',
+                    'required': false,
+                  },
+                },
+              },
+              'title': {
+                'name': 'title',
                 'type': 'string',
                 'required': true,
+              },
+              'id': {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              'failMessage': {
+                'name': 'failMessage',
+                'type': 'string',
+                'required': false,
               },
             },
           },

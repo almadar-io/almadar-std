@@ -39,17 +39,17 @@ export type StdUiWaypointMarkerEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiWaypointMarkerConfig {
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
-  /** Default: `""` */
-  label?: string;
+  icon?: unknown;
+  /** Default: `false` */
+  completed?: boolean;
   /** Default: `""` */
   className?: string;
   /** Default: `false` */
-  completed?: boolean;
-  icon?: unknown;
-  /** Default: `false` */
   active?: boolean;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
+  /** Default: `"Label"` */
+  label?: string;
 }
 
 /**

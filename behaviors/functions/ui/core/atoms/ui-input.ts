@@ -62,26 +62,26 @@ export interface StdUiInputChangePayload {
 export interface StdUiInputConfig {
   /** Default: `"text"` */
   inputType?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'search' | 'date' | 'datetime-local' | 'time' | 'checkbox' | 'select' | 'textarea';
-  /** Default: `""` */
-  value?: string;
-  /** Default: `""` */
-  error?: string;
-  /** Default: `"circle"` */
-  icon?: string;
-  /** Default: `false` */
-  disabled?: boolean;
-  leftIcon?: unknown;
-  /** Default: `[]` */
-  options?: EntityRow[];
+  /** Default: `"Placeholder"` */
+  placeholder?: string;
   /** Default: `false` */
   clearable?: boolean;
-  rightIcon?: unknown;
   /** Default: `""` */
   className?: string;
-  /** Default: `""` */
-  placeholder?: string;
+  /** Default: `[]` */
+  options?: EntityRow[];
+  /** Default: `"Value"` */
+  value?: string;
+  leftIcon?: unknown;
   /** Default: `3` */
   rows?: number;
+  /** Default: `false` */
+  disabled?: boolean;
+  /** Default: `""` */
+  error?: string;
+  rightIcon?: unknown;
+  /** Default: `"circle"` */
+  icon?: string;
 }
 
 /**

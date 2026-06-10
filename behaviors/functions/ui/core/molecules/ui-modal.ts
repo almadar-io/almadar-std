@@ -30,12 +30,19 @@ const ALIAS = 'UiModal';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiModalEventKey = 'CLOSE' | 'INIT';
+export type StdUiModalEventKey = 'CLOSE' | 'INIT' | 'OPEN';
 
 /**
  * Payload shape for the `CLOSE` event.
  */
 export interface StdUiModalClosePayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `OPEN` event.
+ */
+export interface StdUiModalOpenPayload {
   id?: string;
 }
 
@@ -46,26 +53,25 @@ export interface StdUiModalClosePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiModalConfig {
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
   /** Default: `true` */
   isOpen?: boolean;
-  footer?: unknown;
-  /** Default: `""` */
-  title?: string;
-  children?: unknown;
   /** Default: `true` */
   closeOnOverlayClick?: boolean;
-  /** Default: `true` */
-  showCloseButton?: boolean;
+  footer?: unknown;
   /** Default: `true` */
   closeOnEscape?: boolean;
+  /** Default: `true` */
+  showCloseButton?: boolean;
+  /** Default: `"centered-card"` */
+  look?: 'centered-card' | 'top-sheet' | 'side-drawer' | 'full-screen';
+  /** Default: `"Title"` */
+  title?: string;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
   /** Default: `""` */
   className?: string;
   /** Default: `true` */
   swipeDownToClose?: boolean;
-  /** Default: `"centered-card"` */
-  look?: 'centered-card' | 'top-sheet' | 'side-drawer' | 'full-screen';
 }
 
 /**

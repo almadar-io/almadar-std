@@ -39,24 +39,24 @@ export type StdUiGridEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiGridConfig {
-  /** Default: `"start"` */
-  alignItems?: 'start' | 'center' | 'end' | 'stretch' | 'baseline';
+  /** Default: `"md"` */
+  gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   /** Default: `"none"` */
   colGap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  /** Default: `""` */
+  className?: string;
   /** Default: `"start"` */
   justifyItems?: 'start' | 'center' | 'end' | 'stretch';
   /** Default: `0` */
   rows?: number;
-  /** Default: `"md"` */
-  gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
-  cols?: string;
   /** Default: `"none"` */
   rowGap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  style?: unknown;
   /** Default: `"row"` */
   flow?: 'row' | 'col' | 'row-dense' | 'col-dense';
-  /** Default: `""` */
-  className?: string;
-  style?: unknown;
+  cols?: string;
+  /** Default: `"start"` */
+  alignItems?: 'start' | 'center' | 'end' | 'stretch' | 'baseline';
 }
 
 /**

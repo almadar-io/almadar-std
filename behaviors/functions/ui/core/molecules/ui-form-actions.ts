@@ -41,18 +41,17 @@ export type StdUiFormActionsEventKey = 'INIT';
 export interface StdUiFormActionsConfig {
   /** Default: `""` */
   className?: string;
-  primary?: EntityRow;
-  /** Default: `"default"` */
-  variant?: 'default' | 'segmented' | 'toggle';
-  /** Default: `[]` */
-  filters?: EntityRow[];
-  /** Default: `[]` */
-  secondary?: EntityRow[];
   /** Default: `"horizontal"` */
   orientation?: 'horizontal' | 'vertical';
-  children?: unknown;
+  /** Default: `[]` */
+  secondary?: EntityRow[];
+  /** Default: `[]` */
+  filters?: EntityRow[];
+  primary?: EntityRow;
   /** Default: `"right-aligned-buttons"` */
   look?: 'right-aligned-buttons' | 'floating-bar' | 'inline-row' | 'dropdown-menu' | 'command-palette-trigger';
+  /** Default: `"default"` */
+  variant?: 'default' | 'segmented' | 'toggle';
 }
 
 /**

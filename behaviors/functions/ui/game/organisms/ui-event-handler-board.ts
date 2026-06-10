@@ -211,11 +211,11 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
                   'render-ui',
                   'main',
                   {
+                    'completeEvent': 'COMPLETE',
                     'type': 'event-handler-board',
                     'playEvent': 'PLAY',
-                    'completeEvent': 'COMPLETE',
-                    'entity': '@config.entityProp',
                     'stepDurationMs': '@config.stepDurationMs',
+                    'entity': '@config.entityProp',
                   },
                 ],
               ],
@@ -230,57 +230,42 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
             'synonyms': 'entity',
             'tier': 'presentation',
             'properties': {
-              'description': {
-                'name': 'description',
+              'hint': {
+                'name': 'hint',
                 'type': 'string',
-                'required': true,
+                'required': false,
               },
               'title': {
                 'name': 'title',
                 'type': 'string',
                 'required': true,
               },
-              'id': {
-                'name': 'id',
-                'type': 'string',
-                'required': true,
-              },
-              'goalCondition': {
-                'name': 'goalCondition',
-                'type': 'string',
-                'required': true,
-              },
-              'hint': {
-                'name': 'hint',
-                'type': 'string',
-                'required': false,
-              },
-              'successMessage': {
-                'name': 'successMessage',
-                'type': 'string',
-                'required': false,
-              },
-              'headerImage': {
-                'name': 'headerImage',
-                'type': 'string',
-                'required': false,
-              },
               'theme': {
                 'name': 'theme',
                 'type': 'object',
                 'required': false,
                 'properties': {
-                  'accentColor': {
-                    'name': 'accentColor',
-                    'type': 'string',
-                    'required': false,
-                  },
                   'background': {
                     'name': 'background',
                     'type': 'string',
                     'required': false,
                   },
+                  'accentColor': {
+                    'name': 'accentColor',
+                    'type': 'string',
+                    'required': false,
+                  },
                 },
+              },
+              'goalEvent': {
+                'name': 'goalEvent',
+                'type': 'string',
+                'required': true,
+              },
+              'successMessage': {
+                'name': 'successMessage',
+                'type': 'string',
+                'required': false,
               },
               'objects': {
                 'name': 'objects',
@@ -289,26 +274,43 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
                 'items': {
                   'type': 'object',
                   'properties': {
-                    'id': {
-                      'name': 'id',
+                    'icon': {
+                      'name': 'icon',
                       'type': 'string',
                       'required': true,
+                    },
+                    'currentState': {
+                      'name': 'currentState',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'availableEvents': {
+                      'name': 'availableEvents',
+                      'type': 'array',
+                      'required': true,
+                      'items': {
+                        'type': 'object',
+                        'properties': {
+                          'label': {
+                            'name': 'label',
+                            'type': 'string',
+                            'required': true,
+                          },
+                          'value': {
+                            'name': 'value',
+                            'type': 'string',
+                            'required': true,
+                          },
+                        },
+                      },
                     },
                     'maxRules': {
                       'name': 'maxRules',
                       'type': 'number',
                       'required': false,
                     },
-                    'states': {
-                      'name': 'states',
-                      'type': 'array',
-                      'required': true,
-                      'items': {
-                        'type': 'string',
-                      },
-                    },
-                    'currentState': {
-                      'name': 'currentState',
+                    'name': {
+                      'name': 'name',
                       'type': 'string',
                       'required': true,
                     },
@@ -332,31 +334,6 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
                         },
                       },
                     },
-                    'availableEvents': {
-                      'name': 'availableEvents',
-                      'type': 'array',
-                      'required': true,
-                      'items': {
-                        'type': 'object',
-                        'properties': {
-                          'value': {
-                            'name': 'value',
-                            'type': 'string',
-                            'required': true,
-                          },
-                          'label': {
-                            'name': 'label',
-                            'type': 'string',
-                            'required': true,
-                          },
-                        },
-                      },
-                    },
-                    'icon': {
-                      'name': 'icon',
-                      'type': 'string',
-                      'required': true,
-                    },
                     'rules': {
                       'name': 'rules',
                       'type': 'array',
@@ -369,21 +346,21 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
                             'type': 'string',
                             'required': true,
                           },
-                          'whenEvent': {
-                            'name': 'whenEvent',
+                          'id': {
+                            'name': 'id',
                             'type': 'string',
                             'required': true,
                           },
-                          'id': {
-                            'name': 'id',
+                          'whenEvent': {
+                            'name': 'whenEvent',
                             'type': 'string',
                             'required': true,
                           },
                         },
                       },
                     },
-                    'name': {
-                      'name': 'name',
+                    'id': {
+                      'name': 'id',
                       'type': 'string',
                       'required': true,
                     },
@@ -392,8 +369,41 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
                       'type': 'string',
                       'required': true,
                     },
+                    'states': {
+                      'name': 'states',
+                      'type': 'array',
+                      'required': true,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
                   },
                 },
+              },
+              'id': {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              'description': {
+                'name': 'description',
+                'type': 'string',
+                'required': true,
+              },
+              'failMessage': {
+                'name': 'failMessage',
+                'type': 'string',
+                'required': false,
+              },
+              'headerImage': {
+                'name': 'headerImage',
+                'type': 'string',
+                'required': false,
+              },
+              'goalCondition': {
+                'name': 'goalCondition',
+                'type': 'string',
+                'required': true,
               },
               'triggerEvents': {
                 'name': 'triggerEvents',
@@ -402,16 +412,6 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
                 'items': {
                   'type': 'string',
                 },
-              },
-              'failMessage': {
-                'name': 'failMessage',
-                'type': 'string',
-                'required': false,
-              },
-              'goalEvent': {
-                'name': 'goalEvent',
-                'type': 'string',
-                'required': true,
               },
             },
           },

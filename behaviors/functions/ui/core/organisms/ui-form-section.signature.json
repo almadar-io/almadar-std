@@ -48,16 +48,9 @@
           {
             "key": "cancelLabel",
             "type": "string",
-            "default": "",
+            "default": "Cancel Label",
             "label": "Cancel Label",
             "description": "Cancel button label (if provided, shows cancel button)",
-            "tier": "presentation"
-          },
-          {
-            "key": "children",
-            "type": "node",
-            "label": "Children",
-            "description": "Form fields (traditional React children)",
             "tier": "presentation"
           },
           {
@@ -82,7 +75,7 @@
           {
             "key": "configPath",
             "type": "string",
-            "default": "",
+            "default": "Config Path",
             "label": "Config Path",
             "description": "Config path for form configuration (schema-driven)",
             "tier": "presentation"
@@ -94,11 +87,6 @@
             "description": "Error state",
             "tier": "presentation",
             "properties": {
-              "code": {
-                "name": "code",
-                "required": false,
-                "type": "string"
-              },
               "stack": {
                 "name": "stack",
                 "required": false,
@@ -113,6 +101,11 @@
                 "name": "name",
                 "required": false,
                 "type": "string"
+              },
+              "code": {
+                "name": "code",
+                "required": false,
+                "type": "string"
               }
             }
           },
@@ -123,9 +116,9 @@
             "description": "Context for S-expression evaluation - accepts flexible types from generated code",
             "tier": "presentation",
             "properties": {
-              "formValues": {
-                "name": "formValues",
-                "required": true,
+              "localVariables": {
+                "name": "localVariables",
+                "required": false,
                 "type": "string"
               },
               "entity": {
@@ -133,14 +126,14 @@
                 "required": false,
                 "type": "string"
               },
-              "globalVariables": {
-                "name": "globalVariables",
+              "formValues": {
+                "name": "formValues",
                 "required": true,
                 "type": "string"
               },
-              "localVariables": {
-                "name": "localVariables",
-                "required": false,
+              "globalVariables": {
+                "name": "globalVariables",
+                "required": true,
                 "type": "string"
               }
             }
@@ -154,23 +147,8 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "disabled": {
-                  "name": "disabled",
-                  "required": false,
-                  "type": "boolean"
-                },
                 "type": {
                   "name": "type",
-                  "required": false,
-                  "type": "string"
-                },
-                "required": {
-                  "name": "required",
-                  "required": false,
-                  "type": "boolean"
-                },
-                "defaultValue": {
-                  "name": "defaultValue",
                   "required": false,
                   "type": "string"
                 },
@@ -182,59 +160,8 @@
                     "type": "string"
                   }
                 },
-                "relation": {
-                  "name": "relation",
-                  "required": false,
-                  "properties": {
-                    "displayField": {
-                      "name": "displayField",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "cardinality": {
-                      "name": "cardinality",
-                      "required": false,
-                      "type": "string",
-                      "values": [
-                        "one",
-                        "many"
-                      ]
-                    },
-                    "entity": {
-                      "name": "entity",
-                      "required": true,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                },
-                "readonly": {
-                  "name": "readonly",
-                  "required": false,
-                  "type": "boolean"
-                },
-                "inputType": {
-                  "name": "inputType",
-                  "required": false,
-                  "type": "string"
-                },
-                "placeholder": {
-                  "name": "placeholder",
-                  "required": false,
-                  "type": "string"
-                },
-                "pattern": {
-                  "name": "pattern",
-                  "required": false,
-                  "type": "string"
-                },
-                "name": {
-                  "name": "name",
-                  "required": false,
-                  "type": "string"
-                },
-                "validation": {
-                  "name": "validation",
+                "label": {
+                  "name": "label",
                   "required": false,
                   "type": "string"
                 },
@@ -258,25 +185,91 @@
                     "type": "object"
                   }
                 },
+                "min": {
+                  "name": "min",
+                  "required": false,
+                  "type": "number"
+                },
                 "field": {
                   "name": "field",
                   "required": false,
                   "type": "string"
                 },
-                "min": {
-                  "name": "min",
+                "validation": {
+                  "name": "validation",
                   "required": false,
-                  "type": "number"
+                  "type": "string"
                 },
                 "max": {
                   "name": "max",
                   "required": false,
                   "type": "number"
                 },
-                "label": {
-                  "name": "label",
+                "inputType": {
+                  "name": "inputType",
                   "required": false,
                   "type": "string"
+                },
+                "relation": {
+                  "name": "relation",
+                  "required": false,
+                  "properties": {
+                    "entity": {
+                      "name": "entity",
+                      "required": true,
+                      "type": "string"
+                    },
+                    "cardinality": {
+                      "name": "cardinality",
+                      "required": false,
+                      "type": "string",
+                      "values": [
+                        "one",
+                        "many"
+                      ]
+                    },
+                    "displayField": {
+                      "name": "displayField",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "placeholder": {
+                  "name": "placeholder",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "disabled": {
+                  "name": "disabled",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "pattern": {
+                  "name": "pattern",
+                  "required": false,
+                  "type": "string"
+                },
+                "defaultValue": {
+                  "name": "defaultValue",
+                  "required": false,
+                  "type": "string"
+                },
+                "required": {
+                  "name": "required",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "readonly": {
+                  "name": "readonly",
+                  "required": false,
+                  "type": "boolean"
                 }
               },
               "type": "object"
@@ -304,15 +297,15 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "variableName": {
-                  "name": "variableName",
-                  "required": true,
-                  "type": "string"
-                },
                 "expression": {
                   "name": "expression",
                   "required": true,
                   "type": "object"
+                },
+                "variableName": {
+                  "name": "variableName",
+                  "required": true,
+                  "type": "string"
                 },
                 "triggerFields": {
                   "name": "triggerFields",
@@ -369,7 +362,7 @@
           {
             "key": "onCancel",
             "type": "string",
-            "default": "",
+            "default": "On Cancel",
             "label": "On Cancel",
             "description": "Cancel event name for trait dispatch (emitted via eventBus as UI:{onCancel})",
             "tier": "presentation"
@@ -377,7 +370,7 @@
           {
             "key": "onSubmit",
             "type": "string",
-            "default": "",
+            "default": "On Submit",
             "label": "On Submit",
             "description": "Submit event name for trait dispatch (emitted via eventBus as UI:{onSubmit})",
             "tier": "presentation"
@@ -393,25 +386,25 @@
               "type": "array",
               "items": {
                 "properties": {
-                  "description": {
-                    "name": "description",
-                    "required": false,
-                    "type": "string"
-                  },
                   "value": {
                     "name": "value",
                     "required": true,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "description": {
+                    "name": "description",
+                    "required": false,
                     "type": "string"
                   },
                   "disabled": {
                     "name": "disabled",
                     "required": false,
                     "type": "boolean"
-                  },
-                  "label": {
-                    "name": "label",
-                    "required": true,
-                    "type": "string"
                   }
                 },
                 "type": "object"
@@ -446,20 +439,15 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "condition": {
-                  "name": "condition",
-                  "required": false,
-                  "type": "object"
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
                 },
                 "collapsible": {
                   "name": "collapsible",
                   "required": false,
                   "type": "boolean"
-                },
-                "id": {
-                  "name": "id",
-                  "required": true,
-                  "type": "string"
                 },
                 "title": {
                   "name": "title",
@@ -472,6 +460,100 @@
                   "type": "array",
                   "items": {
                     "properties": {
+                      "name": {
+                        "name": "name",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "type": {
+                        "name": "type",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "inputType": {
+                        "name": "inputType",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "label": {
+                        "name": "label",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "relation": {
+                        "name": "relation",
+                        "required": false,
+                        "properties": {
+                          "displayField": {
+                            "name": "displayField",
+                            "required": false,
+                            "type": "string"
+                          },
+                          "entity": {
+                            "name": "entity",
+                            "required": true,
+                            "type": "string"
+                          },
+                          "cardinality": {
+                            "name": "cardinality",
+                            "required": false,
+                            "type": "string",
+                            "values": [
+                              "one",
+                              "many"
+                            ]
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "values": {
+                        "name": "values",
+                        "required": false,
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "min": {
+                        "name": "min",
+                        "required": false,
+                        "type": "number"
+                      },
+                      "required": {
+                        "name": "required",
+                        "required": false,
+                        "type": "boolean"
+                      },
+                      "disabled": {
+                        "name": "disabled",
+                        "required": false,
+                        "type": "boolean"
+                      },
+                      "placeholder": {
+                        "name": "placeholder",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "max": {
+                        "name": "max",
+                        "required": false,
+                        "type": "number"
+                      },
+                      "pattern": {
+                        "name": "pattern",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "defaultValue": {
+                        "name": "defaultValue",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "field": {
+                        "name": "field",
+                        "required": false,
+                        "type": "string"
+                      },
                       "options": {
                         "name": "options",
                         "required": false,
@@ -492,113 +574,24 @@
                           "type": "object"
                         }
                       },
-                      "defaultValue": {
-                        "name": "defaultValue",
-                        "required": false,
-                        "type": "string"
-                      },
-                      "type": {
-                        "name": "type",
-                        "required": false,
-                        "type": "string"
-                      },
-                      "placeholder": {
-                        "name": "placeholder",
-                        "required": false,
-                        "type": "string"
-                      },
-                      "field": {
-                        "name": "field",
-                        "required": false,
-                        "type": "string"
-                      },
-                      "required": {
-                        "name": "required",
-                        "required": false,
-                        "type": "boolean"
-                      },
-                      "inputType": {
-                        "name": "inputType",
-                        "required": false,
-                        "type": "string"
-                      },
-                      "values": {
-                        "name": "values",
-                        "required": false,
-                        "type": "array",
-                        "items": {
-                          "type": "string"
-                        }
-                      },
-                      "max": {
-                        "name": "max",
-                        "required": false,
-                        "type": "number"
-                      },
-                      "validation": {
-                        "name": "validation",
-                        "required": false,
-                        "type": "string"
-                      },
-                      "relation": {
-                        "name": "relation",
-                        "required": false,
-                        "properties": {
-                          "entity": {
-                            "name": "entity",
-                            "required": true,
-                            "type": "string"
-                          },
-                          "displayField": {
-                            "name": "displayField",
-                            "required": false,
-                            "type": "string"
-                          },
-                          "cardinality": {
-                            "name": "cardinality",
-                            "required": false,
-                            "type": "string",
-                            "values": [
-                              "one",
-                              "many"
-                            ]
-                          }
-                        },
-                        "type": "object"
-                      },
-                      "disabled": {
-                        "name": "disabled",
-                        "required": false,
-                        "type": "boolean"
-                      },
-                      "label": {
-                        "name": "label",
-                        "required": false,
-                        "type": "string"
-                      },
-                      "min": {
-                        "name": "min",
-                        "required": false,
-                        "type": "number"
-                      },
-                      "pattern": {
-                        "name": "pattern",
-                        "required": false,
-                        "type": "string"
-                      },
                       "readonly": {
                         "name": "readonly",
                         "required": false,
                         "type": "boolean"
                       },
-                      "name": {
-                        "name": "name",
+                      "validation": {
+                        "name": "validation",
                         "required": false,
                         "type": "string"
                       }
                     },
                     "type": "object"
                   }
+                },
+                "condition": {
+                  "name": "condition",
+                  "required": false,
+                  "type": "object"
                 }
               },
               "type": "object"
@@ -623,7 +616,7 @@
           {
             "key": "submitLabel",
             "type": "string",
-            "default": "",
+            "default": "Submit Label",
             "label": "Submit Label",
             "description": "Submit button label",
             "tier": "presentation"
@@ -631,7 +624,7 @@
           {
             "key": "title",
             "type": "string",
-            "default": "",
+            "default": "Title",
             "label": "Title",
             "description": "Form title (used by ModalSlot to extract title)",
             "tier": "presentation"
@@ -645,11 +638,6 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "condition": {
-                  "name": "condition",
-                  "required": true,
-                  "type": "object"
-                },
                 "fieldId": {
                   "name": "fieldId",
                   "required": false,
@@ -669,8 +657,8 @@
                         "penalty"
                       ]
                     },
-                    "message": {
-                      "name": "message",
+                    "article": {
+                      "name": "article",
                       "required": true,
                       "type": "string"
                     },
@@ -679,12 +667,17 @@
                       "required": true,
                       "type": "string"
                     },
-                    "article": {
-                      "name": "article",
+                    "message": {
+                      "name": "message",
                       "required": true,
                       "type": "string"
                     }
                   },
+                  "type": "object"
+                },
+                "condition": {
+                  "name": "condition",
+                  "required": true,
                   "type": "object"
                 }
               },
