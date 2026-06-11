@@ -488,6 +488,18 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     example: '["notify", "in_app", "Task created successfully"]',
     effect: { kind: 'notify' },
   },
+  log: {
+    module: 'core',
+    category: 'effect',
+    minArity: 1,
+    maxArity: 1,
+    description: 'Emit a structured info log line (compiled + runtime)',
+    hasSideEffects: true,
+    returnType: 'void',
+    params: [{ name: 'message', type: STRING, description: 'Log message' }],
+    example: '["log", "Context below compact threshold"]',
+    effect: { kind: 'log' },
+  },
   spawn: {
     module: 'core',
     category: 'effect',
