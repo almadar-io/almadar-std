@@ -41,12 +41,10 @@ export type StdUiStatCardEventKey = 'INIT';
 export interface StdUiStatCardConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `"Value"` */
-  value?: string;
   /** Default: `"Label"` */
   label?: string;
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
+  /** Default: `"Value"` */
+  value?: string;
 }
 
 /**
