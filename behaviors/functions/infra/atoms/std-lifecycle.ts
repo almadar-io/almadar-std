@@ -71,18 +71,18 @@ export interface StdLifecycleLifecycleSteppedPayload {
 export interface StdLifecycleConfig {
   /** Default: `""` */
   fromStatus?: string;
-  /** Default: `"LifecycleRunLog"` */
-  targetEntity?: string;
-  /** Default: `""` */
-  toStatus?: string;
   /** Default: `"ranAt"` */
   dateField?: string;
   /** Default: `30` */
   ageDays?: number;
   /** Default: `false` */
-  dryRun?: boolean;
-  /** Default: `false` */
   enabled?: boolean;
+  /** Default: `"LifecycleRunLog"` */
+  targetEntity?: string;
+  /** Default: `false` */
+  dryRun?: boolean;
+  /** Default: `""` */
+  toStatus?: string;
 }
 
 /**

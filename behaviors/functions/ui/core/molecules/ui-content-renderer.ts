@@ -39,32 +39,32 @@ export type StdUiContentRendererEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiContentRendererConfig {
-  /** Default: `"Content"` */
-  content?: string;
-  /** Default: `"rtl"` */
-  direction?: 'rtl' | 'ltr';
-  /** Default: `"Search Value"` */
-  searchValue?: string;
-  /** Default: `0` */
-  pageSize?: number;
+  activeFilters?: unknown;
+  /** Default: `"Sort By"` */
+  sortBy?: string;
+  /** Default: `"asc"` */
+  sortDirection?: 'asc' | 'desc';
   /** Default: `[]` */
   segments?: EntityRow[];
   /** Default: `0` */
   pageProp?: number;
-  error?: EntityRow;
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `0` */
-  totalCount?: number;
-  /** Default: `"Sort By"` */
-  sortBy?: string;
+  pageSize?: number;
+  error?: EntityRow;
   /** Default: `[]` */
   selectedIds?: string[];
   /** Default: `""` */
   className?: string;
-  /** Default: `"asc"` */
-  sortDirection?: 'asc' | 'desc';
-  activeFilters?: unknown;
+  /** Default: `"Search Value"` */
+  searchValue?: string;
+  /** Default: `0` */
+  totalCount?: number;
+  /** Default: `"Content"` */
+  content?: string;
+  /** Default: `"rtl"` */
+  direction?: 'rtl' | 'ltr';
 }
 
 /**

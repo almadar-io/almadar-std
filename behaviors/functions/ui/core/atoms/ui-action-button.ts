@@ -48,19 +48,19 @@ export interface StdUiActionButtonClickPayload {
 export interface StdUiActionButtonConfig {
   /** Default: `0` */
   cooldown?: number;
-  icon?: unknown;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
+  /** Default: `"primary"` */
+  variant?: 'primary' | 'secondary' | 'danger';
   /** Default: `false` */
   disabled?: boolean;
   /** Default: `""` */
   className?: string;
-  /** Default: `"Label"` */
-  label?: string;
   /** Default: `"Hotkey"` */
   hotkey?: string;
-  /** Default: `"primary"` */
-  variant?: 'primary' | 'secondary' | 'danger';
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
+  icon?: unknown;
+  /** Default: `"Label"` */
+  label?: string;
 }
 
 /**

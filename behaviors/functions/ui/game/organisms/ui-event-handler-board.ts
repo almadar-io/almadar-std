@@ -53,9 +53,9 @@ export interface StdUiEventHandlerBoardCompletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiEventHandlerBoardConfig {
-  entityProp?: EntityRow;
   /** Default: `800` */
   stepDurationMs?: number;
+  entityProp?: EntityRow;
 }
 
 /**
@@ -211,11 +211,11 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
                   'render-ui',
                   'main',
                   {
-                    'completeEvent': 'COMPLETE',
-                    'type': 'event-handler-board',
-                    'playEvent': 'PLAY',
-                    'stepDurationMs': '@config.stepDurationMs',
                     'entity': '@config.entityProp',
+                    'playEvent': 'PLAY',
+                    'type': 'event-handler-board',
+                    'stepDurationMs': '@config.stepDurationMs',
+                    'completeEvent': 'COMPLETE',
                   },
                 ],
               ],
@@ -223,6 +223,13 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
           ],
         },
         'config': {
+          'stepDurationMs': {
+            'type': 'number',
+            'default': 800,
+            'label': 'Step Duration Ms',
+            'description': 'Playback speed in ms per event',
+            'tier': 'presentation',
+          },
           'entityProp': {
             'type': 'EventHandlerBoardEntity',
             'label': 'Entity',
@@ -230,13 +237,43 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
             'synonyms': 'entity',
             'tier': 'presentation',
             'properties': {
+              'title': {
+                'name': 'title',
+                'type': 'string',
+                'required': true,
+              },
+              'description': {
+                'name': 'description',
+                'type': 'string',
+                'required': true,
+              },
+              'successMessage': {
+                'name': 'successMessage',
+                'type': 'string',
+                'required': false,
+              },
+              'failMessage': {
+                'name': 'failMessage',
+                'type': 'string',
+                'required': false,
+              },
+              'id': {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
               'hint': {
                 'name': 'hint',
                 'type': 'string',
                 'required': false,
               },
-              'title': {
-                'name': 'title',
+              'headerImage': {
+                'name': 'headerImage',
+                'type': 'string',
+                'required': false,
+              },
+              'goalEvent': {
+                'name': 'goalEvent',
                 'type': 'string',
                 'required': true,
               },
@@ -257,15 +294,13 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
                   },
                 },
               },
-              'goalEvent': {
-                'name': 'goalEvent',
-                'type': 'string',
-                'required': true,
-              },
-              'successMessage': {
-                'name': 'successMessage',
-                'type': 'string',
+              'triggerEvents': {
+                'name': 'triggerEvents',
+                'type': 'array',
                 'required': false,
+                'items': {
+                  'type': 'string',
+                },
               },
               'objects': {
                 'name': 'objects',
@@ -274,16 +309,6 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
                 'items': {
                   'type': 'object',
                   'properties': {
-                    'icon': {
-                      'name': 'icon',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'currentState': {
-                      'name': 'currentState',
-                      'type': 'string',
-                      'required': true,
-                    },
                     'availableEvents': {
                       'name': 'availableEvents',
                       'type': 'array',
@@ -291,36 +316,6 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
                       'items': {
                         'type': 'object',
                         'properties': {
-                          'label': {
-                            'name': 'label',
-                            'type': 'string',
-                            'required': true,
-                          },
-                          'value': {
-                            'name': 'value',
-                            'type': 'string',
-                            'required': true,
-                          },
-                        },
-                      },
-                    },
-                    'maxRules': {
-                      'name': 'maxRules',
-                      'type': 'number',
-                      'required': false,
-                    },
-                    'name': {
-                      'name': 'name',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'availableActions': {
-                      'name': 'availableActions',
-                      'type': 'array',
-                      'required': true,
-                      'items': {
-                        'type': 'object',
-                        'properties': {
                           'value': {
                             'name': 'value',
                             'type': 'string',
@@ -333,39 +328,14 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
                           },
                         },
                       },
-                    },
-                    'rules': {
-                      'name': 'rules',
-                      'type': 'array',
-                      'required': true,
-                      'items': {
-                        'type': 'object',
-                        'properties': {
-                          'thenAction': {
-                            'name': 'thenAction',
-                            'type': 'string',
-                            'required': true,
-                          },
-                          'id': {
-                            'name': 'id',
-                            'type': 'string',
-                            'required': true,
-                          },
-                          'whenEvent': {
-                            'name': 'whenEvent',
-                            'type': 'string',
-                            'required': true,
-                          },
-                        },
-                      },
-                    },
-                    'id': {
-                      'name': 'id',
-                      'type': 'string',
-                      'required': true,
                     },
                     'initialState': {
                       'name': 'initialState',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'name': {
+                      'name': 'name',
                       'type': 'string',
                       'required': true,
                     },
@@ -377,50 +347,80 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
                         'type': 'string',
                       },
                     },
+                    'currentState': {
+                      'name': 'currentState',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'rules': {
+                      'name': 'rules',
+                      'type': 'array',
+                      'required': true,
+                      'items': {
+                        'type': 'object',
+                        'properties': {
+                          'whenEvent': {
+                            'name': 'whenEvent',
+                            'type': 'string',
+                            'required': true,
+                          },
+                          'thenAction': {
+                            'name': 'thenAction',
+                            'type': 'string',
+                            'required': true,
+                          },
+                          'id': {
+                            'name': 'id',
+                            'type': 'string',
+                            'required': true,
+                          },
+                        },
+                      },
+                    },
+                    'maxRules': {
+                      'name': 'maxRules',
+                      'type': 'number',
+                      'required': false,
+                    },
+                    'id': {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'icon': {
+                      'name': 'icon',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'availableActions': {
+                      'name': 'availableActions',
+                      'type': 'array',
+                      'required': true,
+                      'items': {
+                        'type': 'object',
+                        'properties': {
+                          'label': {
+                            'name': 'label',
+                            'type': 'string',
+                            'required': true,
+                          },
+                          'value': {
+                            'name': 'value',
+                            'type': 'string',
+                            'required': true,
+                          },
+                        },
+                      },
+                    },
                   },
                 },
-              },
-              'id': {
-                'name': 'id',
-                'type': 'string',
-                'required': true,
-              },
-              'description': {
-                'name': 'description',
-                'type': 'string',
-                'required': true,
-              },
-              'failMessage': {
-                'name': 'failMessage',
-                'type': 'string',
-                'required': false,
-              },
-              'headerImage': {
-                'name': 'headerImage',
-                'type': 'string',
-                'required': false,
               },
               'goalCondition': {
                 'name': 'goalCondition',
                 'type': 'string',
                 'required': true,
               },
-              'triggerEvents': {
-                'name': 'triggerEvents',
-                'type': 'array',
-                'required': false,
-                'items': {
-                  'type': 'string',
-                },
-              },
             },
-          },
-          'stepDurationMs': {
-            'type': 'number',
-            'default': 800,
-            'label': 'Step Duration Ms',
-            'description': 'Playback speed in ms per event',
-            'tier': 'presentation',
           },
         },
         'scope': 'instance',

@@ -39,15 +39,15 @@ export type StdUiModalSlotEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiModalSlotConfig {
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
   /** Default: `false` */
   isLoading?: boolean;
-  error?: EntityRow;
   /** Default: `""` */
   className?: string;
   /** Default: `"Title"` */
   title?: string;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  error?: EntityRow;
 }
 
 /**
@@ -156,19 +156,19 @@ export function stdUiModalSlotModalSlotOrbital(params: StdUiModalSlotModalSlotOr
                   'render-ui',
                   'main',
                   {
-                    'type': 'modal-slot',
-                    'size': '@config.size',
-                    'title': '@config.title',
-                    'isLoading': '@config.isLoading',
                     'entity': 'ModalSlotItem',
                     'error': '@config.error',
+                    'title': '@config.title',
                     'children': [
                       {
                         'type': 'text',
                         'content': 'Sample content',
                       },
                     ],
+                    'isLoading': '@config.isLoading',
                     'className': '@config.className',
+                    'type': 'modal-slot',
+                    'size': '@config.size',
                   },
                 ],
               ],
@@ -176,54 +176,12 @@ export function stdUiModalSlotModalSlotOrbital(params: StdUiModalSlotModalSlotOr
           ],
         },
         'config': {
-          'size': {
-            'type': 'string',
-            'default': 'md',
-            'label': 'Size',
-            'description': 'Modal size',
-            'tier': 'presentation',
-            'values': [
-              'sm',
-              'md',
-              'lg',
-              'xl',
-              'full',
-            ],
-          },
           'isLoading': {
             'type': 'boolean',
             'default': false,
             'label': 'Is Loading',
             'description': 'Loading state indicator',
             'tier': 'presentation',
-          },
-          'error': {
-            'type': 'ModalSlotError',
-            'label': 'Error',
-            'description': 'Error state',
-            'tier': 'presentation',
-            'properties': {
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-            },
           },
           'className': {
             'type': 'string',
@@ -238,6 +196,48 @@ export function stdUiModalSlotModalSlotOrbital(params: StdUiModalSlotModalSlotOr
             'label': 'Title',
             'description': 'Override modal title (extracted from children if not provided)',
             'tier': 'presentation',
+          },
+          'size': {
+            'type': 'string',
+            'default': 'md',
+            'label': 'Size',
+            'description': 'Modal size',
+            'tier': 'presentation',
+            'values': [
+              'sm',
+              'md',
+              'lg',
+              'xl',
+              'full',
+            ],
+          },
+          'error': {
+            'type': 'ModalSlotError',
+            'label': 'Error',
+            'description': 'Error state',
+            'tier': 'presentation',
+            'properties': {
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+            },
           },
         },
         'scope': 'instance',

@@ -46,20 +46,20 @@ export interface StdUiRadioActionPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiRadioConfig {
-  /** Default: `"Label"` */
-  label?: string;
-  /** Default: `[]` */
-  options?: string[];
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
   /** Default: `""` */
   className?: string;
-  /** Default: `"Value"` */
-  value?: string;
+  /** Default: `[]` */
+  options?: string[];
+  /** Default: `"Label"` */
+  label?: string;
   /** Default: `"Helper Text"` */
   helperText?: string;
   /** Default: `""` */
   error?: string;
+  /** Default: `"Value"` */
+  value?: string;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
 }
 
 /**

@@ -39,24 +39,24 @@ export type StdUiHeroOrganismEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiHeroOrganismConfig {
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `"asc"` */
-  sortDirection?: 'asc' | 'desc';
-  /** Default: `""` */
-  className?: string;
-  error?: EntityRow;
-  /** Default: `"Search Value"` */
-  searchValue?: string;
-  /** Default: `0` */
-  pageProp?: number;
-  activeFilters?: unknown;
-  /** Default: `0` */
-  pageSize?: number;
-  /** Default: `0` */
-  totalCount?: number;
   /** Default: `[]` */
   selectedIds?: string[];
+  /** Default: `"asc"` */
+  sortDirection?: 'asc' | 'desc';
+  /** Default: `0` */
+  totalCount?: number;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `0` */
+  pageProp?: number;
+  /** Default: `"Search Value"` */
+  searchValue?: string;
+  activeFilters?: unknown;
+  error?: EntityRow;
+  /** Default: `0` */
+  pageSize?: number;
   /** Default: `"Sort By"` */
   sortBy?: string;
 }
@@ -151,6 +151,11 @@ export function stdUiHeroOrganismHeroOrganismOrbital(params: StdUiHeroOrganismHe
                 'type': 'string',
                 'required': true,
               },
+              'href': {
+                'name': 'href',
+                'type': 'string',
+                'required': true,
+              },
               'variant': {
                 'name': 'variant',
                 'type': 'string',
@@ -160,11 +165,6 @@ export function stdUiHeroOrganismHeroOrganismOrbital(params: StdUiHeroOrganismHe
                   'secondary',
                   'ghost',
                 ],
-              },
-              'href': {
-                'name': 'href',
-                'type': 'string',
-                'required': true,
               },
             },
           },
@@ -280,25 +280,25 @@ export function stdUiHeroOrganismHeroOrganismOrbital(params: StdUiHeroOrganismHe
                   'render-ui',
                   'main',
                   {
-                    'sortBy': '@config.sortBy',
-                    'error': '@config.error',
                     'searchValue': '@config.searchValue',
-                    'className': '@config.className',
-                    'page': '@config.pageProp',
+                    'pageSize': '@config.pageSize',
                     'totalCount': '@config.totalCount',
-                    'selectedIds': '@config.selectedIds',
                     'sortDirection': '@config.sortDirection',
+                    'activeFilters': '@config.activeFilters',
+                    'selectedIds': '@config.selectedIds',
                     'type': 'hero-organism',
-                    'entity': '@entity',
+                    'isLoading': '@config.isLoading',
                     'children': [
                       {
-                        'type': 'text',
                         'content': 'Sample content',
+                        'type': 'text',
                       },
                     ],
-                    'activeFilters': '@config.activeFilters',
-                    'isLoading': '@config.isLoading',
-                    'pageSize': '@config.pageSize',
+                    'entity': '@entity',
+                    'className': '@config.className',
+                    'sortBy': '@config.sortBy',
+                    'page': '@config.pageProp',
+                    'error': '@config.error',
                   },
                 ],
               ],
@@ -306,12 +306,15 @@ export function stdUiHeroOrganismHeroOrganismOrbital(params: StdUiHeroOrganismHe
           ],
         },
         'config': {
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
+          'selectedIds': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Selected Ids',
+            'description': 'Currently selected item IDs',
             'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
           },
           'sortDirection': {
             'type': 'string',
@@ -324,6 +327,13 @@ export function stdUiHeroOrganismHeroOrganismOrbital(params: StdUiHeroOrganismHe
               'desc',
             ],
           },
+          'totalCount': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Total Count',
+            'description': 'Total number of items',
+            'tier': 'presentation',
+          },
           'className': {
             'type': 'string',
             'default': '',
@@ -331,39 +341,11 @@ export function stdUiHeroOrganismHeroOrganismOrbital(params: StdUiHeroOrganismHe
             'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
-          'error': {
-            'type': 'HeroOrganismError',
-            'label': 'Error',
-            'description': 'Error state (UiError)',
-            'tier': 'presentation',
-            'properties': {
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-            },
-          },
-          'searchValue': {
-            'type': 'string',
-            'default': 'Search Value',
-            'label': 'Search Value',
-            'description': 'Current search query value',
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
             'tier': 'presentation',
           },
           'pageProp': {
@@ -374,11 +356,46 @@ export function stdUiHeroOrganismHeroOrganismOrbital(params: StdUiHeroOrganismHe
             'synonyms': 'page',
             'tier': 'presentation',
           },
+          'searchValue': {
+            'type': 'string',
+            'default': 'Search Value',
+            'label': 'Search Value',
+            'description': 'Current search query value',
+            'tier': 'presentation',
+          },
           'activeFilters': {
             'type': 'json',
             'label': 'Active Filters',
             'description': 'Active filters',
             'tier': 'presentation',
+          },
+          'error': {
+            'type': 'HeroOrganismError',
+            'label': 'Error',
+            'description': 'Error state (UiError)',
+            'tier': 'presentation',
+            'properties': {
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+            },
           },
           'pageSize': {
             'type': 'number',
@@ -386,23 +403,6 @@ export function stdUiHeroOrganismHeroOrganismOrbital(params: StdUiHeroOrganismHe
             'label': 'Page Size',
             'description': 'Number of items per page',
             'tier': 'presentation',
-          },
-          'totalCount': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Total Count',
-            'description': 'Total number of items',
-            'tier': 'presentation',
-          },
-          'selectedIds': {
-            'type': '[string]',
-            'default': [],
-            'label': 'Selected Ids',
-            'description': 'Currently selected item IDs',
-            'tier': 'presentation',
-            'items': {
-              'type': 'string',
-            },
           },
           'sortBy': {
             'type': 'string',

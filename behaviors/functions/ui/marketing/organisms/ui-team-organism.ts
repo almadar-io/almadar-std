@@ -39,30 +39,30 @@ export type StdUiTeamOrganismEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiTeamOrganismConfig {
-  /** Default: `"Search Value"` */
-  searchValue?: string;
-  /** Default: `"Subtitle"` */
-  subtitle?: string;
   /** Default: `0` */
-  totalCount?: number;
-  /** Default: `"Heading"` */
-  heading?: string;
-  /** Default: `0` */
-  pageProp?: number;
+  pageSize?: number;
   /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
   /** Default: `""` */
   className?: string;
   /** Default: `false` */
   isLoading?: boolean;
-  activeFilters?: unknown;
-  error?: EntityRow;
+  /** Default: `"Search Value"` */
+  searchValue?: string;
+  /** Default: `"Heading"` */
+  heading?: string;
+  /** Default: `0` */
+  totalCount?: number;
   /** Default: `"Sort By"` */
   sortBy?: string;
+  /** Default: `"Subtitle"` */
+  subtitle?: string;
   /** Default: `0` */
-  pageSize?: number;
+  pageProp?: number;
+  activeFilters?: unknown;
   /** Default: `[]` */
   selectedIds?: string[];
+  error?: EntityRow;
 }
 
 /**
@@ -196,21 +196,21 @@ export function stdUiTeamOrganismTeamOrganismOrbital(params: StdUiTeamOrganismTe
                   'render-ui',
                   'main',
                   {
-                    'type': 'team-organism',
-                    'isLoading': '@config.isLoading',
-                    'className': '@config.className',
-                    'sortDirection': '@config.sortDirection',
                     'entity': '@entity',
-                    'totalCount': '@config.totalCount',
-                    'subtitle': '@config.subtitle',
-                    'page': '@config.pageProp',
                     'heading': '@config.heading',
+                    'page': '@config.pageProp',
+                    'totalCount': '@config.totalCount',
+                    'isLoading': '@config.isLoading',
                     'searchValue': '@config.searchValue',
+                    'className': '@config.className',
                     'pageSize': '@config.pageSize',
-                    'activeFilters': '@config.activeFilters',
                     'sortBy': '@config.sortBy',
-                    'selectedIds': '@config.selectedIds',
+                    'subtitle': '@config.subtitle',
+                    'sortDirection': '@config.sortDirection',
                     'error': '@config.error',
+                    'activeFilters': '@config.activeFilters',
+                    'selectedIds': '@config.selectedIds',
+                    'type': 'team-organism',
                   },
                 ],
               ],
@@ -218,40 +218,11 @@ export function stdUiTeamOrganismTeamOrganismOrbital(params: StdUiTeamOrganismTe
           ],
         },
         'config': {
-          'searchValue': {
-            'type': 'string',
-            'default': 'Search Value',
-            'label': 'Search Value',
-            'description': 'Current search query value',
-            'tier': 'presentation',
-          },
-          'subtitle': {
-            'type': 'string',
-            'default': 'Subtitle',
-            'label': 'Subtitle',
-            'description': 'subtitle prop',
-            'tier': 'presentation',
-          },
-          'totalCount': {
+          'pageSize': {
             'type': 'number',
             'default': 0,
-            'label': 'Total Count',
-            'description': 'Total number of items',
-            'tier': 'presentation',
-          },
-          'heading': {
-            'type': 'string',
-            'default': 'Heading',
-            'label': 'Heading',
-            'description': 'heading prop',
-            'tier': 'presentation',
-          },
-          'pageProp': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page',
-            'description': 'Current page number',
-            'synonyms': 'page',
+            'label': 'Page Size',
+            'description': 'Number of items per page',
             'tier': 'presentation',
           },
           'sortDirection': {
@@ -279,39 +250,26 @@ export function stdUiTeamOrganismTeamOrganismOrbital(params: StdUiTeamOrganismTe
             'description': 'Loading state indicator',
             'tier': 'presentation',
           },
-          'activeFilters': {
-            'type': 'json',
-            'label': 'Active Filters',
-            'description': 'Active filters',
+          'searchValue': {
+            'type': 'string',
+            'default': 'Search Value',
+            'label': 'Search Value',
+            'description': 'Current search query value',
             'tier': 'presentation',
           },
-          'error': {
-            'type': 'TeamOrganismError',
-            'label': 'Error',
-            'description': 'Error state (UiError)',
+          'heading': {
+            'type': 'string',
+            'default': 'Heading',
+            'label': 'Heading',
+            'description': 'heading prop',
             'tier': 'presentation',
-            'properties': {
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-            },
+          },
+          'totalCount': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Total Count',
+            'description': 'Total number of items',
+            'tier': 'presentation',
           },
           'sortBy': {
             'type': 'string',
@@ -320,11 +278,25 @@ export function stdUiTeamOrganismTeamOrganismOrbital(params: StdUiTeamOrganismTe
             'description': 'Current sort field',
             'tier': 'presentation',
           },
-          'pageSize': {
+          'subtitle': {
+            'type': 'string',
+            'default': 'Subtitle',
+            'label': 'Subtitle',
+            'description': 'subtitle prop',
+            'tier': 'presentation',
+          },
+          'pageProp': {
             'type': 'number',
             'default': 0,
-            'label': 'Page Size',
-            'description': 'Number of items per page',
+            'label': 'Page',
+            'description': 'Current page number',
+            'synonyms': 'page',
+            'tier': 'presentation',
+          },
+          'activeFilters': {
+            'type': 'json',
+            'label': 'Active Filters',
+            'description': 'Active filters',
             'tier': 'presentation',
           },
           'selectedIds': {
@@ -335,6 +307,34 @@ export function stdUiTeamOrganismTeamOrganismOrbital(params: StdUiTeamOrganismTe
             'tier': 'presentation',
             'items': {
               'type': 'string',
+            },
+          },
+          'error': {
+            'type': 'TeamOrganismError',
+            'label': 'Error',
+            'description': 'Error state (UiError)',
+            'tier': 'presentation',
+            'properties': {
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
             },
           },
         },

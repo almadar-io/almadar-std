@@ -39,14 +39,14 @@ export type StdUiLabelEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiLabelConfig {
-  /** Default: `"Html For"` */
-  htmlFor?: string;
   /** Default: `""` */
   className?: string;
   /** Default: `false` */
   required?: boolean;
   /** Default: `"Text"` */
   text?: string;
+  /** Default: `"Html For"` */
+  htmlFor?: string;
 }
 
 /**

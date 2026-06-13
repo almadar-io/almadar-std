@@ -37,17 +37,7 @@ export type StdModQueueEventKey = 'APPROVE' | 'CLOSE' | 'ESCALATE' | 'INIT' | 'M
  */
 export interface StdModQueueApprovePayload {
   id: string;
-  row?: {
-    id: string;
-    targetId: string;
-    targetType: string;
-    reason?: string;
-    flagCount?: number;
-    status?: string;
-    reviewedBy?: string;
-    reviewedAt?: string;
-    notes?: string;
-  };
+  row?: EntityRow;
 }
 
 /**
@@ -55,17 +45,7 @@ export interface StdModQueueApprovePayload {
  */
 export interface StdModQueueRejectPayload {
   id: string;
-  row?: {
-    id: string;
-    targetId: string;
-    targetType: string;
-    reason?: string;
-    flagCount?: number;
-    status?: string;
-    reviewedBy?: string;
-    reviewedAt?: string;
-    notes?: string;
-  };
+  row?: EntityRow;
 }
 
 /**
@@ -73,17 +53,7 @@ export interface StdModQueueRejectPayload {
  */
 export interface StdModQueueEscalatePayload {
   id: string;
-  row?: {
-    id: string;
-    targetId: string;
-    targetType: string;
-    reason?: string;
-    flagCount?: number;
-    status?: string;
-    reviewedBy?: string;
-    reviewedAt?: string;
-    notes?: string;
-  };
+  row?: EntityRow;
 }
 
 /**
@@ -105,17 +75,7 @@ export interface StdModQueueModQueueItemLoadFailedPayload {
  * Payload shape for the `ModQueueItemReviewed` event.
  */
 export interface StdModQueueModQueueItemReviewedPayload {
-  row?: {
-    id: string;
-    targetId: string;
-    targetType: string;
-    reason?: string;
-    flagCount?: number;
-    status?: string;
-    reviewedBy?: string;
-    reviewedAt?: string;
-    notes?: string;
-  };
+  row?: EntityRow;
 }
 
 /**
@@ -133,10 +93,10 @@ export interface StdModQueueModQueueItemReviewFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdModQueueConfig {
-  /** Default: `false` */
-  enabled?: boolean;
   /** Default: `5` */
   autoEscalateThreshold?: number;
+  /** Default: `false` */
+  enabled?: boolean;
   /** Default: `"Moderation Queue"` */
   title?: string;
   /** Default: `"dense"` */

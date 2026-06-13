@@ -37,14 +37,7 @@ export type StdGalleryEventKey = 'CLOSE' | 'GalleryItemLoadFailed' | 'GalleryIte
  */
 export interface StdGalleryViewPayload {
   id: string;
-  row?: {
-    id: string;
-    name: string;
-    description?: string;
-    status?: string;
-    createdAt?: string;
-    imageUrl?: string;
-  };
+  row?: EntityRow;
 }
 
 /**

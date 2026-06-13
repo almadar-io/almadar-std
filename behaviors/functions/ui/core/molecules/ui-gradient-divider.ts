@@ -39,10 +39,10 @@ export type StdUiGradientDividerEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiGradientDividerConfig {
-  /** Default: `""` */
-  className?: string;
   /** Default: `"Color"` */
   color?: string;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

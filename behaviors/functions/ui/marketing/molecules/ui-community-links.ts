@@ -39,15 +39,15 @@ export type StdUiCommunityLinksEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiCommunityLinksConfig {
-  /** Default: `""` */
-  className?: string;
   /** Default: `"Heading"` */
   heading?: string;
+  /** Default: `""` */
+  className?: string;
   twitter?: EntityRow;
   github?: EntityRow;
+  discord?: EntityRow;
   /** Default: `"Subtitle"` */
   subtitle?: string;
-  discord?: EntityRow;
 }
 
 /**

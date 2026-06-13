@@ -48,10 +48,10 @@ export interface StdUiTextareaActionPayload {
 export interface StdUiTextareaConfig {
   /** Default: `0` */
   rows?: number;
-  /** Default: `"Placeholder"` */
-  placeholder?: string;
   /** Default: `""` */
   className?: string;
+  /** Default: `"Placeholder"` */
+  placeholder?: string;
   /** Default: `""` */
   error?: string;
 }

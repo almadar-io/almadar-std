@@ -60,26 +60,26 @@ export interface StdUiInputChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiInputConfig {
-  /** Default: `"text"` */
-  inputType?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'search' | 'date' | 'datetime-local' | 'time' | 'checkbox' | 'select' | 'textarea';
-  /** Default: `"Placeholder"` */
-  placeholder?: string;
-  /** Default: `false` */
-  clearable?: boolean;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `[]` */
-  options?: EntityRow[];
   /** Default: `"Value"` */
   value?: string;
-  leftIcon?: unknown;
-  /** Default: `3` */
-  rows?: number;
-  /** Default: `false` */
-  disabled?: boolean;
+  /** Default: `[]` */
+  options?: EntityRow[];
+  /** Default: `"Placeholder"` */
+  placeholder?: string;
   /** Default: `""` */
   error?: string;
   rightIcon?: unknown;
+  /** Default: `false` */
+  clearable?: boolean;
+  leftIcon?: unknown;
+  /** Default: `"text"` */
+  inputType?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'search' | 'date' | 'datetime-local' | 'time' | 'checkbox' | 'select' | 'textarea';
+  /** Default: `3` */
+  rows?: number;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `false` */
+  disabled?: boolean;
   /** Default: `"circle"` */
   icon?: string;
 }

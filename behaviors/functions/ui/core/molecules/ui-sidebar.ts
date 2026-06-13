@@ -60,28 +60,28 @@ export interface StdUiSidebarLogoClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiSidebarConfig {
-  /** Default: `false` */
-  showCloseButton?: boolean;
-  error?: EntityRow;
-  logo?: unknown;
-  footerContent?: unknown;
-  /** Default: `[]` */
-  items?: EntityRow[];
+  userSection?: unknown;
   /** Default: `"KFlow"` */
   brandName?: string;
+  logo?: unknown;
+  error?: EntityRow;
   /** Default: `false` */
-  isLoading?: boolean;
-  userSection?: unknown;
+  collapsed?: boolean;
+  /** Default: `[]` */
+  items?: EntityRow[];
+  footerContent?: unknown;
   /** Default: `false` */
-  defaultCollapsed?: boolean;
+  hideCollapseButton?: boolean;
+  /** Default: `false` */
+  showCloseButton?: boolean;
+  /** Default: `""` */
+  className?: string;
   /** Default: `"Logo Src"` */
   logoSrc?: string;
   /** Default: `false` */
-  hideCollapseButton?: boolean;
-  /** Default: `""` */
-  className?: string;
+  isLoading?: boolean;
   /** Default: `false` */
-  collapsed?: boolean;
+  defaultCollapsed?: boolean;
 }
 
 /**

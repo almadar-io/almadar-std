@@ -46,11 +46,11 @@ export interface StdUiSortableListReorderPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiSortableListConfig {
-  /** Default: `""` */
-  className?: string;
-  reorderPayload?: unknown;
   /** Default: `"left"` */
   dragHandlePosition?: 'left' | 'right';
+  reorderPayload?: unknown;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

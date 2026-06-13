@@ -39,17 +39,17 @@ export type StdUiDrawerSlotEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiDrawerSlotConfig {
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
   /** Default: `""` */
   className?: string;
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `"Title"` */
-  title?: string;
   error?: EntityRow;
   /** Default: `"right"` */
   position?: 'left' | 'right';
+  /** Default: `"Title"` */
+  title?: string;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
 }
 
 /**
@@ -158,20 +158,20 @@ export function stdUiDrawerSlotDrawerSlotOrbital(params: StdUiDrawerSlotDrawerSl
                   'render-ui',
                   'main',
                   {
-                    'entity': 'DrawerSlotItem',
-                    'position': '@config.position',
-                    'title': '@config.title',
-                    'type': 'drawer-slot',
-                    'isLoading': '@config.isLoading',
-                    'error': '@config.error',
+                    'className': '@config.className',
                     'children': [
                       {
-                        'content': 'Sample content',
                         'type': 'text',
+                        'content': 'Sample content',
                       },
                     ],
-                    'className': '@config.className',
+                    'error': '@config.error',
+                    'entity': 'DrawerSlotItem',
+                    'title': '@config.title',
+                    'type': 'drawer-slot',
+                    'position': '@config.position',
                     'size': '@config.size',
+                    'isLoading': '@config.isLoading',
                   },
                 ],
               ],
@@ -179,20 +179,6 @@ export function stdUiDrawerSlotDrawerSlotOrbital(params: StdUiDrawerSlotDrawerSl
           ],
         },
         'config': {
-          'size': {
-            'type': 'string',
-            'default': 'md',
-            'label': 'Size',
-            'description': 'Drawer size',
-            'tier': 'presentation',
-            'values': [
-              'sm',
-              'md',
-              'lg',
-              'xl',
-              'full',
-            ],
-          },
           'className': {
             'type': 'string',
             'default': '',
@@ -207,13 +193,6 @@ export function stdUiDrawerSlotDrawerSlotOrbital(params: StdUiDrawerSlotDrawerSl
             'description': 'Loading state',
             'tier': 'presentation',
           },
-          'title': {
-            'type': 'string',
-            'default': 'Title',
-            'label': 'Title',
-            'description': 'Override drawer title (extracted from children if not provided)',
-            'tier': 'presentation',
-          },
           'error': {
             'type': 'DrawerSlotError',
             'label': 'Error',
@@ -225,8 +204,8 @@ export function stdUiDrawerSlotDrawerSlotOrbital(params: StdUiDrawerSlotDrawerSl
                 'type': 'string',
                 'required': true,
               },
-              'code': {
-                'name': 'code',
+              'name': {
+                'name': 'name',
                 'type': 'string',
                 'required': false,
               },
@@ -235,8 +214,8 @@ export function stdUiDrawerSlotDrawerSlotOrbital(params: StdUiDrawerSlotDrawerSl
                 'type': 'string',
                 'required': false,
               },
-              'name': {
-                'name': 'name',
+              'code': {
+                'name': 'code',
                 'type': 'string',
                 'required': false,
               },
@@ -251,6 +230,27 @@ export function stdUiDrawerSlotDrawerSlotOrbital(params: StdUiDrawerSlotDrawerSl
             'values': [
               'left',
               'right',
+            ],
+          },
+          'title': {
+            'type': 'string',
+            'default': 'Title',
+            'label': 'Title',
+            'description': 'Override drawer title (extracted from children if not provided)',
+            'tier': 'presentation',
+          },
+          'size': {
+            'type': 'string',
+            'default': 'md',
+            'label': 'Size',
+            'description': 'Drawer size',
+            'tier': 'presentation',
+            'values': [
+              'sm',
+              'md',
+              'lg',
+              'xl',
+              'full',
             ],
           },
         },

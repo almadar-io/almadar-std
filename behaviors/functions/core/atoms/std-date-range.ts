@@ -51,10 +51,10 @@ export interface StdDateRangeConfig {
   fromLabel?: string;
   /** Default: `"DATE_RANGE_CHANGED"` */
   event?: string;
-  /** Default: `"To"` */
-  toLabel?: string;
   /** Default: `"Date range"` */
   buttonLabel?: string;
+  /** Default: `"To"` */
+  toLabel?: string;
 }
 
 /**

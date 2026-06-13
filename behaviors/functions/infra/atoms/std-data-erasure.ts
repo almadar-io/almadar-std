@@ -37,17 +37,7 @@ export type StdDataErasureEventKey = 'CANCEL_ERASURE' | 'CLOSE' | 'ErasureLoadFa
  */
 export interface StdDataErasureCancelErasurePayload {
   id: string;
-  row?: {
-    id: string;
-    subjectId?: string;
-    targetEntity?: string;
-    status?: string;
-    requestedAt?: number;
-    executesAt?: number;
-    executedAt?: number;
-    cancelledAt?: number;
-    notes?: string;
-  };
+  row?: EntityRow;
 }
 
 /**
@@ -69,17 +59,7 @@ export interface StdDataErasureErasureLoadFailedPayload {
  * Payload shape for the `ErasureSaved` event.
  */
 export interface StdDataErasureErasureSavedPayload {
-  row?: {
-    id: string;
-    subjectId?: string;
-    targetEntity?: string;
-    status?: string;
-    requestedAt?: number;
-    executesAt?: number;
-    executedAt?: number;
-    cancelledAt?: number;
-    notes?: string;
-  };
+  row?: EntityRow;
 }
 
 /**
@@ -128,20 +108,20 @@ export interface StdDataErasureExecSteppedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdDataErasureConfig {
+  /** Default: `"anonymize"` */
+  anonymizeVsDelete?: 'anonymize' | 'delete';
   /** Default: `"dense"` */
   tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
   /** Default: `"modal"` */
   reviewSlot?: unknown;
-  /** Default: `"anonymize"` */
-  anonymizeVsDelete?: 'anonymize' | 'delete';
+  /** Default: `[]` */
+  piiFields?: string[];
+  /** Default: `30` */
+  gracePeriodDays?: number;
   /** Default: `false` */
   enabled?: boolean;
   /** Default: `""` */
   targetEntity?: string;
-  /** Default: `30` */
-  gracePeriodDays?: number;
-  /** Default: `[]` */
-  piiFields?: string[];
 }
 
 /**

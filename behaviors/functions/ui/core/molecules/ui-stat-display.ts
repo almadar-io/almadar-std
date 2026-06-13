@@ -39,48 +39,48 @@ export type StdUiStatDisplayEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiStatDisplayConfig {
-  /** Default: `"absolute"` */
-  trendFormat?: 'absolute' | 'percent';
-  /** Default: `"default"` */
-  variant?: 'default' | 'primary' | 'success' | 'warning' | 'error' | 'info';
-  /** Default: `0` */
-  trend?: number;
-  /** Default: `"Suffix"` */
-  suffix?: string;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"elevated"` */
-  look?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
-  /** Default: `[]` */
-  sparklineData?: number[];
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
-  /** Default: `0` */
-  max?: number;
-  error?: EntityRow;
   /** Default: `"Label"` */
   label?: string;
-  /** Default: `"text-foreground"` */
-  iconColor?: string;
+  /** Default: `0` */
+  max?: number;
   /** Default: `0` */
   target?: number;
-  /** Default: `"Prefix"` */
-  prefix?: string;
-  /** Default: `false` */
-  compact?: boolean;
-  /** Default: `"Value"` */
-  value?: string;
-  /** Default: `"bg-muted"` */
-  iconBg?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `"Click Event"` */
-  clickEvent?: string;
+  /** Default: `[]` */
+  sparklineData?: number[];
+  /** Default: `"Suffix"` */
+  suffix?: string;
   icon?: unknown;
-  /** Default: `"Format"` */
-  format?: string;
   /** Default: `"higher-is-better"` */
   trendPolarity?: 'higher-is-better' | 'lower-is-better';
+  /** Default: `false` */
+  compact?: boolean;
+  /** Default: `"elevated"` */
+  look?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
+  /** Default: `"default"` */
+  variant?: 'default' | 'primary' | 'success' | 'warning' | 'error' | 'info';
+  /** Default: `"Click Event"` */
+  clickEvent?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `"Value"` */
+  value?: string;
+  error?: EntityRow;
+  /** Default: `"absolute"` */
+  trendFormat?: 'absolute' | 'percent';
+  /** Default: `"bg-muted"` */
+  iconBg?: string;
+  /** Default: `"Format"` */
+  format?: string;
+  /** Default: `0` */
+  trend?: number;
+  /** Default: `"text-foreground"` */
+  iconColor?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"Prefix"` */
+  prefix?: string;
 }
 
 /**

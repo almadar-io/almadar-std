@@ -39,26 +39,26 @@ export type StdUiHeadingEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiHeadingConfig {
-  /** Default: `"visible"` */
-  overflow?: 'visible' | 'hidden' | 'wrap' | 'clamp-2' | 'clamp-3';
-  /** Default: `2` */
-  level?: number;
   /** Default: `"primary"` */
   color?: 'primary' | 'secondary' | 'muted' | 'error' | 'success' | 'warning' | 'inherit';
-  /** Default: `"body"` */
-  variant?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'heading' | 'subheading' | 'body1' | 'body2' | 'body' | 'caption' | 'overline' | 'small' | 'large' | 'label';
-  style?: unknown;
-  /** Default: `false` */
-  truncate?: boolean;
-  content?: unknown;
-  /** Default: `"left"` */
-  align?: 'left' | 'center' | 'right';
-  /** Default: `""` */
-  className?: string;
   /** Default: `"xs"` */
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
+  /** Default: `2` */
+  level?: number;
+  /** Default: `"body"` */
+  variant?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'heading' | 'subheading' | 'body1' | 'body2' | 'body' | 'caption' | 'overline' | 'small' | 'large' | 'label';
+  /** Default: `""` */
+  className?: string;
   /** Default: `"light"` */
   weight?: 'light' | 'normal' | 'medium' | 'semibold' | 'bold';
+  style?: unknown;
+  content?: unknown;
+  /** Default: `false` */
+  truncate?: boolean;
+  /** Default: `"visible"` */
+  overflow?: 'visible' | 'hidden' | 'wrap' | 'clamp-2' | 'clamp-3';
+  /** Default: `"left"` */
+  align?: 'left' | 'center' | 'right';
 }
 
 /**

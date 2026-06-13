@@ -50,11 +50,11 @@ export interface StdUiInfiniteScrollSentinelConfig {
   hasMore?: boolean;
   /** Default: `""` */
   className?: string;
+  loadMorePayload?: unknown;
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `"200px"` */
   threshold?: string;
-  loadMorePayload?: unknown;
 }
 
 /**

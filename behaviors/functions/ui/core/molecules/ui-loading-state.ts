@@ -39,12 +39,12 @@ export type StdUiLoadingStateEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiLoadingStateConfig {
-  /** Default: `"Title"` */
-  title?: string;
   /** Default: `"Message"` */
   message?: string;
   /** Default: `""` */
   className?: string;
+  /** Default: `"Title"` */
+  title?: string;
 }
 
 /**

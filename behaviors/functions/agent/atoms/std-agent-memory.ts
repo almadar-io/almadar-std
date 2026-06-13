@@ -43,19 +43,7 @@ export type StdAgentMemoryListenKey = 'MEMORIZED' | 'MEMORY_CREATED' | 'PINNED' 
  */
 export interface StdAgentMemoryPinPayload {
   id: string;
-  row?: {
-    id: string;
-    name?: string;
-    description?: string;
-    status?: string;
-    createdAt?: string;
-    content?: string;
-    category?: string;
-    strength?: number;
-    pinned?: boolean;
-    scope?: string;
-    lastAccessedAt?: string;
-  };
+  row?: EntityRow;
 }
 
 /**
@@ -63,19 +51,7 @@ export interface StdAgentMemoryPinPayload {
  */
 export interface StdAgentMemoryReinforcePayload {
   id: string;
-  row?: {
-    id: string;
-    name?: string;
-    description?: string;
-    status?: string;
-    createdAt?: string;
-    content?: string;
-    category?: string;
-    strength?: number;
-    pinned?: boolean;
-    scope?: string;
-    lastAccessedAt?: string;
-  };
+  row?: EntityRow;
 }
 
 /**
@@ -83,19 +59,7 @@ export interface StdAgentMemoryReinforcePayload {
  */
 export interface StdAgentMemoryForgetPayload {
   id: string;
-  row?: {
-    id: string;
-    name?: string;
-    description?: string;
-    status?: string;
-    createdAt?: string;
-    content?: string;
-    category?: string;
-    strength?: number;
-    pinned?: boolean;
-    scope?: string;
-    lastAccessedAt?: string;
-  };
+  row?: EntityRow;
 }
 
 /**

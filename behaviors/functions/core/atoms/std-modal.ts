@@ -61,18 +61,18 @@ export interface StdModalModalRecordLoadedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdModalConfig {
-  /** Default: `"stack"` */
-  detailPattern?: unknown;
-  /** Default: `"modal"` */
-  detailSlot?: unknown;
-  /** Default: `"create"` */
-  mode?: string;
-  /** Default: `"layout-panel-top"` */
-  icon?: string;
   /** Default: `"Details"` */
   title?: string;
+  /** Default: `"layout-panel-top"` */
+  icon?: string;
+  /** Default: `"modal"` */
+  detailSlot?: unknown;
   /** Default: `[]` */
   fields?: string[];
+  /** Default: `"stack"` */
+  detailPattern?: unknown;
+  /** Default: `"create"` */
+  mode?: string;
 }
 
 /**

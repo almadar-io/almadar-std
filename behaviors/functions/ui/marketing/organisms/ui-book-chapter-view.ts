@@ -39,12 +39,12 @@ export type StdUiBookChapterViewEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiBookChapterViewConfig {
-  /** Default: `""` */
-  className?: string;
   /** Default: `"rtl"` */
   direction?: 'rtl' | 'ltr';
-  /** Default: `{"content":"","id":"","title":""}` */
+  /** Default: `{"id":"","title":"","content":""}` */
   chapter?: EntityRow;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**
@@ -148,10 +148,10 @@ export function stdUiBookChapterViewBookChapterViewOrbital(params: StdUiBookChap
                   'render-ui',
                   'main',
                   {
-                    'type': 'book-chapter-view',
-                    'chapter': '@config.chapter',
                     'className': '@config.className',
                     'direction': '@config.direction',
+                    'chapter': '@config.chapter',
+                    'type': 'book-chapter-view',
                   },
                 ],
               ],
@@ -159,13 +159,6 @@ export function stdUiBookChapterViewBookChapterViewOrbital(params: StdUiBookChap
           ],
         },
         'config': {
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
           'direction': {
             'type': 'string',
             'default': 'rtl',
@@ -180,9 +173,9 @@ export function stdUiBookChapterViewBookChapterViewOrbital(params: StdUiBookChap
           'chapter': {
             'type': 'BookChapterViewChapter',
             'default': {
-              'content': '',
               'id': '',
               'title': '',
+              'content': '',
             },
             'label': 'Chapter',
             'description': 'chapter prop',
@@ -198,17 +191,24 @@ export function stdUiBookChapterViewBookChapterViewOrbital(params: StdUiBookChap
                 'type': 'string',
                 'required': true,
               },
-              'orbitalSchema': {
-                'name': 'orbitalSchema',
-                'type': 'string',
-                'required': false,
-              },
               'content': {
                 'name': 'content',
                 'type': 'string',
                 'required': true,
               },
+              'orbitalSchema': {
+                'name': 'orbitalSchema',
+                'type': 'string',
+                'required': false,
+              },
             },
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
           },
         },
         'scope': 'instance',

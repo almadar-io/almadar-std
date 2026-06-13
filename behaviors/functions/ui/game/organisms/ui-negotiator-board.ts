@@ -190,8 +190,8 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
                   'main',
                   {
                     'entity': '@config.entityProp',
-                    'completeEvent': 'COMPLETE',
                     'type': 'negotiator-board',
+                    'completeEvent': 'COMPLETE',
                   },
                 ],
               ],
@@ -206,25 +206,75 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
             'synonyms': 'entity',
             'tier': 'presentation',
             'properties': {
-              'headerImage': {
-                'name': 'headerImage',
-                'type': 'string',
-                'required': false,
-              },
-              'hint': {
-                'name': 'hint',
-                'type': 'string',
-                'required': false,
-              },
               'totalRounds': {
                 'name': 'totalRounds',
                 'type': 'number',
                 'required': true,
               },
+              'successMessage': {
+                'name': 'successMessage',
+                'type': 'string',
+                'required': false,
+              },
+              'failMessage': {
+                'name': 'failMessage',
+                'type': 'string',
+                'required': false,
+              },
+              'title': {
+                'name': 'title',
+                'type': 'string',
+                'required': true,
+              },
+              'headerImage': {
+                'name': 'headerImage',
+                'type': 'string',
+                'required': false,
+              },
+              'payoffMatrix': {
+                'name': 'payoffMatrix',
+                'type': 'array',
+                'required': true,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'playerAction': {
+                      'name': 'playerAction',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'playerPayoff': {
+                      'name': 'playerPayoff',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'opponentPayoff': {
+                      'name': 'opponentPayoff',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'opponentAction': {
+                      'name': 'opponentAction',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  },
+                },
+              },
               'description': {
                 'name': 'description',
                 'type': 'string',
                 'required': true,
+              },
+              'opponentStrategy': {
+                'name': 'opponentStrategy',
+                'type': 'string',
+                'required': true,
+              },
+              'hint': {
+                'name': 'hint',
+                'type': 'string',
+                'required': false,
               },
               'actions': {
                 'name': 'actions',
@@ -233,6 +283,11 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
                 'items': {
                   'type': 'object',
                   'properties': {
+                    'label': {
+                      'name': 'label',
+                      'type': 'string',
+                      'required': true,
+                    },
                     'description': {
                       'name': 'description',
                       'type': 'string',
@@ -243,57 +298,12 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
                       'type': 'string',
                       'required': true,
                     },
-                    'label': {
-                      'name': 'label',
-                      'type': 'string',
-                      'required': true,
-                    },
-                  },
-                },
-              },
-              'payoffMatrix': {
-                'name': 'payoffMatrix',
-                'type': 'array',
-                'required': true,
-                'items': {
-                  'type': 'object',
-                  'properties': {
-                    'playerPayoff': {
-                      'name': 'playerPayoff',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'opponentAction': {
-                      'name': 'opponentAction',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'opponentPayoff': {
-                      'name': 'opponentPayoff',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'playerAction': {
-                      'name': 'playerAction',
-                      'type': 'string',
-                      'required': true,
-                    },
                   },
                 },
               },
               'targetScore': {
                 'name': 'targetScore',
                 'type': 'number',
-                'required': true,
-              },
-              'successMessage': {
-                'name': 'successMessage',
-                'type': 'string',
-                'required': false,
-              },
-              'opponentStrategy': {
-                'name': 'opponentStrategy',
-                'type': 'string',
                 'required': true,
               },
               'theme': {
@@ -313,20 +323,10 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
                   },
                 },
               },
-              'title': {
-                'name': 'title',
-                'type': 'string',
-                'required': true,
-              },
               'id': {
                 'name': 'id',
                 'type': 'string',
                 'required': true,
-              },
-              'failMessage': {
-                'name': 'failMessage',
-                'type': 'string',
-                'required': false,
               },
             },
           },

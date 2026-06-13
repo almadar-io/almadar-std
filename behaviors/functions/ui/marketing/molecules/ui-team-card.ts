@@ -41,12 +41,12 @@ export type StdUiTeamCardEventKey = 'INIT';
 export interface StdUiTeamCardConfig {
   /** Default: `"Name Ar"` */
   nameAr?: string;
+  /** Default: `"Name"` */
+  name?: string;
   /** Default: `"Role"` */
   role?: string;
   /** Default: `"Bio"` */
   bio?: string;
-  /** Default: `"Name"` */
-  name?: string;
   avatar?: EntityRow;
   /** Default: `""` */
   className?: string;

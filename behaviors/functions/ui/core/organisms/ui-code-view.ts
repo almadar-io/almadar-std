@@ -41,12 +41,12 @@ export type StdUiCodeViewEventKey = 'INIT';
 export interface StdUiCodeViewConfig {
   /** Default: `false` */
   defaultExpanded?: boolean;
-  /** Default: `{}` */
-  data?: unknown;
-  /** Default: `""` */
-  className?: string;
   /** Default: `"Label"` */
   label?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `{}` */
+  data?: unknown;
 }
 
 /**
@@ -150,10 +150,10 @@ export function stdUiCodeViewCodeViewOrbital(params: StdUiCodeViewCodeViewOrbita
                   'render-ui',
                   'main',
                   {
-                    'type': 'code-view',
                     'data': '@config.data',
-                    'label': '@config.label',
                     'defaultExpanded': '@config.defaultExpanded',
+                    'type': 'code-view',
+                    'label': '@config.label',
                     'className': '@config.className',
                   },
                 ],
@@ -169,11 +169,11 @@ export function stdUiCodeViewCodeViewOrbital(params: StdUiCodeViewCodeViewOrbita
             'description': 'Whether the code is expanded by default',
             'tier': 'presentation',
           },
-          'data': {
-            'type': 'json',
-            'default': {},
-            'label': 'Data',
-            'description': 'JSON data to display',
+          'label': {
+            'type': 'string',
+            'default': 'Label',
+            'label': 'Label',
+            'description': 'Label',
             'tier': 'presentation',
           },
           'className': {
@@ -183,11 +183,11 @@ export function stdUiCodeViewCodeViewOrbital(params: StdUiCodeViewCodeViewOrbita
             'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
-          'label': {
-            'type': 'string',
-            'default': 'Label',
-            'label': 'Label',
-            'description': 'Label',
+          'data': {
+            'type': 'json',
+            'default': {},
+            'label': 'Data',
+            'description': 'JSON data to display',
             'tier': 'presentation',
           },
         },

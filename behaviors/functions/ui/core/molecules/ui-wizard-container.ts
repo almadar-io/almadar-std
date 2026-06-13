@@ -56,17 +56,17 @@ export interface StdUiWizardContainerConfig {
   error?: EntityRow;
   /** Default: `""` */
   className?: string;
-  /** Default: `false` */
-  compact?: boolean;
-  currentStep?: unknown;
-  /** Default: `[]` */
-  steps?: EntityRow[];
-  /** Default: `true` */
-  showProgress?: boolean;
   /** Default: `true` */
   allowBack?: boolean;
+  /** Default: `[]` */
+  steps?: EntityRow[];
+  currentStep?: unknown;
+  /** Default: `true` */
+  showProgress?: boolean;
   /** Default: `false` */
   isLoading?: boolean;
+  /** Default: `false` */
+  compact?: boolean;
 }
 
 /**

@@ -39,26 +39,26 @@ export type StdUiTextEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiTextConfig {
-  /** Default: `"primary"` */
-  color?: 'primary' | 'secondary' | 'muted' | 'error' | 'success' | 'warning' | 'inherit';
-  /** Default: `"visible"` */
-  overflow?: 'visible' | 'hidden' | 'wrap' | 'clamp-2' | 'clamp-3';
-  style?: unknown;
-  /** Default: `"left"` */
-  align?: 'left' | 'center' | 'right';
-  /** Default: `"body"` */
-  variant?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'heading' | 'subheading' | 'body1' | 'body2' | 'body' | 'caption' | 'overline' | 'small' | 'large' | 'label';
-  /** Default: `""` */
-  className?: string;
   /** Default: `"light"` */
   weight?: 'light' | 'normal' | 'medium' | 'semibold' | 'bold';
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"body"` */
+  variant?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'heading' | 'subheading' | 'body1' | 'body2' | 'body' | 'caption' | 'overline' | 'small' | 'large' | 'label';
+  content?: unknown;
+  /** Default: `"left"` */
+  align?: 'left' | 'center' | 'right';
   /** Default: `2` */
   level?: number;
-  content?: unknown;
-  /** Default: `false` */
-  truncate?: boolean;
   /** Default: `"xs"` */
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
+  /** Default: `false` */
+  truncate?: boolean;
+  /** Default: `"primary"` */
+  color?: 'primary' | 'secondary' | 'muted' | 'error' | 'success' | 'warning' | 'inherit';
+  style?: unknown;
+  /** Default: `"visible"` */
+  overflow?: 'visible' | 'hidden' | 'wrap' | 'clamp-2' | 'clamp-3';
 }
 
 /**

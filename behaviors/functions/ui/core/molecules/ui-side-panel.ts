@@ -53,18 +53,18 @@ export interface StdUiSidePanelOpenPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiSidePanelConfig {
-  /** Default: `"w-full sm:w-96"` */
-  width?: string;
-  /** Default: `true` */
-  showOverlay?: boolean;
-  /** Default: `"right"` */
-  position?: 'left' | 'right';
   /** Default: `"Title"` */
   title?: string;
   /** Default: `false` */
   isOpen?: boolean;
+  /** Default: `true` */
+  showOverlay?: boolean;
   /** Default: `""` */
   className?: string;
+  /** Default: `"right"` */
+  position?: 'left' | 'right';
+  /** Default: `"w-full sm:w-96"` */
+  width?: string;
 }
 
 /**

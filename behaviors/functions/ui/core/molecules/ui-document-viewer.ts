@@ -39,35 +39,35 @@ export type StdUiDocumentViewerEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiDocumentViewerConfig {
-  /** Default: `"Src"` */
-  src?: string;
+  /** Default: `[]` */
+  actions?: EntityRow[];
+  /** Default: `"Title"` */
+  title?: string;
   /** Default: `0` */
   currentPage?: number;
-  /** Default: `"Height"` */
-  height?: string;
-  /** Default: `"Content"` */
-  content?: string;
+  /** Default: `false` */
+  showDownload?: boolean;
+  error?: EntityRow;
   /** Default: `[]` */
   documents?: EntityRow[];
+  /** Default: `"Content"` */
+  content?: string;
   /** Default: `""` */
   className?: string;
-  /** Default: `0` */
-  totalPages?: number;
-  /** Default: `false` */
-  showPrint?: boolean;
-  error?: EntityRow;
-  /** Default: `false` */
-  isLoading?: boolean;
   /** Default: `true` */
   showToolbar?: boolean;
   /** Default: `"pdf"` */
   documentType?: 'pdf' | 'text' | 'html' | 'markdown';
-  /** Default: `[]` */
-  actions?: EntityRow[];
   /** Default: `false` */
-  showDownload?: boolean;
-  /** Default: `"Title"` */
-  title?: string;
+  isLoading?: boolean;
+  /** Default: `"Src"` */
+  src?: string;
+  /** Default: `false` */
+  showPrint?: boolean;
+  /** Default: `"Height"` */
+  height?: string;
+  /** Default: `0` */
+  totalPages?: number;
 }
 
 /**

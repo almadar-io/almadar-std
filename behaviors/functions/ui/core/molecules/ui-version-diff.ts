@@ -62,16 +62,16 @@ export interface StdUiVersionDiffRevertPayload {
 export interface StdUiVersionDiffConfig {
   /** Default: `"Language"` */
   language?: string;
-  /** Default: `"Before Id"` */
-  beforeId?: string;
-  /** Default: `"After Id"` */
-  afterId?: string;
-  /** Default: `[{"content":"Content","label":"Label","id":"Id"}]` */
+  /** Default: `[{"content":"Content","id":"Id","label":"Label"}]` */
   revisions?: EntityRow[];
-  /** Default: `"side-by-side"` */
-  view?: 'side-by-side' | 'inline';
   /** Default: `""` */
   className?: string;
+  /** Default: `"Before Id"` */
+  beforeId?: string;
+  /** Default: `"side-by-side"` */
+  view?: 'side-by-side' | 'inline';
+  /** Default: `"After Id"` */
+  afterId?: string;
 }
 
 /**

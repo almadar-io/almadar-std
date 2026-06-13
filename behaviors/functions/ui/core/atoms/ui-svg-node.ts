@@ -40,21 +40,21 @@ export type StdUiSvgNodeEventKey = 'INIT';
  */
 export interface StdUiSvgNodeConfig {
   /** Default: `0` */
-  y?: number;
-  /** Default: `""` */
-  className?: string;
+  x?: number;
   /** Default: `6` */
   r?: number;
+  /** Default: `"Label"` */
+  label?: string;
   /** Default: `0` */
-  x?: number;
+  y?: number;
+  /** Default: `"var(--color-primary)"` */
+  color?: string;
   /** Default: `1` */
   opacity?: number;
   /** Default: `"filled"` */
   variant?: 'filled' | 'stroked' | 'pulse';
-  /** Default: `"var(--color-primary)"` */
-  color?: string;
-  /** Default: `"Label"` */
-  label?: string;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

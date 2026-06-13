@@ -41,12 +41,12 @@ export type StdUiEventLogEventKey = 'INIT';
 export interface StdUiEventLogConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `[]` */
-  entries?: EntityRow[];
   /** Default: `200` */
   maxHeight?: number;
   /** Default: `"Label"` */
   label?: string;
+  /** Default: `[]` */
+  entries?: EntityRow[];
 }
 
 /**
@@ -150,11 +150,11 @@ export function stdUiEventLogEventLogOrbital(params: StdUiEventLogEventLogOrbita
                   'render-ui',
                   'main',
                   {
-                    'maxHeight': '@config.maxHeight',
-                    'label': '@config.label',
-                    'type': 'event-log',
                     'entries': '@config.entries',
+                    'label': '@config.label',
                     'className': '@config.className',
+                    'type': 'event-log',
+                    'maxHeight': '@config.maxHeight',
                   },
                 ],
               ],
@@ -169,49 +169,6 @@ export function stdUiEventLogEventLogOrbital(params: StdUiEventLogEventLogOrbita
             'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
-          'entries': {
-            'type': '[EventLogEntriesItem]',
-            'default': [],
-            'label': 'Entries',
-            'description': 'Log entries',
-            'tier': 'presentation',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'icon': {
-                  'name': 'icon',
-                  'type': 'string',
-                  'required': true,
-                },
-                'timestamp': {
-                  'name': 'timestamp',
-                  'type': 'number',
-                  'required': true,
-                },
-                'id': {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': true,
-                },
-                'message': {
-                  'name': 'message',
-                  'type': 'string',
-                  'required': true,
-                },
-                'status': {
-                  'name': 'status',
-                  'type': 'string',
-                  'required': true,
-                  'values': [
-                    'pending',
-                    'active',
-                    'done',
-                    'error',
-                  ],
-                },
-              },
-            },
-          },
           'maxHeight': {
             'type': 'number',
             'default': 200,
@@ -225,6 +182,49 @@ export function stdUiEventLogEventLogOrbital(params: StdUiEventLogEventLogOrbita
             'label': 'Label',
             'description': 'Title label',
             'tier': 'presentation',
+          },
+          'entries': {
+            'type': '[EventLogEntriesItem]',
+            'default': [],
+            'label': 'Entries',
+            'description': 'Log entries',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                'message': {
+                  'name': 'message',
+                  'type': 'string',
+                  'required': true,
+                },
+                'timestamp': {
+                  'name': 'timestamp',
+                  'type': 'number',
+                  'required': true,
+                },
+                'status': {
+                  'name': 'status',
+                  'type': 'string',
+                  'required': true,
+                  'values': [
+                    'pending',
+                    'active',
+                    'done',
+                    'error',
+                  ],
+                },
+                'icon': {
+                  'name': 'icon',
+                  'type': 'string',
+                  'required': true,
+                },
+              },
+            },
           },
         },
         'scope': 'instance',

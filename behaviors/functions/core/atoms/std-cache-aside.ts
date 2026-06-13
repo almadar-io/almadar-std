@@ -69,18 +69,18 @@ export interface StdCacheAsideCacheEntryUpdateFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdCacheAsideConfig {
+  /** Default: `300` */
+  ttlSeconds?: number;
   /** Default: `"lru"` */
   evictionPolicy?: 'lru' | 'lfu' | 'fifo' | 'ttl-only';
-  /** Default: `"icon-only"` */
-  emptyLook?: 'illustrated' | 'icon-only' | 'text-only' | 'mascot';
   /** Default: `true` */
   staleWhileRevalidate?: boolean;
   /** Default: `1000` */
   maxCacheSize?: number;
+  /** Default: `"icon-only"` */
+  emptyLook?: 'illustrated' | 'icon-only' | 'text-only' | 'mascot';
   /** Default: `"dense"` */
   tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
-  /** Default: `300` */
-  ttlSeconds?: number;
 }
 
 /**

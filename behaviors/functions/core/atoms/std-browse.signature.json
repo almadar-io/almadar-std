@@ -129,18 +129,18 @@
             "default": {
               "children": [
                 {
+                  "imageField": "@config.imageField",
+                  "cols": "@config.cols",
+                  "type": "data-grid",
+                  "pageSize": "@config.displayPageSize",
                   "entity": "@payload.data",
                   "itemActions": "@config.itemActions",
-                  "type": "data-grid",
                   "fields": "@config.fields",
-                  "cols": "@config.cols",
-                  "pageSize": "@config.displayPageSize",
-                  "imageField": "@config.imageField",
                   "gap": "@config.gap"
                 }
               ],
-              "type": "stack",
-              "direction": "vertical"
+              "direction": "vertical",
+              "type": "stack"
             },
             "label": "Body content tree",
             "description": "Render-ui SExpr rendered after rows load. Default is the canonical data-grid call wrapped in a stack. Layer 3 variants override this with their own tree (composing data-list/data-grid/entity-table + custom renderItem lambdas + filter-group, kbd, card, etc.) to deliver entirely different browse UX while inheriting the same trait, state machine, emits, and listens.",
@@ -167,11 +167,11 @@
             "type": "[ColumnSpec]",
             "default": [
               {
-                "align": "left",
-                "field": "name",
-                "header": "Name",
                 "weight": "medium",
-                "key": "name"
+                "header": "Name",
+                "key": "name",
+                "align": "left",
+                "field": "name"
               },
               {
                 "align": "left",
@@ -180,11 +180,11 @@
                 "field": "description"
               },
               {
-                "align": "center",
                 "header": "Status",
+                "key": "status",
                 "field": "status",
                 "format": "badge",
-                "key": "status"
+                "align": "center"
               }
             ],
             "label": "Table columns",
@@ -192,38 +192,8 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "icon": {
-                  "name": "icon",
-                  "required": false,
-                  "type": "string"
-                },
-                "field": {
-                  "name": "field",
-                  "required": false,
-                  "type": "string"
-                },
-                "className": {
-                  "name": "className",
-                  "required": false,
-                  "type": "string"
-                },
                 "format": {
                   "name": "format",
-                  "required": false,
-                  "type": "string"
-                },
-                "weight": {
-                  "name": "weight",
-                  "required": false,
-                  "type": "string"
-                },
-                "key": {
-                  "name": "key",
-                  "required": true,
-                  "type": "string"
-                },
-                "header": {
-                  "name": "header",
                   "required": false,
                   "type": "string"
                 },
@@ -234,6 +204,36 @@
                 },
                 "align": {
                   "name": "align",
+                  "required": false,
+                  "type": "string"
+                },
+                "weight": {
+                  "name": "weight",
+                  "required": false,
+                  "type": "string"
+                },
+                "header": {
+                  "name": "header",
+                  "required": false,
+                  "type": "string"
+                },
+                "key": {
+                  "name": "key",
+                  "required": true,
+                  "type": "string"
+                },
+                "className": {
+                  "name": "className",
+                  "required": false,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "field": {
+                  "name": "field",
                   "required": false,
                   "type": "string"
                 }
@@ -267,13 +267,13 @@
                 "name": "name"
               },
               {
-                "variant": "caption",
+                "label": "Description",
                 "name": "description",
-                "label": "Description"
+                "variant": "caption"
               },
               {
-                "label": "Status",
                 "variant": "badge",
+                "label": "Status",
                 "name": "status"
               }
             ],
@@ -287,18 +287,23 @@
                   "required": false,
                   "type": "string"
                 },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
                 "icon": {
                   "name": "icon",
                   "required": false,
                   "type": "string"
                 },
-                "key": {
-                  "name": "key",
-                  "required": false,
-                  "type": "string"
-                },
-                "variant": {
-                  "name": "variant",
+                "format": {
+                  "name": "format",
                   "required": false,
                   "type": "string"
                 },
@@ -307,13 +312,8 @@
                   "required": true,
                   "type": "string"
                 },
-                "label": {
-                  "name": "label",
-                  "required": false,
-                  "type": "string"
-                },
-                "format": {
-                  "name": "format",
+                "key": {
+                  "name": "key",
                   "required": false,
                   "type": "string"
                 }
@@ -330,6 +330,16 @@
             "tier": "presentation",
             "items": {
               "properties": {
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "field": {
+                  "name": "field",
+                  "required": true,
+                  "type": "string"
+                },
                 "options": {
                   "name": "options",
                   "required": false,
@@ -337,16 +347,6 @@
                   "items": {
                     "type": "string"
                   }
-                },
-                "field": {
-                  "name": "field",
-                  "required": true,
-                  "type": "string"
-                },
-                "label": {
-                  "name": "label",
-                  "required": false,
-                  "type": "string"
                 }
               },
               "type": "object"
@@ -385,14 +385,14 @@
             "tier": "presentation",
             "items": {
               "properties": {
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                },
                 "label": {
                   "name": "label",
                   "required": true,
-                  "type": "string"
-                },
-                "icon": {
-                  "name": "icon",
-                  "required": false,
                   "type": "string"
                 },
                 "event": {
@@ -400,8 +400,8 @@
                   "required": true,
                   "type": "string"
                 },
-                "variant": {
-                  "name": "variant",
+                "icon": {
+                  "name": "icon",
                   "required": false,
                   "type": "string"
                 }

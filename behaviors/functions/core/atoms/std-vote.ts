@@ -59,13 +59,7 @@ export interface StdVoteVoteLoadFailedPayload {
  * Payload shape for the `VoteCasted` event.
  */
 export interface StdVoteVoteCastedPayload {
-  row?: {
-    id: string;
-    targetId: string;
-    voterId: string;
-    direction?: string;
-    createdAt?: string;
-  };
+  row?: EntityRow;
 }
 
 /**

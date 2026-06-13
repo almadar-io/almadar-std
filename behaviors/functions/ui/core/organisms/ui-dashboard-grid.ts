@@ -39,32 +39,32 @@ export type StdUiDashboardGridEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiDashboardGridConfig {
-  /** Default: `3` */
-  columns?: number;
-  /** Default: `[{"content":"Content","id":"Id","colSpan":1,"rowSpan":1}]` */
-  cells?: EntityRow[];
-  /** Default: `"Search Value"` */
-  searchValue?: string;
-  /** Default: `0` */
-  pageSize?: number;
-  error?: EntityRow;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `0` */
-  totalCount?: number;
+  activeFilters?: unknown;
   /** Default: `""` */
   className?: string;
-  activeFilters?: unknown;
+  /** Default: `0` */
+  totalCount?: number;
   /** Default: `[]` */
   selectedIds?: string[];
+  error?: EntityRow;
+  /** Default: `3` */
+  columns?: number;
+  /** Default: `0` */
+  pageProp?: number;
   /** Default: `"md"` */
   gap?: 'sm' | 'md' | 'lg';
-  /** Default: `"asc"` */
-  sortDirection?: 'asc' | 'desc';
+  /** Default: `[{"id":"Id","colSpan":1,"content":"Content","rowSpan":1}]` */
+  cells?: EntityRow[];
   /** Default: `"Sort By"` */
   sortBy?: string;
   /** Default: `0` */
-  pageProp?: number;
+  pageSize?: number;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `"asc"` */
+  sortDirection?: 'asc' | 'desc';
+  /** Default: `"Search Value"` */
+  searchValue?: string;
 }
 
 /**
@@ -174,21 +174,21 @@ export function stdUiDashboardGridDashboardGridOrbital(params: StdUiDashboardGri
                   'main',
                   {
                     'selectedIds': '@config.selectedIds',
-                    'sortBy': '@config.sortBy',
-                    'columns': '@config.columns',
-                    'type': 'dashboard-grid',
-                    'activeFilters': '@config.activeFilters',
-                    'totalCount': '@config.totalCount',
-                    'sortDirection': '@config.sortDirection',
                     'entity': '@entity',
-                    'gap': '@config.gap',
-                    'page': '@config.pageProp',
-                    'isLoading': '@config.isLoading',
-                    'searchValue': '@config.searchValue',
-                    'error': '@config.error',
-                    'className': '@config.className',
                     'cells': '@config.cells',
+                    'type': 'dashboard-grid',
+                    'gap': '@config.gap',
+                    'className': '@config.className',
                     'pageSize': '@config.pageSize',
+                    'totalCount': '@config.totalCount',
+                    'activeFilters': '@config.activeFilters',
+                    'sortBy': '@config.sortBy',
+                    'searchValue': '@config.searchValue',
+                    'isLoading': '@config.isLoading',
+                    'columns': '@config.columns',
+                    'error': '@config.error',
+                    'sortDirection': '@config.sortDirection',
+                    'page': '@config.pageProp',
                   },
                 ],
               ],
@@ -196,65 +196,35 @@ export function stdUiDashboardGridDashboardGridOrbital(params: StdUiDashboardGri
           ],
         },
         'config': {
-          'columns': {
-            'type': 'number',
-            'default': 3,
-            'label': 'Columns',
-            'description': 'Number of columns',
+          'activeFilters': {
+            'type': 'json',
+            'label': 'Active Filters',
+            'description': 'Active filters',
             'tier': 'presentation',
           },
-          'cells': {
-            'type': '[DashboardGridCellsItem]',
-            'default': [
-              {
-                'content': 'Content',
-                'id': 'Id',
-                'colSpan': 1,
-                'rowSpan': 1,
-              },
-            ],
-            'label': 'Cells',
-            'description': 'Cell definitions',
-            'tier': 'presentation',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'content': {
-                  'name': 'content',
-                  'type': 'string',
-                  'required': false,
-                },
-                'id': {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': false,
-                },
-                'rowSpan': {
-                  'name': 'rowSpan',
-                  'type': 'number',
-                  'required': false,
-                },
-                'colSpan': {
-                  'name': 'colSpan',
-                  'type': 'number',
-                  'required': false,
-                },
-              },
-            },
-          },
-          'searchValue': {
+          'className': {
             'type': 'string',
-            'default': 'Search Value',
-            'label': 'Search Value',
-            'description': 'Current search query value',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
-          'pageSize': {
+          'totalCount': {
             'type': 'number',
             'default': 0,
-            'label': 'Page Size',
-            'description': 'Number of items per page',
+            'label': 'Total Count',
+            'description': 'Total number of items',
             'tier': 'presentation',
+          },
+          'selectedIds': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Selected Ids',
+            'description': 'Currently selected item IDs',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
           },
           'error': {
             'type': 'DashboardGridError',
@@ -262,6 +232,11 @@ export function stdUiDashboardGridDashboardGridOrbital(params: StdUiDashboardGri
             'description': 'Error state (UiError)',
             'tier': 'presentation',
             'properties': {
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
               'code': {
                 'name': 'code',
                 'type': 'string',
@@ -277,49 +252,22 @@ export function stdUiDashboardGridDashboardGridOrbital(params: StdUiDashboardGri
                 'type': 'string',
                 'required': false,
               },
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
             },
           },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
+          'columns': {
+            'type': 'number',
+            'default': 3,
+            'label': 'Columns',
+            'description': 'Number of columns',
             'tier': 'presentation',
           },
-          'totalCount': {
+          'pageProp': {
             'type': 'number',
             'default': 0,
-            'label': 'Total Count',
-            'description': 'Total number of items',
+            'label': 'Page',
+            'description': 'Current page number',
+            'synonyms': 'page',
             'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'activeFilters': {
-            'type': 'json',
-            'label': 'Active Filters',
-            'description': 'Active filters',
-            'tier': 'presentation',
-          },
-          'selectedIds': {
-            'type': '[string]',
-            'default': [],
-            'label': 'Selected Ids',
-            'description': 'Currently selected item IDs',
-            'tier': 'presentation',
-            'items': {
-              'type': 'string',
-            },
           },
           'gap': {
             'type': 'string',
@@ -333,6 +281,66 @@ export function stdUiDashboardGridDashboardGridOrbital(params: StdUiDashboardGri
               'lg',
             ],
           },
+          'cells': {
+            'type': '[DashboardGridCellsItem]',
+            'default': [
+              {
+                'id': 'Id',
+                'colSpan': 1,
+                'content': 'Content',
+                'rowSpan': 1,
+              },
+            ],
+            'label': 'Cells',
+            'description': 'Cell definitions',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'content': {
+                  'name': 'content',
+                  'type': 'string',
+                  'required': false,
+                },
+                'rowSpan': {
+                  'name': 'rowSpan',
+                  'type': 'number',
+                  'required': false,
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': false,
+                },
+                'colSpan': {
+                  'name': 'colSpan',
+                  'type': 'number',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'sortBy': {
+            'type': 'string',
+            'default': 'Sort By',
+            'label': 'Sort By',
+            'description': 'Current sort field',
+            'tier': 'presentation',
+          },
+          'pageSize': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page Size',
+            'description': 'Number of items per page',
+            'tier': 'presentation',
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
           'sortDirection': {
             'type': 'string',
             'default': 'asc',
@@ -344,19 +352,11 @@ export function stdUiDashboardGridDashboardGridOrbital(params: StdUiDashboardGri
               'desc',
             ],
           },
-          'sortBy': {
+          'searchValue': {
             'type': 'string',
-            'default': 'Sort By',
-            'label': 'Sort By',
-            'description': 'Current sort field',
-            'tier': 'presentation',
-          },
-          'pageProp': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page',
-            'description': 'Current page number',
-            'synonyms': 'page',
+            'default': 'Search Value',
+            'label': 'Search Value',
+            'description': 'Current search query value',
             'tier': 'presentation',
           },
         },

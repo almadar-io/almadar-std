@@ -85,10 +85,10 @@ export interface StdWizardWizardSaveFailedPayload {
 export interface StdWizardConfig {
   /** Default: `"Wizard"` */
   title?: string;
+  /** Default: `[{"label":"Details","fields":["title","description"],"key":"details","description":"Basic information","icon":"file-text"},{"key":"options","description":"Configure preferences","icon":"settings","label":"Options","fields":["category","priority"]},{"label":"Review","fields":["notes"],"icon":"check-circle","key":"review","description":"Confirm and submit"}]` */
+  steps?: EntityRow[];
   /** Default: `"elevated"` */
   cardLook?: 'elevated' | 'flat-bordered' | 'borderless-divider' | 'ticket' | 'invoice' | 'chip' | 'tile-image-first';
-  /** Default: `[{"fields":["title","description"],"key":"details","label":"Details","description":"Basic information","icon":"file-text"},{"fields":["category","priority"],"description":"Configure preferences","icon":"settings","key":"options","label":"Options"},{"description":"Confirm and submit","key":"review","label":"Review","icon":"check-circle","fields":["notes"]}]` */
-  steps?: EntityRow[];
 }
 
 /**

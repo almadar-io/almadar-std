@@ -39,33 +39,33 @@ export type StdUiMeterEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiMeterConfig {
-  /** Default: `[]` */
-  thresholds?: EntityRow[];
   /** Default: `0` */
   min?: number;
+  error?: EntityRow;
   /** Default: `"Unit"` */
   unit?: string;
-  /** Default: `"linear"` */
-  variant?: 'linear' | 'radial' | 'segmented';
-  /** Default: `[]` */
-  actions?: EntityRow[];
-  /** Default: `5` */
-  segments?: number;
-  error?: EntityRow;
-  /** Default: `100` */
-  max?: number;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `0` */
-  value?: number;
-  /** Default: `"Label"` */
-  label?: string;
-  /** Default: `true` */
-  showValue?: boolean;
   /** Default: `false` */
   isLoading?: boolean;
+  /** Default: `5` */
+  segments?: number;
+  /** Default: `[]` */
+  actions?: EntityRow[];
+  /** Default: `0` */
+  value?: number;
+  /** Default: `100` */
+  max?: number;
+  /** Default: `[]` */
+  thresholds?: EntityRow[];
+  /** Default: `"Label"` */
+  label?: string;
+  /** Default: `"linear"` */
+  variant?: 'linear' | 'radial' | 'segmented';
+  /** Default: `true` */
+  showValue?: boolean;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

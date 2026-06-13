@@ -39,20 +39,20 @@ export type StdUiCardEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiCardConfig {
+  /** Default: `"none"` */
+  shadow?: 'none' | 'sm' | 'md' | 'lg';
+  /** Default: `"bordered"` */
+  variant?: 'default' | 'bordered' | 'elevated' | 'interactive';
+  /** Default: `""` */
+  className?: string;
   /** Default: `"Title"` */
   title?: string;
   /** Default: `"Subtitle"` */
   subtitle?: string;
-  /** Default: `"none"` */
-  shadow?: 'none' | 'sm' | 'md' | 'lg';
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"bordered"` */
-  variant?: 'default' | 'bordered' | 'elevated' | 'interactive';
-  /** Default: `"md"` */
-  padding?: 'none' | 'sm' | 'md' | 'lg';
   /** Default: `"elevated"` */
   look?: 'elevated' | 'flat-bordered' | 'borderless-divider' | 'ticket' | 'invoice' | 'chip' | 'tile-image-first';
+  /** Default: `"md"` */
+  padding?: 'none' | 'sm' | 'md' | 'lg';
 }
 
 /**

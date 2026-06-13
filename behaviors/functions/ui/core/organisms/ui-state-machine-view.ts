@@ -39,11 +39,11 @@ export type StdUiStateMachineViewEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiStateMachineViewConfig {
-  error?: EntityRow;
-  /** Default: `""` */
-  className?: string;
   /** Default: `false` */
   isLoading?: boolean;
+  /** Default: `""` */
+  className?: string;
+  error?: EntityRow;
 }
 
 /**
@@ -147,9 +147,9 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
                   'render-ui',
                   'main',
                   {
-                    'error': '@config.error',
                     'isLoading': '@config.isLoading',
                     'type': 'state-machine-view',
+                    'error': '@config.error',
                     'className': '@config.className',
                   },
                 ],
@@ -158,12 +158,31 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
           ],
         },
         'config': {
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
           'error': {
             'type': 'StateMachineViewError',
             'label': 'Error',
             'description': 'Error state',
             'tier': 'presentation',
             'properties': {
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
               'message': {
                 'name': 'message',
                 'type': 'string',
@@ -179,26 +198,7 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
                 'type': 'string',
                 'required': false,
               },
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
             },
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
-            'tier': 'presentation',
           },
         },
         'scope': 'instance',

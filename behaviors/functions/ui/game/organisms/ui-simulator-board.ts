@@ -189,9 +189,9 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
                   'render-ui',
                   'main',
                   {
+                    'entity': '@config.entityProp',
                     'type': 'simulator-board',
                     'completeEvent': 'COMPLETE',
-                    'entity': '@config.entityProp',
                   },
                 ],
               ],
@@ -206,18 +206,28 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
             'synonyms': 'entity',
             'tier': 'presentation',
             'properties': {
-              'successMessage': {
-                'name': 'successMessage',
+              'hint': {
+                'name': 'hint',
                 'type': 'string',
                 'required': false,
               },
-              'headerImage': {
-                'name': 'headerImage',
+              'title': {
+                'name': 'title',
                 'type': 'string',
-                'required': false,
+                'required': true,
               },
-              'outputLabel': {
-                'name': 'outputLabel',
+              'id': {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              'targetValue': {
+                'name': 'targetValue',
+                'type': 'number',
+                'required': true,
+              },
+              'computeExpression': {
+                'name': 'computeExpression',
                 'type': 'string',
                 'required': true,
               },
@@ -226,32 +236,30 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
                 'type': 'string',
                 'required': false,
               },
-              'theme': {
-                'name': 'theme',
-                'type': 'object',
-                'required': false,
-                'properties': {
-                  'accentColor': {
-                    'name': 'accentColor',
-                    'type': 'string',
-                    'required': false,
-                  },
-                  'background': {
-                    'name': 'background',
-                    'type': 'string',
-                    'required': false,
-                  },
-                },
-              },
-              'targetValue': {
-                'name': 'targetValue',
+              'targetTolerance': {
+                'name': 'targetTolerance',
                 'type': 'number',
                 'required': true,
               },
-              'outputUnit': {
-                'name': 'outputUnit',
+              'outputLabel': {
+                'name': 'outputLabel',
                 'type': 'string',
                 'required': true,
+              },
+              'successMessage': {
+                'name': 'successMessage',
+                'type': 'string',
+                'required': false,
+              },
+              'description': {
+                'name': 'description',
+                'type': 'string',
+                'required': true,
+              },
+              'headerImage': {
+                'name': 'headerImage',
+                'type': 'string',
+                'required': false,
               },
               'parameters': {
                 'name': 'parameters',
@@ -260,21 +268,6 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
                 'items': {
                   'type': 'object',
                   'properties': {
-                    'tolerance': {
-                      'name': 'tolerance',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'min': {
-                      'name': 'min',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'max': {
-                      'name': 'max',
-                      'type': 'number',
-                      'required': true,
-                    },
                     'label': {
                       'name': 'label',
                       'type': 'string',
@@ -290,14 +283,19 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
                       'type': 'string',
                       'required': true,
                     },
+                    'max': {
+                      'name': 'max',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'min': {
+                      'name': 'min',
+                      'type': 'number',
+                      'required': true,
+                    },
                     'id': {
                       'name': 'id',
                       'type': 'string',
-                      'required': true,
-                    },
-                    'initial': {
-                      'name': 'initial',
-                      'type': 'number',
                       'required': true,
                     },
                     'step': {
@@ -305,37 +303,39 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
                       'type': 'number',
                       'required': true,
                     },
+                    'initial': {
+                      'name': 'initial',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'tolerance': {
+                      'name': 'tolerance',
+                      'type': 'number',
+                      'required': true,
+                    },
                   },
                 },
               },
-              'title': {
-                'name': 'title',
-                'type': 'string',
-                'required': true,
-              },
-              'id': {
-                'name': 'id',
-                'type': 'string',
-                'required': true,
-              },
-              'computeExpression': {
-                'name': 'computeExpression',
-                'type': 'string',
-                'required': true,
-              },
-              'hint': {
-                'name': 'hint',
-                'type': 'string',
+              'theme': {
+                'name': 'theme',
+                'type': 'object',
                 'required': false,
+                'properties': {
+                  'background': {
+                    'name': 'background',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'accentColor': {
+                    'name': 'accentColor',
+                    'type': 'string',
+                    'required': false,
+                  },
+                },
               },
-              'description': {
-                'name': 'description',
+              'outputUnit': {
+                'name': 'outputUnit',
                 'type': 'string',
-                'required': true,
-              },
-              'targetTolerance': {
-                'name': 'targetTolerance',
-                'type': 'number',
                 'required': true,
               },
             },

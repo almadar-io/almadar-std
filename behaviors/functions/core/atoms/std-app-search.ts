@@ -53,15 +53,15 @@ export interface StdAppSearchAppSearchFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdAppSearchConfig {
-  /** Default: `[{"label":"Name","variant":"h4","name":"name"}]` */
+  /** Default: `[{"variant":"h4","name":"name","label":"Name"}]` */
   resultFields?: EntityRow[];
   idleContent?: TraitFieldRef;
   /** Default: `[]` */
   resultActions?: EntityRow[];
-  /** Default: `"name"` */
-  searchField?: string;
   /** Default: `"Search results"` */
   resultsTitle?: string;
+  /** Default: `"name"` */
+  searchField?: string;
 }
 
 /**

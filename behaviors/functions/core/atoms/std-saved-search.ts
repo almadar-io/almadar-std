@@ -87,17 +87,7 @@ export interface StdSavedSearchSavedSearchLoadFailedPayload {
  * Payload shape for the `SavedSearchUpdated` event.
  */
 export interface StdSavedSearchSavedSearchUpdatedPayload {
-  row?: {
-    id: string;
-    name: string;
-    query?: string;
-    filters?: EntityRow;
-    alertEnabled?: boolean;
-    alertFrequency?: string;
-    userId?: string;
-    lastNotifiedAt?: string;
-    createdAt?: string;
-  };
+  row?: EntityRow;
 }
 
 /**
@@ -114,10 +104,10 @@ export interface StdSavedSearchSavedSearchDeletedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdSavedSearchConfig {
-  /** Default: `"Saved Searches"` */
-  title?: string;
   /** Default: `"dense"` */
   tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
+  /** Default: `"Saved Searches"` */
+  title?: string;
 }
 
 /**

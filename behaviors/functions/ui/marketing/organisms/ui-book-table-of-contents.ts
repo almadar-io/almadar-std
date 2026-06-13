@@ -39,14 +39,14 @@ export type StdUiBookTableOfContentsEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiBookTableOfContentsConfig {
-  /** Default: `[]` */
-  parts?: EntityRow[];
-  /** Default: `"rtl"` */
-  direction?: 'rtl' | 'ltr';
   /** Default: `"Current Chapter Id"` */
   currentChapterId?: string;
+  /** Default: `[]` */
+  parts?: EntityRow[];
   /** Default: `""` */
   className?: string;
+  /** Default: `"rtl"` */
+  direction?: 'rtl' | 'ltr';
 }
 
 /**
@@ -150,10 +150,10 @@ export function stdUiBookTableOfContentsBookTableOfContentsOrbital(params: StdUi
                   'render-ui',
                   'main',
                   {
-                    'direction': '@config.direction',
-                    'className': '@config.className',
                     'parts': '@config.parts',
                     'currentChapterId': '@config.currentChapterId',
+                    'direction': '@config.direction',
+                    'className': '@config.className',
                     'type': 'book-table-of-contents',
                   },
                 ],
@@ -162,6 +162,13 @@ export function stdUiBookTableOfContentsBookTableOfContentsOrbital(params: StdUi
           ],
         },
         'config': {
+          'currentChapterId': {
+            'type': 'string',
+            'default': 'Current Chapter Id',
+            'label': 'Current Chapter Id',
+            'description': 'currentChapterId prop',
+            'tier': 'presentation',
+          },
           'parts': {
             'type': '[BookTableOfContentsPartsItem]',
             'default': [],
@@ -183,11 +190,6 @@ export function stdUiBookTableOfContentsBookTableOfContentsOrbital(params: StdUi
                   'items': {
                     'type': 'object',
                     'properties': {
-                      'orbitalSchema': {
-                        'name': 'orbitalSchema',
-                        'type': 'string',
-                        'required': false,
-                      },
                       'content': {
                         'name': 'content',
                         'type': 'string',
@@ -203,11 +205,23 @@ export function stdUiBookTableOfContentsBookTableOfContentsOrbital(params: StdUi
                         'type': 'string',
                         'required': true,
                       },
+                      'orbitalSchema': {
+                        'name': 'orbitalSchema',
+                        'type': 'string',
+                        'required': false,
+                      },
                     },
                   },
                 },
               },
             },
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
           },
           'direction': {
             'type': 'string',
@@ -219,20 +233,6 @@ export function stdUiBookTableOfContentsBookTableOfContentsOrbital(params: StdUi
               'rtl',
               'ltr',
             ],
-          },
-          'currentChapterId': {
-            'type': 'string',
-            'default': 'Current Chapter Id',
-            'label': 'Current Chapter Id',
-            'description': 'currentChapterId prop',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
           },
         },
         'scope': 'instance',

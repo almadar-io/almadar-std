@@ -37,17 +37,7 @@ export type StdVersionHistoryEventKey = 'CLOSE_VIEW' | 'COMPARE' | 'INIT' | 'OPE
  */
 export interface StdVersionHistoryOpenRevisionPayload {
   id: string;
-  row?: {
-    id: string;
-    documentId: string;
-    documentType: string;
-    versionNumber: number;
-    authorId?: string;
-    authorName?: string;
-    content?: string;
-    summary?: string;
-    createdAt?: string;
-  };
+  row?: EntityRow;
 }
 
 /**
@@ -86,17 +76,7 @@ export interface StdVersionHistoryRevisionLoadFailedPayload {
  * Payload shape for the `RevisionRolledBack` event.
  */
 export interface StdVersionHistoryRevisionRolledBackPayload {
-  row?: {
-    id: string;
-    documentId: string;
-    documentType: string;
-    versionNumber: number;
-    authorId?: string;
-    authorName?: string;
-    content?: string;
-    summary?: string;
-    createdAt?: string;
-  };
+  row?: EntityRow;
 }
 
 /**
@@ -114,12 +94,12 @@ export interface StdVersionHistoryRevisionRollbackFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdVersionHistoryConfig {
+  /** Default: `"dense"` */
+  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
   /** Default: `"Version History"` */
   title?: string;
   /** Default: `"elevated"` */
   statLook?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
-  /** Default: `"dense"` */
-  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
 }
 
 /**

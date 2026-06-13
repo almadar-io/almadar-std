@@ -39,12 +39,12 @@ export type StdUiLandingPageTemplateEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiLandingPageTemplateConfig {
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"product"` */
-  variant?: 'product' | 'service' | 'platform';
   /** Default: `3` */
   featureColumns?: number;
+  /** Default: `"product"` */
+  variant?: 'product' | 'service' | 'platform';
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

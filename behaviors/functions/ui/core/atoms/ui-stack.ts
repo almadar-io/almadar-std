@@ -46,30 +46,30 @@ export interface StdUiStackActionPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiStackConfig {
+  /** Default: `"md"` */
+  gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  /** Default: `"start"` */
+  justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';
   /** Default: `false` */
-  flex?: boolean;
+  wrap?: boolean;
+  actionPayload?: unknown;
+  /** Default: `false` */
+  responsive?: boolean;
+  /** Default: `0` */
+  tabIndex?: number;
   /** Default: `""` */
   className?: string;
   /** Default: `false` */
-  responsive?: boolean;
-  /** Default: `false` */
-  wrap?: boolean;
-  /** Default: `false` */
   reverse?: boolean;
-  style?: unknown;
-  /** Default: `0` */
-  tabIndex?: number;
   /** Default: `"stretch"` */
   align?: 'start' | 'center' | 'end' | 'stretch' | 'baseline';
-  /** Default: `"start"` */
-  justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';
-  /** Default: `"Role"` */
-  role?: string;
   /** Default: `"vertical"` */
   direction?: 'horizontal' | 'vertical';
-  /** Default: `"md"` */
-  gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
-  actionPayload?: unknown;
+  /** Default: `false` */
+  flex?: boolean;
+  style?: unknown;
+  /** Default: `"Role"` */
+  role?: string;
 }
 
 /**
