@@ -263,15 +263,15 @@
                     "render-ui",
                     "main",
                     {
-                      "selectedFeatureIds": "@config.selectedFeatureIds",
-                      "offsetZ": "@config.offsetZ",
-                      "offsetX": "@config.offsetX",
                       "type": "feature-renderer",
-                      "onFeatureHover": "FEATURE_HOVER",
                       "onFeatureClick": "FEATURE_CLICK",
-                      "features": "@config.features",
+                      "offsetZ": "@config.offsetZ",
+                      "cellSize": "@config.cellSize",
+                      "onFeatureHover": "FEATURE_HOVER",
                       "featureColors": "@config.featureColors",
-                      "cellSize": "@config.cellSize"
+                      "features": "@config.features",
+                      "selectedFeatureIds": "@config.selectedFeatureIds",
+                      "offsetX": "@config.offsetX"
                     }
                   ]
                 ]
@@ -279,6 +279,13 @@
             ]
           },
           "config": {
+            "cellSize": {
+              "type": "number",
+              "default": 1.0,
+              "label": "Cell Size",
+              "description": "Grid cell size",
+              "tier": "presentation"
+            },
             "offsetX": {
               "type": "number",
               "default": 0.0,
@@ -286,15 +293,12 @@
               "description": "Grid offset X",
               "tier": "presentation"
             },
-            "selectedFeatureIds": {
-              "type": "[string]",
-              "default": [],
-              "label": "Selected Feature Ids",
-              "description": "Selected feature IDs",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
+            "offsetZ": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Offset Z",
+              "description": "Grid offset Z",
+              "tier": "presentation"
             },
             "featureColors": {
               "type": "Map<string,string>",
@@ -306,13 +310,23 @@
                 "type": "string"
               }
             },
+            "selectedFeatureIds": {
+              "type": "[string]",
+              "default": [],
+              "label": "Selected Feature Ids",
+              "description": "Selected feature IDs",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
             "features": {
               "type": "[FeatureRendererFeaturesItem]",
               "default": [
                 {
                   "type": "Type",
-                  "x": 1.0,
-                  "y": 1.0
+                  "y": 1.0,
+                  "x": 1.0
                 }
               ],
               "label": "Features",
@@ -321,6 +335,21 @@
               "items": {
                 "type": "object",
                 "properties": {
+                  "assetUrl": {
+                    "name": "assetUrl",
+                    "type": "string",
+                    "required": false
+                  },
+                  "x": {
+                    "name": "x",
+                    "type": "number",
+                    "required": true
+                  },
+                  "type": {
+                    "name": "type",
+                    "type": "string",
+                    "required": true
+                  },
                   "z": {
                     "name": "z",
                     "type": "number",
@@ -336,28 +365,8 @@
                     "type": "number",
                     "required": false
                   },
-                  "y": {
-                    "name": "y",
-                    "type": "number",
-                    "required": true
-                  },
-                  "x": {
-                    "name": "x",
-                    "type": "number",
-                    "required": true
-                  },
-                  "type": {
-                    "name": "type",
-                    "type": "string",
-                    "required": true
-                  },
                   "sprite": {
                     "name": "sprite",
-                    "type": "string",
-                    "required": false
-                  },
-                  "assetUrl": {
-                    "name": "assetUrl",
                     "type": "string",
                     "required": false
                   },
@@ -365,23 +374,14 @@
                     "name": "color",
                     "type": "string",
                     "required": false
+                  },
+                  "y": {
+                    "name": "y",
+                    "type": "number",
+                    "required": true
                   }
                 }
               }
-            },
-            "offsetZ": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Offset Z",
-              "description": "Grid offset Z",
-              "tier": "presentation"
-            },
-            "cellSize": {
-              "type": "number",
-              "default": 1.0,
-              "label": "Cell Size",
-              "description": "Grid cell size",
-              "tier": "presentation"
             }
           },
           "scope": "instance"

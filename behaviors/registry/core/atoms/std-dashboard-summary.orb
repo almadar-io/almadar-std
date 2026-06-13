@@ -43,6 +43,11 @@
             "items": {
               "type": "object",
               "properties": {
+                "label": {
+                  "name": "label",
+                  "type": "string",
+                  "required": true
+                },
                 "value": {
                   "name": "value",
                   "type": "string",
@@ -57,11 +62,6 @@
                   "name": "trend",
                   "type": "number",
                   "required": false
-                },
-                "label": {
-                  "name": "label",
-                  "type": "string",
-                  "required": true
                 }
               }
             },
@@ -258,11 +258,11 @@
                     "fetch",
                     "SummaryRecord",
                     {
-                      "limit": 1.0,
                       "emit": {
-                        "success": "SummaryRecordLoaded",
-                        "failure": "SummaryRecordLoadFailed"
-                      }
+                        "failure": "SummaryRecordLoadFailed",
+                        "success": "SummaryRecordLoaded"
+                      },
+                      "limit": 1.0
                     }
                   ],
                   [
@@ -393,129 +393,130 @@
                     "main",
                     {
                       "gap": "md",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "stack",
+                          "gap": "md",
+                          "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
                               "children": [
                                 {
                                   "type": "typography",
+                                  "weight": "semibold",
                                   "variant": "h3",
-                                  "content": "@entity.title",
-                                  "weight": "semibold"
+                                  "content": "@entity.title"
                                 },
                                 {
                                   "color": "muted",
-                                  "type": "typography",
                                   "variant": "caption",
-                                  "content": "@entity.period"
+                                  "content": "@entity.period",
+                                  "type": "typography"
                                 }
                               ],
-                              "type": "stack",
                               "direction": "vertical",
-                              "gap": "xs"
+                              "gap": "xs",
+                              "type": "stack"
                             },
                             {
-                              "label": "Filter",
-                              "variant": "ghost",
                               "action": "@entity.filterEvent",
-                              "type": "button",
+                              "icon": "filter",
                               "size": "sm",
-                              "icon": "filter"
+                              "variant": "ghost",
+                              "type": "button",
+                              "label": "Filter"
                             }
                           ],
-                          "align": "center",
-                          "direction": "horizontal",
-                          "justify": "between",
-                          "gap": "md"
+                          "justify": "between"
                         },
                         {
-                          "gap": "md",
                           "type": "simple-grid",
-                          "cols": 4.0,
+                          "gap": "md",
                           "children": [
                             {
                               "gap": "md",
-                              "entity": "@entity.tiles",
                               "fields": [],
+                              "entity": "@entity.tiles",
                               "renderItem": [
                                 "fn",
                                 "tile",
                                 {
+                                  "type": "card",
+                                  "padding": "md",
                                   "children": [
                                     {
                                       "children": [
                                         {
-                                          "justify": "between",
+                                          "direction": "horizontal",
                                           "type": "stack",
+                                          "align": "center",
                                           "children": [
                                             {
-                                              "color": "muted",
                                               "content": "@tile.label",
+                                              "color": "muted",
                                               "variant": "overline",
                                               "weight": "semibold",
                                               "type": "typography"
                                             },
                                             {
+                                              "color": "muted",
                                               "size": "sm",
                                               "type": "icon",
-                                              "name": "@tile.icon",
-                                              "color": "muted"
+                                              "name": "@tile.icon"
                                             }
                                           ],
-                                          "align": "center",
-                                          "direction": "horizontal",
-                                          "gap": "xs"
+                                          "gap": "xs",
+                                          "justify": "between"
                                         },
                                         {
-                                          "variant": "h2",
-                                          "weight": "semibold",
                                           "content": "@tile.value",
+                                          "weight": "semibold",
+                                          "variant": "h2",
                                           "type": "typography"
                                         },
                                         {
                                           "size": "sm",
-                                          "showValue": true,
+                                          "type": "trend-indicator",
                                           "value": "@tile.trend",
-                                          "type": "trend-indicator"
+                                          "showValue": true
                                         }
                                       ],
-                                      "direction": "vertical",
                                       "gap": "xs",
+                                      "direction": "vertical",
                                       "type": "stack"
                                     }
                                   ],
-                                  "padding": "md",
-                                  "type": "card",
                                   "look": "elevated"
                                 }
                               ],
                               "type": "data-list"
                             }
-                          ]
+                          ],
+                          "cols": 4.0
                         },
                         {
-                          "align": "center",
                           "type": "stack",
+                          "align": "center",
                           "direction": "horizontal",
                           "gap": "sm",
                           "children": [
                             {
                               "entity": "@entity.statuses",
-                              "fields": [],
                               "gap": "sm",
                               "renderItem": [
                                 "fn",
                                 "pill",
                                 {
-                                  "type": "badge",
+                                  "size": "sm",
                                   "variant": "@pill.tone",
-                                  "label": "@pill.label",
-                                  "size": "sm"
+                                  "type": "badge",
+                                  "label": "@pill.label"
                                 }
                               ],
-                              "type": "data-list"
+                              "type": "data-list",
+                              "fields": []
                             }
                           ]
                         },
@@ -525,61 +526,60 @@
                         {
                           "children": [
                             {
-                              "direction": "vertical",
+                              "type": "stack",
+                              "gap": "md",
                               "children": [
                                 {
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "justify": "between",
-                                  "type": "stack",
                                   "children": [
                                     {
-                                      "type": "stack",
-                                      "direction": "vertical",
                                       "children": [
                                         {
                                           "content": "@entity.chartTitle",
-                                          "type": "typography",
+                                          "weight": "semibold",
                                           "variant": "h4",
-                                          "weight": "semibold"
+                                          "type": "typography"
                                         },
                                         {
-                                          "variant": "caption",
                                           "color": "muted",
-                                          "content": "@entity.chartSubtitle",
-                                          "type": "typography"
+                                          "type": "typography",
+                                          "variant": "caption",
+                                          "content": "@entity.chartSubtitle"
                                         }
                                       ],
-                                      "gap": "xs"
+                                      "gap": "xs",
+                                      "direction": "vertical",
+                                      "type": "stack"
                                     },
                                     {
+                                      "size": "sm",
                                       "label": "@entity.period",
                                       "type": "badge",
-                                      "size": "sm",
                                       "variant": "default"
                                     }
                                   ],
+                                  "gap": "sm",
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "justify": "between",
                                   "align": "center"
                                 },
                                 {
-                                  "chartType": "line",
                                   "data": "@entity.chartData",
                                   "type": "chart",
+                                  "chartType": "line",
                                   "height": 280.0,
                                   "showLegend": false
                                 }
                               ],
-                              "gap": "md",
-                              "type": "stack"
+                              "direction": "vertical"
                             }
                           ],
-                          "padding": "lg",
                           "look": "elevated",
+                          "padding": "lg",
                           "type": "card"
                         }
                       ],
-                      "direction": "vertical",
-                      "type": "stack"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -598,9 +598,9 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "error-state",
                       "message": "@entity.errorMessage",
-                      "title": "Failed to load dashboard",
-                      "type": "error-state"
+                      "title": "Failed to load dashboard"
                     }
                   ]
                 ]
@@ -619,8 +619,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "loading-state",
-                      "title": "Retrying…"
+                      "title": "Retrying…",
+                      "type": "loading-state"
                     }
                   ]
                 ]

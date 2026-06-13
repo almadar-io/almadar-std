@@ -46,11 +46,13 @@
           {
             "name": "status",
             "type": "string",
-            "default": "active",
+            "default": "idle",
             "values": [
-              "active",
-              "inactive",
-              "pending"
+              "idle",
+              "in_progress",
+              "planning",
+              "completed",
+              "failed"
             ],
             "description": "Indicates the current operational state of the loop.",
             "synonyms": "state, condition, operational_status"
@@ -394,57 +396,57 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
+                          "children": [
+                            {
+                              "name": "repeat",
+                              "type": "icon"
+                            },
+                            {
+                              "content": "Tool Execution Loop",
+                              "type": "typography",
+                              "variant": "h2"
+                            }
+                          ],
                           "direction": "horizontal",
                           "gap": "sm",
                           "align": "center",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "repeat"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "Tool Execution Loop",
-                              "variant": "h2"
-                            }
-                          ]
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "card",
                           "children": [
                             {
-                              "direction": "vertical",
+                              "gap": "md",
                               "children": [
                                 {
-                                  "type": "typography",
                                   "content": "Describe the task to execute with tools",
+                                  "type": "typography",
                                   "variant": "body"
                                 },
                                 {
-                                  "mode": "edit",
+                                  "submitEvent": "EXECUTE",
                                   "type": "form-section",
                                   "fields": [
                                     "task"
                                   ],
-                                  "entity": "@entity",
-                                  "submitEvent": "EXECUTE"
+                                  "mode": "edit",
+                                  "entity": "@entity"
                                 }
                               ],
-                              "type": "stack",
-                              "gap": "md"
+                              "direction": "vertical",
+                              "type": "stack"
                             }
-                          ],
-                          "type": "card"
+                          ]
                         }
-                      ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]
@@ -485,29 +487,29 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
-                      "align": "center",
                       "gap": "lg",
+                      "type": "stack",
                       "children": [
                         {
-                          "name": "brain",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "brain"
                         },
                         {
-                          "variant": "h3",
+                          "type": "typography",
                           "content": "Planning execution...",
-                          "type": "typography"
+                          "variant": "h3"
                         },
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
                           "content": "@entity.task",
+                          "variant": "caption",
                           "type": "typography"
                         }
-                      ]
+                      ],
+                      "align": "center"
                     }
                   ]
                 ]
@@ -545,49 +547,54 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack",
                       "children": [
                         {
-                          "gap": "sm",
                           "align": "center",
                           "justify": "between",
                           "direction": "horizontal",
                           "children": [
                             {
-                              "align": "center",
                               "children": [
                                 {
-                                  "name": "tool",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "tool"
                                 },
                                 {
                                   "content": "Executing Tool",
-                                  "type": "typography",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "type": "typography"
                                 }
                               ],
+                              "gap": "sm",
                               "type": "stack",
                               "direction": "horizontal",
-                              "gap": "sm"
+                              "align": "center"
                             },
                             {
                               "label": "@entity.maxIterations",
                               "type": "badge"
                             }
                           ],
-                          "type": "stack"
+                          "type": "stack",
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "card",
                           "children": [
                             {
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "type": "typography",
                                   "content": "Current Tool",
-                                  "variant": "caption"
+                                  "variant": "caption",
+                                  "type": "typography"
                                 },
                                 {
                                   "content": "@entity.currentTool",
@@ -597,18 +604,14 @@
                                 {
                                   "type": "spinner"
                                 }
-                              ],
-                              "gap": "sm",
-                              "direction": "vertical",
-                              "type": "stack"
+                              ]
                             }
-                          ]
+                          ],
+                          "type": "card"
                         },
                         {
-                          "type": "card",
                           "children": [
                             {
-                              "type": "stack",
                               "children": [
                                 {
                                   "type": "typography",
@@ -617,19 +620,18 @@
                                 },
                                 {
                                   "content": "@entity.plan",
-                                  "type": "typography",
-                                  "variant": "body"
+                                  "variant": "body",
+                                  "type": "typography"
                                 }
                               ],
-                              "direction": "vertical",
-                              "gap": "sm"
+                              "type": "stack",
+                              "gap": "sm",
+                              "direction": "vertical"
                             }
-                          ]
+                          ],
+                          "type": "card"
                         }
-                      ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]
@@ -653,18 +655,15 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "gap": "lg",
-                      "type": "stack",
                       "children": [
                         {
                           "name": "x-circle",
                           "type": "icon"
                         },
                         {
-                          "variant": "h2",
                           "content": "Loop Failed",
-                          "type": "typography"
+                          "type": "typography",
+                          "variant": "h2"
                         },
                         {
                           "type": "alert",
@@ -672,32 +671,35 @@
                           "message": "@entity.error"
                         },
                         {
+                          "type": "simple-grid",
                           "children": [
                             {
                               "icon": "repeat",
                               "type": "stat-display",
-                              "label": "Iterations Used",
-                              "value": "@entity.iterations"
+                              "value": "@entity.iterations",
+                              "label": "Iterations Used"
                             },
                             {
-                              "value": "@entity.maxIterations",
                               "label": "Max Allowed",
-                              "icon": "shield",
-                              "type": "stat-display"
+                              "type": "stat-display",
+                              "value": "@entity.maxIterations",
+                              "icon": "shield"
                             }
                           ],
-                          "type": "simple-grid",
                           "cols": 2.0
                         },
                         {
+                          "action": "RESET",
                           "type": "button",
                           "variant": "primary",
-                          "label": "Retry",
-                          "action": "RESET",
-                          "icon": "rotate-ccw"
+                          "icon": "rotate-ccw",
+                          "label": "Retry"
                         }
                       ],
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "align": "center",
+                      "type": "stack",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -729,8 +731,8 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
                       "direction": "vertical",
+                      "gap": "lg",
                       "type": "stack",
                       "align": "center",
                       "children": [
@@ -740,8 +742,8 @@
                         },
                         {
                           "type": "typography",
-                          "variant": "h3",
-                          "content": "Checking result..."
+                          "content": "Checking result...",
+                          "variant": "h3"
                         },
                         {
                           "type": "spinner"
@@ -774,49 +776,49 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "gap": "lg",
                       "children": [
                         {
                           "type": "icon",
                           "name": "x-circle"
                         },
                         {
-                          "content": "Loop Failed",
                           "variant": "h2",
+                          "content": "Loop Failed",
                           "type": "typography"
                         },
                         {
+                          "type": "alert",
                           "variant": "error",
-                          "message": "@entity.error",
-                          "type": "alert"
+                          "message": "@entity.error"
                         },
                         {
-                          "cols": 2.0,
                           "type": "simple-grid",
                           "children": [
                             {
-                              "type": "stat-display",
-                              "icon": "repeat",
                               "label": "Iterations Used",
+                              "icon": "repeat",
+                              "type": "stat-display",
                               "value": "@entity.iterations"
                             },
                             {
-                              "label": "Max Allowed",
                               "value": "@entity.maxIterations",
-                              "type": "stat-display",
-                              "icon": "shield"
+                              "icon": "shield",
+                              "label": "Max Allowed",
+                              "type": "stat-display"
                             }
-                          ]
+                          ],
+                          "cols": 2.0
                         },
                         {
-                          "type": "button",
-                          "icon": "rotate-ccw",
                           "variant": "primary",
-                          "action": "RESET",
-                          "label": "Retry"
+                          "type": "button",
+                          "label": "Retry",
+                          "icon": "rotate-ccw",
+                          "action": "RESET"
                         }
                       ],
+                      "align": "center",
+                      "gap": "lg",
                       "direction": "vertical",
                       "type": "stack"
                     }
@@ -842,39 +844,38 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "children": [
                         {
-                          "align": "center",
-                          "gap": "sm",
                           "justify": "between",
-                          "type": "stack",
+                          "align": "center",
                           "children": [
                             {
-                              "gap": "sm",
-                              "direction": "horizontal",
-                              "type": "stack",
-                              "align": "center",
                               "children": [
                                 {
-                                  "name": "check-circle",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "check-circle"
                                 },
                                 {
                                   "type": "typography",
                                   "content": "Loop Complete",
                                   "variant": "h2"
                                 }
-                              ]
+                              ],
+                              "direction": "horizontal",
+                              "align": "center",
+                              "gap": "sm",
+                              "type": "stack"
                             },
                             {
-                              "variant": "ghost",
-                              "icon": "rotate-ccw",
                               "action": "RESET",
+                              "label": "New Task",
+                              "icon": "rotate-ccw",
                               "type": "button",
-                              "label": "New Task"
+                              "variant": "ghost"
                             }
                           ],
+                          "type": "stack",
+                          "gap": "sm",
                           "direction": "horizontal"
                         },
                         {
@@ -884,16 +885,16 @@
                           "cols": 2.0,
                           "children": [
                             {
-                              "type": "stat-display",
-                              "value": "@entity.iterations",
                               "icon": "repeat",
-                              "label": "Iterations"
+                              "label": "Iterations",
+                              "value": "@entity.iterations",
+                              "type": "stat-display"
                             },
                             {
-                              "type": "stat-display",
                               "icon": "check",
-                              "label": "Status",
-                              "value": "@entity.status"
+                              "type": "stat-display",
+                              "value": "@entity.status",
+                              "label": "Status"
                             }
                           ],
                           "type": "simple-grid"
@@ -902,19 +903,18 @@
                           "type": "divider"
                         },
                         {
-                          "type": "card",
                           "children": [
                             {
                               "children": [
                                 {
-                                  "content": "Task",
                                   "type": "typography",
+                                  "content": "Task",
                                   "variant": "caption"
                                 },
                                 {
-                                  "type": "typography",
                                   "variant": "body",
-                                  "content": "@entity.task"
+                                  "content": "@entity.task",
+                                  "type": "typography"
                                 },
                                 {
                                   "type": "divider"
@@ -925,18 +925,20 @@
                                   "content": "Result"
                                 },
                                 {
+                                  "content": "@entity.result",
                                   "variant": "body",
-                                  "type": "typography",
-                                  "content": "@entity.result"
+                                  "type": "typography"
                                 }
                               ],
                               "type": "stack",
                               "direction": "vertical",
                               "gap": "md"
                             }
-                          ]
+                          ],
+                          "type": "card"
                         }
                       ],
+                      "type": "stack",
                       "gap": "lg",
                       "direction": "vertical"
                     }
@@ -989,12 +991,17 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "gap": "lg",
                       "children": [
                         {
+                          "align": "center",
                           "gap": "sm",
+                          "justify": "between",
+                          "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "direction": "horizontal",
                               "type": "stack",
                               "align": "center",
                               "children": [
@@ -1003,39 +1010,36 @@
                                   "type": "icon"
                                 },
                                 {
-                                  "variant": "h2",
+                                  "type": "typography",
                                   "content": "Executing Tool",
-                                  "type": "typography"
+                                  "variant": "h2"
                                 }
                               ],
+                              "direction": "horizontal",
                               "gap": "sm"
                             },
                             {
                               "label": "@entity.maxIterations",
                               "type": "badge"
                             }
-                          ],
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "justify": "between",
-                          "align": "center"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "card",
                           "children": [
                             {
-                              "direction": "vertical",
                               "children": [
                                 {
-                                  "variant": "caption",
                                   "content": "Current Tool",
+                                  "variant": "caption",
                                   "type": "typography"
                                 },
                                 {
-                                  "content": "@entity.currentTool",
                                   "type": "typography",
+                                  "content": "@entity.currentTool",
                                   "variant": "h4"
                                 },
                                 {
@@ -1043,36 +1047,34 @@
                                 }
                               ],
                               "gap": "sm",
-                              "type": "stack"
+                              "type": "stack",
+                              "direction": "vertical"
                             }
-                          ],
-                          "type": "card"
+                          ]
                         },
                         {
                           "type": "card",
                           "children": [
                             {
-                              "type": "stack",
-                              "gap": "sm",
                               "direction": "vertical",
+                              "gap": "sm",
                               "children": [
                                 {
                                   "variant": "caption",
-                                  "type": "typography",
-                                  "content": "Plan"
+                                  "content": "Plan",
+                                  "type": "typography"
                                 },
                                 {
                                   "type": "typography",
                                   "content": "@entity.plan",
                                   "variant": "body"
                                 }
-                              ]
+                              ],
+                              "type": "stack"
                             }
                           ]
                         }
                       ],
-                      "gap": "lg",
-                      "direction": "vertical",
                       "type": "stack"
                     }
                   ]
@@ -1097,10 +1099,9 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "type": "stack",
                       "align": "center",
                       "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "icon",
@@ -1112,36 +1113,37 @@
                           "variant": "h2"
                         },
                         {
-                          "variant": "error",
                           "message": "@entity.error",
+                          "variant": "error",
                           "type": "alert"
                         },
                         {
-                          "cols": 2.0,
                           "type": "simple-grid",
                           "children": [
                             {
+                              "value": "@entity.iterations",
                               "type": "stat-display",
-                              "label": "Iterations Used",
                               "icon": "repeat",
-                              "value": "@entity.iterations"
+                              "label": "Iterations Used"
                             },
                             {
-                              "icon": "shield",
                               "type": "stat-display",
+                              "value": "@entity.maxIterations",
                               "label": "Max Allowed",
-                              "value": "@entity.maxIterations"
+                              "icon": "shield"
                             }
-                          ]
+                          ],
+                          "cols": 2.0
                         },
                         {
-                          "type": "button",
-                          "action": "RESET",
-                          "label": "Retry",
                           "variant": "primary",
-                          "icon": "rotate-ccw"
+                          "icon": "rotate-ccw",
+                          "action": "RESET",
+                          "type": "button",
+                          "label": "Retry"
                         }
-                      ]
+                      ],
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -1196,21 +1198,20 @@
                     "main",
                     {
                       "type": "stack",
-                      "gap": "lg",
                       "children": [
                         {
+                          "align": "center",
                           "gap": "sm",
                           "direction": "horizontal",
-                          "align": "center",
                           "children": [
                             {
-                              "name": "repeat",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "repeat"
                             },
                             {
-                              "content": "Tool Execution Loop",
+                              "type": "typography",
                               "variant": "h2",
-                              "type": "typography"
+                              "content": "Tool Execution Loop"
                             }
                           ],
                           "type": "stack"
@@ -1221,9 +1222,6 @@
                         {
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "vertical",
-                              "gap": "md",
                               "children": [
                                 {
                                   "type": "typography",
@@ -1231,20 +1229,24 @@
                                   "content": "Describe the task to execute with tools"
                                 },
                                 {
+                                  "type": "form-section",
                                   "fields": [
                                     "task"
                                   ],
-                                  "type": "form-section",
-                                  "submitEvent": "EXECUTE",
                                   "entity": "@entity",
+                                  "submitEvent": "EXECUTE",
                                   "mode": "edit"
                                 }
-                              ]
+                              ],
+                              "direction": "vertical",
+                              "type": "stack",
+                              "gap": "md"
                             }
                           ],
                           "type": "card"
                         }
                       ],
+                      "gap": "lg",
                       "direction": "vertical"
                     }
                   ]
@@ -1299,12 +1301,13 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "type": "stack",
                       "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg",
                       "children": [
                         {
-                          "direction": "horizontal",
+                          "align": "center",
+                          "gap": "sm",
                           "type": "stack",
                           "children": [
                             {
@@ -1312,13 +1315,12 @@
                               "name": "repeat"
                             },
                             {
+                              "variant": "h2",
                               "content": "Tool Execution Loop",
-                              "type": "typography",
-                              "variant": "h2"
+                              "type": "typography"
                             }
                           ],
-                          "align": "center",
-                          "gap": "sm"
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
@@ -1326,24 +1328,24 @@
                         {
                           "children": [
                             {
-                              "type": "stack",
+                              "direction": "vertical",
                               "children": [
                                 {
-                                  "type": "typography",
                                   "content": "Describe the task to execute with tools",
+                                  "type": "typography",
                                   "variant": "body"
                                 },
                                 {
-                                  "type": "form-section",
-                                  "mode": "edit",
-                                  "entity": "@entity",
                                   "submitEvent": "EXECUTE",
                                   "fields": [
                                     "task"
-                                  ]
+                                  ],
+                                  "mode": "edit",
+                                  "type": "form-section",
+                                  "entity": "@entity"
                                 }
                               ],
-                              "direction": "vertical",
+                              "type": "stack",
                               "gap": "md"
                             }
                           ],

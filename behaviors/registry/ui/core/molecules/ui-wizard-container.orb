@@ -104,18 +104,18 @@
                     "render-ui",
                     "main",
                     {
-                      "showProgress": "@config.showProgress",
-                      "entity": "WizardContainerItem",
-                      "className": "@config.className",
                       "type": "wizard-container",
-                      "steps": "@config.steps",
-                      "compact": "@config.compact",
                       "allowBack": "@config.allowBack",
-                      "onStepChange": "STEP_CHANGE",
+                      "isLoading": "@config.isLoading",
                       "currentStep": "@config.currentStep",
+                      "compact": "@config.compact",
                       "error": "@config.error",
+                      "onStepChange": "STEP_CHANGE",
+                      "className": "@config.className",
+                      "steps": "@config.steps",
                       "onComplete": "COMPLETE",
-                      "isLoading": "@config.isLoading"
+                      "entity": "WizardContainerItem",
+                      "showProgress": "@config.showProgress"
                     }
                   ]
                 ]
@@ -129,10 +129,10 @@
               "description": "Error state",
               "tier": "presentation",
               "properties": {
-                "message": {
-                  "name": "message",
+                "code": {
+                  "name": "code",
                   "type": "string",
-                  "required": true
+                  "required": false
                 },
                 "stack": {
                   "name": "stack",
@@ -144,10 +144,10 @@
                   "type": "string",
                   "required": false
                 },
-                "code": {
-                  "name": "code",
+                "message": {
+                  "name": "message",
                   "type": "string",
-                  "required": false
+                  "required": true
                 }
               }
             },
@@ -158,17 +158,11 @@
               "description": "Additional CSS classes",
               "tier": "presentation"
             },
-            "compact": {
+            "allowBack": {
               "type": "boolean",
-              "default": false,
-              "label": "Compact",
-              "description": "Modal mode (compact header, no padding)",
-              "tier": "presentation"
-            },
-            "currentStep": {
-              "type": "json",
-              "label": "Current Step",
-              "description": "Current step index (controlled) - accepts unknown for generated code compatibility",
+              "default": true,
+              "label": "Allow Back",
+              "description": "Allow navigation to previous steps",
               "tier": "presentation"
             },
             "steps": {
@@ -180,21 +174,6 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": false
-                  },
-                  "title": {
-                    "name": "title",
-                    "type": "string",
-                    "required": false
-                  },
-                  "optional": {
-                    "name": "optional",
-                    "type": "boolean",
-                    "required": false
-                  },
                   "lawReferences": {
                     "name": "lawReferences",
                     "type": "array",
@@ -207,39 +186,21 @@
                           "type": "string",
                           "required": true
                         },
-                        "description": {
-                          "name": "description",
-                          "type": "string",
-                          "required": false
-                        },
                         "article": {
                           "name": "article",
                           "type": "string",
                           "required": true
+                        },
+                        "description": {
+                          "name": "description",
+                          "type": "string",
+                          "required": false
                         }
                       }
                     }
                   },
-                  "content": {
-                    "name": "content",
-                    "type": "string",
-                    "required": false
-                  },
-                  "description": {
-                    "name": "description",
-                    "type": "string",
-                    "required": false
-                  },
-                  "globalVariablesRequired": {
-                    "name": "globalVariablesRequired",
-                    "type": "array",
-                    "required": false,
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "globalVariablesSet": {
-                    "name": "globalVariablesSet",
+                  "contextMenu": {
+                    "name": "contextMenu",
                     "type": "array",
                     "required": false,
                     "items": {
@@ -251,10 +212,10 @@
                     "type": "object",
                     "required": false,
                     "properties": {
-                      "entity": {
-                        "name": "entity",
+                      "parentField": {
+                        "name": "parentField",
                         "type": "string",
-                        "required": true
+                        "required": false
                       },
                       "idField": {
                         "name": "idField",
@@ -272,17 +233,25 @@
                           "update"
                         ]
                       },
-                      "parentField": {
-                        "name": "parentField",
+                      "entity": {
+                        "name": "entity",
                         "type": "string",
-                        "required": false
+                        "required": true
                       }
                     }
                   },
-                  "name": {
-                    "name": "name",
+                  "description": {
+                    "name": "description",
                     "type": "string",
                     "required": false
+                  },
+                  "localVariables": {
+                    "name": "localVariables",
+                    "type": "array",
+                    "required": false,
+                    "items": {
+                      "type": "string"
+                    }
                   },
                   "sections": {
                     "name": "sections",
@@ -291,63 +260,10 @@
                     "items": {
                       "type": "object",
                       "properties": {
-                        "title": {
-                          "name": "title",
+                        "description": {
+                          "name": "description",
                           "type": "string",
                           "required": false
-                        },
-                        "dataSource": {
-                          "name": "dataSource",
-                          "type": "string",
-                          "required": false
-                        },
-                        "readOnly": {
-                          "name": "readOnly",
-                          "type": "boolean",
-                          "required": false
-                        },
-                        "condition": {
-                          "name": "condition",
-                          "type": "array",
-                          "required": false,
-                          "items": {
-                            "type": "string"
-                          }
-                        },
-                        "id": {
-                          "name": "id",
-                          "type": "string",
-                          "required": true
-                        },
-                        "addButtonLabel": {
-                          "name": "addButtonLabel",
-                          "type": "string",
-                          "required": false
-                        },
-                        "hiddenCalculations": {
-                          "name": "hiddenCalculations",
-                          "type": "array",
-                          "required": false,
-                          "items": {
-                            "type": "object",
-                            "properties": {
-                              "scope": {
-                                "name": "scope",
-                                "type": "string",
-                                "required": false
-                              },
-                              "variable": {
-                                "name": "variable",
-                                "type": "string",
-                                "required": true
-                              },
-                              "expression": {
-                                "name": "expression",
-                                "type": "string",
-                                "required": true
-                              }
-                            }
-                          }
                         },
                         "fields": {
                           "name": "fields",
@@ -356,38 +272,20 @@
                           "items": {
                             "type": "object",
                             "properties": {
-                              "lawReference": {
-                                "name": "lawReference",
+                              "placeholder": {
+                                "name": "placeholder",
                                 "type": "string",
                                 "required": false
                               },
-                              "entityField": {
-                                "name": "entityField",
+                              "searchConfig": {
+                                "name": "searchConfig",
                                 "type": "string",
                                 "required": false
                               },
-                              "dataSource": {
-                                "name": "dataSource",
-                                "type": "string",
+                              "required": {
+                                "name": "required",
+                                "type": "boolean",
                                 "required": false
-                              },
-                              "contextMenu": {
-                                "name": "contextMenu",
-                                "type": "array",
-                                "required": false,
-                                "items": {
-                                  "type": "string"
-                                }
-                              },
-                              "minDate": {
-                                "name": "minDate",
-                                "type": "string",
-                                "required": false
-                              },
-                              "type": {
-                                "name": "type",
-                                "type": "string",
-                                "required": true
                               },
                               "defaultValue": {
                                 "name": "defaultValue",
@@ -399,19 +297,137 @@
                                 "type": "string",
                                 "required": true
                               },
-                              "label": {
-                                "name": "label",
+                              "dataSource": {
+                                "name": "dataSource",
                                 "type": "string",
                                 "required": false
+                              },
+                              "items": {
+                                "name": "items",
+                                "type": "array",
+                                "required": false,
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "name": "id",
+                                      "type": "string",
+                                      "required": true
+                                    },
+                                    "label": {
+                                      "name": "label",
+                                      "type": "string",
+                                      "required": true
+                                    },
+                                    "autoCheck": {
+                                      "name": "autoCheck",
+                                      "type": "string",
+                                      "required": false
+                                    }
+                                  }
+                                }
                               },
                               "minLength": {
                                 "name": "minLength",
                                 "type": "number",
                                 "required": false
                               },
+                              "repeatable": {
+                                "name": "repeatable",
+                                "type": "boolean",
+                                "required": false
+                              },
+                              "minDate": {
+                                "name": "minDate",
+                                "type": "string",
+                                "required": false
+                              },
+                              "hiddenCalculations": {
+                                "name": "hiddenCalculations",
+                                "type": "array",
+                                "required": false,
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "expression": {
+                                      "name": "expression",
+                                      "type": "string",
+                                      "required": true
+                                    },
+                                    "scope": {
+                                      "name": "scope",
+                                      "type": "string",
+                                      "required": false
+                                    },
+                                    "variable": {
+                                      "name": "variable",
+                                      "type": "string",
+                                      "required": true
+                                    }
+                                  }
+                                }
+                              },
+                              "calculated": {
+                                "name": "calculated",
+                                "type": "string",
+                                "required": false
+                              },
+                              "stats": {
+                                "name": "stats",
+                                "type": "array",
+                                "required": false,
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "label": {
+                                      "name": "label",
+                                      "type": "string",
+                                      "required": true
+                                    },
+                                    "value": {
+                                      "name": "value",
+                                      "type": "string",
+                                      "required": true
+                                    },
+                                    "icon": {
+                                      "name": "icon",
+                                      "type": "string",
+                                      "required": false
+                                    }
+                                  }
+                                }
+                              },
                               "maxLength": {
                                 "name": "maxLength",
                                 "type": "number",
+                                "required": false
+                              },
+                              "type": {
+                                "name": "type",
+                                "type": "string",
+                                "required": true
+                              },
+                              "signatureConfig": {
+                                "name": "signatureConfig",
+                                "type": "string",
+                                "required": false
+                              },
+                              "lawReference": {
+                                "name": "lawReference",
+                                "type": "string",
+                                "required": false
+                              },
+                              "displayFields": {
+                                "name": "displayFields",
+                                "type": "array",
+                                "required": false,
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "label": {
+                                "name": "label",
+                                "type": "string",
                                 "required": false
                               },
                               "options": {
@@ -439,103 +455,28 @@
                                   }
                                 }
                               },
-                              "required": {
-                                "name": "required",
-                                "type": "boolean",
-                                "required": false
-                              },
-                              "repeatable": {
-                                "name": "repeatable",
-                                "type": "boolean",
-                                "required": false
-                              },
-                              "searchConfig": {
-                                "name": "searchConfig",
-                                "type": "string",
-                                "required": false
-                              },
-                              "hiddenCalculations": {
-                                "name": "hiddenCalculations",
-                                "type": "array",
-                                "required": false,
-                                "items": {
-                                  "type": "object",
-                                  "properties": {
-                                    "variable": {
-                                      "name": "variable",
-                                      "type": "string",
-                                      "required": true
-                                    },
-                                    "expression": {
-                                      "name": "expression",
-                                      "type": "string",
-                                      "required": true
-                                    },
-                                    "scope": {
-                                      "name": "scope",
-                                      "type": "string",
-                                      "required": false
-                                    }
-                                  }
-                                }
-                              },
                               "displayTemplate": {
                                 "name": "displayTemplate",
                                 "type": "string",
                                 "required": false
                               },
-                              "calculated": {
-                                "name": "calculated",
+                              "entityField": {
+                                "name": "entityField",
                                 "type": "string",
                                 "required": false
                               },
-                              "readOnly": {
-                                "name": "readOnly",
-                                "type": "boolean",
-                                "required": false
-                              },
-                              "items": {
-                                "name": "items",
-                                "type": "array",
-                                "required": false,
-                                "items": {
-                                  "type": "object",
-                                  "properties": {
-                                    "autoCheck": {
-                                      "name": "autoCheck",
-                                      "type": "string",
-                                      "required": false
-                                    },
-                                    "id": {
-                                      "name": "id",
-                                      "type": "string",
-                                      "required": true
-                                    },
-                                    "label": {
-                                      "name": "label",
-                                      "type": "string",
-                                      "required": true
-                                    }
-                                  }
-                                }
-                              },
-                              "signatureConfig": {
-                                "name": "signatureConfig",
-                                "type": "string",
-                                "required": false
-                              },
-                              "placeholder": {
-                                "name": "placeholder",
-                                "type": "string",
-                                "required": false
-                              },
-                              "displayFields": {
-                                "name": "displayFields",
+                              "contextMenu": {
+                                "name": "contextMenu",
                                 "type": "array",
                                 "required": false,
                                 "items": {
                                   "type": "string"
                                 }
+                              },
+                              "readOnly": {
+                                "name": "readOnly",
+                                "type": "boolean",
+                                "required": false
                               },
                               "condition": {
                                 "name": "condition",
@@ -544,34 +485,29 @@
                                 "items": {
                                   "type": "string"
                                 }
-                              },
-                              "stats": {
-                                "name": "stats",
-                                "type": "array",
-                                "required": false,
-                                "items": {
-                                  "type": "object",
-                                  "properties": {
-                                    "icon": {
-                                      "name": "icon",
-                                      "type": "string",
-                                      "required": false
-                                    },
-                                    "label": {
-                                      "name": "label",
-                                      "type": "string",
-                                      "required": true
-                                    },
-                                    "value": {
-                                      "name": "value",
-                                      "type": "string",
-                                      "required": true
-                                    }
-                                  }
-                                }
                               }
                             }
                           }
+                        },
+                        "minItems": {
+                          "name": "minItems",
+                          "type": "number",
+                          "required": false
+                        },
+                        "addButtonLabel": {
+                          "name": "addButtonLabel",
+                          "type": "string",
+                          "required": false
+                        },
+                        "title": {
+                          "name": "title",
+                          "type": "string",
+                          "required": false
+                        },
+                        "id": {
+                          "name": "id",
+                          "type": "string",
+                          "required": true
                         },
                         "subsections": {
                           "name": "subsections",
@@ -586,23 +522,97 @@
                           "type": "boolean",
                           "required": false
                         },
-                        "minItems": {
-                          "name": "minItems",
-                          "type": "number",
+                        "hiddenCalculations": {
+                          "name": "hiddenCalculations",
+                          "type": "array",
+                          "required": false,
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "expression": {
+                                "name": "expression",
+                                "type": "string",
+                                "required": true
+                              },
+                              "scope": {
+                                "name": "scope",
+                                "type": "string",
+                                "required": false
+                              },
+                              "variable": {
+                                "name": "variable",
+                                "type": "string",
+                                "required": true
+                              }
+                            }
+                          }
+                        },
+                        "condition": {
+                          "name": "condition",
+                          "type": "array",
+                          "required": false,
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "readOnly": {
+                          "name": "readOnly",
+                          "type": "boolean",
                           "required": false
                         },
-                        "description": {
-                          "name": "description",
+                        "dataSource": {
+                          "name": "dataSource",
                           "type": "string",
                           "required": false
                         }
                       }
                     }
                   },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": false
+                  },
+                  "optional": {
+                    "name": "optional",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "globalVariablesRequired": {
+                    "name": "globalVariablesRequired",
+                    "type": "array",
+                    "required": false,
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "content": {
+                    "name": "content",
+                    "type": "string",
+                    "required": false
+                  },
+                  "title": {
+                    "name": "title",
+                    "type": "string",
+                    "required": false
+                  },
                   "tabId": {
                     "name": "tabId",
                     "type": "string",
                     "required": false
+                  },
+                  "phase": {
+                    "name": "phase",
+                    "type": "string",
+                    "required": false
+                  },
+                  "globalVariablesSet": {
+                    "name": "globalVariablesSet",
+                    "type": "array",
+                    "required": false,
+                    "items": {
+                      "type": "string"
+                    }
                   },
                   "validationRules": {
                     "name": "validationRules",
@@ -611,6 +621,11 @@
                     "items": {
                       "type": "object",
                       "properties": {
+                        "message": {
+                          "name": "message",
+                          "type": "string",
+                          "required": true
+                        },
                         "condition": {
                           "name": "condition",
                           "type": "array",
@@ -618,38 +633,23 @@
                           "items": {
                             "type": "string"
                           }
-                        },
-                        "message": {
-                          "name": "message",
-                          "type": "string",
-                          "required": true
                         }
                       }
                     }
                   },
-                  "phase": {
-                    "name": "phase",
+                  "name": {
+                    "name": "name",
                     "type": "string",
                     "required": false
-                  },
-                  "localVariables": {
-                    "name": "localVariables",
-                    "type": "array",
-                    "required": false,
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "contextMenu": {
-                    "name": "contextMenu",
-                    "type": "array",
-                    "required": false,
-                    "items": {
-                      "type": "string"
-                    }
                   }
                 }
               }
+            },
+            "currentStep": {
+              "type": "json",
+              "label": "Current Step",
+              "description": "Current step index (controlled) - accepts unknown for generated code compatibility",
+              "tier": "presentation"
             },
             "showProgress": {
               "type": "boolean",
@@ -658,18 +658,18 @@
               "description": "Show progress indicator",
               "tier": "presentation"
             },
-            "allowBack": {
-              "type": "boolean",
-              "default": true,
-              "label": "Allow Back",
-              "description": "Allow navigation to previous steps",
-              "tier": "presentation"
-            },
             "isLoading": {
               "type": "boolean",
               "default": false,
               "label": "Is Loading",
               "description": "Loading state indicator",
+              "tier": "presentation"
+            },
+            "compact": {
+              "type": "boolean",
+              "default": false,
+              "label": "Compact",
+              "description": "Modal mode (compact header, no padding)",
               "tier": "presentation"
             }
           },

@@ -104,13 +104,13 @@
       "traits": [
         {
           "name": "AgentToolCallModal",
-          "category": "interaction",
-          "linkedEntity": "AgentToolCall",
           "entityRebindable": true,
           "entityContract": {
             "requires": [],
             "provides": []
           },
+          "category": "interaction",
+          "linkedEntity": "AgentToolCall",
           "emits": [
             {
               "event": "INVOKED",
@@ -253,7 +253,13 @@
               },
               {
                 "key": "INVOKED",
-                "name": "Invoked"
+                "name": "Invoked",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "AgentToolCallLoaded",
@@ -368,20 +374,20 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "gap": "md",
-                          "type": "stack",
-                          "direction": "horizontal",
                           "justify": "between",
+                          "type": "stack",
                           "children": [
                             {
                               "gap": "md",
-                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "wrench"
+                                  "name": "wrench",
+                                  "type": "icon"
                                 },
                                 {
                                   "type": "typography",
@@ -389,30 +395,30 @@
                                   "variant": "h2"
                                 }
                               ],
+                              "direction": "horizontal",
                               "type": "stack"
                             },
                             {
-                              "label": "Open",
                               "action": "INVOKE",
-                              "type": "button",
                               "variant": "primary",
-                              "icon": "wrench"
+                              "icon": "wrench",
+                              "label": "Open",
+                              "type": "button"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "icon": "wrench",
                           "title": "Nothing open",
                           "description": "Click Open to view details in a modal overlay.",
+                          "icon": "wrench",
                           "type": "empty-state"
                         }
-                      ],
-                      "type": "stack",
-                      "gap": "lg",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -427,21 +433,19 @@
                     "modal",
                     {
                       "direction": "vertical",
-                      "type": "stack",
-                      "gap": "md",
                       "children": [
                         {
-                          "type": "stack",
                           "direction": "horizontal",
+                          "type": "stack",
                           "children": [
                             {
-                              "name": "wrench",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "wrench"
                             },
                             {
+                              "content": "Invoke Tool",
                               "type": "typography",
-                              "variant": "h3",
-                              "content": "Invoke Tool"
+                              "variant": "h3"
                             }
                           ],
                           "gap": "sm"
@@ -451,15 +455,17 @@
                         },
                         {
                           "mode": "create",
-                          "cancelEvent": "CLOSE",
-                          "submitEvent": "SAVE",
                           "fields": [
                             "toolName",
                             "args"
                           ],
+                          "cancelEvent": "CLOSE",
+                          "submitEvent": "SAVE",
                           "type": "form-section"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -493,51 +499,51 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "lg",
-                      "direction": "vertical",
                       "children": [
                         {
                           "gap": "md",
-                          "justify": "between",
+                          "type": "stack",
                           "children": [
                             {
-                              "direction": "horizontal",
                               "children": [
                                 {
                                   "type": "icon",
                                   "name": "wrench"
                                 },
                                 {
-                                  "variant": "h2",
                                   "content": "Invoke Tool",
+                                  "variant": "h2",
                                   "type": "typography"
                                 }
                               ],
+                              "direction": "horizontal",
                               "gap": "md",
                               "type": "stack"
                             },
                             {
+                              "type": "button",
+                              "icon": "wrench",
                               "label": "Open",
                               "variant": "primary",
-                              "icon": "wrench",
-                              "type": "button",
                               "action": "INVOKE"
                             }
                           ],
-                          "type": "stack",
-                          "direction": "horizontal"
+                          "direction": "horizontal",
+                          "justify": "between"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "icon": "wrench",
+                          "title": "Nothing open",
                           "description": "Click Open to view details in a modal overlay.",
-                          "type": "empty-state",
-                          "title": "Nothing open"
+                          "type": "empty-state"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -582,18 +588,19 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
                       "gap": "lg",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
+                          "justify": "between",
+                          "gap": "md",
                           "direction": "horizontal",
                           "type": "stack",
-                          "gap": "md",
-                          "justify": "between",
                           "children": [
                             {
                               "direction": "horizontal",
+                              "gap": "md",
                               "children": [
                                 {
                                   "name": "wrench",
@@ -605,15 +612,14 @@
                                   "type": "typography"
                                 }
                               ],
-                              "type": "stack",
-                              "gap": "md"
+                              "type": "stack"
                             },
                             {
                               "variant": "primary",
                               "icon": "wrench",
-                              "label": "Open",
+                              "action": "INVOKE",
                               "type": "button",
-                              "action": "INVOKE"
+                              "label": "Open"
                             }
                           ]
                         },
@@ -621,9 +627,9 @@
                           "type": "divider"
                         },
                         {
-                          "description": "Click Open to view details in a modal overlay.",
                           "title": "Nothing open",
                           "icon": "wrench",
+                          "description": "Click Open to view details in a modal overlay.",
                           "type": "empty-state"
                         }
                       ]
@@ -805,15 +811,45 @@
               },
               {
                 "key": "TOOL_STARTED",
-                "name": "Tool Started"
+                "name": "Tool Started",
+                "payloadSchema": [
+                  {
+                    "name": "toolName",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "TOOL_COMPLETED",
-                "name": "Tool Completed"
+                "name": "Tool Completed",
+                "payloadSchema": [
+                  {
+                    "name": "toolName",
+                    "type": "string"
+                  },
+                  {
+                    "name": "result",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "LOG_ENTRY",
-                "name": "Log Entry"
+                "name": "Log Entry",
+                "payloadSchema": [
+                  {
+                    "name": "action",
+                    "type": "string"
+                  },
+                  {
+                    "name": "detail",
+                    "type": "string"
+                  },
+                  {
+                    "name": "status",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "AgentToolCallLoaded",
@@ -895,8 +931,8 @@
                     "AgentToolCall",
                     {
                       "emit": {
-                        "success": "AgentToolCallLoaded",
-                        "failure": "AgentToolCallLoadFailed"
+                        "failure": "AgentToolCallLoadFailed",
+                        "success": "AgentToolCallLoaded"
                       }
                     }
                   ],
@@ -904,10 +940,10 @@
                     "render-ui",
                     "main",
                     {
-                      "icon": "wrench",
-                      "type": "empty-state",
                       "description": "Tool Call is ready",
-                      "title": "Tool Call"
+                      "type": "empty-state",
+                      "title": "Tool Call",
+                      "icon": "wrench"
                     }
                   ]
                 ]

@@ -95,8 +95,6 @@
       "traits": [
         {
           "name": "AgentProviderModal",
-          "category": "interaction",
-          "linkedEntity": "AgentProvider",
           "entityRebindable": true,
           "entityContract": {
             "requires": [],
@@ -105,6 +103,8 @@
               "currentProvider"
             ]
           },
+          "category": "interaction",
+          "linkedEntity": "AgentProvider",
           "emits": [
             {
               "event": "SWITCHED",
@@ -273,7 +273,13 @@
               },
               {
                 "key": "SWITCHED",
-                "name": "Switched"
+                "name": "Switched",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "AgentProviderLoaded",
@@ -371,8 +377,8 @@
                     "AgentProvider",
                     {
                       "emit": {
-                        "success": "AgentProviderLoaded",
-                        "failure": "AgentProviderLoadFailed"
+                        "failure": "AgentProviderLoadFailed",
+                        "success": "AgentProviderLoaded"
                       }
                     }
                   ],
@@ -380,17 +386,16 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
                       "gap": "lg",
                       "children": [
                         {
-                          "gap": "md",
+                          "justify": "between",
                           "direction": "horizontal",
+                          "gap": "md",
                           "type": "stack",
                           "children": [
                             {
-                              "direction": "horizontal",
+                              "gap": "md",
                               "children": [
                                 {
                                   "type": "icon",
@@ -402,29 +407,30 @@
                                   "type": "typography"
                                 }
                               ],
-                              "gap": "md",
+                              "direction": "horizontal",
                               "type": "stack"
                             },
                             {
+                              "icon": "repeat",
+                              "type": "button",
                               "action": "SWITCH",
                               "label": "Open",
-                              "variant": "primary",
-                              "icon": "repeat",
-                              "type": "button"
+                              "variant": "primary"
                             }
-                          ],
-                          "justify": "between"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "description": "Click Open to view details in a modal overlay.",
                           "type": "empty-state",
                           "icon": "repeat",
-                          "title": "Nothing open",
-                          "description": "Click Open to view details in a modal overlay."
+                          "title": "Nothing open"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -448,22 +454,22 @@
                     "render-ui",
                     "modal",
                     {
-                      "type": "stack",
                       "className": "py-12",
                       "gap": "md",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
                           "content": "Loading…",
-                          "color": "muted",
-                          "variant": "caption"
+                          "variant": "caption",
+                          "type": "typography",
+                          "color": "muted"
                         }
                       ],
                       "direction": "vertical",
-                      "align": "center"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -477,61 +483,61 @@
                     "render-ui",
                     "modal",
                     {
-                      "direction": "vertical",
                       "gap": "md",
-                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "stack",
                           "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack",
                           "children": [
                             {
                               "type": "icon",
                               "name": "repeat"
                             },
                             {
-                              "variant": "h3",
+                              "type": "typography",
                               "content": "Switch Provider",
-                              "type": "typography"
+                              "variant": "h3"
                             }
-                          ],
-                          "gap": "sm"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
                           "children": [
                             {
                               "content": "Current:",
-                              "variant": "caption",
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "caption"
                             },
                             {
-                              "label": "@entity.currentProvider",
-                              "type": "badge"
+                              "type": "badge",
+                              "label": "@entity.currentProvider"
                             },
                             {
                               "label": "@entity.currentModel",
                               "type": "badge"
                             }
-                          ],
-                          "gap": "md",
-                          "type": "stack",
-                          "direction": "horizontal"
+                          ]
                         },
                         {
-                          "cancelEvent": "CLOSE",
-                          "entity": "@payload.row",
+                          "mode": "edit",
                           "fields": [
                             "currentProvider",
                             "currentModel"
                           ],
+                          "submitEvent": "SAVE",
                           "type": "form-section",
-                          "mode": "edit",
-                          "submitEvent": "SAVE"
+                          "entity": "@payload.row",
+                          "cancelEvent": "CLOSE"
                         }
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -556,8 +562,8 @@
                     "AgentProvider",
                     {
                       "emit": {
-                        "success": "AgentProviderLoaded",
-                        "failure": "AgentProviderLoadFailed"
+                        "failure": "AgentProviderLoadFailed",
+                        "success": "AgentProviderLoaded"
                       }
                     }
                   ],
@@ -567,11 +573,9 @@
                     {
                       "children": [
                         {
-                          "justify": "between",
                           "children": [
                             {
                               "direction": "horizontal",
-                              "gap": "md",
                               "type": "stack",
                               "children": [
                                 {
@@ -579,37 +583,39 @@
                                   "name": "repeat"
                                 },
                                 {
-                                  "content": "Switch Provider",
                                   "type": "typography",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "content": "Switch Provider"
                                 }
-                              ]
+                              ],
+                              "gap": "md"
                             },
                             {
                               "action": "SWITCH",
                               "variant": "primary",
                               "label": "Open",
-                              "icon": "repeat",
-                              "type": "button"
+                              "type": "button",
+                              "icon": "repeat"
                             }
                           ],
-                          "gap": "md",
+                          "justify": "between",
+                          "type": "stack",
                           "direction": "horizontal",
-                          "type": "stack"
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "description": "Click Open to view details in a modal overlay.",
-                          "type": "empty-state",
                           "title": "Nothing open",
-                          "icon": "repeat"
+                          "icon": "repeat",
+                          "type": "empty-state"
                         }
                       ],
+                      "gap": "lg",
                       "direction": "vertical",
-                      "type": "stack",
-                      "gap": "lg"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -634,8 +640,8 @@
                     "AgentProvider",
                     {
                       "emit": {
-                        "failure": "AgentProviderLoadFailed",
-                        "success": "AgentProviderLoaded"
+                        "success": "AgentProviderLoaded",
+                        "failure": "AgentProviderLoadFailed"
                       }
                     }
                   ],
@@ -643,51 +649,51 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
                       "children": [
                         {
                           "type": "stack",
-                          "gap": "md",
-                          "justify": "between",
                           "children": [
                             {
+                              "gap": "md",
                               "direction": "horizontal",
                               "children": [
                                 {
-                                  "name": "repeat",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "repeat"
                                 },
                                 {
-                                  "variant": "h2",
                                   "type": "typography",
+                                  "variant": "h2",
                                   "content": "Switch Provider"
                                 }
                               ],
-                              "gap": "md",
                               "type": "stack"
                             },
                             {
-                              "type": "button",
                               "label": "Open",
+                              "type": "button",
                               "variant": "primary",
-                              "icon": "repeat",
-                              "action": "SWITCH"
+                              "action": "SWITCH",
+                              "icon": "repeat"
                             }
                           ],
-                          "direction": "horizontal"
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "between"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "icon": "repeat",
-                          "description": "Click Open to view details in a modal overlay.",
                           "type": "empty-state",
-                          "title": "Nothing open"
+                          "title": "Nothing open",
+                          "icon": "repeat",
+                          "description": "Click Open to view details in a modal overlay."
                         }
-                      ]
+                      ],
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -704,8 +710,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "success": "AgentProviderUpdated",
-                        "failure": "AgentProviderUpdateFailed"
+                        "failure": "AgentProviderUpdateFailed",
+                        "success": "AgentProviderUpdated"
                       }
                     }
                   ],
@@ -732,15 +738,13 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
                       "children": [
                         {
+                          "gap": "md",
+                          "direction": "horizontal",
+                          "type": "stack",
                           "children": [
                             {
-                              "direction": "horizontal",
-                              "type": "stack",
                               "gap": "md",
                               "children": [
                                 {
@@ -748,35 +752,37 @@
                                   "type": "icon"
                                 },
                                 {
-                                  "type": "typography",
+                                  "variant": "h2",
                                   "content": "Switch Provider",
-                                  "variant": "h2"
+                                  "type": "typography"
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "direction": "horizontal"
                             },
                             {
-                              "icon": "repeat",
                               "action": "SWITCH",
-                              "label": "Open",
                               "type": "button",
-                              "variant": "primary"
+                              "label": "Open",
+                              "variant": "primary",
+                              "icon": "repeat"
                             }
                           ],
-                          "gap": "md",
-                          "justify": "between",
-                          "direction": "horizontal",
-                          "type": "stack"
+                          "justify": "between"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "empty-state",
                           "title": "Nothing open",
                           "icon": "repeat",
-                          "description": "Click Open to view details in a modal overlay."
+                          "description": "Click Open to view details in a modal overlay.",
+                          "type": "empty-state"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -959,8 +965,8 @@
                     "AgentProvider",
                     {
                       "emit": {
-                        "success": "AgentProviderLoaded",
-                        "failure": "AgentProviderLoadFailed"
+                        "failure": "AgentProviderLoadFailed",
+                        "success": "AgentProviderLoaded"
                       }
                     }
                   ]
@@ -989,37 +995,37 @@
                       "gap": "lg",
                       "children": [
                         {
-                          "direction": "horizontal",
+                          "gap": "md",
+                          "type": "stack",
+                          "justify": "between",
                           "children": [
                             {
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "server"
+                                  "name": "server",
+                                  "type": "icon"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "Provider Status",
+                                  "type": "typography",
                                   "variant": "h2"
                                 }
                               ],
+                              "gap": "md",
                               "direction": "horizontal",
-                              "align": "center",
                               "type": "stack",
-                              "gap": "md"
+                              "align": "center"
                             },
                             {
                               "action": "HIDE",
                               "label": "Dismiss",
                               "variant": "ghost",
-                              "type": "button",
-                              "icon": "x"
+                              "icon": "x",
+                              "type": "button"
                             }
                           ],
-                          "type": "stack",
-                          "gap": "md",
-                          "justify": "between",
-                          "align": "center"
+                          "align": "center",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
@@ -1033,9 +1039,9 @@
                           "type": "toast-slot"
                         },
                         {
-                          "variant": "warning",
                           "message": "@entity.message",
-                          "type": "alert"
+                          "type": "alert",
+                          "variant": "warning"
                         }
                       ],
                       "direction": "vertical"
@@ -1062,60 +1068,60 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
+                      "type": "stack",
                       "direction": "vertical",
                       "children": [
                         {
+                          "gap": "md",
                           "children": [
                             {
                               "align": "center",
                               "direction": "horizontal",
                               "type": "stack",
-                              "gap": "md",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "server"
+                                  "name": "server",
+                                  "type": "icon"
                                 },
                                 {
-                                  "variant": "h2",
                                   "type": "typography",
-                                  "content": "Provider Status"
+                                  "content": "Provider Status",
+                                  "variant": "h2"
                                 }
-                              ]
+                              ],
+                              "gap": "md"
                             },
                             {
-                              "action": "HIDE",
                               "type": "button",
+                              "label": "Dismiss",
                               "icon": "x",
                               "variant": "ghost",
-                              "label": "Dismiss"
+                              "action": "HIDE"
                             }
                           ],
-                          "gap": "md",
-                          "justify": "between",
                           "type": "stack",
-                          "direction": "horizontal",
-                          "align": "center"
+                          "justify": "between",
+                          "align": "center",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "variant": "@entity.notificationType",
+                          "message": "@entity.message",
                           "type": "alert",
-                          "message": "@entity.message"
+                          "variant": "@entity.notificationType"
                         },
                         {
                           "type": "toast-slot"
                         },
                         {
+                          "type": "alert",
                           "message": "@entity.message",
-                          "variant": "warning",
-                          "type": "alert"
+                          "variant": "warning"
                         }
                       ],
-                      "type": "stack"
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -1268,7 +1274,18 @@
               },
               {
                 "key": "SHOW",
-                "name": "Show"
+                "name": "Show",
+                "payloadSchema": [
+                  {
+                    "name": "message",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "notificationType",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "AgentProviderLoaded",
@@ -1347,8 +1364,8 @@
                     "AgentProvider",
                     {
                       "emit": {
-                        "failure": "AgentProviderLoadFailed",
-                        "success": "AgentProviderLoaded"
+                        "success": "AgentProviderLoaded",
+                        "failure": "AgentProviderLoadFailed"
                       }
                     }
                   ],
@@ -1362,10 +1379,10 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "empty-state",
-                      "title": "Provider",
                       "description": "Provider is ready",
-                      "icon": "repeat"
+                      "type": "empty-state",
+                      "icon": "repeat",
+                      "title": "Provider"
                     }
                   ]
                 ]
@@ -1466,8 +1483,8 @@
                     "emit",
                     "SHOW",
                     {
-                      "notificationType": "info",
-                      "message": "Provider switched"
+                      "message": "Provider switched",
+                      "notificationType": "info"
                     }
                   ]
                 ]

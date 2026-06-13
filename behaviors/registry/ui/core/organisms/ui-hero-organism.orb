@@ -43,6 +43,11 @@
                 "type": "string",
                 "required": true
               },
+              "href": {
+                "name": "href",
+                "type": "string",
+                "required": true
+              },
               "variant": {
                 "name": "variant",
                 "type": "string",
@@ -52,11 +57,6 @@
                   "secondary",
                   "ghost"
                 ]
-              },
-              "href": {
-                "name": "href",
-                "type": "string",
-                "required": true
               }
             }
           },
@@ -167,25 +167,25 @@
                     "render-ui",
                     "main",
                     {
-                      "sortBy": "@config.sortBy",
-                      "error": "@config.error",
                       "searchValue": "@config.searchValue",
-                      "className": "@config.className",
-                      "page": "@config.pageProp",
+                      "pageSize": "@config.pageSize",
                       "totalCount": "@config.totalCount",
-                      "selectedIds": "@config.selectedIds",
                       "sortDirection": "@config.sortDirection",
+                      "activeFilters": "@config.activeFilters",
+                      "selectedIds": "@config.selectedIds",
                       "type": "hero-organism",
-                      "entity": "@entity",
+                      "isLoading": "@config.isLoading",
                       "children": [
                         {
-                          "type": "text",
-                          "content": "Sample content"
+                          "content": "Sample content",
+                          "type": "text"
                         }
                       ],
-                      "activeFilters": "@config.activeFilters",
-                      "isLoading": "@config.isLoading",
-                      "pageSize": "@config.pageSize"
+                      "entity": "@entity",
+                      "className": "@config.className",
+                      "sortBy": "@config.sortBy",
+                      "page": "@config.pageProp",
+                      "error": "@config.error"
                     }
                   ]
                 ]
@@ -193,12 +193,15 @@
             ]
           },
           "config": {
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state indicator",
-              "tier": "presentation"
+            "selectedIds": {
+              "type": "[string]",
+              "default": [],
+              "label": "Selected Ids",
+              "description": "Currently selected item IDs",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
             },
             "sortDirection": {
               "type": "string",
@@ -211,6 +214,13 @@
                 "desc"
               ]
             },
+            "totalCount": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Total Count",
+              "description": "Total number of items",
+              "tier": "presentation"
+            },
             "className": {
               "type": "string",
               "default": "",
@@ -218,39 +228,11 @@
               "description": "Additional CSS classes",
               "tier": "presentation"
             },
-            "error": {
-              "type": "HeroOrganismError",
-              "label": "Error",
-              "description": "Error state (UiError)",
-              "tier": "presentation",
-              "properties": {
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                },
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                }
-              }
-            },
-            "searchValue": {
-              "type": "string",
-              "default": "Search Value",
-              "label": "Search Value",
-              "description": "Current search query value",
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
               "tier": "presentation"
             },
             "pageProp": {
@@ -261,11 +243,46 @@
               "synonyms": "page",
               "tier": "presentation"
             },
+            "searchValue": {
+              "type": "string",
+              "default": "Search Value",
+              "label": "Search Value",
+              "description": "Current search query value",
+              "tier": "presentation"
+            },
             "activeFilters": {
               "type": "json",
               "label": "Active Filters",
               "description": "Active filters",
               "tier": "presentation"
+            },
+            "error": {
+              "type": "HeroOrganismError",
+              "label": "Error",
+              "description": "Error state (UiError)",
+              "tier": "presentation",
+              "properties": {
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                },
+                "code": {
+                  "name": "code",
+                  "type": "string",
+                  "required": false
+                },
+                "stack": {
+                  "name": "stack",
+                  "type": "string",
+                  "required": false
+                },
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": false
+                }
+              }
             },
             "pageSize": {
               "type": "number",
@@ -273,23 +290,6 @@
               "label": "Page Size",
               "description": "Number of items per page",
               "tier": "presentation"
-            },
-            "totalCount": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Total Count",
-              "description": "Total number of items",
-              "tier": "presentation"
-            },
-            "selectedIds": {
-              "type": "[string]",
-              "default": [],
-              "label": "Selected Ids",
-              "description": "Currently selected item IDs",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
             },
             "sortBy": {
               "type": "string",

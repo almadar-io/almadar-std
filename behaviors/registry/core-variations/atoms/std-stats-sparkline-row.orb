@@ -36,24 +36,28 @@
                     "lower-is-better"
                   ]
                 },
-                "prefix": {
-                  "name": "prefix",
-                  "type": "string",
-                  "required": false
-                },
-                "target": {
-                  "name": "target",
-                  "type": "number",
-                  "required": false
-                },
-                "trendFormat": {
-                  "name": "trendFormat",
-                  "type": "string",
+                "sparklineData": {
+                  "name": "sparklineData",
+                  "type": "array",
                   "required": false,
-                  "values": [
-                    "absolute",
-                    "percent"
-                  ]
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                "clickEvent": {
+                  "name": "clickEvent",
+                  "type": "string",
+                  "required": false
+                },
+                "label": {
+                  "name": "label",
+                  "type": "string",
+                  "required": true
+                },
+                "suffix": {
+                  "name": "suffix",
+                  "type": "string",
+                  "required": false
                 },
                 "variant": {
                   "name": "variant",
@@ -68,22 +72,9 @@
                     "info"
                   ]
                 },
-                "sparklineData": {
-                  "name": "sparklineData",
-                  "type": "array",
-                  "required": false,
-                  "items": {
-                    "type": "number"
-                  }
-                },
-                "clickEvent": {
-                  "name": "clickEvent",
+                "prefix": {
+                  "name": "prefix",
                   "type": "string",
-                  "required": false
-                },
-                "trend": {
-                  "name": "trend",
-                  "type": "number",
                   "required": false
                 },
                 "format": {
@@ -101,13 +92,8 @@
                   "type": "number",
                   "required": false
                 },
-                "label": {
-                  "name": "label",
-                  "type": "string",
-                  "required": true
-                },
-                "value": {
-                  "name": "value",
+                "target": {
+                  "name": "target",
                   "type": "number",
                   "required": false
                 },
@@ -116,9 +102,23 @@
                   "type": "string",
                   "required": false
                 },
-                "suffix": {
-                  "name": "suffix",
+                "trendFormat": {
+                  "name": "trendFormat",
                   "type": "string",
+                  "required": false,
+                  "values": [
+                    "absolute",
+                    "percent"
+                  ]
+                },
+                "trend": {
+                  "name": "trend",
+                  "type": "number",
+                  "required": false
+                },
+                "value": {
+                  "name": "value",
+                  "type": "number",
                   "required": false
                 }
               }
@@ -136,6 +136,7 @@
           "config": {
             "metrics": [
               {
+                "label": "Weekly Active Users",
                 "trend": 9.3,
                 "sparklineData": [
                   12000.0,
@@ -151,17 +152,20 @@
                   17900.0,
                   18420.0
                 ],
-                "value": 18420.0,
-                "variant": "primary",
-                "label": "Weekly Active Users",
+                "format": "number",
                 "trendFormat": "percent",
-                "icon": "users",
+                "value": 18420.0,
                 "trendPolarity": "higher-is-better",
-                "format": "number"
+                "variant": "primary",
+                "icon": "users"
               },
               {
-                "variant": "info",
                 "label": "Requests / min",
+                "variant": "info",
+                "trendFormat": "percent",
+                "icon": "activity",
+                "trend": -4.1,
+                "value": 2340.0,
                 "sparklineData": [
                   2600.0,
                   2520.0,
@@ -176,21 +180,17 @@
                   2330.0,
                   2340.0
                 ],
-                "value": 2340.0,
-                "format": "number",
                 "trendPolarity": "higher-is-better",
-                "trend": -4.1,
-                "icon": "activity",
-                "trendFormat": "percent"
+                "format": "number"
               },
               {
-                "label": "p95 Latency",
-                "variant": "warning",
+                "format": "number",
                 "trendPolarity": "lower-is-better",
-                "trendFormat": "percent",
-                "trend": -12.0,
                 "suffix": "ms",
+                "trend": -12.0,
                 "value": 184.0,
+                "variant": "warning",
+                "icon": "gauge",
                 "sparklineData": [
                   240.0,
                   232.0,
@@ -205,17 +205,10 @@
                   186.0,
                   184.0
                 ],
-                "icon": "gauge",
-                "format": "number"
+                "label": "p95 Latency",
+                "trendFormat": "percent"
               },
               {
-                "value": 0.42,
-                "format": "percent",
-                "suffix": "%",
-                "variant": "error",
-                "icon": "alert-circle",
-                "trendPolarity": "lower-is-better",
-                "trendFormat": "absolute",
                 "sparklineData": [
                   0.9,
                   0.82,
@@ -231,101 +224,108 @@
                   0.42
                 ],
                 "label": "Error Rate",
-                "trend": -0.18
+                "variant": "error",
+                "format": "percent",
+                "trend": -0.18,
+                "icon": "alert-circle",
+                "suffix": "%",
+                "trendFormat": "absolute",
+                "trendPolarity": "lower-is-better",
+                "value": 0.42
               }
             ],
             "bodyContent": {
-              "entity": "@entity.cards",
-              "type": "data-grid",
-              "minCardWidth": 260.0,
+              "fields": [],
               "className": "w-full",
+              "entity": "@entity.cards",
+              "gap": "md",
               "renderItem": [
                 "fn",
                 "card",
                 {
+                  "gap": "sm",
+                  "direction": "vertical",
+                  "type": "stack",
                   "className": "rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] p-card-md shadow-elevation-sm hover:shadow-elevation-md transition-shadow min-h-[180px]",
                   "children": [
                     {
-                      "align": "center",
                       "children": [
                         {
+                          "color": "muted",
                           "type": "icon",
                           "name": "@card.icon",
-                          "size": "xs",
-                          "color": "muted"
+                          "size": "xs"
                         },
                         {
-                          "variant": "overline",
-                          "color": "muted",
                           "content": "@card.label",
+                          "className": "uppercase tracking-wide truncate",
                           "type": "typography",
                           "weight": "semibold",
-                          "className": "uppercase tracking-wide truncate"
+                          "color": "muted",
+                          "variant": "overline"
                         }
                       ],
-                      "direction": "horizontal",
+                      "align": "center",
+                      "type": "stack",
                       "gap": "xs",
-                      "type": "stack"
+                      "direction": "horizontal"
                     },
                     {
+                      "height": 64.0,
+                      "strokeWidth": 2.0,
+                      "type": "sparkline",
                       "className": "w-full",
                       "color": "auto",
-                      "height": 64.0,
                       "data": "@card.sparklineData",
-                      "strokeWidth": 2.0,
-                      "fill": true,
-                      "type": "sparkline"
+                      "fill": true
                     },
                     {
-                      "justify": "between",
-                      "align": "baseline",
-                      "gap": "sm",
-                      "type": "stack",
+                      "direction": "horizontal",
                       "children": [
                         {
+                          "align": "baseline",
+                          "direction": "horizontal",
+                          "gap": "xs",
                           "type": "stack",
                           "children": [
                             {
                               "content": "@card.prefix",
                               "type": "typography",
-                              "variant": "caption",
-                              "color": "muted"
+                              "color": "muted",
+                              "variant": "caption"
                             },
                             {
                               "content": "@card.value",
-                              "className": "tabular-nums",
                               "variant": "h3",
                               "type": "typography",
-                              "weight": "semibold"
+                              "weight": "semibold",
+                              "className": "tabular-nums"
                             },
                             {
-                              "content": "@card.suffix",
                               "variant": "caption",
+                              "content": "@card.suffix",
                               "type": "typography",
                               "color": "muted"
                             }
-                          ],
-                          "align": "baseline",
-                          "direction": "horizontal",
-                          "gap": "xs"
+                          ]
                         },
                         {
-                          "value": "@card.trend",
-                          "type": "trend-indicator",
                           "size": "sm",
-                          "showValue": true
+                          "value": "@card.trend",
+                          "showValue": true,
+                          "type": "trend-indicator"
                         }
                       ],
-                      "direction": "horizontal"
+                      "align": "baseline",
+                      "justify": "between",
+                      "gap": "sm",
+                      "type": "stack"
                     }
-                  ],
-                  "gap": "sm",
-                  "direction": "vertical",
-                  "type": "stack"
+                  ]
                 }
               ],
-              "fields": [],
-              "gap": "md"
+              "minCardWidth": 260.0,
+              "type": "data-grid"
             }
           }
         }

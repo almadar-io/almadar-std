@@ -131,14 +131,26 @@
                 "name": "Search",
                 "description": "Indicates a search query has been submitted.",
                 "synonyms": "query, find, lookup",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "NOTIFY_CLICK",
                 "name": "Notify Click",
                 "description": "A user interacted with a notification.",
                 "synonyms": "click, tap, select",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -152,8 +164,8 @@
                     "AppLayoutData",
                     {
                       "emit": {
-                        "success": "AppLayoutStateLoaded",
-                        "failure": "AppLayoutStateLoadFailed"
+                        "failure": "AppLayoutStateLoadFailed",
+                        "success": "AppLayoutStateLoaded"
                       }
                     }
                   ],
@@ -161,24 +173,24 @@
                     "render-ui",
                     "main",
                     {
+                      "notifications": "@config.notifications",
                       "children": [
                         {
-                          "gap": "lg",
-                          "className": "max-w-5xl mx-auto w-full",
-                          "direction": "vertical",
-                          "type": "stack",
                           "children": [
                             "@config.contentTrait"
-                          ]
+                          ],
+                          "type": "stack",
+                          "gap": "lg",
+                          "className": "max-w-5xl mx-auto w-full",
+                          "direction": "vertical"
                         }
                       ],
-                      "layoutMode": "@config.layoutMode",
+                      "appName": "@config.appName",
                       "searchEvent": "@config.searchEvent",
-                      "notifications": "@config.notifications",
                       "navItems": "@config.navItems",
                       "notificationClickEvent": "@config.notificationClickEvent",
-                      "appName": "@config.appName",
                       "type": "@config.layoutPattern",
+                      "layoutMode": "@config.layoutMode",
                       "topBarActions": "@config.topBarActions"
                     }
                   ]
@@ -207,6 +219,59 @@
             ]
           },
           "config": {
+            "contentTrait": {
+              "type": "trait",
+              "label": "Content trait",
+              "description": "Trait rendered inside the app layout content area",
+              "tier": "internal"
+            },
+            "notifications": {
+              "type": "[NotificationSpec]",
+              "default": [],
+              "label": "Notifications",
+              "description": "Items shown in the notifications dropdown",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
+                  "message": {
+                    "name": "message",
+                    "type": "string",
+                    "required": false
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "searchEvent": {
+              "type": "string",
+              "default": "SEARCH",
+              "label": "Search event",
+              "description": "Event emitted when the user runs a global search",
+              "tier": "internal"
+            },
+            "layoutMode": {
+              "type": "string",
+              "default": "sidebar",
+              "label": "Layout mode",
+              "description": "Where the primary navigation lives in the chrome",
+              "tier": "presentation",
+              "values": [
+                "sidebar",
+                "topnav",
+                "bottomnav",
+                "minimal"
+              ]
+            },
             "appName": {
               "type": "string",
               "default": "App",
@@ -214,37 +279,12 @@
               "description": "Product name shown in the chrome header",
               "tier": "presentation"
             },
-            "topBarActions": {
-              "type": "[ItemAction]",
-              "default": [],
-              "label": "Top-bar actions",
-              "description": "Icon buttons shown on the right side of the top bar",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": true
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
+            "notificationClickEvent": {
+              "type": "string",
+              "default": "NOTIFY_CLICK",
+              "label": "Notification click event",
+              "description": "Event emitted when the user picks a notification",
+              "tier": "internal"
             },
             "detailSlot": {
               "type": "slot",
@@ -262,20 +302,20 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "href": {
-                    "name": "href",
+                  "badge": {
+                    "name": "badge",
                     "type": "string",
-                    "required": true
+                    "required": false
                   },
                   "icon": {
                     "name": "icon",
                     "type": "string",
                     "required": false
                   },
-                  "badge": {
-                    "name": "badge",
+                  "href": {
+                    "name": "href",
                     "type": "string",
-                    "required": false
+                    "required": true
                   },
                   "label": {
                     "name": "label",
@@ -285,39 +325,6 @@
                 }
               }
             },
-            "layoutMode": {
-              "type": "string",
-              "default": "sidebar",
-              "label": "Layout mode",
-              "description": "Where the primary navigation lives in the chrome",
-              "tier": "presentation",
-              "values": [
-                "sidebar",
-                "topnav",
-                "bottomnav",
-                "minimal"
-              ]
-            },
-            "searchEvent": {
-              "type": "string",
-              "default": "SEARCH",
-              "label": "Search event",
-              "description": "Event emitted when the user runs a global search",
-              "tier": "internal"
-            },
-            "contentTrait": {
-              "type": "trait",
-              "label": "Content trait",
-              "description": "Trait rendered inside the app layout content area",
-              "tier": "internal"
-            },
-            "notificationClickEvent": {
-              "type": "string",
-              "default": "NOTIFY_CLICK",
-              "label": "Notification click event",
-              "description": "Event emitted when the user picks a notification",
-              "tier": "internal"
-            },
             "layoutPattern": {
               "type": "pattern",
               "default": "dashboard-layout",
@@ -325,27 +332,32 @@
               "description": "UI pattern used to render the application chrome",
               "tier": "internal"
             },
-            "notifications": {
-              "type": "[NotificationSpec]",
+            "topBarActions": {
+              "type": "[ItemAction]",
               "default": [],
-              "label": "Notifications",
-              "description": "Items shown in the notifications dropdown",
+              "label": "Top-bar actions",
+              "description": "Icon buttons shown on the right side of the top bar",
               "tier": "presentation",
               "items": {
                 "type": "object",
                 "properties": {
-                  "id": {
-                    "name": "id",
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": true
+                  },
+                  "icon": {
+                    "name": "icon",
                     "type": "string",
                     "required": false
                   },
                   "variant": {
                     "name": "variant",
-                    "type": "string",
-                    "required": false
-                  },
-                  "message": {
-                    "name": "message",
                     "type": "string",
                     "required": false
                   }

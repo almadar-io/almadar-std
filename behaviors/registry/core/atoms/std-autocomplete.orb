@@ -144,7 +144,14 @@
                 "name": "Auto Selected",
                 "description": "A suggestion was picked; carries the chosen record id for the consumer to open or bind.",
                 "synonyms": "select, choose, pick",
-                "tier": "essential"
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -162,10 +169,10 @@
                     "render-ui",
                     "main",
                     {
+                      "query": "@entity.searchTerm",
                       "event": "AUTO_QUERY",
-                      "placeholder": "@config.placeholder",
                       "type": "search-input",
-                      "query": "@entity.searchTerm"
+                      "placeholder": "@config.placeholder"
                     }
                   ]
                 ]
@@ -211,21 +218,21 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "xs",
+                      "type": "stack",
                       "direction": "vertical",
+                      "gap": "xs",
                       "children": [
                         {
-                          "type": "search-input",
+                          "placeholder": "@config.placeholder",
                           "event": "AUTO_QUERY",
-                          "query": "@entity.searchTerm",
-                          "placeholder": "@config.placeholder"
+                          "type": "search-input",
+                          "query": "@entity.searchTerm"
                         },
                         {
-                          "type": "spinner",
-                          "size": "sm"
+                          "size": "sm",
+                          "type": "spinner"
                         }
-                      ],
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -239,28 +246,28 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "xs",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "event": "AUTO_QUERY",
-                          "query": "@entity.searchTerm",
                           "type": "search-input",
-                          "placeholder": "@config.placeholder"
+                          "event": "AUTO_QUERY",
+                          "placeholder": "@config.placeholder",
+                          "query": "@entity.searchTerm"
                         },
                         {
-                          "entity": "@payload.data",
-                          "fields": "@config.suggestionFields",
                           "type": "data-list",
                           "itemActions": [
                             {
-                              "variant": "ghost",
+                              "event": "AUTO_SELECT",
                               "label": "Open",
-                              "event": "AUTO_SELECT"
+                              "variant": "ghost"
                             }
-                          ]
+                          ],
+                          "entity": "@payload.data",
+                          "fields": "@config.suggestionFields"
                         }
                       ],
-                      "gap": "xs",
-                      "direction": "vertical",
                       "type": "stack"
                     }
                   ]
@@ -282,10 +289,10 @@
                     "render-ui",
                     "main",
                     {
-                      "event": "AUTO_QUERY",
-                      "placeholder": "@config.placeholder",
+                      "type": "search-input",
                       "query": "@entity.searchTerm",
-                      "type": "search-input"
+                      "event": "AUTO_QUERY",
+                      "placeholder": "@config.placeholder"
                     }
                   ]
                 ]
@@ -299,8 +306,8 @@
                     "render-ui",
                     "main",
                     {
-                      "query": "@entity.searchTerm",
                       "type": "search-input",
+                      "query": "@entity.searchTerm",
                       "placeholder": "@config.placeholder",
                       "event": "AUTO_QUERY"
                     }
@@ -310,20 +317,6 @@
             ]
           },
           "config": {
-            "searchField": {
-              "type": "string",
-              "default": "name",
-              "label": "Search field",
-              "description": "Entity field matched against the typed query (case-insensitive substring).",
-              "tier": "presentation"
-            },
-            "placeholder": {
-              "type": "string",
-              "default": "Search…",
-              "label": "Placeholder",
-              "description": "Hint text in the empty typeahead input.",
-              "tier": "presentation"
-            },
             "suggestionFields": {
               "type": "[AutoSuggestSpec]",
               "default": [
@@ -361,6 +354,20 @@
                   }
                 }
               }
+            },
+            "placeholder": {
+              "type": "string",
+              "default": "Search…",
+              "label": "Placeholder",
+              "description": "Hint text in the empty typeahead input.",
+              "tier": "presentation"
+            },
+            "searchField": {
+              "type": "string",
+              "default": "name",
+              "label": "Search field",
+              "description": "Entity field matched against the typed query (case-insensitive substring).",
+              "tier": "presentation"
             }
           },
           "scope": "collection"

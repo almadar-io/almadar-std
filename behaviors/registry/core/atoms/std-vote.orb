@@ -105,27 +105,33 @@
               "tier": "essential",
               "payloadSchema": [
                 {
-                  "name": "row.id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.targetId",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.voterId",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.direction",
-                  "type": "string"
-                },
-                {
-                  "name": "row.createdAt",
-                  "type": "string"
+                  "name": "row",
+                  "type": "object",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "type": "string",
+                      "required": true
+                    },
+                    {
+                      "name": "targetId",
+                      "type": "string",
+                      "required": true
+                    },
+                    {
+                      "name": "voterId",
+                      "type": "string",
+                      "required": true
+                    },
+                    {
+                      "name": "direction",
+                      "type": "string"
+                    },
+                    {
+                      "name": "createdAt",
+                      "type": "string"
+                    }
+                  ]
                 }
               ]
             },
@@ -257,8 +263,8 @@
                     "Vote",
                     {
                       "emit": {
-                        "success": "VoteLoaded",
-                        "failure": "VoteLoadFailed"
+                        "failure": "VoteLoadFailed",
+                        "success": "VoteLoaded"
                       }
                     }
                   ],
@@ -267,21 +273,21 @@
                     "main",
                     {
                       "direction": "vertical",
+                      "gap": "md",
                       "className": "py-12",
-                      "type": "stack",
-                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
                           "type": "typography",
-                          "variant": "caption",
-                          "content": "Loading votes…"
+                          "content": "Loading votes…",
+                          "color": "muted",
+                          "variant": "caption"
                         }
                       ],
-                      "gap": "md"
+                      "align": "center",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -295,12 +301,12 @@
                     "render-ui",
                     "main",
                     {
-                      "onVote": "VOTE",
-                      "variant": "vertical",
-                      "label": "Vote",
+                      "count": 0.0,
                       "type": "vote-stack",
-                      "userVote": "@entity.direction",
-                      "count": 0.0
+                      "label": "Vote",
+                      "variant": "vertical",
+                      "onVote": "VOTE",
+                      "userVote": "@entity.direction"
                     }
                   ]
                 ]
@@ -314,9 +320,9 @@
                     "render-ui",
                     "main",
                     {
+                      "message": "@payload.error",
                       "variant": "error",
-                      "type": "alert",
-                      "message": "@payload.error"
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -346,8 +352,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "success": "VoteCasted",
-                        "failure": "VoteCastFailed"
+                        "failure": "VoteCastFailed",
+                        "success": "VoteCasted"
                       }
                     }
                   ],
@@ -355,22 +361,22 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack",
                       "className": "py-12",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "variant": "caption",
-                          "type": "typography",
                           "color": "muted",
-                          "content": "Recording your vote…"
+                          "content": "Recording your vote…",
+                          "type": "typography"
                         }
-                      ],
-                      "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack",
-                      "align": "center"
+                      ]
                     }
                   ]
                 ]
@@ -397,8 +403,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "success": "VoteCasted",
-                        "failure": "VoteCastFailed"
+                        "failure": "VoteCastFailed",
+                        "success": "VoteCasted"
                       }
                     }
                   ],
@@ -406,22 +412,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "type": "typography",
                           "color": "muted",
-                          "variant": "caption",
                           "content": "Clearing your vote…",
-                          "type": "typography"
+                          "variant": "caption"
                         }
                       ],
+                      "align": "center",
+                      "className": "py-12",
                       "direction": "vertical",
-                      "type": "stack",
-                      "gap": "md"
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -435,12 +441,12 @@
                     "render-ui",
                     "main",
                     {
-                      "count": 0.0,
-                      "userVote": "@entity.direction",
-                      "type": "vote-stack",
                       "onVote": "VOTE",
                       "label": "Vote",
-                      "variant": "vertical"
+                      "userVote": "@entity.direction",
+                      "type": "vote-stack",
+                      "variant": "vertical",
+                      "count": 0.0
                     }
                   ]
                 ]
@@ -454,9 +460,9 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "@payload.error",
                       "type": "alert",
-                      "variant": "error"
+                      "variant": "error",
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -480,21 +486,21 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
                       "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "content": "Loading votes…",
                           "color": "muted",
+                          "content": "Loading votes…",
+                          "type": "typography",
                           "variant": "caption"
                         }
                       ],
-                      "className": "py-12",
-                      "gap": "md",
                       "align": "center",
+                      "className": "py-12",
                       "direction": "vertical"
                     }
                   ]

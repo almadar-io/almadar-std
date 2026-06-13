@@ -271,23 +271,23 @@
                         "create",
                         "AuditEntry",
                         {
-                          "recordedAt": 0.0,
-                          "entityType": "@config.captureEntity",
                           "action": "@entity.action",
-                          "entityId": "@entity.entityId",
                           "before": "@entity.before",
-                          "after": "@entity.after",
-                          "actor": "@user.id"
+                          "actor": "@user.id",
+                          "entityId": "@entity.entityId",
+                          "entityType": "@config.captureEntity",
+                          "recordedAt": 0.0,
+                          "after": "@entity.after"
                         }
                       ],
                       [
                         "emit",
                         "AuditRecorded",
                         {
+                          "recordedAt": 0.0,
                           "action": "@entity.action",
                           "actor": "@user.id",
                           "entityId": "@entity.entityId",
-                          "recordedAt": 0.0,
                           "entityType": "@config.captureEntity"
                         }
                       ]
@@ -298,6 +298,20 @@
             ]
           },
           "config": {
+            "retentionDays": {
+              "type": "number",
+              "default": 2555.0,
+              "label": "How long to keep the audit log",
+              "description": "Number of days to retain audit entries. Default is about 7 years, typical for compliance.",
+              "tier": "policy"
+            },
+            "captureEntity": {
+              "type": "string",
+              "default": "",
+              "label": "Entity to audit",
+              "description": "Type name of the entity whose mutations get logged",
+              "tier": "internal"
+            },
             "captureEventTypes": {
               "type": "[string]",
               "default": [],
@@ -307,13 +321,6 @@
               "items": {
                 "type": "string"
               }
-            },
-            "retentionDays": {
-              "type": "number",
-              "default": 2555.0,
-              "label": "How long to keep the audit log",
-              "description": "Number of days to retain audit entries. Default is about 7 years, typical for compliance.",
-              "tier": "policy"
             },
             "enabled": {
               "type": "boolean",
@@ -339,13 +346,6 @@
               "label": "Keep before/after snapshots",
               "description": "Store a full before-and-after snapshot of each change. More detail, but a larger audit log.",
               "tier": "policy"
-            },
-            "captureEntity": {
-              "type": "string",
-              "default": "",
-              "label": "Entity to audit",
-              "description": "Type name of the entity whose mutations get logged",
-              "tier": "internal"
             }
           },
           "scope": "instance"

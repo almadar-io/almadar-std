@@ -28,6 +28,11 @@
             "items": {
               "type": "object",
               "properties": {
+                "content": {
+                  "name": "content",
+                  "type": "trait",
+                  "required": false
+                },
                 "id": {
                   "name": "id",
                   "type": "string",
@@ -38,19 +43,14 @@
                   "type": "string",
                   "required": true
                 },
-                "badge": {
-                  "name": "badge",
-                  "type": "string",
-                  "required": false
-                },
                 "icon": {
                   "name": "icon",
                   "type": "string",
                   "required": false
                 },
-                "content": {
-                  "name": "content",
-                  "type": "trait",
+                "badge": {
+                  "name": "badge",
+                  "type": "string",
                   "required": false
                 }
               }
@@ -164,6 +164,66 @@
             ]
           },
           "config": {
+            "tabs": {
+              "type": "[TabSpec]",
+              "default": [
+                {
+                  "id": "overview",
+                  "icon": "info",
+                  "label": "Overview"
+                },
+                {
+                  "label": "Details",
+                  "icon": "list",
+                  "id": "details"
+                },
+                {
+                  "id": "settings",
+                  "label": "Settings",
+                  "icon": "settings"
+                }
+              ],
+              "label": "Tabs",
+              "description": "Tab entries with id, label, icon, badge, and optional content trait",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "content": {
+                    "name": "content",
+                    "type": "trait",
+                    "required": false
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "badge": {
+                    "name": "badge",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "defaultTab": {
+              "type": "string",
+              "default": "overview",
+              "label": "Default tab",
+              "description": "Tab id selected on first render",
+              "tier": "presentation"
+            },
             "variant": {
               "type": "string",
               "default": "default",
@@ -176,73 +236,6 @@
                 "underline"
               ]
             },
-            "bodyContent": {
-              "type": "render-ui",
-              "default": {
-                "type": "tabs",
-                "items": "@entity.items",
-                "activeTab": "@entity.activeTab",
-                "orientation": "@config.orientation",
-                "variant": "@config.variant",
-                "tabChangeEvent": "TAB_CHANGED"
-              },
-              "label": "Body content tree",
-              "description": "Render-ui SExpr rendered for the tabs surface. Default is the canonical tabs pattern bound to @entity.items / @entity.activeTab. Layer 3 variants override this with their own tree (segmented-pill bar, vertical sidebar rail, etc.) while inheriting the same trait, state machine, emits, and listens.",
-              "tier": "internal"
-            },
-            "tabs": {
-              "type": "[TabSpec]",
-              "default": [
-                {
-                  "id": "overview",
-                  "label": "Overview",
-                  "icon": "info"
-                },
-                {
-                  "id": "details",
-                  "label": "Details",
-                  "icon": "list"
-                },
-                {
-                  "icon": "settings",
-                  "label": "Settings",
-                  "id": "settings"
-                }
-              ],
-              "label": "Tabs",
-              "description": "Tab entries with id, label, icon, badge, and optional content trait",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "badge": {
-                    "name": "badge",
-                    "type": "string",
-                    "required": false
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "content": {
-                    "name": "content",
-                    "type": "trait",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            },
             "orientation": {
               "type": "string",
               "default": "horizontal",
@@ -254,12 +247,19 @@
                 "vertical"
               ]
             },
-            "defaultTab": {
-              "type": "string",
-              "default": "overview",
-              "label": "Default tab",
-              "description": "Tab id selected on first render",
-              "tier": "presentation"
+            "bodyContent": {
+              "type": "render-ui",
+              "default": {
+                "type": "tabs",
+                "variant": "@config.variant",
+                "tabChangeEvent": "TAB_CHANGED",
+                "items": "@entity.items",
+                "orientation": "@config.orientation",
+                "activeTab": "@entity.activeTab"
+              },
+              "label": "Body content tree",
+              "description": "Render-ui SExpr rendered for the tabs surface. Default is the canonical tabs pattern bound to @entity.items / @entity.activeTab. Layer 3 variants override this with their own tree (segmented-pill bar, vertical sidebar rail, etc.) while inheriting the same trait, state machine, emits, and listens.",
+              "tier": "internal"
             }
           },
           "scope": "instance"

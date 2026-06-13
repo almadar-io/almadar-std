@@ -27,50 +27,31 @@
             "items": {
               "type": "object",
               "properties": {
-                "trend": {
-                  "name": "trend",
-                  "type": "number",
-                  "required": false
-                },
-                "trendFormat": {
-                  "name": "trendFormat",
+                "prefix": {
+                  "name": "prefix",
                   "type": "string",
-                  "required": false,
-                  "values": [
-                    "absolute",
-                    "percent"
-                  ]
+                  "required": false
                 },
                 "icon": {
                   "name": "icon",
                   "type": "string",
                   "required": false
                 },
-                "variant": {
-                  "name": "variant",
-                  "type": "string",
+                "sparklineData": {
+                  "name": "sparklineData",
+                  "type": "array",
                   "required": false,
-                  "values": [
-                    "default",
-                    "primary",
-                    "success",
-                    "warning",
-                    "error",
-                    "info"
-                  ]
+                  "items": {
+                    "type": "number"
+                  }
                 },
                 "clickEvent": {
                   "name": "clickEvent",
                   "type": "string",
                   "required": false
                 },
-                "value": {
-                  "name": "value",
-                  "type": "number",
-                  "required": false
-                },
-                "prefix": {
-                  "name": "prefix",
+                "suffix": {
+                  "name": "suffix",
                   "type": "string",
                   "required": false
                 },
@@ -89,18 +70,22 @@
                   "type": "string",
                   "required": true
                 },
-                "suffix": {
-                  "name": "suffix",
-                  "type": "string",
+                "value": {
+                  "name": "value",
+                  "type": "number",
                   "required": false
                 },
-                "trendPolarity": {
-                  "name": "trendPolarity",
+                "variant": {
+                  "name": "variant",
                   "type": "string",
                   "required": false,
                   "values": [
-                    "higher-is-better",
-                    "lower-is-better"
+                    "default",
+                    "primary",
+                    "success",
+                    "warning",
+                    "error",
+                    "info"
                   ]
                 },
                 "max": {
@@ -113,13 +98,28 @@
                   "type": "number",
                   "required": false
                 },
-                "sparklineData": {
-                  "name": "sparklineData",
-                  "type": "array",
+                "trend": {
+                  "name": "trend",
+                  "type": "number",
+                  "required": false
+                },
+                "trendPolarity": {
+                  "name": "trendPolarity",
+                  "type": "string",
                   "required": false,
-                  "items": {
-                    "type": "number"
-                  }
+                  "values": [
+                    "higher-is-better",
+                    "lower-is-better"
+                  ]
+                },
+                "trendFormat": {
+                  "name": "trendFormat",
+                  "type": "string",
+                  "required": false,
+                  "values": [
+                    "absolute",
+                    "percent"
+                  ]
                 }
               }
             },
@@ -135,17 +135,15 @@
           "linkedEntity": "KpiTileStats",
           "config": {
             "bodyContent": {
-              "className": "w-full",
               "gap": "lg",
-              "type": "data-grid",
+              "entity": "@entity.cards",
+              "minCardWidth": 220.0,
+              "className": "w-full",
               "fields": [],
               "renderItem": [
                 "fn",
                 "card",
                 {
-                  "type": "stack",
-                  "gap": "sm",
-                  "direction": "vertical",
                   "className": "rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-card-lg shadow-elevation-sm hover:shadow-elevation-md transition-shadow",
                   "children": [
                     {
@@ -153,86 +151,81 @@
                         {
                           "color": "muted",
                           "content": "@card.label",
-                          "variant": "caption",
-                          "type": "typography",
                           "weight": "medium",
-                          "className": "uppercase tracking-wide"
+                          "className": "uppercase tracking-wide",
+                          "type": "typography",
+                          "variant": "caption"
                         },
                         {
-                          "type": "icon",
                           "size": "sm",
                           "name": "@card.icon",
+                          "type": "icon",
                           "color": "muted"
                         }
                       ],
+                      "direction": "horizontal",
+                      "align": "center",
                       "justify": "between",
                       "gap": "xs",
-                      "type": "stack",
-                      "align": "center",
-                      "direction": "horizontal"
+                      "type": "stack"
                     },
                     {
                       "type": "stack",
-                      "align": "baseline",
                       "children": [
                         {
-                          "content": "@card.prefix",
-                          "type": "typography",
                           "variant": "caption",
-                          "color": "muted"
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "@card.prefix"
                         },
                         {
                           "className": "text-4xl font-bold tracking-tight",
-                          "value": "@card.value",
-                          "type": "animated-counter"
+                          "type": "animated-counter",
+                          "value": "@card.value"
                         },
                         {
                           "variant": "caption",
-                          "color": "muted",
+                          "content": "@card.suffix",
                           "type": "typography",
-                          "content": "@card.suffix"
+                          "color": "muted"
                         }
                       ],
-                      "direction": "horizontal",
-                      "gap": "xs"
+                      "align": "baseline",
+                      "gap": "xs",
+                      "direction": "horizontal"
                     },
                     {
-                      "type": "stack",
-                      "direction": "horizontal",
-                      "align": "center",
-                      "gap": "sm",
                       "children": [
                         {
                           "showValue": true,
                           "value": "@card.trend",
-                          "size": "sm",
-                          "type": "trend-indicator"
+                          "type": "trend-indicator",
+                          "size": "sm"
                         },
                         {
-                          "height": 24.0,
-                          "className": "flex-1",
-                          "color": "auto",
-                          "fill": true,
                           "data": "@card.sparklineData",
-                          "type": "sparkline"
+                          "className": "flex-1",
+                          "fill": true,
+                          "height": 24.0,
+                          "type": "sparkline",
+                          "color": "auto"
                         }
-                      ]
+                      ],
+                      "align": "center",
+                      "gap": "sm",
+                      "type": "stack",
+                      "direction": "horizontal"
                     }
-                  ]
+                  ],
+                  "direction": "vertical",
+                  "gap": "sm",
+                  "type": "stack"
                 }
               ],
-              "entity": "@entity.cards",
-              "minCardWidth": 220.0
+              "type": "data-grid"
             },
             "metrics": [
               {
-                "trendPolarity": "higher-is-better",
-                "prefix": "$",
-                "format": "currency",
-                "value": 72400.0,
-                "variant": "success",
-                "label": "Revenue",
-                "icon": "dollar-sign",
                 "sparklineData": [
                   42000.0,
                   45000.0,
@@ -247,12 +240,20 @@
                   67800.0,
                   72400.0
                 ],
+                "icon": "dollar-sign",
                 "trend": 12.4,
-                "trendFormat": "percent"
+                "trendFormat": "percent",
+                "value": 72400.0,
+                "prefix": "$",
+                "format": "currency",
+                "label": "Revenue",
+                "trendPolarity": "higher-is-better",
+                "variant": "success"
               },
               {
+                "format": "number",
                 "trendFormat": "percent",
-                "label": "Active Users",
+                "trendPolarity": "higher-is-better",
                 "sparklineData": [
                   2800.0,
                   2950.0,
@@ -263,20 +264,18 @@
                   3180.0,
                   3240.0
                 ],
-                "icon": "users",
                 "trend": 8.1,
-                "format": "number",
+                "variant": "primary",
                 "value": 3240.0,
-                "trendPolarity": "higher-is-better",
-                "variant": "primary"
+                "label": "Active Users",
+                "icon": "users"
               },
               {
-                "format": "percent",
-                "suffix": "%",
-                "icon": "trending-up",
+                "trendPolarity": "higher-is-better",
                 "variant": "info",
                 "trend": -1.2,
-                "value": 4.7,
+                "trendFormat": "percent",
+                "suffix": "%",
                 "sparklineData": [
                   5.2,
                   5.0,
@@ -287,19 +286,12 @@
                   4.5,
                   4.7
                 ],
-                "trendPolarity": "higher-is-better",
                 "label": "Conversion",
-                "trendFormat": "percent"
+                "format": "percent",
+                "value": 4.7,
+                "icon": "trending-up"
               },
               {
-                "icon": "trending-down",
-                "label": "Churn",
-                "value": 1.9,
-                "trendFormat": "percent",
-                "suffix": "%",
-                "trend": -0.4,
-                "trendPolarity": "lower-is-better",
-                "variant": "warning",
                 "sparklineData": [
                   2.3,
                   2.1,
@@ -310,7 +302,15 @@
                   1.8,
                   1.9
                 ],
-                "format": "percent"
+                "icon": "trending-down",
+                "format": "percent",
+                "label": "Churn",
+                "trendPolarity": "lower-is-better",
+                "trend": -0.4,
+                "trendFormat": "percent",
+                "value": 1.9,
+                "variant": "warning",
+                "suffix": "%"
               }
             ]
           }

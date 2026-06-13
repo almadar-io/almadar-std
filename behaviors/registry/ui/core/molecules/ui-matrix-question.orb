@@ -83,16 +83,16 @@
                     "render-ui",
                     "main",
                     {
-                      "title": "@config.title",
                       "columns": "@config.columns",
-                      "changeEvent": "CHANGE",
-                      "disabled": "@config.disabled",
                       "size": "@config.size",
                       "className": "@config.className",
-                      "values": "@config.values",
                       "type": "matrix-question",
-                      "onChange": "CHANGE",
-                      "rows": "@config.rows"
+                      "rows": "@config.rows",
+                      "changeEvent": "CHANGE",
+                      "title": "@config.title",
+                      "disabled": "@config.disabled",
+                      "values": "@config.values",
+                      "onChange": "CHANGE"
                     }
                   ]
                 ]
@@ -100,6 +100,20 @@
             ]
           },
           "config": {
+            "disabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Disabled",
+              "description": "Disable all inputs",
+              "tier": "presentation"
+            },
+            "title": {
+              "type": "string",
+              "default": "Title",
+              "label": "Title",
+              "description": "Optional title rendered above the matrix",
+              "tier": "presentation"
+            },
             "rows": {
               "type": "[MatrixQuestionRowsItem]",
               "default": [
@@ -114,17 +128,27 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
                   "id": {
                     "name": "id",
                     "type": "string",
                     "required": true
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
                   }
                 }
+              }
+            },
+            "values": {
+              "type": "Map<string,string>",
+              "default": {},
+              "label": "Values",
+              "description": "Selected value per row, keyed by rowId",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
               }
             },
             "columns": {
@@ -149,18 +173,11 @@
                 }
               }
             },
-            "disabled": {
-              "type": "boolean",
-              "default": false,
-              "label": "Disabled",
-              "description": "Disable all inputs",
-              "tier": "presentation"
-            },
-            "title": {
+            "className": {
               "type": "string",
-              "default": "Title",
-              "label": "Title",
-              "description": "Optional title rendered above the matrix",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
               "tier": "presentation"
             },
             "size": {
@@ -173,23 +190,6 @@
                 "sm",
                 "md"
               ]
-            },
-            "values": {
-              "type": "Map<string,string>",
-              "default": {},
-              "label": "Values",
-              "description": "Selected value per row, keyed by rowId",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
             }
           },
           "scope": "instance"

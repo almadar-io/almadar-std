@@ -54,23 +54,23 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "@config.className",
-                      "actions": "@config.actions",
+                      "showPrint": "@config.showPrint",
                       "totalPages": "@config.totalPages",
-                      "showToolbar": "@config.showToolbar",
-                      "entity": "DocumentViewerItem",
-                      "title": "@config.title",
-                      "documents": "@config.documents",
                       "content": "@config.content",
-                      "type": "document-viewer",
-                      "height": "@config.height",
-                      "showDownload": "@config.showDownload",
+                      "actions": "@config.actions",
                       "currentPage": "@config.currentPage",
                       "error": "@config.error",
-                      "showPrint": "@config.showPrint",
-                      "isLoading": "@config.isLoading",
+                      "className": "@config.className",
+                      "height": "@config.height",
+                      "title": "@config.title",
+                      "documents": "@config.documents",
                       "src": "@config.src",
-                      "documentType": "@config.documentType"
+                      "documentType": "@config.documentType",
+                      "entity": "DocumentViewerItem",
+                      "isLoading": "@config.isLoading",
+                      "type": "document-viewer",
+                      "showDownload": "@config.showDownload",
+                      "showToolbar": "@config.showToolbar"
                     }
                   ]
                 ]
@@ -78,11 +78,48 @@
             ]
           },
           "config": {
-            "src": {
+            "actions": {
+              "type": "[DocumentViewerActionsItem]",
+              "default": [],
+              "label": "Actions",
+              "description": "Actions",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": false
+                  },
+                  "navigatesTo": {
+                    "name": "navigatesTo",
+                    "type": "string",
+                    "required": false
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "primary",
+                      "secondary",
+                      "ghost"
+                    ]
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "title": {
               "type": "string",
-              "default": "Src",
-              "label": "Src",
-              "description": "Document URL (for PDF/external documents)",
+              "default": "Title",
+              "label": "Title",
+              "description": "Document title",
               "tier": "presentation"
             },
             "currentPage": {
@@ -92,19 +129,40 @@
               "description": "Current page (for multi-page documents)",
               "tier": "presentation"
             },
-            "height": {
-              "type": "string",
-              "default": "Height",
-              "label": "Height",
-              "description": "Viewer height",
+            "showDownload": {
+              "type": "boolean",
+              "default": false,
+              "label": "Show Download",
+              "description": "Show download button",
               "tier": "presentation"
             },
-            "content": {
-              "type": "string",
-              "default": "Content",
-              "label": "Content",
-              "description": "Document content (for text/html/markdown)",
-              "tier": "presentation"
+            "error": {
+              "type": "DocumentViewerError",
+              "label": "Error",
+              "description": "Error state",
+              "tier": "presentation",
+              "properties": {
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                },
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": false
+                },
+                "code": {
+                  "name": "code",
+                  "type": "string",
+                  "required": false
+                },
+                "stack": {
+                  "name": "stack",
+                  "type": "string",
+                  "required": false
+                }
+              }
             },
             "documents": {
               "type": "[DocumentViewerDocumentsItem]",
@@ -115,15 +173,15 @@
               "items": {
                 "type": "object",
                 "properties": {
+                  "src": {
+                    "name": "src",
+                    "type": "string",
+                    "required": false
+                  },
                   "label": {
                     "name": "label",
                     "type": "string",
                     "required": true
-                  },
-                  "content": {
-                    "name": "content",
-                    "type": "string",
-                    "required": false
                   },
                   "documentType": {
                     "name": "documentType",
@@ -136,68 +194,26 @@
                       "markdown"
                     ]
                   },
-                  "src": {
-                    "name": "src",
+                  "content": {
+                    "name": "content",
                     "type": "string",
                     "required": false
                   }
                 }
               }
             },
+            "content": {
+              "type": "string",
+              "default": "Content",
+              "label": "Content",
+              "description": "Document content (for text/html/markdown)",
+              "tier": "presentation"
+            },
             "className": {
               "type": "string",
               "default": "",
               "label": "Class Name",
               "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "totalPages": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Total Pages",
-              "description": "Total pages",
-              "tier": "presentation"
-            },
-            "showPrint": {
-              "type": "boolean",
-              "default": false,
-              "label": "Show Print",
-              "description": "Show print button",
-              "tier": "presentation"
-            },
-            "error": {
-              "type": "DocumentViewerError",
-              "label": "Error",
-              "description": "Error state",
-              "tier": "presentation",
-              "properties": {
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                },
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                }
-              }
-            },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state",
               "tier": "presentation"
             },
             "showToolbar": {
@@ -220,55 +236,39 @@
                 "markdown"
               ]
             },
-            "actions": {
-              "type": "[DocumentViewerActionsItem]",
-              "default": [],
-              "label": "Actions",
-              "description": "Actions",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "navigatesTo": {
-                    "name": "navigatesTo",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "primary",
-                      "secondary",
-                      "ghost"
-                    ]
-                  },
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "showDownload": {
+            "isLoading": {
               "type": "boolean",
               "default": false,
-              "label": "Show Download",
-              "description": "Show download button",
+              "label": "Is Loading",
+              "description": "Loading state",
               "tier": "presentation"
             },
-            "title": {
+            "src": {
               "type": "string",
-              "default": "Title",
-              "label": "Title",
-              "description": "Document title",
+              "default": "Src",
+              "label": "Src",
+              "description": "Document URL (for PDF/external documents)",
+              "tier": "presentation"
+            },
+            "showPrint": {
+              "type": "boolean",
+              "default": false,
+              "label": "Show Print",
+              "description": "Show print button",
+              "tier": "presentation"
+            },
+            "height": {
+              "type": "string",
+              "default": "Height",
+              "label": "Height",
+              "description": "Viewer height",
+              "tier": "presentation"
+            },
+            "totalPages": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Total Pages",
+              "description": "Total pages",
               "tier": "presentation"
             }
           },

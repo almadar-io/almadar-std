@@ -130,37 +130,43 @@
               "tier": "essential",
               "payloadSchema": [
                 {
-                  "name": "row.id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.targetId",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.targetType",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.signerName",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.signatureDataUrl",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.signedAt",
-                  "type": "string"
-                },
-                {
-                  "name": "row.ipAddress",
-                  "type": "string"
+                  "name": "row",
+                  "type": "object",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "type": "string",
+                      "required": true
+                    },
+                    {
+                      "name": "targetId",
+                      "type": "string",
+                      "required": true
+                    },
+                    {
+                      "name": "targetType",
+                      "type": "string",
+                      "required": true
+                    },
+                    {
+                      "name": "signerName",
+                      "type": "string",
+                      "required": true
+                    },
+                    {
+                      "name": "signatureDataUrl",
+                      "type": "string",
+                      "required": true
+                    },
+                    {
+                      "name": "signedAt",
+                      "type": "string"
+                    },
+                    {
+                      "name": "ipAddress",
+                      "type": "string"
+                    }
+                  ]
                 }
               ]
             },
@@ -309,8 +315,8 @@
                     "Signature",
                     {
                       "emit": {
-                        "failure": "SignatureLoadFailed",
-                        "success": "SignatureLoaded"
+                        "success": "SignatureLoaded",
+                        "failure": "SignatureLoadFailed"
                       }
                     }
                   ],
@@ -318,7 +324,6 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "direction": "vertical",
                       "className": "py-12",
                       "children": [
@@ -326,14 +331,15 @@
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
+                          "type": "typography",
                           "content": "Loading…",
                           "color": "muted",
-                          "type": "typography"
+                          "variant": "caption"
                         }
                       ],
-                      "align": "center",
-                      "type": "stack"
+                      "type": "stack",
+                      "gap": "md",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -348,47 +354,47 @@
                     "main",
                     {
                       "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
                       "children": [
                         {
                           "content": "@config.title",
-                          "variant": "h3",
+                          "type": "typography",
+                          "variant": "h3"
+                        },
+                        {
+                          "color": "muted",
+                          "variant": "caption",
+                          "content": "@config.instructions",
                           "type": "typography"
                         },
                         {
-                          "variant": "caption",
-                          "type": "typography",
-                          "content": "@config.instructions",
-                          "color": "muted"
-                        },
-                        {
-                          "value": "@entity.signatureDataUrl",
                           "onChange": "CHANGE",
+                          "value": "@entity.signatureDataUrl",
                           "type": "signature-pad"
                         },
                         {
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "icon": "trash",
                               "action": "CLEAR",
+                              "icon": "trash",
+                              "variant": "secondary",
                               "label": "Clear",
-                              "type": "button",
-                              "variant": "secondary"
+                              "type": "button"
                             },
                             {
                               "variant": "primary",
                               "label": "Submit",
                               "action": "SUBMIT",
-                              "type": "button",
-                              "icon": "send"
+                              "icon": "send",
+                              "type": "button"
                             }
                           ],
-                          "gap": "sm",
-                          "type": "stack"
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm"
                         }
-                      ],
-                      "direction": "vertical",
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -404,6 +410,7 @@
                     {
                       "type": "stack",
                       "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "typography",
@@ -411,39 +418,38 @@
                           "content": "@config.title"
                         },
                         {
-                          "variant": "caption",
-                          "color": "muted",
                           "type": "typography",
-                          "content": "@config.instructions"
+                          "content": "@config.instructions",
+                          "color": "muted",
+                          "variant": "caption"
                         },
                         {
-                          "value": "@entity.signatureDataUrl",
+                          "onChange": "CHANGE",
                           "type": "signature-pad",
-                          "onChange": "CHANGE"
+                          "value": "@entity.signatureDataUrl"
                         },
                         {
                           "type": "stack",
                           "gap": "sm",
                           "children": [
                             {
-                              "label": "Clear",
-                              "icon": "trash",
-                              "type": "button",
                               "action": "CLEAR",
-                              "variant": "secondary"
+                              "variant": "secondary",
+                              "type": "button",
+                              "label": "Clear",
+                              "icon": "trash"
                             },
                             {
-                              "action": "SUBMIT",
                               "icon": "send",
                               "variant": "primary",
+                              "label": "Submit",
                               "type": "button",
-                              "label": "Submit"
+                              "action": "SUBMIT"
                             }
                           ],
                           "direction": "horizontal"
                         }
-                      ],
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -474,8 +480,6 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "type": "stack",
                       "children": [
                         {
                           "variant": "h3",
@@ -483,39 +487,41 @@
                           "content": "@config.title"
                         },
                         {
-                          "color": "muted",
-                          "variant": "caption",
                           "type": "typography",
-                          "content": "@config.instructions"
+                          "variant": "caption",
+                          "content": "@config.instructions",
+                          "color": "muted"
                         },
                         {
-                          "onChange": "CHANGE",
                           "type": "signature-pad",
-                          "value": "@entity.signatureDataUrl"
+                          "value": "@entity.signatureDataUrl",
+                          "onChange": "CHANGE"
                         },
                         {
                           "type": "stack",
                           "gap": "sm",
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "variant": "secondary",
-                              "type": "button",
-                              "action": "CLEAR",
                               "label": "Clear",
-                              "icon": "trash"
+                              "icon": "trash",
+                              "variant": "secondary",
+                              "action": "CLEAR",
+                              "type": "button"
                             },
                             {
-                              "type": "button",
                               "variant": "primary",
                               "action": "SUBMIT",
+                              "label": "Submit",
                               "icon": "send",
-                              "label": "Submit"
+                              "type": "button"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal"
                         }
                       ],
-                      "direction": "vertical"
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -541,10 +547,8 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "align": "center",
-                      "gap": "md",
-                      "type": "stack",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
@@ -556,7 +560,9 @@
                           "content": "Submitting your signature…"
                         }
                       ],
-                      "direction": "vertical"
+                      "gap": "md",
+                      "className": "py-12",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -570,23 +576,23 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md",
+                      "align": "center",
                       "children": [
                         {
-                          "type": "icon",
                           "color": "success",
-                          "name": "check-circle"
+                          "name": "check-circle",
+                          "type": "icon"
                         },
                         {
+                          "type": "typography",
                           "variant": "h3",
-                          "content": "Signature recorded. Thank you.",
-                          "type": "typography"
+                          "content": "Signature recorded. Thank you."
                         }
                       ],
-                      "align": "center"
+                      "className": "py-12",
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -600,9 +606,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
                       "variant": "error",
-                      "message": "@payload.error"
+                      "message": "@payload.error",
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -622,8 +628,6 @@
                     "main",
                     {
                       "type": "stack",
-                      "gap": "md",
-                      "direction": "vertical",
                       "children": [
                         {
                           "type": "typography",
@@ -632,37 +636,39 @@
                         },
                         {
                           "content": "@config.instructions",
-                          "variant": "caption",
                           "color": "muted",
+                          "variant": "caption",
                           "type": "typography"
                         },
                         {
+                          "onChange": "CHANGE",
                           "type": "signature-pad",
-                          "value": "@entity.signatureDataUrl",
-                          "onChange": "CHANGE"
+                          "value": "@entity.signatureDataUrl"
                         },
                         {
+                          "gap": "sm",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "label": "Clear",
-                              "action": "CLEAR",
+                              "variant": "secondary",
                               "type": "button",
-                              "icon": "trash",
-                              "variant": "secondary"
+                              "action": "CLEAR",
+                              "icon": "trash"
                             },
                             {
-                              "action": "SUBMIT",
                               "label": "Submit",
-                              "type": "button",
+                              "action": "SUBMIT",
+                              "variant": "primary",
                               "icon": "send",
-                              "variant": "primary"
+                              "type": "button"
                             }
                           ],
-                          "gap": "sm",
-                          "type": "stack",
-                          "direction": "horizontal"
+                          "type": "stack"
                         }
-                      ]
+                      ],
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
