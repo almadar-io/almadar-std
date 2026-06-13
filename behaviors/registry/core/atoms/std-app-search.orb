@@ -137,11 +137,11 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "md",
                       "children": [
                         "@config.idleContent"
                       ],
+                      "gap": "md",
+                      "type": "stack",
                       "direction": "vertical"
                     }
                   ]
@@ -188,22 +188,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "type": "stack",
-                      "gap": "md",
+                      "direction": "vertical",
+                      "align": "center",
                       "className": "py-12",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
                           "type": "typography",
-                          "color": "muted",
-                          "content": "Searching…"
+                          "content": "Searching…",
+                          "variant": "caption",
+                          "color": "muted"
                         }
-                      ],
-                      "align": "center"
+                      ]
                     }
                   ]
                 ]
@@ -250,6 +250,8 @@
                     "main",
                     {
                       "type": "stack",
+                      "direction": "vertical",
+                      "className": "py-12",
                       "gap": "md",
                       "align": "center",
                       "children": [
@@ -257,14 +259,12 @@
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "content": "Searching…",
                           "color": "muted",
-                          "variant": "caption"
+                          "variant": "caption",
+                          "type": "typography",
+                          "content": "Searching…"
                         }
-                      ],
-                      "direction": "vertical",
-                      "className": "py-12"
+                      ]
                     }
                   ]
                 ]
@@ -278,31 +278,35 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "className": "max-w-6xl mx-auto w-full p-4",
                       "children": [
                         {
                           "type": "stack",
                           "gap": "sm",
+                          "justify": "between",
                           "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
                               "type": "icon",
                               "name": "search"
                             },
                             {
-                              "type": "typography",
+                              "content": "@config.resultsTitle",
                               "variant": "h2",
-                              "content": "@config.resultsTitle"
+                              "type": "typography"
                             },
                             {
                               "action": "CLEAR_SEARCH",
+                              "type": "button",
                               "variant": "ghost",
                               "icon": "x",
-                              "type": "button",
                               "label": "Clear search"
                             }
-                          ],
-                          "justify": "between",
-                          "align": "center"
+                          ]
                         },
                         {
                           "variant": "caption",
@@ -314,16 +318,12 @@
                           "type": "divider"
                         },
                         {
-                          "entity": "@payload.data",
                           "fields": "@config.resultFields",
+                          "itemActions": "@config.resultActions",
                           "type": "data-grid",
-                          "itemActions": "@config.resultActions"
+                          "entity": "@payload.data"
                         }
-                      ],
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "type": "stack",
-                      "className": "max-w-6xl mx-auto w-full p-4"
+                      ]
                     }
                   ]
                 ]
@@ -337,17 +337,17 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "gap": "md",
                       "type": "stack",
                       "children": [
                         {
-                          "type": "alert",
                           "variant": "error",
+                          "type": "alert",
                           "message": "@payload.error"
                         },
                         "@config.idleContent"
-                      ],
-                      "direction": "vertical",
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -384,8 +384,8 @@
                         ]
                       ],
                       "emit": {
-                        "success": "AppSearchLoaded",
-                        "failure": "AppSearchFailed"
+                        "failure": "AppSearchFailed",
+                        "success": "AppSearchLoaded"
                       }
                     }
                   ],
@@ -393,22 +393,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "md",
                       "className": "py-12",
-                      "align": "center",
                       "direction": "vertical",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Searching…",
+                          "color": "muted",
                           "type": "typography",
                           "variant": "caption",
-                          "color": "muted"
+                          "content": "Searching…"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -427,12 +427,12 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "gap": "md",
                       "direction": "vertical",
                       "children": [
                         "@config.idleContent"
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -444,9 +444,9 @@
               "type": "[AppSearchFieldSpec]",
               "default": [
                 {
-                  "label": "Name",
                   "variant": "h4",
-                  "name": "name"
+                  "name": "name",
+                  "label": "Name"
                 }
               ],
               "label": "Result columns",
@@ -460,18 +460,8 @@
                     "type": "string",
                     "required": false
                   },
-                  "format": {
-                    "name": "format",
-                    "type": "string",
-                    "required": false
-                  },
                   "label": {
                     "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "icon": {
-                    "name": "icon",
                     "type": "string",
                     "required": false
                   },
@@ -479,6 +469,16 @@
                     "name": "name",
                     "type": "string",
                     "required": true
+                  },
+                  "format": {
+                    "name": "format",
+                    "type": "string",
+                    "required": false
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
                   }
                 }
               }
@@ -513,31 +513,31 @@
                     "type": "string",
                     "required": false
                   },
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
-                  },
                   "format": {
                     "name": "format",
                     "type": "string",
                     "required": false
+                  },
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
                   }
                 }
               }
-            },
-            "searchField": {
-              "type": "string",
-              "default": "name",
-              "label": "Search field",
-              "description": "Entity field matched against the query (case-insensitive substring).",
-              "tier": "presentation"
             },
             "resultsTitle": {
               "type": "string",
               "default": "Search results",
               "label": "Results title",
               "description": "Heading shown above the search-results grid.",
+              "tier": "presentation"
+            },
+            "searchField": {
+              "type": "string",
+              "default": "name",
+              "label": "Search field",
+              "description": "Entity field matched against the query (case-insensitive substring).",
               "tier": "presentation"
             }
           },

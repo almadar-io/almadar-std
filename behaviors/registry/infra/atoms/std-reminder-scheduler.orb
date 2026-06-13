@@ -244,8 +244,8 @@
                     },
                     {
                       "emit": {
-                        "failure": "ScanFailed",
-                        "success": "ReminderStepped"
+                        "success": "ReminderStepped",
+                        "failure": "ScanFailed"
                       }
                     }
                   ]
@@ -354,8 +354,8 @@
                     "ReminderDue",
                     {
                       "template": "@config.template",
-                      "entityId": "@entity.headId",
-                      "severity": "@config.severity"
+                      "severity": "@config.severity",
+                      "entityId": "@entity.headId"
                     }
                   ],
                   [
@@ -404,10 +404,6 @@
                   "fetch",
                   "@config.targetEntity",
                   {
-                    "emit": {
-                      "success": "ScanRecordsLoaded",
-                      "failure": "ScanFailed"
-                    },
                     "filter": [
                       "and",
                       [
@@ -445,36 +441,24 @@
                           3600000.0
                         ]
                       ]
-                    ]
+                    ],
+                    "emit": {
+                      "success": "ScanRecordsLoaded",
+                      "failure": "ScanFailed"
+                    }
                   }
                 ]
               ]
             }
           ],
           "config": {
-            "template": {
-              "type": "string",
-              "default": "",
-              "label": "Message template",
-              "description": "Message body passed to the notifier.",
-              "synonyms": "message text, reminder body, notification copy, alert message, what to say",
-              "tier": "presentation"
-            },
-            "enabled": {
-              "type": "boolean",
-              "default": false,
-              "label": "Send deadline reminders",
-              "description": "Automatically remind about upcoming deadlines. Off by default.",
-              "synonyms": "enable, turn on, activate, switch on, reminders, deadline reminders, due-date reminders, advance notice, heads up, nudge before due",
+            "offsetHours": {
+              "type": "number",
+              "default": 24.0,
+              "label": "Remind this many hours before the deadline",
+              "description": "A reminder fires once the deadline is within this many hours of now.",
+              "synonyms": "advance notice, lead time, heads up, early warning hours, how far ahead",
               "tier": "infra"
-            },
-            "dateField": {
-              "type": "string",
-              "default": "dueAt",
-              "label": "Deadline field",
-              "description": "Numeric (ms-epoch) field on the target holding the deadline (e.g. 'dueAt', 'startsAt').",
-              "synonyms": "due date field, timestamp field, cutoff field, expiry field, when it's due",
-              "tier": "internal"
             },
             "severity": {
               "type": "string",
@@ -484,13 +468,21 @@
               "synonyms": "urgency level, priority, importance, alert level, how urgent",
               "tier": "infra"
             },
-            "offsetHours": {
-              "type": "number",
-              "default": 24.0,
-              "label": "Remind this many hours before the deadline",
-              "description": "A reminder fires once the deadline is within this many hours of now.",
-              "synonyms": "advance notice, lead time, heads up, early warning hours, how far ahead",
-              "tier": "infra"
+            "template": {
+              "type": "string",
+              "default": "",
+              "label": "Message template",
+              "description": "Message body passed to the notifier.",
+              "synonyms": "message text, reminder body, notification copy, alert message, what to say",
+              "tier": "presentation"
+            },
+            "dateField": {
+              "type": "string",
+              "default": "dueAt",
+              "label": "Deadline field",
+              "description": "Numeric (ms-epoch) field on the target holding the deadline (e.g. 'dueAt', 'startsAt').",
+              "synonyms": "due date field, timestamp field, cutoff field, expiry field, when it's due",
+              "tier": "internal"
             },
             "targetEntity": {
               "type": "string",
@@ -499,6 +491,14 @@
               "description": "Entity to scan for upcoming deadlines (e.g. 'Task', 'ClassSession'). Defaults to the atom's own log so the standalone validates; rebind per composition.",
               "synonyms": "entity to monitor, entity to watch, record type, object type",
               "tier": "internal"
+            },
+            "enabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Send deadline reminders",
+              "description": "Automatically remind about upcoming deadlines. Off by default.",
+              "synonyms": "enable, turn on, activate, switch on, reminders, deadline reminders, due-date reminders, advance notice, heads up, nudge before due",
+              "tier": "infra"
             }
           },
           "scope": "instance"

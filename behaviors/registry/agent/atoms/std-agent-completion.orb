@@ -103,8 +103,6 @@
       "traits": [
         {
           "name": "AgentCompletionModal",
-          "category": "interaction",
-          "linkedEntity": "AgentCompletion",
           "entityRebindable": true,
           "entityContract": {
             "requires": [],
@@ -113,6 +111,8 @@
               "provider"
             ]
           },
+          "category": "interaction",
+          "linkedEntity": "AgentCompletion",
           "emits": [
             {
               "event": "GENERATED",
@@ -251,7 +251,13 @@
               },
               {
                 "key": "GENERATED",
-                "name": "Generated"
+                "name": "Generated",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "AgentCompletionLoaded",
@@ -363,8 +369,8 @@
                     "AgentCompletion",
                     {
                       "emit": {
-                        "success": "AgentCompletionLoaded",
-                        "failure": "AgentCompletionLoadFailed"
+                        "failure": "AgentCompletionLoadFailed",
+                        "success": "AgentCompletionLoaded"
                       }
                     }
                   ],
@@ -372,8 +378,10 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "children": [
                         {
+                          "justify": "between",
                           "children": [
                             {
                               "children": [
@@ -382,41 +390,39 @@
                                   "type": "icon"
                                 },
                                 {
+                                  "content": "AgentCompletion",
                                   "type": "typography",
-                                  "variant": "h2",
-                                  "content": "AgentCompletion"
+                                  "variant": "h2"
                                 }
                               ],
                               "gap": "md",
-                              "type": "stack",
-                              "direction": "horizontal"
+                              "direction": "horizontal",
+                              "type": "stack"
                             },
                             {
-                              "action": "GENERATE",
-                              "label": "Open",
-                              "type": "button",
                               "variant": "primary",
-                              "icon": "sparkles"
+                              "label": "Open",
+                              "icon": "sparkles",
+                              "action": "GENERATE",
+                              "type": "button"
                             }
                           ],
+                          "type": "stack",
                           "gap": "md",
-                          "direction": "horizontal",
-                          "justify": "between",
-                          "type": "stack"
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "title": "Nothing open",
-                          "icon": "sparkles",
                           "description": "Click Open to view details in a modal overlay.",
-                          "type": "empty-state"
+                          "type": "empty-state",
+                          "title": "Nothing open",
+                          "icon": "sparkles"
                         }
                       ],
                       "gap": "lg",
-                      "direction": "vertical",
-                      "type": "stack"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -430,54 +436,54 @@
                     "render-ui",
                     "modal",
                     {
-                      "direction": "vertical",
                       "children": [
                         {
-                          "gap": "sm",
-                          "direction": "horizontal",
                           "type": "stack",
+                          "gap": "sm",
                           "children": [
                             {
                               "name": "sparkles",
                               "type": "icon"
                             },
                             {
-                              "content": "AgentCompletion",
+                              "variant": "h3",
                               "type": "typography",
-                              "variant": "h3"
+                              "content": "AgentCompletion"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "stack",
                           "direction": "horizontal",
-                          "gap": "sm",
                           "children": [
                             {
-                              "type": "badge",
-                              "label": "@entity.provider"
+                              "label": "@entity.provider",
+                              "type": "badge"
                             },
                             {
                               "label": "@entity.model",
                               "type": "badge"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "gap": "sm"
                         },
                         {
-                          "submitEvent": "SAVE",
-                          "type": "form-section",
                           "mode": "create",
-                          "cancelEvent": "CLOSE",
+                          "submitEvent": "SAVE",
                           "fields": [
                             "prompt"
-                          ]
+                          ],
+                          "type": "form-section",
+                          "cancelEvent": "CLOSE"
                         }
                       ],
+                      "type": "stack",
                       "gap": "md",
-                      "type": "stack"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -502,8 +508,8 @@
                     "AgentCompletion",
                     {
                       "emit": {
-                        "failure": "AgentCompletionLoadFailed",
-                        "success": "AgentCompletionLoaded"
+                        "success": "AgentCompletionLoaded",
+                        "failure": "AgentCompletionLoadFailed"
                       }
                     }
                   ],
@@ -513,13 +519,14 @@
                     {
                       "children": [
                         {
-                          "type": "stack",
                           "gap": "md",
                           "justify": "between",
                           "direction": "horizontal",
+                          "type": "stack",
                           "children": [
                             {
                               "direction": "horizontal",
+                              "gap": "md",
                               "type": "stack",
                               "children": [
                                 {
@@ -527,19 +534,18 @@
                                   "name": "sparkles"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "AgentCompletion",
+                                  "type": "typography",
                                   "variant": "h2"
                                 }
-                              ],
-                              "gap": "md"
+                              ]
                             },
                             {
-                              "type": "button",
                               "action": "GENERATE",
-                              "label": "Open",
+                              "icon": "sparkles",
+                              "type": "button",
                               "variant": "primary",
-                              "icon": "sparkles"
+                              "label": "Open"
                             }
                           ]
                         },
@@ -547,15 +553,15 @@
                           "type": "divider"
                         },
                         {
-                          "description": "Click Open to view details in a modal overlay.",
+                          "title": "Nothing open",
                           "type": "empty-state",
                           "icon": "sparkles",
-                          "title": "Nothing open"
+                          "description": "Click Open to view details in a modal overlay."
                         }
                       ],
                       "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg"
+                      "gap": "lg",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -572,8 +578,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "success": "AgentCompletionSaved",
-                        "failure": "AgentCompletionSaveFailed"
+                        "failure": "AgentCompletionSaveFailed",
+                        "success": "AgentCompletionSaved"
                       }
                     }
                   ],
@@ -591,8 +597,8 @@
                     "AgentCompletion",
                     {
                       "emit": {
-                        "success": "AgentCompletionLoaded",
-                        "failure": "AgentCompletionLoadFailed"
+                        "failure": "AgentCompletionLoadFailed",
+                        "success": "AgentCompletionLoaded"
                       }
                     }
                   ],
@@ -600,7 +606,6 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
                       "direction": "vertical",
                       "type": "stack",
                       "children": [
@@ -612,39 +617,40 @@
                               "type": "stack",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "sparkles"
+                                  "name": "sparkles",
+                                  "type": "icon"
                                 },
                                 {
-                                  "content": "AgentCompletion",
                                   "variant": "h2",
+                                  "content": "AgentCompletion",
                                   "type": "typography"
                                 }
                               ]
                             },
                             {
-                              "label": "Open",
-                              "icon": "sparkles",
                               "type": "button",
                               "variant": "primary",
+                              "icon": "sparkles",
+                              "label": "Open",
                               "action": "GENERATE"
                             }
                           ],
-                          "justify": "between",
-                          "type": "stack",
                           "direction": "horizontal",
-                          "gap": "md"
+                          "gap": "md",
+                          "justify": "between",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "icon": "sparkles",
+                          "title": "Nothing open",
                           "description": "Click Open to view details in a modal overlay.",
-                          "type": "empty-state",
-                          "title": "Nothing open"
+                          "icon": "sparkles",
+                          "type": "empty-state"
                         }
-                      ]
+                      ],
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -861,60 +867,60 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
-                          "justify": "between",
+                          "type": "stack",
                           "children": [
                             {
-                              "align": "center",
-                              "direction": "horizontal",
                               "gap": "md",
+                              "align": "center",
                               "type": "stack",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "sparkles"
+                                  "name": "sparkles",
+                                  "type": "icon"
                                 },
                                 {
-                                  "type": "typography",
+                                  "variant": "h2",
                                   "content": "AgentCompletion Status",
-                                  "variant": "h2"
+                                  "type": "typography"
                                 }
-                              ]
+                              ],
+                              "direction": "horizontal"
                             },
                             {
-                              "variant": "ghost",
-                              "icon": "x",
-                              "label": "Dismiss",
                               "type": "button",
-                              "action": "HIDE"
+                              "variant": "ghost",
+                              "action": "HIDE",
+                              "label": "Dismiss",
+                              "icon": "x"
                             }
                           ],
                           "align": "center",
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md"
+                          "gap": "md",
+                          "justify": "between",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "variant": "@entity.notificationType",
                           "type": "alert",
-                          "message": "@entity.message"
+                          "message": "@entity.message",
+                          "variant": "@entity.notificationType"
                         },
                         {
                           "type": "toast-slot"
                         },
                         {
-                          "type": "alert",
                           "variant": "warning",
+                          "type": "alert",
                           "message": "@entity.message"
                         }
                       ],
-                      "type": "stack",
-                      "gap": "lg"
+                      "gap": "lg",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -938,60 +944,60 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "stack",
-                          "gap": "md",
-                          "justify": "between",
                           "children": [
                             {
-                              "align": "center",
+                              "gap": "md",
                               "direction": "horizontal",
-                              "type": "stack",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "sparkles"
+                                  "name": "sparkles",
+                                  "type": "icon"
                                 },
                                 {
                                   "variant": "h2",
-                                  "type": "typography",
-                                  "content": "AgentCompletion Status"
+                                  "content": "AgentCompletion Status",
+                                  "type": "typography"
                                 }
                               ],
-                              "gap": "md"
+                              "align": "center",
+                              "type": "stack"
                             },
                             {
                               "icon": "x",
                               "action": "HIDE",
-                              "variant": "ghost",
+                              "label": "Dismiss",
                               "type": "button",
-                              "label": "Dismiss"
+                              "variant": "ghost"
                             }
                           ],
-                          "align": "center",
-                          "direction": "horizontal"
+                          "justify": "between",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "type": "stack",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "alert",
+                          "message": "@entity.message",
                           "variant": "@entity.notificationType",
-                          "message": "@entity.message"
+                          "type": "alert"
                         },
                         {
                           "type": "toast-slot"
                         },
                         {
-                          "message": "@entity.message",
                           "variant": "warning",
-                          "type": "alert"
+                          "type": "alert",
+                          "message": "@entity.message"
                         }
-                      ],
-                      "gap": "lg",
-                      "type": "stack",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -1155,7 +1161,18 @@
               },
               {
                 "key": "SHOW",
-                "name": "Show"
+                "name": "Show",
+                "payloadSchema": [
+                  {
+                    "name": "message",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "notificationType",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "AgentCompletionLoaded",
@@ -1242,10 +1259,10 @@
                     "render-ui",
                     "main",
                     {
-                      "title": "Completion",
+                      "icon": "sparkles",
                       "type": "empty-state",
                       "description": "Completion is ready",
-                      "icon": "sparkles"
+                      "title": "Completion"
                     }
                   ]
                 ]
@@ -1301,8 +1318,8 @@
                     "emit",
                     "SHOW",
                     {
-                      "message": "Completion ready",
-                      "notificationType": "success"
+                      "notificationType": "success",
+                      "message": "Completion ready"
                     }
                   ]
                 ]

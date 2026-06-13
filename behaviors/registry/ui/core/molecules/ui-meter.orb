@@ -49,21 +49,21 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "@config.variant",
+                      "className": "@config.className",
                       "label": "@config.label",
+                      "showValue": "@config.showValue",
+                      "type": "meter",
+                      "thresholds": "@config.thresholds",
+                      "min": "@config.min",
+                      "segments": "@config.segments",
+                      "value": "@config.value",
+                      "isLoading": "@config.isLoading",
+                      "variant": "@config.variant",
+                      "max": "@config.max",
+                      "actions": "@config.actions",
                       "size": "@config.size",
                       "unit": "@config.unit",
-                      "showValue": "@config.showValue",
-                      "thresholds": "@config.thresholds",
-                      "max": "@config.max",
-                      "segments": "@config.segments",
-                      "error": "@config.error",
-                      "className": "@config.className",
-                      "value": "@config.value",
-                      "min": "@config.min",
-                      "actions": "@config.actions",
-                      "isLoading": "@config.isLoading",
-                      "type": "meter"
+                      "error": "@config.error"
                     }
                   ]
                 ]
@@ -71,6 +71,113 @@
             ]
           },
           "config": {
+            "min": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Min",
+              "description": "Minimum value",
+              "tier": "presentation"
+            },
+            "error": {
+              "type": "MeterError",
+              "label": "Error",
+              "description": "Error state",
+              "tier": "presentation",
+              "properties": {
+                "stack": {
+                  "name": "stack",
+                  "type": "string",
+                  "required": false
+                },
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                },
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": false
+                },
+                "code": {
+                  "name": "code",
+                  "type": "string",
+                  "required": false
+                }
+              }
+            },
+            "unit": {
+              "type": "string",
+              "default": "Unit",
+              "label": "Unit",
+              "description": "Unit suffix (e.g., '%', 'MB', 'credits')",
+              "tier": "presentation"
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state",
+              "tier": "presentation"
+            },
+            "segments": {
+              "type": "number",
+              "default": 5.0,
+              "label": "Segments",
+              "description": "Number of segments (for segmented variant)",
+              "tier": "presentation"
+            },
+            "actions": {
+              "type": "[MeterActionsItem]",
+              "default": [],
+              "label": "Actions",
+              "description": "Actions",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": false
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "primary",
+                      "secondary",
+                      "ghost"
+                    ]
+                  },
+                  "navigatesTo": {
+                    "name": "navigatesTo",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "value": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Value",
+              "description": "Current value",
+              "tier": "presentation"
+            },
+            "max": {
+              "type": "number",
+              "default": 100.0,
+              "label": "Max",
+              "description": "Maximum value",
+              "tier": "presentation"
+            },
             "thresholds": {
               "type": "[MeterThresholdsItem]",
               "default": [],
@@ -98,18 +205,11 @@
                 }
               }
             },
-            "min": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Min",
-              "description": "Minimum value",
-              "tier": "presentation"
-            },
-            "unit": {
+            "label": {
               "type": "string",
-              "default": "Unit",
-              "label": "Unit",
-              "description": "Unit suffix (e.g., '%', 'MB', 'credits')",
+              "default": "Label",
+              "label": "Label",
+              "description": "Display label",
               "tier": "presentation"
             },
             "variant": {
@@ -124,118 +224,11 @@
                 "segmented"
               ]
             },
-            "actions": {
-              "type": "[MeterActionsItem]",
-              "default": [],
-              "label": "Actions",
-              "description": "Actions",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "navigatesTo": {
-                    "name": "navigatesTo",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": false
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "primary",
-                      "secondary",
-                      "ghost"
-                    ]
-                  }
-                }
-              }
-            },
-            "segments": {
-              "type": "number",
-              "default": 5.0,
-              "label": "Segments",
-              "description": "Number of segments (for segmented variant)",
-              "tier": "presentation"
-            },
-            "error": {
-              "type": "MeterError",
-              "label": "Error",
-              "description": "Error state",
-              "tier": "presentation",
-              "properties": {
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                },
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                },
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                }
-              }
-            },
-            "max": {
-              "type": "number",
-              "default": 100.0,
-              "label": "Max",
-              "description": "Maximum value",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "value": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Value",
-              "description": "Current value",
-              "tier": "presentation"
-            },
-            "label": {
-              "type": "string",
-              "default": "Label",
-              "label": "Label",
-              "description": "Display label",
-              "tier": "presentation"
-            },
             "showValue": {
               "type": "boolean",
               "default": true,
               "label": "Show Value",
               "description": "Show value text",
-              "tier": "presentation"
-            },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state",
               "tier": "presentation"
             },
             "size": {
@@ -249,6 +242,13 @@
                 "md",
                 "lg"
               ]
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
             }
           },
           "scope": "instance"

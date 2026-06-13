@@ -54,23 +54,23 @@
                     "render-ui",
                     "main",
                     {
-                      "showLineNumbers": "@config.showLineNumbers",
-                      "code": "@config.code",
+                      "maxHeight": "@config.maxHeight",
                       "showCopy": "@config.showCopy",
-                      "diff": "@config.diff",
-                      "type": "code-viewer",
-                      "entity": "CodeViewerItem",
                       "error": "@config.error",
+                      "type": "code-viewer",
+                      "mode": "@config.mode",
+                      "code": "@config.code",
+                      "diff": "@config.diff",
+                      "newValue": "@config.newValue",
+                      "entity": "CodeViewerItem",
+                      "showLineNumbers": "@config.showLineNumbers",
+                      "oldValue": "@config.oldValue",
+                      "wordWrap": "@config.wordWrap",
+                      "language": "@config.language",
+                      "files": "@config.files",
+                      "isLoading": "@config.isLoading",
                       "actions": "@config.actions",
                       "className": "@config.className",
-                      "wordWrap": "@config.wordWrap",
-                      "isLoading": "@config.isLoading",
-                      "mode": "@config.mode",
-                      "language": "@config.language",
-                      "maxHeight": "@config.maxHeight",
-                      "oldValue": "@config.oldValue",
-                      "files": "@config.files",
-                      "newValue": "@config.newValue",
                       "title": "@config.title"
                     }
                   ]
@@ -79,6 +79,13 @@
             ]
           },
           "config": {
+            "oldValue": {
+              "type": "string",
+              "default": "Old Value",
+              "label": "Old Value",
+              "description": "Old value (for generating diff)",
+              "tier": "presentation"
+            },
             "isLoading": {
               "type": "boolean",
               "default": false,
@@ -86,11 +93,122 @@
               "description": "Loading state",
               "tier": "presentation"
             },
+            "title": {
+              "type": "string",
+              "default": "Title",
+              "label": "Title",
+              "description": "Viewer title",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
             "wordWrap": {
               "type": "boolean",
               "default": false,
               "label": "Word Wrap",
               "description": "Enable word wrap",
+              "tier": "presentation"
+            },
+            "showCopy": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Copy",
+              "description": "Show copy button",
+              "tier": "presentation"
+            },
+            "showLineNumbers": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Line Numbers",
+              "description": "Show line numbers",
+              "tier": "presentation"
+            },
+            "code": {
+              "type": "string",
+              "default": "Code",
+              "label": "Code",
+              "description": "Code content",
+              "tier": "presentation"
+            },
+            "error": {
+              "type": "CodeViewerError",
+              "label": "Error",
+              "description": "Error state",
+              "tier": "presentation",
+              "properties": {
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": false
+                },
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                },
+                "code": {
+                  "name": "code",
+                  "type": "string",
+                  "required": false
+                },
+                "stack": {
+                  "name": "stack",
+                  "type": "string",
+                  "required": false
+                }
+              }
+            },
+            "files": {
+              "type": "[CodeViewerFilesItem]",
+              "default": [],
+              "label": "Files",
+              "description": "Multiple files (tabbed view)",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "name": "code",
+                    "type": "string",
+                    "required": true
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "language": {
+                    "name": "language",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "newValue": {
+              "type": "string",
+              "default": "New Value",
+              "label": "New Value",
+              "description": "New value (for generating diff)",
+              "tier": "presentation"
+            },
+            "language": {
+              "type": "string",
+              "default": "Language",
+              "label": "Language",
+              "description": "Language for display label",
+              "tier": "presentation"
+            },
+            "maxHeight": {
+              "type": "string",
+              "default": "Max Height",
+              "label": "Max Height",
+              "description": "Max height before scrolling",
               "tier": "presentation"
             },
             "actions": {
@@ -117,46 +235,18 @@
                       "ghost"
                     ]
                   },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
                   "navigatesTo": {
                     "name": "navigatesTo",
                     "type": "string",
                     "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
                   }
                 }
               }
-            },
-            "oldValue": {
-              "type": "string",
-              "default": "Old Value",
-              "label": "Old Value",
-              "description": "Old value (for generating diff)",
-              "tier": "presentation"
-            },
-            "newValue": {
-              "type": "string",
-              "default": "New Value",
-              "label": "New Value",
-              "description": "New value (for generating diff)",
-              "tier": "presentation"
-            },
-            "code": {
-              "type": "string",
-              "default": "Code",
-              "label": "Code",
-              "description": "Code content",
-              "tier": "presentation"
-            },
-            "language": {
-              "type": "string",
-              "default": "Language",
-              "label": "Language",
-              "description": "Language for display label",
-              "tier": "presentation"
             },
             "mode": {
               "type": "string",
@@ -178,11 +268,6 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "afterLineNumber": {
-                    "name": "afterLineNumber",
-                    "type": "number",
-                    "required": false
-                  },
                   "type": {
                     "name": "type",
                     "type": "string",
@@ -203,97 +288,12 @@
                     "name": "content",
                     "type": "string",
                     "required": true
-                  }
-                }
-              }
-            },
-            "showCopy": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Copy",
-              "description": "Show copy button",
-              "tier": "presentation"
-            },
-            "maxHeight": {
-              "type": "string",
-              "default": "Max Height",
-              "label": "Max Height",
-              "description": "Max height before scrolling",
-              "tier": "presentation"
-            },
-            "title": {
-              "type": "string",
-              "default": "Title",
-              "label": "Title",
-              "description": "Viewer title",
-              "tier": "presentation"
-            },
-            "showLineNumbers": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Line Numbers",
-              "description": "Show line numbers",
-              "tier": "presentation"
-            },
-            "files": {
-              "type": "[CodeViewerFilesItem]",
-              "default": [],
-              "label": "Files",
-              "description": "Multiple files (tabbed view)",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "code": {
-                    "name": "code",
-                    "type": "string",
-                    "required": true
                   },
-                  "language": {
-                    "name": "language",
-                    "type": "string",
+                  "afterLineNumber": {
+                    "name": "afterLineNumber",
+                    "type": "number",
                     "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
                   }
-                }
-              }
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "error": {
-              "type": "CodeViewerError",
-              "label": "Error",
-              "description": "Error state",
-              "tier": "presentation",
-              "properties": {
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                },
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
                 }
               }
             }

@@ -55,21 +55,21 @@
                     "main",
                     {
                       "selectedIds": "@config.selectedIds",
-                      "sortBy": "@config.sortBy",
-                      "columns": "@config.columns",
-                      "type": "dashboard-grid",
-                      "activeFilters": "@config.activeFilters",
-                      "totalCount": "@config.totalCount",
-                      "sortDirection": "@config.sortDirection",
                       "entity": "@entity",
-                      "gap": "@config.gap",
-                      "page": "@config.pageProp",
-                      "isLoading": "@config.isLoading",
-                      "searchValue": "@config.searchValue",
-                      "error": "@config.error",
-                      "className": "@config.className",
                       "cells": "@config.cells",
-                      "pageSize": "@config.pageSize"
+                      "type": "dashboard-grid",
+                      "gap": "@config.gap",
+                      "className": "@config.className",
+                      "pageSize": "@config.pageSize",
+                      "totalCount": "@config.totalCount",
+                      "activeFilters": "@config.activeFilters",
+                      "sortBy": "@config.sortBy",
+                      "searchValue": "@config.searchValue",
+                      "isLoading": "@config.isLoading",
+                      "columns": "@config.columns",
+                      "error": "@config.error",
+                      "sortDirection": "@config.sortDirection",
+                      "page": "@config.pageProp"
                     }
                   ]
                 ]
@@ -77,65 +77,35 @@
             ]
           },
           "config": {
-            "columns": {
-              "type": "number",
-              "default": 3.0,
-              "label": "Columns",
-              "description": "Number of columns",
+            "activeFilters": {
+              "type": "json",
+              "label": "Active Filters",
+              "description": "Active filters",
               "tier": "presentation"
             },
-            "cells": {
-              "type": "[DashboardGridCellsItem]",
-              "default": [
-                {
-                  "content": "Content",
-                  "id": "Id",
-                  "colSpan": 1.0,
-                  "rowSpan": 1.0
-                }
-              ],
-              "label": "Cells",
-              "description": "Cell definitions",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "content": {
-                    "name": "content",
-                    "type": "string",
-                    "required": false
-                  },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": false
-                  },
-                  "rowSpan": {
-                    "name": "rowSpan",
-                    "type": "number",
-                    "required": false
-                  },
-                  "colSpan": {
-                    "name": "colSpan",
-                    "type": "number",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "searchValue": {
+            "className": {
               "type": "string",
-              "default": "Search Value",
-              "label": "Search Value",
-              "description": "Current search query value",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
               "tier": "presentation"
             },
-            "pageSize": {
+            "totalCount": {
               "type": "number",
               "default": 0.0,
-              "label": "Page Size",
-              "description": "Number of items per page",
+              "label": "Total Count",
+              "description": "Total number of items",
               "tier": "presentation"
+            },
+            "selectedIds": {
+              "type": "[string]",
+              "default": [],
+              "label": "Selected Ids",
+              "description": "Currently selected item IDs",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
             },
             "error": {
               "type": "DashboardGridError",
@@ -143,6 +113,11 @@
               "description": "Error state (UiError)",
               "tier": "presentation",
               "properties": {
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                },
                 "code": {
                   "name": "code",
                   "type": "string",
@@ -157,50 +132,23 @@
                   "name": "name",
                   "type": "string",
                   "required": false
-                },
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
                 }
               }
             },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state indicator",
+            "columns": {
+              "type": "number",
+              "default": 3.0,
+              "label": "Columns",
+              "description": "Number of columns",
               "tier": "presentation"
             },
-            "totalCount": {
+            "pageProp": {
               "type": "number",
               "default": 0.0,
-              "label": "Total Count",
-              "description": "Total number of items",
+              "label": "Page",
+              "description": "Current page number",
+              "synonyms": "page",
               "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "activeFilters": {
-              "type": "json",
-              "label": "Active Filters",
-              "description": "Active filters",
-              "tier": "presentation"
-            },
-            "selectedIds": {
-              "type": "[string]",
-              "default": [],
-              "label": "Selected Ids",
-              "description": "Currently selected item IDs",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
             },
             "gap": {
               "type": "string",
@@ -214,6 +162,66 @@
                 "lg"
               ]
             },
+            "cells": {
+              "type": "[DashboardGridCellsItem]",
+              "default": [
+                {
+                  "id": "Id",
+                  "colSpan": 1.0,
+                  "content": "Content",
+                  "rowSpan": 1.0
+                }
+              ],
+              "label": "Cells",
+              "description": "Cell definitions",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "content": {
+                    "name": "content",
+                    "type": "string",
+                    "required": false
+                  },
+                  "rowSpan": {
+                    "name": "rowSpan",
+                    "type": "number",
+                    "required": false
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": false
+                  },
+                  "colSpan": {
+                    "name": "colSpan",
+                    "type": "number",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "sortBy": {
+              "type": "string",
+              "default": "Sort By",
+              "label": "Sort By",
+              "description": "Current sort field",
+              "tier": "presentation"
+            },
+            "pageSize": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Page Size",
+              "description": "Number of items per page",
+              "tier": "presentation"
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
+              "tier": "presentation"
+            },
             "sortDirection": {
               "type": "string",
               "default": "asc",
@@ -225,19 +233,11 @@
                 "desc"
               ]
             },
-            "sortBy": {
+            "searchValue": {
               "type": "string",
-              "default": "Sort By",
-              "label": "Sort By",
-              "description": "Current sort field",
-              "tier": "presentation"
-            },
-            "pageProp": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Page",
-              "description": "Current page number",
-              "synonyms": "page",
+              "default": "Search Value",
+              "label": "Search Value",
+              "description": "Current search query value",
               "tier": "presentation"
             }
           },

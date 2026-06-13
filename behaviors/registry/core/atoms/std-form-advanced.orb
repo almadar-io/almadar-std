@@ -350,8 +350,8 @@
                     "FormEntry",
                     {
                       "emit": {
-                        "success": "FormEntryLoaded",
-                        "failure": "FormEntryLoadFailed"
+                        "failure": "FormEntryLoadFailed",
+                        "success": "FormEntryLoaded"
                       }
                     }
                   ],
@@ -360,37 +360,37 @@
                     "main",
                     {
                       "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
                       "children": [
                         {
-                          "gap": "sm",
-                          "type": "stack",
                           "direction": "horizontal",
                           "align": "center",
+                          "gap": "sm",
                           "children": [
                             {
-                              "name": "@config.icon",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "@config.icon"
                             },
                             {
+                              "content": "@config.title",
                               "variant": "h2",
-                              "type": "typography",
-                              "content": "@config.title"
+                              "type": "typography"
                             }
-                          ]
+                          ],
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "cancelEvent": "INIT",
+                          "submitEvent": "SUBMIT",
                           "fields": "@config.fields",
                           "type": "form-section",
-                          "mode": "create",
-                          "submitEvent": "SUBMIT"
+                          "mode": "create"
                         }
-                      ],
-                      "gap": "lg",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -417,32 +417,32 @@
                     "main",
                     {
                       "type": "stack",
-                      "gap": "lg",
-                      "align": "center",
-                      "direction": "vertical",
                       "children": [
                         {
                           "name": "check-circle",
                           "type": "icon"
                         },
                         {
-                          "content": "Form Submitted",
+                          "type": "typography",
                           "variant": "h2",
-                          "type": "typography"
+                          "content": "Form Submitted"
                         },
                         {
                           "variant": "success",
-                          "type": "alert",
-                          "message": "Your form has been submitted successfully."
+                          "message": "Your form has been submitted successfully.",
+                          "type": "alert"
                         },
                         {
-                          "type": "button",
-                          "icon": "plus",
                           "variant": "primary",
+                          "label": "New Entry",
                           "action": "RESET",
-                          "label": "New Entry"
+                          "icon": "plus",
+                          "type": "button"
                         }
-                      ]
+                      ],
+                      "gap": "lg",
+                      "align": "center",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -476,38 +476,38 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
                       "type": "stack",
-                      "direction": "vertical",
+                      "gap": "lg",
                       "children": [
                         {
+                          "direction": "horizontal",
+                          "type": "stack",
                           "children": [
                             {
                               "name": "@config.icon",
                               "type": "icon"
                             },
                             {
-                              "variant": "h2",
                               "type": "typography",
+                              "variant": "h2",
                               "content": "@config.title"
                             }
                           ],
-                          "direction": "horizontal",
                           "align": "center",
-                          "type": "stack",
                           "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "fields": "@config.fields",
-                          "submitEvent": "SUBMIT",
-                          "type": "form-section",
                           "mode": "create",
-                          "cancelEvent": "INIT"
+                          "cancelEvent": "INIT",
+                          "submitEvent": "SUBMIT",
+                          "fields": "@config.fields",
+                          "type": "form-section"
                         }
-                      ]
+                      ],
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -522,13 +522,6 @@
               "description": "Heading shown above the form",
               "tier": "presentation"
             },
-            "icon": {
-              "type": "string",
-              "default": "file-text",
-              "label": "Header icon",
-              "description": "Icon shown beside the form title",
-              "tier": "presentation"
-            },
             "fieldValidation": {
               "type": "[ValidationSpec]",
               "default": [],
@@ -538,84 +531,91 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "message": {
-                    "name": "message",
+                  "field": {
+                    "name": "field",
                     "type": "string",
-                    "required": false
+                    "required": true
                   },
                   "rule": {
                     "name": "rule",
                     "type": "string",
                     "required": false
                   },
-                  "field": {
-                    "name": "field",
+                  "message": {
+                    "name": "message",
                     "type": "string",
-                    "required": true
+                    "required": false
                   }
                 }
               }
+            },
+            "icon": {
+              "type": "string",
+              "default": "file-text",
+              "label": "Header icon",
+              "description": "Icon shown beside the form title",
+              "tier": "presentation"
             },
             "fields": {
               "type": "[FieldSpec]",
               "default": [
                 {
-                  "name": "name",
-                  "label": "Name"
+                  "label": "Name",
+                  "name": "name"
                 },
                 {
-                  "name": "description",
-                  "label": "Description"
+                  "label": "Description",
+                  "name": "description"
                 },
                 {
-                  "label": "Status",
                   "type": "enum",
+                  "label": "Status",
+                  "name": "status",
                   "values": [
                     "active",
                     "inactive",
                     "pending"
-                  ],
-                  "name": "status"
+                  ]
                 },
                 {
                   "name": "notes",
-                  "label": "Notes",
-                  "type": "textarea"
+                  "type": "textarea",
+                  "label": "Notes"
                 },
                 {
+                  "label": "Age",
                   "name": "age",
-                  "type": "number",
-                  "label": "Age"
+                  "type": "number"
                 },
                 {
-                  "type": "boolean",
                   "name": "isActive",
+                  "type": "boolean",
                   "label": "Is Active"
                 },
                 {
+                  "name": "birthDate",
                   "label": "Birth Date",
-                  "type": "date",
-                  "name": "birthDate"
+                  "type": "date"
                 },
                 {
                   "name": "priority",
-                  "label": "Priority",
                   "type": "enum",
                   "values": [
                     "low",
                     "medium",
                     "high",
                     "critical"
-                  ]
+                  ],
+                  "label": "Priority"
                 },
                 {
-                  "type": "relation",
-                  "label": "Category ID",
                   "name": "categoryId",
+                  "label": "Category ID",
                   "relation": {
                     "entity": "FormEntry",
                     "cardinality": "one"
-                  }
+                  },
+                  "type": "relation"
                 }
               ],
               "label": "Form fields",
@@ -624,13 +624,8 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
-                  },
-                  "header": {
-                    "name": "header",
+                  "key": {
+                    "name": "key",
                     "type": "string",
                     "required": false
                   },
@@ -638,6 +633,16 @@
                     "name": "name",
                     "type": "string",
                     "required": true
+                  },
+                  "header": {
+                    "name": "header",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
                   },
                   "icon": {
                     "name": "icon",
@@ -649,13 +654,8 @@
                     "type": "string",
                     "required": false
                   },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "key": {
-                    "name": "key",
+                  "variant": {
+                    "name": "variant",
                     "type": "string",
                     "required": false
                   }

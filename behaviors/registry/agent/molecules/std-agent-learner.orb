@@ -46,11 +46,11 @@
           {
             "name": "status",
             "type": "string",
-            "default": "active",
+            "default": "idle",
             "values": [
-              "active",
-              "inactive",
-              "pending"
+              "idle",
+              "recording",
+              "analyzing"
             ],
             "description": "Indicates the current operational state of the component.",
             "synonyms": "state, condition, operational_status"
@@ -375,22 +375,48 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "children": [
                         {
-                          "align": "center",
-                          "direction": "horizontal",
-                          "type": "stack",
                           "gap": "sm",
+                          "align": "center",
                           "children": [
                             {
-                              "name": "graduation-cap",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "graduation-cap"
                             },
                             {
-                              "variant": "h2",
                               "content": "Outcome Learner",
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "h2"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "cols": 3.0,
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "label": "Successes",
+                              "value": "@entity.totalSuccesses",
+                              "icon": "check-circle"
+                            },
+                            {
+                              "value": "@entity.totalFailures",
+                              "icon": "x-circle",
+                              "label": "Failures",
+                              "type": "stat-display"
+                            },
+                            {
+                              "icon": "cpu",
+                              "type": "stat-display",
+                              "value": "@entity.provider",
+                              "label": "Current Provider"
                             }
                           ]
                         },
@@ -398,37 +424,9 @@
                           "type": "divider"
                         },
                         {
-                          "cols": 3.0,
+                          "type": "card",
                           "children": [
                             {
-                              "type": "stat-display",
-                              "label": "Successes",
-                              "icon": "check-circle",
-                              "value": "@entity.totalSuccesses"
-                            },
-                            {
-                              "label": "Failures",
-                              "value": "@entity.totalFailures",
-                              "icon": "x-circle",
-                              "type": "stat-display"
-                            },
-                            {
-                              "type": "stat-display",
-                              "label": "Current Provider",
-                              "value": "@entity.provider",
-                              "icon": "cpu"
-                            }
-                          ],
-                          "type": "simple-grid"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "children": [
-                            {
-                              "type": "stack",
-                              "gap": "md",
                               "children": [
                                 {
                                   "type": "typography",
@@ -436,42 +434,43 @@
                                   "variant": "body"
                                 },
                                 {
-                                  "variant": "caption",
+                                  "content": "This module records TASK_SUCCEEDED and TASK_FAILED events automatically.",
                                   "type": "typography",
-                                  "content": "This module records TASK_SUCCEEDED and TASK_FAILED events automatically."
+                                  "variant": "caption"
                                 }
                               ],
+                              "gap": "md",
+                              "type": "stack",
                               "direction": "vertical"
                             }
-                          ],
-                          "type": "card"
+                          ]
                         },
                         {
                           "children": [
                             {
+                              "direction": "vertical",
                               "children": [
                                 {
-                                  "variant": "caption",
                                   "type": "typography",
-                                  "content": "Last Outcome"
+                                  "content": "Last Outcome",
+                                  "variant": "caption"
                                 },
                                 {
                                   "variant": "body",
-                                  "content": "@entity.outcome",
+                                  "type": "typography",
+                                  "content": "@entity.outcome"
+                                },
+                                {
+                                  "variant": "caption",
+                                  "content": "Impact Analysis",
                                   "type": "typography"
                                 },
                                 {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "content": "Impact Analysis"
-                                },
-                                {
-                                  "type": "typography",
+                                  "content": "@entity.impact",
                                   "variant": "body",
-                                  "content": "@entity.impact"
+                                  "type": "typography"
                                 }
                               ],
-                              "direction": "vertical",
                               "type": "stack",
                               "gap": "sm"
                             }
@@ -479,8 +478,9 @@
                           "type": "card"
                         }
                       ],
+                      "direction": "vertical",
                       "gap": "lg",
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -537,28 +537,28 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
-                      "align": "center",
-                      "gap": "lg",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "save"
+                          "name": "save",
+                          "type": "icon"
                         },
                         {
-                          "content": "Recording outcome...",
+                          "variant": "h3",
                           "type": "typography",
-                          "variant": "h3"
+                          "content": "Recording outcome..."
                         },
                         {
                           "type": "spinner"
                         },
                         {
-                          "label": "@entity.outcome",
-                          "type": "badge"
+                          "type": "badge",
+                          "label": "@entity.outcome"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -619,28 +619,28 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "children": [
                         {
                           "type": "icon",
                           "name": "save"
                         },
                         {
-                          "type": "typography",
                           "content": "Recording outcome...",
-                          "variant": "h3"
+                          "variant": "h3",
+                          "type": "typography"
                         },
                         {
                           "type": "spinner"
                         },
                         {
-                          "label": "@entity.outcome",
-                          "type": "badge"
+                          "type": "badge",
+                          "label": "@entity.outcome"
                         }
                       ],
-                      "direction": "vertical",
                       "align": "center",
-                      "gap": "lg",
-                      "type": "stack"
+                      "direction": "vertical",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -661,10 +661,14 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "align": "center",
                           "type": "stack",
+                          "gap": "sm",
+                          "align": "center",
                           "children": [
                             {
                               "type": "icon",
@@ -672,12 +676,11 @@
                             },
                             {
                               "content": "Outcome Learner",
-                              "variant": "h2",
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "h2"
                             }
                           ],
-                          "direction": "horizontal",
-                          "gap": "sm"
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
@@ -687,21 +690,21 @@
                           "children": [
                             {
                               "type": "stat-display",
-                              "label": "Successes",
+                              "icon": "check-circle",
                               "value": "@entity.totalSuccesses",
-                              "icon": "check-circle"
+                              "label": "Successes"
                             },
                             {
-                              "label": "Failures",
                               "icon": "x-circle",
                               "type": "stat-display",
-                              "value": "@entity.totalFailures"
+                              "value": "@entity.totalFailures",
+                              "label": "Failures"
                             },
                             {
-                              "value": "@entity.provider",
                               "label": "Current Provider",
                               "type": "stat-display",
-                              "icon": "cpu"
+                              "icon": "cpu",
+                              "value": "@entity.provider"
                             }
                           ],
                           "cols": 3.0
@@ -710,11 +713,11 @@
                           "type": "divider"
                         },
                         {
+                          "type": "card",
                           "children": [
                             {
                               "direction": "vertical",
                               "type": "stack",
-                              "gap": "md",
                               "children": [
                                 {
                                   "content": "Listening for task outcomes...",
@@ -722,51 +725,48 @@
                                   "variant": "body"
                                 },
                                 {
-                                  "variant": "caption",
                                   "content": "This module records TASK_SUCCEEDED and TASK_FAILED events automatically.",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "variant": "caption"
                                 }
-                              ]
+                              ],
+                              "gap": "md"
                             }
-                          ],
-                          "type": "card"
+                          ]
                         },
                         {
                           "children": [
                             {
                               "type": "stack",
-                              "direction": "vertical",
                               "gap": "sm",
                               "children": [
                                 {
-                                  "variant": "caption",
+                                  "content": "Last Outcome",
                                   "type": "typography",
-                                  "content": "Last Outcome"
+                                  "variant": "caption"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "@entity.outcome",
+                                  "type": "typography",
                                   "variant": "body"
                                 },
                                 {
-                                  "variant": "caption",
+                                  "type": "typography",
                                   "content": "Impact Analysis",
-                                  "type": "typography"
+                                  "variant": "caption"
                                 },
                                 {
                                   "type": "typography",
                                   "variant": "body",
                                   "content": "@entity.impact"
                                 }
-                              ]
+                              ],
+                              "direction": "vertical"
                             }
                           ],
                           "type": "card"
                         }
-                      ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]
@@ -846,8 +846,8 @@
                     {
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "cpu"
+                          "name": "cpu",
+                          "type": "icon"
                         },
                         {
                           "type": "typography",
@@ -858,8 +858,8 @@
                           "type": "spinner"
                         },
                         {
-                          "direction": "horizontal",
                           "justify": "center",
+                          "direction": "horizontal",
                           "type": "stack",
                           "gap": "md",
                           "children": [
@@ -902,65 +902,63 @@
                     "main",
                     {
                       "direction": "vertical",
+                      "gap": "lg",
                       "children": [
                         {
-                          "gap": "sm",
+                          "align": "center",
                           "children": [
                             {
                               "type": "icon",
                               "name": "graduation-cap"
                             },
                             {
-                              "variant": "h2",
                               "type": "typography",
+                              "variant": "h2",
                               "content": "Outcome Learner"
                             }
                           ],
                           "type": "stack",
-                          "align": "center",
+                          "gap": "sm",
                           "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "simple-grid",
                           "cols": 3.0,
                           "children": [
                             {
                               "icon": "check-circle",
                               "value": "@entity.totalSuccesses",
-                              "label": "Successes",
+                              "type": "stat-display",
+                              "label": "Successes"
+                            },
+                            {
+                              "icon": "x-circle",
+                              "label": "Failures",
+                              "value": "@entity.totalFailures",
                               "type": "stat-display"
                             },
                             {
-                              "type": "stat-display",
-                              "label": "Failures",
-                              "icon": "x-circle",
-                              "value": "@entity.totalFailures"
-                            },
-                            {
-                              "label": "Current Provider",
-                              "type": "stat-display",
                               "value": "@entity.provider",
-                              "icon": "cpu"
+                              "label": "Current Provider",
+                              "icon": "cpu",
+                              "type": "stat-display"
                             }
-                          ]
+                          ],
+                          "type": "simple-grid"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "card",
                           "children": [
                             {
-                              "type": "stack",
-                              "gap": "md",
                               "children": [
                                 {
+                                  "variant": "body",
                                   "type": "typography",
-                                  "content": "Listening for task outcomes...",
-                                  "variant": "body"
+                                  "content": "Listening for task outcomes..."
                                 },
                                 {
                                   "variant": "caption",
@@ -968,45 +966,47 @@
                                   "content": "This module records TASK_SUCCEEDED and TASK_FAILED events automatically."
                                 }
                               ],
-                              "direction": "vertical"
+                              "gap": "md",
+                              "direction": "vertical",
+                              "type": "stack"
                             }
-                          ]
+                          ],
+                          "type": "card"
                         },
                         {
-                          "type": "card",
                           "children": [
                             {
                               "gap": "sm",
-                              "direction": "vertical",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "content": "Last Outcome",
+                                  "type": "typography",
                                   "variant": "caption",
+                                  "content": "Last Outcome"
+                                },
+                                {
+                                  "content": "@entity.outcome",
+                                  "variant": "body",
                                   "type": "typography"
                                 },
                                 {
+                                  "variant": "caption",
+                                  "type": "typography",
+                                  "content": "Impact Analysis"
+                                },
+                                {
                                   "variant": "body",
-                                  "type": "typography",
-                                  "content": "@entity.outcome"
-                                },
-                                {
-                                  "content": "Impact Analysis",
-                                  "type": "typography",
-                                  "variant": "caption"
-                                },
-                                {
                                   "content": "@entity.impact",
-                                  "variant": "body",
                                   "type": "typography"
                                 }
                               ],
-                              "type": "stack"
+                              "direction": "vertical"
                             }
-                          ]
+                          ],
+                          "type": "card"
                         }
                       ],
-                      "type": "stack",
-                      "gap": "lg"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1037,12 +1037,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "lg",
                       "children": [
                         {
-                          "align": "center",
-                          "gap": "sm",
                           "children": [
                             {
                               "name": "graduation-cap",
@@ -1050,12 +1046,14 @@
                             },
                             {
                               "type": "typography",
-                              "variant": "h2",
-                              "content": "Outcome Learner"
+                              "content": "Outcome Learner",
+                              "variant": "h2"
                             }
                           ],
-                          "direction": "horizontal",
-                          "type": "stack"
+                          "gap": "sm",
+                          "type": "stack",
+                          "align": "center",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
@@ -1069,20 +1067,20 @@
                               "icon": "check-circle"
                             },
                             {
-                              "icon": "x-circle",
-                              "value": "@entity.totalFailures",
+                              "type": "stat-display",
                               "label": "Failures",
-                              "type": "stat-display"
+                              "value": "@entity.totalFailures",
+                              "icon": "x-circle"
                             },
                             {
+                              "icon": "cpu",
                               "type": "stat-display",
                               "label": "Current Provider",
-                              "icon": "cpu",
                               "value": "@entity.provider"
                             }
                           ],
-                          "type": "simple-grid",
-                          "cols": 3.0
+                          "cols": 3.0,
+                          "type": "simple-grid"
                         },
                         {
                           "type": "divider"
@@ -1091,34 +1089,33 @@
                           "children": [
                             {
                               "direction": "vertical",
-                              "gap": "md",
                               "type": "stack",
                               "children": [
                                 {
-                                  "type": "typography",
+                                  "variant": "body",
                                   "content": "Listening for task outcomes...",
-                                  "variant": "body"
+                                  "type": "typography"
                                 },
                                 {
-                                  "variant": "caption",
                                   "type": "typography",
+                                  "variant": "caption",
                                   "content": "This module records TASK_SUCCEEDED and TASK_FAILED events automatically."
                                 }
-                              ]
+                              ],
+                              "gap": "md"
                             }
                           ],
                           "type": "card"
                         },
                         {
-                          "type": "card",
                           "children": [
                             {
                               "direction": "vertical",
                               "children": [
                                 {
+                                  "type": "typography",
                                   "content": "Last Outcome",
-                                  "variant": "caption",
-                                  "type": "typography"
+                                  "variant": "caption"
                                 },
                                 {
                                   "type": "typography",
@@ -1131,18 +1128,21 @@
                                   "variant": "caption"
                                 },
                                 {
+                                  "content": "@entity.impact",
                                   "type": "typography",
-                                  "variant": "body",
-                                  "content": "@entity.impact"
+                                  "variant": "body"
                                 }
                               ],
                               "type": "stack",
                               "gap": "sm"
                             }
-                          ]
+                          ],
+                          "type": "card"
                         }
                       ],
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -1166,96 +1166,97 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack",
                       "children": [
                         {
+                          "align": "center",
+                          "gap": "sm",
+                          "type": "stack",
                           "children": [
                             {
                               "name": "graduation-cap",
                               "type": "icon"
                             },
                             {
-                              "content": "Outcome Learner",
+                              "variant": "h2",
                               "type": "typography",
-                              "variant": "h2"
+                              "content": "Outcome Learner"
                             }
                           ],
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center"
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "cols": 3.0,
-                          "type": "simple-grid",
                           "children": [
                             {
+                              "value": "@entity.totalSuccesses",
                               "type": "stat-display",
-                              "label": "Successes",
                               "icon": "check-circle",
-                              "value": "@entity.totalSuccesses"
+                              "label": "Successes"
                             },
                             {
+                              "value": "@entity.totalFailures",
                               "label": "Failures",
                               "icon": "x-circle",
-                              "value": "@entity.totalFailures",
                               "type": "stat-display"
                             },
                             {
                               "label": "Current Provider",
+                              "value": "@entity.provider",
                               "icon": "cpu",
-                              "type": "stat-display",
-                              "value": "@entity.provider"
+                              "type": "stat-display"
                             }
-                          ]
+                          ],
+                          "cols": 3.0,
+                          "type": "simple-grid"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "card",
                           "children": [
                             {
-                              "direction": "vertical",
                               "gap": "md",
-                              "type": "stack",
+                              "direction": "vertical",
                               "children": [
                                 {
                                   "content": "Listening for task outcomes...",
-                                  "variant": "body",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "variant": "body"
                                 },
                                 {
                                   "type": "typography",
                                   "content": "This module records TASK_SUCCEEDED and TASK_FAILED events automatically.",
                                   "variant": "caption"
                                 }
-                              ]
+                              ],
+                              "type": "stack"
                             }
-                          ]
+                          ],
+                          "type": "card"
                         },
                         {
                           "children": [
                             {
-                              "direction": "vertical",
-                              "type": "stack",
                               "children": [
                                 {
-                                  "type": "typography",
                                   "content": "Last Outcome",
-                                  "variant": "caption"
+                                  "variant": "caption",
+                                  "type": "typography"
                                 },
                                 {
-                                  "type": "typography",
+                                  "variant": "body",
                                   "content": "@entity.outcome",
-                                  "variant": "body"
+                                  "type": "typography"
                                 },
                                 {
                                   "content": "Impact Analysis",
-                                  "variant": "caption",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "variant": "caption"
                                 },
                                 {
                                   "type": "typography",
@@ -1263,15 +1264,14 @@
                                   "variant": "body"
                                 }
                               ],
-                              "gap": "sm"
+                              "gap": "sm",
+                              "type": "stack",
+                              "direction": "vertical"
                             }
                           ],
                           "type": "card"
                         }
-                      ],
-                      "gap": "lg",
-                      "type": "stack",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]

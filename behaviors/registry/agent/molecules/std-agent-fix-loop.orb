@@ -46,11 +46,16 @@
           {
             "name": "status",
             "type": "string",
-            "default": "active",
+            "default": "idle",
             "values": [
-              "active",
-              "inactive",
-              "pending"
+              "idle",
+              "in_progress",
+              "validating",
+              "fixing",
+              "applying",
+              "succeeded",
+              "completed",
+              "failed"
             ],
             "description": "Indicates the current operational state.",
             "synonyms": "state, condition, operational_status"
@@ -323,11 +328,27 @@
               },
               {
                 "key": "FIX_SUCCEEDED",
-                "name": "Fix Succeeded"
+                "name": "Fix Succeeded",
+                "payloadSchema": [
+                  {
+                    "name": "target",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "FIX_FAILED",
-                "name": "Fix Failed"
+                "name": "Fix Failed",
+                "payloadSchema": [
+                  {
+                    "name": "target",
+                    "type": "string"
+                  },
+                  {
+                    "name": "error",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -345,57 +366,57 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "gap": "lg",
-                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
                           "gap": "sm",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "name": "wrench",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "wrench"
                             },
                             {
                               "content": "Validation-Fix Loop",
-                              "variant": "h2",
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "h2"
                             }
                           ],
                           "type": "stack",
-                          "direction": "horizontal",
                           "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "card",
                           "children": [
                             {
+                              "type": "stack",
                               "children": [
                                 {
+                                  "variant": "body",
                                   "content": "Enter the target to validate and auto-fix",
-                                  "type": "typography",
-                                  "variant": "body"
+                                  "type": "typography"
                                 },
                                 {
-                                  "type": "form-section",
+                                  "mode": "edit",
+                                  "entity": "@entity",
                                   "fields": [
                                     "target"
                                   ],
-                                  "entity": "@entity",
-                                  "mode": "edit",
+                                  "type": "form-section",
                                   "submitEvent": "FIX"
                                 }
                               ],
-                              "type": "stack",
-                              "gap": "md",
-                              "direction": "vertical"
+                              "direction": "vertical",
+                              "gap": "md"
                             }
-                          ],
-                          "type": "card"
+                          ]
                         }
-                      ]
+                      ],
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -436,23 +457,24 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "align": "center",
-                      "direction": "vertical",
                       "children": [
                         {
                           "name": "shield-check",
                           "type": "icon"
                         },
                         {
-                          "variant": "h3",
+                          "content": "Validating...",
                           "type": "typography",
-                          "content": "Validating..."
+                          "variant": "h3"
                         },
                         {
                           "type": "spinner"
                         },
                         {
+                          "direction": "horizontal",
+                          "justify": "center",
+                          "type": "stack",
+                          "gap": "md",
                           "children": [
                             {
                               "label": "@entity.target",
@@ -462,13 +484,12 @@
                               "label": "@entity.maxAttempts",
                               "type": "badge"
                             }
-                          ],
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "justify": "center"
+                          ]
                         }
                       ],
+                      "type": "stack",
+                      "align": "center",
+                      "direction": "vertical",
                       "gap": "lg"
                     }
                   ]
@@ -497,80 +518,80 @@
                       "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
-                          "gap": "sm",
-                          "align": "center",
-                          "direction": "horizontal",
                           "justify": "between",
+                          "type": "stack",
+                          "align": "center",
                           "children": [
                             {
-                              "align": "center",
                               "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
+                              "align": "center",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "check-circle"
+                                  "name": "check-circle",
+                                  "type": "icon"
                                 },
                                 {
-                                  "content": "Validation Passed",
                                   "type": "typography",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "content": "Validation Passed"
                                 }
-                              ]
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm"
                             },
                             {
-                              "type": "button",
-                              "icon": "rotate-ccw",
-                              "label": "New Target",
                               "variant": "ghost",
-                              "action": "RESET"
+                              "icon": "rotate-ccw",
+                              "type": "button",
+                              "action": "RESET",
+                              "label": "New Target"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "cols": 2.0,
-                          "type": "simple-grid",
                           "children": [
                             {
-                              "type": "stat-display",
-                              "value": "@entity.fixAttempts",
                               "label": "Fix Attempts",
-                              "icon": "wrench"
+                              "value": "@entity.fixAttempts",
+                              "icon": "wrench",
+                              "type": "stat-display"
                             },
                             {
                               "value": "Passed",
-                              "label": "Status",
                               "type": "stat-display",
-                              "icon": "check"
+                              "icon": "check",
+                              "label": "Status"
                             }
-                          ]
+                          ],
+                          "type": "simple-grid"
                         },
                         {
+                          "type": "card",
                           "children": [
                             {
                               "gap": "sm",
                               "direction": "vertical",
+                              "type": "stack",
                               "children": [
                                 {
                                   "content": "Target",
-                                  "variant": "caption",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "variant": "caption"
                                 },
                                 {
                                   "content": "@entity.target",
-                                  "type": "typography",
-                                  "variant": "body"
+                                  "variant": "body",
+                                  "type": "typography"
                                 }
-                              ],
-                              "type": "stack"
+                              ]
                             }
-                          ],
-                          "type": "card"
+                          ]
                         }
                       ]
                     }
@@ -621,69 +642,69 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "type": "stack",
                       "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
-                          "gap": "sm",
-                          "justify": "between",
                           "children": [
                             {
+                              "align": "center",
+                              "gap": "sm",
+                              "direction": "horizontal",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "name": "cpu",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "cpu"
                                 },
                                 {
-                                  "variant": "h2",
+                                  "content": "Generating fix...",
                                   "type": "typography",
-                                  "content": "Generating fix..."
+                                  "variant": "h2"
                                 }
-                              ],
-                              "gap": "sm",
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "align": "center"
+                              ]
                             },
                             {
-                              "label": "@entity.fixAttempts",
-                              "type": "badge"
+                              "type": "badge",
+                              "label": "@entity.fixAttempts"
                             }
                           ],
                           "direction": "horizontal",
-                          "align": "center"
+                          "gap": "sm",
+                          "justify": "between",
+                          "align": "center",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "card",
                           "children": [
                             {
+                              "gap": "sm",
                               "children": [
                                 {
-                                  "type": "typography",
                                   "content": "Validation Errors",
+                                  "type": "typography",
                                   "variant": "caption"
                                 },
                                 {
-                                  "message": "@entity.validationErrors",
                                   "variant": "error",
+                                  "message": "@entity.validationErrors",
                                   "type": "alert"
                                 }
                               ],
                               "type": "stack",
-                              "direction": "vertical",
-                              "gap": "sm"
+                              "direction": "vertical"
                             }
-                          ],
-                          "type": "card"
+                          ]
                         },
                         {
                           "type": "spinner"
                         }
-                      ]
+                      ],
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -711,7 +732,7 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
+                      "align": "center",
                       "children": [
                         {
                           "type": "icon",
@@ -723,27 +744,27 @@
                           "variant": "h2"
                         },
                         {
+                          "variant": "error",
                           "message": "@entity.error",
-                          "type": "alert",
-                          "variant": "error"
+                          "type": "alert"
                         },
                         {
+                          "type": "simple-grid",
                           "children": [
                             {
+                              "icon": "wrench",
                               "type": "stat-display",
-                              "label": "Attempts Used",
                               "value": "@entity.fixAttempts",
-                              "icon": "wrench"
+                              "label": "Attempts Used"
                             },
                             {
-                              "label": "Remaining Errors",
                               "type": "stat-display",
                               "icon": "alert-triangle",
+                              "label": "Remaining Errors",
                               "value": "@entity.errorCount"
                             }
                           ],
-                          "cols": 2.0,
-                          "type": "simple-grid"
+                          "cols": 2.0
                         },
                         {
                           "type": "card",
@@ -751,33 +772,33 @@
                             {
                               "direction": "vertical",
                               "type": "stack",
-                              "gap": "sm",
                               "children": [
                                 {
-                                  "content": "Last Validation Errors",
                                   "variant": "caption",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "content": "Last Validation Errors"
                                 },
                                 {
                                   "variant": "body",
-                                  "type": "typography",
-                                  "content": "@entity.validationErrors"
+                                  "content": "@entity.validationErrors",
+                                  "type": "typography"
                                 }
-                              ]
+                              ],
+                              "gap": "sm"
                             }
                           ]
                         },
                         {
-                          "variant": "primary",
-                          "type": "button",
-                          "icon": "rotate-ccw",
                           "label": "Retry",
+                          "type": "button",
+                          "variant": "primary",
+                          "icon": "rotate-ccw",
                           "action": "RESET"
                         }
                       ],
-                      "type": "stack",
-                      "align": "center",
-                      "gap": "lg"
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -801,24 +822,23 @@
                     "agent/invoke",
                     "apply-fix",
                     {
-                      "target": "@entity.target",
-                      "fix": "@payload.fix"
+                      "fix": "@payload.fix",
+                      "target": "@entity.target"
                     }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
                       "children": [
                         {
                           "type": "icon",
                           "name": "tool"
                         },
                         {
-                          "content": "Applying fix...",
                           "type": "typography",
-                          "variant": "h3"
+                          "variant": "h3",
+                          "content": "Applying fix..."
                         },
                         {
                           "type": "spinner"
@@ -826,29 +846,30 @@
                         {
                           "children": [
                             {
+                              "gap": "sm",
+                              "type": "stack",
                               "children": [
                                 {
+                                  "type": "typography",
                                   "content": "Proposed Fix",
-                                  "variant": "caption",
-                                  "type": "typography"
+                                  "variant": "caption"
                                 },
                                 {
-                                  "variant": "body",
+                                  "type": "typography",
                                   "content": "@entity.currentFix",
-                                  "type": "typography"
+                                  "variant": "body"
                                 }
                               ],
-                              "direction": "vertical",
-                              "gap": "sm",
-                              "type": "stack"
+                              "direction": "vertical"
                             }
                           ],
                           "type": "card"
                         }
                       ],
-                      "type": "stack",
+                      "gap": "lg",
                       "direction": "vertical",
-                      "gap": "lg"
+                      "type": "stack",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -877,36 +898,37 @@
                     "main",
                     {
                       "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "x-circle"
+                          "name": "x-circle",
+                          "type": "icon"
                         },
                         {
                           "type": "typography",
-                          "content": "Fix Loop Failed",
-                          "variant": "h2"
+                          "variant": "h2",
+                          "content": "Fix Loop Failed"
                         },
                         {
+                          "message": "@entity.error",
                           "variant": "error",
-                          "type": "alert",
-                          "message": "@entity.error"
+                          "type": "alert"
                         },
                         {
-                          "type": "simple-grid",
                           "cols": 2.0,
+                          "type": "simple-grid",
                           "children": [
                             {
-                              "value": "@entity.fixAttempts",
                               "icon": "wrench",
-                              "type": "stat-display",
-                              "label": "Attempts Used"
+                              "value": "@entity.fixAttempts",
+                              "label": "Attempts Used",
+                              "type": "stat-display"
                             },
                             {
                               "label": "Remaining Errors",
-                              "icon": "alert-triangle",
+                              "value": "@entity.errorCount",
                               "type": "stat-display",
-                              "value": "@entity.errorCount"
+                              "icon": "alert-triangle"
                             }
                           ]
                         },
@@ -914,35 +936,34 @@
                           "type": "card",
                           "children": [
                             {
-                              "gap": "sm",
-                              "direction": "vertical",
-                              "type": "stack",
                               "children": [
                                 {
-                                  "content": "Last Validation Errors",
                                   "type": "typography",
-                                  "variant": "caption"
+                                  "variant": "caption",
+                                  "content": "Last Validation Errors"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "@entity.validationErrors",
-                                  "variant": "body"
+                                  "variant": "body",
+                                  "type": "typography"
                                 }
-                              ]
+                              ],
+                              "direction": "vertical",
+                              "type": "stack",
+                              "gap": "sm"
                             }
                           ]
                         },
                         {
                           "action": "RESET",
-                          "icon": "rotate-ccw",
-                          "variant": "primary",
                           "type": "button",
-                          "label": "Retry"
+                          "icon": "rotate-ccw",
+                          "label": "Retry",
+                          "variant": "primary"
                         }
                       ],
-                      "direction": "vertical",
-                      "align": "center",
-                      "gap": "lg"
+                      "gap": "lg",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -968,39 +989,39 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "align": "center",
-                      "gap": "lg",
                       "children": [
                         {
-                          "name": "shield-check",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "shield-check"
                         },
                         {
                           "variant": "h3",
-                          "type": "typography",
-                          "content": "Validating..."
+                          "content": "Validating...",
+                          "type": "typography"
                         },
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "stack",
-                          "gap": "md",
-                          "justify": "center",
                           "direction": "horizontal",
+                          "justify": "center",
                           "children": [
                             {
                               "label": "@entity.target",
                               "type": "badge"
                             },
                             {
-                              "label": "@entity.maxAttempts",
-                              "type": "badge"
+                              "type": "badge",
+                              "label": "@entity.maxAttempts"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "gap": "md"
                         }
                       ],
+                      "type": "stack",
+                      "gap": "lg",
                       "direction": "vertical"
                     }
                   ]
@@ -1029,35 +1050,38 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
+                      "gap": "lg",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "name": "x-circle",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "x-circle"
                         },
                         {
+                          "type": "typography",
                           "variant": "h2",
-                          "content": "Fix Loop Failed",
-                          "type": "typography"
+                          "content": "Fix Loop Failed"
                         },
                         {
-                          "variant": "error",
                           "type": "alert",
-                          "message": "@entity.error"
+                          "message": "@entity.error",
+                          "variant": "error"
                         },
                         {
                           "cols": 2.0,
                           "children": [
                             {
-                              "label": "Attempts Used",
-                              "type": "stat-display",
                               "icon": "wrench",
-                              "value": "@entity.fixAttempts"
+                              "label": "Attempts Used",
+                              "value": "@entity.fixAttempts",
+                              "type": "stat-display"
                             },
                             {
+                              "icon": "alert-triangle",
                               "label": "Remaining Errors",
                               "type": "stat-display",
-                              "value": "@entity.errorCount",
-                              "icon": "alert-triangle"
+                              "value": "@entity.errorCount"
                             }
                           ],
                           "type": "simple-grid"
@@ -1065,37 +1089,34 @@
                         {
                           "children": [
                             {
-                              "gap": "sm",
-                              "type": "stack",
-                              "direction": "vertical",
                               "children": [
                                 {
-                                  "content": "Last Validation Errors",
                                   "type": "typography",
-                                  "variant": "caption"
+                                  "variant": "caption",
+                                  "content": "Last Validation Errors"
                                 },
                                 {
                                   "variant": "body",
                                   "type": "typography",
                                   "content": "@entity.validationErrors"
                                 }
-                              ]
+                              ],
+                              "gap": "sm",
+                              "direction": "vertical",
+                              "type": "stack"
                             }
                           ],
                           "type": "card"
                         },
                         {
-                          "icon": "rotate-ccw",
                           "action": "RESET",
+                          "icon": "rotate-ccw",
+                          "label": "Retry",
                           "type": "button",
-                          "variant": "primary",
-                          "label": "Retry"
+                          "variant": "primary"
                         }
                       ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "align": "center",
-                      "gap": "lg"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1144,23 +1165,26 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "stack",
                           "align": "center",
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "children": [
                             {
-                              "name": "wrench",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "wrench"
                             },
                             {
-                              "type": "typography",
                               "content": "Validation-Fix Loop",
+                              "type": "typography",
                               "variant": "h2"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
@@ -1169,32 +1193,29 @@
                           "type": "card",
                           "children": [
                             {
+                              "gap": "md",
+                              "direction": "vertical",
                               "children": [
                                 {
                                   "variant": "body",
-                                  "type": "typography",
-                                  "content": "Enter the target to validate and auto-fix"
+                                  "content": "Enter the target to validate and auto-fix",
+                                  "type": "typography"
                                 },
                                 {
+                                  "entity": "@entity",
+                                  "submitEvent": "FIX",
+                                  "type": "form-section",
                                   "fields": [
                                     "target"
                                   ],
-                                  "type": "form-section",
-                                  "entity": "@entity",
-                                  "mode": "edit",
-                                  "submitEvent": "FIX"
+                                  "mode": "edit"
                                 }
                               ],
-                              "type": "stack",
-                              "direction": "vertical",
-                              "gap": "md"
+                              "type": "stack"
                             }
                           ]
                         }
-                      ],
-                      "type": "stack",
-                      "gap": "lg",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -1245,7 +1266,6 @@
                     {
                       "children": [
                         {
-                          "gap": "sm",
                           "children": [
                             {
                               "name": "wrench",
@@ -1257,42 +1277,43 @@
                               "type": "typography"
                             }
                           ],
+                          "type": "stack",
                           "direction": "horizontal",
-                          "align": "center",
-                          "type": "stack"
+                          "gap": "sm",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "card",
                           "children": [
                             {
-                              "direction": "vertical",
                               "type": "stack",
                               "gap": "md",
                               "children": [
                                 {
-                                  "variant": "body",
                                   "content": "Enter the target to validate and auto-fix",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "variant": "body"
                                 },
                                 {
                                   "submitEvent": "FIX",
+                                  "entity": "@entity",
                                   "fields": [
                                     "target"
                                   ],
                                   "mode": "edit",
-                                  "type": "form-section",
-                                  "entity": "@entity"
+                                  "type": "form-section"
                                 }
-                              ]
+                              ],
+                              "direction": "vertical"
                             }
-                          ]
+                          ],
+                          "type": "card"
                         }
                       ],
-                      "direction": "vertical",
                       "gap": "lg",
+                      "direction": "vertical",
                       "type": "stack"
                     }
                   ]

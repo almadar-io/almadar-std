@@ -104,27 +104,27 @@
                     "render-ui",
                     "main",
                     {
-                      "onTabChange": "TAB_CHANGE",
-                      "title": "@config.title",
-                      "subtitle": "@config.subtitle",
-                      "entity": "PageHeaderItem",
-                      "breadcrumbs": "@config.breadcrumbs",
-                      "actions": "@config.actions",
-                      "isLoading": "@config.isLoading",
-                      "activeTab": "@config.activeTab",
-                      "tabs": "@config.tabs",
-                      "backEvent": "BACK",
-                      "className": "@config.className",
-                      "type": "page-header",
-                      "showBack": "@config.showBack",
-                      "status": "@config.status",
                       "error": "@config.error",
+                      "entity": "PageHeaderItem",
+                      "onTabChange": "TAB_CHANGE",
+                      "type": "page-header",
                       "children": [
                         {
                           "content": "Sample content",
                           "type": "text"
                         }
-                      ]
+                      ],
+                      "subtitle": "@config.subtitle",
+                      "actions": "@config.actions",
+                      "isLoading": "@config.isLoading",
+                      "status": "@config.status",
+                      "showBack": "@config.showBack",
+                      "className": "@config.className",
+                      "activeTab": "@config.activeTab",
+                      "breadcrumbs": "@config.breadcrumbs",
+                      "backEvent": "BACK",
+                      "tabs": "@config.tabs",
+                      "title": "@config.title"
                     }
                   ]
                 ]
@@ -132,12 +132,32 @@
             ]
           },
           "config": {
-            "showBack": {
-              "type": "boolean",
-              "default": false,
-              "label": "Show Back",
-              "description": "Show back button",
-              "tier": "presentation"
+            "tabs": {
+              "type": "[PageHeaderTabsItem]",
+              "default": [],
+              "label": "Tabs",
+              "description": "Tabs for sub-navigation",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "count": {
+                    "name": "count",
+                    "type": "number",
+                    "required": false
+                  },
+                  "value": {
+                    "name": "value",
+                    "type": "string",
+                    "required": true
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
             },
             "subtitle": {
               "type": "json",
@@ -167,34 +187,24 @@
                 }
               }
             },
-            "activeTab": {
-              "type": "string",
-              "default": "Active Tab",
-              "label": "Active Tab",
-              "description": "activeTab prop",
-              "tier": "presentation"
-            },
-            "title": {
-              "type": "json",
-              "label": "Title",
-              "description": "Page title - accepts unknown to handle generated code accessing dynamic entity data",
-              "tier": "presentation"
-            },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state indicator",
-              "tier": "presentation"
-            },
             "error": {
               "type": "PageHeaderError",
               "label": "Error",
               "description": "Error state",
               "tier": "presentation",
               "properties": {
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                },
                 "stack": {
                   "name": "stack",
+                  "type": "string",
+                  "required": false
+                },
+                "name": {
+                  "name": "name",
                   "type": "string",
                   "required": false
                 },
@@ -202,25 +212,8 @@
                   "name": "code",
                   "type": "string",
                   "required": false
-                },
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
                 }
               }
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "className prop",
-              "tier": "presentation"
             },
             "actions": {
               "type": "[PageHeaderActionsItem]",
@@ -241,11 +234,6 @@
                     "type": "boolean",
                     "required": false
                   },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
                   "disabled": {
                     "name": "disabled",
                     "type": "boolean",
@@ -253,6 +241,16 @@
                   },
                   "event": {
                     "name": "event",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "navigatesTo": {
+                    "name": "navigatesTo",
                     "type": "string",
                     "required": false
                   },
@@ -266,38 +264,6 @@
                       "ghost",
                       "danger"
                     ]
-                  },
-                  "navigatesTo": {
-                    "name": "navigatesTo",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "tabs": {
-              "type": "[PageHeaderTabsItem]",
-              "default": [],
-              "label": "Tabs",
-              "description": "Tabs for sub-navigation",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "value": {
-                    "name": "value",
-                    "type": "string",
-                    "required": true
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "count": {
-                    "name": "count",
-                    "type": "number",
-                    "required": false
                   }
                 }
               }
@@ -326,6 +292,40 @@
                   ]
                 }
               }
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
+              "tier": "presentation"
+            },
+            "showBack": {
+              "type": "boolean",
+              "default": false,
+              "label": "Show Back",
+              "description": "Show back button",
+              "tier": "presentation"
+            },
+            "title": {
+              "type": "json",
+              "label": "Title",
+              "description": "Page title - accepts unknown to handle generated code accessing dynamic entity data",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "className prop",
+              "tier": "presentation"
+            },
+            "activeTab": {
+              "type": "string",
+              "default": "Active Tab",
+              "label": "Active Tab",
+              "description": "activeTab prop",
+              "tier": "presentation"
             }
           },
           "scope": "instance"

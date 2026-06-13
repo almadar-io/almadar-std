@@ -101,41 +101,47 @@
                   "required": true
                 },
                 {
-                  "name": "row.id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.subjectId",
-                  "type": "string"
-                },
-                {
-                  "name": "row.targetEntity",
-                  "type": "string"
-                },
-                {
-                  "name": "row.status",
-                  "type": "string"
-                },
-                {
-                  "name": "row.requestedAt",
-                  "type": "number"
-                },
-                {
-                  "name": "row.executesAt",
-                  "type": "number"
-                },
-                {
-                  "name": "row.executedAt",
-                  "type": "number"
-                },
-                {
-                  "name": "row.cancelledAt",
-                  "type": "number"
-                },
-                {
-                  "name": "row.notes",
-                  "type": "string"
+                  "name": "row",
+                  "type": "object",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "type": "string",
+                      "required": true
+                    },
+                    {
+                      "name": "subjectId",
+                      "type": "string"
+                    },
+                    {
+                      "name": "targetEntity",
+                      "type": "string"
+                    },
+                    {
+                      "name": "status",
+                      "type": "string"
+                    },
+                    {
+                      "name": "requestedAt",
+                      "type": "number"
+                    },
+                    {
+                      "name": "executesAt",
+                      "type": "number"
+                    },
+                    {
+                      "name": "executedAt",
+                      "type": "number"
+                    },
+                    {
+                      "name": "cancelledAt",
+                      "type": "number"
+                    },
+                    {
+                      "name": "notes",
+                      "type": "string"
+                    }
+                  ]
                 }
               ]
             },
@@ -180,41 +186,47 @@
               "tier": "essential",
               "payloadSchema": [
                 {
-                  "name": "row.id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.subjectId",
-                  "type": "string"
-                },
-                {
-                  "name": "row.targetEntity",
-                  "type": "string"
-                },
-                {
-                  "name": "row.status",
-                  "type": "string"
-                },
-                {
-                  "name": "row.requestedAt",
-                  "type": "number"
-                },
-                {
-                  "name": "row.executesAt",
-                  "type": "number"
-                },
-                {
-                  "name": "row.executedAt",
-                  "type": "number"
-                },
-                {
-                  "name": "row.cancelledAt",
-                  "type": "number"
-                },
-                {
-                  "name": "row.notes",
-                  "type": "string"
+                  "name": "row",
+                  "type": "object",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "type": "string",
+                      "required": true
+                    },
+                    {
+                      "name": "subjectId",
+                      "type": "string"
+                    },
+                    {
+                      "name": "targetEntity",
+                      "type": "string"
+                    },
+                    {
+                      "name": "status",
+                      "type": "string"
+                    },
+                    {
+                      "name": "requestedAt",
+                      "type": "number"
+                    },
+                    {
+                      "name": "executesAt",
+                      "type": "number"
+                    },
+                    {
+                      "name": "executedAt",
+                      "type": "number"
+                    },
+                    {
+                      "name": "cancelledAt",
+                      "type": "number"
+                    },
+                    {
+                      "name": "notes",
+                      "type": "string"
+                    }
+                  ]
                 }
               ]
             },
@@ -516,8 +528,8 @@
                     "ErasureRequest",
                     {
                       "emit": {
-                        "success": "ErasureLoaded",
-                        "failure": "ErasureLoadFailed"
+                        "failure": "ErasureLoadFailed",
+                        "success": "ErasureLoaded"
                       }
                     }
                   ],
@@ -525,22 +537,22 @@
                     "render-ui",
                     "@config.reviewSlot",
                     {
-                      "type": "stack",
-                      "gap": "md",
-                      "className": "py-12",
-                      "align": "center",
                       "direction": "vertical",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Loading erasure requests…",
-                          "color": "muted",
+                          "variant": "caption",
                           "type": "typography",
-                          "variant": "caption"
+                          "color": "muted",
+                          "content": "Loading erasure requests…"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "className": "py-12",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -612,9 +624,9 @@
                     "update",
                     "ErasureRequest",
                     {
-                      "id": "@entity.id",
                       "executedAt": "@now",
-                      "status": "executed"
+                      "status": "executed",
+                      "id": "@entity.id"
                     },
                     {
                       "emit": {
@@ -734,8 +746,8 @@
                     "emit",
                     "ExecuteErasure",
                     {
-                      "subjectId": "@entity.subjectId",
                       "requestId": "@entity.id",
+                      "subjectId": "@entity.subjectId",
                       "targetEntity": "@entity.targetEntity"
                     }
                   ],
@@ -744,9 +756,9 @@
                     "update",
                     "ErasureRequest",
                     {
-                      "id": "@entity.id",
+                      "status": "executed",
                       "executedAt": "@now",
-                      "status": "executed"
+                      "id": "@entity.id"
                     },
                     {
                       "emit": {
@@ -784,79 +796,79 @@
                     "render-ui",
                     "@config.reviewSlot",
                     {
-                      "gap": "md",
                       "children": [
                         {
-                          "type": "stack",
+                          "gap": "sm",
                           "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
-                              "align": "center",
                               "direction": "horizontal",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "trash-2"
+                                  "name": "trash-2",
+                                  "type": "icon"
                                 },
                                 {
-                                  "type": "typography",
                                   "variant": "h3",
+                                  "type": "typography",
                                   "content": "Erasure requests"
                                 }
                               ],
                               "gap": "sm",
-                              "type": "stack"
+                              "type": "stack",
+                              "align": "center"
                             },
                             {
+                              "label": "Close",
                               "icon": "x",
                               "action": "CLOSE",
                               "type": "button",
-                              "variant": "ghost",
-                              "label": "Close"
+                              "variant": "ghost"
                             }
                           ],
-                          "align": "center",
-                          "gap": "sm",
-                          "justify": "between"
+                          "justify": "between",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "look": "@config.tableLook",
+                          "type": "data-grid",
+                          "cols": 1.0,
                           "fields": [
                             {
-                              "label": "Subject",
                               "name": "subjectId",
-                              "variant": "caption"
+                              "variant": "caption",
+                              "label": "Subject"
                             },
                             {
-                              "variant": "badge",
+                              "label": "Status",
                               "name": "status",
-                              "label": "Status"
+                              "variant": "badge"
                             },
                             {
                               "label": "Executes",
-                              "variant": "caption",
-                              "name": "executesAt"
+                              "name": "executesAt",
+                              "variant": "caption"
                             }
                           ],
-                          "cols": 1.0,
+                          "entity": "@payload.data",
                           "itemActions": [
                             {
                               "label": "Cancel",
                               "variant": "secondary",
-                              "event": "CANCEL_ERASURE",
-                              "icon": "x"
+                              "icon": "x",
+                              "event": "CANCEL_ERASURE"
                             }
                           ],
                           "gap": "sm",
-                          "type": "data-grid",
-                          "entity": "@payload.data"
+                          "look": "@config.tableLook"
                         }
                       ],
                       "direction": "vertical",
-                      "type": "stack"
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -870,9 +882,9 @@
                     "render-ui",
                     "@config.reviewSlot",
                     {
+                      "type": "alert",
                       "variant": "error",
-                      "message": "@payload.error",
-                      "type": "alert"
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -911,8 +923,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "success": "ErasureSaved",
-                        "failure": "ErasureSaveFailed"
+                        "failure": "ErasureSaveFailed",
+                        "success": "ErasureSaved"
                       }
                     }
                   ]
@@ -928,8 +940,8 @@
                     "ErasureRequest",
                     {
                       "emit": {
-                        "failure": "ErasureLoadFailed",
-                        "success": "ErasureLoaded"
+                        "success": "ErasureLoaded",
+                        "failure": "ErasureLoadFailed"
                       }
                     }
                   ]
@@ -944,9 +956,9 @@
                     "render-ui",
                     "@config.reviewSlot",
                     {
-                      "variant": "error",
+                      "type": "alert",
                       "message": "@payload.error",
-                      "type": "alert"
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -973,8 +985,8 @@
                     "ErasureRequest",
                     {
                       "emit": {
-                        "success": "ErasureLoaded",
-                        "failure": "ErasureLoadFailed"
+                        "failure": "ErasureLoadFailed",
+                        "success": "ErasureLoaded"
                       }
                     }
                   ],
@@ -982,8 +994,8 @@
                     "render-ui",
                     "@config.reviewSlot",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]
@@ -1011,6 +1023,10 @@
                   "fetch",
                   "ErasureRequest",
                   {
+                    "emit": {
+                      "success": "ExecScanLoaded",
+                      "failure": "ExecScanFailed"
+                    },
                     "filter": [
                       "and",
                       [
@@ -1031,17 +1047,24 @@
                         ],
                         "@now"
                       ]
-                    ],
-                    "emit": {
-                      "failure": "ExecScanFailed",
-                      "success": "ExecScanLoaded"
-                    }
+                    ]
                   }
                 ]
               ]
             }
           ],
           "config": {
+            "anonymizeVsDelete": {
+              "type": "string",
+              "default": "anonymize",
+              "label": "Mode",
+              "description": "anonymize = scrub piiFields and retain row for audit. delete = remove the row entirely.",
+              "tier": "policy",
+              "values": [
+                "anonymize",
+                "delete"
+              ]
+            },
             "tableLook": {
               "type": "string",
               "default": "dense",
@@ -1063,16 +1086,22 @@
               "description": "UI slot the erasure-requests queue renders into. Defaults to the modal overlay so it never seizes the host's main content; summoned via OPEN, cleared via CLOSE.",
               "tier": "internal"
             },
-            "anonymizeVsDelete": {
-              "type": "string",
-              "default": "anonymize",
-              "label": "Mode",
-              "description": "anonymize = scrub piiFields and retain row for audit. delete = remove the row entirely.",
+            "piiFields": {
+              "type": "[string]",
+              "default": [],
+              "label": "PII fields to scrub",
+              "description": "Fields the target atom should null when anonymizeVsDelete='anonymize'.",
               "tier": "policy",
-              "values": [
-                "anonymize",
-                "delete"
-              ]
+              "items": {
+                "type": "string"
+              }
+            },
+            "gracePeriodDays": {
+              "type": "number",
+              "default": 30.0,
+              "label": "Grace period (days)",
+              "description": "Days between request and execution. Customer can CANCEL during this window. Default 30 days matches typical GDPR practice.",
+              "tier": "policy"
             },
             "enabled": {
               "type": "boolean",
@@ -1088,23 +1117,6 @@
               "label": "Target entity",
               "description": "Entity name whose records erasure requests apply to (e.g. 'CustomerAccount').",
               "tier": "internal"
-            },
-            "gracePeriodDays": {
-              "type": "number",
-              "default": 30.0,
-              "label": "Grace period (days)",
-              "description": "Days between request and execution. Customer can CANCEL during this window. Default 30 days matches typical GDPR practice.",
-              "tier": "policy"
-            },
-            "piiFields": {
-              "type": "[string]",
-              "default": [],
-              "label": "PII fields to scrub",
-              "description": "Fields the target atom should null when anonymizeVsDelete='anonymize'.",
-              "tier": "policy",
-              "items": {
-                "type": "string"
-              }
             }
           },
           "scope": "collection"

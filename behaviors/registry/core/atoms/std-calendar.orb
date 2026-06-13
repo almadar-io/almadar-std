@@ -204,8 +204,8 @@
                     "CalendarEvent",
                     {
                       "emit": {
-                        "success": "CalendarEventLoaded",
-                        "failure": "CalendarEventLoadFailed"
+                        "failure": "CalendarEventLoadFailed",
+                        "success": "CalendarEventLoaded"
                       }
                     }
                   ],
@@ -213,22 +213,22 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "align": "center",
-                      "className": "py-12",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "variant": "caption",
                           "content": "Loading calendar…",
+                          "variant": "caption",
+                          "type": "typography",
                           "color": "muted"
                         }
                       ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "md"
+                      "className": "py-12",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -254,36 +254,36 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "align": "center",
-                      "className": "py-12",
+                      "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "name": "alert-triangle",
                           "color": "destructive",
+                          "name": "alert-triangle",
                           "type": "icon"
                         },
                         {
-                          "content": "Failed to load",
                           "variant": "h3",
-                          "type": "typography"
+                          "type": "typography",
+                          "content": "Failed to load"
                         },
                         {
                           "color": "muted",
-                          "content": "@payload.error",
                           "type": "typography",
-                          "variant": "body"
+                          "variant": "body",
+                          "content": "@payload.error"
                         },
                         {
-                          "type": "button",
-                          "label": "Retry",
-                          "action": "INIT",
                           "variant": "primary",
-                          "icon": "rotate-ccw"
+                          "label": "Retry",
+                          "icon": "rotate-ccw",
+                          "type": "button",
+                          "action": "INIT"
                         }
                       ],
-                      "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical"
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -308,8 +308,8 @@
                     "CalendarEvent",
                     {
                       "emit": {
-                        "failure": "CalendarEventLoadFailed",
-                        "success": "CalendarEventLoaded"
+                        "success": "CalendarEventLoaded",
+                        "failure": "CalendarEventLoadFailed"
                       },
                       "filter": [
                         "time/isAfter",
@@ -405,113 +405,12 @@
             ]
           },
           "config": {
-            "badgeBinding": {
-              "type": "string",
-              "default": "@item.status",
-              "label": "Badge binding",
-              "description": "Per-row binding for the event status/badge slot.",
-              "tier": "presentation"
-            },
             "descriptionBinding": {
               "type": "string",
               "default": "@item.description",
               "label": "Description binding",
               "description": "Per-row binding for the event description slot.",
               "tier": "presentation"
-            },
-            "bodyContent": {
-              "type": "render-ui",
-              "default": {
-                "type": "stack",
-                "children": [
-                  {
-                    "children": [
-                      {
-                        "align": "center",
-                        "children": [
-                          {
-                            "name": "calendar",
-                            "type": "icon"
-                          },
-                          {
-                            "type": "typography",
-                            "content": "CalendarEvents Calendar",
-                            "variant": "h2"
-                          }
-                        ],
-                        "gap": "sm",
-                        "type": "stack",
-                        "direction": "horizontal"
-                      },
-                      {
-                        "onSelect": "SELECT_DAY",
-                        "type": "date-range-selector",
-                        "selected": "@entity.selectedRange"
-                      }
-                    ],
-                    "gap": "md",
-                    "justify": "between",
-                    "direction": "horizontal",
-                    "type": "stack",
-                    "align": "center"
-                  },
-                  {
-                    "type": "divider"
-                  },
-                  {
-                    "type": "calendar-grid"
-                  },
-                  {
-                    "type": "divider"
-                  },
-                  {
-                    "content": "Upcoming Events",
-                    "type": "typography",
-                    "variant": "h4"
-                  },
-                  {
-                    "look": "@config.tableLook",
-                    "entity": "@payload.data",
-                    "fields": [
-                      {
-                        "name": "name",
-                        "icon": "calendar",
-                        "label": "Event",
-                        "variant": "h4"
-                      },
-                      {
-                        "variant": "badge",
-                        "name": "time",
-                        "label": "Time"
-                      },
-                      {
-                        "format": "date",
-                        "name": "date",
-                        "variant": "caption",
-                        "label": "Date"
-                      },
-                      {
-                        "name": "status",
-                        "label": "Status",
-                        "variant": "badge"
-                      }
-                    ],
-                    "itemActions": [
-                      {
-                        "event": "SELECT_DAY",
-                        "icon": "eye",
-                        "label": "View"
-                      }
-                    ],
-                    "type": "data-list"
-                  }
-                ],
-                "gap": "lg",
-                "direction": "vertical"
-              },
-              "label": "Body content tree",
-              "description": "Render-ui SExpr rendered after events load. Default is the month-grid + upcoming-events list. Layer 3 variants override this with their own tree (agenda list, week timeline, etc.) to deliver entirely different calendar UX while inheriting the same trait, state machine, emits, and listens.",
-              "tier": "internal"
             },
             "tableLook": {
               "type": "string",
@@ -527,6 +426,100 @@
                 "card-rows"
               ]
             },
+            "bodyContent": {
+              "type": "render-ui",
+              "default": {
+                "type": "stack",
+                "children": [
+                  {
+                    "align": "center",
+                    "direction": "horizontal",
+                    "children": [
+                      {
+                        "direction": "horizontal",
+                        "children": [
+                          {
+                            "name": "calendar",
+                            "type": "icon"
+                          },
+                          {
+                            "type": "typography",
+                            "content": "CalendarEvents Calendar",
+                            "variant": "h2"
+                          }
+                        ],
+                        "align": "center",
+                        "type": "stack",
+                        "gap": "sm"
+                      },
+                      {
+                        "onSelect": "SELECT_DAY",
+                        "type": "date-range-selector",
+                        "selected": "@entity.selectedRange"
+                      }
+                    ],
+                    "gap": "md",
+                    "justify": "between",
+                    "type": "stack"
+                  },
+                  {
+                    "type": "divider"
+                  },
+                  {
+                    "type": "calendar-grid"
+                  },
+                  {
+                    "type": "divider"
+                  },
+                  {
+                    "type": "typography",
+                    "variant": "h4",
+                    "content": "Upcoming Events"
+                  },
+                  {
+                    "look": "@config.tableLook",
+                    "itemActions": [
+                      {
+                        "label": "View",
+                        "event": "SELECT_DAY",
+                        "icon": "eye"
+                      }
+                    ],
+                    "type": "data-list",
+                    "fields": [
+                      {
+                        "variant": "h4",
+                        "name": "name",
+                        "label": "Event",
+                        "icon": "calendar"
+                      },
+                      {
+                        "name": "time",
+                        "variant": "badge",
+                        "label": "Time"
+                      },
+                      {
+                        "format": "date",
+                        "variant": "caption",
+                        "name": "date",
+                        "label": "Date"
+                      },
+                      {
+                        "variant": "badge",
+                        "name": "status",
+                        "label": "Status"
+                      }
+                    ],
+                    "entity": "@payload.data"
+                  }
+                ],
+                "gap": "lg",
+                "direction": "vertical"
+              },
+              "label": "Body content tree",
+              "description": "Render-ui SExpr rendered after events load. Default is the month-grid + upcoming-events list. Layer 3 variants override this with their own tree (agenda list, week timeline, etc.) to deliver entirely different calendar UX while inheriting the same trait, state machine, emits, and listens.",
+              "tier": "internal"
+            },
             "timeBinding": {
               "type": "string",
               "default": "@item.time",
@@ -539,6 +532,13 @@
               "default": "@item.name",
               "label": "Title binding",
               "description": "Per-row binding for the event title slot.",
+              "tier": "presentation"
+            },
+            "badgeBinding": {
+              "type": "string",
+              "default": "@item.status",
+              "label": "Badge binding",
+              "description": "Per-row binding for the event status/badge slot.",
               "tier": "presentation"
             }
           },

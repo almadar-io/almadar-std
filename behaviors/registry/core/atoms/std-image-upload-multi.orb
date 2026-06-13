@@ -126,46 +126,52 @@
               "tier": "essential",
               "payloadSchema": [
                 {
-                  "name": "row.id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.url",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.name",
-                  "type": "string"
-                },
-                {
-                  "name": "row.sizeBytes",
-                  "type": "number"
-                },
-                {
-                  "name": "row.mimeType",
-                  "type": "string"
-                },
-                {
-                  "name": "row.width",
-                  "type": "number"
-                },
-                {
-                  "name": "row.height",
-                  "type": "number"
-                },
-                {
-                  "name": "row.parentId",
-                  "type": "string"
-                },
-                {
-                  "name": "row.parentType",
-                  "type": "string"
-                },
-                {
-                  "name": "row.uploadedAt",
-                  "type": "string"
+                  "name": "row",
+                  "type": "object",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "type": "string",
+                      "required": true
+                    },
+                    {
+                      "name": "url",
+                      "type": "string",
+                      "required": true
+                    },
+                    {
+                      "name": "name",
+                      "type": "string"
+                    },
+                    {
+                      "name": "sizeBytes",
+                      "type": "number"
+                    },
+                    {
+                      "name": "mimeType",
+                      "type": "string"
+                    },
+                    {
+                      "name": "width",
+                      "type": "number"
+                    },
+                    {
+                      "name": "height",
+                      "type": "number"
+                    },
+                    {
+                      "name": "parentId",
+                      "type": "string"
+                    },
+                    {
+                      "name": "parentType",
+                      "type": "string"
+                    },
+                    {
+                      "name": "uploadedAt",
+                      "type": "string"
+                    }
+                  ]
                 }
               ]
             },
@@ -381,17 +387,17 @@
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
-                          "color": "muted",
                           "content": "Loading images…",
-                          "type": "typography"
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted"
                         }
                       ],
-                      "align": "center",
-                      "gap": "md",
+                      "className": "py-12",
                       "type": "stack",
+                      "align": "center",
                       "direction": "vertical",
-                      "className": "py-12"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -405,45 +411,45 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
+                      "type": "stack",
                       "children": [
                         {
+                          "direction": "horizontal",
                           "align": "center",
+                          "gap": "sm",
                           "type": "stack",
                           "children": [
                             {
-                              "name": "image-plus",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "image-plus"
                             },
                             {
-                              "variant": "h3",
                               "content": "@config.title",
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "h3"
                             }
-                          ],
-                          "direction": "horizontal",
-                          "gap": "sm"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "action": "UPLOAD",
-                          "maxSize": "@config.maxBytesPerImage",
-                          "accept": "@config.accept",
                           "maxFiles": "@config.maxImages",
-                          "icon": "image-plus",
+                          "label": "Drop images here",
+                          "maxSize": "@config.maxBytesPerImage",
                           "description": "or click to browse",
                           "type": "upload-drop-zone",
-                          "label": "Drop images here"
+                          "accept": "@config.accept",
+                          "action": "UPLOAD",
+                          "icon": "image-plus"
                         },
                         {
                           "entity": "@payload.data",
                           "type": "media-gallery"
                         }
                       ],
-                      "direction": "vertical",
-                      "type": "stack"
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -457,9 +463,9 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
+                      "type": "alert",
                       "message": "@payload.error",
-                      "type": "alert"
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -485,24 +491,24 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "align": "center",
                       "children": [
                         {
-                          "content": "Uploading images…",
+                          "type": "typography",
                           "variant": "h3",
-                          "type": "typography"
+                          "content": "Uploading images…"
                         },
                         {
                           "type": "progress-bar",
-                          "value": 0.0,
                           "max": 100.0,
+                          "value": 0.0,
                           "progressType": "linear"
                         }
                       ],
-                      "gap": "md",
-                      "align": "center",
-                      "className": "py-12",
                       "direction": "vertical",
-                      "type": "stack"
+                      "className": "py-12",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -519,8 +525,8 @@
                     "@payload.id",
                     {
                       "emit": {
-                        "failure": "UploadedImageDeleteFailed",
-                        "success": "UploadedImageDeleted"
+                        "success": "UploadedImageDeleted",
+                        "failure": "UploadedImageDeleteFailed"
                       }
                     }
                   ]
@@ -536,8 +542,8 @@
                     "UploadedImage",
                     {
                       "emit": {
-                        "success": "UploadedImageLoaded",
-                        "failure": "UploadedImageLoadFailed"
+                        "failure": "UploadedImageLoadFailed",
+                        "success": "UploadedImageLoaded"
                       }
                     }
                   ]
@@ -552,8 +558,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
                       "message": "@payload.error",
+                      "type": "alert",
                       "variant": "error"
                     }
                   ]
@@ -569,8 +575,8 @@
                     "UploadedImage",
                     {
                       "emit": {
-                        "failure": "UploadedImageLoadFailed",
-                        "success": "UploadedImageLoaded"
+                        "success": "UploadedImageLoaded",
+                        "failure": "UploadedImageLoadFailed"
                       }
                     }
                   ],
@@ -578,23 +584,23 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "align": "center",
                       "className": "py-12",
-                      "type": "stack",
-                      "gap": "md",
+                      "align": "center",
                       "children": [
                         {
                           "type": "icon",
-                          "color": "success",
-                          "name": "check-circle"
+                          "name": "check-circle",
+                          "color": "success"
                         },
                         {
-                          "content": "Upload complete",
                           "variant": "h3",
+                          "content": "Upload complete",
                           "type": "typography"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -608,8 +614,8 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
                       "message": "@payload.error",
+                      "variant": "error",
                       "type": "alert"
                     }
                   ]
@@ -624,45 +630,45 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
+                      "type": "stack",
                       "children": [
                         {
-                          "gap": "sm",
-                          "type": "stack",
                           "align": "center",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "image-plus"
+                              "name": "image-plus",
+                              "type": "icon"
                             },
                             {
+                              "type": "typography",
                               "variant": "h3",
-                              "content": "@config.title",
-                              "type": "typography"
+                              "content": "@config.title"
                             }
                           ],
-                          "direction": "horizontal"
+                          "gap": "sm",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "description": "or click to browse",
-                          "maxFiles": "@config.maxImages",
-                          "action": "UPLOAD",
-                          "type": "upload-drop-zone",
-                          "accept": "@config.accept",
                           "maxSize": "@config.maxBytesPerImage",
+                          "maxFiles": "@config.maxImages",
                           "icon": "image-plus",
-                          "label": "Drop images here"
+                          "accept": "@config.accept",
+                          "action": "UPLOAD",
+                          "label": "Drop images here",
+                          "description": "or click to browse",
+                          "type": "upload-drop-zone"
                         },
                         {
-                          "entity": "@payload.data",
-                          "type": "media-gallery"
+                          "type": "media-gallery",
+                          "entity": "@payload.data"
                         }
                       ],
-                      "direction": "vertical",
-                      "type": "stack"
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -670,18 +676,18 @@
             ]
           },
           "config": {
-            "maxBytesPerImage": {
-              "type": "number",
-              "default": 10485760.0,
-              "label": "Size limit (bytes)",
-              "description": "Per-image upload size cap",
-              "tier": "domain"
-            },
             "maxImages": {
               "type": "number",
               "default": 10.0,
               "label": "Max images",
               "description": "Maximum number of images accepted per upload batch",
+              "tier": "domain"
+            },
+            "maxBytesPerImage": {
+              "type": "number",
+              "default": 10485760.0,
+              "label": "Size limit (bytes)",
+              "description": "Per-image upload size cap",
               "tier": "domain"
             },
             "title": {

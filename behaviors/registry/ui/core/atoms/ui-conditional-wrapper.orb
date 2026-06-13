@@ -50,16 +50,16 @@
                     "main",
                     {
                       "condition": "@config.condition",
+                      "context": "@config.context",
+                      "animate": "@config.animate",
+                      "type": "conditional-wrapper",
                       "children": [
                         {
-                          "content": "Sample content",
-                          "type": "text"
+                          "type": "text",
+                          "content": "Sample content"
                         }
                       ],
-                      "fallback": "@config.fallback",
-                      "animate": "@config.animate",
-                      "context": "@config.context",
-                      "type": "conditional-wrapper"
+                      "fallback": "@config.fallback"
                     }
                   ]
                 ]
@@ -67,10 +67,10 @@
             ]
           },
           "config": {
-            "fallback": {
-              "type": "node",
-              "label": "Fallback",
-              "description": "Optional fallback to render when condition is false",
+            "condition": {
+              "type": "SExpr",
+              "label": "Condition",
+              "description": "The S-expression condition to evaluate",
               "tier": "presentation"
             },
             "animate": {
@@ -80,16 +80,32 @@
               "description": "Whether to animate the transition (uses CSS transitions)",
               "tier": "presentation"
             },
+            "fallback": {
+              "type": "node",
+              "label": "Fallback",
+              "description": "Optional fallback to render when condition is false",
+              "tier": "presentation"
+            },
             "context": {
               "type": "ConditionalWrapperContext",
               "default": {
-                "globalVariables": {},
-                "formValues": {}
+                "formValues": {},
+                "globalVariables": {}
               },
               "label": "Context",
               "description": "Context for evaluating the condition",
               "tier": "presentation",
               "properties": {
+                "formValues": {
+                  "name": "formValues",
+                  "type": "string",
+                  "required": true
+                },
+                "globalVariables": {
+                  "name": "globalVariables",
+                  "type": "string",
+                  "required": true
+                },
                 "entity": {
                   "name": "entity",
                   "type": "string",
@@ -99,24 +115,8 @@
                   "name": "localVariables",
                   "type": "string",
                   "required": false
-                },
-                "globalVariables": {
-                  "name": "globalVariables",
-                  "type": "string",
-                  "required": true
-                },
-                "formValues": {
-                  "name": "formValues",
-                  "type": "string",
-                  "required": true
                 }
               }
-            },
-            "condition": {
-              "type": "SExpr",
-              "label": "Condition",
-              "description": "The S-expression condition to evaluate",
-              "tier": "presentation"
             }
           },
           "scope": "instance"
