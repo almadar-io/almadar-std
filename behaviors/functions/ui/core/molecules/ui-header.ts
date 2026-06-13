@@ -67,36 +67,36 @@ export interface StdUiHeaderLogoClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiHeaderConfig {
-  /** Default: `false` */
-  isMenuOpen?: boolean;
-  /** Default: `false` */
-  isLoading?: boolean;
-  logo?: unknown;
-  /** Default: `"compact-bar"` */
-  look?: 'hero' | 'compact-bar' | 'breadcrumb' | 'contextual' | 'editorial-banner';
-  userAvatar?: EntityRow;
-  /** Default: `"Search Placeholder"` */
-  searchPlaceholder?: string;
-  /** Default: `[]` */
-  navigationItems?: EntityRow[];
-  error?: EntityRow;
-  /** Default: `""` */
-  className?: string;
   /** Default: `true` */
   showMenuToggle?: boolean;
-  /** Default: `"KFlow"` */
-  brandName?: string;
-  /** Default: `"Logo Src"` */
-  logoSrc?: string;
-  actions?: unknown;
+  userAvatar?: EntityRow;
   /** Default: `false` */
   showSearch?: boolean;
-  /** Default: `"mobile"` */
-  variant?: 'mobile' | 'desktop';
+  actions?: unknown;
   /** Default: `true` */
   sticky?: boolean;
+  /** Default: `"compact-bar"` */
+  look?: 'hero' | 'compact-bar' | 'breadcrumb' | 'contextual' | 'editorial-banner';
+  /** Default: `"Search Placeholder"` */
+  searchPlaceholder?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `false` */
+  isMenuOpen?: boolean;
+  /** Default: `[]` */
+  navigationItems?: EntityRow[];
+  /** Default: `"KFlow"` */
+  brandName?: string;
+  error?: EntityRow;
+  /** Default: `"Logo Src"` */
+  logoSrc?: string;
+  /** Default: `""` */
+  className?: string;
   /** Default: `"User Name"` */
   userName?: string;
+  /** Default: `"mobile"` */
+  variant?: 'mobile' | 'desktop';
+  logo?: unknown;
 }
 
 /**

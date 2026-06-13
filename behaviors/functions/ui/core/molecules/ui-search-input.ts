@@ -46,22 +46,22 @@ export interface StdUiSearchInputSearchPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiSearchInputConfig {
+  /** Default: `"Value"` */
+  value?: string;
   /** Default: `""` */
   className?: string;
+  /** Default: `"Event"` */
+  event?: string;
   /** Default: `300` */
   debounceMs?: number;
   /** Default: `"Placeholder"` */
   placeholder?: string;
   /** Default: `true` */
   clearable?: boolean;
-  /** Default: `"Event"` */
-  event?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `"Value"` */
-  value?: string;
   /** Default: `"Query"` */
   query?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
 }
 
 /**

@@ -39,18 +39,18 @@ export type StdUiUiSlotRendererEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiUiSlotRendererConfig {
-  /** Default: `false` */
-  isLoading?: boolean;
   error?: EntityRow;
   suspense?: EntityRow;
-  /** Default: `"fixed"` */
-  hudMode?: 'fixed' | 'inline';
   /** Default: `false` */
   includeFloating?: boolean;
   /** Default: `false` */
   includeHud?: boolean;
+  /** Default: `"fixed"` */
+  hudMode?: 'fixed' | 'inline';
   /** Default: `""` */
   className?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
 }
 
 /**
@@ -159,15 +159,15 @@ export function stdUiUiSlotRendererUiSlotRendererOrbital(params: StdUiUiSlotRend
                   'render-ui',
                   'main',
                   {
-                    'error': '@config.error',
-                    'entity': 'UiSlotRendererItem',
-                    'suspense': '@config.suspense',
-                    'isLoading': '@config.isLoading',
-                    'hudMode': '@config.hudMode',
-                    'className': '@config.className',
-                    'type': 'ui-slot-renderer',
-                    'includeFloating': '@config.includeFloating',
                     'includeHud': '@config.includeHud',
+                    'isLoading': '@config.isLoading',
+                    'error': '@config.error',
+                    'suspense': '@config.suspense',
+                    'className': '@config.className',
+                    'entity': 'UiSlotRendererItem',
+                    'hudMode': '@config.hudMode',
+                    'includeFloating': '@config.includeFloating',
+                    'type': 'ui-slot-renderer',
                   },
                 ],
               ],
@@ -175,31 +175,14 @@ export function stdUiUiSlotRendererUiSlotRendererOrbital(params: StdUiUiSlotRend
           ],
         },
         'config': {
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
-            'tier': 'presentation',
-          },
           'error': {
             'type': 'UiSlotRendererError',
             'label': 'Error',
             'description': 'Error state',
             'tier': 'presentation',
             'properties': {
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
               'stack': {
                 'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-              'name': {
-                'name': 'name',
                 'type': 'string',
                 'required': false,
               },
@@ -207,6 +190,16 @@ export function stdUiUiSlotRendererUiSlotRendererOrbital(params: StdUiUiSlotRend
                 'name': 'message',
                 'type': 'string',
                 'required': true,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
               },
             },
           },
@@ -231,17 +224,6 @@ export function stdUiUiSlotRendererUiSlotRendererOrbital(params: StdUiUiSlotRend
               },
             },
           },
-          'hudMode': {
-            'type': 'string',
-            'default': 'fixed',
-            'label': 'Hud Mode',
-            'description': 'HUD positioning mode: \'fixed\' (default, viewport-relative) or \'inline\' (container-relative, uses sticky)',
-            'tier': 'presentation',
-            'values': [
-              'fixed',
-              'inline',
-            ],
-          },
           'includeFloating': {
             'type': 'boolean',
             'default': false,
@@ -256,11 +238,29 @@ export function stdUiUiSlotRendererUiSlotRendererOrbital(params: StdUiUiSlotRend
             'description': 'Include HUD slots',
             'tier': 'presentation',
           },
+          'hudMode': {
+            'type': 'string',
+            'default': 'fixed',
+            'label': 'Hud Mode',
+            'description': 'HUD positioning mode: \'fixed\' (default, viewport-relative) or \'inline\' (container-relative, uses sticky)',
+            'tier': 'presentation',
+            'values': [
+              'fixed',
+              'inline',
+            ],
+          },
           'className': {
             'type': 'string',
             'default': '',
             'label': 'Class Name',
             'description': 'Additional class name for the container',
+            'tier': 'presentation',
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
             'tier': 'presentation',
           },
         },

@@ -41,22 +41,22 @@ export type StdUiGridEventKey = 'INIT';
 export interface StdUiGridConfig {
   /** Default: `"md"` */
   gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  /** Default: `"start"` */
+  alignItems?: 'start' | 'center' | 'end' | 'stretch' | 'baseline';
+  /** Default: `"row"` */
+  flow?: 'row' | 'col' | 'row-dense' | 'col-dense';
   /** Default: `"none"` */
   colGap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   /** Default: `""` */
   className?: string;
-  /** Default: `"start"` */
-  justifyItems?: 'start' | 'center' | 'end' | 'stretch';
   /** Default: `0` */
   rows?: number;
+  cols?: string;
   /** Default: `"none"` */
   rowGap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   style?: unknown;
-  /** Default: `"row"` */
-  flow?: 'row' | 'col' | 'row-dense' | 'col-dense';
-  cols?: string;
   /** Default: `"start"` */
-  alignItems?: 'start' | 'center' | 'end' | 'stretch' | 'baseline';
+  justifyItems?: 'start' | 'center' | 'end' | 'stretch';
 }
 
 /**

@@ -65,15 +65,7 @@ export interface StdSignatureCaptureSignatureLoadFailedPayload {
  * Payload shape for the `SignatureSubmitted` event.
  */
 export interface StdSignatureCaptureSignatureSubmittedPayload {
-  row?: {
-    id: string;
-    targetId: string;
-    targetType: string;
-    signerName: string;
-    signatureDataUrl: string;
-    signedAt?: string;
-    ipAddress?: string;
-  };
+  row?: EntityRow;
 }
 
 /**

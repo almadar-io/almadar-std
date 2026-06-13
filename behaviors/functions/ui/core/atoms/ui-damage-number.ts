@@ -39,10 +39,10 @@ export type StdUiDamageNumberEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiDamageNumberConfig {
-  /** Default: `""` */
-  className?: string;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
+  /** Default: `""` */
+  className?: string;
   /** Default: `0` */
   value?: number;
 }

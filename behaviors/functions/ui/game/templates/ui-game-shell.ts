@@ -41,9 +41,9 @@ export type StdUiGameShellEventKey = 'INIT';
 export interface StdUiGameShellConfig {
   /** Default: `"Game"` */
   appName?: string;
+  hud?: unknown;
   /** Default: `true` */
   showTopBar?: boolean;
-  hud?: unknown;
   /** Default: `""` */
   className?: string;
 }

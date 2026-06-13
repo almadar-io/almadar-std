@@ -54,18 +54,18 @@ export interface StdCalendarCalendarEventLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdCalendarConfig {
-  /** Default: `"@item.status"` */
-  badgeBinding?: string;
   /** Default: `"@item.description"` */
   descriptionBinding?: string;
-  /** Default: `{"type":"stack","children":[{"children":[{"align":"center","children":[{"name":"calendar","type":"icon"},{"type":"typography","content":"CalendarEvents Calendar","variant":"h2"}],"gap":"sm","type":"stack","direction":"horizontal"},{"onSelect":"SELECT_DAY","type":"date-range-selector","selected":"@entity.selectedRange"}],"gap":"md","justify":"between","direction":"horizontal","type":"stack","align":"center"},{"type":"divider"},{"type":"calendar-grid"},{"type":"divider"},{"content":"Upcoming Events","type":"typography","variant":"h4"},{"look":"@config.tableLook","entity":"@payload.data","fields":[{"name":"name","icon":"calendar","label":"Event","variant":"h4"},{"variant":"badge","name":"time","label":"Time"},{"format":"date","name":"date","variant":"caption","label":"Date"},{"name":"status","label":"Status","variant":"badge"}],"itemActions":[{"event":"SELECT_DAY","icon":"eye","label":"View"}],"type":"data-list"}],"gap":"lg","direction":"vertical"}` */
-  bodyContent?: unknown;
   /** Default: `"dense"` */
   tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
+  /** Default: `{"type":"stack","children":[{"align":"center","direction":"horizontal","children":[{"direction":"horizontal","children":[{"name":"calendar","type":"icon"},{"type":"typography","content":"CalendarEvents Calendar","variant":"h2"}],"align":"center","type":"stack","gap":"sm"},{"onSelect":"SELECT_DAY","type":"date-range-selector","selected":"@entity.selectedRange"}],"gap":"md","justify":"between","type":"stack"},{"type":"divider"},{"type":"calendar-grid"},{"type":"divider"},{"type":"typography","variant":"h4","content":"Upcoming Events"},{"look":"@config.tableLook","itemActions":[{"label":"View","event":"SELECT_DAY","icon":"eye"}],"type":"data-list","fields":[{"variant":"h4","name":"name","label":"Event","icon":"calendar"},{"name":"time","variant":"badge","label":"Time"},{"format":"date","variant":"caption","name":"date","label":"Date"},{"variant":"badge","name":"status","label":"Status"}],"entity":"@payload.data"}],"gap":"lg","direction":"vertical"}` */
+  bodyContent?: unknown;
   /** Default: `"@item.time"` */
   timeBinding?: string;
   /** Default: `"@item.name"` */
   titleBinding?: string;
+  /** Default: `"@item.status"` */
+  badgeBinding?: string;
 }
 
 /**

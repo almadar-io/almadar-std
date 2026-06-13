@@ -41,16 +41,16 @@ export type StdUiSplitSectionEventKey = 'INIT';
 export interface StdUiSplitSectionConfig {
   /** Default: `"Title"` */
   title?: string;
-  /** Default: `[]` */
-  bullets?: string[];
   image?: EntityRow;
-  description?: unknown;
-  /** Default: `"right"` */
-  imagePosition?: 'left' | 'right';
   /** Default: `"default"` */
   background?: 'default' | 'alt';
+  description?: unknown;
   /** Default: `""` */
   className?: string;
+  /** Default: `"right"` */
+  imagePosition?: 'left' | 'right';
+  /** Default: `[]` */
+  bullets?: string[];
 }
 
 /**

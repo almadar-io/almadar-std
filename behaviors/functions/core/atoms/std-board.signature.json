@@ -209,43 +209,43 @@
             "key": "bodyContent",
             "type": "render-ui",
             "default": {
+              "gap": "md",
               "direction": "vertical",
+              "type": "stack",
               "children": [
                 {
-                  "direction": "horizontal",
-                  "align": "center",
                   "children": [
                     {
-                      "type": "icon",
-                      "name": "kanban-square"
+                      "name": "kanban-square",
+                      "type": "icon"
                     },
                     {
+                      "content": "@config.title",
                       "variant": "h3",
-                      "type": "typography",
-                      "content": "@config.title"
+                      "type": "typography"
                     }
                   ],
+                  "type": "stack",
                   "gap": "sm",
-                  "type": "stack"
+                  "direction": "horizontal",
+                  "align": "center"
                 },
                 {
                   "type": "divider"
                 },
                 {
-                  "entity": "@entity.boards",
-                  "fields": [],
                   "cols": "@config.gridCols",
+                  "dndRoot": true,
                   "renderItem": [
                     "fn",
                     "col",
                     {
-                      "look": "@config.cardLook",
                       "children": [
                         {
-                          "direction": "vertical",
-                          "type": "stack",
                           "children": [
                             {
+                              "type": "stack",
+                              "direction": "horizontal",
                               "children": [
                                 {
                                   "name": "@col.icon",
@@ -253,100 +253,100 @@
                                 },
                                 {
                                   "content": "@col.label",
-                                  "variant": "h4",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "variant": "h4"
                                 },
                                 {
-                                  "label": "@col.count",
                                   "type": "badge",
-                                  "variant": "@col.variant"
+                                  "variant": "@col.variant",
+                                  "label": "@col.count"
                                 }
                               ],
-                              "direction": "horizontal",
-                              "type": "stack",
                               "align": "center",
                               "gap": "xs"
                             },
                             {
                               "sortable": true,
-                              "gap": "sm",
-                              "accepts": "*",
                               "positionEvent": "REORDER_POSITION",
+                              "gap": "sm",
+                              "dragGroup": "@col.key",
+                              "type": "data-list",
+                              "reorderEvent": "REORDER_CARD",
+                              "dropEvent": "MOVE_CARD",
+                              "accepts": "*",
+                              "fields": [],
                               "renderItem": [
                                 "fn",
                                 "item",
                                 {
+                                  "look": "@config.cardLook",
                                   "children": [
                                     {
+                                      "direction": "vertical",
+                                      "gap": "xs",
+                                      "type": "stack",
                                       "children": [
                                         {
+                                          "variant": "h4",
                                           "type": "typography",
-                                          "content": "@config.cardTitleBinding",
-                                          "variant": "h4"
+                                          "content": "@config.cardTitleBinding"
                                         },
                                         {
-                                          "content": "@config.cardDescriptionBinding",
-                                          "color": "muted",
+                                          "variant": "caption",
                                           "type": "typography",
-                                          "variant": "caption"
+                                          "color": "muted",
+                                          "content": "@config.cardDescriptionBinding"
                                         },
                                         {
                                           "direction": "horizontal",
                                           "gap": "xs",
+                                          "type": "stack",
                                           "align": "center",
                                           "children": [
                                             {
-                                              "action": "OPEN_CARD",
                                               "actionPayload": {
                                                 "row": "@item",
                                                 "id": "@config.cardIdBinding"
                                               },
-                                              "icon": "arrow-right",
                                               "type": "button",
+                                              "icon": "arrow-right",
                                               "label": "Open",
+                                              "action": "OPEN_CARD",
                                               "variant": "ghost"
                                             }
-                                          ],
-                                          "type": "stack"
+                                          ]
                                         }
-                                      ],
-                                      "type": "stack",
-                                      "gap": "xs",
-                                      "direction": "vertical"
+                                      ]
                                     }
                                   ],
-                                  "look": "@config.cardLook",
                                   "type": "card"
                                 }
                               ],
-                              "type": "data-list",
-                              "dragGroup": "@col.key",
-                              "fields": [],
-                              "entity": "@col.items",
-                              "reorderEvent": "REORDER_CARD",
-                              "dropEvent": "MOVE_CARD"
+                              "entity": "@col.items"
                             }
                           ],
+                          "type": "stack",
+                          "direction": "vertical",
                           "gap": "sm"
                         }
                       ],
+                      "look": "@config.cardLook",
                       "type": "card"
                     }
                   ],
-                  "gap": "md",
-                  "dndRoot": true,
-                  "type": "data-grid"
+                  "type": "data-grid",
+                  "entity": "@entity.boards",
+                  "fields": [],
+                  "gap": "md"
                 },
                 {
+                  "label": "Add item",
+                  "action": "ADD_CARD",
                   "type": "floating-action-button",
                   "icon": "plus",
-                  "action": "ADD_CARD",
-                  "label": "Add item",
                   "variant": "primary"
                 }
-              ],
-              "type": "stack",
-              "gap": "md"
+              ]
             },
             "label": "Body content tree",
             "description": "Render-ui SExpr rendered after the board loads. Default is the canonical column data-grid with nested per-column data-lists. Layer 3 variants override this with their own tree (swim-lanes, timeline-roadmap, etc.) while inheriting the same trait, state machine, emits, and listens.",
@@ -407,21 +407,21 @@
             "default": [
               {
                 "variant": "default",
-                "key": "todo",
+                "icon": "circle",
                 "label": "To Do",
-                "icon": "circle"
+                "key": "todo"
               },
               {
-                "label": "In Progress",
                 "icon": "circle-dot",
-                "key": "doing",
-                "variant": "primary"
+                "variant": "primary",
+                "label": "In Progress",
+                "key": "doing"
               },
               {
-                "label": "Done",
-                "icon": "check-circle",
                 "key": "done",
-                "variant": "success"
+                "variant": "success",
+                "icon": "check-circle",
+                "label": "Done"
               }
             ],
             "label": "Columns",
@@ -429,9 +429,9 @@
             "tier": "domain",
             "items": {
               "properties": {
-                "variant": {
-                  "name": "variant",
-                  "required": false,
+                "label": {
+                  "name": "label",
+                  "required": true,
                   "type": "string"
                 },
                 "icon": {
@@ -444,9 +444,9 @@
                   "required": true,
                   "type": "string"
                 },
-                "label": {
-                  "name": "label",
-                  "required": true,
+                "variant": {
+                  "name": "variant",
+                  "required": false,
                   "type": "string"
                 }
               },

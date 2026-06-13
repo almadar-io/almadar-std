@@ -40,25 +40,25 @@ export type StdUiSvgGridEventKey = 'INIT';
  */
 export interface StdUiSvgGridConfig {
   /** Default: `0` */
-  x?: number;
-  /** Default: `1` */
-  opacity?: number;
-  /** Default: `3` */
-  nodeRadius?: number;
-  /** Default: `[]` */
-  highlights?: number[];
-  /** Default: `4` */
-  cols?: number;
-  /** Default: `3` */
-  rows?: number;
+  y?: number;
   /** Default: `20` */
   spacing?: number;
-  /** Default: `"var(--color-primary)"` */
-  color?: string;
   /** Default: `""` */
   className?: string;
+  /** Default: `"var(--color-primary)"` */
+  color?: string;
+  /** Default: `[]` */
+  highlights?: number[];
+  /** Default: `3` */
+  rows?: number;
   /** Default: `0` */
-  y?: number;
+  x?: number;
+  /** Default: `3` */
+  nodeRadius?: number;
+  /** Default: `4` */
+  cols?: number;
+  /** Default: `1` */
+  opacity?: number;
 }
 
 /**

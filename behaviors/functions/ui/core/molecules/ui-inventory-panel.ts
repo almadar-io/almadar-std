@@ -61,19 +61,19 @@ export interface StdUiInventoryPanelDropItemPayload {
  */
 export interface StdUiInventoryPanelConfig {
   /** Default: `0` */
-  slots?: number;
-  /** Default: `0` */
   selectedSlot?: number;
   /** Default: `true` */
   showTooltips?: boolean;
-  /** Default: `""` */
-  className?: string;
   /** Default: `48` */
   slotSize?: number;
   /** Default: `0` */
-  columns?: number;
-  /** Default: `[{"id":"Id","type":"Type","quantity":1}]` */
+  slots?: number;
+  /** Default: `[{"type":"Type","id":"Id","quantity":1}]` */
   items?: EntityRow[];
+  /** Default: `0` */
+  columns?: number;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

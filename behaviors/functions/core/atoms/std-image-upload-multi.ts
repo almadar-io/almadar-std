@@ -58,18 +58,7 @@ export interface StdImageUploadMultiUploadedImageLoadFailedPayload {
  * Payload shape for the `UploadedImageCreated` event.
  */
 export interface StdImageUploadMultiUploadedImageCreatedPayload {
-  row?: {
-    id: string;
-    url: string;
-    name?: string;
-    sizeBytes?: number;
-    mimeType?: string;
-    width?: number;
-    height?: number;
-    parentId?: string;
-    parentType?: string;
-    uploadedAt?: string;
-  };
+  row?: EntityRow;
 }
 
 /**
@@ -102,10 +91,10 @@ export interface StdImageUploadMultiUploadedImageDeleteFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdImageUploadMultiConfig {
-  /** Default: `10485760` */
-  maxBytesPerImage?: number;
   /** Default: `10` */
   maxImages?: number;
+  /** Default: `10485760` */
+  maxBytesPerImage?: number;
   /** Default: `"Upload Images"` */
   title?: string;
   /** Default: `"image/*"` */

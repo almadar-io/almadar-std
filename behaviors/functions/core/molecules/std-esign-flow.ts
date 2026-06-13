@@ -43,18 +43,7 @@ export type StdEsignFlowListenKey = 'SESSION_CREATED' | 'SESSION_RESENT' | 'SESS
  */
 export interface StdEsignFlowResendRequestPayload {
   id: string;
-  row?: {
-    id: string;
-    documentId: string;
-    documentName?: string;
-    recipientName: string;
-    recipientEmail: string;
-    requesterName?: string;
-    status?: string;
-    sentAt?: string;
-    signedAt?: string;
-    pendingId?: string;
-  };
+  row?: EntityRow;
 }
 
 /**
@@ -62,18 +51,7 @@ export interface StdEsignFlowResendRequestPayload {
  */
 export interface StdEsignFlowRequestDeletePayload {
   id: string;
-  row?: {
-    id: string;
-    documentId: string;
-    documentName?: string;
-    recipientName: string;
-    recipientEmail: string;
-    requesterName?: string;
-    status?: string;
-    sentAt?: string;
-    signedAt?: string;
-    pendingId?: string;
-  };
+  row?: EntityRow;
 }
 
 /**

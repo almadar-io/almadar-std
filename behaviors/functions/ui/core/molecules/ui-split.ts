@@ -39,27 +39,27 @@ export type StdUiSplitEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiSplitConfig {
-  /** Default: `"1:1"` */
-  ratio?: '1:1' | '1:2' | '2:1' | '1:3' | '3:1' | '1:4' | '4:1' | '2:3' | '3:2';
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `"md"` */
-  gap?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
-  /** Default: `false` */
-  reverse?: boolean;
   /** Default: `true` */
   stackOnMobile?: boolean;
-  error?: EntityRow;
+  /** Default: `false` */
+  reverse?: boolean;
   /** Default: `"stretch"` */
   align?: 'start' | 'center' | 'end' | 'stretch';
   /** Default: `"Left Class Name"` */
   leftClassName?: string;
+  /** Default: `"1:1"` */
+  ratio?: '1:1' | '1:2' | '2:1' | '1:3' | '3:1' | '1:4' | '4:1' | '2:3' | '3:2';
   /** Default: `"Right Class Name"` */
   rightClassName?: string;
-  /** Default: `""` */
-  className?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  error?: EntityRow;
+  /** Default: `"md"` */
+  gap?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
   /** Default: `"md"` */
   stackBreakpoint?: 'sm' | 'md' | 'lg' | 'xl';
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

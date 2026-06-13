@@ -37,19 +37,7 @@ export type StdBillableHourEventKey = 'BillableHourLoadFailed' | 'BillableHourLo
  */
 export interface StdBillableHourOpenHoursPayload {
   id: string;
-  row?: {
-    id: string;
-    workerId: string;
-    workerName?: string;
-    matterId?: string;
-    projectId?: string;
-    workDate: string;
-    hours?: number;
-    rate?: number;
-    description?: string;
-    isBillable?: boolean;
-    invoiceStatus?: string;
-  };
+  row?: EntityRow;
 }
 
 /**
@@ -88,12 +76,12 @@ export interface StdBillableHourBillableHourLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdBillableHourConfig {
-  /** Default: `"Time Entries"` */
-  title?: string;
   /** Default: `"dense"` */
   tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
   /** Default: `"elevated"` */
   statLook?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
+  /** Default: `"Time Entries"` */
+  title?: string;
 }
 
 /**

@@ -39,37 +39,37 @@ export type StdUiCodeViewerEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiCodeViewerConfig {
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `false` */
-  wordWrap?: boolean;
-  /** Default: `[]` */
-  actions?: EntityRow[];
   /** Default: `"Old Value"` */
   oldValue?: string;
-  /** Default: `"New Value"` */
-  newValue?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `"Title"` */
+  title?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `false` */
+  wordWrap?: boolean;
+  /** Default: `true` */
+  showCopy?: boolean;
+  /** Default: `true` */
+  showLineNumbers?: boolean;
   /** Default: `"Code"` */
   code?: string;
+  error?: EntityRow;
+  /** Default: `[]` */
+  files?: EntityRow[];
+  /** Default: `"New Value"` */
+  newValue?: string;
   /** Default: `"Language"` */
   language?: string;
+  /** Default: `"Max Height"` */
+  maxHeight?: string;
+  /** Default: `[]` */
+  actions?: EntityRow[];
   /** Default: `"code"` */
   mode?: 'code' | 'diff';
   /** Default: `[]` */
   diff?: EntityRow[];
-  /** Default: `true` */
-  showCopy?: boolean;
-  /** Default: `"Max Height"` */
-  maxHeight?: string;
-  /** Default: `"Title"` */
-  title?: string;
-  /** Default: `true` */
-  showLineNumbers?: boolean;
-  /** Default: `[]` */
-  files?: EntityRow[];
-  /** Default: `""` */
-  className?: string;
-  error?: EntityRow;
 }
 
 /**

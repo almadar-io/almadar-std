@@ -40,9 +40,9 @@ export type StdUiInputGroupEventKey = 'INIT';
  */
 export interface StdUiInputGroupConfig {
   rightAddon?: unknown;
+  leftAddon?: unknown;
   /** Default: `""` */
   className?: string;
-  leftAddon?: unknown;
 }
 
 /**

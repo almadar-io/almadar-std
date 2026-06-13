@@ -62,16 +62,16 @@ export interface StdUiLightboxOpenPayload {
 export interface StdUiLightboxConfig {
   /** Default: `0` */
   currentIndex?: number;
+  /** Default: `false` */
+  isOpen?: boolean;
   /** Default: `"Close Action"` */
   closeAction?: string;
   /** Default: `""` */
   className?: string;
-  /** Default: `false` */
-  isOpen?: boolean;
-  /** Default: `[{"alt":"Alt","caption":"Caption","src":"Src"}]` */
-  images?: EntityRow[];
   /** Default: `true` */
   showCounter?: boolean;
+  /** Default: `[{"src":"Src","alt":"Alt","caption":"Caption"}]` */
+  images?: EntityRow[];
 }
 
 /**

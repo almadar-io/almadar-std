@@ -42,14 +42,14 @@ export interface StdUiWaypointMarkerConfig {
   icon?: unknown;
   /** Default: `false` */
   completed?: boolean;
-  /** Default: `""` */
-  className?: string;
   /** Default: `false` */
   active?: boolean;
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
   /** Default: `"Label"` */
   label?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
 }
 
 /**

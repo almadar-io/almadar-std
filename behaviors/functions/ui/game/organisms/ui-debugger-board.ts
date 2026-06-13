@@ -190,8 +190,8 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
                   'main',
                   {
                     'entity': '@config.entityProp',
-                    'completeEvent': 'COMPLETE',
                     'type': 'debugger-board',
+                    'completeEvent': 'COMPLETE',
                   },
                 ],
               ],
@@ -206,13 +206,23 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
             'synonyms': 'entity',
             'tier': 'presentation',
             'properties': {
-              'bugCount': {
-                'name': 'bugCount',
-                'type': 'number',
-                'required': true,
-              },
               'failMessage': {
                 'name': 'failMessage',
+                'type': 'string',
+                'required': false,
+              },
+              'title': {
+                'name': 'title',
+                'type': 'string',
+                'required': true,
+              },
+              'language': {
+                'name': 'language',
+                'type': 'string',
+                'required': false,
+              },
+              'hint': {
+                'name': 'hint',
                 'type': 'string',
                 'required': false,
               },
@@ -220,36 +230,6 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
                 'name': 'headerImage',
                 'type': 'string',
                 'required': false,
-              },
-              'lines': {
-                'name': 'lines',
-                'type': 'array',
-                'required': true,
-                'items': {
-                  'type': 'object',
-                  'properties': {
-                    'id': {
-                      'name': 'id',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'explanation': {
-                      'name': 'explanation',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'isBug': {
-                      'name': 'isBug',
-                      'type': 'boolean',
-                      'required': true,
-                    },
-                    'content': {
-                      'name': 'content',
-                      'type': 'string',
-                      'required': true,
-                    },
-                  },
-                },
               },
               'theme': {
                 'name': 'theme',
@@ -268,13 +248,43 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
                   },
                 },
               },
-              'hint': {
-                'name': 'hint',
-                'type': 'string',
-                'required': false,
+              'lines': {
+                'name': 'lines',
+                'type': 'array',
+                'required': true,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'isBug': {
+                      'name': 'isBug',
+                      'type': 'boolean',
+                      'required': true,
+                    },
+                    'content': {
+                      'name': 'content',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'id': {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'explanation': {
+                      'name': 'explanation',
+                      'type': 'string',
+                      'required': false,
+                    },
+                  },
+                },
               },
-              'title': {
-                'name': 'title',
+              'bugCount': {
+                'name': 'bugCount',
+                'type': 'number',
+                'required': true,
+              },
+              'id': {
+                'name': 'id',
                 'type': 'string',
                 'required': true,
               },
@@ -283,20 +293,10 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
                 'type': 'string',
                 'required': false,
               },
-              'id': {
-                'name': 'id',
-                'type': 'string',
-                'required': true,
-              },
               'description': {
                 'name': 'description',
                 'type': 'string',
                 'required': true,
-              },
-              'language': {
-                'name': 'language',
-                'type': 'string',
-                'required': false,
               },
             },
           },

@@ -55,18 +55,18 @@ export interface StdStatusLifecycleStatusChangeFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdStatusLifecycleConfig {
-  /** Default: `false` */
-  enabled?: boolean;
   /** Default: `"status"` */
   statusField?: string;
-  /** Default: `[{"to":"active","from":"draft","event":"ACTIVATE","label":"Activate"},{"from":"active","label":"Archive","event":"ARCHIVE","to":"archived"}]` */
-  transitions?: EntityRow[];
+  /** Default: `false` */
+  enabled?: boolean;
+  /** Default: `"draft"` */
+  initialStatus?: string;
   /** Default: `["draft","active","archived"]` */
   states?: string[];
   /** Default: `"StatusRecord"` */
   targetEntity?: string;
-  /** Default: `"draft"` */
-  initialStatus?: string;
+  /** Default: `[{"event":"ACTIVATE","from":"draft","to":"active","label":"Activate"},{"event":"ARCHIVE","from":"active","label":"Archive","to":"archived"}]` */
+  transitions?: EntityRow[];
 }
 
 /**

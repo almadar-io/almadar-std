@@ -53,24 +53,24 @@ export interface StdUiPageHeaderTabChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiPageHeaderConfig {
-  /** Default: `false` */
-  showBack?: boolean;
+  /** Default: `[]` */
+  tabs?: EntityRow[];
   subtitle?: unknown;
   /** Default: `[]` */
   breadcrumbs?: EntityRow[];
-  /** Default: `"Active Tab"` */
-  activeTab?: string;
-  title?: unknown;
-  /** Default: `false` */
-  isLoading?: boolean;
   error?: EntityRow;
-  /** Default: `""` */
-  className?: string;
   /** Default: `[]` */
   actions?: EntityRow[];
-  /** Default: `[]` */
-  tabs?: EntityRow[];
   status?: EntityRow;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `false` */
+  showBack?: boolean;
+  title?: unknown;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"Active Tab"` */
+  activeTab?: string;
 }
 
 /**

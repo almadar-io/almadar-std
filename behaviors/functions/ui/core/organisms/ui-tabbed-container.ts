@@ -46,16 +46,16 @@ export interface StdUiTabbedContainerTabChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiTabbedContainerConfig {
-  /** Default: `"Default Tab"` */
-  defaultTab?: string;
-  /** Default: `"top"` */
-  position?: 'top' | 'left';
-  /** Default: `"Active Tab"` */
-  activeTab?: string;
   /** Default: `""` */
   className?: string;
-  /** Default: `[{"label":"Label","id":"Id"}]` */
+  /** Default: `"top"` */
+  position?: 'top' | 'left';
+  /** Default: `[{"id":"Id","label":"Label"}]` */
   tabs?: EntityRow[];
+  /** Default: `"Default Tab"` */
+  defaultTab?: string;
+  /** Default: `"Active Tab"` */
+  activeTab?: string;
 }
 
 /**
@@ -185,13 +185,13 @@ export function stdUiTabbedContainerTabbedContainerOrbital(params: StdUiTabbedCo
                   'render-ui',
                   'main',
                   {
-                    'position': '@config.position',
                     'className': '@config.className',
+                    'position': '@config.position',
                     'type': 'tabbed-container',
-                    'tabs': '@config.tabs',
-                    'defaultTab': '@config.defaultTab',
                     'activeTab': '@config.activeTab',
+                    'tabs': '@config.tabs',
                     'onTabChange': 'TAB_CHANGE',
+                    'defaultTab': '@config.defaultTab',
                   },
                 ],
               ],
@@ -199,11 +199,11 @@ export function stdUiTabbedContainerTabbedContainerOrbital(params: StdUiTabbedCo
           ],
         },
         'config': {
-          'defaultTab': {
+          'className': {
             'type': 'string',
-            'default': 'Default Tab',
-            'label': 'Default Tab',
-            'description': 'Default active tab ID',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
           'position': {
@@ -217,26 +217,12 @@ export function stdUiTabbedContainerTabbedContainerOrbital(params: StdUiTabbedCo
               'left',
             ],
           },
-          'activeTab': {
-            'type': 'string',
-            'default': 'Active Tab',
-            'label': 'Active Tab',
-            'description': 'Controlled active tab',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
           'tabs': {
             'type': '[TabbedContainerTabsItem]',
             'default': [
               {
-                'label': 'Label',
                 'id': 'Id',
+                'label': 'Label',
               },
             ],
             'label': 'Tabs',
@@ -245,26 +231,6 @@ export function stdUiTabbedContainerTabbedContainerOrbital(params: StdUiTabbedCo
             'items': {
               'type': 'object',
               'properties': {
-                'disabled': {
-                  'name': 'disabled',
-                  'type': 'boolean',
-                  'required': false,
-                },
-                'badge': {
-                  'name': 'badge',
-                  'type': 'string',
-                  'required': false,
-                },
-                'content': {
-                  'name': 'content',
-                  'type': 'string',
-                  'required': false,
-                },
-                'sectionId': {
-                  'name': 'sectionId',
-                  'type': 'string',
-                  'required': false,
-                },
                 'id': {
                   'name': 'id',
                   'type': 'string',
@@ -275,8 +241,42 @@ export function stdUiTabbedContainerTabbedContainerOrbital(params: StdUiTabbedCo
                   'type': 'string',
                   'required': true,
                 },
+                'sectionId': {
+                  'name': 'sectionId',
+                  'type': 'string',
+                  'required': false,
+                },
+                'content': {
+                  'name': 'content',
+                  'type': 'string',
+                  'required': false,
+                },
+                'badge': {
+                  'name': 'badge',
+                  'type': 'string',
+                  'required': false,
+                },
+                'disabled': {
+                  'name': 'disabled',
+                  'type': 'boolean',
+                  'required': false,
+                },
               },
             },
+          },
+          'defaultTab': {
+            'type': 'string',
+            'default': 'Default Tab',
+            'label': 'Default Tab',
+            'description': 'Default active tab ID',
+            'tier': 'presentation',
+          },
+          'activeTab': {
+            'type': 'string',
+            'default': 'Active Tab',
+            'label': 'Active Tab',
+            'description': 'Controlled active tab',
+            'tier': 'presentation',
           },
         },
         'scope': 'instance',

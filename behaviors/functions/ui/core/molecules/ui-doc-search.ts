@@ -39,10 +39,10 @@ export type StdUiDocSearchEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiDocSearchConfig {
-  /** Default: `"Search documentation..."` */
-  placeholder?: string;
   /** Default: `""` */
   className?: string;
+  /** Default: `"Search documentation..."` */
+  placeholder?: string;
 }
 
 /**

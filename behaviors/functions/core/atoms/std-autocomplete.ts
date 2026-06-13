@@ -60,12 +60,12 @@ export interface StdAutocompleteAutoSelectedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdAutocompleteConfig {
-  /** Default: `"name"` */
-  searchField?: string;
-  /** Default: `"Search…"` */
-  placeholder?: string;
   /** Default: `[{"label":"Name","name":"name","variant":"body"}]` */
   suggestionFields?: EntityRow[];
+  /** Default: `"Search…"` */
+  placeholder?: string;
+  /** Default: `"name"` */
+  searchField?: string;
 }
 
 /**

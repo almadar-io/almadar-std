@@ -43,10 +43,10 @@ export interface StdUiStepFlowConfig {
   showConnectors?: boolean;
   /** Default: `"horizontal"` */
   orientation?: 'horizontal' | 'vertical';
-  /** Default: `[]` */
-  steps?: EntityRow[];
   /** Default: `""` */
   className?: string;
+  /** Default: `[]` */
+  steps?: EntityRow[];
 }
 
 /**

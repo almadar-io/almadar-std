@@ -37,17 +37,7 @@ export type StdApprovalGateEventKey = 'APPROVE' | 'ApprovalDenied' | 'ApprovalGr
  */
 export interface StdApprovalGateApprovePayload {
   id: string;
-  row?: {
-    id: string;
-    gatedEvent?: string;
-    status?: string;
-    reviewer?: string;
-    requestedAt?: number;
-    decidedAt?: number;
-    escalatedAt?: number;
-    notes?: string;
-    payload?: EntityRow;
-  };
+  row?: EntityRow;
 }
 
 /**
@@ -55,17 +45,7 @@ export interface StdApprovalGateApprovePayload {
  */
 export interface StdApprovalGateDenyPayload {
   id: string;
-  row?: {
-    id: string;
-    gatedEvent?: string;
-    status?: string;
-    reviewer?: string;
-    requestedAt?: number;
-    decidedAt?: number;
-    escalatedAt?: number;
-    notes?: string;
-    payload?: EntityRow;
-  };
+  row?: EntityRow;
 }
 
 /**
@@ -102,17 +82,7 @@ export interface StdApprovalGateApprovalRequestLoadFailedPayload {
  * Payload shape for the `ApprovalRequestReviewed` event.
  */
 export interface StdApprovalGateApprovalRequestReviewedPayload {
-  row?: {
-    id: string;
-    gatedEvent?: string;
-    status?: string;
-    reviewer?: string;
-    requestedAt?: number;
-    decidedAt?: number;
-    escalatedAt?: number;
-    notes?: string;
-    payload?: EntityRow;
-  };
+  row?: EntityRow;
 }
 
 /**
@@ -130,24 +100,24 @@ export interface StdApprovalGateApprovalRequestReviewFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdApprovalGateConfig {
-  /** Default: `false` */
-  enabled?: boolean;
-  /** Default: `[]` */
-  escalationRoles?: string[];
-  /** Default: `"modal"` */
-  reviewSlot?: unknown;
-  /** Default: `true` */
-  autoApproveBelowThreshold?: boolean;
-  /** Default: `0` */
-  escalationHours?: number;
-  /** Default: `""` */
-  valueField?: string;
-  /** Default: `[]` */
-  approverRoles?: string[];
   /** Default: `"dense"` */
   tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
   /** Default: `0` */
+  escalationHours?: number;
+  /** Default: `false` */
+  enabled?: boolean;
+  /** Default: `"modal"` */
+  reviewSlot?: unknown;
+  /** Default: `[]` */
+  escalationRoles?: string[];
+  /** Default: `0` */
   threshold?: number;
+  /** Default: `[]` */
+  approverRoles?: string[];
+  /** Default: `true` */
+  autoApproveBelowThreshold?: boolean;
+  /** Default: `""` */
+  valueField?: string;
 }
 
 /**

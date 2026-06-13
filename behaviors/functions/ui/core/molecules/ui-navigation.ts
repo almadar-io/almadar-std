@@ -41,11 +41,11 @@ export type StdUiNavigationEventKey = 'INIT';
 export interface StdUiNavigationConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
-  error?: EntityRow;
   /** Default: `[]` */
   items?: EntityRow[];
+  error?: EntityRow;
+  /** Default: `false` */
+  isLoading?: boolean;
   /** Default: `"horizontal"` */
   orientation?: 'horizontal' | 'vertical';
 }

@@ -39,16 +39,16 @@ export type StdStatsEventKey = 'INIT' | 'ITEMS_LOADED';
  * without modifying its state-machine topology.
  */
 export interface StdStatsConfig {
-  /** Default: `"Summary"` */
-  title?: string;
-  /** Default: `"data-grid"` */
-  viewPattern?: unknown;
-  /** Default: `[{"aggregation":"count","icon":"list","format":"number","label":"Total Items","variant":"primary"},{"label":"Active","icon":"check-circle","aggregation":"count","format":"number","variant":"success"},{"label":"Avg Value","format":"number","aggregation":"avg","icon":"trending-up","variant":"info","field":"value"}]` */
+  /** Default: `[{"format":"number","label":"Total Items","aggregation":"count","icon":"list","variant":"primary"},{"label":"Active","icon":"check-circle","variant":"success","format":"number","aggregation":"count"},{"format":"number","aggregation":"avg","icon":"trending-up","label":"Avg Value","variant":"info","field":"value"}]` */
   metrics?: EntityRow[];
   /** Default: `"elevated"` */
   statLook?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
-  /** Default: `{"renderItem":["fn","card",{"trendFormat":"@card.trendFormat","value":"@card.value","clickEvent":"@card.clickEvent","format":"@card.format","type":"stat-display","trend":"@card.trend","trendPolarity":"@card.trendPolarity","look":"@config.statLook","suffix":"@card.suffix","max":"@card.max","variant":"@card.variant","target":"@card.target","sparklineData":"@card.sparklineData","label":"@card.label","prefix":"@card.prefix","icon":"@card.icon"}],"type":"@config.viewPattern","fields":[],"entity":"@entity.cards"}` */
+  /** Default: `{"renderItem":["fn","card",{"trend":"@card.trend","sparklineData":"@card.sparklineData","prefix":"@card.prefix","icon":"@card.icon","look":"@config.statLook","target":"@card.target","trendPolarity":"@card.trendPolarity","value":"@card.value","format":"@card.format","variant":"@card.variant","label":"@card.label","trendFormat":"@card.trendFormat","clickEvent":"@card.clickEvent","suffix":"@card.suffix","type":"stat-display","max":"@card.max"}],"type":"@config.viewPattern","entity":"@entity.cards","fields":[]}` */
   bodyContent?: unknown;
+  /** Default: `"data-grid"` */
+  viewPattern?: unknown;
+  /** Default: `"Summary"` */
+  title?: string;
 }
 
 /**

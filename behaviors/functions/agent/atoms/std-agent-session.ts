@@ -43,16 +43,7 @@ export type StdAgentSessionListenKey = 'FORKED' | 'LABELED' | 'ENDED';
  */
 export interface StdAgentSessionForkPayload {
   id: string;
-  row?: {
-    id: string;
-    name?: string;
-    description?: string;
-    status?: string;
-    createdAt?: string;
-    sessionId?: string;
-    parentId?: string;
-    label?: string;
-  };
+  row?: EntityRow;
 }
 
 /**
@@ -60,16 +51,7 @@ export interface StdAgentSessionForkPayload {
  */
 export interface StdAgentSessionLabelPayload {
   id: string;
-  row?: {
-    id: string;
-    name?: string;
-    description?: string;
-    status?: string;
-    createdAt?: string;
-    sessionId?: string;
-    parentId?: string;
-    label?: string;
-  };
+  row?: EntityRow;
 }
 
 /**
@@ -77,16 +59,7 @@ export interface StdAgentSessionLabelPayload {
  */
 export interface StdAgentSessionEndPayload {
   id: string;
-  row?: {
-    id: string;
-    name?: string;
-    description?: string;
-    status?: string;
-    createdAt?: string;
-    sessionId?: string;
-    parentId?: string;
-    label?: string;
-  };
+  row?: EntityRow;
 }
 
 /**

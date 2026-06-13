@@ -66,11 +66,11 @@ export interface StdUiCastleBoardTileClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiCastleBoardConfig {
-  /** Default: `""` */
-  className?: string;
   entityProp?: EntityRow;
   /** Default: `0.45` */
   scale?: number;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**
@@ -614,16 +614,16 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                   'render-ui',
                   'main',
                   {
-                    'entity': '@config.entityProp',
-                    'onUnitClick': 'UNIT_CLICK',
                     'className': '@config.className',
-                    'onFeatureClick': 'FEATURE_CLICK',
-                    'tileClickEvent': 'TILE_CLICK',
+                    'entity': '@config.entityProp',
                     'type': 'castle-board',
-                    'onTileClick': 'TILE_CLICK',
-                    'unitClickEvent': 'UNIT_CLICK',
-                    'scale': '@config.scale',
+                    'tileClickEvent': 'TILE_CLICK',
                     'featureClickEvent': 'FEATURE_CLICK',
+                    'unitClickEvent': 'UNIT_CLICK',
+                    'onUnitClick': 'UNIT_CLICK',
+                    'onTileClick': 'TILE_CLICK',
+                    'onFeatureClick': 'FEATURE_CLICK',
+                    'scale': '@config.scale',
                   },
                 ],
               ],
@@ -631,13 +631,6 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
           ],
         },
         'config': {
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'className prop',
-            'tier': 'presentation',
-          },
           'entityProp': {
             'type': 'CastleBoardEntity',
             'label': 'Entity',
@@ -645,24 +638,11 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
             'synonyms': 'entity',
             'tier': 'presentation',
             'properties': {
-              'id': {
-                'name': 'id',
-                'type': 'string',
-                'required': true,
-              },
               'assetManifest': {
                 'name': 'assetManifest',
                 'type': 'object',
                 'required': false,
                 'properties': {
-                  'units': {
-                    'name': 'units',
-                    'type': 'object',
-                    'required': false,
-                    'items': {
-                      'type': 'string',
-                    },
-                  },
                   'baseUrl': {
                     'name': 'baseUrl',
                     'type': 'string',
@@ -684,6 +664,84 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                       'type': 'string',
                     },
                   },
+                  'units': {
+                    'name': 'units',
+                    'type': 'object',
+                    'required': false,
+                    'items': {
+                      'type': 'string',
+                    },
+                  },
+                },
+              },
+              'id': {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              'tiles': {
+                'name': 'tiles',
+                'type': 'array',
+                'required': true,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'tileType': {
+                      'name': 'tileType',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'terrain': {
+                      'name': 'terrain',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'passable': {
+                      'name': 'passable',
+                      'type': 'boolean',
+                      'required': false,
+                    },
+                    'z': {
+                      'name': 'z',
+                      'type': 'number',
+                      'required': false,
+                    },
+                    'elevation': {
+                      'name': 'elevation',
+                      'type': 'number',
+                      'required': false,
+                    },
+                    'id': {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'terrainSprite': {
+                      'name': 'terrainSprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'movementCost': {
+                      'name': 'movementCost',
+                      'type': 'number',
+                      'required': false,
+                    },
+                    'y': {
+                      'name': 'y',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'x': {
+                      'name': 'x',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'type': {
+                      'name': 'type',
+                      'type': 'string',
+                      'required': false,
+                    },
+                  },
                 },
               },
               'units': {
@@ -693,8 +751,68 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                 'items': {
                   'type': 'object',
                   'properties': {
+                    'heroId': {
+                      'name': 'heroId',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'y': {
+                      'name': 'y',
+                      'type': 'number',
+                      'required': false,
+                    },
+                    'faction': {
+                      'name': 'faction',
+                      'type': 'string',
+                      'required': false,
+                      'values': [
+                        'player',
+                        'enemy',
+                        'neutral',
+                      ],
+                    },
+                    'z': {
+                      'name': 'z',
+                      'type': 'number',
+                      'required': false,
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'id': {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
                     'maxHealth': {
                       'name': 'maxHealth',
+                      'type': 'number',
+                      'required': false,
+                    },
+                    'team': {
+                      'name': 'team',
+                      'type': 'string',
+                      'required': false,
+                      'values': [
+                        'player',
+                        'enemy',
+                        'neutral',
+                      ],
+                    },
+                    'health': {
+                      'name': 'health',
+                      'type': 'number',
+                      'required': false,
+                    },
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'elevation': {
+                      'name': 'elevation',
                       'type': 'number',
                       'required': false,
                     },
@@ -705,16 +823,6 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                       'items': {
                         'type': 'object',
                         'properties': {
-                          'cooldown': {
-                            'name': 'cooldown',
-                            'type': 'number',
-                            'required': true,
-                          },
-                          'name': {
-                            'name': 'name',
-                            'type': 'string',
-                            'required': true,
-                          },
                           'currentState': {
                             'name': 'currentState',
                             'type': 'string',
@@ -728,17 +836,44 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                               'type': 'string',
                             },
                           },
+                          'cooldown': {
+                            'name': 'cooldown',
+                            'type': 'number',
+                            'required': true,
+                          },
+                          'name': {
+                            'name': 'name',
+                            'type': 'string',
+                            'required': true,
+                          },
+                        },
+                      },
+                    },
+                    'x': {
+                      'name': 'x',
+                      'type': 'number',
+                      'required': false,
+                    },
+                    'position': {
+                      'name': 'position',
+                      'type': 'object',
+                      'required': false,
+                      'properties': {
+                        'x': {
+                          'name': 'x',
+                          'type': 'number',
+                          'required': true,
+                        },
+                        'y': {
+                          'name': 'y',
+                          'type': 'number',
+                          'required': true,
                         },
                       },
                     },
                     'unitType': {
                       'name': 'unitType',
                       'type': 'string',
-                      'required': false,
-                    },
-                    'elevation': {
-                      'name': 'elevation',
-                      'type': 'number',
                       'required': false,
                     },
                     'previousPosition': {
@@ -758,80 +893,58 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                         },
                       },
                     },
-                    'team': {
-                      'name': 'team',
-                      'type': 'string',
-                      'required': false,
-                      'values': [
-                        'player',
-                        'enemy',
-                        'neutral',
-                      ],
-                    },
-                    'health': {
-                      'name': 'health',
-                      'type': 'number',
-                      'required': false,
-                    },
+                  },
+                },
+              },
+              'features': {
+                'name': 'features',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'object',
+                  'properties': {
                     'id': {
                       'name': 'id',
                       'type': 'string',
+                      'required': false,
+                    },
+                    'y': {
+                      'name': 'y',
+                      'type': 'number',
                       'required': true,
-                    },
-                    'position': {
-                      'name': 'position',
-                      'type': 'object',
-                      'required': false,
-                      'properties': {
-                        'x': {
-                          'name': 'x',
-                          'type': 'number',
-                          'required': true,
-                        },
-                        'y': {
-                          'name': 'y',
-                          'type': 'number',
-                          'required': true,
-                        },
-                      },
-                    },
-                    'heroId': {
-                      'name': 'heroId',
-                      'type': 'string',
-                      'required': false,
                     },
                     'x': {
                       'name': 'x',
                       'type': 'number',
-                      'required': false,
+                      'required': true,
                     },
                     'sprite': {
                       'name': 'sprite',
                       'type': 'string',
                       'required': false,
                     },
-                    'name': {
-                      'name': 'name',
+                    'color': {
+                      'name': 'color',
                       'type': 'string',
                       'required': false,
-                    },
-                    'faction': {
-                      'name': 'faction',
-                      'type': 'string',
-                      'required': false,
-                      'values': [
-                        'player',
-                        'enemy',
-                        'neutral',
-                      ],
                     },
                     'z': {
                       'name': 'z',
                       'type': 'number',
                       'required': false,
                     },
-                    'y': {
-                      'name': 'y',
+                    'type': {
+                      'name': 'type',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'assetUrl': {
+                      'name': 'assetUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'elevation': {
+                      'name': 'elevation',
                       'type': 'number',
                       'required': false,
                     },
@@ -843,126 +956,6 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                 'type': 'string',
                 'required': false,
               },
-              'features': {
-                'name': 'features',
-                'type': 'array',
-                'required': false,
-                'items': {
-                  'type': 'object',
-                  'properties': {
-                    'elevation': {
-                      'name': 'elevation',
-                      'type': 'number',
-                      'required': false,
-                    },
-                    'z': {
-                      'name': 'z',
-                      'type': 'number',
-                      'required': false,
-                    },
-                    'type': {
-                      'name': 'type',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'color': {
-                      'name': 'color',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'assetUrl': {
-                      'name': 'assetUrl',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'x': {
-                      'name': 'x',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'id': {
-                      'name': 'id',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'y': {
-                      'name': 'y',
-                      'type': 'number',
-                      'required': true,
-                    },
-                  },
-                },
-              },
-              'tiles': {
-                'name': 'tiles',
-                'type': 'array',
-                'required': true,
-                'items': {
-                  'type': 'object',
-                  'properties': {
-                    'movementCost': {
-                      'name': 'movementCost',
-                      'type': 'number',
-                      'required': false,
-                    },
-                    'tileType': {
-                      'name': 'tileType',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'y': {
-                      'name': 'y',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'id': {
-                      'name': 'id',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'type': {
-                      'name': 'type',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'z': {
-                      'name': 'z',
-                      'type': 'number',
-                      'required': false,
-                    },
-                    'terrainSprite': {
-                      'name': 'terrainSprite',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'x': {
-                      'name': 'x',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'elevation': {
-                      'name': 'elevation',
-                      'type': 'number',
-                      'required': false,
-                    },
-                    'passable': {
-                      'name': 'passable',
-                      'type': 'boolean',
-                      'required': false,
-                    },
-                    'terrain': {
-                      'name': 'terrain',
-                      'type': 'string',
-                      'required': false,
-                    },
-                  },
-                },
-              },
             },
           },
           'scale': {
@@ -970,6 +963,13 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
             'default': 0.45,
             'label': 'Scale',
             'description': 'Canvas render scale',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'className prop',
             'tier': 'presentation',
           },
         },

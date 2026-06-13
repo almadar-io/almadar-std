@@ -67,31 +67,31 @@ export interface StdUiPlatformerCanvasStopPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiPlatformerCanvasConfig {
-  /** Default: `800` */
-  worldWidth?: number;
   /** Default: `400` */
   canvasHeight?: number;
-  /** Default: `400` */
-  worldHeight?: number;
-  player?: EntityRow;
-  /** Default: `true` */
-  followCamera?: boolean;
-  /** Default: `"Bg Color"` */
-  bgColor?: string;
-  /** Default: `"Player Sprite"` */
-  playerSprite?: string;
   /** Default: `{}` */
   tileSprites?: unknown;
-  /** Default: `"Background Image"` */
-  backgroundImage?: string;
+  player?: EntityRow;
+  /** Default: `400` */
+  worldHeight?: number;
+  /** Default: `"Bg Color"` */
+  bgColor?: string;
   /** Default: `"Asset Base Url"` */
   assetBaseUrl?: string;
   /** Default: `800` */
   canvasWidth?: number;
-  /** Default: `""` */
-  className?: string;
+  /** Default: `"Player Sprite"` */
+  playerSprite?: string;
   /** Default: `[]` */
   platforms?: EntityRow[];
+  /** Default: `true` */
+  followCamera?: boolean;
+  /** Default: `800` */
+  worldWidth?: number;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"Background Image"` */
+  backgroundImage?: string;
 }
 
 /**

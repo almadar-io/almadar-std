@@ -53,55 +53,55 @@ export interface StdUiDataGridLoadMorePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiDataGridConfig {
-  /** Default: `false` */
-  dndRoot?: boolean;
-  /** Default: `1` */
-  cols?: number;
-  error?: EntityRow;
-  /** Default: `"Position Event"` */
-  positionEvent?: string;
-  /** Default: `0` */
-  maxInlineActions?: number;
-  /** Default: `"dense"` */
-  look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
-  /** Default: `[]` */
-  fields?: EntityRow[];
   /** Default: `"md"` */
   gap?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
-  /** Default: `false` */
-  hasMore?: boolean;
-  /** Default: `"Reorder Event"` */
-  reorderEvent?: string;
-  /** Default: `[]` */
-  columns?: EntityRow[];
-  /** Default: `false` */
-  scrollX?: boolean;
-  /** Default: `"Drag Group"` */
-  dragGroup?: string;
-  /** Default: `false` */
-  infiniteScroll?: boolean;
-  /** Default: `[]` */
-  itemActions?: EntityRow[];
   /** Default: `""` */
   className?: string;
-  /** Default: `"Image Field"` */
-  imageField?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `0` */
-  pageSize?: number;
-  /** Default: `false` */
-  selectable?: boolean;
-  /** Default: `"Accepts"` */
-  accepts?: string;
   /** Default: `"Dnd Item Id Field"` */
   dndItemIdField?: string;
   /** Default: `false` */
-  sortable?: boolean;
+  dndRoot?: boolean;
+  /** Default: `false` */
+  isLoading?: boolean;
   /** Default: `"Drop Event"` */
   dropEvent?: string;
+  error?: EntityRow;
+  /** Default: `false` */
+  selectable?: boolean;
+  /** Default: `false` */
+  hasMore?: boolean;
+  /** Default: `[]` */
+  fields?: EntityRow[];
+  /** Default: `[]` */
+  itemActions?: EntityRow[];
+  /** Default: `0` */
+  pageSize?: number;
+  /** Default: `false` */
+  sortable?: boolean;
+  /** Default: `"dense"` */
+  look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
+  /** Default: `false` */
+  infiniteScroll?: boolean;
+  /** Default: `[]` */
+  columns?: EntityRow[];
   /** Default: `280` */
   minCardWidth?: number;
+  /** Default: `"Image Field"` */
+  imageField?: string;
+  /** Default: `1` */
+  cols?: number;
+  /** Default: `"Drag Group"` */
+  dragGroup?: string;
+  /** Default: `0` */
+  maxInlineActions?: number;
+  /** Default: `"Accepts"` */
+  accepts?: string;
+  /** Default: `"Reorder Event"` */
+  reorderEvent?: string;
+  /** Default: `"Position Event"` */
+  positionEvent?: string;
+  /** Default: `false` */
+  scrollX?: boolean;
 }
 
 /**

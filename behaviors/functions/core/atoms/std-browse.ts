@@ -53,13 +53,7 @@ export interface StdBrowseBrowseItemLoadFailedPayload {
  */
 export interface StdBrowseViewPayload {
   id: string;
-  row?: {
-    id: string;
-    name: string;
-    description?: string;
-    status?: string;
-    createdAt?: string;
-  };
+  row?: EntityRow;
 }
 
 /**
@@ -67,13 +61,7 @@ export interface StdBrowseViewPayload {
  */
 export interface StdBrowseEditPayload {
   id: string;
-  row?: {
-    id: string;
-    name: string;
-    description?: string;
-    status?: string;
-    createdAt?: string;
-  };
+  row?: EntityRow;
 }
 
 /**
@@ -81,13 +69,7 @@ export interface StdBrowseEditPayload {
  */
 export interface StdBrowseDeletePayload {
   id: string;
-  row?: {
-    id: string;
-    name: string;
-    description?: string;
-    status?: string;
-    createdAt?: string;
-  };
+  row?: EntityRow;
 }
 
 /**
@@ -97,50 +79,50 @@ export interface StdBrowseDeletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdBrowseConfig {
-  /** Default: `"@item.description"` */
-  descriptionBinding?: string;
+  /** Default: `"@item.price"` */
+  priceBinding?: string;
+  /** Default: `"@item.createdAt"` */
+  metaBinding?: string;
+  /** Default: `"@item.priority"` */
+  priorityBinding?: string;
+  /** Default: `"@item.name"` */
+  titleBinding?: string;
+  /** Default: `"@item.assignee"` */
+  assigneeBinding?: string;
   /** Default: `"@item.status"` */
   badgeBinding?: string;
+  /** Default: `{"children":[{"imageField":"@config.imageField","cols":"@config.cols","type":"data-grid","pageSize":"@config.displayPageSize","entity":"@payload.data","itemActions":"@config.itemActions","fields":"@config.fields","gap":"@config.gap"}],"direction":"vertical","type":"stack"}` */
+  bodyContent?: unknown;
+  /** Default: `10` */
+  pageSize?: number;
   /** Default: `"@item.category"` */
   categoryBinding?: string;
-  /** Default: `[{"label":"Name","variant":"h4","name":"name"},{"variant":"caption","name":"description","label":"Description"},{"label":"Status","variant":"badge","name":"status"}]` */
+  /** Default: `1` */
+  cols?: number;
+  /** Default: `99` */
+  maxInlineActions?: number;
+  /** Default: `"@item.description"` */
+  descriptionBinding?: string;
+  /** Default: `[]` */
+  filters?: EntityRow[];
+  /** Default: `[{"label":"Name","variant":"h4","name":"name"},{"label":"Description","name":"description","variant":"caption"},{"variant":"badge","label":"Status","name":"status"}]` */
   fields?: EntityRow[];
   /** Default: `"@item.thumbnailLabel"` */
   imageLabelBinding?: string;
-  /** Default: `"@item.priority"` */
-  priorityBinding?: string;
   /** Default: `[]` */
   itemActions?: EntityRow[];
-  /** Default: `""` */
-  imageField?: string;
-  /** Default: `"md"` */
-  gap?: string;
-  /** Default: `"@item.name"` */
-  titleBinding?: string;
-  /** Default: `{"children":[{"entity":"@payload.data","itemActions":"@config.itemActions","type":"data-grid","fields":"@config.fields","cols":"@config.cols","pageSize":"@config.displayPageSize","imageField":"@config.imageField","gap":"@config.gap"}],"type":"stack","direction":"vertical"}` */
-  bodyContent?: unknown;
-  /** Default: `10` */
-  displayPageSize?: number;
-  /** Default: `"@item.createdAt"` */
-  metaBinding?: string;
-  /** Default: `99` */
-  maxInlineActions?: number;
-  /** Default: `1` */
-  cols?: number;
-  /** Default: `10` */
-  pageSize?: number;
+  /** Default: `[{"weight":"medium","header":"Name","key":"name","align":"left","field":"name"},{"align":"left","header":"Detail","key":"description","field":"description"},{"header":"Status","key":"status","field":"status","format":"badge","align":"center"}]` */
+  columns?: EntityRow[];
   /** Default: `"Search…"` */
   searchPlaceholder?: string;
   /** Default: `"data-grid"` */
   viewPattern?: unknown;
-  /** Default: `"@item.price"` */
-  priceBinding?: string;
-  /** Default: `[{"align":"left","field":"name","header":"Name","weight":"medium","key":"name"},{"align":"left","header":"Detail","key":"description","field":"description"},{"align":"center","header":"Status","field":"status","format":"badge","key":"status"}]` */
-  columns?: EntityRow[];
-  /** Default: `[]` */
-  filters?: EntityRow[];
-  /** Default: `"@item.assignee"` */
-  assigneeBinding?: string;
+  /** Default: `"md"` */
+  gap?: string;
+  /** Default: `10` */
+  displayPageSize?: number;
+  /** Default: `""` */
+  imageField?: string;
 }
 
 /**

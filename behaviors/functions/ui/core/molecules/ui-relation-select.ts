@@ -48,28 +48,28 @@ export interface StdUiRelationSelectChangePayload {
 export interface StdUiRelationSelectConfig {
   /** Default: `"Name"` */
   name?: string;
-  /** Default: `false` */
-  required?: boolean;
-  /** Default: `true` */
-  clearable?: boolean;
-  /** Default: `"Search Placeholder"` */
-  searchPlaceholder?: string;
-  /** Default: `[{"value":"Value","label":"Label"}]` */
-  options?: EntityRow[];
-  /** Default: `"Select..."` */
-  placeholder?: string;
-  /** Default: `""` */
-  className?: string;
   /** Default: `"Empty Message"` */
   emptyMessage?: string;
-  /** Default: `""` */
-  error?: string;
+  /** Default: `true` */
+  clearable?: boolean;
   /** Default: `false` */
-  isLoading?: boolean;
+  required?: boolean;
   /** Default: `"Value"` */
   value?: string;
+  /** Default: `"Select..."` */
+  placeholder?: string;
   /** Default: `false` */
   disabled?: boolean;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `""` */
+  error?: string;
+  /** Default: `[{"label":"Label","value":"Value"}]` */
+  options?: EntityRow[];
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `"Search Placeholder"` */
+  searchPlaceholder?: string;
 }
 
 /**

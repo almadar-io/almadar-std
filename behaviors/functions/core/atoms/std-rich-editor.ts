@@ -37,18 +37,7 @@ export type StdRichEditorEventKey = 'BLOCKS_CHANGE' | 'CLOSE_VIEW' | 'DocumentLo
  */
 export interface StdRichEditorOpenPayload {
   id: string;
-  row?: {
-    id: string;
-    title: string;
-    blocksJson?: EntityRow[];
-    authorId?: string;
-    parentId?: string;
-    kind?: string;
-    status?: string;
-    version?: number;
-    createdAt?: string;
-    updatedAt?: string;
-  };
+  row?: EntityRow;
 }
 
 /**
@@ -91,36 +80,14 @@ export interface StdRichEditorDocumentLoadFailedPayload {
  * Payload shape for the `DocumentSaved` event.
  */
 export interface StdRichEditorDocumentSavedPayload {
-  row?: {
-    id: string;
-    title: string;
-    blocksJson?: EntityRow[];
-    authorId?: string;
-    parentId?: string;
-    kind?: string;
-    status?: string;
-    version?: number;
-    createdAt?: string;
-    updatedAt?: string;
-  };
+  row?: EntityRow;
 }
 
 /**
  * Payload shape for the `DocumentPublished` event.
  */
 export interface StdRichEditorDocumentPublishedPayload {
-  row?: {
-    id: string;
-    title: string;
-    blocksJson?: EntityRow[];
-    authorId?: string;
-    parentId?: string;
-    kind?: string;
-    status?: string;
-    version?: number;
-    createdAt?: string;
-    updatedAt?: string;
-  };
+  row?: EntityRow;
 }
 
 /**

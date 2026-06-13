@@ -69,49 +69,49 @@ export interface StdUiIsometricCanvasTileLeavePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiIsometricCanvasConfig {
-  /** Default: `0` */
-  diamondTopY?: number;
-  /** Default: `false` */
-  hasActiveEffects?: boolean;
-  /** Default: `[]` */
-  effectSpriteUrls?: string[];
-  /** Default: `false` */
-  debug?: boolean;
-  /** Default: `true` */
-  enableCamera?: boolean;
-  /** Default: `1` */
-  unitScale?: number;
-  /** Default: `0` */
-  boardWidth?: number;
-  /** Default: `[]` */
-  validMoves?: EntityRow[];
+  /** Default: `"Asset Base Url"` */
+  assetBaseUrl?: string;
   /** Default: `[]` */
   features?: EntityRow[];
-  /** Default: `true` */
-  showMinimap?: boolean;
   /** Default: `[]` */
-  attackTargets?: EntityRow[];
+  effectSpriteUrls?: string[];
+  error?: EntityRow;
+  /** Default: `[]` */
+  validMoves?: EntityRow[];
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `[]` */
-  tiles?: EntityRow[];
+  /** Default: `true` */
+  showMinimap?: boolean;
   /** Default: `"Selected Unit Id"` */
   selectedUnitId?: string;
   /** Default: `0.4` */
   scale?: number;
-  /** Default: `"Background Image"` */
-  backgroundImage?: string;
-  /** Default: `0` */
-  boardHeight?: number;
   /** Default: `[]` */
   units?: EntityRow[];
-  error?: EntityRow;
-  assetManifest?: EntityRow;
-  /** Default: `"Asset Base Url"` */
-  assetBaseUrl?: string;
+  /** Default: `"Background Image"` */
+  backgroundImage?: string;
+  /** Default: `[]` */
+  tiles?: EntityRow[];
+  hoveredTile?: EntityRow;
+  /** Default: `0` */
+  boardWidth?: number;
+  /** Default: `0` */
+  boardHeight?: number;
+  /** Default: `false` */
+  debug?: boolean;
+  /** Default: `0` */
+  diamondTopY?: number;
   /** Default: `""` */
   className?: string;
-  hoveredTile?: EntityRow;
+  /** Default: `false` */
+  hasActiveEffects?: boolean;
+  /** Default: `[]` */
+  attackTargets?: EntityRow[];
+  /** Default: `1` */
+  unitScale?: number;
+  /** Default: `true` */
+  enableCamera?: boolean;
+  assetManifest?: EntityRow;
 }
 
 /**

@@ -41,11 +41,11 @@ export type StdUiMarketingFooterEventKey = 'INIT';
 export interface StdUiMarketingFooterConfig {
   /** Default: `"Copyright"` */
   copyright?: string;
-  logo?: EntityRow;
   /** Default: `""` */
   className?: string;
   /** Default: `[]` */
   columns?: EntityRow[];
+  logo?: EntityRow;
 }
 
 /**

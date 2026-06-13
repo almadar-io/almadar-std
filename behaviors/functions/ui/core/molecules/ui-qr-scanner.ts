@@ -47,17 +47,17 @@ export interface StdUiQrScannerScanPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiQrScannerConfig {
+  /** Default: `true` */
+  showCameraControls?: boolean;
+  fallback?: unknown;
+  /** Default: `false` */
+  paused?: boolean;
+  /** Default: `true` */
+  showOverlay?: boolean;
   /** Default: `""` */
   className?: string;
   /** Default: `"environment"` */
   facingMode?: 'environment' | 'user';
-  /** Default: `false` */
-  paused?: boolean;
-  fallback?: unknown;
-  /** Default: `true` */
-  showCameraControls?: boolean;
-  /** Default: `true` */
-  showOverlay?: boolean;
 }
 
 /**

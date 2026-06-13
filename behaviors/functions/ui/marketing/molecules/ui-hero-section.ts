@@ -39,30 +39,30 @@ export type StdUiHeroSectionEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiHeroSectionConfig {
-  /** Default: `"primary"` */
-  tagVariant?: 'primary' | 'secondary' | 'accent';
-  /** Default: `"Title"` */
-  title?: string;
   /** Default: `"Tag"` */
   tag?: string;
   /** Default: `"Title Accent"` */
   titleAccent?: string;
-  primaryAction?: EntityRow;
   secondaryAction?: EntityRow;
   image?: EntityRow;
-  /** Default: `"center"` */
-  align?: 'center' | 'left';
-  backgroundElement?: unknown;
-  /** Default: `"below"` */
-  imagePosition?: 'below' | 'right' | 'background';
   /** Default: `"subtle"` */
   background?: 'dark' | 'gradient' | 'subtle';
+  /** Default: `"center"` */
+  align?: 'center' | 'left';
   /** Default: `"Install Command"` */
   installCommand?: string;
+  primaryAction?: EntityRow;
+  /** Default: `"below"` */
+  imagePosition?: 'below' | 'right' | 'background';
+  /** Default: `"Title"` */
+  title?: string;
+  backgroundElement?: unknown;
   /** Default: `""` */
   className?: string;
   /** Default: `"Subtitle"` */
   subtitle?: string;
+  /** Default: `"primary"` */
+  tagVariant?: 'primary' | 'secondary' | 'accent';
 }
 
 /**

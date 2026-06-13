@@ -83,16 +83,16 @@ export interface StdEventLogEventLogSaveFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdEventLogConfig {
-  /** Default: `"elevated"` */
-  cardLook?: 'elevated' | 'flat-bordered' | 'borderless-divider' | 'ticket' | 'invoice' | 'chip' | 'tile-image-first';
   /** Default: `"vertical-spacious"` */
   timelineLook?: 'vertical-compact' | 'vertical-spacious' | 'horizontal' | 'swimlane';
+  /** Default: `"elevated"` */
+  cardLook?: 'elevated' | 'flat-bordered' | 'borderless-divider' | 'ticket' | 'invoice' | 'chip' | 'tile-image-first';
   /** Default: `["backfillTitle","backfillDescription","backfillKind","backfillDate"]` */
   formFields?: string[];
-  /** Default: `[{"label":"Created","status":"active","key":"created","icon":"plus-circle"},{"label":"Updated","icon":"edit-3","key":"updated","status":"pending"},{"label":"Approved","status":"complete","icon":"check-circle","key":"approved"},{"label":"Rejected","status":"error","key":"rejected","icon":"x-circle"}]` */
-  kindOptions?: EntityRow[];
   /** Default: `"Activity"` */
   title?: string;
+  /** Default: `[{"icon":"plus-circle","key":"created","status":"active","label":"Created"},{"status":"pending","label":"Updated","icon":"edit-3","key":"updated"},{"label":"Approved","status":"complete","icon":"check-circle","key":"approved"},{"key":"rejected","icon":"x-circle","label":"Rejected","status":"error"}]` */
+  kindOptions?: EntityRow[];
 }
 
 /**

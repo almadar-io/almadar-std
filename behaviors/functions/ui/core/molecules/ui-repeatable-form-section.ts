@@ -63,31 +63,31 @@ export interface StdUiRepeatableFormSectionReorderPayload {
  */
 export interface StdUiRepeatableFormSectionConfig {
   /** Default: `false` */
-  showAuditInfo?: boolean;
-  /** Default: `0` */
-  minItems?: number;
-  /** Default: `"Section Type"` */
-  sectionType?: string;
-  /** Default: `"Empty Message"` */
-  emptyMessage?: string;
+  allowReorder?: boolean;
   /** Default: `"Title"` */
   title?: string;
-  /** Default: `"Add Label"` */
-  addLabel?: string;
+  /** Default: `"Empty Message"` */
+  emptyMessage?: string;
   /** Default: `false` */
-  allowReorder?: boolean;
+  readOnly?: boolean;
   /** Default: `""` */
   className?: string;
-  /** Default: `0` */
-  maxItems?: number;
   /** Default: `false` */
   trackAddedInState?: boolean;
   /** Default: `"Current State"` */
   currentState?: string;
+  /** Default: `"Section Type"` */
+  sectionType?: string;
+  /** Default: `false` */
+  showAuditInfo?: boolean;
+  /** Default: `0` */
+  maxItems?: number;
   /** Default: `[{"id":"Id"}]` */
   items?: EntityRow[];
-  /** Default: `false` */
-  readOnly?: boolean;
+  /** Default: `"Add Label"` */
+  addLabel?: string;
+  /** Default: `0` */
+  minItems?: number;
 }
 
 /**

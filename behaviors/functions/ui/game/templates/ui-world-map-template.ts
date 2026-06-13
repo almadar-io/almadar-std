@@ -39,16 +39,16 @@ export type StdUiWorldMapTemplateEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiWorldMapTemplateConfig {
-  /** Default: `""` */
-  className?: string;
-  /** Default: `0.4` */
-  scale?: number;
   /** Default: `2.5` */
   unitScale?: number;
-  /** Default: `false` */
-  allowMoveAllHeroes?: boolean;
   /** Default: `0` */
   diamondTopY?: number;
+  /** Default: `0.4` */
+  scale?: number;
+  /** Default: `false` */
+  allowMoveAllHeroes?: boolean;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

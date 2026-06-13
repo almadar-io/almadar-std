@@ -41,24 +41,24 @@ export type StdUiFlexEventKey = 'INIT';
 export interface StdUiFlexConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `"row"` */
-  direction?: 'row' | 'row-reverse' | 'col' | 'col-reverse';
   /** Default: `"stretch"` */
   align?: 'start' | 'center' | 'end' | 'stretch' | 'baseline';
+  /** Default: `"start"` */
+  justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';
   /** Default: `false` */
   inline?: boolean;
+  /** Default: `0` */
+  grow?: number;
+  /** Default: `"none"` */
+  gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  /** Default: `"row"` */
+  direction?: 'row' | 'row-reverse' | 'col' | 'col-reverse';
+  /** Default: `"nowrap"` */
+  wrap?: 'nowrap' | 'wrap' | 'wrap-reverse';
   /** Default: `0` */
   shrink?: number;
   /** Default: `"Basis"` */
   basis?: string;
-  /** Default: `"none"` */
-  gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
-  /** Default: `"nowrap"` */
-  wrap?: 'nowrap' | 'wrap' | 'wrap-reverse';
-  /** Default: `0` */
-  grow?: number;
-  /** Default: `"start"` */
-  justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';
 }
 
 /**

@@ -49,10 +49,10 @@ export interface StdRowAccessControlRowsFilteredPayload {
 export interface StdRowAccessControlConfig {
   /** Default: `""` */
   ownerField?: string;
-  /** Default: `false` */
-  enabled?: boolean;
   /** Default: `[]` */
   visibleRoles?: string[];
+  /** Default: `false` */
+  enabled?: boolean;
 }
 
 /**

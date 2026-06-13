@@ -39,39 +39,39 @@ export type StdUiChartEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiChartConfig {
-  /** Default: `"Subtitle"` */
-  subtitle?: string;
-  error?: EntityRow;
-  /** Default: `"Title"` */
-  title?: string;
+  /** Default: `"bar"` */
+  chartType?: 'bar' | 'line' | 'pie' | 'area' | 'donut' | 'scatter' | 'histogram';
+  /** Default: `true` */
+  showLegend?: boolean;
   /** Default: `[]` */
   series?: EntityRow[];
-  /** Default: `[]` */
-  scatterData?: EntityRow[];
-  /** Default: `false` */
-  timeAxis?: boolean;
-  /** Default: `[]` */
-  actions?: EntityRow[];
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `""` */
-  className?: string;
+  /** Default: `"Title"` */
+  title?: string;
   /** Default: `false` */
   showValues?: boolean;
   /** Default: `[]` */
-  data?: EntityRow[];
-  /** Default: `200` */
-  height?: number;
-  /** Default: `"bar"` */
-  chartType?: 'bar' | 'line' | 'pie' | 'area' | 'donut' | 'scatter' | 'histogram';
+  scatterData?: EntityRow[];
+  /** Default: `false` */
+  isLoading?: boolean;
   /** Default: `"none"` */
   stack?: 'none' | 'stack' | 'normalize';
-  /** Default: `true` */
-  showLegend?: boolean;
+  /** Default: `200` */
+  height?: number;
   /** Default: `"bar-vertical"` */
   look?: 'bar-vertical' | 'bar-horizontal' | 'line' | 'area' | 'pie' | 'donut' | 'scatter' | 'histogram';
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"Subtitle"` */
+  subtitle?: string;
+  /** Default: `false` */
+  timeAxis?: boolean;
   /** Default: `"Drill Event"` */
   drillEvent?: string;
+  /** Default: `[]` */
+  actions?: EntityRow[];
+  error?: EntityRow;
+  /** Default: `[]` */
+  data?: EntityRow[];
 }
 
 /**
