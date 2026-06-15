@@ -93,6 +93,8 @@ export interface StdModQueueModQueueItemReviewFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdModQueueConfig {
+  /** Default: `"modal"` */
+  reviewSlot?: unknown;
   /** Default: `5` */
   autoEscalateThreshold?: number;
   /** Default: `false` */
@@ -101,8 +103,6 @@ export interface StdModQueueConfig {
   title?: string;
   /** Default: `"dense"` */
   tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
-  /** Default: `"modal"` */
-  reviewSlot?: unknown;
 }
 
 /**
