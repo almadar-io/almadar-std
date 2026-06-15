@@ -530,9 +530,58 @@
                     "ModQueueItem",
                     {
                       "emit": {
-                        "success": "ModQueueItemLoaded",
-                        "failure": "ModQueueItemLoadFailed"
+                        "failure": "ModQueueItemLoadFailed",
+                        "success": "ModQueueItemLoaded"
                       }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "name": "shield-alert",
+                              "type": "icon"
+                            },
+                            {
+                              "content": "@config.title",
+                              "type": "typography",
+                              "variant": "h3"
+                            }
+                          ],
+                          "align": "center",
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "children": [
+                            {
+                              "type": "spinner"
+                            },
+                            {
+                              "content": "Loading moderation queue…",
+                              "variant": "caption",
+                              "color": "muted",
+                              "type": "typography"
+                            }
+                          ],
+                          "className": "py-8",
+                          "direction": "vertical",
+                          "gap": "sm",
+                          "align": "center",
+                          "type": "stack"
+                        }
+                      ],
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -540,7 +589,70 @@
               {
                 "from": "idle",
                 "to": "idle",
-                "event": "ModQueueItemLoaded"
+                "event": "ModQueueItemLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "children": [
+                        {
+                          "align": "center",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "shield-alert"
+                            },
+                            {
+                              "content": "@config.title",
+                              "type": "typography",
+                              "variant": "h3"
+                            }
+                          ],
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "entity-table",
+                          "fields": [
+                            "targetType",
+                            "reason",
+                            "flagCount",
+                            "status"
+                          ],
+                          "itemActions": [
+                            {
+                              "icon": "check",
+                              "event": "APPROVE",
+                              "variant": "primary",
+                              "label": "Approve"
+                            },
+                            {
+                              "label": "Reject",
+                              "event": "REJECT",
+                              "variant": "danger",
+                              "icon": "x"
+                            },
+                            {
+                              "event": "ESCALATE",
+                              "variant": "secondary",
+                              "label": "Escalate",
+                              "icon": "alert-triangle"
+                            }
+                          ],
+                          "entity": "@payload.data"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "md"
+                    }
+                  ]
+                ]
               },
               {
                 "from": "idle",
@@ -567,22 +679,22 @@
                     "render-ui",
                     "@config.reviewSlot",
                     {
+                      "className": "py-12",
+                      "direction": "vertical",
                       "type": "stack",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
                           "content": "Loading moderation queue…",
+                          "color": "muted",
                           "type": "typography",
                           "variant": "caption"
                         }
                       ],
-                      "direction": "vertical",
-                      "gap": "md",
-                      "className": "py-12",
-                      "align": "center"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -596,17 +708,15 @@
                     "render-ui",
                     "@config.reviewSlot",
                     {
+                      "gap": "md",
                       "direction": "vertical",
-                      "type": "stack",
                       "children": [
                         {
-                          "justify": "between",
+                          "type": "stack",
                           "align": "center",
-                          "gap": "sm",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "direction": "horizontal",
-                              "type": "stack",
                               "children": [
                                 {
                                   "type": "icon",
@@ -614,78 +724,80 @@
                                 },
                                 {
                                   "content": "@config.title",
-                                  "type": "typography",
-                                  "variant": "h3"
+                                  "variant": "h3",
+                                  "type": "typography"
                                 }
                               ],
+                              "direction": "horizontal",
+                              "align": "center",
                               "gap": "sm",
-                              "align": "center"
+                              "type": "stack"
                             },
                             {
-                              "variant": "ghost",
+                              "action": "CLOSE",
                               "icon": "x",
-                              "type": "button",
+                              "variant": "ghost",
                               "label": "Close",
-                              "action": "CLOSE"
+                              "type": "button"
                             }
                           ],
-                          "type": "stack",
-                          "direction": "horizontal"
+                          "gap": "sm",
+                          "justify": "between"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "entity": "@payload.data",
+                          "type": "data-grid",
+                          "look": "@config.tableLook",
+                          "cols": 1.0,
                           "itemActions": [
                             {
-                              "variant": "primary",
-                              "event": "APPROVE",
+                              "icon": "check",
                               "label": "Approve",
-                              "icon": "check"
+                              "variant": "primary",
+                              "event": "APPROVE"
                             },
                             {
-                              "label": "Reject",
-                              "event": "REJECT",
                               "variant": "danger",
-                              "icon": "x"
+                              "label": "Reject",
+                              "icon": "x",
+                              "event": "REJECT"
                             },
                             {
                               "icon": "alert-triangle",
-                              "label": "Escalate",
                               "event": "ESCALATE",
+                              "label": "Escalate",
                               "variant": "secondary"
                             }
                           ],
-                          "entity": "@payload.data",
-                          "type": "data-grid",
-                          "cols": 1.0,
-                          "look": "@config.tableLook",
                           "fields": [
                             {
-                              "variant": "badge",
                               "label": "Type",
-                              "name": "targetType"
+                              "name": "targetType",
+                              "variant": "badge"
+                            },
+                            {
+                              "name": "reason",
+                              "variant": "caption",
+                              "label": "Reason"
                             },
                             {
                               "variant": "caption",
-                              "label": "Reason",
-                              "name": "reason"
-                            },
-                            {
-                              "label": "Flags",
                               "name": "flagCount",
-                              "variant": "caption"
+                              "label": "Flags"
                             },
                             {
-                              "label": "Status",
+                              "name": "status",
                               "variant": "badge",
-                              "name": "status"
+                              "label": "Status"
                             }
                           ],
                           "gap": "sm"
                         }
                       ],
-                      "gap": "md"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -715,6 +827,65 @@
                     "render-ui",
                     "@config.reviewSlot",
                     null
+                  ],
+                  [
+                    "fetch",
+                    "ModQueueItem",
+                    {
+                      "emit": {
+                        "failure": "ModQueueItemLoadFailed",
+                        "success": "ModQueueItemLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "name": "shield-alert",
+                              "type": "icon"
+                            },
+                            {
+                              "content": "@config.title",
+                              "variant": "h3",
+                              "type": "typography"
+                            }
+                          ],
+                          "align": "center",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "children": [
+                            {
+                              "type": "spinner"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Loading moderation queue…",
+                              "variant": "caption",
+                              "color": "muted"
+                            }
+                          ],
+                          "className": "py-8",
+                          "align": "center",
+                          "direction": "vertical",
+                          "gap": "sm",
+                          "type": "stack"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "type": "stack"
+                    }
                   ]
                 ]
               },
@@ -755,8 +926,8 @@
                     },
                     {
                       "emit": {
-                        "failure": "ModQueueItemReviewFailed",
-                        "success": "ModQueueItemReviewed"
+                        "success": "ModQueueItemReviewed",
+                        "failure": "ModQueueItemReviewFailed"
                       }
                     }
                   ]
@@ -777,8 +948,8 @@
                     },
                     {
                       "emit": {
-                        "success": "ModQueueItemReviewed",
-                        "failure": "ModQueueItemReviewFailed"
+                        "failure": "ModQueueItemReviewFailed",
+                        "success": "ModQueueItemReviewed"
                       }
                     }
                   ]
@@ -810,9 +981,9 @@
                     "render-ui",
                     "@config.reviewSlot",
                     {
-                      "type": "alert",
                       "variant": "error",
-                      "message": "@payload.error"
+                      "message": "@payload.error",
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -826,6 +997,65 @@
                     "render-ui",
                     "@config.reviewSlot",
                     null
+                  ],
+                  [
+                    "fetch",
+                    "ModQueueItem",
+                    {
+                      "emit": {
+                        "success": "ModQueueItemLoaded",
+                        "failure": "ModQueueItemLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "name": "shield-alert",
+                              "type": "icon"
+                            },
+                            {
+                              "content": "@config.title",
+                              "type": "typography",
+                              "variant": "h3"
+                            }
+                          ],
+                          "gap": "sm",
+                          "type": "stack",
+                          "align": "center"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "direction": "vertical",
+                          "children": [
+                            {
+                              "type": "spinner"
+                            },
+                            {
+                              "content": "Loading moderation queue…",
+                              "color": "muted",
+                              "type": "typography",
+                              "variant": "caption"
+                            }
+                          ],
+                          "gap": "sm",
+                          "type": "stack",
+                          "className": "py-8",
+                          "align": "center"
+                        }
+                      ],
+                      "gap": "md",
+                      "type": "stack"
+                    }
                   ]
                 ]
               },
@@ -839,8 +1069,8 @@
                     "ModQueueItem",
                     {
                       "emit": {
-                        "failure": "ModQueueItemLoadFailed",
-                        "success": "ModQueueItemLoaded"
+                        "success": "ModQueueItemLoaded",
+                        "failure": "ModQueueItemLoadFailed"
                       }
                     }
                   ],
@@ -863,12 +1093,78 @@
                     "render-ui",
                     "@config.reviewSlot",
                     null
+                  ],
+                  [
+                    "fetch",
+                    "ModQueueItem",
+                    {
+                      "emit": {
+                        "failure": "ModQueueItemLoadFailed",
+                        "success": "ModQueueItemLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "name": "shield-alert",
+                              "type": "icon"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "h3",
+                              "content": "@config.title"
+                            }
+                          ],
+                          "gap": "sm",
+                          "type": "stack",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "gap": "sm",
+                          "direction": "vertical",
+                          "align": "center",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "type": "spinner"
+                            },
+                            {
+                              "color": "muted",
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "Loading moderation queue…"
+                            }
+                          ],
+                          "className": "py-8"
+                        }
+                      ]
+                    }
                   ]
                 ]
               }
             ]
           },
           "config": {
+            "reviewSlot": {
+              "type": "slot",
+              "default": "modal",
+              "label": "Review slot",
+              "description": "UI slot the moderation queue renders into. Defaults to the modal overlay so it never seizes the host's main content; summoned via OPEN, cleared via CLOSE.",
+              "tier": "internal"
+            },
             "autoEscalateThreshold": {
               "type": "number",
               "default": 5.0,
@@ -904,13 +1200,6 @@
                 "borderless",
                 "card-rows"
               ]
-            },
-            "reviewSlot": {
-              "type": "slot",
-              "default": "modal",
-              "label": "Review slot",
-              "description": "UI slot the moderation queue renders into. Defaults to the modal overlay so it never seizes the host's main content; summoned via OPEN, cleared via CLOSE.",
-              "tier": "internal"
             }
           },
           "scope": "collection"

@@ -29,7 +29,71 @@ orbital ModQueueItemOrbital {
         (fetch ModQueueItem {
           emit: { failure: ModQueueItemLoadFailed, success: ModQueueItemLoaded }
         })
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: shield-alert, type: icon }, {
+              content: @config.title
+              type: typography
+              variant: h3
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            align: center
+            children: [{ type: spinner }, {
+              color: muted
+              content: "Loading moderation queue…"
+              type: typography
+              variant: caption
+            }]
+            className: py-8
+            direction: vertical
+            gap: sm
+            type: stack
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
       ModQueueItemLoaded -> idle
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: shield-alert, type: icon }, {
+              content: @config.title
+              type: typography
+              variant: h3
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            entity: ?data
+            fields: [targetType, reason, flagCount, status]
+            itemActions: [{
+              event: APPROVE
+              icon: check
+              label: Approve
+              variant: primary
+            }, {
+              event: REJECT
+              icon: x
+              label: Reject
+              variant: danger
+            }, {
+              event: ESCALATE
+              icon: alert-triangle
+              label: Escalate
+              variant: secondary
+            }]
+            type: entity-table
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
       ModQueueItemLoadFailed -> idle
       OPEN -> loading when @config.enabled
         (fetch ModQueueItem {
@@ -128,6 +192,37 @@ orbital ModQueueItemOrbital {
         })
       CLOSE -> idle
         (render-ui @config.reviewSlot null)
+        (fetch ModQueueItem {
+          emit: { failure: ModQueueItemLoadFailed, success: ModQueueItemLoaded }
+        })
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: shield-alert, type: icon }, {
+              content: @config.title
+              type: typography
+              variant: h3
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            align: center
+            children: [{ type: spinner }, {
+              color: muted
+              content: "Loading moderation queue…"
+              type: typography
+              variant: caption
+            }]
+            className: py-8
+            direction: vertical
+            gap: sm
+            type: stack
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
     }
 
     state reviewing {
@@ -155,6 +250,37 @@ orbital ModQueueItemOrbital {
         })
       CLOSE -> idle
         (render-ui @config.reviewSlot null)
+        (fetch ModQueueItem {
+          emit: { failure: ModQueueItemLoadFailed, success: ModQueueItemLoaded }
+        })
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: shield-alert, type: icon }, {
+              content: @config.title
+              type: typography
+              variant: h3
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            align: center
+            children: [{ type: spinner }, {
+              color: muted
+              content: "Loading moderation queue…"
+              type: typography
+              variant: caption
+            }]
+            className: py-8
+            direction: vertical
+            gap: sm
+            type: stack
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
     }
 
     state error {
@@ -165,6 +291,37 @@ orbital ModQueueItemOrbital {
         (render-ui @config.reviewSlot { size: sm, type: spinner })
       CLOSE -> idle
         (render-ui @config.reviewSlot null)
+        (fetch ModQueueItem {
+          emit: { failure: ModQueueItemLoadFailed, success: ModQueueItemLoaded }
+        })
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: shield-alert, type: icon }, {
+              content: @config.title
+              type: typography
+              variant: h3
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            align: center
+            children: [{ type: spinner }, {
+              color: muted
+              content: "Loading moderation queue…"
+              type: typography
+              variant: caption
+            }]
+            className: py-8
+            direction: vertical
+            gap: sm
+            type: stack
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
     }
 
     emits {
