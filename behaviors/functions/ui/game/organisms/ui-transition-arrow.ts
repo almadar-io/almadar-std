@@ -46,18 +46,18 @@ export interface StdUiTransitionArrowClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiTransitionArrowConfig {
-  /** Default: `{"y":1,"x":1}` */
-  toProp?: EntityRow;
-  /** Default: `false` */
-  isActive?: boolean;
   /** Default: `"Event Label"` */
   eventLabel?: string;
-  /** Default: `{"x":1,"y":1}` */
-  fromProp?: EntityRow;
-  /** Default: `"Guard Hint"` */
-  guardHint?: string;
   /** Default: `""` */
   className?: string;
+  /** Default: `{"y":1,"x":1}` */
+  toProp?: EntityRow;
+  /** Default: `"Guard Hint"` */
+  guardHint?: string;
+  /** Default: `{"x":1,"y":1}` */
+  fromProp?: EntityRow;
+  /** Default: `false` */
+  isActive?: boolean;
 }
 
 /**
@@ -187,14 +187,14 @@ export function stdUiTransitionArrowTransitionArrowOrbital(params: StdUiTransiti
                   'render-ui',
                   'main',
                   {
-                    'eventLabel': '@config.eventLabel',
-                    'onClick': 'CLICK',
                     'to': '@config.toProp',
-                    'type': 'transition-arrow',
+                    'eventLabel': '@config.eventLabel',
                     'isActive': '@config.isActive',
-                    'className': '@config.className',
-                    'from': '@config.fromProp',
                     'guardHint': '@config.guardHint',
+                    'onClick': 'CLICK',
+                    'type': 'transition-arrow',
+                    'from': '@config.fromProp',
+                    'className': '@config.className',
                   },
                 ],
               ],
@@ -202,6 +202,20 @@ export function stdUiTransitionArrowTransitionArrowOrbital(params: StdUiTransiti
           ],
         },
         'config': {
+          'eventLabel': {
+            'type': 'string',
+            'default': 'Event Label',
+            'label': 'Event Label',
+            'description': 'Event label shown on the arrow',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes for the SVG group',
+            'tier': 'presentation',
+          },
           'toProp': {
             'type': 'TransitionArrowTo',
             'default': {
@@ -225,18 +239,11 @@ export function stdUiTransitionArrowTransitionArrowOrbital(params: StdUiTransiti
               },
             },
           },
-          'isActive': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Active',
-            'description': 'Whether this transition is currently active',
-            'tier': 'presentation',
-          },
-          'eventLabel': {
+          'guardHint': {
             'type': 'string',
-            'default': 'Event Label',
-            'label': 'Event Label',
-            'description': 'Event label shown on the arrow',
+            'default': 'Guard Hint',
+            'label': 'Guard Hint',
+            'description': 'Guard hint shown below event',
             'tier': 'presentation',
           },
           'fromProp': {
@@ -262,18 +269,11 @@ export function stdUiTransitionArrowTransitionArrowOrbital(params: StdUiTransiti
               },
             },
           },
-          'guardHint': {
-            'type': 'string',
-            'default': 'Guard Hint',
-            'label': 'Guard Hint',
-            'description': 'Guard hint shown below event',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes for the SVG group',
+          'isActive': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Active',
+            'description': 'Whether this transition is currently active',
             'tier': 'presentation',
           },
         },

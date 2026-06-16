@@ -46,30 +46,30 @@ export interface StdUiRelationSelectChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiRelationSelectConfig {
-  /** Default: `"Value"` */
-  value?: string;
-  /** Default: `"Empty Message"` */
-  emptyMessage?: string;
   /** Default: `false` */
-  disabled?: boolean;
-  /** Default: `"Name"` */
-  name?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
+  required?: boolean;
+  /** Default: `""` */
+  className?: string;
   /** Default: `""` */
   error?: string;
   /** Default: `false` */
-  required?: boolean;
+  isLoading?: boolean;
   /** Default: `true` */
   clearable?: boolean;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"Search Placeholder"` */
-  searchPlaceholder?: string;
-  /** Default: `[{"value":"Value","description":"Description","disabled":false,"label":"Label"}]` */
-  options?: EntityRow[];
+  /** Default: `"Name"` */
+  name?: string;
+  /** Default: `"Empty Message"` */
+  emptyMessage?: string;
   /** Default: `"Placeholder"` */
   placeholder?: string;
+  /** Default: `[{"description":"Description","label":"Label","value":"Value","disabled":false}]` */
+  options?: EntityRow[];
+  /** Default: `"Value"` */
+  value?: string;
+  /** Default: `false` */
+  disabled?: boolean;
+  /** Default: `"Search Placeholder"` */
+  searchPlaceholder?: string;
 }
 
 /**

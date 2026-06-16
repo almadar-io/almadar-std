@@ -41,14 +41,14 @@ export type StdUiSectionHeaderEventKey = 'INIT';
 export interface StdUiSectionHeaderConfig {
   /** Default: `"center"` */
   align?: 'center' | 'left' | 'right';
-  /** Default: `2` */
-  level?: number;
   /** Default: `""` */
   className?: string;
-  /** Default: `"Subtitle"` */
-  subtitle?: string;
   /** Default: `"Title"` */
   title?: string;
+  /** Default: `"Subtitle"` */
+  subtitle?: string;
+  /** Default: `2` */
+  level?: number;
 }
 
 /**

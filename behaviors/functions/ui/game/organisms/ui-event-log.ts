@@ -41,7 +41,7 @@ export type StdUiEventLogEventKey = 'INIT';
 export interface StdUiEventLogConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `[{"timestamp":1,"status":"pending","id":"Id","icon":"circle","message":"Message"}]` */
+  /** Default: `[{"timestamp":1,"icon":"circle","message":"Message","status":"pending","id":"Id"}]` */
   entries?: EntityRow[];
   /** Default: `"Label"` */
   label?: string;
@@ -150,10 +150,10 @@ export function stdUiEventLogEventLogOrbital(params: StdUiEventLogEventLogOrbita
                   'render-ui',
                   'main',
                   {
-                    'className': '@config.className',
-                    'label': '@config.label',
                     'entries': '@config.entries',
+                    'label': '@config.label',
                     'maxHeight': '@config.maxHeight',
+                    'className': '@config.className',
                     'type': 'event-log',
                   },
                 ],
@@ -174,10 +174,10 @@ export function stdUiEventLogEventLogOrbital(params: StdUiEventLogEventLogOrbita
             'default': [
               {
                 'timestamp': 1,
-                'status': 'pending',
-                'id': 'Id',
                 'icon': 'circle',
                 'message': 'Message',
+                'status': 'pending',
+                'id': 'Id',
               },
             ],
             'label': 'Entries',
@@ -186,19 +186,14 @@ export function stdUiEventLogEventLogOrbital(params: StdUiEventLogEventLogOrbita
             'items': {
               'type': 'object',
               'properties': {
-                'timestamp': {
-                  'name': 'timestamp',
-                  'type': 'number',
-                  'required': true,
-                },
                 'id': {
                   'name': 'id',
                   'type': 'string',
                   'required': true,
                 },
-                'icon': {
-                  'name': 'icon',
-                  'type': 'string',
+                'timestamp': {
+                  'name': 'timestamp',
+                  'type': 'number',
                   'required': true,
                 },
                 'status': {
@@ -214,6 +209,11 @@ export function stdUiEventLogEventLogOrbital(params: StdUiEventLogEventLogOrbita
                 },
                 'message': {
                   'name': 'message',
+                  'type': 'string',
+                  'required': true,
+                },
+                'icon': {
+                  'name': 'icon',
                   'type': 'string',
                   'required': true,
                 },

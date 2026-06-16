@@ -41,16 +41,16 @@ export type StdUiSimulationCanvasEventKey = 'INIT';
 export interface StdUiSimulationCanvasConfig {
   /** Default: `400` */
   height?: number;
-  /** Default: `1` */
-  speed?: number;
-  /** Default: `{"description":"Description","parameters":{},"constraints":[{"bodyB":1,"length":1,"stiffness":1,"bodyA":1}],"showVelocity":false,"id":"Id","bodies":[{"color":"Color","vx":1,"mass":1,"radius":1,"id":"Id","x":1,"fixed":false,"y":1,"vy":1}],"gravity":{"y":1,"x":1},"backgroundColor":"Background Color","name":"Name","domain":"Domain"}` */
-  preset?: EntityRow;
   /** Default: `false` */
   running?: boolean;
-  /** Default: `""` */
-  className?: string;
   /** Default: `600` */
   width?: number;
+  /** Default: `{"description":"Description","gravity":{"x":1,"y":1},"name":"Name","parameters":{},"bodies":[{"vx":1,"vy":1,"y":1,"color":"Color","id":"Id","fixed":false,"mass":1,"radius":1,"x":1}],"constraints":[{"stiffness":1,"length":1,"bodyB":1,"bodyA":1}],"id":"Id","backgroundColor":"Background Color","domain":"Domain","showVelocity":false}` */
+  preset?: EntityRow;
+  /** Default: `1` */
+  speed?: number;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**
@@ -154,12 +154,12 @@ export function stdUiSimulationCanvasSimulationCanvasOrbital(params: StdUiSimula
                   'render-ui',
                   'main',
                   {
-                    'height': '@config.height',
-                    'preset': '@config.preset',
-                    'width': '@config.width',
-                    'speed': '@config.speed',
-                    'type': 'simulation-canvas',
                     'running': '@config.running',
+                    'width': '@config.width',
+                    'height': '@config.height',
+                    'speed': '@config.speed',
+                    'preset': '@config.preset',
+                    'type': 'simulation-canvas',
                     'className': '@config.className',
                   },
                 ],
@@ -175,82 +175,67 @@ export function stdUiSimulationCanvasSimulationCanvasOrbital(params: StdUiSimula
             'description': 'height prop',
             'tier': 'presentation',
           },
-          'speed': {
+          'running': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Running',
+            'description': 'running prop',
+            'tier': 'presentation',
+          },
+          'width': {
             'type': 'number',
-            'default': 1,
-            'label': 'Speed',
-            'description': 'speed prop',
+            'default': 600,
+            'label': 'Width',
+            'description': 'width prop',
             'tier': 'presentation',
           },
           'preset': {
             'type': 'SimulationCanvasPreset',
             'default': {
               'description': 'Description',
+              'gravity': {
+                'x': 1,
+                'y': 1,
+              },
+              'name': 'Name',
               'parameters': {},
+              'bodies': [
+                {
+                  'vx': 1,
+                  'vy': 1,
+                  'y': 1,
+                  'color': 'Color',
+                  'id': 'Id',
+                  'fixed': false,
+                  'mass': 1,
+                  'radius': 1,
+                  'x': 1,
+                },
+              ],
               'constraints': [
                 {
-                  'bodyB': 1,
-                  'length': 1,
                   'stiffness': 1,
+                  'length': 1,
+                  'bodyB': 1,
                   'bodyA': 1,
                 },
               ],
-              'showVelocity': false,
               'id': 'Id',
-              'bodies': [
-                {
-                  'color': 'Color',
-                  'vx': 1,
-                  'mass': 1,
-                  'radius': 1,
-                  'id': 'Id',
-                  'x': 1,
-                  'fixed': false,
-                  'y': 1,
-                  'vy': 1,
-                },
-              ],
-              'gravity': {
-                'y': 1,
-                'x': 1,
-              },
               'backgroundColor': 'Background Color',
-              'name': 'Name',
               'domain': 'Domain',
+              'showVelocity': false,
             },
             'label': 'Preset',
             'description': 'preset prop',
             'tier': 'presentation',
             'properties': {
+              'backgroundColor': {
+                'name': 'backgroundColor',
+                'type': 'string',
+                'required': false,
+              },
               'domain': {
                 'name': 'domain',
-                'type': 'string',
-                'required': true,
-              },
-              'gravity': {
-                'name': 'gravity',
-                'type': 'object',
-                'required': false,
-                'properties': {
-                  'y': {
-                    'name': 'y',
-                    'type': 'number',
-                    'required': true,
-                  },
-                  'x': {
-                    'name': 'x',
-                    'type': 'number',
-                    'required': true,
-                  },
-                },
-              },
-              'description': {
-                'name': 'description',
-                'type': 'string',
-                'required': true,
-              },
-              'name': {
-                'name': 'name',
                 'type': 'string',
                 'required': true,
               },
@@ -261,39 +246,14 @@ export function stdUiSimulationCanvasSimulationCanvasOrbital(params: StdUiSimula
                 'items': {
                   'type': 'object',
                   'properties': {
-                    'mass': {
-                      'name': 'mass',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'radius': {
-                      'name': 'radius',
-                      'type': 'number',
-                      'required': true,
-                    },
                     'vx': {
                       'name': 'vx',
                       'type': 'number',
                       'required': true,
                     },
-                    'color': {
-                      'name': 'color',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'fixed': {
-                      'name': 'fixed',
-                      'type': 'boolean',
-                      'required': true,
-                    },
-                    'y': {
-                      'name': 'y',
+                    'mass': {
+                      'name': 'mass',
                       'type': 'number',
-                      'required': true,
-                    },
-                    'id': {
-                      'name': 'id',
-                      'type': 'string',
                       'required': true,
                     },
                     'x': {
@@ -306,53 +266,43 @@ export function stdUiSimulationCanvasSimulationCanvasOrbital(params: StdUiSimula
                       'type': 'number',
                       'required': true,
                     },
-                  },
-                },
-              },
-              'id': {
-                'name': 'id',
-                'type': 'string',
-                'required': true,
-              },
-              'backgroundColor': {
-                'name': 'backgroundColor',
-                'type': 'string',
-                'required': false,
-              },
-              'parameters': {
-                'name': 'parameters',
-                'type': 'object',
-                'required': true,
-                'items': {
-                  'type': 'object',
-                  'properties': {
-                    'step': {
-                      'name': 'step',
+                    'y': {
+                      'name': 'y',
                       'type': 'number',
                       'required': true,
                     },
-                    'label': {
-                      'name': 'label',
+                    'fixed': {
+                      'name': 'fixed',
+                      'type': 'boolean',
+                      'required': true,
+                    },
+                    'radius': {
+                      'name': 'radius',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'id': {
+                      'name': 'id',
                       'type': 'string',
                       'required': true,
                     },
-                    'min': {
-                      'name': 'min',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'value': {
-                      'name': 'value',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'max': {
-                      'name': 'max',
-                      'type': 'number',
+                    'color': {
+                      'name': 'color',
+                      'type': 'string',
                       'required': true,
                     },
                   },
                 },
+              },
+              'description': {
+                'name': 'description',
+                'type': 'string',
+                'required': true,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': true,
               },
               'constraints': {
                 'name': 'constraints',
@@ -371,13 +321,13 @@ export function stdUiSimulationCanvasSimulationCanvasOrbital(params: StdUiSimula
                       'type': 'number',
                       'required': true,
                     },
-                    'length': {
-                      'name': 'length',
+                    'bodyB': {
+                      'name': 'bodyB',
                       'type': 'number',
                       'required': true,
                     },
-                    'bodyB': {
-                      'name': 'bodyB',
+                    'length': {
+                      'name': 'length',
                       'type': 'number',
                       'required': true,
                     },
@@ -389,13 +339,70 @@ export function stdUiSimulationCanvasSimulationCanvasOrbital(params: StdUiSimula
                 'type': 'boolean',
                 'required': false,
               },
+              'id': {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              'parameters': {
+                'name': 'parameters',
+                'type': 'object',
+                'required': true,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'value': {
+                      'name': 'value',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'min': {
+                      'name': 'min',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'step': {
+                      'name': 'step',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'label': {
+                      'name': 'label',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'max': {
+                      'name': 'max',
+                      'type': 'number',
+                      'required': true,
+                    },
+                  },
+                },
+              },
+              'gravity': {
+                'name': 'gravity',
+                'type': 'object',
+                'required': false,
+                'properties': {
+                  'y': {
+                    'name': 'y',
+                    'type': 'number',
+                    'required': true,
+                  },
+                  'x': {
+                    'name': 'x',
+                    'type': 'number',
+                    'required': true,
+                  },
+                },
+              },
             },
           },
-          'running': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Running',
-            'description': 'running prop',
+          'speed': {
+            'type': 'number',
+            'default': 1,
+            'label': 'Speed',
+            'description': 'speed prop',
             'tier': 'presentation',
           },
           'className': {
@@ -403,13 +410,6 @@ export function stdUiSimulationCanvasSimulationCanvasOrbital(params: StdUiSimula
             'default': '',
             'label': 'Class Name',
             'description': 'className prop',
-            'tier': 'presentation',
-          },
-          'width': {
-            'type': 'number',
-            'default': 600,
-            'label': 'Width',
-            'description': 'width prop',
             'tier': 'presentation',
           },
         },

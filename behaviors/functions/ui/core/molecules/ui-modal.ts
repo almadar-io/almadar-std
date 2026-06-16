@@ -53,21 +53,21 @@ export interface StdUiModalOpenPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiModalConfig {
+  /** Default: `"centered-card"` */
+  look?: 'centered-card' | 'top-sheet' | 'side-drawer' | 'full-screen';
+  /** Default: `""` */
+  className?: string;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
-  /** Default: `true` */
-  closeOnOverlayClick?: boolean;
+  footer?: unknown;
   /** Default: `"Title"` */
   title?: string;
   /** Default: `true` */
   showCloseButton?: boolean;
-  /** Default: `"centered-card"` */
-  look?: 'centered-card' | 'top-sheet' | 'side-drawer' | 'full-screen';
-  footer?: unknown;
+  /** Default: `true` */
+  closeOnOverlayClick?: boolean;
   /** Default: `true` */
   closeOnEscape?: boolean;
-  /** Default: `""` */
-  className?: string;
   /** Default: `true` */
   isOpen?: boolean;
   /** Default: `true` */

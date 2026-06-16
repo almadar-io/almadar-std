@@ -39,18 +39,18 @@ export type StdUiEnemyPlateEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiEnemyPlateConfig {
-  /** Default: `"Name"` */
-  name?: string;
-  /** Default: `[{"label":"Label","variant":"buff","icon":"circle"}]` */
+  /** Default: `[{"variant":"buff","icon":"circle","label":"Label"}]` */
   effects?: EntityRow[];
   /** Default: `""` */
   className?: string;
   /** Default: `0` */
-  maxHealth?: number;
+  health?: number;
+  /** Default: `"Name"` */
+  name?: string;
   /** Default: `0` */
   level?: number;
   /** Default: `0` */
-  health?: number;
+  maxHealth?: number;
 }
 
 /**

@@ -39,17 +39,17 @@ export type StdUiRuntimeDebuggerEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiRuntimeDebuggerConfig {
+  /** Default: `"floating"` */
+  mode?: 'floating' | 'inline' | 'verify';
   /** Default: `true` */
   defaultCollapsed?: boolean;
   /** Default: `"Default Tab"` */
   defaultTab?: string;
+  /** Default: `""` */
+  className?: string;
   schema?: unknown;
   /** Default: `"bottom-right"` */
   position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
-  /** Default: `"floating"` */
-  mode?: 'floating' | 'inline' | 'verify';
-  /** Default: `""` */
-  className?: string;
 }
 
 /**
@@ -153,13 +153,13 @@ export function stdUiRuntimeDebuggerRuntimeDebuggerOrbital(params: StdUiRuntimeD
                   'render-ui',
                   'main',
                   {
-                    'mode': '@config.mode',
-                    'className': '@config.className',
-                    'position': '@config.position',
-                    'defaultCollapsed': '@config.defaultCollapsed',
-                    'defaultTab': '@config.defaultTab',
-                    'schema': '@config.schema',
                     'type': 'runtime-debugger',
+                    'defaultCollapsed': '@config.defaultCollapsed',
+                    'className': '@config.className',
+                    'mode': '@config.mode',
+                    'schema': '@config.schema',
+                    'defaultTab': '@config.defaultTab',
+                    'position': '@config.position',
                   },
                 ],
               ],
@@ -167,6 +167,18 @@ export function stdUiRuntimeDebuggerRuntimeDebuggerOrbital(params: StdUiRuntimeD
           ],
         },
         'config': {
+          'mode': {
+            'type': 'string',
+            'default': 'floating',
+            'label': 'Mode',
+            'description': 'Display mode: floating (fixed overlay), inline (block element), or verify (always-visible compact overlay for verification runs)',
+            'tier': 'presentation',
+            'values': [
+              'floating',
+              'inline',
+              'verify',
+            ],
+          },
           'defaultCollapsed': {
             'type': 'boolean',
             'default': true,
@@ -179,6 +191,13 @@ export function stdUiRuntimeDebuggerRuntimeDebuggerOrbital(params: StdUiRuntimeD
             'default': 'Default Tab',
             'label': 'Default Tab',
             'description': 'Default active tab id',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
           'schema': {
@@ -199,25 +218,6 @@ export function stdUiRuntimeDebuggerRuntimeDebuggerOrbital(params: StdUiRuntimeD
               'top-right',
               'top-left',
             ],
-          },
-          'mode': {
-            'type': 'string',
-            'default': 'floating',
-            'label': 'Mode',
-            'description': 'Display mode: floating (fixed overlay), inline (block element), or verify (always-visible compact overlay for verification runs)',
-            'tier': 'presentation',
-            'values': [
-              'floating',
-              'inline',
-              'verify',
-            ],
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
           },
         },
         'scope': 'instance',

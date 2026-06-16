@@ -55,20 +55,20 @@ export interface StdUiStarRatingChangePayload {
 export interface StdUiStarRatingConfig {
   /** Default: `false` */
   readOnly?: boolean;
-  /** Default: `"full"` */
-  precision?: 'full' | 'half';
   /** Default: `"Label"` */
   label?: string;
-  /** Default: `0` */
-  value?: number;
-  /** Default: `{}` */
-  actionPayload?: unknown;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
   /** Default: `5` */
   max?: number;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
+  /** Default: `""` */
+  className?: string;
+  /** Default: `0` */
+  value?: number;
+  /** Default: `"full"` */
+  precision?: 'full' | 'half';
+  /** Default: `{}` */
+  actionPayload?: unknown;
 }
 
 /**

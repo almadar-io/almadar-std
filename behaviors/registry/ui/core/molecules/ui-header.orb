@@ -152,34 +152,34 @@
                     "render-ui",
                     "main",
                     {
-                      "isLoading": "@config.isLoading",
-                      "userName": "@config.userName",
-                      "searchPlaceholder": "@config.searchPlaceholder",
-                      "error": "@config.error",
-                      "entity": "HeaderItem",
-                      "sticky": "@config.sticky",
+                      "logoSrc": "@config.logoSrc",
+                      "actions": "@config.actions",
+                      "showSearch": "@config.showSearch",
                       "look": "@config.look",
+                      "searchPlaceholder": "@config.searchPlaceholder",
+                      "brandName": "@config.brandName",
+                      "onLogoClick": "LOGO_CLICK",
+                      "className": "@config.className",
+                      "sticky": "@config.sticky",
+                      "showMenuToggle": "@config.showMenuToggle",
+                      "userName": "@config.userName",
+                      "navigationItems": "@config.navigationItems",
+                      "onMenuToggle": "MENU_TOGGLE",
+                      "error": "@config.error",
+                      "onSearch": "SEARCH",
                       "type": "header",
-                      "isMenuOpen": "@config.isMenuOpen",
-                      "onUserClick": "USER_CLICK",
-                      "variant": "@config.variant",
                       "logo": [
                         {
                           "content": "Logo",
                           "type": "typography"
                         }
                       ],
-                      "brandName": "@config.brandName",
-                      "navigationItems": "@config.navigationItems",
-                      "showMenuToggle": "@config.showMenuToggle",
-                      "onMenuToggle": "MENU_TOGGLE",
-                      "showSearch": "@config.showSearch",
-                      "onSearch": "SEARCH",
+                      "isLoading": "@config.isLoading",
                       "userAvatar": "@config.userAvatar",
-                      "onLogoClick": "LOGO_CLICK",
-                      "logoSrc": "@config.logoSrc",
-                      "actions": "@config.actions",
-                      "className": "@config.className"
+                      "onUserClick": "USER_CLICK",
+                      "variant": "@config.variant",
+                      "entity": "HeaderItem",
+                      "isMenuOpen": "@config.isMenuOpen"
                     }
                   ]
                 ]
@@ -187,6 +187,54 @@
             ]
           },
           "config": {
+            "isMenuOpen": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Menu Open",
+              "description": "Is menu open (for toggle icon)",
+              "tier": "presentation"
+            },
+            "sticky": {
+              "type": "boolean",
+              "default": true,
+              "label": "Sticky",
+              "description": "Sticky header",
+              "tier": "presentation"
+            },
+            "userName": {
+              "type": "string",
+              "default": "User Name",
+              "label": "User Name",
+              "description": "User name (display name or email)",
+              "tier": "presentation"
+            },
+            "brandName": {
+              "type": "string",
+              "default": "KFlow",
+              "label": "Brand Name",
+              "description": "Brand/App name",
+              "tier": "presentation"
+            },
+            "logoSrc": {
+              "type": "asset",
+              "default": "https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png",
+              "label": "Logo Src",
+              "description": "Logo image source",
+              "tier": "presentation"
+            },
+            "showMenuToggle": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Menu Toggle",
+              "description": "Show menu toggle button",
+              "tier": "presentation"
+            },
+            "actions": {
+              "type": "node",
+              "label": "Actions",
+              "description": "Action buttons (right side)",
+              "tier": "presentation"
+            },
             "showSearch": {
               "type": "boolean",
               "default": false,
@@ -208,12 +256,117 @@
               "description": "Loading state indicator (closed circuit)",
               "tier": "presentation"
             },
+            "error": {
+              "type": "HeaderError",
+              "label": "Error",
+              "description": "Error state (closed circuit)",
+              "tier": "presentation",
+              "properties": {
+                "stack": {
+                  "name": "stack",
+                  "type": "string",
+                  "required": false
+                },
+                "code": {
+                  "name": "code",
+                  "type": "string",
+                  "required": false
+                },
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                },
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": false
+                }
+              }
+            },
+            "look": {
+              "type": "string",
+              "default": "compact-bar",
+              "label": "Look",
+              "description": "Layer 2 visual treatment — orthogonal to the structural variant (which currently flips mobile vs desktop).",
+              "tier": "presentation",
+              "values": [
+                "hero",
+                "compact-bar",
+                "breadcrumb",
+                "contextual",
+                "editorial-banner"
+              ]
+            },
+            "navigationItems": {
+              "type": "[HeaderNavigationItemsItem]",
+              "default": [
+                {
+                  "href": "Href",
+                  "icon": "circle",
+                  "badge": "Badge",
+                  "active": false,
+                  "label": "Label"
+                }
+              ],
+              "label": "Navigation Items",
+              "description": "Navigation items (for desktop header variant)",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "active": {
+                    "name": "active",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "href": {
+                    "name": "href",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "badge": {
+                    "name": "badge",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "searchPlaceholder": {
+              "type": "string",
+              "default": "Search Placeholder",
+              "label": "Search Placeholder",
+              "description": "Search placeholder",
+              "tier": "presentation"
+            },
+            "variant": {
+              "type": "string",
+              "default": "mobile",
+              "label": "Variant",
+              "description": "Variant - mobile shows menu toggle, desktop shows full nav",
+              "tier": "presentation",
+              "values": [
+                "mobile",
+                "desktop"
+              ]
+            },
             "userAvatar": {
               "type": "HeaderUserAvatar",
               "default": {
                 "initials": "Initials",
-                "alt": "Alt",
-                "src": "Src"
+                "src": "https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png",
+                "alt": "Alt"
               },
               "label": "User Avatar",
               "description": "User avatar configuration",
@@ -235,159 +388,6 @@
                   "required": false
                 }
               }
-            },
-            "searchPlaceholder": {
-              "type": "string",
-              "default": "Search Placeholder",
-              "label": "Search Placeholder",
-              "description": "Search placeholder",
-              "tier": "presentation"
-            },
-            "look": {
-              "type": "string",
-              "default": "compact-bar",
-              "label": "Look",
-              "description": "Layer 2 visual treatment — orthogonal to the structural variant (which currently flips mobile vs desktop).",
-              "tier": "presentation",
-              "values": [
-                "hero",
-                "compact-bar",
-                "breadcrumb",
-                "contextual",
-                "editorial-banner"
-              ]
-            },
-            "showMenuToggle": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Menu Toggle",
-              "description": "Show menu toggle button",
-              "tier": "presentation"
-            },
-            "logoSrc": {
-              "type": "string",
-              "default": "Logo Src",
-              "label": "Logo Src",
-              "description": "Logo image source",
-              "tier": "presentation"
-            },
-            "isMenuOpen": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Menu Open",
-              "description": "Is menu open (for toggle icon)",
-              "tier": "presentation"
-            },
-            "variant": {
-              "type": "string",
-              "default": "mobile",
-              "label": "Variant",
-              "description": "Variant - mobile shows menu toggle, desktop shows full nav",
-              "tier": "presentation",
-              "values": [
-                "mobile",
-                "desktop"
-              ]
-            },
-            "userName": {
-              "type": "string",
-              "default": "User Name",
-              "label": "User Name",
-              "description": "User name (display name or email)",
-              "tier": "presentation"
-            },
-            "brandName": {
-              "type": "string",
-              "default": "KFlow",
-              "label": "Brand Name",
-              "description": "Brand/App name",
-              "tier": "presentation"
-            },
-            "navigationItems": {
-              "type": "[HeaderNavigationItemsItem]",
-              "default": [
-                {
-                  "badge": "Badge",
-                  "label": "Label",
-                  "active": false,
-                  "href": "Href",
-                  "icon": "circle"
-                }
-              ],
-              "label": "Navigation Items",
-              "description": "Navigation items (for desktop header variant)",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "active": {
-                    "name": "active",
-                    "type": "boolean",
-                    "required": false
-                  },
-                  "badge": {
-                    "name": "badge",
-                    "type": "string",
-                    "required": false
-                  },
-                  "href": {
-                    "name": "href",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            },
-            "error": {
-              "type": "HeaderError",
-              "label": "Error",
-              "description": "Error state (closed circuit)",
-              "tier": "presentation",
-              "properties": {
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                },
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                },
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                }
-              }
-            },
-            "actions": {
-              "type": "node",
-              "label": "Actions",
-              "description": "Action buttons (right side)",
-              "tier": "presentation"
-            },
-            "sticky": {
-              "type": "boolean",
-              "default": true,
-              "label": "Sticky",
-              "description": "Sticky header",
-              "tier": "presentation"
             }
           },
           "scope": "instance"

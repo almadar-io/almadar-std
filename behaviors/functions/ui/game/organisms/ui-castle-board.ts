@@ -186,11 +186,11 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                   },
                   {
                     'name': 'sprite',
-                    'type': 'string',
+                    'type': 'asset',
                   },
                   {
                     'name': 'assetUrl',
-                    'type': 'string',
+                    'type': 'asset',
                   },
                   {
                     'name': 'color',
@@ -269,7 +269,7 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                   },
                   {
                     'name': 'sprite',
-                    'type': 'string',
+                    'type': 'asset',
                   },
                   {
                     'name': 'unitType',
@@ -418,11 +418,11 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                     },
                     {
                       'name': 'sprite',
-                      'type': 'string',
+                      'type': 'asset',
                     },
                     {
                       'name': 'assetUrl',
-                      'type': 'string',
+                      'type': 'asset',
                     },
                     {
                       'name': 'color',
@@ -501,7 +501,7 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                     },
                     {
                       'name': 'sprite',
-                      'type': 'string',
+                      'type': 'asset',
                     },
                     {
                       'name': 'unitType',
@@ -618,16 +618,16 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                   'render-ui',
                   'main',
                   {
-                    'scale': '@config.scale',
-                    'entity': '@entity',
-                    'type': 'castle-board',
-                    'onUnitClick': 'UNIT_CLICK',
-                    'onTileClick': 'TILE_CLICK',
                     'featureClickEvent': 'FEATURE_CLICK',
                     'unitClickEvent': 'UNIT_CLICK',
-                    'className': '@config.className',
+                    'entity': '@entity',
+                    'onTileClick': 'TILE_CLICK',
                     'onFeatureClick': 'FEATURE_CLICK',
                     'tileClickEvent': 'TILE_CLICK',
+                    'type': 'castle-board',
+                    'className': '@config.className',
+                    'onUnitClick': 'UNIT_CLICK',
+                    'scale': '@config.scale',
                   },
                 ],
               ],

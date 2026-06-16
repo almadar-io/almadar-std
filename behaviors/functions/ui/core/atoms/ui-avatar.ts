@@ -53,26 +53,26 @@ export interface StdUiAvatarActionPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiAvatarConfig {
-  /** Default: `"Alt"` */
-  alt?: string;
-  /** Default: `{}` */
-  actionPayload?: unknown;
-  /** Default: `"Name"` */
-  name?: string;
-  /** Default: `"circle"` */
-  icon?: unknown;
   /** Default: `""` */
   className?: string;
-  /** Default: `"online"` */
-  status?: 'online' | 'offline' | 'away' | 'busy';
-  /** Default: `"Badge"` */
-  badge?: string;
-  /** Default: `"md"` */
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   /** Default: `"Initials"` */
   initials?: string;
-  /** Default: `"Src"` */
-  src?: string;
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
+  src?: unknown;
+  /** Default: `"md"` */
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  /** Default: `"online"` */
+  status?: 'online' | 'offline' | 'away' | 'busy';
+  /** Default: `{}` */
+  actionPayload?: unknown;
+  /** Default: `"Alt"` */
+  alt?: string;
+  /** Default: `"circle"` */
+  icon?: unknown;
+  /** Default: `"Badge"` */
+  badge?: string;
+  /** Default: `"Name"` */
+  name?: string;
 }
 
 /**

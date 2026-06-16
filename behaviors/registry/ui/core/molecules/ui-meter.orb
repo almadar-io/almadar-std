@@ -49,21 +49,21 @@
                     "render-ui",
                     "main",
                     {
-                      "min": "@config.min",
-                      "thresholds": "@config.thresholds",
-                      "size": "@config.size",
-                      "className": "@config.className",
-                      "segments": "@config.segments",
-                      "error": "@config.error",
-                      "actions": "@config.actions",
                       "unit": "@config.unit",
-                      "max": "@config.max",
+                      "thresholds": "@config.thresholds",
+                      "actions": "@config.actions",
+                      "className": "@config.className",
+                      "label": "@config.label",
                       "showValue": "@config.showValue",
+                      "size": "@config.size",
                       "value": "@config.value",
-                      "variant": "@config.variant",
+                      "segments": "@config.segments",
+                      "max": "@config.max",
                       "type": "meter",
+                      "error": "@config.error",
+                      "variant": "@config.variant",
                       "isLoading": "@config.isLoading",
-                      "label": "@config.label"
+                      "min": "@config.min"
                     }
                   ]
                 ]
@@ -71,11 +71,11 @@
             ]
           },
           "config": {
-            "min": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Min",
-              "description": "Minimum value",
+            "unit": {
+              "type": "string",
+              "default": "Unit",
+              "label": "Unit",
+              "description": "Unit suffix (e.g., '%', 'MB', 'credits')",
               "tier": "presentation"
             },
             "segments": {
@@ -85,66 +85,19 @@
               "description": "Number of segments (for segmented variant)",
               "tier": "presentation"
             },
-            "unit": {
-              "type": "string",
-              "default": "Unit",
-              "label": "Unit",
-              "description": "Unit suffix (e.g., '%', 'MB', 'credits')",
+            "max": {
+              "type": "number",
+              "default": 100.0,
+              "label": "Max",
+              "description": "Maximum value",
               "tier": "presentation"
             },
-            "showValue": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Value",
-              "description": "Show value text",
+            "min": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Min",
+              "description": "Minimum value",
               "tier": "presentation"
-            },
-            "size": {
-              "type": "string",
-              "default": "md",
-              "label": "Size",
-              "description": "Size (for radial variant)",
-              "tier": "presentation",
-              "values": [
-                "sm",
-                "md",
-                "lg"
-              ]
-            },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state",
-              "tier": "presentation"
-            },
-            "error": {
-              "type": "MeterError",
-              "label": "Error",
-              "description": "Error state",
-              "tier": "presentation",
-              "properties": {
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                },
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                }
-              }
             },
             "label": {
               "type": "string",
@@ -153,13 +106,65 @@
               "description": "Display label",
               "tier": "presentation"
             },
+            "variant": {
+              "type": "string",
+              "default": "linear",
+              "label": "Variant",
+              "description": "Display variant",
+              "tier": "presentation",
+              "values": [
+                "linear",
+                "radial",
+                "segmented"
+              ]
+            },
+            "thresholds": {
+              "type": "[MeterThresholdsItem]",
+              "default": [
+                {
+                  "value": 1.0,
+                  "color": "Color",
+                  "label": "Label"
+                }
+              ],
+              "label": "Thresholds",
+              "description": "Color thresholds",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "value": {
+                    "name": "value",
+                    "type": "number",
+                    "required": true
+                  },
+                  "color": {
+                    "name": "color",
+                    "type": "string",
+                    "required": true
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state",
+              "tier": "presentation"
+            },
             "actions": {
               "type": "[MeterActionsItem]",
               "default": [
                 {
-                  "variant": "primary",
+                  "navigatesTo": "Navigates To",
                   "label": "Label",
-                  "navigatesTo": "Navigates To"
+                  "variant": "primary"
                 }
               ],
               "label": "Actions",
@@ -196,70 +201,65 @@
                 }
               }
             },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "variant": {
-              "type": "string",
-              "default": "linear",
-              "label": "Variant",
-              "description": "Display variant",
-              "tier": "presentation",
-              "values": [
-                "linear",
-                "radial",
-                "segmented"
-              ]
-            },
-            "thresholds": {
-              "type": "[MeterThresholdsItem]",
-              "default": [
-                {
-                  "color": "Color",
-                  "value": 1.0,
-                  "label": "Label"
-                }
-              ],
-              "label": "Thresholds",
-              "description": "Color thresholds",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "value": {
-                    "name": "value",
-                    "type": "number",
-                    "required": true
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "color": {
-                    "name": "color",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            },
-            "max": {
-              "type": "number",
-              "default": 100.0,
-              "label": "Max",
-              "description": "Maximum value",
-              "tier": "presentation"
-            },
             "value": {
               "type": "number",
               "default": 0.0,
               "label": "Value",
               "description": "Current value",
+              "tier": "presentation"
+            },
+            "showValue": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Value",
+              "description": "Show value text",
+              "tier": "presentation"
+            },
+            "size": {
+              "type": "string",
+              "default": "md",
+              "label": "Size",
+              "description": "Size (for radial variant)",
+              "tier": "presentation",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            },
+            "error": {
+              "type": "MeterError",
+              "label": "Error",
+              "description": "Error state",
+              "tier": "presentation",
+              "properties": {
+                "stack": {
+                  "name": "stack",
+                  "type": "string",
+                  "required": false
+                },
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                },
+                "code": {
+                  "name": "code",
+                  "type": "string",
+                  "required": false
+                },
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": false
+                }
+              }
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
               "tier": "presentation"
             }
           },

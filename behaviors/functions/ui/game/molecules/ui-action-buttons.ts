@@ -49,14 +49,14 @@ export interface StdUiActionButtonsActionPayload {
 export interface StdUiActionButtonsConfig {
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
-  /** Default: `[{"id":"Id","variant":"primary","label":"Label","icon":"circle"}]` */
-  buttons?: EntityRow[];
   /** Default: `""` */
   className?: string;
   /** Default: `false` */
   disabled?: boolean;
   /** Default: `"horizontal"` */
   layout?: 'horizontal' | 'vertical' | 'diamond';
+  /** Default: `[{"label":"Label","icon":"circle","id":"Id","variant":"primary"}]` */
+  buttons?: EntityRow[];
 }
 
 /**

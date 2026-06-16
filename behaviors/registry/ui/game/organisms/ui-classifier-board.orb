@@ -92,20 +92,20 @@
                     "render-ui",
                     "main",
                     {
-                      "selectedIds": "@config.selectedIds",
-                      "error": "@config.error",
-                      "completeEvent": "COMPLETE",
-                      "totalCount": "@config.totalCount",
-                      "page": "@config.pageProp",
-                      "sortDirection": "@config.sortDirection",
-                      "pageSize": "@config.pageSize",
-                      "searchValue": "@config.searchValue",
                       "isLoading": "@config.isLoading",
+                      "error": "@config.error",
+                      "sortBy": "@config.sortBy",
+                      "sortDirection": "@config.sortDirection",
                       "className": "@config.className",
+                      "searchValue": "@config.searchValue",
+                      "page": "@config.pageProp",
+                      "totalCount": "@config.totalCount",
+                      "selectedIds": "@config.selectedIds",
                       "activeFilters": "@config.activeFilters",
                       "entity": "@entity",
-                      "type": "classifier-board",
-                      "sortBy": "@config.sortBy"
+                      "pageSize": "@config.pageSize",
+                      "completeEvent": "COMPLETE",
+                      "type": "classifier-board"
                     }
                   ]
                 ]
@@ -113,11 +113,84 @@
             ]
           },
           "config": {
+            "error": {
+              "type": "ClassifierBoardError",
+              "label": "Error",
+              "description": "Error state (UiError)",
+              "tier": "presentation",
+              "properties": {
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                },
+                "stack": {
+                  "name": "stack",
+                  "type": "string",
+                  "required": false
+                },
+                "code": {
+                  "name": "code",
+                  "type": "string",
+                  "required": false
+                },
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": false
+                }
+              }
+            },
+            "sortBy": {
+              "type": "string",
+              "default": "Sort By",
+              "label": "Sort By",
+              "description": "Current sort field",
+              "tier": "presentation"
+            },
             "searchValue": {
               "type": "string",
               "default": "Search Value",
               "label": "Search Value",
               "description": "Current search query value",
+              "tier": "presentation"
+            },
+            "activeFilters": {
+              "type": "json",
+              "label": "Active Filters",
+              "description": "Active filters",
+              "tier": "presentation"
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
+              "tier": "presentation"
+            },
+            "selectedIds": {
+              "type": "[string]",
+              "default": [],
+              "label": "Selected Ids",
+              "description": "Currently selected item IDs",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "pageProp": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Page",
+              "description": "Current page number",
+              "synonyms": "page",
               "tier": "presentation"
             },
             "sortDirection": {
@@ -131,71 +204,6 @@
                 "desc"
               ]
             },
-            "error": {
-              "type": "ClassifierBoardError",
-              "label": "Error",
-              "description": "Error state (UiError)",
-              "tier": "presentation",
-              "properties": {
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                },
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                }
-              }
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state indicator",
-              "tier": "presentation"
-            },
-            "sortBy": {
-              "type": "string",
-              "default": "Sort By",
-              "label": "Sort By",
-              "description": "Current sort field",
-              "tier": "presentation"
-            },
-            "activeFilters": {
-              "type": "json",
-              "label": "Active Filters",
-              "description": "Active filters",
-              "tier": "presentation"
-            },
-            "selectedIds": {
-              "type": "[string]",
-              "default": [],
-              "label": "Selected Ids",
-              "description": "Currently selected item IDs",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
-            },
             "pageSize": {
               "type": "number",
               "default": 0.0,
@@ -208,14 +216,6 @@
               "default": 0.0,
               "label": "Total Count",
               "description": "Total number of items",
-              "tier": "presentation"
-            },
-            "pageProp": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Page",
-              "description": "Current page number",
-              "synonyms": "page",
               "tier": "presentation"
             }
           },

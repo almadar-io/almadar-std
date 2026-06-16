@@ -46,21 +46,21 @@ export interface StdUiTraitStateViewerStateClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiTraitStateViewerConfig {
+  /** Default: `"compact"` */
+  variant?: 'linear' | 'compact' | 'full';
+  /** Default: `true` */
+  showTransitions?: boolean;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
   /** Default: `{}` */
   stateStyles?: unknown;
-  /** Default: `{"description":"Description","name":"Name","currentState":"Current State","states":["Item"],"transitions":[{"event":"Event","to":"To","from":"From","guardHint":"Guard Hint"}]}` */
+  /** Default: `{"currentState":"Current State","description":"Description","states":["Item"],"transitions":[{"to":"To","from":"From","event":"Event","guardHint":"Guard Hint"}],"name":"Name"}` */
   traitProp?: EntityRow;
   /** Default: `""` */
   className?: string;
-  /** Default: `true` */
-  showTransitions?: boolean;
   error?: EntityRow;
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `"compact"` */
-  variant?: 'linear' | 'compact' | 'full';
 }
 
 /**
@@ -195,17 +195,17 @@ export function stdUiTraitStateViewerTraitStateViewerOrbital(params: StdUiTraitS
                   'render-ui',
                   'main',
                   {
-                    'error': '@config.error',
-                    'isLoading': '@config.isLoading',
-                    'entity': 'TraitStateViewerItem',
-                    'size': '@config.size',
-                    'type': 'trait-state-viewer',
                     'variant': '@config.variant',
+                    'size': '@config.size',
+                    'isLoading': '@config.isLoading',
                     'showTransitions': '@config.showTransitions',
-                    'trait': '@config.traitProp',
+                    'error': '@config.error',
                     'stateStyles': '@config.stateStyles',
-                    'onStateClick': 'STATE_CLICK',
                     'className': '@config.className',
+                    'trait': '@config.traitProp',
+                    'onStateClick': 'STATE_CLICK',
+                    'entity': 'TraitStateViewerItem',
+                    'type': 'trait-state-viewer',
                   },
                 ],
               ],
@@ -213,6 +213,44 @@ export function stdUiTraitStateViewerTraitStateViewerOrbital(params: StdUiTraitS
           ],
         },
         'config': {
+          'variant': {
+            'type': 'string',
+            'default': 'compact',
+            'label': 'Variant',
+            'description': 'Display variant',
+            'tier': 'presentation',
+            'values': [
+              'linear',
+              'compact',
+              'full',
+            ],
+          },
+          'showTransitions': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Show Transitions',
+            'description': 'Whether to show transition labels',
+            'tier': 'presentation',
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state',
+            'tier': 'presentation',
+          },
+          'size': {
+            'type': 'string',
+            'default': 'md',
+            'label': 'Size',
+            'description': 'Size variant',
+            'tier': 'presentation',
+            'values': [
+              'sm',
+              'md',
+              'lg',
+            ],
+          },
           'stateStyles': {
             'type': 'Map<string,TraitStateViewerStateStylesValue>',
             'default': {},
@@ -238,38 +276,30 @@ export function stdUiTraitStateViewerTraitStateViewerOrbital(params: StdUiTraitS
           'traitProp': {
             'type': 'TraitStateViewerTrait',
             'default': {
-              'description': 'Description',
-              'name': 'Name',
               'currentState': 'Current State',
+              'description': 'Description',
               'states': [
                 'Item',
               ],
               'transitions': [
                 {
-                  'event': 'Event',
                   'to': 'To',
                   'from': 'From',
+                  'event': 'Event',
                   'guardHint': 'Guard Hint',
                 },
               ],
+              'name': 'Name',
             },
             'label': 'Trait',
             'description': 'The trait / state machine to visualize',
             'synonyms': 'trait',
             'tier': 'presentation',
             'properties': {
-              'states': {
-                'name': 'states',
-                'type': 'array',
-                'required': true,
-                'items': {
-                  'type': 'string',
-                },
-              },
-              'description': {
-                'name': 'description',
+              'currentState': {
+                'name': 'currentState',
                 'type': 'string',
-                'required': false,
+                'required': true,
               },
               'transitions': {
                 'name': 'transitions',
@@ -301,13 +331,21 @@ export function stdUiTraitStateViewerTraitStateViewerOrbital(params: StdUiTraitS
                   },
                 },
               },
+              'description': {
+                'name': 'description',
+                'type': 'string',
+                'required': false,
+              },
+              'states': {
+                'name': 'states',
+                'type': 'array',
+                'required': true,
+                'items': {
+                  'type': 'string',
+                },
+              },
               'name': {
                 'name': 'name',
-                'type': 'string',
-                'required': true,
-              },
-              'currentState': {
-                'name': 'currentState',
                 'type': 'string',
                 'required': true,
               },
@@ -320,21 +358,14 @@ export function stdUiTraitStateViewerTraitStateViewerOrbital(params: StdUiTraitS
             'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
-          'showTransitions': {
-            'type': 'boolean',
-            'default': true,
-            'label': 'Show Transitions',
-            'description': 'Whether to show transition labels',
-            'tier': 'presentation',
-          },
           'error': {
             'type': 'TraitStateViewerError',
             'label': 'Error',
             'description': 'Error state',
             'tier': 'presentation',
             'properties': {
-              'stack': {
-                'name': 'stack',
+              'code': {
+                'name': 'code',
                 'type': 'string',
                 'required': false,
               },
@@ -348,43 +379,12 @@ export function stdUiTraitStateViewerTraitStateViewerOrbital(params: StdUiTraitS
                 'type': 'string',
                 'required': true,
               },
-              'code': {
-                'name': 'code',
+              'stack': {
+                'name': 'stack',
                 'type': 'string',
                 'required': false,
               },
             },
-          },
-          'size': {
-            'type': 'string',
-            'default': 'md',
-            'label': 'Size',
-            'description': 'Size variant',
-            'tier': 'presentation',
-            'values': [
-              'sm',
-              'md',
-              'lg',
-            ],
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state',
-            'tier': 'presentation',
-          },
-          'variant': {
-            'type': 'string',
-            'default': 'compact',
-            'label': 'Variant',
-            'description': 'Display variant',
-            'tier': 'presentation',
-            'values': [
-              'linear',
-              'compact',
-              'full',
-            ],
           },
         },
         'scope': 'instance',

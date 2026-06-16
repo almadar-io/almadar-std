@@ -39,22 +39,22 @@ export type StdUiSplitPaneEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiSplitPaneConfig {
+  /** Default: `"Right Class Name"` */
+  rightClassName?: string;
+  left?: unknown;
   /** Default: `""` */
   className?: string;
+  /** Default: `"Left Class Name"` */
+  leftClassName?: string;
+  right?: unknown;
+  /** Default: `"horizontal"` */
+  direction?: 'horizontal' | 'vertical';
   /** Default: `100` */
   minSize?: number;
   /** Default: `0` */
   ratio?: number;
   /** Default: `true` */
   resizable?: boolean;
-  right?: unknown;
-  /** Default: `"Left Class Name"` */
-  leftClassName?: string;
-  /** Default: `"horizontal"` */
-  direction?: 'horizontal' | 'vertical';
-  /** Default: `"Right Class Name"` */
-  rightClassName?: string;
-  left?: unknown;
 }
 
 /**
@@ -158,16 +158,16 @@ export function stdUiSplitPaneSplitPaneOrbital(params: StdUiSplitPaneSplitPaneOr
                   'render-ui',
                   'main',
                   {
-                    'type': 'split-pane',
-                    'leftClassName': '@config.leftClassName',
-                    'left': '@config.left',
-                    'right': '@config.right',
-                    'className': '@config.className',
-                    'resizable': '@config.resizable',
                     'minSize': '@config.minSize',
+                    'resizable': '@config.resizable',
+                    'leftClassName': '@config.leftClassName',
+                    'right': '@config.right',
                     'direction': '@config.direction',
+                    'className': '@config.className',
+                    'type': 'split-pane',
                     'ratio': '@config.ratio',
                     'rightClassName': '@config.rightClassName',
+                    'left': '@config.left',
                   },
                 ],
               ],
@@ -175,12 +175,49 @@ export function stdUiSplitPaneSplitPaneOrbital(params: StdUiSplitPaneSplitPaneOr
           ],
         },
         'config': {
+          'rightClassName': {
+            'type': 'string',
+            'default': 'Right Class Name',
+            'label': 'Right Class Name',
+            'description': 'Class for right/bottom pane',
+            'tier': 'presentation',
+          },
+          'left': {
+            'type': 'node',
+            'label': 'Left',
+            'description': 'Content for the left/top pane',
+            'tier': 'presentation',
+          },
           'className': {
             'type': 'string',
             'default': '',
             'label': 'Class Name',
             'description': 'Additional CSS classes',
             'tier': 'presentation',
+          },
+          'leftClassName': {
+            'type': 'string',
+            'default': 'Left Class Name',
+            'label': 'Left Class Name',
+            'description': 'Class for left/top pane',
+            'tier': 'presentation',
+          },
+          'right': {
+            'type': 'node',
+            'label': 'Right',
+            'description': 'Content for the right/bottom pane',
+            'tier': 'presentation',
+          },
+          'direction': {
+            'type': 'string',
+            'default': 'horizontal',
+            'label': 'Direction',
+            'description': 'Direction of the split',
+            'tier': 'presentation',
+            'values': [
+              'horizontal',
+              'vertical',
+            ],
           },
           'minSize': {
             'type': 'number',
@@ -201,43 +238,6 @@ export function stdUiSplitPaneSplitPaneOrbital(params: StdUiSplitPaneSplitPaneOr
             'default': true,
             'label': 'Resizable',
             'description': 'Allow user resizing',
-            'tier': 'presentation',
-          },
-          'right': {
-            'type': 'node',
-            'label': 'Right',
-            'description': 'Content for the right/bottom pane',
-            'tier': 'presentation',
-          },
-          'leftClassName': {
-            'type': 'string',
-            'default': 'Left Class Name',
-            'label': 'Left Class Name',
-            'description': 'Class for left/top pane',
-            'tier': 'presentation',
-          },
-          'direction': {
-            'type': 'string',
-            'default': 'horizontal',
-            'label': 'Direction',
-            'description': 'Direction of the split',
-            'tier': 'presentation',
-            'values': [
-              'horizontal',
-              'vertical',
-            ],
-          },
-          'rightClassName': {
-            'type': 'string',
-            'default': 'Right Class Name',
-            'label': 'Right Class Name',
-            'description': 'Class for right/bottom pane',
-            'tier': 'presentation',
-          },
-          'left': {
-            'type': 'node',
-            'label': 'Left',
-            'description': 'Content for the left/top pane',
             'tier': 'presentation',
           },
         },

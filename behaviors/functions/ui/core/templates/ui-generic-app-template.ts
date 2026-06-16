@@ -39,14 +39,14 @@ export type StdUiGenericAppTemplateEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiGenericAppTemplateConfig {
-  /** Default: `""` */
-  className?: string;
   /** Default: `"Title"` */
   title?: string;
-  headerActions?: unknown;
-  footer?: unknown;
   /** Default: `"Subtitle"` */
   subtitle?: string;
+  footer?: unknown;
+  /** Default: `""` */
+  className?: string;
+  headerActions?: unknown;
 }
 
 /**

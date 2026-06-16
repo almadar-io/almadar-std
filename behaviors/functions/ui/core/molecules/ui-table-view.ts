@@ -60,51 +60,51 @@ export interface StdUiTableViewViewPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiTableViewConfig {
-  /** Default: `"Position Event"` */
-  positionEvent?: string;
   /** Default: `"Accepts"` */
   accepts?: string;
-  /** Default: `"Dnd Item Id Field"` */
-  dndItemIdField?: string;
-  /** Default: `"Reorder Event"` */
-  reorderEvent?: string;
+  /** Default: `"Position Event"` */
+  positionEvent?: string;
+  /** Default: `"Sort Column"` */
+  sortColumn?: string;
+  /** Default: `false` */
+  selectable?: boolean;
+  /** Default: `false` */
+  sortable?: boolean;
+  /** Default: `"Group By"` */
+  groupBy?: string;
+  /** Default: `"dense"` */
+  look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'bordered';
+  /** Default: `[]` */
+  itemActions?: EntityRow[];
+  /** Default: `"asc"` */
+  sortDirection?: 'asc' | 'desc';
+  /** Default: `"Drag Group"` */
+  dragGroup?: string;
+  /** Default: `false` */
+  dndRoot?: boolean;
+  /** Default: `[]` */
+  selectedIds?: string[];
+  /** Default: `""` */
+  className?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  error?: EntityRow;
+  /** Default: `0` */
+  pageSize?: number;
+  /** Default: `"Drop Event"` */
+  dropEvent?: string;
   /** Default: `0` */
   maxInlineActions?: number;
   /** Default: `"Empty Message"` */
   emptyMessage?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `[]` */
-  selectedIds?: string[];
-  /** Default: `false` */
-  dndRoot?: boolean;
-  /** Default: `[{"format":"badge","width":"Width","icon":"circle","label":"Label","align":"left","sortable":false,"field":"Field","className":"Class Name","weight":"normal","header":"Header","key":"Key"}]` */
+  /** Default: `[{"field":"Field","weight":"normal","label":"Label","header":"Header","icon":"circle","key":"Key","format":"badge","className":"Class Name","width":"Width","align":"left","sortable":false}]` */
   fields?: EntityRow[];
-  /** Default: `false` */
-  sortable?: boolean;
-  /** Default: `[]` */
-  itemActions?: EntityRow[];
-  /** Default: `false` */
-  selectable?: boolean;
-  /** Default: `"Sort Column"` */
-  sortColumn?: string;
-  /** Default: `""` */
-  className?: string;
-  error?: EntityRow;
-  /** Default: `"Drop Event"` */
-  dropEvent?: string;
-  /** Default: `"dense"` */
-  look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'bordered';
-  /** Default: `"Drag Group"` */
-  dragGroup?: string;
-  /** Default: `"asc"` */
-  sortDirection?: 'asc' | 'desc';
-  /** Default: `[{"className":"Class Name","header":"Header","align":"left","field":"Field","weight":"normal","key":"Key","format":"badge","icon":"circle","sortable":false,"label":"Label","width":"Width"}]` */
+  /** Default: `"Reorder Event"` */
+  reorderEvent?: string;
+  /** Default: `[{"header":"Header","format":"badge","width":"Width","weight":"normal","field":"Field","icon":"circle","label":"Label","key":"Key","sortable":false,"className":"Class Name","align":"left"}]` */
   columns?: EntityRow[];
-  /** Default: `"Group By"` */
-  groupBy?: string;
-  /** Default: `0` */
-  pageSize?: number;
+  /** Default: `"Dnd Item Id Field"` */
+  dndItemIdField?: string;
 }
 
 /**

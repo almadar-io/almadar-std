@@ -52,13 +52,13 @@ export interface StdUiGameMenuConfig {
   title?: string;
   /** Default: `"Background"` */
   background?: string;
-  /** Default: `[{"action":"Action","subLabel":"Sub Label","navigatesTo":"Navigates To","id":"Id","label":"Label","variant":"primary","disabled":false}]` */
+  /** Default: `"Logo"` */
+  logo?: string;
+  /** Default: `[{"label":"Label","subLabel":"Sub Label","action":"Action","disabled":false,"variant":"primary","id":"Id","navigatesTo":"Navigates To"}]` */
   menuItems?: EntityRow[];
   /** Default: `""` */
   className?: string;
-  /** Default: `"Logo"` */
-  logo?: string;
-  /** Default: `[{"label":"Label","id":"Id","variant":"primary","subLabel":"Sub Label","action":"Action","navigatesTo":"Navigates To","disabled":false}]` */
+  /** Default: `[{"action":"Action","label":"Label","id":"Id","variant":"primary","navigatesTo":"Navigates To","disabled":false,"subLabel":"Sub Label"}]` */
   options?: EntityRow[];
 }
 

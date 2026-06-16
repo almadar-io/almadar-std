@@ -39,30 +39,30 @@ export type StdUiSvgLobeEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiSvgLobeConfig {
-  /** Default: `50` */
-  cy?: number;
-  /** Default: `50` */
-  cx?: number;
-  /** Default: `2` */
-  shells?: number;
-  /** Default: `"var(--color-primary)"` */
-  color?: string;
-  /** Default: `0` */
-  rotation?: number;
-  /** Default: `14` */
-  rx?: number;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `1` */
-  opacity?: number;
-  /** Default: `true` */
-  asRoot?: boolean;
   /** Default: `100` */
   width?: number;
+  /** Default: `50` */
+  cx?: number;
+  /** Default: `0` */
+  rotation?: number;
+  /** Default: `true` */
+  asRoot?: boolean;
   /** Default: `100` */
   height?: number;
   /** Default: `20` */
   ry?: number;
+  /** Default: `"var(--color-primary)"` */
+  color?: string;
+  /** Default: `14` */
+  rx?: number;
+  /** Default: `50` */
+  cy?: number;
+  /** Default: `2` */
+  shells?: number;
+  /** Default: `1` */
+  opacity?: number;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

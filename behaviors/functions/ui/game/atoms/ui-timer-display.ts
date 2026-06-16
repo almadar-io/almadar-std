@@ -39,18 +39,18 @@ export type StdUiTimerDisplayEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiTimerDisplayConfig {
-  /** Default: `"mm:ss"` */
-  format?: 'mm:ss' | 'ss' | 'countdown';
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
-  /** Default: `0` */
-  seconds?: number;
+  /** Default: `false` */
+  running?: boolean;
+  /** Default: `"mm:ss"` */
+  format?: 'mm:ss' | 'ss' | 'countdown';
   /** Default: `""` */
   className?: string;
   /** Default: `0` */
   lowThreshold?: number;
-  /** Default: `false` */
-  running?: boolean;
+  /** Default: `0` */
+  seconds?: number;
 }
 
 /**

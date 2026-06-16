@@ -41,30 +41,30 @@ export type StdUiContentRendererEventKey = 'INIT';
 export interface StdUiContentRendererConfig {
   /** Default: `"Search Value"` */
   searchValue?: string;
-  /** Default: `0` */
-  pageProp?: number;
-  activeFilters?: unknown;
-  /** Default: `0` */
-  totalCount?: number;
-  /** Default: `"Content"` */
-  content?: string;
-  /** Default: `0` */
-  pageSize?: number;
+  error?: EntityRow;
   /** Default: `"Sort By"` */
   sortBy?: string;
-  /** Default: `"asc"` */
-  sortDirection?: 'asc' | 'desc';
-  /** Default: `[{"content":"Content","type":"markdown"}]` */
-  segments?: EntityRow[];
-  error?: EntityRow;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"rtl"` */
-  direction?: 'rtl' | 'ltr';
-  /** Default: `false` */
-  isLoading?: boolean;
+  activeFilters?: unknown;
   /** Default: `[]` */
   selectedIds?: string[];
+  /** Default: `0` */
+  totalCount?: number;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `"Content"` */
+  content?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `0` */
+  pageSize?: number;
+  /** Default: `[{"type":"markdown","content":"Content"}]` */
+  segments?: EntityRow[];
+  /** Default: `"asc"` */
+  sortDirection?: 'asc' | 'desc';
+  /** Default: `"rtl"` */
+  direction?: 'rtl' | 'ltr';
+  /** Default: `0` */
+  pageProp?: number;
 }
 
 /**

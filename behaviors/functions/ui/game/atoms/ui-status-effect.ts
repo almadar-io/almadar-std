@@ -41,16 +41,16 @@ export type StdUiStatusEffectEventKey = 'INIT';
 export interface StdUiStatusEffectConfig {
   /** Default: `"neutral"` */
   variant?: 'buff' | 'debuff' | 'neutral';
-  /** Default: `"Label"` */
-  label?: string;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
   /** Default: `0` */
   duration?: number;
+  /** Default: `"Label"` */
+  label?: string;
   /** Default: `"circle"` */
   icon?: unknown;
   /** Default: `0` */
   stacks?: number;
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
   /** Default: `""` */
   className?: string;
 }

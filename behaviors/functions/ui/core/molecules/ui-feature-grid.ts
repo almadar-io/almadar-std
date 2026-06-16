@@ -39,14 +39,14 @@ export type StdUiFeatureGridEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiFeatureGridConfig {
-  /** Default: `3` */
-  columns?: number;
   /** Default: `"md"` */
   gap?: 'sm' | 'md' | 'lg';
+  /** Default: `[{"href":"Href","title":"Title","linkLabel":"Link Label","className":"Class Name","icon":"circle","size":"sm","variant":"default","description":"Description"}]` */
+  items?: EntityRow[];
   /** Default: `""` */
   className?: string;
-  /** Default: `[{"href":"Href","linkLabel":"Link Label","variant":"default","description":"Description","icon":"circle","className":"Class Name","size":"sm","title":"Title"}]` */
-  items?: EntityRow[];
+  /** Default: `3` */
+  columns?: number;
 }
 
 /**

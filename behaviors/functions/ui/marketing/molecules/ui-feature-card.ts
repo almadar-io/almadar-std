@@ -39,20 +39,20 @@ export type StdUiFeatureCardEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiFeatureCardConfig {
-  /** Default: `"Description"` */
-  description?: string;
-  /** Default: `"circle"` */
-  icon?: unknown;
-  /** Default: `"Href"` */
-  href?: string;
-  /** Default: `"Title"` */
-  title?: string;
   /** Default: `"Learn more"` */
   linkLabel?: string;
   /** Default: `"bordered"` */
   variant?: 'default' | 'bordered' | 'elevated' | 'interactive';
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
+  /** Default: `"Title"` */
+  title?: string;
+  /** Default: `"Description"` */
+  description?: string;
+  /** Default: `"circle"` */
+  icon?: unknown;
+  /** Default: `"Href"` */
+  href?: string;
   /** Default: `""` */
   className?: string;
 }

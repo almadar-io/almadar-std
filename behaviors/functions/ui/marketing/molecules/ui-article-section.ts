@@ -39,10 +39,10 @@ export type StdUiArticleSectionEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiArticleSectionConfig {
-  /** Default: `"md"` */
-  maxWidth?: 'sm' | 'md' | 'lg';
   /** Default: `"Title"` */
   title?: string;
+  /** Default: `"md"` */
+  maxWidth?: 'sm' | 'md' | 'lg';
   /** Default: `""` */
   className?: string;
 }

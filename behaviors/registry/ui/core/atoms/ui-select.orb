@@ -38,6 +38,18 @@
                   "type": "string"
                 }
               ]
+            },
+            {
+              "event": "CHANGE",
+              "description": "onChange handler or declarative event key for trait dispatch",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
             }
           ],
           "stateMachine": {
@@ -63,6 +75,18 @@
                     "type": "string"
                   }
                 ]
+              },
+              {
+                "key": "CHANGE",
+                "name": "Change",
+                "description": "onChange handler or declarative event key for trait dispatch",
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -75,13 +99,14 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "select",
                       "options": "@config.options",
-                      "error": "@config.error",
                       "className": "@config.className",
-                      "value": "@config.value",
-                      "action": "ACTION",
                       "placeholder": "@config.placeholder",
-                      "type": "select"
+                      "onChange": "CHANGE",
+                      "action": "ACTION",
+                      "value": "@config.value",
+                      "error": "@config.error"
                     }
                   ]
                 ]
@@ -96,19 +121,12 @@
               "description": "Current value",
               "tier": "presentation"
             },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes applied to the root element.",
-              "tier": "presentation"
-            },
             "options": {
               "type": "[SelectOptionsItem]",
               "default": [
                 {
-                  "label": "Label",
-                  "value": "Value"
+                  "value": "Value",
+                  "label": "Label"
                 }
               ],
               "label": "Options",
@@ -117,13 +135,13 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "label": {
-                    "name": "label",
+                  "value": {
+                    "name": "value",
                     "type": "string",
                     "required": true
                   },
-                  "value": {
-                    "name": "value",
+                  "label": {
+                    "name": "label",
                     "type": "string",
                     "required": true
                   }
@@ -135,6 +153,13 @@
               "default": "Placeholder",
               "label": "Placeholder",
               "description": "Placeholder text",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes applied to the root element.",
               "tier": "presentation"
             },
             "error": {

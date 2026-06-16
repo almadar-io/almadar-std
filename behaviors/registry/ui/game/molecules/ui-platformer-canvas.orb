@@ -151,24 +151,24 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "platformer-canvas",
-                      "assetBaseUrl": "@config.assetBaseUrl",
-                      "backgroundImage": "@config.backgroundImage",
+                      "worldWidth": "@config.worldWidth",
+                      "tileSprites": "@config.tileSprites",
                       "jumpEvent": "JUMP",
-                      "player": "@config.player",
+                      "worldHeight": "@config.worldHeight",
+                      "leftEvent": "LEFT",
+                      "className": "@config.className",
+                      "bgColor": "@config.bgColor",
                       "playerSprite": "@config.playerSprite",
                       "stopEvent": "STOP",
-                      "followCamera": "@config.followCamera",
-                      "worldWidth": "@config.worldWidth",
-                      "worldHeight": "@config.worldHeight",
-                      "canvasHeight": "@config.canvasHeight",
-                      "canvasWidth": "@config.canvasWidth",
-                      "leftEvent": "LEFT",
-                      "platforms": "@config.platforms",
-                      "bgColor": "@config.bgColor",
-                      "tileSprites": "@config.tileSprites",
+                      "player": "@config.player",
                       "rightEvent": "RIGHT",
-                      "className": "@config.className"
+                      "followCamera": "@config.followCamera",
+                      "assetBaseUrl": "@config.assetBaseUrl",
+                      "canvasHeight": "@config.canvasHeight",
+                      "platforms": "@config.platforms",
+                      "canvasWidth": "@config.canvasWidth",
+                      "type": "platformer-canvas",
+                      "backgroundImage": "@config.backgroundImage"
                     }
                   ]
                 ]
@@ -176,6 +176,34 @@
             ]
           },
           "config": {
+            "playerSprite": {
+              "type": "asset",
+              "default": "https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png",
+              "label": "Player Sprite",
+              "description": "Player sprite image URL",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "canvasHeight": {
+              "type": "number",
+              "default": 400.0,
+              "label": "Canvas Height",
+              "description": "canvasHeight prop",
+              "tier": "presentation"
+            },
+            "assetBaseUrl": {
+              "type": "asset",
+              "default": "https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png",
+              "label": "Asset Base Url",
+              "description": "Base URL prefix for asset URLs",
+              "tier": "presentation"
+            },
             "bgColor": {
               "type": "string",
               "default": "Bg Color",
@@ -183,46 +211,15 @@
               "description": "Background color",
               "tier": "presentation"
             },
-            "assetBaseUrl": {
-              "type": "string",
-              "default": "Asset Base Url",
-              "label": "Asset Base Url",
-              "description": "Base URL prefix for asset URLs",
-              "tier": "presentation"
-            },
-            "backgroundImage": {
-              "type": "string",
-              "default": "Background Image",
-              "label": "Background Image",
-              "description": "Background image URL",
-              "tier": "presentation"
-            },
-            "canvasWidth": {
-              "type": "number",
-              "default": 800.0,
-              "label": "Canvas Width",
-              "description": "Canvas display size",
-              "tier": "presentation"
-            },
-            "tileSprites": {
-              "type": "Map<string,string>",
-              "default": {},
-              "label": "Tile Sprites",
-              "description": "Map of platform type to tile sprite URL",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
-            },
             "platforms": {
               "type": "[PlatformerCanvasPlatformsItem]",
               "default": [
                 {
                   "type": "ground",
-                  "width": 1.0,
+                  "height": 1.0,
                   "y": 1.0,
                   "x": 1.0,
-                  "height": 1.0
+                  "width": 1.0
                 }
               ],
               "label": "Platforms",
@@ -231,8 +228,18 @@
               "items": {
                 "type": "object",
                 "properties": {
+                  "x": {
+                    "name": "x",
+                    "type": "number",
+                    "required": true
+                  },
                   "y": {
                     "name": "y",
+                    "type": "number",
+                    "required": true
+                  },
+                  "height": {
+                    "name": "height",
                     "type": "number",
                     "required": true
                   },
@@ -251,32 +258,22 @@
                     "name": "width",
                     "type": "number",
                     "required": true
-                  },
-                  "x": {
-                    "name": "x",
-                    "type": "number",
-                    "required": true
-                  },
-                  "height": {
-                    "name": "height",
-                    "type": "number",
-                    "required": true
                   }
                 }
               }
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
             },
             "worldHeight": {
               "type": "number",
               "default": 400.0,
               "label": "World Height",
               "description": "worldHeight prop",
+              "tier": "presentation"
+            },
+            "followCamera": {
+              "type": "boolean",
+              "default": true,
+              "label": "Follow Camera",
+              "description": "Camera follows player",
               "tier": "presentation"
             },
             "worldWidth": {
@@ -286,41 +283,41 @@
               "description": "World dimensions",
               "tier": "presentation"
             },
-            "playerSprite": {
-              "type": "string",
-              "default": "Player Sprite",
-              "label": "Player Sprite",
-              "description": "Player sprite image URL",
+            "canvasWidth": {
+              "type": "number",
+              "default": 800.0,
+              "label": "Canvas Width",
+              "description": "Canvas display size",
               "tier": "presentation"
             },
             "player": {
               "type": "PlatformerCanvasPlayer",
               "default": {
+                "y": 1.0,
+                "x": 1.0,
                 "width": 1.0,
                 "facingRight": false,
                 "grounded": false,
-                "y": 1.0,
-                "height": 1.0,
-                "vy": 1.0,
                 "vx": 1.0,
-                "x": 1.0
+                "vy": 1.0,
+                "height": 1.0
               },
               "label": "Player",
               "description": "Player state data",
               "tier": "presentation",
               "properties": {
-                "vx": {
-                  "name": "vx",
-                  "type": "number",
-                  "required": false
-                },
                 "grounded": {
                   "name": "grounded",
                   "type": "boolean",
                   "required": false
                 },
-                "vy": {
-                  "name": "vy",
+                "width": {
+                  "name": "width",
+                  "type": "number",
+                  "required": false
+                },
+                "vx": {
+                  "name": "vx",
                   "type": "number",
                   "required": false
                 },
@@ -329,13 +326,18 @@
                   "type": "boolean",
                   "required": false
                 },
+                "height": {
+                  "name": "height",
+                  "type": "number",
+                  "required": false
+                },
                 "y": {
                   "name": "y",
                   "type": "number",
                   "required": true
                 },
-                "height": {
-                  "name": "height",
+                "vy": {
+                  "name": "vy",
                   "type": "number",
                   "required": false
                 },
@@ -343,26 +345,24 @@
                   "name": "x",
                   "type": "number",
                   "required": true
-                },
-                "width": {
-                  "name": "width",
-                  "type": "number",
-                  "required": false
                 }
               }
             },
-            "canvasHeight": {
-              "type": "number",
-              "default": 400.0,
-              "label": "Canvas Height",
-              "description": "canvasHeight prop",
-              "tier": "presentation"
+            "tileSprites": {
+              "type": "Map<string,asset>",
+              "default": {},
+              "label": "Tile Sprites",
+              "description": "Map of platform type to tile sprite URL",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
             },
-            "followCamera": {
-              "type": "boolean",
-              "default": true,
-              "label": "Follow Camera",
-              "description": "Camera follows player",
+            "backgroundImage": {
+              "type": "asset",
+              "default": "https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png",
+              "label": "Background Image",
+              "description": "Background image URL",
               "tier": "presentation"
             }
           },

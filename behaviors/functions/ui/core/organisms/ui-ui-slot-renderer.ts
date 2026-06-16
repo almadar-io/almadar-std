@@ -41,17 +41,17 @@ export type StdUiUiSlotRendererEventKey = 'INIT';
 export interface StdUiUiSlotRendererConfig {
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `{"enabled":false}` */
-  suspense?: EntityRow;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `false` */
-  includeFloating?: boolean;
   error?: EntityRow;
   /** Default: `false` */
-  includeHud?: boolean;
+  includeFloating?: boolean;
+  /** Default: `{"enabled":false}` */
+  suspense?: EntityRow;
   /** Default: `"fixed"` */
   hudMode?: 'fixed' | 'inline';
+  /** Default: `false` */
+  includeHud?: boolean;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**
@@ -160,15 +160,15 @@ export function stdUiUiSlotRendererUiSlotRendererOrbital(params: StdUiUiSlotRend
                   'render-ui',
                   'main',
                   {
-                    'className': '@config.className',
-                    'error': '@config.error',
-                    'entity': 'UiSlotRendererItem',
-                    'type': 'ui-slot-renderer',
-                    'includeFloating': '@config.includeFloating',
-                    'includeHud': '@config.includeHud',
                     'isLoading': '@config.isLoading',
-                    'hudMode': '@config.hudMode',
                     'suspense': '@config.suspense',
+                    'includeHud': '@config.includeHud',
+                    'className': '@config.className',
+                    'entity': 'UiSlotRendererItem',
+                    'includeFloating': '@config.includeFloating',
+                    'hudMode': '@config.hudMode',
+                    'error': '@config.error',
+                    'type': 'ui-slot-renderer',
                   },
                 ],
               ],
@@ -183,6 +183,41 @@ export function stdUiUiSlotRendererUiSlotRendererOrbital(params: StdUiUiSlotRend
             'description': 'Loading state indicator',
             'tier': 'presentation',
           },
+          'error': {
+            'type': 'UiSlotRendererError',
+            'label': 'Error',
+            'description': 'Error state',
+            'tier': 'presentation',
+            'properties': {
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+            },
+          },
+          'includeFloating': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Include Floating',
+            'description': 'Include floating slot',
+            'tier': 'presentation',
+          },
           'suspense': {
             'type': 'UiSlotRendererSuspense',
             'default': {
@@ -192,11 +227,6 @@ export function stdUiUiSlotRendererUiSlotRendererOrbital(params: StdUiUiSlotRend
             'description': 'Enable Suspense boundaries around each slot. When true, each inline slot is wrapped in `<ErrorBoundary><Suspense>` with Skeleton fallbacks. Opt-in — existing isLoading prop pattern still works.',
             'tier': 'presentation',
             'properties': {
-              'enabled': {
-                'name': 'enabled',
-                'type': 'boolean',
-                'required': true,
-              },
               'slotFallbacks': {
                 'name': 'slotFallbacks',
                 'type': 'object',
@@ -205,56 +235,12 @@ export function stdUiUiSlotRendererUiSlotRendererOrbital(params: StdUiUiSlotRend
                   'type': 'string',
                 },
               },
-            },
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional class name for the container',
-            'tier': 'presentation',
-          },
-          'includeFloating': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Include Floating',
-            'description': 'Include floating slot',
-            'tier': 'presentation',
-          },
-          'error': {
-            'type': 'UiSlotRendererError',
-            'label': 'Error',
-            'description': 'Error state',
-            'tier': 'presentation',
-            'properties': {
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'message': {
-                'name': 'message',
-                'type': 'string',
+              'enabled': {
+                'name': 'enabled',
+                'type': 'boolean',
                 'required': true,
               },
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
             },
-          },
-          'includeHud': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Include Hud',
-            'description': 'Include HUD slots',
-            'tier': 'presentation',
           },
           'hudMode': {
             'type': 'string',
@@ -266,6 +252,20 @@ export function stdUiUiSlotRendererUiSlotRendererOrbital(params: StdUiUiSlotRend
               'fixed',
               'inline',
             ],
+          },
+          'includeHud': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Include Hud',
+            'description': 'Include HUD slots',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional class name for the container',
+            'tier': 'presentation',
           },
         },
         'scope': 'instance',

@@ -39,48 +39,49 @@ export type StdUiStatDisplayEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiStatDisplayConfig {
-  /** Default: `"bg-muted"` */
-  iconBg?: string;
-  /** Default: `"higher-is-better"` */
-  trendPolarity?: 'higher-is-better' | 'lower-is-better';
-  /** Default: `"Format"` */
-  format?: string;
-  /** Default: `"Click Event"` */
-  clickEvent?: string;
   /** Default: `"Suffix"` */
   suffix?: string;
-  /** Default: `"Label"` */
-  label?: string;
+  /** Default: `"text-foreground"` */
+  iconColor?: string;
+  /** Default: `[]` */
+  sparklineData?: number[];
+  /** Default: `0` */
+  max?: number;
+  /** Default: `"bg-muted"` */
+  iconBg?: string;
+  /** Default: `"Click Event"` */
+  clickEvent?: string;
+  /** Default: `"circle"` */
+  icon?: unknown;
   /** Default: `"elevated"` */
   look?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
+  /** Default: `"higher-is-better"` */
+  trendPolarity?: 'higher-is-better' | 'lower-is-better';
+  /** Default: `"Label"` */
+  label?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `"Format"` */
+  format?: string;
+  /** Default: `"Prefix"` */
+  prefix?: string;
+  /** Default: `"default"` */
+  variant?: 'default' | 'primary' | 'success' | 'warning' | 'error' | 'info';
+  /** Default: `"Value"` */
+  value?: string;
+  /** Default: `0` */
+  target?: number;
+  /** Default: `""` */
+  className?: string;
+  error?: EntityRow;
+  /** Default: `0` */
+  trend?: number;
+  /** Default: `false` */
+  compact?: boolean;
   /** Default: `"absolute"` */
   trendFormat?: 'absolute' | 'percent';
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
-  /** Default: `0` */
-  trend?: number;
-  icon?: unknown;
-  /** Default: `"Value"` */
-  value?: string;
-  /** Default: `"text-foreground"` */
-  iconColor?: string;
-  /** Default: `0` */
-  target?: number;
-  /** Default: `0` */
-  max?: number;
-  /** Default: `[]` */
-  sparklineData?: number[];
-  /** Default: `false` */
-  isLoading?: boolean;
-  error?: EntityRow;
-  /** Default: `"Prefix"` */
-  prefix?: string;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `false` */
-  compact?: boolean;
-  /** Default: `"default"` */
-  variant?: 'default' | 'primary' | 'success' | 'warning' | 'error' | 'info';
 }
 
 /**

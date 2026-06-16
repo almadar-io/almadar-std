@@ -41,10 +41,10 @@ export type StdUiBattleTemplateEventKey = 'INIT';
 export interface StdUiBattleTemplateConfig {
   /** Default: `0.45` */
   scale?: number;
-  /** Default: `1` */
-  unitScale?: number;
   /** Default: `""` */
   className?: string;
+  /** Default: `1` */
+  unitScale?: number;
 }
 
 /**

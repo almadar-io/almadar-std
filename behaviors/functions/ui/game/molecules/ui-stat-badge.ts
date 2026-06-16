@@ -39,25 +39,26 @@ export type StdUiStatBadgeEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiStatBadgeConfig {
+  /** Default: `"number"` */
+  format?: 'number' | 'hearts' | 'bar' | 'text';
   /** Default: `"Value"` */
   value?: string;
-  /** Default: `"Source"` */
-  source?: string;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
+  /** Default: `"Label"` */
+  label?: string;
+  /** Default: `0` */
+  max?: number;
   /** Default: `"default"` */
   variant?: 'default' | 'primary' | 'success' | 'warning' | 'danger';
+  /** Default: `"Source"` */
+  source?: string;
+  /** Default: `"circle"` */
   icon?: unknown;
   /** Default: `""` */
   className?: string;
   /** Default: `"Field"` */
   field?: string;
-  /** Default: `"Label"` */
-  label?: string;
-  /** Default: `"number"` */
-  format?: 'number' | 'hearts' | 'bar' | 'text';
-  /** Default: `0` */
-  max?: number;
 }
 
 /**
