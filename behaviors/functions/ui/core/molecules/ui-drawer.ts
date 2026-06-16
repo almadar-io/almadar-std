@@ -53,23 +53,23 @@ export interface StdUiDrawerOpenPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiDrawerConfig {
+  /** Default: `"right"` */
+  position?: 'left' | 'right';
+  /** Default: `true` */
+  closeOnOverlayClick?: boolean;
+  footer?: unknown;
+  /** Default: `"md"` */
+  width?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
   /** Default: `true` */
   closeOnEscape?: boolean;
   /** Default: `true` */
-  isOpen?: boolean;
-  /** Default: `true` */
   showCloseButton?: boolean;
-  /** Default: `"right"` */
-  position?: 'left' | 'right';
-  footer?: unknown;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `true` */
-  closeOnOverlayClick?: boolean;
-  /** Default: `"md"` */
-  width?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
   /** Default: `"Title"` */
   title?: string;
+  /** Default: `true` */
+  isOpen?: boolean;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

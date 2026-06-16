@@ -1,48 +1,11 @@
 app ui-event-handler-board "1.0.0"
 "EventHandlerBoard — UI factory (1:1 with the @almadar/ui event-handler-board pattern)."
 orbital EventHandlerBoardOrbital {
-  type EventHandlerBoardEntity = {
-    id : string!
-    title : string!
-    description : string!
-    objects : [EventHandlerBoardEntityObjectsItem]!
-    goalCondition : string!
-    goalEvent : string!
-    triggerEvents : [string]
-    successMessage : string
-    failMessage : string
-    hint : string
-    headerImage : string
-    theme : EventHandlerBoardEntityTheme
-  }
-  type EventHandlerBoardEntityObjectsItem = {
-    id : string!
-    name : string!
-    icon : string!
-    states : [string]!
-    initialState : string!
-    currentState : string!
-    availableEvents : [EventHandlerBoardEntityObjectsItemAvailableEventsItem]!
-    availableActions : [EventHandlerBoardEntityObjectsItemAvailableActionsItem]!
-    rules : [EventHandlerBoardEntityObjectsItemRulesItem]!
-    maxRules : number
-  }
-  type EventHandlerBoardEntityObjectsItemAvailableEventsItem = {
-    value : string!
-    label : string!
-  }
-  type EventHandlerBoardEntityObjectsItemAvailableActionsItem = {
-    value : string!
-    label : string!
-  }
-  type EventHandlerBoardEntityObjectsItemRulesItem = {
-    id : string!
-    whenEvent : string!
-    thenAction : string!
-  }
-  type EventHandlerBoardEntityTheme = {
-    background : string
-    accentColor : string
+  type EventHandlerBoardError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
   }
 
   entity EventHandlerBoardItem [runtime] {
@@ -54,8 +17,20 @@ orbital EventHandlerBoardOrbital {
 
     state idle {
       INIT -> idle
+        (fetch EventHandlerBoardItem {})
         (render-ui main {
-          entity: @config.entityProp
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          sortBy: @config.sortBy
+          sortDirection: @config.sortDirection
+          searchValue: @config.searchValue
+          page: @config.pageProp
+          pageSize: @config.pageSize
+          totalCount: @config.totalCount
+          activeFilters: @config.activeFilters
+          selectedIds: @config.selectedIds
+          entity: @entity
           stepDurationMs: @config.stepDurationMs
           playEvent: PLAY
           completeEvent: COMPLETE
@@ -77,10 +52,50 @@ orbital EventHandlerBoardOrbital {
     }
 
     config {
-      entityProp : EventHandlerBoardEntity
-        @label "Entity"
-        @description "Puzzle data. The compiler binds the generic `EntityRow`, so the inlet accepts it (and arrays) as union members; the component narrows to its curated `EventHandlerPuzzleEntity` read-shape below (a valid union-narrow) and renders nothing until a puzzle entity is present."
-        @synonyms "entity"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : EventHandlerBoardError
+        @label "Error"
+        @description "Error state (UiError)"
+        @tier "presentation"
+      sortBy : string = "Sort By"
+        @label "Sort By"
+        @description "Current sort field"
+        @tier "presentation"
+      sortDirection : "asc" | "desc" = asc
+        @label "Sort Direction"
+        @description "Current sort direction"
+        @tier "presentation"
+      searchValue : string = "Search Value"
+        @label "Search Value"
+        @description "Current search query value"
+        @tier "presentation"
+      pageProp : number = 0
+        @label "Page"
+        @description "Current page number"
+        @synonyms "page"
+        @tier "presentation"
+      pageSize : number = 0
+        @label "Page Size"
+        @description "Number of items per page"
+        @tier "presentation"
+      totalCount : number = 0
+        @label "Total Count"
+        @description "Total number of items"
+        @tier "presentation"
+      activeFilters : json
+        @label "Active Filters"
+        @description "Active filters"
+        @tier "presentation"
+      selectedIds : [string] = []
+        @label "Selected Ids"
+        @description "Currently selected item IDs"
         @tier "presentation"
       stepDurationMs : number = 800
         @label "Step Duration Ms"

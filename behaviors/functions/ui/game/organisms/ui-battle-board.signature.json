@@ -81,6 +81,13 @@
         ],
         "overridableConfigKeys": [
           {
+            "key": "activeFilters",
+            "type": "json",
+            "label": "Active Filters",
+            "description": "Active filters",
+            "tier": "presentation"
+          },
+          {
             "key": "className",
             "type": "string",
             "default": "",
@@ -100,370 +107,30 @@
             }
           },
           {
-            "key": "entityProp",
-            "type": "BattleBoardEntity",
-            "default": {
-              "id": "",
-              "turn": 0,
-              "units": [],
-              "tiles": [],
-              "selectedUnitId": "",
-              "phase": "observation",
-              "gameResult": "victory"
-            },
-            "label": "Entity",
-            "description": "Entity containing all board data",
-            "synonyms": "entity",
+            "key": "error",
+            "type": "BattleBoardError",
+            "label": "Error",
+            "description": "Error state (UiError)",
             "tier": "presentation",
             "properties": {
-              "boardWidth": {
-                "name": "boardWidth",
-                "required": false,
-                "type": "number"
-              },
-              "units": {
-                "name": "units",
-                "required": true,
-                "type": "array",
-                "items": {
-                  "properties": {
-                    "sprite": {
-                      "name": "sprite",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "team": {
-                      "name": "team",
-                      "required": true,
-                      "type": "string",
-                      "values": [
-                        "player",
-                        "enemy"
-                      ]
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": true,
-                      "type": "string"
-                    },
-                    "unitType": {
-                      "name": "unitType",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "heroId": {
-                      "name": "heroId",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "id": {
-                      "name": "id",
-                      "required": true,
-                      "type": "string"
-                    },
-                    "spriteSheet": {
-                      "name": "spriteSheet",
-                      "required": false,
-                      "properties": {
-                        "frameWidth": {
-                          "name": "frameWidth",
-                          "required": true,
-                          "type": "number"
-                        },
-                        "frameHeight": {
-                          "name": "frameHeight",
-                          "required": true,
-                          "type": "number"
-                        },
-                        "sw": {
-                          "name": "sw",
-                          "required": true,
-                          "type": "string"
-                        },
-                        "se": {
-                          "name": "se",
-                          "required": true,
-                          "type": "string"
-                        }
-                      },
-                      "type": "object"
-                    },
-                    "position": {
-                      "name": "position",
-                      "required": true,
-                      "properties": {
-                        "y": {
-                          "name": "y",
-                          "required": true,
-                          "type": "number"
-                        },
-                        "x": {
-                          "name": "x",
-                          "required": true,
-                          "type": "number"
-                        }
-                      },
-                      "type": "object"
-                    },
-                    "maxHealth": {
-                      "name": "maxHealth",
-                      "required": true,
-                      "type": "number"
-                    },
-                    "movement": {
-                      "name": "movement",
-                      "required": true,
-                      "type": "number"
-                    },
-                    "defense": {
-                      "name": "defense",
-                      "required": true,
-                      "type": "number"
-                    },
-                    "traits": {
-                      "name": "traits",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "properties": {
-                          "cooldown": {
-                            "name": "cooldown",
-                            "required": false,
-                            "type": "number"
-                          },
-                          "states": {
-                            "name": "states",
-                            "required": true,
-                            "type": "array",
-                            "items": {
-                              "type": "string"
-                            }
-                          },
-                          "currentState": {
-                            "name": "currentState",
-                            "required": true,
-                            "type": "string"
-                          },
-                          "name": {
-                            "name": "name",
-                            "required": true,
-                            "type": "string"
-                          }
-                        },
-                        "type": "object"
-                      }
-                    },
-                    "attack": {
-                      "name": "attack",
-                      "required": true,
-                      "type": "number"
-                    },
-                    "health": {
-                      "name": "health",
-                      "required": true,
-                      "type": "number"
-                    }
-                  },
-                  "type": "object"
-                }
-              },
-              "turn": {
-                "name": "turn",
-                "required": true,
-                "type": "number"
-              },
-              "selectedUnitId": {
-                "name": "selectedUnitId",
-                "required": true,
-                "type": "string"
-              },
-              "tiles": {
-                "name": "tiles",
-                "required": true,
-                "type": "array",
-                "items": {
-                  "properties": {
-                    "type": {
-                      "name": "type",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "terrain": {
-                      "name": "terrain",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "z": {
-                      "name": "z",
-                      "required": false,
-                      "type": "number"
-                    },
-                    "passable": {
-                      "name": "passable",
-                      "required": false,
-                      "type": "boolean"
-                    },
-                    "terrainSprite": {
-                      "name": "terrainSprite",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "movementCost": {
-                      "name": "movementCost",
-                      "required": false,
-                      "type": "number"
-                    },
-                    "elevation": {
-                      "name": "elevation",
-                      "required": false,
-                      "type": "number"
-                    },
-                    "x": {
-                      "name": "x",
-                      "required": true,
-                      "type": "number"
-                    },
-                    "id": {
-                      "name": "id",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "y": {
-                      "name": "y",
-                      "required": true,
-                      "type": "number"
-                    },
-                    "tileType": {
-                      "name": "tileType",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                }
-              },
-              "features": {
-                "name": "features",
-                "required": false,
-                "type": "array",
-                "items": {
-                  "properties": {
-                    "type": {
-                      "name": "type",
-                      "required": true,
-                      "type": "string"
-                    },
-                    "sprite": {
-                      "name": "sprite",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "id": {
-                      "name": "id",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "elevation": {
-                      "name": "elevation",
-                      "required": false,
-                      "type": "number"
-                    },
-                    "y": {
-                      "name": "y",
-                      "required": true,
-                      "type": "number"
-                    },
-                    "x": {
-                      "name": "x",
-                      "required": true,
-                      "type": "number"
-                    },
-                    "assetUrl": {
-                      "name": "assetUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "color": {
-                      "name": "color",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "z": {
-                      "name": "z",
-                      "required": false,
-                      "type": "number"
-                    }
-                  },
-                  "type": "object"
-                }
-              },
-              "boardHeight": {
-                "name": "boardHeight",
-                "required": false,
-                "type": "number"
-              },
-              "phase": {
-                "name": "phase",
-                "required": true,
-                "type": "string",
-                "values": [
-                  "observation",
-                  "selection",
-                  "movement",
-                  "action",
-                  "enemy_turn",
-                  "game_over"
-                ]
-              },
-              "assetManifest": {
-                "name": "assetManifest",
-                "required": false,
-                "properties": {
-                  "terrains": {
-                    "name": "terrains",
-                    "required": false,
-                    "type": "object"
-                  },
-                  "effects": {
-                    "name": "effects",
-                    "required": false,
-                    "type": "object"
-                  },
-                  "units": {
-                    "name": "units",
-                    "required": false,
-                    "type": "object"
-                  },
-                  "baseUrl": {
-                    "name": "baseUrl",
-                    "required": true,
-                    "type": "string"
-                  },
-                  "features": {
-                    "name": "features",
-                    "required": false,
-                    "type": "object"
-                  }
-                },
-                "type": "object"
-              },
-              "backgroundImage": {
-                "name": "backgroundImage",
+              "code": {
+                "name": "code",
                 "required": false,
                 "type": "string"
               },
-              "gameResult": {
-                "name": "gameResult",
+              "message": {
+                "name": "message",
                 "required": true,
-                "type": "string",
-                "values": [
-                  "victory",
-                  "defeat"
-                ]
+                "type": "string"
               },
-              "id": {
-                "name": "id",
-                "required": true,
+              "stack": {
+                "name": "stack",
+                "required": false,
+                "type": "string"
+              },
+              "name": {
+                "name": "name",
+                "required": false,
                 "type": "string"
               }
             }
@@ -477,11 +144,83 @@
             "tier": "presentation"
           },
           {
+            "key": "isLoading",
+            "type": "boolean",
+            "default": false,
+            "label": "Is Loading",
+            "description": "Loading state indicator",
+            "tier": "presentation"
+          },
+          {
+            "key": "pageProp",
+            "type": "number",
+            "default": 0,
+            "label": "Page",
+            "description": "Current page number",
+            "synonyms": "page",
+            "tier": "presentation"
+          },
+          {
+            "key": "pageSize",
+            "type": "number",
+            "default": 0,
+            "label": "Page Size",
+            "description": "Number of items per page",
+            "tier": "presentation"
+          },
+          {
             "key": "scale",
             "type": "number",
             "default": 0.45,
             "label": "Scale",
             "description": "Canvas render scale",
+            "tier": "presentation"
+          },
+          {
+            "key": "searchValue",
+            "type": "string",
+            "default": "Search Value",
+            "label": "Search Value",
+            "description": "Current search query value",
+            "tier": "presentation"
+          },
+          {
+            "key": "selectedIds",
+            "type": "[string]",
+            "default": [],
+            "label": "Selected Ids",
+            "description": "Currently selected item IDs",
+            "tier": "presentation",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "sortBy",
+            "type": "string",
+            "default": "Sort By",
+            "label": "Sort By",
+            "description": "Current sort field",
+            "tier": "presentation"
+          },
+          {
+            "key": "sortDirection",
+            "type": "string",
+            "default": "asc",
+            "label": "Sort Direction",
+            "description": "Current sort direction",
+            "tier": "presentation",
+            "enumValues": [
+              "asc",
+              "desc"
+            ]
+          },
+          {
+            "key": "totalCount",
+            "type": "number",
+            "default": 0,
+            "label": "Total Count",
+            "description": "Total number of items",
             "tier": "presentation"
           },
           {

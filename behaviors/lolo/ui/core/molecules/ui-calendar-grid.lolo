@@ -1,20 +1,10 @@
 app ui-calendar-grid "1.0.0"
 "CalendarGrid — UI factory (1:1 with the @almadar/ui calendar-grid pattern)."
 orbital CalendarGridOrbital {
-  type CalendarGridEVENTCLICKEvent = {
-    id : string!
-    title : string!
-    startTime : date!
-    endTime : date
-    color : string
-  }
-
   entity CalendarGridItem [runtime] {
     id : string!
     title : string = ""
-    startTime : date
-    endTime : date
-    color : string = ""
+    startTime : string = ""
   }
 
   trait CalendarGridRender -> @rebindable CalendarGridItem [interaction, instance] {
@@ -53,7 +43,7 @@ orbital CalendarGridOrbital {
         @description "Called when a day header is clicked"
         @tier "essential"
       EVENT_CLICK -> external {
-        event : CalendarGridEVENTCLICKEvent
+        event : object
       }
         @description "Called when an event is clicked"
         @tier "essential"
@@ -76,7 +66,7 @@ orbital CalendarGridOrbital {
     }
 
     config {
-      weekStart : date
+      weekStart : date = "2024-01-01"
         @label "Week Start"
         @description "Start of the week (defaults to current week's Monday)"
         @tier "presentation"

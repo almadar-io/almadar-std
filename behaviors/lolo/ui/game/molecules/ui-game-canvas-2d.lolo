@@ -1,0 +1,72 @@
+app ui-game-canvas-2d "1.0.0"
+"GameCanvas2d — UI factory (1:1 with the @almadar/ui game-canvas-2d pattern)."
+orbital GameCanvas2dOrbital {
+  entity GameCanvas2dItem [runtime] {
+    id : string!
+  }
+
+  trait GameCanvas2dRender -> @rebindable GameCanvas2dItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          width: @config.width
+          height: @config.height
+          onTick: TICK
+          tickEvent: @config.tickEvent
+          drawEvent: @config.drawEvent
+          fps: @config.fps
+          backgroundImage: @config.backgroundImage
+          assetBaseUrl: @config.assetBaseUrl
+          className: @config.className
+          type: game-canvas-2d
+        })
+    }
+
+    emits {
+      TICK -> external {
+        dt : number
+      }
+        @description "Called each tick with delta time in seconds"
+        @tier "essential"
+    }
+
+    config {
+      width : number = 800
+        @label "Width"
+        @description "Canvas width in pixels"
+        @tier "presentation"
+      height : number = 600
+        @label "Height"
+        @description "Canvas height in pixels"
+        @tier "presentation"
+      tickEvent : string = "Tick Event"
+        @label "Tick Event"
+        @description "Event name emitted each tick with { dt, frame } — for closed-circuit .orb integration"
+        @tier "presentation"
+      drawEvent : string = "Draw Event"
+        @label "Draw Event"
+        @description "Event name emitted each draw frame with { frame } — for closed-circuit .orb integration"
+        @tier "presentation"
+      fps : number = 60
+        @label "Fps"
+        @description "Target frames per second"
+        @tier "presentation"
+      backgroundImage : string = "Background Image"
+        @label "Background Image"
+        @description "Background image URL"
+        @tier "presentation"
+      assetBaseUrl : string = "Asset Base Url"
+        @label "Asset Base Url"
+        @description "Base URL prefix for asset URLs"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/game-canvas-2d" as GameCanvas2dPage -> GameCanvas2dRender
+}

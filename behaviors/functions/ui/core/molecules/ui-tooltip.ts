@@ -39,10 +39,10 @@ export type StdUiTooltipEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiTooltipConfig {
-  /** Default: `"top"` */
-  position?: 'top' | 'bottom' | 'left' | 'right';
   /** Default: `true` */
   showArrow?: boolean;
+  /** Default: `"top"` */
+  position?: 'top' | 'bottom' | 'left' | 'right';
   /** Default: `""` */
   className?: string;
   content?: unknown;

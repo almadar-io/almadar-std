@@ -84,12 +84,28 @@
                 "event": "INIT",
                 "effects": [
                   [
+                    "fetch",
+                    "BuilderBoardItem",
+                    {}
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "type": "builder-board",
+                      "className": "@config.className",
+                      "pageSize": "@config.pageSize",
+                      "totalCount": "@config.totalCount",
+                      "page": "@config.pageProp",
+                      "activeFilters": "@config.activeFilters",
+                      "sortBy": "@config.sortBy",
+                      "error": "@config.error",
+                      "entity": "@entity",
+                      "sortDirection": "@config.sortDirection",
+                      "selectedIds": "@config.selectedIds",
+                      "searchValue": "@config.searchValue",
                       "completeEvent": "COMPLETE",
-                      "entity": "@config.entityProp"
+                      "type": "builder-board",
+                      "isLoading": "@config.isLoading"
                     }
                   ]
                 ]
@@ -97,136 +113,110 @@
             ]
           },
           "config": {
-            "entityProp": {
-              "type": "BuilderBoardEntity",
-              "label": "Entity",
-              "description": "The compiler binds the generic `EntityRow`, so the inlet accepts it (and",
-              "synonyms": "entity",
+            "activeFilters": {
+              "type": "json",
+              "label": "Active Filters",
+              "description": "Active filters",
+              "tier": "presentation"
+            },
+            "pageSize": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Page Size",
+              "description": "Number of items per page",
+              "tier": "presentation"
+            },
+            "selectedIds": {
+              "type": "[string]",
+              "default": [],
+              "label": "Selected Ids",
+              "description": "Currently selected item IDs",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "sortBy": {
+              "type": "string",
+              "default": "Sort By",
+              "label": "Sort By",
+              "description": "Current sort field",
+              "tier": "presentation"
+            },
+            "error": {
+              "type": "BuilderBoardError",
+              "label": "Error",
+              "description": "Error state (UiError)",
               "tier": "presentation",
               "properties": {
-                "hint": {
-                  "name": "hint",
+                "code": {
+                  "name": "code",
                   "type": "string",
                   "required": false
                 },
-                "theme": {
-                  "name": "theme",
-                  "type": "object",
-                  "required": false,
-                  "properties": {
-                    "accentColor": {
-                      "name": "accentColor",
-                      "type": "string",
-                      "required": false
-                    },
-                    "background": {
-                      "name": "background",
-                      "type": "string",
-                      "required": false
-                    }
-                  }
-                },
-                "id": {
-                  "name": "id",
+                "message": {
+                  "name": "message",
                   "type": "string",
                   "required": true
                 },
-                "title": {
-                  "name": "title",
-                  "type": "string",
-                  "required": true
-                },
-                "successMessage": {
-                  "name": "successMessage",
+                "stack": {
+                  "name": "stack",
                   "type": "string",
                   "required": false
                 },
-                "failMessage": {
-                  "name": "failMessage",
+                "name": {
+                  "name": "name",
                   "type": "string",
                   "required": false
-                },
-                "slots": {
-                  "name": "slots",
-                  "type": "array",
-                  "required": true,
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "acceptsComponentId": {
-                        "name": "acceptsComponentId",
-                        "type": "string",
-                        "required": true
-                      },
-                      "description": {
-                        "name": "description",
-                        "type": "string",
-                        "required": false
-                      },
-                      "id": {
-                        "name": "id",
-                        "type": "string",
-                        "required": true
-                      },
-                      "label": {
-                        "name": "label",
-                        "type": "string",
-                        "required": true
-                      }
-                    }
-                  }
-                },
-                "headerImage": {
-                  "name": "headerImage",
-                  "type": "string",
-                  "required": false
-                },
-                "description": {
-                  "name": "description",
-                  "type": "string",
-                  "required": true
-                },
-                "components": {
-                  "name": "components",
-                  "type": "array",
-                  "required": true,
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "category": {
-                        "name": "category",
-                        "type": "string",
-                        "required": false
-                      },
-                      "id": {
-                        "name": "id",
-                        "type": "string",
-                        "required": true
-                      },
-                      "description": {
-                        "name": "description",
-                        "type": "string",
-                        "required": false
-                      },
-                      "iconUrl": {
-                        "name": "iconUrl",
-                        "type": "string",
-                        "required": false
-                      },
-                      "label": {
-                        "name": "label",
-                        "type": "string",
-                        "required": true
-                      },
-                      "iconEmoji": {
-                        "name": "iconEmoji",
-                        "type": "string",
-                        "required": false
-                      }
-                    }
-                  }
                 }
               }
+            },
+            "searchValue": {
+              "type": "string",
+              "default": "Search Value",
+              "label": "Search Value",
+              "description": "Current search query value",
+              "tier": "presentation"
+            },
+            "pageProp": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Page",
+              "description": "Current page number",
+              "synonyms": "page",
+              "tier": "presentation"
+            },
+            "sortDirection": {
+              "type": "string",
+              "default": "asc",
+              "label": "Sort Direction",
+              "description": "Current sort direction",
+              "tier": "presentation",
+              "values": [
+                "asc",
+                "desc"
+              ]
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "totalCount": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Total Count",
+              "description": "Total number of items",
+              "tier": "presentation"
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
+              "tier": "presentation"
             }
           },
           "scope": "instance"

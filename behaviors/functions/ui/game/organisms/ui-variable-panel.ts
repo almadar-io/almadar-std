@@ -43,8 +43,6 @@ export interface StdUiVariablePanelConfig {
   className?: string;
   /** Default: `"Entity Name"` */
   entityName?: string;
-  /** Default: `[{"value":1,"name":"Name"}]` */
-  variables?: EntityRow[];
 }
 
 /**
@@ -145,13 +143,18 @@ export function stdUiVariablePanelVariablePanelOrbital(params: StdUiVariablePane
               'event': 'INIT',
               'effects': [
                 [
+                  'fetch',
+                  'VariablePanelItem',
+                  {},
+                ],
+                [
                   'render-ui',
                   'main',
                   {
+                    'variables': '@entity',
+                    'className': '@config.className',
                     'entityName': '@config.entityName',
                     'type': 'variable-panel',
-                    'className': '@config.className',
-                    'variables': '@config.variables',
                   },
                 ],
               ],
@@ -172,48 +175,6 @@ export function stdUiVariablePanelVariablePanelOrbital(params: StdUiVariablePane
             'label': 'Entity Name',
             'description': 'Entity name',
             'tier': 'presentation',
-          },
-          'variables': {
-            'type': '[VariablePanelVariablesItem]',
-            'default': [
-              {
-                'value': 1,
-                'name': 'Name',
-              },
-            ],
-            'label': 'Variables',
-            'description': 'Variables to display',
-            'tier': 'presentation',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'min': {
-                  'name': 'min',
-                  'type': 'number',
-                  'required': false,
-                },
-                'max': {
-                  'name': 'max',
-                  'type': 'number',
-                  'required': false,
-                },
-                'value': {
-                  'name': 'value',
-                  'type': 'number',
-                  'required': true,
-                },
-                'name': {
-                  'name': 'name',
-                  'type': 'string',
-                  'required': true,
-                },
-                'unit': {
-                  'name': 'unit',
-                  'type': 'string',
-                  'required': false,
-                },
-              },
-            },
           },
         },
         'scope': 'instance',

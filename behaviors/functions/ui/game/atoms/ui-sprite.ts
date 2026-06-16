@@ -53,34 +53,34 @@ export interface StdUiSpriteActionPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiSpriteConfig {
-  /** Default: `0` */
-  frame?: number;
-  /** Default: `0` */
-  frameHeight?: number;
-  /** Default: `0` */
-  y?: number;
-  /** Default: `0` */
-  zIndex?: number;
   /** Default: `16` */
   columns?: number;
   /** Default: `""` */
   className?: string;
-  /** Default: `1` */
-  scale?: number;
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/sprite-sheets/amir-sprite-sheet-se.png"` */
+  /** Default: `0` */
+  zIndex?: number;
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/isometric-blocks/Spritesheet/allTiles_sheet.png"` */
   spritesheet?: unknown;
+  /** Default: `0` */
+  frame?: number;
   /** Default: `0` */
   x?: number;
   /** Default: `false` */
-  flipY?: boolean;
+  flipX?: boolean;
+  /** Default: `0` */
+  frameWidth?: number;
+  /** Default: `0` */
+  frameHeight?: number;
+  /** Default: `0` */
+  y?: number;
+  /** Default: `1` */
+  scale?: number;
   /** Default: `0` */
   rotation?: number;
   /** Default: `1` */
   opacity?: number;
-  /** Default: `0` */
-  frameWidth?: number;
   /** Default: `false` */
-  flipX?: boolean;
+  flipY?: boolean;
 }
 
 /**

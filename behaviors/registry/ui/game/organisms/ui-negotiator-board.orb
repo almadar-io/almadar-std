@@ -84,12 +84,28 @@
                 "event": "INIT",
                 "effects": [
                   [
+                    "fetch",
+                    "NegotiatorBoardItem",
+                    {}
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "entity": "@config.entityProp",
+                      "entity": "@entity",
+                      "activeFilters": "@config.activeFilters",
+                      "searchValue": "@config.searchValue",
+                      "sortBy": "@config.sortBy",
+                      "page": "@config.pageProp",
+                      "sortDirection": "@config.sortDirection",
+                      "selectedIds": "@config.selectedIds",
+                      "pageSize": "@config.pageSize",
                       "completeEvent": "COMPLETE",
-                      "type": "negotiator-board"
+                      "type": "negotiator-board",
+                      "isLoading": "@config.isLoading",
+                      "totalCount": "@config.totalCount",
+                      "error": "@config.error",
+                      "className": "@config.className"
                     }
                   ]
                 ]
@@ -97,132 +113,106 @@
             ]
           },
           "config": {
-            "entityProp": {
-              "type": "NegotiatorBoardEntity",
-              "label": "Entity",
-              "description": "The compiler binds the generic `EntityRow`, so the inlet accepts it (and",
-              "synonyms": "entity",
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "pageSize": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Page Size",
+              "description": "Number of items per page",
+              "tier": "presentation"
+            },
+            "totalCount": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Total Count",
+              "description": "Total number of items",
+              "tier": "presentation"
+            },
+            "pageProp": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Page",
+              "description": "Current page number",
+              "synonyms": "page",
+              "tier": "presentation"
+            },
+            "activeFilters": {
+              "type": "json",
+              "label": "Active Filters",
+              "description": "Active filters",
+              "tier": "presentation"
+            },
+            "sortBy": {
+              "type": "string",
+              "default": "Sort By",
+              "label": "Sort By",
+              "description": "Current sort field",
+              "tier": "presentation"
+            },
+            "searchValue": {
+              "type": "string",
+              "default": "Search Value",
+              "label": "Search Value",
+              "description": "Current search query value",
+              "tier": "presentation"
+            },
+            "selectedIds": {
+              "type": "[string]",
+              "default": [],
+              "label": "Selected Ids",
+              "description": "Currently selected item IDs",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "sortDirection": {
+              "type": "string",
+              "default": "asc",
+              "label": "Sort Direction",
+              "description": "Current sort direction",
+              "tier": "presentation",
+              "values": [
+                "asc",
+                "desc"
+              ]
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
+              "tier": "presentation"
+            },
+            "error": {
+              "type": "NegotiatorBoardError",
+              "label": "Error",
+              "description": "Error state (UiError)",
               "tier": "presentation",
               "properties": {
-                "description": {
-                  "name": "description",
-                  "type": "string",
-                  "required": true
-                },
-                "hint": {
-                  "name": "hint",
+                "code": {
+                  "name": "code",
                   "type": "string",
                   "required": false
                 },
-                "headerImage": {
-                  "name": "headerImage",
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                },
+                "name": {
+                  "name": "name",
                   "type": "string",
                   "required": false
                 },
-                "opponentStrategy": {
-                  "name": "opponentStrategy",
-                  "type": "string",
-                  "required": true
-                },
-                "payoffMatrix": {
-                  "name": "payoffMatrix",
-                  "type": "array",
-                  "required": true,
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "opponentPayoff": {
-                        "name": "opponentPayoff",
-                        "type": "number",
-                        "required": true
-                      },
-                      "opponentAction": {
-                        "name": "opponentAction",
-                        "type": "string",
-                        "required": true
-                      },
-                      "playerPayoff": {
-                        "name": "playerPayoff",
-                        "type": "number",
-                        "required": true
-                      },
-                      "playerAction": {
-                        "name": "playerAction",
-                        "type": "string",
-                        "required": true
-                      }
-                    }
-                  }
-                },
-                "id": {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                },
-                "failMessage": {
-                  "name": "failMessage",
-                  "type": "string",
-                  "required": false
-                },
-                "theme": {
-                  "name": "theme",
-                  "type": "object",
-                  "required": false,
-                  "properties": {
-                    "accentColor": {
-                      "name": "accentColor",
-                      "type": "string",
-                      "required": false
-                    },
-                    "background": {
-                      "name": "background",
-                      "type": "string",
-                      "required": false
-                    }
-                  }
-                },
-                "targetScore": {
-                  "name": "targetScore",
-                  "type": "number",
-                  "required": true
-                },
-                "title": {
-                  "name": "title",
-                  "type": "string",
-                  "required": true
-                },
-                "totalRounds": {
-                  "name": "totalRounds",
-                  "type": "number",
-                  "required": true
-                },
-                "actions": {
-                  "name": "actions",
-                  "type": "array",
-                  "required": true,
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "description": {
-                        "name": "description",
-                        "type": "string",
-                        "required": false
-                      },
-                      "id": {
-                        "name": "id",
-                        "type": "string",
-                        "required": true
-                      },
-                      "label": {
-                        "name": "label",
-                        "type": "string",
-                        "required": true
-                      }
-                    }
-                  }
-                },
-                "successMessage": {
-                  "name": "successMessage",
+                "stack": {
+                  "name": "stack",
                   "type": "string",
                   "required": false
                 }

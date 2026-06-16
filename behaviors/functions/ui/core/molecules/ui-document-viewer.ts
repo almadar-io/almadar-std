@@ -40,32 +40,32 @@ export type StdUiDocumentViewerEventKey = 'INIT';
  */
 export interface StdUiDocumentViewerConfig {
   /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `0` */
+  currentPage?: number;
+  /** Default: `false` */
   showPrint?: boolean;
   /** Default: `"Title"` */
   title?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"Content"` */
-  content?: string;
-  /** Default: `[]` */
-  actions?: EntityRow[];
-  /** Default: `[]` */
-  documents?: EntityRow[];
-  /** Default: `"Height"` */
-  height?: string;
-  /** Default: `0` */
-  currentPage?: number;
-  /** Default: `true` */
-  showToolbar?: boolean;
-  /** Default: `false` */
-  showDownload?: boolean;
-  /** Default: `0` */
-  totalPages?: number;
-  error?: EntityRow;
   /** Default: `"pdf"` */
   documentType?: 'pdf' | 'text' | 'html' | 'markdown';
+  /** Default: `[{"label":"Label"}]` */
+  documents?: EntityRow[];
+  /** Default: `0` */
+  totalPages?: number;
+  /** Default: `"Height"` */
+  height?: string;
+  /** Default: `[]` */
+  actions?: EntityRow[];
+  error?: EntityRow;
+  /** Default: `false` */
+  showDownload?: boolean;
+  /** Default: `"Content"` */
+  content?: string;
+  /** Default: `true` */
+  showToolbar?: boolean;
+  /** Default: `""` */
+  className?: string;
   /** Default: `"Src"` */
   src?: string;
 }

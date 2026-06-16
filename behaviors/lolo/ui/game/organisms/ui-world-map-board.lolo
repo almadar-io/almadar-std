@@ -7,61 +7,6 @@ orbital WorldMapBoardOrbital {
     code : string
     stack : string
   }
-  type WorldMapBoardEntity = {
-    id : string!
-    hexes : [WorldMapBoardEntityHexesItem]!
-    heroes : [WorldMapBoardEntityHeroesItem]!
-    features : [WorldMapBoardEntityFeaturesItem]
-    selectedHeroId : string
-    assetManifest : WorldMapBoardEntityAssetManifest
-    backgroundImage : string
-  }
-  type WorldMapBoardEntityHexesItem = {
-    x : number!
-    y : number!
-    terrain : string!
-    terrainSprite : string
-    feature : string
-    featureData : Map string json
-    passable : boolean
-  }
-  type WorldMapBoardEntityHeroesItem = {
-    id : string!
-    name : string!
-    owner : "player" | "enemy"!
-    position : WorldMapBoardEntityHeroesItemPosition!
-    movement : number!
-    sprite : string
-    spriteSheet : WorldMapBoardEntityHeroesItemSpriteSheet
-    level : number
-  }
-  type WorldMapBoardEntityHeroesItemPosition = {
-    x : number!
-    y : number!
-  }
-  type WorldMapBoardEntityHeroesItemSpriteSheet = {
-    se : string!
-    sw : string!
-    frameWidth : number!
-    frameHeight : number!
-  }
-  type WorldMapBoardEntityFeaturesItem = {
-    id : string
-    x : number!
-    y : number!
-    z : number
-    type : string!
-    sprite : string
-    assetUrl : string
-    color : string
-    elevation : number
-  }
-  type WorldMapBoardEntityAssetManifest = {
-    baseUrl : string!
-    terrains : Map string string
-    units : Map string string
-    features : Map string string
-  }
 
   entity WorldMapBoardItem [runtime] {
     id : string!
@@ -72,11 +17,12 @@ orbital WorldMapBoardOrbital {
 
     state idle {
       INIT -> idle
+        (fetch WorldMapBoardItem {})
         (render-ui main {
           className: @config.className
           isLoading: @config.isLoading
           error: @config.error
-          entity: @config.entityProp
+          entity: @entity
           scale: @config.scale
           unitScale: @config.unitScale
           allowMoveAllHeroes: @config.allowMoveAllHeroes
@@ -142,11 +88,6 @@ orbital WorldMapBoardOrbital {
       error : WorldMapBoardError
         @label "Error"
         @description "Error state"
-        @tier "presentation"
-      entityProp : WorldMapBoardEntity
-        @label "Entity"
-        @description "World map entity data. Also accepts the canonical `EntityRow` the compiler binds; the component narrows to `WorldMapEntity` below."
-        @synonyms "entity"
         @tier "presentation"
       scale : number = 0.4
         @label "Scale"

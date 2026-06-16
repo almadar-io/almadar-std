@@ -81,57 +81,57 @@ export interface StdUiDataListLoadMorePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiDataListConfig {
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `5` */
-  pageSize?: number;
-  /** Default: `"default"` */
-  variant?: 'default' | 'card' | 'compact' | 'message';
-  /** Default: `false` */
-  hasMore?: boolean;
-  /** Default: `[]` */
-  columns?: EntityRow[];
-  /** Default: `"Current User"` */
-  currentUser?: string;
-  /** Default: `"Drag Group"` */
-  dragGroup?: string;
-  /** Default: `"Group By"` */
-  groupBy?: string;
-  /** Default: `false` */
-  dndRoot?: boolean;
-  /** Default: `[]` */
-  itemActions?: EntityRow[];
-  error?: EntityRow;
-  /** Default: `"Position Event"` */
-  positionEvent?: string;
-  /** Default: `"Sender Field"` */
-  senderField?: string;
-  /** Default: `false` */
-  reorderable?: boolean;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"Drop Event"` */
-  dropEvent?: string;
-  /** Default: `[]` */
-  swipeLeftActions?: EntityRow[];
-  /** Default: `false` */
-  sortable?: boolean;
-  /** Default: `"Accepts"` */
-  accepts?: string;
-  /** Default: `[]` */
-  fields?: EntityRow[];
-  /** Default: `[]` */
-  swipeRightActions?: EntityRow[];
-  /** Default: `0` */
-  maxInlineActions?: number;
-  /** Default: `false` */
-  infiniteScroll?: boolean;
-  /** Default: `"none"` */
-  gap?: 'none' | 'sm' | 'md' | 'lg';
   /** Default: `"Dnd Item Id Field"` */
   dndItemIdField?: string;
+  /** Default: `[{"label":"Label"}]` */
+  swipeLeftActions?: EntityRow[];
+  /** Default: `0` */
+  maxInlineActions?: number;
+  /** Default: `"Accepts"` */
+  accepts?: string;
+  /** Default: `false` */
+  dndRoot?: boolean;
+  /** Default: `"Sender Field"` */
+  senderField?: string;
+  /** Default: `"Current User"` */
+  currentUser?: string;
+  /** Default: `"Drop Event"` */
+  dropEvent?: string;
+  /** Default: `[{"name":"Name"}]` */
+  columns?: EntityRow[];
+  /** Default: `false` */
+  reorderable?: boolean;
+  /** Default: `[{"label":"Label"}]` */
+  swipeRightActions?: EntityRow[];
+  /** Default: `false` */
+  infiniteScroll?: boolean;
+  /** Default: `false` */
+  hasMore?: boolean;
+  error?: EntityRow;
+  /** Default: `[]` */
+  itemActions?: EntityRow[];
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"default"` */
+  variant?: 'default' | 'card' | 'compact' | 'message';
+  /** Default: `5` */
+  pageSize?: number;
   /** Default: `"dense"` */
   look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
+  /** Default: `"Drag Group"` */
+  dragGroup?: string;
+  /** Default: `false` */
+  sortable?: boolean;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `[{"name":"Name"}]` */
+  fields?: EntityRow[];
+  /** Default: `"Position Event"` */
+  positionEvent?: string;
+  /** Default: `"none"` */
+  gap?: 'none' | 'sm' | 'md' | 'lg';
+  /** Default: `"Group By"` */
+  groupBy?: string;
 }
 
 /**

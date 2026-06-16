@@ -48,12 +48,12 @@ export interface StdUiCraftingRecipeCraftPayload {
 export interface StdUiCraftingRecipeConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `false` */
-  canCraft?: boolean;
-  /** Default: `[]` */
+  /** Default: `[{"required":1,"label":"Label","available":1}]` */
   inputs?: EntityRow[];
   /** Default: `{"label":""}` */
   output?: EntityRow;
+  /** Default: `false` */
+  canCraft?: boolean;
 }
 
 /**

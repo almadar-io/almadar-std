@@ -84,12 +84,28 @@
                 "event": "INIT",
                 "effects": [
                   [
+                    "fetch",
+                    "DebuggerBoardItem",
+                    {}
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
+                      "completeEvent": "COMPLETE",
+                      "page": "@config.pageProp",
+                      "selectedIds": "@config.selectedIds",
+                      "sortBy": "@config.sortBy",
+                      "activeFilters": "@config.activeFilters",
+                      "searchValue": "@config.searchValue",
+                      "isLoading": "@config.isLoading",
+                      "entity": "@entity",
+                      "error": "@config.error",
+                      "className": "@config.className",
+                      "sortDirection": "@config.sortDirection",
+                      "pageSize": "@config.pageSize",
                       "type": "debugger-board",
-                      "entity": "@config.entityProp",
-                      "completeEvent": "COMPLETE"
+                      "totalCount": "@config.totalCount"
                     }
                   ]
                 ]
@@ -97,106 +113,110 @@
             ]
           },
           "config": {
-            "entityProp": {
-              "type": "DebuggerBoardEntity",
-              "label": "Entity",
-              "description": "The compiler binds the generic `EntityRow`, so the inlet accepts it (and",
-              "synonyms": "entity",
+            "activeFilters": {
+              "type": "json",
+              "label": "Active Filters",
+              "description": "Active filters",
+              "tier": "presentation"
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
+              "tier": "presentation"
+            },
+            "sortBy": {
+              "type": "string",
+              "default": "Sort By",
+              "label": "Sort By",
+              "description": "Current sort field",
+              "tier": "presentation"
+            },
+            "error": {
+              "type": "DebuggerBoardError",
+              "label": "Error",
+              "description": "Error state (UiError)",
               "tier": "presentation",
               "properties": {
-                "id": {
-                  "name": "id",
+                "code": {
+                  "name": "code",
+                  "type": "string",
+                  "required": false
+                },
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": false
+                },
+                "message": {
+                  "name": "message",
                   "type": "string",
                   "required": true
                 },
-                "theme": {
-                  "name": "theme",
-                  "type": "object",
-                  "required": false,
-                  "properties": {
-                    "accentColor": {
-                      "name": "accentColor",
-                      "type": "string",
-                      "required": false
-                    },
-                    "background": {
-                      "name": "background",
-                      "type": "string",
-                      "required": false
-                    }
-                  }
-                },
-                "successMessage": {
-                  "name": "successMessage",
+                "stack": {
+                  "name": "stack",
                   "type": "string",
                   "required": false
-                },
-                "failMessage": {
-                  "name": "failMessage",
-                  "type": "string",
-                  "required": false
-                },
-                "lines": {
-                  "name": "lines",
-                  "type": "array",
-                  "required": true,
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "id": {
-                        "name": "id",
-                        "type": "string",
-                        "required": true
-                      },
-                      "explanation": {
-                        "name": "explanation",
-                        "type": "string",
-                        "required": false
-                      },
-                      "content": {
-                        "name": "content",
-                        "type": "string",
-                        "required": true
-                      },
-                      "isBug": {
-                        "name": "isBug",
-                        "type": "boolean",
-                        "required": true
-                      }
-                    }
-                  }
-                },
-                "hint": {
-                  "name": "hint",
-                  "type": "string",
-                  "required": false
-                },
-                "language": {
-                  "name": "language",
-                  "type": "string",
-                  "required": false
-                },
-                "headerImage": {
-                  "name": "headerImage",
-                  "type": "string",
-                  "required": false
-                },
-                "description": {
-                  "name": "description",
-                  "type": "string",
-                  "required": true
-                },
-                "bugCount": {
-                  "name": "bugCount",
-                  "type": "number",
-                  "required": true
-                },
-                "title": {
-                  "name": "title",
-                  "type": "string",
-                  "required": true
                 }
               }
+            },
+            "pageProp": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Page",
+              "description": "Current page number",
+              "synonyms": "page",
+              "tier": "presentation"
+            },
+            "pageSize": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Page Size",
+              "description": "Number of items per page",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "selectedIds": {
+              "type": "[string]",
+              "default": [],
+              "label": "Selected Ids",
+              "description": "Currently selected item IDs",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "searchValue": {
+              "type": "string",
+              "default": "Search Value",
+              "label": "Search Value",
+              "description": "Current search query value",
+              "tier": "presentation"
+            },
+            "totalCount": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Total Count",
+              "description": "Total number of items",
+              "tier": "presentation"
+            },
+            "sortDirection": {
+              "type": "string",
+              "default": "asc",
+              "label": "Sort Direction",
+              "description": "Current sort direction",
+              "tier": "presentation",
+              "values": [
+                "asc",
+                "desc"
+              ]
             }
           },
           "scope": "instance"

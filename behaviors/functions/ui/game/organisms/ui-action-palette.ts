@@ -39,20 +39,20 @@ export type StdUiActionPaletteEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiActionPaletteConfig {
+  /** Default: `true` */
+  allowDuplicates?: boolean;
+  /** Default: `[{"category":"Category","id":"Id","name":"Name"}]` */
+  actions?: EntityRow[];
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
   /** Default: `"Label"` */
   label?: string;
+  /** Default: `{}` */
+  categoryColors?: unknown;
   /** Default: `""` */
   className?: string;
   /** Default: `[]` */
   usedActionIds?: string[];
-  /** Default: `[]` */
-  actions?: EntityRow[];
-  /** Default: `{}` */
-  categoryColors?: unknown;
-  /** Default: `true` */
-  allowDuplicates?: boolean;
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
 }
 
 /**
@@ -157,13 +157,13 @@ export function stdUiActionPaletteActionPaletteOrbital(params: StdUiActionPalett
                   'main',
                   {
                     'type': 'action-palette',
-                    'usedActionIds': '@config.usedActionIds',
-                    'className': '@config.className',
-                    'allowDuplicates': '@config.allowDuplicates',
-                    'actions': '@config.actions',
-                    'size': '@config.size',
-                    'categoryColors': '@config.categoryColors',
                     'label': '@config.label',
+                    'allowDuplicates': '@config.allowDuplicates',
+                    'className': '@config.className',
+                    'size': '@config.size',
+                    'actions': '@config.actions',
+                    'usedActionIds': '@config.usedActionIds',
+                    'categoryColors': '@config.categoryColors',
                   },
                 ],
               ],
@@ -171,41 +171,35 @@ export function stdUiActionPaletteActionPaletteOrbital(params: StdUiActionPalett
           ],
         },
         'config': {
-          'label': {
-            'type': 'string',
-            'default': 'Label',
-            'label': 'Label',
-            'description': 'Label above the palette',
+          'allowDuplicates': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Allow Duplicates',
+            'description': 'Whether each action can be used multiple times',
             'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'usedActionIds': {
-            'type': '[string]',
-            'default': [],
-            'label': 'Used Action Ids',
-            'description': 'IDs of actions that are already used (shown as disabled)',
-            'tier': 'presentation',
-            'items': {
-              'type': 'string',
-            },
           },
           'actions': {
             'type': '[ActionPaletteActionsItem]',
-            'default': [],
+            'default': [
+              {
+                'category': 'Category',
+                'id': 'Id',
+                'name': 'Name',
+              },
+            ],
             'label': 'Actions',
             'description': 'Available actions',
             'tier': 'presentation',
             'items': {
               'type': 'object',
               'properties': {
-                'id': {
-                  'name': 'id',
+                'iconEmoji': {
+                  'name': 'iconEmoji',
+                  'type': 'string',
+                  'required': false,
+                },
+                'category': {
+                  'name': 'category',
                   'type': 'string',
                   'required': true,
                 },
@@ -214,10 +208,20 @@ export function stdUiActionPaletteActionPaletteOrbital(params: StdUiActionPalett
                   'type': 'string',
                   'required': false,
                 },
-                'category': {
-                  'name': 'category',
+                'id': {
+                  'name': 'id',
                   'type': 'string',
                   'required': true,
+                },
+                'name': {
+                  'name': 'name',
+                  'type': 'string',
+                  'required': true,
+                },
+                'iconUrl': {
+                  'name': 'iconUrl',
+                  'type': 'string',
+                  'required': false,
                 },
                 'stateMachine': {
                   'name': 'stateMachine',
@@ -259,6 +263,11 @@ export function stdUiActionPaletteActionPaletteOrbital(params: StdUiActionPalett
                       'type': 'string',
                       'required': true,
                     },
+                    'currentState': {
+                      'name': 'currentState',
+                      'type': 'string',
+                      'required': true,
+                    },
                     'description': {
                       'name': 'description',
                       'type': 'string',
@@ -272,30 +281,29 @@ export function stdUiActionPaletteActionPaletteOrbital(params: StdUiActionPalett
                         'type': 'string',
                       },
                     },
-                    'currentState': {
-                      'name': 'currentState',
-                      'type': 'string',
-                      'required': true,
-                    },
                   },
-                },
-                'name': {
-                  'name': 'name',
-                  'type': 'string',
-                  'required': true,
-                },
-                'iconEmoji': {
-                  'name': 'iconEmoji',
-                  'type': 'string',
-                  'required': false,
-                },
-                'iconUrl': {
-                  'name': 'iconUrl',
-                  'type': 'string',
-                  'required': false,
                 },
               },
             },
+          },
+          'size': {
+            'type': 'string',
+            'default': 'md',
+            'label': 'Size',
+            'description': 'Size variant',
+            'tier': 'presentation',
+            'values': [
+              'sm',
+              'md',
+              'lg',
+            ],
+          },
+          'label': {
+            'type': 'string',
+            'default': 'Label',
+            'label': 'Label',
+            'description': 'Label above the palette',
+            'tier': 'presentation',
           },
           'categoryColors': {
             'type': 'Map<string,ActionPaletteCategoryColorsValue>',
@@ -319,24 +327,22 @@ export function stdUiActionPaletteActionPaletteOrbital(params: StdUiActionPalett
               },
             },
           },
-          'allowDuplicates': {
-            'type': 'boolean',
-            'default': true,
-            'label': 'Allow Duplicates',
-            'description': 'Whether each action can be used multiple times',
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
-          'size': {
-            'type': 'string',
-            'default': 'md',
-            'label': 'Size',
-            'description': 'Size variant',
+          'usedActionIds': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Used Action Ids',
+            'description': 'IDs of actions that are already used (shown as disabled)',
             'tier': 'presentation',
-            'values': [
-              'sm',
-              'md',
-              'lg',
-            ],
+            'items': {
+              'type': 'string',
+            },
           },
         },
         'scope': 'instance',

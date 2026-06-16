@@ -54,22 +54,22 @@ export interface StdUiSequenceBarSlotRemovePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiSequenceBarConfig {
-  /** Default: `"lg"` */
-  size?: 'sm' | 'md' | 'lg';
-  /** Default: `false` */
-  playing?: boolean;
   /** Default: `""` */
   className?: string;
+  /** Default: `"lg"` */
+  size?: 'sm' | 'md' | 'lg';
+  /** Default: `[{"id":"Id","name":"Name","category":"Category"}]` */
+  slots?: EntityRow[];
+  /** Default: `{}` */
+  categoryColors?: unknown;
+  /** Default: `false` */
+  playing?: boolean;
   /** Default: `0` */
   maxSlots?: number;
   /** Default: `-1` */
   currentStep?: number;
   /** Default: `[]` */
   slotFeedback?: string[];
-  /** Default: `[]` */
-  slots?: EntityRow[];
-  /** Default: `{}` */
-  categoryColors?: unknown;
 }
 
 /**
@@ -391,17 +391,17 @@ export function stdUiSequenceBarSequenceBarOrbital(params: StdUiSequenceBarSeque
                   'render-ui',
                   'main',
                   {
-                    'categoryColors': '@config.categoryColors',
                     'className': '@config.className',
                     'onSlotDrop': 'SLOT_DROP',
+                    'type': 'sequence-bar',
+                    'categoryColors': '@config.categoryColors',
+                    'playing': '@config.playing',
                     'maxSlots': '@config.maxSlots',
-                    'onSlotRemove': 'SLOT_REMOVE',
-                    'slots': '@config.slots',
+                    'currentStep': '@config.currentStep',
                     'slotFeedback': '@config.slotFeedback',
                     'size': '@config.size',
-                    'type': 'sequence-bar',
-                    'playing': '@config.playing',
-                    'currentStep': '@config.currentStep',
+                    'slots': '@config.slots',
+                    'onSlotRemove': 'SLOT_REMOVE',
                   },
                 ],
               ],
@@ -409,6 +409,13 @@ export function stdUiSequenceBarSequenceBarOrbital(params: StdUiSequenceBarSeque
           ],
         },
         'config': {
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
           'size': {
             'type': 'string',
             'default': 'lg',
@@ -421,18 +428,141 @@ export function stdUiSequenceBarSequenceBarOrbital(params: StdUiSequenceBarSeque
               'lg',
             ],
           },
+          'slots': {
+            'type': '[SequenceBarSlotsItem]',
+            'default': [
+              {
+                'id': 'Id',
+                'name': 'Name',
+                'category': 'Category',
+              },
+            ],
+            'label': 'Slots',
+            'description': 'The current sequence (sparse — undefined means empty slot)',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'stateMachine': {
+                  'name': 'stateMachine',
+                  'type': 'object',
+                  'required': false,
+                  'properties': {
+                    'description': {
+                      'name': 'description',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'states': {
+                      'name': 'states',
+                      'type': 'array',
+                      'required': true,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
+                    'currentState': {
+                      'name': 'currentState',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'transitions': {
+                      'name': 'transitions',
+                      'type': 'array',
+                      'required': true,
+                      'items': {
+                        'type': 'object',
+                        'properties': {
+                          'to': {
+                            'name': 'to',
+                            'type': 'string',
+                            'required': true,
+                          },
+                          'from': {
+                            'name': 'from',
+                            'type': 'string',
+                            'required': true,
+                          },
+                          'guardHint': {
+                            'name': 'guardHint',
+                            'type': 'string',
+                            'required': false,
+                          },
+                          'event': {
+                            'name': 'event',
+                            'type': 'string',
+                            'required': true,
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+                'category': {
+                  'name': 'category',
+                  'type': 'string',
+                  'required': true,
+                },
+                'name': {
+                  'name': 'name',
+                  'type': 'string',
+                  'required': true,
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                'description': {
+                  'name': 'description',
+                  'type': 'string',
+                  'required': false,
+                },
+                'iconEmoji': {
+                  'name': 'iconEmoji',
+                  'type': 'string',
+                  'required': false,
+                },
+                'iconUrl': {
+                  'name': 'iconUrl',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'categoryColors': {
+            'type': 'Map<string,SequenceBarCategoryColorsValue>',
+            'default': {},
+            'label': 'Category Colors',
+            'description': 'Category → color mapping',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'bg': {
+                  'name': 'bg',
+                  'type': 'string',
+                  'required': true,
+                },
+                'border': {
+                  'name': 'border',
+                  'type': 'string',
+                  'required': true,
+                },
+              },
+            },
+          },
           'playing': {
             'type': 'boolean',
             'default': false,
             'label': 'Playing',
             'description': 'Whether the sequence is currently playing (disable interaction)',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
           'maxSlots': {
@@ -461,130 +591,6 @@ export function stdUiSequenceBarSequenceBarOrbital(params: StdUiSequenceBarSeque
                 'correct',
                 'wrong',
               ],
-            },
-          },
-          'slots': {
-            'type': '[SequenceBarSlotsItem]',
-            'default': [],
-            'label': 'Slots',
-            'description': 'The current sequence (sparse — undefined means empty slot)',
-            'tier': 'presentation',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'description': {
-                  'name': 'description',
-                  'type': 'string',
-                  'required': false,
-                },
-                'iconEmoji': {
-                  'name': 'iconEmoji',
-                  'type': 'string',
-                  'required': false,
-                },
-                'id': {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': true,
-                },
-                'stateMachine': {
-                  'name': 'stateMachine',
-                  'type': 'object',
-                  'required': false,
-                  'properties': {
-                    'name': {
-                      'name': 'name',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'transitions': {
-                      'name': 'transitions',
-                      'type': 'array',
-                      'required': true,
-                      'items': {
-                        'type': 'object',
-                        'properties': {
-                          'event': {
-                            'name': 'event',
-                            'type': 'string',
-                            'required': true,
-                          },
-                          'guardHint': {
-                            'name': 'guardHint',
-                            'type': 'string',
-                            'required': false,
-                          },
-                          'to': {
-                            'name': 'to',
-                            'type': 'string',
-                            'required': true,
-                          },
-                          'from': {
-                            'name': 'from',
-                            'type': 'string',
-                            'required': true,
-                          },
-                        },
-                      },
-                    },
-                    'currentState': {
-                      'name': 'currentState',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'description': {
-                      'name': 'description',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'states': {
-                      'name': 'states',
-                      'type': 'array',
-                      'required': true,
-                      'items': {
-                        'type': 'string',
-                      },
-                    },
-                  },
-                },
-                'name': {
-                  'name': 'name',
-                  'type': 'string',
-                  'required': true,
-                },
-                'iconUrl': {
-                  'name': 'iconUrl',
-                  'type': 'string',
-                  'required': false,
-                },
-                'category': {
-                  'name': 'category',
-                  'type': 'string',
-                  'required': true,
-                },
-              },
-            },
-          },
-          'categoryColors': {
-            'type': 'Map<string,SequenceBarCategoryColorsValue>',
-            'default': {},
-            'label': 'Category Colors',
-            'description': 'Category → color mapping',
-            'tier': 'presentation',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'bg': {
-                  'name': 'bg',
-                  'type': 'string',
-                  'required': true,
-                },
-                'border': {
-                  'name': 'border',
-                  'type': 'string',
-                  'required': true,
-                },
-              },
             },
           },
         },

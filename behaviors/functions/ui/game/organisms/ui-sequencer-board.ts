@@ -54,11 +54,30 @@ export interface StdUiSequencerBoardCompletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiSequencerBoardConfig {
-  entityProp?: EntityRow;
-  /** Default: `{}` */
-  categoryColors?: unknown;
   /** Default: `1000` */
   stepDurationMs?: number;
+  /** Default: `0` */
+  pageProp?: number;
+  /** Default: `"Sort By"` */
+  sortBy?: string;
+  error?: EntityRow;
+  /** Default: `0` */
+  totalCount?: number;
+  activeFilters?: unknown;
+  /** Default: `0` */
+  pageSize?: number;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"asc"` */
+  sortDirection?: 'asc' | 'desc';
+  /** Default: `"Search Value"` */
+  searchValue?: string;
+  /** Default: `[]` */
+  selectedIds?: string[];
+  /** Default: `{}` */
+  categoryColors?: unknown;
+  /** Default: `false` */
+  isLoading?: boolean;
 }
 
 /**
@@ -223,15 +242,31 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
               'event': 'INIT',
               'effects': [
                 [
+                  'fetch',
+                  'SequencerBoardItem',
+                  {},
+                ],
+                [
                   'render-ui',
                   'main',
                   {
-                    'type': 'sequencer-board',
+                    'page': '@config.pageProp',
+                    'error': '@config.error',
+                    'pageSize': '@config.pageSize',
+                    'searchValue': '@config.searchValue',
+                    'className': '@config.className',
+                    'activeFilters': '@config.activeFilters',
+                    'sortDirection': '@config.sortDirection',
+                    'categoryColors': '@config.categoryColors',
+                    'sortBy': '@config.sortBy',
+                    'entity': '@entity',
                     'playEvent': 'PLAY',
                     'completeEvent': 'COMPLETE',
-                    'entity': '@config.entityProp',
                     'stepDurationMs': '@config.stepDurationMs',
-                    'categoryColors': '@config.categoryColors',
+                    'selectedIds': '@config.selectedIds',
+                    'isLoading': '@config.isLoading',
+                    'type': 'sequencer-board',
+                    'totalCount': '@config.totalCount',
                   },
                 ],
               ],
@@ -239,206 +274,109 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
           ],
         },
         'config': {
-          'entityProp': {
-            'type': 'SequencerBoardEntity',
-            'label': 'Entity',
-            'description': 'Puzzle data. Also accepts the canonical `EntityRow` the compiler binds (and arrays); narrowed to `SequencerPuzzleEntity` internally.',
-            'synonyms': 'entity',
+          'stepDurationMs': {
+            'type': 'number',
+            'default': 1000,
+            'label': 'Step Duration Ms',
+            'description': 'Playback speed in ms per step',
+            'tier': 'presentation',
+          },
+          'pageProp': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page',
+            'description': 'Current page number',
+            'synonyms': 'page',
+            'tier': 'presentation',
+          },
+          'sortBy': {
+            'type': 'string',
+            'default': 'Sort By',
+            'label': 'Sort By',
+            'description': 'Current sort field',
+            'tier': 'presentation',
+          },
+          'error': {
+            'type': 'SequencerBoardError',
+            'label': 'Error',
+            'description': 'Error state (UiError)',
             'tier': 'presentation',
             'properties': {
-              'path': {
-                'name': 'path',
-                'type': 'array',
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
                 'required': false,
-                'items': {
-                  'type': 'object',
-                  'properties': {
-                    'y': {
-                      'name': 'y',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'x': {
-                      'name': 'x',
-                      'type': 'number',
-                      'required': true,
-                    },
-                  },
-                },
               },
-              'maxSlots': {
-                'name': 'maxSlots',
-                'type': 'number',
-                'required': true,
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
               },
-              'id': {
-                'name': 'id',
+              'message': {
+                'name': 'message',
                 'type': 'string',
                 'required': true,
               },
-              'headerImage': {
-                'name': 'headerImage',
+              'code': {
+                'name': 'code',
                 'type': 'string',
                 'required': false,
               },
-              'title': {
-                'name': 'title',
-                'type': 'string',
-                'required': true,
-              },
-              'solutions': {
-                'name': 'solutions',
-                'type': 'array',
-                'required': true,
-                'items': {
-                  'type': 'array',
-                  'items': {
-                    'type': 'string',
-                  },
-                },
-              },
-              'hint': {
-                'name': 'hint',
-                'type': 'string',
-                'required': false,
-              },
-              'description': {
-                'name': 'description',
-                'type': 'string',
-                'required': true,
-              },
-              'availableActions': {
-                'name': 'availableActions',
-                'type': 'array',
-                'required': true,
-                'items': {
-                  'type': 'object',
-                  'properties': {
-                    'name': {
-                      'name': 'name',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'iconUrl': {
-                      'name': 'iconUrl',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'iconEmoji': {
-                      'name': 'iconEmoji',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'category': {
-                      'name': 'category',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'id': {
-                      'name': 'id',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'description': {
-                      'name': 'description',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'stateMachine': {
-                      'name': 'stateMachine',
-                      'type': 'object',
-                      'required': false,
-                      'properties': {
-                        'description': {
-                          'name': 'description',
-                          'type': 'string',
-                          'required': false,
-                        },
-                        'name': {
-                          'name': 'name',
-                          'type': 'string',
-                          'required': true,
-                        },
-                        'currentState': {
-                          'name': 'currentState',
-                          'type': 'string',
-                          'required': true,
-                        },
-                        'transitions': {
-                          'name': 'transitions',
-                          'type': 'array',
-                          'required': true,
-                          'items': {
-                            'type': 'object',
-                            'properties': {
-                              'to': {
-                                'name': 'to',
-                                'type': 'string',
-                                'required': true,
-                              },
-                              'from': {
-                                'name': 'from',
-                                'type': 'string',
-                                'required': true,
-                              },
-                              'event': {
-                                'name': 'event',
-                                'type': 'string',
-                                'required': true,
-                              },
-                              'guardHint': {
-                                'name': 'guardHint',
-                                'type': 'string',
-                                'required': false,
-                              },
-                            },
-                          },
-                        },
-                        'states': {
-                          'name': 'states',
-                          'type': 'array',
-                          'required': true,
-                          'items': {
-                            'type': 'string',
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-              'theme': {
-                'name': 'theme',
-                'type': 'object',
-                'required': false,
-                'properties': {
-                  'background': {
-                    'name': 'background',
-                    'type': 'string',
-                    'required': false,
-                  },
-                  'accentColor': {
-                    'name': 'accentColor',
-                    'type': 'string',
-                    'required': false,
-                  },
-                },
-              },
-              'successMessage': {
-                'name': 'successMessage',
-                'type': 'string',
-                'required': false,
-              },
-              'allowDuplicates': {
-                'name': 'allowDuplicates',
-                'type': 'boolean',
-                'required': false,
-              },
-              'failMessage': {
-                'name': 'failMessage',
-                'type': 'string',
-                'required': false,
-              },
+            },
+          },
+          'totalCount': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Total Count',
+            'description': 'Total number of items',
+            'tier': 'presentation',
+          },
+          'activeFilters': {
+            'type': 'json',
+            'label': 'Active Filters',
+            'description': 'Active filters',
+            'tier': 'presentation',
+          },
+          'pageSize': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page Size',
+            'description': 'Number of items per page',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'sortDirection': {
+            'type': 'string',
+            'default': 'asc',
+            'label': 'Sort Direction',
+            'description': 'Current sort direction',
+            'tier': 'presentation',
+            'values': [
+              'asc',
+              'desc',
+            ],
+          },
+          'searchValue': {
+            'type': 'string',
+            'default': 'Search Value',
+            'label': 'Search Value',
+            'description': 'Current search query value',
+            'tier': 'presentation',
+          },
+          'selectedIds': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Selected Ids',
+            'description': 'Currently selected item IDs',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
             },
           },
           'categoryColors': {
@@ -450,24 +388,24 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
             'items': {
               'type': 'object',
               'properties': {
-                'border': {
-                  'name': 'border',
+                'bg': {
+                  'name': 'bg',
                   'type': 'string',
                   'required': true,
                 },
-                'bg': {
-                  'name': 'bg',
+                'border': {
+                  'name': 'border',
                   'type': 'string',
                   'required': true,
                 },
               },
             },
           },
-          'stepDurationMs': {
-            'type': 'number',
-            'default': 1000,
-            'label': 'Step Duration Ms',
-            'description': 'Playback speed in ms per step',
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
             'tier': 'presentation',
           },
         },

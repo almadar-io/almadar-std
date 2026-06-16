@@ -39,39 +39,39 @@ export type StdUiChartEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiChartConfig {
-  /** Default: `"Title"` */
-  title?: string;
-  /** Default: `200` */
-  height?: number;
-  /** Default: `false` */
-  timeAxis?: boolean;
-  /** Default: `false` */
-  showValues?: boolean;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"bar-vertical"` */
-  look?: 'bar-vertical' | 'bar-horizontal' | 'line' | 'area' | 'pie' | 'donut' | 'scatter' | 'histogram';
-  /** Default: `"none"` */
-  stack?: 'none' | 'stack' | 'normalize';
-  /** Default: `true` */
-  showLegend?: boolean;
-  /** Default: `[]` */
-  data?: EntityRow[];
   /** Default: `[]` */
   actions?: EntityRow[];
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `"Subtitle"` */
-  subtitle?: string;
+  /** Default: `"Title"` */
+  title?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `true` */
+  showLegend?: boolean;
+  /** Default: `200` */
+  height?: number;
   /** Default: `"bar"` */
   chartType?: 'bar' | 'line' | 'pie' | 'area' | 'donut' | 'scatter' | 'histogram';
-  error?: EntityRow;
-  /** Default: `[]` */
+  /** Default: `"bar-vertical"` */
+  look?: 'bar-vertical' | 'bar-horizontal' | 'line' | 'area' | 'pie' | 'donut' | 'scatter' | 'histogram';
+  /** Default: `false` */
+  showValues?: boolean;
+  /** Default: `"Subtitle"` */
+  subtitle?: string;
+  /** Default: `[{"label":"Label","value":1}]` */
+  data?: EntityRow[];
+  /** Default: `"none"` */
+  stack?: 'none' | 'stack' | 'normalize';
+  /** Default: `false` */
+  timeAxis?: boolean;
+  /** Default: `[{"y":1,"x":1}]` */
+  scatterData?: EntityRow[];
+  /** Default: `[{"name":"Name","data":[{"value":1,"label":"Label"}]}]` */
   series?: EntityRow[];
+  error?: EntityRow;
   /** Default: `"Drill Event"` */
   drillEvent?: string;
-  /** Default: `[]` */
-  scatterData?: EntityRow[];
 }
 
 /**

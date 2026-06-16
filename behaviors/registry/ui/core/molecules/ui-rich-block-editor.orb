@@ -72,17 +72,23 @@
                 "event": "INIT",
                 "effects": [
                   [
+                    "fetch",
+                    "RichBlockEditorItem",
+                    {}
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "changeEvent": "CHANGE",
-                      "className": "@config.className",
-                      "type": "rich-block-editor",
-                      "showToolbar": "@config.showToolbar",
-                      "initialBlocks": "@config.initialBlocks",
-                      "readOnly": "@config.readOnly",
+                      "initialBlocks": "@entity",
                       "placeholder": "@config.placeholder",
-                      "onChange": "CHANGE"
+                      "type": "rich-block-editor",
+                      "enableBlocks": "@config.enableBlocks",
+                      "changeEvent": "CHANGE",
+                      "onChange": "CHANGE",
+                      "readOnly": "@config.readOnly",
+                      "showToolbar": "@config.showToolbar",
+                      "className": "@config.className"
                     }
                   ]
                 ]
@@ -90,73 +96,25 @@
             ]
           },
           "config": {
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "className prop",
+            "readOnly": {
+              "type": "boolean",
+              "default": false,
+              "label": "Read Only",
+              "description": "readOnly prop",
               "tier": "presentation"
-            },
-            "initialBlocks": {
-              "type": "[RichBlockEditorInitialBlocksItem]",
-              "default": [],
-              "label": "Initial Blocks",
-              "description": "Initial block payload. Accepts strongly-typed RichBlock[] from native callers and the wider EntityRow[] shape that orb-bound traits emit (orb `[object]` lowers to `Record<string, FieldValue | undefined>[]`, which is structurally EntityRow[]). Items missing id/type are normalized into paragraph blocks at mount.",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "type": {
-                    "name": "type",
-                    "type": "string",
-                    "required": true,
-                    "values": [
-                      "paragraph",
-                      "heading-1",
-                      "heading-2",
-                      "heading-3",
-                      "bullet-list",
-                      "numbered-list",
-                      "quote",
-                      "code",
-                      "divider",
-                      "image"
-                    ]
-                  },
-                  "metadata": {
-                    "name": "metadata",
-                    "type": "object",
-                    "required": false,
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "children": {
-                    "name": "children",
-                    "type": "array",
-                    "required": false,
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  "content": {
-                    "name": "content",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
             },
             "showToolbar": {
               "type": "boolean",
               "default": true,
               "label": "Show Toolbar",
               "description": "showToolbar prop",
+              "tier": "presentation"
+            },
+            "enableBlocks": {
+              "type": "boolean",
+              "default": false,
+              "label": "Enable Blocks",
+              "description": "Opt-in to the Notion-style block authoring chrome (insert toolbar, per-row +/menu gutter, turn-into menu). Off by default: the editor renders as a plain rich text surface that edits block content inline without any add-block affordances.",
               "tier": "presentation"
             },
             "placeholder": {
@@ -166,11 +124,11 @@
               "description": "placeholder prop",
               "tier": "presentation"
             },
-            "readOnly": {
-              "type": "boolean",
-              "default": false,
-              "label": "Read Only",
-              "description": "readOnly prop",
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "className prop",
               "tier": "presentation"
             }
           },

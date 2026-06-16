@@ -53,51 +53,51 @@ export interface StdUiTableViewSortPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiTableViewConfig {
-  /** Default: `"Empty Message"` */
-  emptyMessage?: string;
-  /** Default: `0` */
-  maxInlineActions?: number;
   /** Default: `"Drop Event"` */
   dropEvent?: string;
-  error?: EntityRow;
+  /** Default: `"Dnd Item Id Field"` */
+  dndItemIdField?: string;
   /** Default: `0` */
-  pageSize?: number;
+  maxInlineActions?: number;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `"Accepts"` */
+  accepts?: string;
   /** Default: `"Reorder Event"` */
   reorderEvent?: string;
-  /** Default: `[]` */
-  itemActions?: EntityRow[];
-  /** Default: `"dense"` */
-  look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'bordered';
-  /** Default: `[]` */
-  columns?: EntityRow[];
-  /** Default: `[]` */
+  /** Default: `"asc"` */
+  sortDirection?: 'asc' | 'desc';
+  /** Default: `0` */
+  pageSize?: number;
+  /** Default: `[{"key":"Key"}]` */
   fields?: EntityRow[];
   /** Default: `false` */
-  selectable?: boolean;
+  sortable?: boolean;
+  /** Default: `[{"key":"Key"}]` */
+  columns?: EntityRow[];
+  /** Default: `"Empty Message"` */
+  emptyMessage?: string;
+  error?: EntityRow;
+  /** Default: `"Sort Column"` */
+  sortColumn?: string;
   /** Default: `false` */
   dndRoot?: boolean;
   /** Default: `""` */
   className?: string;
-  /** Default: `"asc"` */
-  sortDirection?: 'asc' | 'desc';
-  /** Default: `"Dnd Item Id Field"` */
-  dndItemIdField?: string;
-  /** Default: `"Sort Column"` */
-  sortColumn?: string;
   /** Default: `[]` */
   selectedIds?: string[];
-  /** Default: `"Drag Group"` */
-  dragGroup?: string;
-  /** Default: `"Accepts"` */
-  accepts?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `"Group By"` */
-  groupBy?: string;
-  /** Default: `false` */
-  sortable?: boolean;
+  /** Default: `[]` */
+  itemActions?: EntityRow[];
   /** Default: `"Position Event"` */
   positionEvent?: string;
+  /** Default: `"dense"` */
+  look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'bordered';
+  /** Default: `"Group By"` */
+  groupBy?: string;
+  /** Default: `"Drag Group"` */
+  dragGroup?: string;
+  /** Default: `false` */
+  selectable?: boolean;
 }
 
 /**

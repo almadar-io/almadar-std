@@ -53,20 +53,20 @@ export interface StdUiWizardContainerCompletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiWizardContainerConfig {
-  /** Default: `[]` */
+  error?: EntityRow;
+  /** Default: `[{"globalVariablesSet":["Item"],"title":"Title","content":"Content","entityMapping":{"entity":"Entity","mode":"search_or_create"},"sections":[],"optional":false,"name":"Name","localVariables":["Item"],"phase":"Phase","contextMenu":["Item"],"validationRules":[{"message":"Message","condition":[]}],"description":"Description","id":"Id","tabId":"Tab Id","globalVariablesRequired":["Item"],"lawReferences":[{"law":"Law","article":"Article"}]}]` */
   steps?: EntityRow[];
-  currentStep?: unknown;
   /** Default: `true` */
   showProgress?: boolean;
-  /** Default: `true` */
-  allowBack?: boolean;
-  error?: EntityRow;
-  /** Default: `false` */
-  isLoading?: boolean;
   /** Default: `""` */
   className?: string;
+  /** Default: `true` */
+  allowBack?: boolean;
+  currentStep?: unknown;
   /** Default: `false` */
   compact?: boolean;
+  /** Default: `false` */
+  isLoading?: boolean;
 }
 
 /**

@@ -39,17 +39,17 @@ export type StdUiGameAudioProviderEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiGameAudioProviderConfig {
-  error?: EntityRow;
-  /** Default: `"Base Url"` */
-  baseUrl?: string;
-  /** Default: `false` */
-  initialMuted?: boolean;
   /** Default: `""` */
   className?: string;
   /** Default: `false` */
   isLoading?: boolean;
+  /** Default: `false` */
+  initialMuted?: boolean;
+  error?: EntityRow;
   /** Default: `{}` */
   manifest?: unknown;
+  /** Default: `"Base Url"` */
+  baseUrl?: string;
 }
 
 /**
@@ -158,20 +158,20 @@ export function stdUiGameAudioProviderGameAudioProviderOrbital(params: StdUiGame
                   'render-ui',
                   'main',
                   {
+                    'type': 'game-audio-provider',
+                    'baseUrl': '@config.baseUrl',
+                    'className': '@config.className',
                     'children': [
                       {
-                        'type': 'text',
+                        'type': 'typography',
                         'content': 'Sample content',
                       },
                     ],
-                    'className': '@config.className',
-                    'baseUrl': '@config.baseUrl',
+                    'isLoading': '@config.isLoading',
                     'manifest': '@config.manifest',
                     'error': '@config.error',
                     'initialMuted': '@config.initialMuted',
                     'entity': 'GameAudioProviderItem',
-                    'type': 'game-audio-provider',
-                    'isLoading': '@config.isLoading',
                   },
                 ],
               ],
@@ -179,48 +179,6 @@ export function stdUiGameAudioProviderGameAudioProviderOrbital(params: StdUiGame
           ],
         },
         'config': {
-          'error': {
-            'type': 'GameAudioProviderError',
-            'label': 'Error',
-            'description': 'error prop',
-            'tier': 'presentation',
-            'properties': {
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-            },
-          },
-          'baseUrl': {
-            'type': 'string',
-            'default': 'Base Url',
-            'label': 'Base Url',
-            'description': 'Base URL prepended to all sound paths (default \'\')',
-            'tier': 'presentation',
-          },
-          'initialMuted': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Initial Muted',
-            'description': 'Initial muted state',
-            'tier': 'presentation',
-          },
           'className': {
             'type': 'string',
             'default': '',
@@ -235,6 +193,41 @@ export function stdUiGameAudioProviderGameAudioProviderOrbital(params: StdUiGame
             'description': 'isLoading prop',
             'tier': 'presentation',
           },
+          'initialMuted': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Initial Muted',
+            'description': 'Initial muted state',
+            'tier': 'presentation',
+          },
+          'error': {
+            'type': 'GameAudioProviderError',
+            'label': 'Error',
+            'description': 'error prop',
+            'tier': 'presentation',
+            'properties': {
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+            },
+          },
           'manifest': {
             'type': 'Map<string,GameAudioProviderManifestValue>',
             'default': {},
@@ -244,31 +237,6 @@ export function stdUiGameAudioProviderGameAudioProviderOrbital(params: StdUiGame
             'items': {
               'type': 'object',
               'properties': {
-                'loop': {
-                  'name': 'loop',
-                  'type': 'boolean',
-                  'required': false,
-                },
-                'poolSize': {
-                  'name': 'poolSize',
-                  'type': 'number',
-                  'required': false,
-                },
-                'crossfade': {
-                  'name': 'crossfade',
-                  'type': 'boolean',
-                  'required': false,
-                },
-                'autostart': {
-                  'name': 'autostart',
-                  'type': 'boolean',
-                  'required': false,
-                },
-                'crossfadeDurationMs': {
-                  'name': 'crossfadeDurationMs',
-                  'type': 'number',
-                  'required': false,
-                },
                 'path': {
                   'name': 'path',
                   'type': 'array',
@@ -282,8 +250,40 @@ export function stdUiGameAudioProviderGameAudioProviderOrbital(params: StdUiGame
                   'type': 'number',
                   'required': false,
                 },
+                'loop': {
+                  'name': 'loop',
+                  'type': 'boolean',
+                  'required': false,
+                },
+                'poolSize': {
+                  'name': 'poolSize',
+                  'type': 'number',
+                  'required': false,
+                },
+                'autostart': {
+                  'name': 'autostart',
+                  'type': 'boolean',
+                  'required': false,
+                },
+                'crossfade': {
+                  'name': 'crossfade',
+                  'type': 'boolean',
+                  'required': false,
+                },
+                'crossfadeDurationMs': {
+                  'name': 'crossfadeDurationMs',
+                  'type': 'number',
+                  'required': false,
+                },
               },
             },
+          },
+          'baseUrl': {
+            'type': 'string',
+            'default': 'Base Url',
+            'label': 'Base Url',
+            'description': 'Base URL prepended to all sound paths (default \'\')',
+            'tier': 'presentation',
           },
         },
         'scope': 'instance',

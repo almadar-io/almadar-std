@@ -1,47 +1,11 @@
 app ui-state-architect-board "1.0.0"
 "StateArchitectBoard — UI factory (1:1 with the @almadar/ui state-architect-board pattern)."
 orbital StateArchitectBoardOrbital {
-  type StateArchitectBoardEntity = {
-    id : string!
-    title : string!
-    description : string!
-    hint : string!
-    entityName : string!
-    variables : [StateArchitectBoardEntityVariablesItem]!
-    states : [string]!
-    initialState : string!
-    transitions : [StateArchitectBoardEntityTransitionsItem]!
-    availableEvents : [string]!
-    availableStates : [string]
-    testCases : [StateArchitectBoardEntityTestCasesItem]!
-    showCodeView : boolean
-    successMessage : string
-    failMessage : string
-    headerImage : string
-    theme : StateArchitectBoardEntityTheme
-  }
-  type StateArchitectBoardEntityVariablesItem = {
-    name : string!
-    value : number!
-    min : number
-    max : number
-    unit : string
-  }
-  type StateArchitectBoardEntityTransitionsItem = {
-    id : string!
-    from : string!
-    to : string!
-    event : string!
-    guardHint : string
-  }
-  type StateArchitectBoardEntityTestCasesItem = {
-    events : [string]!
-    expectedState : string!
-    label : string!
-  }
-  type StateArchitectBoardEntityTheme = {
-    background : string
-    accentColor : string
+  type StateArchitectBoardError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
   }
 
   entity StateArchitectBoardItem [runtime] {
@@ -53,8 +17,20 @@ orbital StateArchitectBoardOrbital {
 
     state idle {
       INIT -> idle
+        (fetch StateArchitectBoardItem {})
         (render-ui main {
-          entity: @config.entityProp
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          sortBy: @config.sortBy
+          sortDirection: @config.sortDirection
+          searchValue: @config.searchValue
+          page: @config.pageProp
+          pageSize: @config.pageSize
+          totalCount: @config.totalCount
+          activeFilters: @config.activeFilters
+          selectedIds: @config.selectedIds
+          entity: @entity
           stepDurationMs: @config.stepDurationMs
           testEvent: TEST
           completeEvent: COMPLETE
@@ -77,10 +53,50 @@ orbital StateArchitectBoardOrbital {
     }
 
     config {
-      entityProp : StateArchitectBoardEntity
-        @label "Entity"
-        @description "Puzzle data. Also accepts the canonical `EntityRow` the compiler binds (and arrays); narrowed to `StateArchitectPuzzleEntity` internally."
-        @synonyms "entity"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : StateArchitectBoardError
+        @label "Error"
+        @description "Error state (UiError)"
+        @tier "presentation"
+      sortBy : string = "Sort By"
+        @label "Sort By"
+        @description "Current sort field"
+        @tier "presentation"
+      sortDirection : "asc" | "desc" = asc
+        @label "Sort Direction"
+        @description "Current sort direction"
+        @tier "presentation"
+      searchValue : string = "Search Value"
+        @label "Search Value"
+        @description "Current search query value"
+        @tier "presentation"
+      pageProp : number = 0
+        @label "Page"
+        @description "Current page number"
+        @synonyms "page"
+        @tier "presentation"
+      pageSize : number = 0
+        @label "Page Size"
+        @description "Number of items per page"
+        @tier "presentation"
+      totalCount : number = 0
+        @label "Total Count"
+        @description "Total number of items"
+        @tier "presentation"
+      activeFilters : json
+        @label "Active Filters"
+        @description "Active filters"
+        @tier "presentation"
+      selectedIds : [string] = []
+        @label "Selected Ids"
+        @description "Currently selected item IDs"
         @tier "presentation"
       stepDurationMs : number = 600
         @label "Step Duration Ms"

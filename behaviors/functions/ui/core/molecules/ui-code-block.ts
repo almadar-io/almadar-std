@@ -52,16 +52,15 @@ export interface StdUiCodeBlockConfig {
   editable?: boolean;
   /** Default: `true` */
   showCopyButton?: boolean;
-  /** Default: `"60vh"` */
-  maxHeight?: string;
-  /** Default: `"text"` */
-  language?: string;
   /** Default: `true` */
   showLanguageBadge?: boolean;
   /** Default: `false` */
   foldable?: boolean;
   /** Default: `"Code"` */
   code?: string;
+  language?: unknown;
+  /** Default: `"60vh"` */
+  maxHeight?: string;
 }
 
 /**

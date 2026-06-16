@@ -39,28 +39,28 @@ export type StdUiHeroSectionEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiHeroSectionConfig {
-  /** Default: `"Subtitle"` */
-  subtitle?: string;
-  primaryAction?: EntityRow;
-  image?: EntityRow;
+  /** Default: `"Install Command"` */
+  installCommand?: string;
+  backgroundElement?: unknown;
   /** Default: `"center"` */
   align?: 'center' | 'left';
   /** Default: `"subtle"` */
   background?: 'dark' | 'gradient' | 'subtle';
-  /** Default: `"below"` */
-  imagePosition?: 'below' | 'right' | 'background';
-  backgroundElement?: unknown;
-  /** Default: `"primary"` */
-  tagVariant?: 'primary' | 'secondary' | 'accent';
-  /** Default: `"Title"` */
-  title?: string;
+  secondaryAction?: EntityRow;
   /** Default: `"Title Accent"` */
   titleAccent?: string;
+  /** Default: `"primary"` */
+  tagVariant?: 'primary' | 'secondary' | 'accent';
+  image?: EntityRow;
   /** Default: `""` */
   className?: string;
-  /** Default: `"Install Command"` */
-  installCommand?: string;
-  secondaryAction?: EntityRow;
+  /** Default: `"Subtitle"` */
+  subtitle?: string;
+  primaryAction?: EntityRow;
+  /** Default: `"below"` */
+  imagePosition?: 'below' | 'right' | 'background';
+  /** Default: `"Title"` */
+  title?: string;
   /** Default: `"Tag"` */
   tag?: string;
 }

@@ -1,20 +1,6 @@
 app ui-hero-organism "1.0.0"
 "HeroOrganism — UI factory (1:1 with the @almadar/ui hero-organism pattern)."
 orbital HeroOrganismOrbital {
-  type HeroOrganismPrimaryAction = {
-    label : string!
-    href : string!
-    variant : "primary" | "secondary" | "ghost"
-  }
-  type HeroOrganismSecondaryAction = {
-    label : string!
-    href : string!
-    variant : "primary" | "secondary" | "ghost"
-  }
-  type HeroOrganismImage = {
-    src : string!
-    alt : string!
-  }
   type HeroOrganismError = {
     message : string!
     name : string
@@ -24,16 +10,7 @@ orbital HeroOrganismOrbital {
 
   entity HeroOrganismItem [runtime] {
     id : string!
-    tag : string = ""
     title : string = ""
-    titleAccent : string = ""
-    subtitle : string = ""
-    primaryAction : HeroOrganismPrimaryAction
-    secondaryAction : HeroOrganismSecondaryAction
-    installCommand : string = ""
-    image : HeroOrganismImage
-    imagePosition : "below" | "right" | "background" = below
-    background : "dark" | "gradient" | "subtle" = dark
   }
 
   trait HeroOrganismRender -> @rebindable HeroOrganismItem [interaction, instance] {
@@ -43,7 +20,6 @@ orbital HeroOrganismOrbital {
       INIT -> idle
         (fetch HeroOrganismItem {})
         (render-ui main {
-          entity: @entity
           className: @config.className
           isLoading: @config.isLoading
           error: @config.error
@@ -55,7 +31,8 @@ orbital HeroOrganismOrbital {
           totalCount: @config.totalCount
           activeFilters: @config.activeFilters
           selectedIds: @config.selectedIds
-          children: [{ content: "Sample content", type: text }]
+          entity: @entity
+          children: [{ content: "Sample content", type: typography }]
           type: hero-organism
         })
     }

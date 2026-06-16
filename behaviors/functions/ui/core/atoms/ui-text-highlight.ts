@@ -76,12 +76,12 @@ export interface StdUiTextHighlightHoverPayload {
 export interface StdUiTextHighlightConfig {
   /** Default: `"question"` */
   highlightType?: 'question' | 'note';
+  /** Default: `false` */
+  isActive?: boolean;
   /** Default: `""` */
   className?: string;
   /** Default: `"Annotation Id"` */
   annotationId?: string;
-  /** Default: `false` */
-  isActive?: boolean;
 }
 
 /**

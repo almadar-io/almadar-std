@@ -60,28 +60,28 @@ export interface StdUiInputChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiInputConfig {
-  /** Default: `[]` */
-  options?: EntityRow[];
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"circle"` */
-  icon?: unknown;
-  /** Default: `"text"` */
-  inputType?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'search' | 'date' | 'datetime-local' | 'time' | 'checkbox' | 'select' | 'textarea';
   /** Default: `false` */
   disabled?: boolean;
-  /** Default: `"Value"` */
-  value?: string;
-  /** Default: `false` */
-  clearable?: boolean;
-  /** Default: `3` */
-  rows?: number;
+  /** Default: `[{"value":"Value","label":"Label"}]` */
+  options?: EntityRow[];
   rightIcon?: unknown;
-  leftIcon?: unknown;
+  /** Default: `"circle"` */
+  icon?: unknown;
   /** Default: `""` */
-  error?: string;
+  className?: string;
+  leftIcon?: unknown;
   /** Default: `"Placeholder"` */
   placeholder?: string;
+  /** Default: `"Value"` */
+  value?: string;
+  /** Default: `""` */
+  error?: string;
+  /** Default: `false` */
+  clearable?: boolean;
+  /** Default: `"text"` */
+  inputType?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'search' | 'date' | 'datetime-local' | 'time' | 'checkbox' | 'select' | 'textarea';
+  /** Default: `3` */
+  rows?: number;
 }
 
 /**

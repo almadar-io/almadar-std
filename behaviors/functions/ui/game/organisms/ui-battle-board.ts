@@ -101,18 +101,34 @@ export interface StdUiBattleBoardPlayAgainPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiBattleBoardConfig {
-  /** Default: `[]` */
-  effectSpriteUrls?: string[];
+  /** Default: `"Search Value"` */
+  searchValue?: string;
+  /** Default: `0` */
+  pageProp?: number;
   /** Default: `0.45` */
   scale?: number;
-  /** Default: `{"id":"","turn":0,"units":[],"tiles":[],"selectedUnitId":"","phase":"observation","gameResult":"victory"}` */
-  entityProp?: EntityRow;
   /** Default: `false` */
-  hasActiveEffects?: boolean;
-  /** Default: `""` */
-  className?: string;
+  isLoading?: boolean;
   /** Default: `1` */
   unitScale?: number;
+  activeFilters?: unknown;
+  /** Default: `"asc"` */
+  sortDirection?: 'asc' | 'desc';
+  /** Default: `0` */
+  pageSize?: number;
+  /** Default: `"Sort By"` */
+  sortBy?: string;
+  /** Default: `[]` */
+  effectSpriteUrls?: string[];
+  /** Default: `false` */
+  hasActiveEffects?: boolean;
+  /** Default: `[]` */
+  selectedIds?: string[];
+  /** Default: `0` */
+  totalCount?: number;
+  /** Default: `""` */
+  className?: string;
+  error?: EntityRow;
 }
 
 /**
@@ -203,254 +219,10 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
               {
                 'name': 'attacker',
                 'type': 'object',
-                'properties': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                    'required': true,
-                  },
-                  {
-                    'name': 'name',
-                    'type': 'string',
-                    'required': true,
-                  },
-                  {
-                    'name': 'unitType',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'heroId',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'sprite',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'spriteSheet',
-                    'type': 'object',
-                    'properties': [
-                      {
-                        'name': 'se',
-                        'type': 'string',
-                        'required': true,
-                      },
-                      {
-                        'name': 'sw',
-                        'type': 'string',
-                        'required': true,
-                      },
-                      {
-                        'name': 'frameWidth',
-                        'type': 'number',
-                        'required': true,
-                      },
-                      {
-                        'name': 'frameHeight',
-                        'type': 'number',
-                        'required': true,
-                      },
-                    ],
-                  },
-                  {
-                    'name': 'team',
-                    'type': 'string',
-                    'required': true,
-                  },
-                  {
-                    'name': 'position',
-                    'type': 'object',
-                    'required': true,
-                    'properties': [
-                      {
-                        'name': 'x',
-                        'type': 'number',
-                        'required': true,
-                      },
-                      {
-                        'name': 'y',
-                        'type': 'number',
-                        'required': true,
-                      },
-                    ],
-                  },
-                  {
-                    'name': 'health',
-                    'type': 'number',
-                    'required': true,
-                  },
-                  {
-                    'name': 'maxHealth',
-                    'type': 'number',
-                    'required': true,
-                  },
-                  {
-                    'name': 'movement',
-                    'type': 'number',
-                    'required': true,
-                  },
-                  {
-                    'name': 'attack',
-                    'type': 'number',
-                    'required': true,
-                  },
-                  {
-                    'name': 'defense',
-                    'type': 'number',
-                    'required': true,
-                  },
-                  {
-                    'name': 'traits',
-                    'type': '[object]',
-                    'properties': [
-                      {
-                        'name': 'name',
-                        'type': 'string',
-                        'required': true,
-                      },
-                      {
-                        'name': 'currentState',
-                        'type': 'string',
-                        'required': true,
-                      },
-                      {
-                        'name': 'states',
-                        'type': '[string]',
-                        'required': true,
-                      },
-                      {
-                        'name': 'cooldown',
-                        'type': 'number',
-                      },
-                    ],
-                  },
-                ],
               },
               {
                 'name': 'target',
                 'type': 'object',
-                'properties': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                    'required': true,
-                  },
-                  {
-                    'name': 'name',
-                    'type': 'string',
-                    'required': true,
-                  },
-                  {
-                    'name': 'unitType',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'heroId',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'sprite',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'spriteSheet',
-                    'type': 'object',
-                    'properties': [
-                      {
-                        'name': 'se',
-                        'type': 'string',
-                        'required': true,
-                      },
-                      {
-                        'name': 'sw',
-                        'type': 'string',
-                        'required': true,
-                      },
-                      {
-                        'name': 'frameWidth',
-                        'type': 'number',
-                        'required': true,
-                      },
-                      {
-                        'name': 'frameHeight',
-                        'type': 'number',
-                        'required': true,
-                      },
-                    ],
-                  },
-                  {
-                    'name': 'team',
-                    'type': 'string',
-                    'required': true,
-                  },
-                  {
-                    'name': 'position',
-                    'type': 'object',
-                    'required': true,
-                    'properties': [
-                      {
-                        'name': 'x',
-                        'type': 'number',
-                        'required': true,
-                      },
-                      {
-                        'name': 'y',
-                        'type': 'number',
-                        'required': true,
-                      },
-                    ],
-                  },
-                  {
-                    'name': 'health',
-                    'type': 'number',
-                    'required': true,
-                  },
-                  {
-                    'name': 'maxHealth',
-                    'type': 'number',
-                    'required': true,
-                  },
-                  {
-                    'name': 'movement',
-                    'type': 'number',
-                    'required': true,
-                  },
-                  {
-                    'name': 'attack',
-                    'type': 'number',
-                    'required': true,
-                  },
-                  {
-                    'name': 'defense',
-                    'type': 'number',
-                    'required': true,
-                  },
-                  {
-                    'name': 'traits',
-                    'type': '[object]',
-                    'properties': [
-                      {
-                        'name': 'name',
-                        'type': 'string',
-                        'required': true,
-                      },
-                      {
-                        'name': 'currentState',
-                        'type': 'string',
-                        'required': true,
-                      },
-                      {
-                        'name': 'states',
-                        'type': '[string]',
-                        'required': true,
-                      },
-                      {
-                        'name': 'cooldown',
-                        'type': 'number',
-                      },
-                    ],
-                  },
-                ],
               },
               {
                 'name': 'damage',
@@ -489,128 +261,6 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
               {
                 'name': 'unit',
                 'type': 'object',
-                'properties': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                    'required': true,
-                  },
-                  {
-                    'name': 'name',
-                    'type': 'string',
-                    'required': true,
-                  },
-                  {
-                    'name': 'unitType',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'heroId',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'sprite',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'spriteSheet',
-                    'type': 'object',
-                    'properties': [
-                      {
-                        'name': 'se',
-                        'type': 'string',
-                        'required': true,
-                      },
-                      {
-                        'name': 'sw',
-                        'type': 'string',
-                        'required': true,
-                      },
-                      {
-                        'name': 'frameWidth',
-                        'type': 'number',
-                        'required': true,
-                      },
-                      {
-                        'name': 'frameHeight',
-                        'type': 'number',
-                        'required': true,
-                      },
-                    ],
-                  },
-                  {
-                    'name': 'team',
-                    'type': 'string',
-                    'required': true,
-                  },
-                  {
-                    'name': 'position',
-                    'type': 'object',
-                    'required': true,
-                    'properties': [
-                      {
-                        'name': 'x',
-                        'type': 'number',
-                        'required': true,
-                      },
-                      {
-                        'name': 'y',
-                        'type': 'number',
-                        'required': true,
-                      },
-                    ],
-                  },
-                  {
-                    'name': 'health',
-                    'type': 'number',
-                    'required': true,
-                  },
-                  {
-                    'name': 'maxHealth',
-                    'type': 'number',
-                    'required': true,
-                  },
-                  {
-                    'name': 'movement',
-                    'type': 'number',
-                    'required': true,
-                  },
-                  {
-                    'name': 'attack',
-                    'type': 'number',
-                    'required': true,
-                  },
-                  {
-                    'name': 'defense',
-                    'type': 'number',
-                    'required': true,
-                  },
-                  {
-                    'name': 'traits',
-                    'type': '[object]',
-                    'properties': [
-                      {
-                        'name': 'name',
-                        'type': 'string',
-                        'required': true,
-                      },
-                      {
-                        'name': 'currentState',
-                        'type': 'string',
-                        'required': true,
-                      },
-                      {
-                        'name': 'states',
-                        'type': '[string]',
-                        'required': true,
-                      },
-                      {
-                        'name': 'cooldown',
-                        'type': 'number',
-                      },
-                    ],
-                  },
-                ],
               },
               {
                 'name': 'to',
@@ -719,254 +369,10 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                 {
                   'name': 'attacker',
                   'type': 'object',
-                  'properties': [
-                    {
-                      'name': 'id',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    {
-                      'name': 'name',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    {
-                      'name': 'unitType',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'heroId',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'sprite',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'spriteSheet',
-                      'type': 'object',
-                      'properties': [
-                        {
-                          'name': 'se',
-                          'type': 'string',
-                          'required': true,
-                        },
-                        {
-                          'name': 'sw',
-                          'type': 'string',
-                          'required': true,
-                        },
-                        {
-                          'name': 'frameWidth',
-                          'type': 'number',
-                          'required': true,
-                        },
-                        {
-                          'name': 'frameHeight',
-                          'type': 'number',
-                          'required': true,
-                        },
-                      ],
-                    },
-                    {
-                      'name': 'team',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    {
-                      'name': 'position',
-                      'type': 'object',
-                      'required': true,
-                      'properties': [
-                        {
-                          'name': 'x',
-                          'type': 'number',
-                          'required': true,
-                        },
-                        {
-                          'name': 'y',
-                          'type': 'number',
-                          'required': true,
-                        },
-                      ],
-                    },
-                    {
-                      'name': 'health',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    {
-                      'name': 'maxHealth',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    {
-                      'name': 'movement',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    {
-                      'name': 'attack',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    {
-                      'name': 'defense',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    {
-                      'name': 'traits',
-                      'type': '[object]',
-                      'properties': [
-                        {
-                          'name': 'name',
-                          'type': 'string',
-                          'required': true,
-                        },
-                        {
-                          'name': 'currentState',
-                          'type': 'string',
-                          'required': true,
-                        },
-                        {
-                          'name': 'states',
-                          'type': '[string]',
-                          'required': true,
-                        },
-                        {
-                          'name': 'cooldown',
-                          'type': 'number',
-                        },
-                      ],
-                    },
-                  ],
                 },
                 {
                   'name': 'target',
                   'type': 'object',
-                  'properties': [
-                    {
-                      'name': 'id',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    {
-                      'name': 'name',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    {
-                      'name': 'unitType',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'heroId',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'sprite',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'spriteSheet',
-                      'type': 'object',
-                      'properties': [
-                        {
-                          'name': 'se',
-                          'type': 'string',
-                          'required': true,
-                        },
-                        {
-                          'name': 'sw',
-                          'type': 'string',
-                          'required': true,
-                        },
-                        {
-                          'name': 'frameWidth',
-                          'type': 'number',
-                          'required': true,
-                        },
-                        {
-                          'name': 'frameHeight',
-                          'type': 'number',
-                          'required': true,
-                        },
-                      ],
-                    },
-                    {
-                      'name': 'team',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    {
-                      'name': 'position',
-                      'type': 'object',
-                      'required': true,
-                      'properties': [
-                        {
-                          'name': 'x',
-                          'type': 'number',
-                          'required': true,
-                        },
-                        {
-                          'name': 'y',
-                          'type': 'number',
-                          'required': true,
-                        },
-                      ],
-                    },
-                    {
-                      'name': 'health',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    {
-                      'name': 'maxHealth',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    {
-                      'name': 'movement',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    {
-                      'name': 'attack',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    {
-                      'name': 'defense',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    {
-                      'name': 'traits',
-                      'type': '[object]',
-                      'properties': [
-                        {
-                          'name': 'name',
-                          'type': 'string',
-                          'required': true,
-                        },
-                        {
-                          'name': 'currentState',
-                          'type': 'string',
-                          'required': true,
-                        },
-                        {
-                          'name': 'states',
-                          'type': '[string]',
-                          'required': true,
-                        },
-                        {
-                          'name': 'cooldown',
-                          'type': 'number',
-                        },
-                      ],
-                    },
-                  ],
                 },
                 {
                   'name': 'damage',
@@ -1005,128 +411,6 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                 {
                   'name': 'unit',
                   'type': 'object',
-                  'properties': [
-                    {
-                      'name': 'id',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    {
-                      'name': 'name',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    {
-                      'name': 'unitType',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'heroId',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'sprite',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'spriteSheet',
-                      'type': 'object',
-                      'properties': [
-                        {
-                          'name': 'se',
-                          'type': 'string',
-                          'required': true,
-                        },
-                        {
-                          'name': 'sw',
-                          'type': 'string',
-                          'required': true,
-                        },
-                        {
-                          'name': 'frameWidth',
-                          'type': 'number',
-                          'required': true,
-                        },
-                        {
-                          'name': 'frameHeight',
-                          'type': 'number',
-                          'required': true,
-                        },
-                      ],
-                    },
-                    {
-                      'name': 'team',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    {
-                      'name': 'position',
-                      'type': 'object',
-                      'required': true,
-                      'properties': [
-                        {
-                          'name': 'x',
-                          'type': 'number',
-                          'required': true,
-                        },
-                        {
-                          'name': 'y',
-                          'type': 'number',
-                          'required': true,
-                        },
-                      ],
-                    },
-                    {
-                      'name': 'health',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    {
-                      'name': 'maxHealth',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    {
-                      'name': 'movement',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    {
-                      'name': 'attack',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    {
-                      'name': 'defense',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    {
-                      'name': 'traits',
-                      'type': '[object]',
-                      'properties': [
-                        {
-                          'name': 'name',
-                          'type': 'string',
-                          'required': true,
-                        },
-                        {
-                          'name': 'currentState',
-                          'type': 'string',
-                          'required': true,
-                        },
-                        {
-                          'name': 'states',
-                          'type': '[string]',
-                          'required': true,
-                        },
-                        {
-                          'name': 'cooldown',
-                          'type': 'number',
-                        },
-                      ],
-                    },
-                  ],
                 },
                 {
                   'name': 'to',
@@ -1221,26 +505,41 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
               'event': 'INIT',
               'effects': [
                 [
+                  'fetch',
+                  'BattleBoardItem',
+                  {},
+                ],
+                [
                   'render-ui',
                   'main',
                   {
-                    'onGameEnd': 'GAME_END',
-                    'onAttack': 'ATTACK',
-                    'entity': '@config.entityProp',
-                    'scale': '@config.scale',
-                    'cancelEvent': 'CANCEL',
-                    'gameEndEvent': 'GAME_END',
-                    'effectSpriteUrls': '@config.effectSpriteUrls',
-                    'type': 'battle-board',
-                    'hasActiveEffects': '@config.hasActiveEffects',
                     'unitScale': '@config.unitScale',
+                    'sortDirection': '@config.sortDirection',
+                    'activeFilters': '@config.activeFilters',
+                    'isLoading': '@config.isLoading',
+                    'effectSpriteUrls': '@config.effectSpriteUrls',
                     'tileClickEvent': 'TILE_CLICK',
                     'unitClickEvent': 'UNIT_CLICK',
+                    'error': '@config.error',
+                    'onGameEnd': 'GAME_END',
+                    'searchValue': '@config.searchValue',
+                    'pageSize': '@config.pageSize',
                     'endTurnEvent': 'END_TURN',
+                    'gameEndEvent': 'GAME_END',
                     'playAgainEvent': 'PLAY_AGAIN',
-                    'className': '@config.className',
-                    'attackEvent': 'ATTACK',
+                    'totalCount': '@config.totalCount',
                     'onUnitMove': 'UNIT_MOVE',
+                    'hasActiveEffects': '@config.hasActiveEffects',
+                    'page': '@config.pageProp',
+                    'scale': '@config.scale',
+                    'attackEvent': 'ATTACK',
+                    'onAttack': 'ATTACK',
+                    'type': 'battle-board',
+                    'entity': '@entity',
+                    'sortBy': '@config.sortBy',
+                    'cancelEvent': 'CANCEL',
+                    'selectedIds': '@config.selectedIds',
+                    'className': '@config.className',
                   },
                 ],
               ],
@@ -1248,6 +547,73 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
           ],
         },
         'config': {
+          'searchValue': {
+            'type': 'string',
+            'default': 'Search Value',
+            'label': 'Search Value',
+            'description': 'Current search query value',
+            'tier': 'presentation',
+          },
+          'pageProp': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page',
+            'description': 'Current page number',
+            'synonyms': 'page',
+            'tier': 'presentation',
+          },
+          'scale': {
+            'type': 'number',
+            'default': 0.45,
+            'label': 'Scale',
+            'description': 'Canvas render scale',
+            'tier': 'presentation',
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
+          'unitScale': {
+            'type': 'number',
+            'default': 1,
+            'label': 'Unit Scale',
+            'description': 'Unit draw-size multiplier',
+            'tier': 'presentation',
+          },
+          'activeFilters': {
+            'type': 'json',
+            'label': 'Active Filters',
+            'description': 'Active filters',
+            'tier': 'presentation',
+          },
+          'sortDirection': {
+            'type': 'string',
+            'default': 'asc',
+            'label': 'Sort Direction',
+            'description': 'Current sort direction',
+            'tier': 'presentation',
+            'values': [
+              'asc',
+              'desc',
+            ],
+          },
+          'pageSize': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page Size',
+            'description': 'Number of items per page',
+            'tier': 'presentation',
+          },
+          'sortBy': {
+            'type': 'string',
+            'default': 'Sort By',
+            'label': 'Sort By',
+            'description': 'Current sort field',
+            'tier': 'presentation',
+          },
           'effectSpriteUrls': {
             'type': '[string]',
             'default': [],
@@ -1258,398 +624,28 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
               'type': 'string',
             },
           },
-          'scale': {
-            'type': 'number',
-            'default': 0.45,
-            'label': 'Scale',
-            'description': 'Canvas render scale',
-            'tier': 'presentation',
-          },
-          'entityProp': {
-            'type': 'BattleBoardEntity',
-            'default': {
-              'id': '',
-              'turn': 0,
-              'units': [],
-              'tiles': [],
-              'selectedUnitId': '',
-              'phase': 'observation',
-              'gameResult': 'victory',
-            },
-            'label': 'Entity',
-            'description': 'Entity containing all board data',
-            'synonyms': 'entity',
-            'tier': 'presentation',
-            'properties': {
-              'boardWidth': {
-                'name': 'boardWidth',
-                'type': 'number',
-                'required': false,
-              },
-              'units': {
-                'name': 'units',
-                'type': 'array',
-                'required': true,
-                'items': {
-                  'type': 'object',
-                  'properties': {
-                    'sprite': {
-                      'name': 'sprite',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'team': {
-                      'name': 'team',
-                      'type': 'string',
-                      'required': true,
-                      'values': [
-                        'player',
-                        'enemy',
-                      ],
-                    },
-                    'name': {
-                      'name': 'name',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'unitType': {
-                      'name': 'unitType',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'heroId': {
-                      'name': 'heroId',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'id': {
-                      'name': 'id',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'spriteSheet': {
-                      'name': 'spriteSheet',
-                      'type': 'object',
-                      'required': false,
-                      'properties': {
-                        'frameWidth': {
-                          'name': 'frameWidth',
-                          'type': 'number',
-                          'required': true,
-                        },
-                        'frameHeight': {
-                          'name': 'frameHeight',
-                          'type': 'number',
-                          'required': true,
-                        },
-                        'sw': {
-                          'name': 'sw',
-                          'type': 'string',
-                          'required': true,
-                        },
-                        'se': {
-                          'name': 'se',
-                          'type': 'string',
-                          'required': true,
-                        },
-                      },
-                    },
-                    'position': {
-                      'name': 'position',
-                      'type': 'object',
-                      'required': true,
-                      'properties': {
-                        'y': {
-                          'name': 'y',
-                          'type': 'number',
-                          'required': true,
-                        },
-                        'x': {
-                          'name': 'x',
-                          'type': 'number',
-                          'required': true,
-                        },
-                      },
-                    },
-                    'maxHealth': {
-                      'name': 'maxHealth',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'movement': {
-                      'name': 'movement',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'defense': {
-                      'name': 'defense',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'traits': {
-                      'name': 'traits',
-                      'type': 'array',
-                      'required': false,
-                      'items': {
-                        'type': 'object',
-                        'properties': {
-                          'cooldown': {
-                            'name': 'cooldown',
-                            'type': 'number',
-                            'required': false,
-                          },
-                          'states': {
-                            'name': 'states',
-                            'type': 'array',
-                            'required': true,
-                            'items': {
-                              'type': 'string',
-                            },
-                          },
-                          'currentState': {
-                            'name': 'currentState',
-                            'type': 'string',
-                            'required': true,
-                          },
-                          'name': {
-                            'name': 'name',
-                            'type': 'string',
-                            'required': true,
-                          },
-                        },
-                      },
-                    },
-                    'attack': {
-                      'name': 'attack',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'health': {
-                      'name': 'health',
-                      'type': 'number',
-                      'required': true,
-                    },
-                  },
-                },
-              },
-              'turn': {
-                'name': 'turn',
-                'type': 'number',
-                'required': true,
-              },
-              'selectedUnitId': {
-                'name': 'selectedUnitId',
-                'type': 'string',
-                'required': true,
-              },
-              'tiles': {
-                'name': 'tiles',
-                'type': 'array',
-                'required': true,
-                'items': {
-                  'type': 'object',
-                  'properties': {
-                    'type': {
-                      'name': 'type',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'terrain': {
-                      'name': 'terrain',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'z': {
-                      'name': 'z',
-                      'type': 'number',
-                      'required': false,
-                    },
-                    'passable': {
-                      'name': 'passable',
-                      'type': 'boolean',
-                      'required': false,
-                    },
-                    'terrainSprite': {
-                      'name': 'terrainSprite',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'movementCost': {
-                      'name': 'movementCost',
-                      'type': 'number',
-                      'required': false,
-                    },
-                    'elevation': {
-                      'name': 'elevation',
-                      'type': 'number',
-                      'required': false,
-                    },
-                    'x': {
-                      'name': 'x',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'id': {
-                      'name': 'id',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'y': {
-                      'name': 'y',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'tileType': {
-                      'name': 'tileType',
-                      'type': 'string',
-                      'required': false,
-                    },
-                  },
-                },
-              },
-              'features': {
-                'name': 'features',
-                'type': 'array',
-                'required': false,
-                'items': {
-                  'type': 'object',
-                  'properties': {
-                    'type': {
-                      'name': 'type',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'id': {
-                      'name': 'id',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'elevation': {
-                      'name': 'elevation',
-                      'type': 'number',
-                      'required': false,
-                    },
-                    'y': {
-                      'name': 'y',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'x': {
-                      'name': 'x',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'assetUrl': {
-                      'name': 'assetUrl',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'color': {
-                      'name': 'color',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'z': {
-                      'name': 'z',
-                      'type': 'number',
-                      'required': false,
-                    },
-                  },
-                },
-              },
-              'boardHeight': {
-                'name': 'boardHeight',
-                'type': 'number',
-                'required': false,
-              },
-              'phase': {
-                'name': 'phase',
-                'type': 'string',
-                'required': true,
-                'values': [
-                  'observation',
-                  'selection',
-                  'movement',
-                  'action',
-                  'enemy_turn',
-                  'game_over',
-                ],
-              },
-              'assetManifest': {
-                'name': 'assetManifest',
-                'type': 'object',
-                'required': false,
-                'properties': {
-                  'terrains': {
-                    'name': 'terrains',
-                    'type': 'object',
-                    'required': false,
-                    'items': {
-                      'type': 'string',
-                    },
-                  },
-                  'effects': {
-                    'name': 'effects',
-                    'type': 'object',
-                    'required': false,
-                    'items': {
-                      'type': 'string',
-                    },
-                  },
-                  'units': {
-                    'name': 'units',
-                    'type': 'object',
-                    'required': false,
-                    'items': {
-                      'type': 'string',
-                    },
-                  },
-                  'baseUrl': {
-                    'name': 'baseUrl',
-                    'type': 'string',
-                    'required': true,
-                  },
-                  'features': {
-                    'name': 'features',
-                    'type': 'object',
-                    'required': false,
-                    'items': {
-                      'type': 'string',
-                    },
-                  },
-                },
-              },
-              'backgroundImage': {
-                'name': 'backgroundImage',
-                'type': 'string',
-                'required': false,
-              },
-              'gameResult': {
-                'name': 'gameResult',
-                'type': 'string',
-                'required': true,
-                'values': [
-                  'victory',
-                  'defeat',
-                ],
-              },
-              'id': {
-                'name': 'id',
-                'type': 'string',
-                'required': true,
-              },
-            },
-          },
           'hasActiveEffects': {
             'type': 'boolean',
             'default': false,
             'label': 'Has Active Effects',
             'description': 'hasActiveEffects prop',
+            'tier': 'presentation',
+          },
+          'selectedIds': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Selected Ids',
+            'description': 'Currently selected item IDs',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'totalCount': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Total Count',
+            'description': 'Total number of items',
             'tier': 'presentation',
           },
           'className': {
@@ -1659,12 +655,33 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
             'description': 'className prop',
             'tier': 'presentation',
           },
-          'unitScale': {
-            'type': 'number',
-            'default': 1,
-            'label': 'Unit Scale',
-            'description': 'Unit draw-size multiplier',
+          'error': {
+            'type': 'BattleBoardError',
+            'label': 'Error',
+            'description': 'Error state (UiError)',
             'tier': 'presentation',
+            'properties': {
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+            },
           },
         },
         'scope': 'instance',

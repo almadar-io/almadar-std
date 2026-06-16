@@ -46,16 +46,16 @@ export interface StdUiRichBlockEditorChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiRichBlockEditorConfig {
-  /** Default: `""` */
-  className?: string;
-  /** Default: `[]` */
-  initialBlocks?: EntityRow[];
-  /** Default: `true` */
-  showToolbar?: boolean;
-  /** Default: `"Placeholder"` */
-  placeholder?: string;
   /** Default: `false` */
   readOnly?: boolean;
+  /** Default: `true` */
+  showToolbar?: boolean;
+  /** Default: `false` */
+  enableBlocks?: boolean;
+  /** Default: `"Placeholder"` */
+  placeholder?: string;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**
