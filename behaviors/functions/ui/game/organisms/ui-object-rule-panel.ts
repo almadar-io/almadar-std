@@ -47,10 +47,10 @@ export interface StdUiObjectRulePanelRulesChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiObjectRulePanelConfig {
-  /** Default: `""` */
-  className?: string;
   /** Default: `false` */
   disabled?: boolean;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**
@@ -193,11 +193,11 @@ export function stdUiObjectRulePanelObjectRulePanelOrbital(params: StdUiObjectRu
                   'render-ui',
                   'main',
                   {
-                    'object': '@entity',
+                    'onRulesChange': 'RULES_CHANGE',
                     'type': 'object-rule-panel',
                     'className': '@config.className',
+                    'object': '@entity',
                     'disabled': '@config.disabled',
-                    'onRulesChange': 'RULES_CHANGE',
                   },
                 ],
               ],
@@ -205,18 +205,18 @@ export function stdUiObjectRulePanelObjectRulePanelOrbital(params: StdUiObjectRu
           ],
         },
         'config': {
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
           'disabled': {
             'type': 'boolean',
             'default': false,
             'label': 'Disabled',
             'description': 'Whether editing is disabled',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
         },

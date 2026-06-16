@@ -39,12 +39,12 @@ export type StdUiResourceBarEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiResourceBarConfig {
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
   /** Default: `""` */
   className?: string;
-  /** Default: `[{"label":"Label"}]` */
+  /** Default: `[{"label":"Label","icon":"circle","value":1,"max":1}]` */
   resources?: EntityRow[];
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
 }
 
 /**

@@ -39,15 +39,15 @@ export type StdUiNavigationEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiNavigationConfig {
-  /** Default: `""` */
-  className?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
   error?: EntityRow;
+  /** Default: `[{"icon":"circle","badge":"Badge","isActive":false,"subMenu":[],"href":"Href","id":"Id","disabled":false,"label":"Label"}]` */
+  items?: EntityRow[];
   /** Default: `"horizontal"` */
   orientation?: 'horizontal' | 'vertical';
-  /** Default: `[{"id":"Id","label":"Label"}]` */
-  items?: EntityRow[];
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

@@ -39,14 +39,14 @@ export type StdUiBookNavBarEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiBookNavBarConfig {
-  /** Default: `0` */
-  totalPages?: number;
   /** Default: `""` */
   className?: string;
-  /** Default: `"Chapter Title"` */
-  chapterTitle?: string;
   /** Default: `"rtl"` */
   direction?: 'rtl' | 'ltr';
+  /** Default: `0` */
+  totalPages?: number;
+  /** Default: `"Chapter Title"` */
+  chapterTitle?: string;
   /** Default: `0` */
   currentPage?: number;
 }
@@ -152,11 +152,11 @@ export function stdUiBookNavBarBookNavBarOrbital(params: StdUiBookNavBarBookNavB
                   'render-ui',
                   'main',
                   {
-                    'chapterTitle': '@config.chapterTitle',
                     'currentPage': '@config.currentPage',
                     'totalPages': '@config.totalPages',
-                    'className': '@config.className',
+                    'chapterTitle': '@config.chapterTitle',
                     'direction': '@config.direction',
+                    'className': '@config.className',
                     'type': 'book-nav-bar',
                   },
                 ],
@@ -165,25 +165,11 @@ export function stdUiBookNavBarBookNavBarOrbital(params: StdUiBookNavBarBookNavB
           ],
         },
         'config': {
-          'totalPages': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Total Pages',
-            'description': 'totalPages prop',
-            'tier': 'presentation',
-          },
           'className': {
             'type': 'string',
             'default': '',
             'label': 'Class Name',
             'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'chapterTitle': {
-            'type': 'string',
-            'default': 'Chapter Title',
-            'label': 'Chapter Title',
-            'description': 'chapterTitle prop',
             'tier': 'presentation',
           },
           'direction': {
@@ -196,6 +182,20 @@ export function stdUiBookNavBarBookNavBarOrbital(params: StdUiBookNavBarBookNavB
               'rtl',
               'ltr',
             ],
+          },
+          'totalPages': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Total Pages',
+            'description': 'totalPages prop',
+            'tier': 'presentation',
+          },
+          'chapterTitle': {
+            'type': 'string',
+            'default': 'Chapter Title',
+            'label': 'Chapter Title',
+            'description': 'chapterTitle prop',
+            'tier': 'presentation',
           },
           'currentPage': {
             'type': 'number',

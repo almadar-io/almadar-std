@@ -223,20 +223,20 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "map-view",
+                      "markers": "@config.markers",
+                      "showClickedPin": "@config.showClickedPin",
+                      "className": "@config.className",
                       "zoom": "@config.zoom",
-                      "routes": "@config.routes",
-                      "onMapClick": "MAP_CLICK",
                       "onMarkerClick": "MARKER_CLICK",
                       "height": "@config.height",
-                      "showClickedPin": "@config.showClickedPin",
-                      "type": "map-view",
-                      "markerClickEvent": "MARKER_CLICK",
                       "mapClickEvent": "MAP_CLICK",
-                      "className": "@config.className",
                       "showAttribution": "@config.showAttribution",
-                      "markers": "@config.markers",
+                      "onMapClick": "MAP_CLICK",
+                      "markerClickEvent": "MARKER_CLICK",
+                      "centerLng": "@config.centerLng",
                       "centerLat": "@config.centerLat",
-                      "centerLng": "@config.centerLng"
+                      "routes": "@config.routes"
                     }
                   ]
                 ]
@@ -251,53 +251,30 @@
               "description": "Map center latitude",
               "tier": "presentation"
             },
-            "zoom": {
-              "type": "number",
-              "default": 13.0,
-              "label": "Zoom",
-              "description": "Zoom level (1-18, default 13)",
-              "tier": "presentation"
-            },
-            "centerLng": {
-              "type": "number",
-              "default": -0.09,
-              "label": "Center Lng",
-              "description": "Map center longitude",
-              "tier": "presentation"
-            },
-            "height": {
-              "type": "string",
-              "default": "400px",
-              "label": "Height",
-              "description": "Height of the map container (default '400px')",
-              "tier": "presentation"
-            },
             "markers": {
               "type": "[MapViewMarkersItem]",
-              "default": [],
+              "default": [
+                {
+                  "lat": 1.0,
+                  "label": "Label",
+                  "id": "Id",
+                  "category": "Category",
+                  "lng": 1.0
+                }
+              ],
               "label": "Markers",
               "description": "Array of markers to display",
               "tier": "presentation",
               "items": {
                 "type": "object",
                 "properties": {
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  "lng": {
-                    "name": "lng",
-                    "type": "number",
-                    "required": true
-                  },
-                  "label": {
-                    "name": "label",
+                  "category": {
+                    "name": "category",
                     "type": "string",
                     "required": false
                   },
-                  "category": {
-                    "name": "category",
+                  "label": {
+                    "name": "label",
                     "type": "string",
                     "required": false
                   },
@@ -305,13 +282,38 @@
                     "name": "lat",
                     "type": "number",
                     "required": true
+                  },
+                  "lng": {
+                    "name": "lng",
+                    "type": "number",
+                    "required": true
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
                   }
                 }
               }
             },
             "routes": {
               "type": "[MapViewRoutesItem]",
-              "default": [],
+              "default": [
+                {
+                  "label": "Label",
+                  "dashArray": "Dash Array",
+                  "weight": 1.0,
+                  "id": "Id",
+                  "waypoints": [
+                    {
+                      "lat": 1.0,
+                      "lng": 1.0
+                    }
+                  ],
+                  "opacity": 1.0,
+                  "color": "Color"
+                }
+              ],
               "label": "Routes",
               "description": "Routes (polylines with optional popups) drawn over the tile layer",
               "tier": "presentation",
@@ -322,6 +324,21 @@
                     "name": "id",
                     "type": "string",
                     "required": true
+                  },
+                  "opacity": {
+                    "name": "opacity",
+                    "type": "number",
+                    "required": false
+                  },
+                  "color": {
+                    "name": "color",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
                   },
                   "waypoints": {
                     "name": "waypoints",
@@ -343,23 +360,8 @@
                       }
                     }
                   },
-                  "opacity": {
-                    "name": "opacity",
-                    "type": "number",
-                    "required": false
-                  },
                   "dashArray": {
                     "name": "dashArray",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "color": {
-                    "name": "color",
                     "type": "string",
                     "required": false
                   },
@@ -371,11 +373,32 @@
                 }
               }
             },
+            "centerLng": {
+              "type": "number",
+              "default": -0.09,
+              "label": "Center Lng",
+              "description": "Map center longitude",
+              "tier": "presentation"
+            },
             "className": {
               "type": "string",
               "default": "",
               "label": "Class Name",
               "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "zoom": {
+              "type": "number",
+              "default": 13.0,
+              "label": "Zoom",
+              "description": "Zoom level (1-18, default 13)",
+              "tier": "presentation"
+            },
+            "height": {
+              "type": "string",
+              "default": "400px",
+              "label": "Height",
+              "description": "Height of the map container (default '400px')",
               "tier": "presentation"
             },
             "showAttribution": {

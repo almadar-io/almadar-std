@@ -53,40 +53,40 @@ export interface StdUiEntityListViewPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiEntityListConfig {
-  /** Default: `0` */
-  totalCount?: number;
-  /** Default: `"asc"` */
-  sortDirection?: 'asc' | 'desc';
-  /** Default: `0` */
-  pageSize?: number;
-  activeFilters?: unknown;
-  /** Default: `[{"key":"Key","name":"Name","header":"Header","label":"Label"}]` */
-  fields?: EntityRow[];
   /** Default: `"Search Value"` */
   searchValue?: string;
-  /** Default: `false` */
-  showDividers?: boolean;
-  /** Default: `"Empty Message"` */
-  emptyMessage?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `[]` */
-  selectedIds?: string[];
-  /** Default: `"default"` */
-  variant?: 'default' | 'card';
-  /** Default: `"Sort By"` */
-  sortBy?: string;
   /** Default: `"Entity Type"` */
   entityType?: string;
   /** Default: `false` */
-  selectable?: boolean;
+  showDividers?: boolean;
+  /** Default: `[]` */
+  selectedIds?: string[];
+  /** Default: `0` */
+  pageProp?: number;
+  /** Default: `0` */
+  totalCount?: number;
+  activeFilters?: unknown;
   /** Default: `[]` */
   fieldNames?: string[];
+  /** Default: `"Sort By"` */
+  sortBy?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
   /** Default: `""` */
   className?: string;
   /** Default: `0` */
-  pageProp?: number;
+  pageSize?: number;
+  /** Default: `"Empty Message"` */
+  emptyMessage?: string;
+  /** Default: `[{"header":"Header","name":"Name","key":"Key","label":"Label"}]` */
+  fields?: EntityRow[];
   error?: EntityRow;
+  /** Default: `"default"` */
+  variant?: 'default' | 'card';
+  /** Default: `false` */
+  selectable?: boolean;
+  /** Default: `"asc"` */
+  sortDirection?: 'asc' | 'desc';
 }
 
 /**
@@ -245,38 +245,38 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
                   'render-ui',
                   'main',
                   {
-                    'error': '@config.error',
+                    'entityType': '@config.entityType',
+                    'type': 'entity-list',
                     'sortBy': '@config.sortBy',
                     'emptyMessage': '@config.emptyMessage',
+                    'page': '@config.pageProp',
+                    'className': '@config.className',
                     'selectable': '@config.selectable',
-                    'children': [
-                      {
-                        'content': 'Sample content',
-                        'type': 'typography',
-                      },
-                    ],
+                    'showDividers': '@config.showDividers',
+                    'isLoading': '@config.isLoading',
+                    'error': '@config.error',
+                    'activeFilters': '@config.activeFilters',
+                    'sortDirection': '@config.sortDirection',
+                    'selectedIds': '@config.selectedIds',
+                    'searchValue': '@config.searchValue',
+                    'pageSize': '@config.pageSize',
+                    'fields': '@config.fields',
+                    'entity': '@entity',
+                    'totalCount': '@config.totalCount',
                     'itemActions': [
                       {
                         'label': 'View',
                         'event': 'VIEW',
                       },
                     ],
-                    'type': 'entity-list',
+                    'children': [
+                      {
+                        'type': 'typography',
+                        'content': 'Sample content',
+                      },
+                    ],
                     'variant': '@config.variant',
-                    'searchValue': '@config.searchValue',
-                    'isLoading': '@config.isLoading',
-                    'entity': '@entity',
-                    'activeFilters': '@config.activeFilters',
-                    'className': '@config.className',
-                    'sortDirection': '@config.sortDirection',
-                    'fields': '@config.fields',
-                    'entityType': '@config.entityType',
-                    'page': '@config.pageProp',
-                    'pageSize': '@config.pageSize',
-                    'showDividers': '@config.showDividers',
                     'fieldNames': '@config.fieldNames',
-                    'selectedIds': '@config.selectedIds',
-                    'totalCount': '@config.totalCount',
                   },
                 ],
               ],
@@ -296,76 +296,6 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
           ],
         },
         'config': {
-          'totalCount': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Total Count',
-            'description': 'Total number of items',
-            'tier': 'presentation',
-          },
-          'sortDirection': {
-            'type': 'string',
-            'default': 'asc',
-            'label': 'Sort Direction',
-            'description': 'Current sort direction',
-            'tier': 'presentation',
-            'values': [
-              'asc',
-              'desc',
-            ],
-          },
-          'pageSize': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page Size',
-            'description': 'Number of items per page',
-            'tier': 'presentation',
-          },
-          'activeFilters': {
-            'type': 'json',
-            'label': 'Active Filters',
-            'description': 'Active filters',
-            'tier': 'presentation',
-          },
-          'fields': {
-            'type': '[EntityListFieldsItem]',
-            'default': [
-              {
-                'key': 'Key',
-                'name': 'Name',
-                'header': 'Header',
-                'label': 'Label',
-              },
-            ],
-            'label': 'Fields',
-            'description': 'Fields to display - accepts string[] or {key, header}[] for unified interface',
-            'tier': 'presentation',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'key': {
-                  'name': 'key',
-                  'type': 'string',
-                  'required': false,
-                },
-                'header': {
-                  'name': 'header',
-                  'type': 'string',
-                  'required': false,
-                },
-                'name': {
-                  'name': 'name',
-                  'type': 'string',
-                  'required': false,
-                },
-                'label': {
-                  'name': 'label',
-                  'type': 'string',
-                  'required': false,
-                },
-              },
-            },
-          },
           'searchValue': {
             'type': 'string',
             'default': 'Search Value',
@@ -373,25 +303,18 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
             'description': 'Current search query value',
             'tier': 'presentation',
           },
+          'entityType': {
+            'type': 'string',
+            'default': 'Entity Type',
+            'label': 'Entity Type',
+            'description': 'Entity type name for display',
+            'tier': 'presentation',
+          },
           'showDividers': {
             'type': 'boolean',
             'default': false,
             'label': 'Show Dividers',
             'description': 'showDividers prop',
-            'tier': 'presentation',
-          },
-          'emptyMessage': {
-            'type': 'string',
-            'default': 'Empty Message',
-            'label': 'Empty Message',
-            'description': 'emptyMessage prop',
-            'tier': 'presentation',
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
             'tier': 'presentation',
           },
           'selectedIds': {
@@ -402,6 +325,139 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
             'tier': 'presentation',
             'items': {
               'type': 'string',
+            },
+          },
+          'pageProp': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page',
+            'description': 'Current page number',
+            'synonyms': 'page',
+            'tier': 'presentation',
+          },
+          'totalCount': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Total Count',
+            'description': 'Total number of items',
+            'tier': 'presentation',
+          },
+          'activeFilters': {
+            'type': 'json',
+            'label': 'Active Filters',
+            'description': 'Active filters',
+            'tier': 'presentation',
+          },
+          'fieldNames': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Field Names',
+            'description': 'Alias for fields - backwards compatibility',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'sortBy': {
+            'type': 'string',
+            'default': 'Sort By',
+            'label': 'Sort By',
+            'description': 'Current sort field',
+            'tier': 'presentation',
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'pageSize': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page Size',
+            'description': 'Number of items per page',
+            'tier': 'presentation',
+          },
+          'emptyMessage': {
+            'type': 'string',
+            'default': 'Empty Message',
+            'label': 'Empty Message',
+            'description': 'emptyMessage prop',
+            'tier': 'presentation',
+          },
+          'fields': {
+            'type': '[EntityListFieldsItem]',
+            'default': [
+              {
+                'header': 'Header',
+                'name': 'Name',
+                'key': 'Key',
+                'label': 'Label',
+              },
+            ],
+            'label': 'Fields',
+            'description': 'Fields to display - accepts string[] or {key, header}[] for unified interface',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'name': {
+                  'name': 'name',
+                  'type': 'string',
+                  'required': false,
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': false,
+                },
+                'key': {
+                  'name': 'key',
+                  'type': 'string',
+                  'required': false,
+                },
+                'header': {
+                  'name': 'header',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'error': {
+            'type': 'EntityListError',
+            'label': 'Error',
+            'description': 'Error state (UiError)',
+            'tier': 'presentation',
+            'properties': {
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
             },
           },
           'variant': {
@@ -415,20 +471,6 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
               'card',
             ],
           },
-          'sortBy': {
-            'type': 'string',
-            'default': 'Sort By',
-            'label': 'Sort By',
-            'description': 'Current sort field',
-            'tier': 'presentation',
-          },
-          'entityType': {
-            'type': 'string',
-            'default': 'Entity Type',
-            'label': 'Entity Type',
-            'description': 'Entity type name for display',
-            'tier': 'presentation',
-          },
           'selectable': {
             'type': 'boolean',
             'default': false,
@@ -436,58 +478,16 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
             'description': 'selectable prop',
             'tier': 'presentation',
           },
-          'fieldNames': {
-            'type': '[string]',
-            'default': [],
-            'label': 'Field Names',
-            'description': 'Alias for fields - backwards compatibility',
-            'tier': 'presentation',
-            'items': {
-              'type': 'string',
-            },
-          },
-          'className': {
+          'sortDirection': {
             'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
+            'default': 'asc',
+            'label': 'Sort Direction',
+            'description': 'Current sort direction',
             'tier': 'presentation',
-          },
-          'pageProp': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page',
-            'description': 'Current page number',
-            'synonyms': 'page',
-            'tier': 'presentation',
-          },
-          'error': {
-            'type': 'EntityListError',
-            'label': 'Error',
-            'description': 'Error state (UiError)',
-            'tier': 'presentation',
-            'properties': {
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-            },
+            'values': [
+              'asc',
+              'desc',
+            ],
           },
         },
         'scope': 'instance',

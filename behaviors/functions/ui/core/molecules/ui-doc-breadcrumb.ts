@@ -39,7 +39,7 @@ export type StdUiDocBreadcrumbEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiDocBreadcrumbConfig {
-  /** Default: `[{"label":"Label"}]` */
+  /** Default: `[{"href":"Href","label":"Label"}]` */
   items?: EntityRow[];
   /** Default: `""` */
   className?: string;

@@ -67,31 +67,32 @@ export interface StdUiPlatformerCanvasStopPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiPlatformerCanvasConfig {
-  /** Default: `"Bg Color"` */
-  bgColor?: string;
-  /** Default: `[{"width":1,"x":1,"y":1,"height":1}]` */
-  platforms?: EntityRow[];
-  /** Default: `"Player Sprite"` */
-  playerSprite?: string;
-  /** Default: `{}` */
-  tileSprites?: unknown;
-  /** Default: `800` */
-  canvasWidth?: number;
-  /** Default: `"Background Image"` */
-  backgroundImage?: string;
   /** Default: `400` */
   canvasHeight?: number;
-  /** Default: `""` */
-  className?: string;
-  player?: EntityRow;
-  /** Default: `800` */
-  worldWidth?: number;
-  /** Default: `"Asset Base Url"` */
-  assetBaseUrl?: string;
   /** Default: `400` */
   worldHeight?: number;
   /** Default: `true` */
   followCamera?: boolean;
+  /** Default: `"Bg Color"` */
+  bgColor?: string;
+  /** Default: `{"vy":1,"width":1,"facingRight":false,"x":1,"grounded":false,"y":1,"vx":1,"height":1}` */
+  player?: EntityRow;
+  /** Default: `"Player Sprite"` */
+  playerSprite?: string;
+  /** Default: `"Background Image"` */
+  backgroundImage?: string;
+  /** Default: `"Asset Base Url"` */
+  assetBaseUrl?: string;
+  /** Default: `[{"x":1,"type":"ground","width":1,"y":1,"height":1}]` */
+  platforms?: EntityRow[];
+  /** Default: `800` */
+  worldWidth?: number;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `{}` */
+  tileSprites?: unknown;
+  /** Default: `800` */
+  canvasWidth?: number;
 }
 
 /**

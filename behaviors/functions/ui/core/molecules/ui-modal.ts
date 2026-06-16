@@ -53,25 +53,25 @@ export interface StdUiModalOpenPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiModalConfig {
-  /** Default: `true` */
-  swipeDownToClose?: boolean;
-  /** Default: `"centered-card"` */
-  look?: 'centered-card' | 'top-sheet' | 'side-drawer' | 'full-screen';
-  /** Default: `true` */
-  isOpen?: boolean;
-  /** Default: `true` */
-  showCloseButton?: boolean;
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
-  /** Default: `"Title"` */
-  title?: string;
-  /** Default: `true` */
-  closeOnOverlayClick?: boolean;
   /** Default: `""` */
   className?: string;
   /** Default: `true` */
-  closeOnEscape?: boolean;
+  showCloseButton?: boolean;
+  /** Default: `true` */
+  closeOnOverlayClick?: boolean;
   footer?: unknown;
+  /** Default: `true` */
+  swipeDownToClose?: boolean;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  /** Default: `"centered-card"` */
+  look?: 'centered-card' | 'top-sheet' | 'side-drawer' | 'full-screen';
+  /** Default: `true` */
+  closeOnEscape?: boolean;
+  /** Default: `"Title"` */
+  title?: string;
+  /** Default: `true` */
+  isOpen?: boolean;
 }
 
 /**

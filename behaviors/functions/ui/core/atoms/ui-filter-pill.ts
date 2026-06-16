@@ -55,15 +55,15 @@ export interface StdUiFilterPillClickPayload {
 export interface StdUiFilterPillConfig {
   /** Default: `true` */
   removable?: boolean;
-  icon?: unknown;
-  /** Default: `"Label"` */
-  label?: string;
-  /** Default: `"default"` */
-  variant?: 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'info' | 'neutral';
-  /** Default: `""` */
-  className?: string;
   /** Default: `"sm"` */
   size?: 'sm' | 'md' | 'lg';
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"Label"` */
+  label?: string;
+  icon?: unknown;
+  /** Default: `"default"` */
+  variant?: 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'info' | 'neutral';
 }
 
 /**

@@ -43,13 +43,12 @@ export interface StdUiTooltipConfig {
   showArrow?: boolean;
   /** Default: `"top"` */
   position?: 'top' | 'bottom' | 'left' | 'right';
-  /** Default: `""` */
-  className?: string;
-  content?: unknown;
   /** Default: `0` */
   hideDelay?: number;
   /** Default: `200` */
   delay?: number;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

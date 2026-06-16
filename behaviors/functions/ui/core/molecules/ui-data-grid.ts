@@ -30,7 +30,7 @@ const ALIAS = 'UiDataGrid';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiDataGridEventKey = 'INIT' | 'LOAD_MORE' | 'SELECTION';
+export type StdUiDataGridEventKey = 'INIT' | 'LOAD_MORE' | 'SELECTION' | 'VIEW';
 
 /**
  * Payload shape for the `SELECTION` event.
@@ -47,6 +47,13 @@ export interface StdUiDataGridLoadMorePayload {
 }
 
 /**
+ * Payload shape for the `VIEW` event.
+ */
+export interface StdUiDataGridViewPayload {
+  id?: string;
+}
+
+/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait
@@ -54,54 +61,54 @@ export interface StdUiDataGridLoadMorePayload {
  */
 export interface StdUiDataGridConfig {
   /** Default: `false` */
-  dndRoot?: boolean;
-  /** Default: `"Drop Event"` */
-  dropEvent?: string;
-  /** Default: `"Reorder Event"` */
-  reorderEvent?: string;
-  /** Default: `1` */
-  cols?: number;
-  /** Default: `"Image Field"` */
-  imageField?: string;
+  infiniteScroll?: boolean;
   /** Default: `"Drag Group"` */
   dragGroup?: string;
   /** Default: `false` */
   hasMore?: boolean;
-  /** Default: `[]` */
-  columns?: EntityRow[];
-  /** Default: `"dense"` */
-  look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
-  error?: EntityRow;
-  /** Default: `"Accepts"` */
-  accepts?: string;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `0` */
-  maxInlineActions?: number;
-  /** Default: `0` */
-  pageSize?: number;
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `false` */
-  scrollX?: boolean;
-  /** Default: `false` */
-  sortable?: boolean;
-  /** Default: `"Dnd Item Id Field"` */
-  dndItemIdField?: string;
-  /** Default: `false` */
-  selectable?: boolean;
-  /** Default: `false` */
-  infiniteScroll?: boolean;
-  /** Default: `"Position Event"` */
-  positionEvent?: string;
-  /** Default: `"md"` */
-  gap?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
-  /** Default: `[]` */
-  fields?: EntityRow[];
-  /** Default: `280` */
-  minCardWidth?: number;
   /** Default: `[]` */
   itemActions?: EntityRow[];
+  /** Default: `"Reorder Event"` */
+  reorderEvent?: string;
+  /** Default: `[{"name":"Name","label":"Label","format":"date","icon":"circle","variant":"h3"}]` */
+  fields?: EntityRow[];
+  /** Default: `1` */
+  cols?: number;
+  /** Default: `"Drop Event"` */
+  dropEvent?: string;
+  /** Default: `false` */
+  dndRoot?: boolean;
+  /** Default: `280` */
+  minCardWidth?: number;
+  /** Default: `false` */
+  sortable?: boolean;
+  error?: EntityRow;
+  /** Default: `0` */
+  pageSize?: number;
+  /** Default: `"dense"` */
+  look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
+  /** Default: `"Position Event"` */
+  positionEvent?: string;
+  /** Default: `false` */
+  selectable?: boolean;
+  /** Default: `"md"` */
+  gap?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
+  /** Default: `"Accepts"` */
+  accepts?: string;
+  /** Default: `"Dnd Item Id Field"` */
+  dndItemIdField?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `[{"icon":"circle","variant":"h3","name":"Name","label":"Label","format":"date"}]` */
+  columns?: EntityRow[];
+  /** Default: `"Image Field"` */
+  imageField?: string;
+  /** Default: `0` */
+  maxInlineActions?: number;
+  /** Default: `false` */
+  scrollX?: boolean;
 }
 
 /**

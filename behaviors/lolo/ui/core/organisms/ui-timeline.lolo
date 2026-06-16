@@ -41,10 +41,20 @@ orbital TimelineOrbital {
           title: @config.title
           items: @config.items
           fields: @config.fields
-          itemActions: @config.itemActions
           look: @config.look
+          itemActions: [{ label: "View", event: VIEW }]
           type: timeline
         })
+      VIEW -> idle
+        (emit VIEW {})
+    }
+
+    emits {
+      VIEW -> external {
+        id : string
+      }
+        @description "User opened a record from the list."
+        @tier "essential"
     }
 
     config {
@@ -64,7 +74,7 @@ orbital TimelineOrbital {
         @label "Title"
         @description "Timeline title"
         @tier "presentation"
-      items : [TimelineItemsItem] = [{ id: "Id", title: "Title" }]
+      items : [TimelineItemsItem] = [{ id: "Id", title: "Title", description: "Description", date: "Date", status: complete, icon: "circle", tags: ["Item"] }]
         @label "Items"
         @description "Timeline items"
         @tier "presentation"
@@ -72,7 +82,7 @@ orbital TimelineOrbital {
         @label "Fields"
         @description "Fields to display"
         @tier "presentation"
-      itemActions : [TimelineItemActionsItem] = []
+      itemActions : [TimelineItemActionsItem] = [{ label: "Label", navigatesTo: "Navigates To", variant: primary }]
         @label "Item Actions"
         @description "Actions per item"
         @tier "presentation"

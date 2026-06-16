@@ -39,10 +39,10 @@ export type StdUiVariablePanelEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiVariablePanelConfig {
-  /** Default: `""` */
-  className?: string;
   /** Default: `"Entity Name"` */
   entityName?: string;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**
@@ -162,18 +162,18 @@ export function stdUiVariablePanelVariablePanelOrbital(params: StdUiVariablePane
           ],
         },
         'config': {
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
           'entityName': {
             'type': 'string',
             'default': 'Entity Name',
             'label': 'Entity Name',
             'description': 'Entity name',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
         },

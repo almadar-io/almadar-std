@@ -39,19 +39,17 @@ export type StdUiMasterDetailLayoutEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiMasterDetailLayoutConfig {
-  detail?: unknown;
-  /** Default: `false` */
-  hasSelection?: boolean;
-  /** Default: `"Detail Class Name"` */
-  detailClassName?: string;
-  emptyDetail?: unknown;
   /** Default: `""` */
   className?: string;
   /** Default: `"350px"` */
   masterWidth?: string;
   /** Default: `"Master Class Name"` */
   masterClassName?: string;
-  master?: unknown;
+  /** Default: `"Detail Class Name"` */
+  detailClassName?: string;
+  emptyDetail?: unknown;
+  /** Default: `false` */
+  hasSelection?: boolean;
 }
 
 /**
@@ -155,15 +153,25 @@ export function stdUiMasterDetailLayoutMasterDetailLayoutOrbital(params: StdUiMa
                   'render-ui',
                   'main',
                   {
-                    'master': '@config.master',
                     'hasSelection': '@config.hasSelection',
-                    'type': 'master-detail-layout',
                     'detailClassName': '@config.detailClassName',
-                    'detail': '@config.detail',
                     'emptyDetail': '@config.emptyDetail',
-                    'masterWidth': '@config.masterWidth',
-                    'className': '@config.className',
+                    'type': 'master-detail-layout',
+                    'detail': [
+                      {
+                        'type': 'typography',
+                        'content': 'Detail',
+                      },
+                    ],
                     'masterClassName': '@config.masterClassName',
+                    'className': '@config.className',
+                    'master': [
+                      {
+                        'content': 'Master',
+                        'type': 'typography',
+                      },
+                    ],
+                    'masterWidth': '@config.masterWidth',
                   },
                 ],
               ],
@@ -171,32 +179,6 @@ export function stdUiMasterDetailLayoutMasterDetailLayoutOrbital(params: StdUiMa
           ],
         },
         'config': {
-          'detail': {
-            'type': 'node',
-            'label': 'Detail',
-            'description': 'Detail panel content',
-            'tier': 'presentation',
-          },
-          'hasSelection': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Has Selection',
-            'description': 'Whether an item is currently selected',
-            'tier': 'presentation',
-          },
-          'detailClassName': {
-            'type': 'string',
-            'default': 'Detail Class Name',
-            'label': 'Detail Class Name',
-            'description': 'Class for detail pane',
-            'tier': 'presentation',
-          },
-          'emptyDetail': {
-            'type': 'node',
-            'label': 'Empty Detail',
-            'description': 'Content shown when nothing is selected',
-            'tier': 'presentation',
-          },
           'className': {
             'type': 'string',
             'default': '',
@@ -218,10 +200,24 @@ export function stdUiMasterDetailLayoutMasterDetailLayoutOrbital(params: StdUiMa
             'description': 'Class for master pane',
             'tier': 'presentation',
           },
-          'master': {
+          'detailClassName': {
+            'type': 'string',
+            'default': 'Detail Class Name',
+            'label': 'Detail Class Name',
+            'description': 'Class for detail pane',
+            'tier': 'presentation',
+          },
+          'emptyDetail': {
             'type': 'node',
-            'label': 'Master',
-            'description': 'Master panel content (usually a list)',
+            'label': 'Empty Detail',
+            'description': 'Content shown when nothing is selected',
+            'tier': 'presentation',
+          },
+          'hasSelection': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Has Selection',
+            'description': 'Whether an item is currently selected',
             'tier': 'presentation',
           },
         },

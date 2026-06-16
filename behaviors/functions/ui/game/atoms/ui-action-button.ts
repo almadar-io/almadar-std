@@ -46,21 +46,21 @@ export interface StdUiActionButtonClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiActionButtonConfig {
-  /** Default: `"primary"` */
-  variant?: 'primary' | 'secondary' | 'danger';
-  icon?: unknown;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
-  /** Default: `"Label"` */
-  label?: string;
   /** Default: `false` */
   disabled?: boolean;
   /** Default: `0` */
   cooldown?: number;
-  /** Default: `"Hotkey"` */
-  hotkey?: string;
+  icon?: unknown;
+  /** Default: `"Label"` */
+  label?: string;
+  /** Default: `"primary"` */
+  variant?: 'primary' | 'secondary' | 'danger';
   /** Default: `""` */
   className?: string;
+  /** Default: `"Hotkey"` */
+  hotkey?: string;
 }
 
 /**

@@ -47,26 +47,26 @@ export interface StdUiSimulatorBoardCompletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiSimulatorBoardConfig {
+  /** Default: `"Search Value"` */
+  searchValue?: string;
+  /** Default: `""` */
+  className?: string;
+  error?: EntityRow;
   /** Default: `"Sort By"` */
   sortBy?: string;
-  /** Default: `[]` */
-  selectedIds?: string[];
-  /** Default: `"asc"` */
-  sortDirection?: 'asc' | 'desc';
   /** Default: `0` */
   pageSize?: number;
   /** Default: `0` */
-  pageProp?: number;
-  /** Default: `0` */
   totalCount?: number;
-  /** Default: `"Search Value"` */
-  searchValue?: string;
-  activeFilters?: unknown;
-  /** Default: `""` */
-  className?: string;
+  /** Default: `"asc"` */
+  sortDirection?: 'asc' | 'desc';
   /** Default: `false` */
   isLoading?: boolean;
-  error?: EntityRow;
+  /** Default: `0` */
+  pageProp?: number;
+  activeFilters?: unknown;
+  /** Default: `[]` */
+  selectedIds?: string[];
 }
 
 /**
@@ -213,20 +213,20 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
                   'render-ui',
                   'main',
                   {
-                    'isLoading': '@config.isLoading',
-                    'sortDirection': '@config.sortDirection',
-                    'totalCount': '@config.totalCount',
-                    'className': '@config.className',
                     'sortBy': '@config.sortBy',
-                    'page': '@config.pageProp',
-                    'pageSize': '@config.pageSize',
-                    'completeEvent': 'COMPLETE',
-                    'error': '@config.error',
-                    'selectedIds': '@config.selectedIds',
+                    'className': '@config.className',
+                    'sortDirection': '@config.sortDirection',
+                    'activeFilters': '@config.activeFilters',
                     'entity': '@entity',
                     'type': 'simulator-board',
-                    'activeFilters': '@config.activeFilters',
+                    'totalCount': '@config.totalCount',
+                    'selectedIds': '@config.selectedIds',
+                    'isLoading': '@config.isLoading',
                     'searchValue': '@config.searchValue',
+                    'pageSize': '@config.pageSize',
+                    'error': '@config.error',
+                    'completeEvent': 'COMPLETE',
+                    'page': '@config.pageProp',
                   },
                 ],
               ],
@@ -234,67 +234,11 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
           ],
         },
         'config': {
-          'sortBy': {
-            'type': 'string',
-            'default': 'Sort By',
-            'label': 'Sort By',
-            'description': 'Current sort field',
-            'tier': 'presentation',
-          },
-          'selectedIds': {
-            'type': '[string]',
-            'default': [],
-            'label': 'Selected Ids',
-            'description': 'Currently selected item IDs',
-            'tier': 'presentation',
-            'items': {
-              'type': 'string',
-            },
-          },
-          'sortDirection': {
-            'type': 'string',
-            'default': 'asc',
-            'label': 'Sort Direction',
-            'description': 'Current sort direction',
-            'tier': 'presentation',
-            'values': [
-              'asc',
-              'desc',
-            ],
-          },
-          'pageSize': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page Size',
-            'description': 'Number of items per page',
-            'tier': 'presentation',
-          },
-          'pageProp': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page',
-            'description': 'Current page number',
-            'synonyms': 'page',
-            'tier': 'presentation',
-          },
-          'totalCount': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Total Count',
-            'description': 'Total number of items',
-            'tier': 'presentation',
-          },
           'searchValue': {
             'type': 'string',
             'default': 'Search Value',
             'label': 'Search Value',
             'description': 'Current search query value',
-            'tier': 'presentation',
-          },
-          'activeFilters': {
-            'type': 'json',
-            'label': 'Active Filters',
-            'description': 'Active filters',
             'tier': 'presentation',
           },
           'className': {
@@ -304,26 +248,19 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
             'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
-            'tier': 'presentation',
-          },
           'error': {
             'type': 'SimulatorBoardError',
             'label': 'Error',
             'description': 'Error state (UiError)',
             'tier': 'presentation',
             'properties': {
-              'stack': {
-                'name': 'stack',
+              'name': {
+                'name': 'name',
                 'type': 'string',
                 'required': false,
               },
-              'name': {
-                'name': 'name',
+              'stack': {
+                'name': 'stack',
                 'type': 'string',
                 'required': false,
               },
@@ -337,6 +274,69 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
                 'type': 'string',
                 'required': false,
               },
+            },
+          },
+          'sortBy': {
+            'type': 'string',
+            'default': 'Sort By',
+            'label': 'Sort By',
+            'description': 'Current sort field',
+            'tier': 'presentation',
+          },
+          'pageSize': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page Size',
+            'description': 'Number of items per page',
+            'tier': 'presentation',
+          },
+          'totalCount': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Total Count',
+            'description': 'Total number of items',
+            'tier': 'presentation',
+          },
+          'sortDirection': {
+            'type': 'string',
+            'default': 'asc',
+            'label': 'Sort Direction',
+            'description': 'Current sort direction',
+            'tier': 'presentation',
+            'values': [
+              'asc',
+              'desc',
+            ],
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
+          'pageProp': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page',
+            'description': 'Current page number',
+            'synonyms': 'page',
+            'tier': 'presentation',
+          },
+          'activeFilters': {
+            'type': 'json',
+            'label': 'Active Filters',
+            'description': 'Active filters',
+            'tier': 'presentation',
+          },
+          'selectedIds': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Selected Ids',
+            'description': 'Currently selected item IDs',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
             },
           },
         },

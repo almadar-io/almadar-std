@@ -41,8 +41,8 @@ export type StdUiGradientDividerEventKey = 'INIT';
 export interface StdUiGradientDividerConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `"Color"` */
-  color?: string;
+  /** Default: `"primary"` */
+  color?: 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'muted';
 }
 
 /**

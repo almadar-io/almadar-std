@@ -46,16 +46,16 @@ export interface StdUiSwitchChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiSwitchConfig {
-  /** Default: `"Name"` */
-  name?: string;
-  /** Default: `"Label"` */
-  label?: string;
-  /** Default: `false` */
-  checked?: boolean;
-  /** Default: `""` */
-  className?: string;
   /** Default: `false` */
   defaultChecked?: boolean;
+  /** Default: `"Label"` */
+  label?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"Name"` */
+  name?: string;
+  /** Default: `false` */
+  checked?: boolean;
   /** Default: `false` */
   disabled?: boolean;
 }

@@ -39,20 +39,20 @@ export type StdUiActionPaletteEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiActionPaletteConfig {
-  /** Default: `true` */
-  allowDuplicates?: boolean;
-  /** Default: `[{"category":"Category","id":"Id","name":"Name"}]` */
-  actions?: EntityRow[];
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
   /** Default: `"Label"` */
   label?: string;
-  /** Default: `{}` */
-  categoryColors?: unknown;
   /** Default: `""` */
   className?: string;
+  /** Default: `[{"iconUrl":"Icon Url","stateMachine":{"description":"Description","currentState":"Current State","name":"Name","states":["Item"],"transitions":[{"to":"To","event":"Event","guardHint":"Guard Hint","from":"From"}]},"category":"Category","name":"Name","description":"Description","id":"Id","iconEmoji":"Icon Emoji"}]` */
+  actions?: EntityRow[];
   /** Default: `[]` */
   usedActionIds?: string[];
+  /** Default: `true` */
+  allowDuplicates?: boolean;
+  /** Default: `{}` */
+  categoryColors?: unknown;
 }
 
 /**
@@ -156,13 +156,13 @@ export function stdUiActionPaletteActionPaletteOrbital(params: StdUiActionPalett
                   'render-ui',
                   'main',
                   {
-                    'type': 'action-palette',
-                    'label': '@config.label',
-                    'allowDuplicates': '@config.allowDuplicates',
-                    'className': '@config.className',
-                    'size': '@config.size',
                     'actions': '@config.actions',
+                    'allowDuplicates': '@config.allowDuplicates',
                     'usedActionIds': '@config.usedActionIds',
+                    'size': '@config.size',
+                    'label': '@config.label',
+                    'className': '@config.className',
+                    'type': 'action-palette',
                     'categoryColors': '@config.categoryColors',
                   },
                 ],
@@ -171,121 +171,6 @@ export function stdUiActionPaletteActionPaletteOrbital(params: StdUiActionPalett
           ],
         },
         'config': {
-          'allowDuplicates': {
-            'type': 'boolean',
-            'default': true,
-            'label': 'Allow Duplicates',
-            'description': 'Whether each action can be used multiple times',
-            'tier': 'presentation',
-          },
-          'actions': {
-            'type': '[ActionPaletteActionsItem]',
-            'default': [
-              {
-                'category': 'Category',
-                'id': 'Id',
-                'name': 'Name',
-              },
-            ],
-            'label': 'Actions',
-            'description': 'Available actions',
-            'tier': 'presentation',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'iconEmoji': {
-                  'name': 'iconEmoji',
-                  'type': 'string',
-                  'required': false,
-                },
-                'category': {
-                  'name': 'category',
-                  'type': 'string',
-                  'required': true,
-                },
-                'description': {
-                  'name': 'description',
-                  'type': 'string',
-                  'required': false,
-                },
-                'id': {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': true,
-                },
-                'name': {
-                  'name': 'name',
-                  'type': 'string',
-                  'required': true,
-                },
-                'iconUrl': {
-                  'name': 'iconUrl',
-                  'type': 'string',
-                  'required': false,
-                },
-                'stateMachine': {
-                  'name': 'stateMachine',
-                  'type': 'object',
-                  'required': false,
-                  'properties': {
-                    'transitions': {
-                      'name': 'transitions',
-                      'type': 'array',
-                      'required': true,
-                      'items': {
-                        'type': 'object',
-                        'properties': {
-                          'from': {
-                            'name': 'from',
-                            'type': 'string',
-                            'required': true,
-                          },
-                          'to': {
-                            'name': 'to',
-                            'type': 'string',
-                            'required': true,
-                          },
-                          'guardHint': {
-                            'name': 'guardHint',
-                            'type': 'string',
-                            'required': false,
-                          },
-                          'event': {
-                            'name': 'event',
-                            'type': 'string',
-                            'required': true,
-                          },
-                        },
-                      },
-                    },
-                    'name': {
-                      'name': 'name',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'currentState': {
-                      'name': 'currentState',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'description': {
-                      'name': 'description',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'states': {
-                      'name': 'states',
-                      'type': 'array',
-                      'required': true,
-                      'items': {
-                        'type': 'string',
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
           'size': {
             'type': 'string',
             'default': 'md',
@@ -303,6 +188,157 @@ export function stdUiActionPaletteActionPaletteOrbital(params: StdUiActionPalett
             'default': 'Label',
             'label': 'Label',
             'description': 'Label above the palette',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'actions': {
+            'type': '[ActionPaletteActionsItem]',
+            'default': [
+              {
+                'iconUrl': 'Icon Url',
+                'stateMachine': {
+                  'description': 'Description',
+                  'currentState': 'Current State',
+                  'name': 'Name',
+                  'states': [
+                    'Item',
+                  ],
+                  'transitions': [
+                    {
+                      'to': 'To',
+                      'event': 'Event',
+                      'guardHint': 'Guard Hint',
+                      'from': 'From',
+                    },
+                  ],
+                },
+                'category': 'Category',
+                'name': 'Name',
+                'description': 'Description',
+                'id': 'Id',
+                'iconEmoji': 'Icon Emoji',
+              },
+            ],
+            'label': 'Actions',
+            'description': 'Available actions',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'description': {
+                  'name': 'description',
+                  'type': 'string',
+                  'required': false,
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                'iconEmoji': {
+                  'name': 'iconEmoji',
+                  'type': 'string',
+                  'required': false,
+                },
+                'iconUrl': {
+                  'name': 'iconUrl',
+                  'type': 'string',
+                  'required': false,
+                },
+                'stateMachine': {
+                  'name': 'stateMachine',
+                  'type': 'object',
+                  'required': false,
+                  'properties': {
+                    'description': {
+                      'name': 'description',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'currentState': {
+                      'name': 'currentState',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'states': {
+                      'name': 'states',
+                      'type': 'array',
+                      'required': true,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
+                    'transitions': {
+                      'name': 'transitions',
+                      'type': 'array',
+                      'required': true,
+                      'items': {
+                        'type': 'object',
+                        'properties': {
+                          'from': {
+                            'name': 'from',
+                            'type': 'string',
+                            'required': true,
+                          },
+                          'to': {
+                            'name': 'to',
+                            'type': 'string',
+                            'required': true,
+                          },
+                          'event': {
+                            'name': 'event',
+                            'type': 'string',
+                            'required': true,
+                          },
+                          'guardHint': {
+                            'name': 'guardHint',
+                            'type': 'string',
+                            'required': false,
+                          },
+                        },
+                      },
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  },
+                },
+                'name': {
+                  'name': 'name',
+                  'type': 'string',
+                  'required': true,
+                },
+                'category': {
+                  'name': 'category',
+                  'type': 'string',
+                  'required': true,
+                },
+              },
+            },
+          },
+          'usedActionIds': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Used Action Ids',
+            'description': 'IDs of actions that are already used (shown as disabled)',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'allowDuplicates': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Allow Duplicates',
+            'description': 'Whether each action can be used multiple times',
             'tier': 'presentation',
           },
           'categoryColors': {
@@ -325,23 +361,6 @@ export function stdUiActionPaletteActionPaletteOrbital(params: StdUiActionPalett
                   'required': true,
                 },
               },
-            },
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'usedActionIds': {
-            'type': '[string]',
-            'default': [],
-            'label': 'Used Action Ids',
-            'description': 'IDs of actions that are already used (shown as disabled)',
-            'tier': 'presentation',
-            'items': {
-              'type': 'string',
             },
           },
         },

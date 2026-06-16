@@ -49,21 +49,21 @@
                     "render-ui",
                     "main",
                     {
-                      "segments": "@config.segments",
-                      "pageSize": "@config.pageSize",
-                      "error": "@config.error",
+                      "activeFilters": "@config.activeFilters",
+                      "sortBy": "@config.sortBy",
                       "isLoading": "@config.isLoading",
+                      "sortDirection": "@config.sortDirection",
+                      "totalCount": "@config.totalCount",
                       "content": "@config.content",
+                      "selectedIds": "@config.selectedIds",
+                      "searchValue": "@config.searchValue",
+                      "error": "@config.error",
+                      "page": "@config.pageProp",
                       "type": "content-renderer",
                       "className": "@config.className",
-                      "searchValue": "@config.searchValue",
-                      "page": "@config.pageProp",
-                      "sortBy": "@config.sortBy",
-                      "direction": "@config.direction",
-                      "sortDirection": "@config.sortDirection",
-                      "activeFilters": "@config.activeFilters",
-                      "totalCount": "@config.totalCount",
-                      "selectedIds": "@config.selectedIds"
+                      "pageSize": "@config.pageSize",
+                      "segments": "@config.segments",
+                      "direction": "@config.direction"
                     }
                   ]
                 ]
@@ -71,27 +71,6 @@
             ]
           },
           "config": {
-            "direction": {
-              "type": "string",
-              "default": "rtl",
-              "label": "Direction",
-              "description": "Text direction for markdown",
-              "tier": "presentation",
-              "values": [
-                "rtl",
-                "ltr"
-              ]
-            },
-            "segments": {
-              "type": "[json]",
-              "default": [],
-              "label": "Segments",
-              "description": "Pre-parsed segments (overrides content)",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
-            },
             "pageProp": {
               "type": "number",
               "default": 0.0,
@@ -107,18 +86,21 @@
               "description": "Current sort field",
               "tier": "presentation"
             },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state indicator",
-              "tier": "presentation"
+            "sortDirection": {
+              "type": "string",
+              "default": "asc",
+              "label": "Sort Direction",
+              "description": "Current sort direction",
+              "tier": "presentation",
+              "values": [
+                "asc",
+                "desc"
+              ]
             },
-            "totalCount": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Total Count",
-              "description": "Total number of items",
+            "activeFilters": {
+              "type": "json",
+              "label": "Active Filters",
+              "description": "Active filters",
               "tier": "presentation"
             },
             "selectedIds": {
@@ -131,6 +113,53 @@
                 "type": "string"
               }
             },
+            "segments": {
+              "type": "[ContentRendererSegmentsItem]",
+              "default": [
+                {
+                  "content": "Content",
+                  "type": "markdown"
+                }
+              ],
+              "label": "Segments",
+              "description": "Pre-parsed segments (overrides content)",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "name": "type",
+                    "type": "string",
+                    "required": true,
+                    "values": [
+                      "markdown",
+                      "code",
+                      "orbital",
+                      "quiz"
+                    ]
+                  },
+                  "content": {
+                    "name": "content",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "content": {
+              "type": "string",
+              "default": "Content",
+              "label": "Content",
+              "description": "Raw content string — auto-parsed into segments",
+              "tier": "presentation"
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
+              "tier": "presentation"
+            },
             "error": {
               "type": "ContentRendererError",
               "label": "Error",
@@ -139,6 +168,11 @@
               "properties": {
                 "name": {
                   "name": "name",
+                  "type": "string",
+                  "required": false
+                },
+                "code": {
+                  "name": "code",
                   "type": "string",
                   "required": false
                 },
@@ -151,11 +185,6 @@
                   "name": "message",
                   "type": "string",
                   "required": true
-                },
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
                 }
               }
             },
@@ -166,22 +195,19 @@
               "description": "Additional CSS classes",
               "tier": "presentation"
             },
-            "activeFilters": {
-              "type": "json",
-              "label": "Active Filters",
-              "description": "Active filters",
+            "pageSize": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Page Size",
+              "description": "Number of items per page",
               "tier": "presentation"
             },
-            "sortDirection": {
-              "type": "string",
-              "default": "asc",
-              "label": "Sort Direction",
-              "description": "Current sort direction",
-              "tier": "presentation",
-              "values": [
-                "asc",
-                "desc"
-              ]
+            "totalCount": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Total Count",
+              "description": "Total number of items",
+              "tier": "presentation"
             },
             "searchValue": {
               "type": "string",
@@ -190,19 +216,16 @@
               "description": "Current search query value",
               "tier": "presentation"
             },
-            "pageSize": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Page Size",
-              "description": "Number of items per page",
-              "tier": "presentation"
-            },
-            "content": {
+            "direction": {
               "type": "string",
-              "default": "Content",
-              "label": "Content",
-              "description": "Raw content string — auto-parsed into segments",
-              "tier": "presentation"
+              "default": "rtl",
+              "label": "Direction",
+              "description": "Text direction for markdown",
+              "tier": "presentation",
+              "values": [
+                "rtl",
+                "ltr"
+              ]
             }
           },
           "scope": "instance"

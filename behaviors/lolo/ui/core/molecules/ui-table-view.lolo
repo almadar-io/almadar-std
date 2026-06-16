@@ -62,7 +62,6 @@ orbital TableViewOrbital {
           entity: @entity
           columns: @config.columns
           fields: @config.fields
-          itemActions: @config.itemActions
           maxInlineActions: @config.maxInlineActions
           selectable: @config.selectable
           selectEvent: SELECT
@@ -77,8 +76,11 @@ orbital TableViewOrbital {
           groupBy: @config.groupBy
           pageSize: @config.pageSize
           look: @config.look
+          itemActions: [{ label: "View", event: VIEW }]
           type: table-view
         })
+      VIEW -> idle
+        (emit VIEW {})
     }
 
     emits {
@@ -91,6 +93,11 @@ orbital TableViewOrbital {
         id : string
       }
         @description "Event emitted on sortable-header click: UI:{sortEvent} with { column, direction }."
+        @tier "essential"
+      VIEW -> external {
+        id : string
+      }
+        @description "User opened a record from the list."
         @tier "essential"
     }
 
@@ -127,11 +134,11 @@ orbital TableViewOrbital {
         @label "Dnd Root"
         @description "Mark this container as the DnD root for its subtree — descendant zones share one DndContext (cross-container drag). Use on an outer container whose own items are not draggable."
         @tier "presentation"
-      columns : [TableViewColumnsItem] = [{ key: "Key" }]
+      columns : [TableViewColumnsItem] = [{ key: "Key", field: "Field", header: "Header", label: "Label", width: "Width", align: left, className: "Class Name", weight: normal, format: badge, icon: "circle", sortable: false }]
         @label "Columns"
         @description "Column definitions. The compiler emits `columns`; `fields` is the alias."
         @tier "presentation"
-      fields : [TableViewFieldsItem] = [{ key: "Key" }]
+      fields : [TableViewFieldsItem] = [{ key: "Key", field: "Field", header: "Header", label: "Label", width: "Width", align: left, className: "Class Name", weight: normal, format: badge, icon: "circle", sortable: false }]
         @label "Fields"
         @description "Alias for `columns`."
         @tier "presentation"

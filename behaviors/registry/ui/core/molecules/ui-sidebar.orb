@@ -137,23 +137,28 @@
                     "render-ui",
                     "main",
                     {
-                      "logoClickEvent": "LOGO_CLICK",
-                      "defaultCollapsed": "@config.defaultCollapsed",
-                      "logoSrc": "@config.logoSrc",
-                      "userSection": "@config.userSection",
                       "footerContent": "@config.footerContent",
-                      "showCloseButton": "@config.showCloseButton",
-                      "collapseChangeEvent": "COLLAPSE_CHANGE",
-                      "error": "@config.error",
-                      "brandName": "@config.brandName",
-                      "items": "@config.items",
-                      "className": "@config.className",
-                      "hideCollapseButton": "@config.hideCollapseButton",
-                      "closeEvent": "CLOSE",
-                      "collapsed": "@entity.collapsed",
+                      "logoClickEvent": "LOGO_CLICK",
                       "isLoading": "@config.isLoading",
-                      "logo": "@config.logo",
-                      "type": "sidebar"
+                      "collapseChangeEvent": "COLLAPSE_CHANGE",
+                      "type": "sidebar",
+                      "items": "@config.items",
+                      "showCloseButton": "@config.showCloseButton",
+                      "logoSrc": "@config.logoSrc",
+                      "className": "@config.className",
+                      "collapsed": "@entity.collapsed",
+                      "hideCollapseButton": "@config.hideCollapseButton",
+                      "error": "@config.error",
+                      "userSection": "@config.userSection",
+                      "defaultCollapsed": "@config.defaultCollapsed",
+                      "logo": [
+                        {
+                          "content": "Logo",
+                          "type": "typography"
+                        }
+                      ],
+                      "brandName": "@config.brandName",
+                      "closeEvent": "CLOSE"
                     }
                   ]
                 ]
@@ -172,23 +177,28 @@
                     "render-ui",
                     "main",
                     {
-                      "footerContent": "@config.footerContent",
-                      "closeEvent": "CLOSE",
-                      "defaultCollapsed": "@config.defaultCollapsed",
-                      "logo": "@config.logo",
-                      "brandName": "@config.brandName",
-                      "logoClickEvent": "LOGO_CLICK",
                       "error": "@config.error",
-                      "collapseChangeEvent": "COLLAPSE_CHANGE",
-                      "showCloseButton": "@config.showCloseButton",
+                      "className": "@config.className",
+                      "logo": [
+                        {
+                          "content": "Logo",
+                          "type": "typography"
+                        }
+                      ],
                       "userSection": "@config.userSection",
                       "logoSrc": "@config.logoSrc",
+                      "brandName": "@config.brandName",
+                      "items": "@config.items",
+                      "closeEvent": "CLOSE",
+                      "type": "sidebar",
+                      "collapseChangeEvent": "COLLAPSE_CHANGE",
+                      "footerContent": "@config.footerContent",
                       "collapsed": "@entity.collapsed",
+                      "defaultCollapsed": "@config.defaultCollapsed",
                       "isLoading": "@config.isLoading",
                       "hideCollapseButton": "@config.hideCollapseButton",
-                      "type": "sidebar",
-                      "className": "@config.className",
-                      "items": "@config.items"
+                      "showCloseButton": "@config.showCloseButton",
+                      "logoClickEvent": "LOGO_CLICK"
                     }
                   ]
                 ]
@@ -196,31 +206,90 @@
             ]
           },
           "config": {
-            "brandName": {
-              "type": "string",
-              "default": "KFlow",
-              "label": "Brand Name",
-              "description": "Brand/App name",
-              "tier": "presentation"
-            },
-            "showCloseButton": {
-              "type": "boolean",
-              "default": false,
-              "label": "Show Close Button",
-              "description": "Show a close button (for mobile)",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
+            "items": {
+              "type": "[SidebarItemsItem]",
+              "default": [
+                {
+                  "icon": "circle",
+                  "badge": "Badge",
+                  "active": false,
+                  "isActive": false,
+                  "subItems": [],
+                  "id": "Id",
+                  "label": "Label",
+                  "href": "Href"
+                }
+              ],
+              "label": "Items",
+              "description": "Navigation items",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "isActive": {
+                    "name": "isActive",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "subItems": {
+                    "name": "subItems",
+                    "type": "array",
+                    "required": false,
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "active": {
+                    "name": "active",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  "href": {
+                    "name": "href",
+                    "type": "string",
+                    "required": false
+                  },
+                  "badge": {
+                    "name": "badge",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
             },
             "footerContent": {
               "type": "node",
               "label": "Footer Content",
               "description": "Footer content (e.g., theme toggle)",
+              "tier": "presentation"
+            },
+            "collapsed": {
+              "type": "boolean",
+              "default": false,
+              "label": "Collapsed",
+              "description": "Collapsed state (controlled)",
+              "tier": "presentation"
+            },
+            "defaultCollapsed": {
+              "type": "boolean",
+              "default": false,
+              "label": "Default Collapsed",
+              "description": "Default collapsed state",
               "tier": "presentation"
             },
             "error": {
@@ -229,15 +298,15 @@
               "description": "Error state",
               "tier": "presentation",
               "properties": {
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                },
                 "message": {
                   "name": "message",
                   "type": "string",
                   "required": true
+                },
+                "stack": {
+                  "name": "stack",
+                  "type": "string",
+                  "required": false
                 },
                 "code": {
                   "name": "code",
@@ -251,18 +320,11 @@
                 }
               }
             },
-            "collapsed": {
-              "type": "boolean",
-              "default": false,
-              "label": "Collapsed",
-              "description": "Collapsed state (controlled)",
-              "tier": "presentation"
-            },
-            "hideCollapseButton": {
-              "type": "boolean",
-              "default": false,
-              "label": "Hide Collapse Button",
-              "description": "Hide the collapse/expand button",
+            "brandName": {
+              "type": "string",
+              "default": "KFlow",
+              "label": "Brand Name",
+              "description": "Brand/App name",
               "tier": "presentation"
             },
             "isLoading": {
@@ -272,11 +334,24 @@
               "description": "Loading state indicator",
               "tier": "presentation"
             },
-            "defaultCollapsed": {
+            "hideCollapseButton": {
               "type": "boolean",
               "default": false,
-              "label": "Default Collapsed",
-              "description": "Default collapsed state",
+              "label": "Hide Collapse Button",
+              "description": "Hide the collapse/expand button",
+              "tier": "presentation"
+            },
+            "showCloseButton": {
+              "type": "boolean",
+              "default": false,
+              "label": "Show Close Button",
+              "description": "Show a close button (for mobile)",
+              "tier": "presentation"
+            },
+            "userSection": {
+              "type": "node",
+              "label": "User Section",
+              "description": "User section content",
               "tier": "presentation"
             },
             "logoSrc": {
@@ -286,76 +361,11 @@
               "description": "Logo image source",
               "tier": "presentation"
             },
-            "items": {
-              "type": "[SidebarItemsItem]",
-              "default": [
-                {
-                  "id": "Id",
-                  "label": "Label"
-                }
-              ],
-              "label": "Items",
-              "description": "Navigation items",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "isActive": {
-                    "name": "isActive",
-                    "type": "boolean",
-                    "required": false
-                  },
-                  "subItems": {
-                    "name": "subItems",
-                    "type": "array",
-                    "required": false,
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "badge": {
-                    "name": "badge",
-                    "type": "string",
-                    "required": false
-                  },
-                  "active": {
-                    "name": "active",
-                    "type": "boolean",
-                    "required": false
-                  },
-                  "href": {
-                    "name": "href",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "logo": {
-              "type": "node",
-              "label": "Logo",
-              "description": "Logo/Brand content - can be a ReactNode or logo config",
-              "tier": "presentation"
-            },
-            "userSection": {
-              "type": "node",
-              "label": "User Section",
-              "description": "User section content",
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
               "tier": "presentation"
             }
           },

@@ -384,6 +384,11 @@ import {
   isStdUiStateArchitectBoardStateArchitectBoardOrbitalParams,
 } from './ui/game/organisms/ui-state-architect-board.js';
 import {
+  stdUiStateJsonViewStateJsonViewOrbital,
+  StdUiStateJsonViewStateJsonViewOrbitalManifest,
+  isStdUiStateJsonViewStateJsonViewOrbitalParams,
+} from './ui/game/organisms/ui-state-json-view.js';
+import {
   stdUiStateMachineViewStateMachineViewOrbital,
   StdUiStateMachineViewStateMachineViewOrbitalManifest,
   isStdUiStateMachineViewStateMachineViewOrbitalParams,
@@ -1261,6 +1266,15 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdUiStateArchitectBoardStateArchitectBoardOrbital(p);
     },
     manifest: StdUiStateArchitectBoardStateArchitectBoardOrbitalManifest,
+  }],
+  ['ui-state-json-view::StateJsonViewOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdUiStateJsonViewStateJsonViewOrbitalParams(p)) {
+        throw new TypeError('Invalid params for ui-state-json-view::StateJsonViewOrbital');
+      }
+      return stdUiStateJsonViewStateJsonViewOrbital(p);
+    },
+    manifest: StdUiStateJsonViewStateJsonViewOrbitalManifest,
   }],
   ['ui-state-machine-view::StateMachineViewOrbital', {
     factory: (p: object): OrbitalDefinition => {

@@ -39,15 +39,15 @@ export type StdUiModalSlotEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiModalSlotConfig {
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
   /** Default: `""` */
   className?: string;
+  /** Default: `"Title"` */
+  title?: string;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
   /** Default: `false` */
   isLoading?: boolean;
   error?: EntityRow;
-  /** Default: `"Title"` */
-  title?: string;
 }
 
 /**
@@ -156,19 +156,19 @@ export function stdUiModalSlotModalSlotOrbital(params: StdUiModalSlotModalSlotOr
                   'render-ui',
                   'main',
                   {
-                    'className': '@config.className',
+                    'size': '@config.size',
+                    'isLoading': '@config.isLoading',
                     'title': '@config.title',
+                    'error': '@config.error',
+                    'entity': 'ModalSlotItem',
                     'children': [
                       {
                         'type': 'typography',
                         'content': 'Sample content',
                       },
                     ],
-                    'entity': 'ModalSlotItem',
+                    'className': '@config.className',
                     'type': 'modal-slot',
-                    'isLoading': '@config.isLoading',
-                    'size': '@config.size',
-                    'error': '@config.error',
                   },
                 ],
               ],
@@ -176,6 +176,20 @@ export function stdUiModalSlotModalSlotOrbital(params: StdUiModalSlotModalSlotOr
           ],
         },
         'config': {
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Custom class name',
+            'tier': 'presentation',
+          },
+          'title': {
+            'type': 'string',
+            'default': 'Title',
+            'label': 'Title',
+            'description': 'Override modal title (extracted from children if not provided)',
+            'tier': 'presentation',
+          },
           'size': {
             'type': 'string',
             'default': 'md',
@@ -190,13 +204,6 @@ export function stdUiModalSlotModalSlotOrbital(params: StdUiModalSlotModalSlotOr
               'full',
             ],
           },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Custom class name',
-            'tier': 'presentation',
-          },
           'isLoading': {
             'type': 'boolean',
             'default': false,
@@ -210,34 +217,27 @@ export function stdUiModalSlotModalSlotOrbital(params: StdUiModalSlotModalSlotOr
             'description': 'Error state',
             'tier': 'presentation',
             'properties': {
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
               'code': {
                 'name': 'code',
                 'type': 'string',
                 'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
               },
               'stack': {
                 'name': 'stack',
                 'type': 'string',
                 'required': false,
               },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
             },
-          },
-          'title': {
-            'type': 'string',
-            'default': 'Title',
-            'label': 'Title',
-            'description': 'Override modal title (extracted from children if not provided)',
-            'tier': 'presentation',
           },
         },
         'scope': 'instance',

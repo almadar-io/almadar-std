@@ -48,20 +48,20 @@ export interface StdUiSearchInputSearchPayload {
 export interface StdUiSearchInputConfig {
   /** Default: `"Value"` */
   value?: string;
-  /** Default: `true` */
-  clearable?: boolean;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"Query"` */
-  query?: string;
-  /** Default: `"Event"` */
-  event?: string;
   /** Default: `300` */
   debounceMs?: number;
+  /** Default: `"Event"` */
+  event?: string;
+  /** Default: `true` */
+  clearable?: boolean;
   /** Default: `"Placeholder"` */
   placeholder?: string;
   /** Default: `false` */
   isLoading?: boolean;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"Query"` */
+  query?: string;
 }
 
 /**

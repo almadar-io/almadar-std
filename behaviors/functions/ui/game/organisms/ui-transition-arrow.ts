@@ -46,18 +46,18 @@ export interface StdUiTransitionArrowClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiTransitionArrowConfig {
-  /** Default: `"Guard Hint"` */
-  guardHint?: string;
+  /** Default: `{"x":1,"y":1}` */
+  fromProp?: EntityRow;
+  /** Default: `{"y":1,"x":1}` */
+  toProp?: EntityRow;
   /** Default: `false` */
   isActive?: boolean;
-  /** Default: `"Event Label"` */
-  eventLabel?: string;
-  /** Default: `{"y":0,"x":0}` */
-  toProp?: EntityRow;
-  /** Default: `{"x":0,"y":0}` */
-  fromProp?: EntityRow;
   /** Default: `""` */
   className?: string;
+  /** Default: `"Event Label"` */
+  eventLabel?: string;
+  /** Default: `"Guard Hint"` */
+  guardHint?: string;
 }
 
 /**
@@ -188,13 +188,13 @@ export function stdUiTransitionArrowTransitionArrowOrbital(params: StdUiTransiti
                   'main',
                   {
                     'type': 'transition-arrow',
-                    'isActive': '@config.isActive',
-                    'className': '@config.className',
-                    'guardHint': '@config.guardHint',
                     'to': '@config.toProp',
+                    'className': '@config.className',
+                    'isActive': '@config.isActive',
+                    'from': '@config.fromProp',
+                    'guardHint': '@config.guardHint',
                     'eventLabel': '@config.eventLabel',
                     'onClick': 'CLICK',
-                    'from': '@config.fromProp',
                   },
                 ],
               ],
@@ -202,18 +202,64 @@ export function stdUiTransitionArrowTransitionArrowOrbital(params: StdUiTransiti
           ],
         },
         'config': {
-          'guardHint': {
-            'type': 'string',
-            'default': 'Guard Hint',
-            'label': 'Guard Hint',
-            'description': 'Guard hint shown below event',
+          'fromProp': {
+            'type': 'TransitionArrowFrom',
+            'default': {
+              'x': 1,
+              'y': 1,
+            },
+            'label': 'From',
+            'description': 'Start position (center of from-node)',
+            'synonyms': 'from',
             'tier': 'presentation',
+            'properties': {
+              'x': {
+                'name': 'x',
+                'type': 'number',
+                'required': true,
+              },
+              'y': {
+                'name': 'y',
+                'type': 'number',
+                'required': true,
+              },
+            },
+          },
+          'toProp': {
+            'type': 'TransitionArrowTo',
+            'default': {
+              'y': 1,
+              'x': 1,
+            },
+            'label': 'To',
+            'description': 'End position (center of to-node)',
+            'synonyms': 'to',
+            'tier': 'presentation',
+            'properties': {
+              'y': {
+                'name': 'y',
+                'type': 'number',
+                'required': true,
+              },
+              'x': {
+                'name': 'x',
+                'type': 'number',
+                'required': true,
+              },
+            },
           },
           'isActive': {
             'type': 'boolean',
             'default': false,
             'label': 'Is Active',
             'description': 'Whether this transition is currently active',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes for the SVG group',
             'tier': 'presentation',
           },
           'eventLabel': {
@@ -223,57 +269,11 @@ export function stdUiTransitionArrowTransitionArrowOrbital(params: StdUiTransiti
             'description': 'Event label shown on the arrow',
             'tier': 'presentation',
           },
-          'toProp': {
-            'type': 'TransitionArrowTo',
-            'default': {
-              'y': 0,
-              'x': 0,
-            },
-            'label': 'To',
-            'description': 'End position (center of to-node)',
-            'synonyms': 'to',
-            'tier': 'presentation',
-            'properties': {
-              'x': {
-                'name': 'x',
-                'type': 'number',
-                'required': true,
-              },
-              'y': {
-                'name': 'y',
-                'type': 'number',
-                'required': true,
-              },
-            },
-          },
-          'fromProp': {
-            'type': 'TransitionArrowFrom',
-            'default': {
-              'x': 0,
-              'y': 0,
-            },
-            'label': 'From',
-            'description': 'Start position (center of from-node)',
-            'synonyms': 'from',
-            'tier': 'presentation',
-            'properties': {
-              'y': {
-                'name': 'y',
-                'type': 'number',
-                'required': true,
-              },
-              'x': {
-                'name': 'x',
-                'type': 'number',
-                'required': true,
-              },
-            },
-          },
-          'className': {
+          'guardHint': {
             'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes for the SVG group',
+            'default': 'Guard Hint',
+            'label': 'Guard Hint',
+            'description': 'Guard hint shown below event',
             'tier': 'presentation',
           },
         },

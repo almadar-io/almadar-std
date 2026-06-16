@@ -55,16 +55,16 @@ export interface StdUiSidePanelOpenPayload {
 export interface StdUiSidePanelConfig {
   /** Default: `"Title"` */
   title?: string;
+  /** Default: `"w-full sm:w-96"` */
+  width?: string;
+  /** Default: `false` */
+  isOpen?: boolean;
+  /** Default: `"right"` */
+  position?: 'left' | 'right';
   /** Default: `""` */
   className?: string;
   /** Default: `true` */
   showOverlay?: boolean;
-  /** Default: `"right"` */
-  position?: 'left' | 'right';
-  /** Default: `false` */
-  isOpen?: boolean;
-  /** Default: `"w-full sm:w-96"` */
-  width?: string;
 }
 
 /**

@@ -67,24 +67,24 @@ export interface StdUiDashboardLayoutSignOutPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiDashboardLayoutConfig {
-  /** Default: `"sidebar"` */
-  layoutMode?: 'sidebar' | 'topnav' | 'bottomnav' | 'minimal';
-  /** Default: `[{"id":"Id","message":"Message"}]` */
-  notifications?: EntityRow[];
-  /** Default: `false` */
-  showSearch?: boolean;
-  /** Default: `"{{APP_TITLE}}"` */
-  appName?: string;
-  headerActions?: unknown;
-  logo?: unknown;
+  sidebarFooter?: unknown;
+  /** Default: `[{"href":"Href","label":"Label","children":[],"icon":"circle","badge":"Badge"}]` */
+  navItems?: EntityRow[];
   /** Default: `true` */
   showThemeToggle?: boolean;
-  /** Default: `[]` */
-  navItems?: EntityRow[];
+  headerActions?: unknown;
+  /** Default: `false` */
+  showSearch?: boolean;
+  /** Default: `"sidebar"` */
+  layoutMode?: 'sidebar' | 'topnav' | 'bottomnav' | 'minimal';
+  /** Default: `"{{APP_TITLE}}"` */
+  appName?: string;
+  /** Default: `{"avatar":"Avatar","email":"Email","name":"Name"}` */
   user?: EntityRow;
   /** Default: `[]` */
   topBarActions?: EntityRow[];
-  sidebarFooter?: unknown;
+  /** Default: `[{"id":"Id","description":"Description","createdAt":"Created At","message":"Message","read":false}]` */
+  notifications?: EntityRow[];
   /** Default: `"Current Path"` */
   currentPath?: string;
 }

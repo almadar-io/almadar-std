@@ -46,20 +46,20 @@ export interface StdUiTabsTabChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiTabsConfig {
-  /** Default: `"Active Tab"` */
-  activeTab?: string;
-  /** Default: `"Default Active Tab"` */
-  defaultActiveTab?: string;
+  /** Default: `[{"badge":"Badge","content":"Content","value":"Value","disabled":false,"active":false,"label":"Label","icon":"circle","id":"Id"}]` */
+  tabs?: EntityRow[];
   /** Default: `"horizontal"` */
   orientation?: 'horizontal' | 'vertical';
   /** Default: `""` */
   className?: string;
   /** Default: `"default"` */
   variant?: 'default' | 'pills' | 'underline';
-  /** Default: `[]` */
+  /** Default: `"Active Tab"` */
+  activeTab?: string;
+  /** Default: `"Default Active Tab"` */
+  defaultActiveTab?: string;
+  /** Default: `[{"disabled":false,"content":"Content","id":"Id","label":"Label","icon":"circle","value":"Value","badge":"Badge","active":false}]` */
   items?: EntityRow[];
-  /** Default: `[]` */
-  tabs?: EntityRow[];
 }
 
 /**

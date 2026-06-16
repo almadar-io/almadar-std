@@ -30,7 +30,7 @@ const ALIAS = 'UiDataList';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiDataListEventKey = 'INIT' | 'ITEM_CLICK' | 'LOAD_MORE' | 'LONG_PRESS' | 'REORDER' | 'SWIPE_LEFT' | 'SWIPE_RIGHT';
+export type StdUiDataListEventKey = 'INIT' | 'ITEM_CLICK' | 'LOAD_MORE' | 'LONG_PRESS' | 'REORDER' | 'SWIPE_LEFT' | 'SWIPE_RIGHT' | 'VIEW';
 
 /**
  * Payload shape for the `REORDER` event.
@@ -75,63 +75,70 @@ export interface StdUiDataListLoadMorePayload {
 }
 
 /**
+ * Payload shape for the `VIEW` event.
+ */
+export interface StdUiDataListViewPayload {
+  id?: string;
+}
+
+/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait
  * without modifying its state-machine topology.
  */
 export interface StdUiDataListConfig {
-  /** Default: `"Dnd Item Id Field"` */
-  dndItemIdField?: string;
-  /** Default: `[{"label":"Label"}]` */
-  swipeLeftActions?: EntityRow[];
-  /** Default: `0` */
-  maxInlineActions?: number;
-  /** Default: `"Accepts"` */
-  accepts?: string;
-  /** Default: `false` */
-  dndRoot?: boolean;
-  /** Default: `"Sender Field"` */
-  senderField?: string;
-  /** Default: `"Current User"` */
-  currentUser?: string;
   /** Default: `"Drop Event"` */
   dropEvent?: string;
-  /** Default: `[{"name":"Name"}]` */
-  columns?: EntityRow[];
-  /** Default: `false` */
-  reorderable?: boolean;
-  /** Default: `[{"label":"Label"}]` */
-  swipeRightActions?: EntityRow[];
-  /** Default: `false` */
-  infiniteScroll?: boolean;
-  /** Default: `false` */
-  hasMore?: boolean;
-  error?: EntityRow;
-  /** Default: `[]` */
-  itemActions?: EntityRow[];
+  /** Default: `"Accepts"` */
+  accepts?: string;
+  /** Default: `"Dnd Item Id Field"` */
+  dndItemIdField?: string;
   /** Default: `""` */
   className?: string;
-  /** Default: `"default"` */
-  variant?: 'default' | 'card' | 'compact' | 'message';
-  /** Default: `5` */
-  pageSize?: number;
-  /** Default: `"dense"` */
-  look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
-  /** Default: `"Drag Group"` */
-  dragGroup?: string;
-  /** Default: `false` */
-  sortable?: boolean;
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `[{"name":"Name"}]` */
+  /** Default: `"Sender Field"` */
+  senderField?: string;
+  error?: EntityRow;
+  /** Default: `0` */
+  maxInlineActions?: number;
+  /** Default: `"Drag Group"` */
+  dragGroup?: string;
+  /** Default: `"default"` */
+  variant?: 'default' | 'card' | 'compact' | 'message';
+  /** Default: `false` */
+  reorderable?: boolean;
+  /** Default: `false` */
+  infiniteScroll?: boolean;
+  /** Default: `[{"icon":"circle","name":"Name","variant":"h3","format":"date","label":"Label"}]` */
   fields?: EntityRow[];
-  /** Default: `"Position Event"` */
-  positionEvent?: string;
-  /** Default: `"none"` */
-  gap?: 'none' | 'sm' | 'md' | 'lg';
+  /** Default: `false` */
+  hasMore?: boolean;
+  /** Default: `5` */
+  pageSize?: number;
+  /** Default: `[{"icon":"circle","label":"Label","variant":"primary"}]` */
+  swipeRightActions?: EntityRow[];
   /** Default: `"Group By"` */
   groupBy?: string;
+  /** Default: `false` */
+  dndRoot?: boolean;
+  /** Default: `"Current User"` */
+  currentUser?: string;
+  /** Default: `false` */
+  sortable?: boolean;
+  /** Default: `"Position Event"` */
+  positionEvent?: string;
+  /** Default: `[{"label":"Label","icon":"circle","variant":"primary"}]` */
+  swipeLeftActions?: EntityRow[];
+  /** Default: `"none"` */
+  gap?: 'none' | 'sm' | 'md' | 'lg';
+  /** Default: `[]` */
+  itemActions?: EntityRow[];
+  /** Default: `"dense"` */
+  look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
+  /** Default: `[{"label":"Label","format":"date","icon":"circle","variant":"h3","name":"Name"}]` */
+  columns?: EntityRow[];
 }
 
 /**

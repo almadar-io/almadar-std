@@ -39,15 +39,15 @@ export type StdUiToastSlotEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiToastSlotConfig {
-  /** Default: `"Title"` */
-  title?: string;
   /** Default: `""` */
   className?: string;
+  /** Default: `"Title"` */
+  title?: string;
   /** Default: `"success"` */
   variant?: 'success' | 'error' | 'info' | 'warning';
-  error?: EntityRow;
   /** Default: `false` */
   isLoading?: boolean;
+  error?: EntityRow;
   /** Default: `5000` */
   duration?: number;
 }
@@ -159,19 +159,19 @@ export function stdUiToastSlotToastSlotOrbital(params: StdUiToastSlotToastSlotOr
                   'main',
                   {
                     'className': '@config.className',
-                    'entity': 'ToastSlotItem',
                     'type': 'toast-slot',
-                    'error': '@config.error',
+                    'duration': '@config.duration',
+                    'variant': '@config.variant',
+                    'isLoading': '@config.isLoading',
+                    'title': '@config.title',
                     'children': [
                       {
-                        'type': 'typography',
                         'content': 'Sample content',
+                        'type': 'typography',
                       },
                     ],
-                    'variant': '@config.variant',
-                    'title': '@config.title',
-                    'duration': '@config.duration',
-                    'isLoading': '@config.isLoading',
+                    'error': '@config.error',
+                    'entity': 'ToastSlotItem',
                   },
                 ],
               ],
@@ -179,18 +179,18 @@ export function stdUiToastSlotToastSlotOrbital(params: StdUiToastSlotToastSlotOr
           ],
         },
         'config': {
-          'title': {
-            'type': 'string',
-            'default': 'Title',
-            'label': 'Title',
-            'description': 'Toast title',
-            'tier': 'presentation',
-          },
           'className': {
             'type': 'string',
             'default': '',
             'label': 'Class Name',
             'description': 'Custom class name',
+            'tier': 'presentation',
+          },
+          'title': {
+            'type': 'string',
+            'default': 'Title',
+            'label': 'Title',
+            'description': 'Toast title',
             'tier': 'presentation',
           },
           'variant': {
@@ -206,12 +206,24 @@ export function stdUiToastSlotToastSlotOrbital(params: StdUiToastSlotToastSlotOr
               'warning',
             ],
           },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
           'error': {
             'type': 'ToastSlotError',
             'label': 'Error',
             'description': 'Error state',
             'tier': 'presentation',
             'properties': {
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
               'message': {
                 'name': 'message',
                 'type': 'string',
@@ -222,24 +234,12 @@ export function stdUiToastSlotToastSlotOrbital(params: StdUiToastSlotToastSlotOr
                 'type': 'string',
                 'required': false,
               },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
               'code': {
                 'name': 'code',
                 'type': 'string',
                 'required': false,
               },
             },
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
-            'tier': 'presentation',
           },
           'duration': {
             'type': 'number',

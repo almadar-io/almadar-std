@@ -101,34 +101,34 @@ export interface StdUiBattleBoardPlayAgainPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiBattleBoardConfig {
-  /** Default: `"Search Value"` */
-  searchValue?: string;
-  /** Default: `0` */
-  pageProp?: number;
-  /** Default: `0.45` */
-  scale?: number;
-  /** Default: `false` */
-  isLoading?: boolean;
   /** Default: `1` */
   unitScale?: number;
-  activeFilters?: unknown;
   /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
-  /** Default: `0` */
-  pageSize?: number;
-  /** Default: `"Sort By"` */
-  sortBy?: string;
-  /** Default: `[]` */
-  effectSpriteUrls?: string[];
+  /** Default: `"Search Value"` */
+  searchValue?: string;
   /** Default: `false` */
   hasActiveEffects?: boolean;
   /** Default: `[]` */
   selectedIds?: string[];
   /** Default: `0` */
   totalCount?: number;
+  /** Default: `0` */
+  pageProp?: number;
+  /** Default: `0.45` */
+  scale?: number;
+  /** Default: `false` */
+  isLoading?: boolean;
+  error?: EntityRow;
+  /** Default: `[]` */
+  effectSpriteUrls?: string[];
   /** Default: `""` */
   className?: string;
-  error?: EntityRow;
+  /** Default: `0` */
+  pageSize?: number;
+  activeFilters?: unknown;
+  /** Default: `"Sort By"` */
+  sortBy?: string;
 }
 
 /**
@@ -513,33 +513,33 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                   'render-ui',
                   'main',
                   {
-                    'unitScale': '@config.unitScale',
-                    'sortDirection': '@config.sortDirection',
-                    'activeFilters': '@config.activeFilters',
-                    'isLoading': '@config.isLoading',
-                    'effectSpriteUrls': '@config.effectSpriteUrls',
-                    'tileClickEvent': 'TILE_CLICK',
-                    'unitClickEvent': 'UNIT_CLICK',
-                    'error': '@config.error',
-                    'onGameEnd': 'GAME_END',
-                    'searchValue': '@config.searchValue',
-                    'pageSize': '@config.pageSize',
-                    'endTurnEvent': 'END_TURN',
-                    'gameEndEvent': 'GAME_END',
                     'playAgainEvent': 'PLAY_AGAIN',
-                    'totalCount': '@config.totalCount',
-                    'onUnitMove': 'UNIT_MOVE',
-                    'hasActiveEffects': '@config.hasActiveEffects',
-                    'page': '@config.pageProp',
-                    'scale': '@config.scale',
-                    'attackEvent': 'ATTACK',
-                    'onAttack': 'ATTACK',
-                    'type': 'battle-board',
-                    'entity': '@entity',
                     'sortBy': '@config.sortBy',
-                    'cancelEvent': 'CANCEL',
-                    'selectedIds': '@config.selectedIds',
                     'className': '@config.className',
+                    'scale': '@config.scale',
+                    'selectedIds': '@config.selectedIds',
+                    'unitScale': '@config.unitScale',
+                    'gameEndEvent': 'GAME_END',
+                    'activeFilters': '@config.activeFilters',
+                    'effectSpriteUrls': '@config.effectSpriteUrls',
+                    'attackEvent': 'ATTACK',
+                    'entity': '@entity',
+                    'totalCount': '@config.totalCount',
+                    'type': 'battle-board',
+                    'error': '@config.error',
+                    'tileClickEvent': 'TILE_CLICK',
+                    'sortDirection': '@config.sortDirection',
+                    'page': '@config.pageProp',
+                    'hasActiveEffects': '@config.hasActiveEffects',
+                    'unitClickEvent': 'UNIT_CLICK',
+                    'endTurnEvent': 'END_TURN',
+                    'cancelEvent': 'CANCEL',
+                    'searchValue': '@config.searchValue',
+                    'isLoading': '@config.isLoading',
+                    'pageSize': '@config.pageSize',
+                    'onAttack': 'ATTACK',
+                    'onGameEnd': 'GAME_END',
+                    'onUnitMove': 'UNIT_MOVE',
                   },
                 ],
               ],
@@ -547,46 +547,11 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
           ],
         },
         'config': {
-          'searchValue': {
-            'type': 'string',
-            'default': 'Search Value',
-            'label': 'Search Value',
-            'description': 'Current search query value',
-            'tier': 'presentation',
-          },
-          'pageProp': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page',
-            'description': 'Current page number',
-            'synonyms': 'page',
-            'tier': 'presentation',
-          },
-          'scale': {
-            'type': 'number',
-            'default': 0.45,
-            'label': 'Scale',
-            'description': 'Canvas render scale',
-            'tier': 'presentation',
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
-            'tier': 'presentation',
-          },
           'unitScale': {
             'type': 'number',
             'default': 1,
             'label': 'Unit Scale',
             'description': 'Unit draw-size multiplier',
-            'tier': 'presentation',
-          },
-          'activeFilters': {
-            'type': 'json',
-            'label': 'Active Filters',
-            'description': 'Active filters',
             'tier': 'presentation',
           },
           'sortDirection': {
@@ -600,29 +565,12 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
               'desc',
             ],
           },
-          'pageSize': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page Size',
-            'description': 'Number of items per page',
-            'tier': 'presentation',
-          },
-          'sortBy': {
+          'searchValue': {
             'type': 'string',
-            'default': 'Sort By',
-            'label': 'Sort By',
-            'description': 'Current sort field',
+            'default': 'Search Value',
+            'label': 'Search Value',
+            'description': 'Current search query value',
             'tier': 'presentation',
-          },
-          'effectSpriteUrls': {
-            'type': '[string]',
-            'default': [],
-            'label': 'Effect Sprite Urls',
-            'description': 'effectSpriteUrls prop',
-            'tier': 'presentation',
-            'items': {
-              'type': 'string',
-            },
           },
           'hasActiveEffects': {
             'type': 'boolean',
@@ -648,11 +596,26 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
             'description': 'Total number of items',
             'tier': 'presentation',
           },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'className prop',
+          'pageProp': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page',
+            'description': 'Current page number',
+            'synonyms': 'page',
+            'tier': 'presentation',
+          },
+          'scale': {
+            'type': 'number',
+            'default': 0.45,
+            'label': 'Scale',
+            'description': 'Canvas render scale',
+            'tier': 'presentation',
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
             'tier': 'presentation',
           },
           'error': {
@@ -661,6 +624,11 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
             'description': 'Error state (UiError)',
             'tier': 'presentation',
             'properties': {
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
               'code': {
                 'name': 'code',
                 'type': 'string',
@@ -676,12 +644,44 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                 'type': 'string',
                 'required': false,
               },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
             },
+          },
+          'effectSpriteUrls': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Effect Sprite Urls',
+            'description': 'effectSpriteUrls prop',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'className prop',
+            'tier': 'presentation',
+          },
+          'pageSize': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page Size',
+            'description': 'Number of items per page',
+            'tier': 'presentation',
+          },
+          'activeFilters': {
+            'type': 'json',
+            'label': 'Active Filters',
+            'description': 'Active filters',
+            'tier': 'presentation',
+          },
+          'sortBy': {
+            'type': 'string',
+            'default': 'Sort By',
+            'label': 'Sort By',
+            'description': 'Current sort field',
+            'tier': 'presentation',
           },
         },
         'scope': 'instance',

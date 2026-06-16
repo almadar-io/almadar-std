@@ -39,10 +39,12 @@ export type StdUiDocPaginationEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiDocPaginationConfig {
-  prev?: EntityRow;
-  next?: EntityRow;
   /** Default: `""` */
   className?: string;
+  /** Default: `{"label":"Label","href":"Href","category":"Category"}` */
+  prev?: EntityRow;
+  /** Default: `{"label":"Label","category":"Category","href":"Href"}` */
+  next?: EntityRow;
 }
 
 /**

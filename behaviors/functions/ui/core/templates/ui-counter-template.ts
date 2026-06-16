@@ -62,14 +62,14 @@ export interface StdUiCounterTemplateResetPayload {
 export interface StdUiCounterTemplateConfig {
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"Counter"` */
-  title?: string;
-  /** Default: `true` */
-  showReset?: boolean;
   /** Default: `"minimal"` */
   variant?: 'minimal' | 'standard' | 'full';
+  /** Default: `""` */
+  className?: string;
+  /** Default: `true` */
+  showReset?: boolean;
+  /** Default: `"Counter"` */
+  title?: string;
 }
 
 /**

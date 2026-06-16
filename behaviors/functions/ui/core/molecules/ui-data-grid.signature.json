@@ -16,7 +16,8 @@
         "name": "DataGridRender",
         "emittedEvents": [
           "SELECTION",
-          "LOAD_MORE"
+          "LOAD_MORE",
+          "VIEW"
         ],
         "listenedEvents": [],
         "events": [
@@ -30,6 +31,12 @@
             "name": "LOAD_MORE",
             "direction": "emit",
             "description": "Event emitted when more items needed: UI:{loadMoreEvent}",
+            "tier": "essential"
+          },
+          {
+            "name": "VIEW",
+            "direction": "emit",
+            "description": "User opened a record from the list.",
             "tier": "essential"
           },
           {
@@ -65,7 +72,15 @@
           {
             "key": "columns",
             "type": "[DataGridColumnsItem]",
-            "default": [],
+            "default": [
+              {
+                "icon": "circle",
+                "variant": "h3",
+                "name": "Name",
+                "label": "Label",
+                "format": "date"
+              }
+            ],
             "label": "Columns",
             "description": "Alias for `fields` — the compiler emits `columns` for field defs.",
             "tier": "presentation",
@@ -76,14 +91,26 @@
                   "required": false,
                   "type": "string"
                 },
-                "colorMap": {
-                  "name": "colorMap",
+                "format": {
+                  "name": "format",
                   "required": false,
-                  "type": "object"
+                  "type": "string",
+                  "values": [
+                    "date",
+                    "currency",
+                    "number",
+                    "boolean",
+                    "percent"
+                  ]
                 },
                 "name": {
                   "name": "name",
                   "required": true,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
                   "type": "string"
                 },
                 "variant": {
@@ -100,22 +127,10 @@
                     "progress"
                   ]
                 },
-                "icon": {
-                  "name": "icon",
+                "colorMap": {
+                  "name": "colorMap",
                   "required": false,
-                  "type": "string"
-                },
-                "format": {
-                  "name": "format",
-                  "required": false,
-                  "type": "string",
-                  "values": [
-                    "date",
-                    "currency",
-                    "number",
-                    "boolean",
-                    "percent"
-                  ]
+                  "type": "object"
                 }
               },
               "type": "object"
@@ -160,9 +175,9 @@
             "description": "Error state",
             "tier": "presentation",
             "properties": {
-              "stack": {
-                "name": "stack",
-                "required": false,
+              "message": {
+                "name": "message",
+                "required": true,
                 "type": "string"
               },
               "code": {
@@ -175,9 +190,9 @@
                 "required": false,
                 "type": "string"
               },
-              "message": {
-                "name": "message",
-                "required": true,
+              "stack": {
+                "name": "stack",
+                "required": false,
                 "type": "string"
               }
             }
@@ -185,19 +200,44 @@
           {
             "key": "fields",
             "type": "[DataGridFieldsItem]",
-            "default": [],
+            "default": [
+              {
+                "name": "Name",
+                "label": "Label",
+                "format": "date",
+                "icon": "circle",
+                "variant": "h3"
+              }
+            ],
             "label": "Fields",
             "description": "Field definitions for rendering each card. The pattern contract in `@almadar/patterns` documents `columns` as the wire-format alias the compiler emits — both names resolve to the same shape here. Pass either.",
             "tier": "presentation",
             "items": {
               "properties": {
-                "name": {
-                  "name": "name",
-                  "required": true,
-                  "type": "string"
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "date",
+                    "currency",
+                    "number",
+                    "boolean",
+                    "percent"
+                  ]
+                },
+                "colorMap": {
+                  "name": "colorMap",
+                  "required": false,
+                  "type": "object"
                 },
                 "label": {
                   "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
                   "required": false,
                   "type": "string"
                 },
@@ -215,27 +255,10 @@
                     "progress"
                   ]
                 },
-                "colorMap": {
-                  "name": "colorMap",
-                  "required": false,
-                  "type": "object"
-                },
-                "icon": {
-                  "name": "icon",
-                  "required": false,
+                "name": {
+                  "name": "name",
+                  "required": true,
                   "type": "string"
-                },
-                "format": {
-                  "name": "format",
-                  "required": false,
-                  "type": "string",
-                  "values": [
-                    "date",
-                    "currency",
-                    "number",
-                    "boolean",
-                    "percent"
-                  ]
                 }
               },
               "type": "object"
@@ -297,16 +320,10 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "variant": {
-                  "name": "variant",
-                  "required": false,
-                  "type": "string",
-                  "values": [
-                    "primary",
-                    "secondary",
-                    "ghost",
-                    "danger"
-                  ]
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
                 },
                 "event": {
                   "name": "event",
@@ -318,10 +335,16 @@
                   "required": false,
                   "type": "string"
                 },
-                "label": {
-                  "name": "label",
-                  "required": true,
-                  "type": "string"
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "primary",
+                    "secondary",
+                    "ghost",
+                    "danger"
+                  ]
                 }
               },
               "type": "object"
@@ -424,7 +447,8 @@
     ],
     "emittedEvents": [
       "LOAD_MORE",
-      "SELECTION"
+      "SELECTION",
+      "VIEW"
     ],
     "listenedEvents": []
   }

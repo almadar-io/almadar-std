@@ -39,26 +39,26 @@ export type StdUiFlexEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiFlexConfig {
-  /** Default: `"stretch"` */
-  align?: 'start' | 'center' | 'end' | 'stretch' | 'baseline';
-  /** Default: `0` */
-  grow?: number;
+  /** Default: `"Basis"` */
+  basis?: string;
   /** Default: `0` */
   shrink?: number;
   /** Default: `false` */
   inline?: boolean;
-  /** Default: `"start"` */
-  justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"row"` */
-  direction?: 'row' | 'row-reverse' | 'col' | 'col-reverse';
-  /** Default: `"Basis"` */
-  basis?: string;
   /** Default: `"none"` */
   gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  /** Default: `"stretch"` */
+  align?: 'start' | 'center' | 'end' | 'stretch' | 'baseline';
   /** Default: `"nowrap"` */
   wrap?: 'nowrap' | 'wrap' | 'wrap-reverse';
+  /** Default: `"row"` */
+  direction?: 'row' | 'row-reverse' | 'col' | 'col-reverse';
+  /** Default: `""` */
+  className?: string;
+  /** Default: `0` */
+  grow?: number;
+  /** Default: `"start"` */
+  justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';
 }
 
 /**

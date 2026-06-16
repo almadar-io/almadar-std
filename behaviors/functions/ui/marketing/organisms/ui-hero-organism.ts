@@ -39,26 +39,26 @@ export type StdUiHeroOrganismEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiHeroOrganismConfig {
-  /** Default: `"Search Value"` */
-  searchValue?: string;
-  /** Default: `0` */
-  totalCount?: number;
-  error?: EntityRow;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `0` */
-  pageProp?: number;
-  /** Default: `"Sort By"` */
-  sortBy?: string;
   activeFilters?: unknown;
   /** Default: `0` */
   pageSize?: number;
+  /** Default: `"Sort By"` */
+  sortBy?: string;
+  /** Default: `0` */
+  totalCount?: number;
   /** Default: `[]` */
   selectedIds?: string[];
+  /** Default: `false` */
+  isLoading?: boolean;
   /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
+  /** Default: `"Search Value"` */
+  searchValue?: string;
+  /** Default: `""` */
+  className?: string;
+  error?: EntityRow;
+  /** Default: `0` */
+  pageProp?: number;
 }
 
 /**
@@ -172,25 +172,25 @@ export function stdUiHeroOrganismHeroOrganismOrbital(params: StdUiHeroOrganismHe
                   'render-ui',
                   'main',
                   {
+                    'pageSize': '@config.pageSize',
+                    'sortDirection': '@config.sortDirection',
+                    'error': '@config.error',
+                    'sortBy': '@config.sortBy',
+                    'selectedIds': '@config.selectedIds',
                     'activeFilters': '@config.activeFilters',
+                    'className': '@config.className',
+                    'isLoading': '@config.isLoading',
+                    'searchValue': '@config.searchValue',
                     'page': '@config.pageProp',
+                    'totalCount': '@config.totalCount',
+                    'entity': '@entity',
+                    'type': 'hero-organism',
                     'children': [
                       {
                         'content': 'Sample content',
                         'type': 'typography',
                       },
                     ],
-                    'sortDirection': '@config.sortDirection',
-                    'isLoading': '@config.isLoading',
-                    'searchValue': '@config.searchValue',
-                    'error': '@config.error',
-                    'pageSize': '@config.pageSize',
-                    'totalCount': '@config.totalCount',
-                    'entity': '@entity',
-                    'sortBy': '@config.sortBy',
-                    'className': '@config.className',
-                    'type': 'hero-organism',
-                    'selectedIds': '@config.selectedIds',
                   },
                 ],
               ],
@@ -198,11 +198,24 @@ export function stdUiHeroOrganismHeroOrganismOrbital(params: StdUiHeroOrganismHe
           ],
         },
         'config': {
-          'searchValue': {
+          'activeFilters': {
+            'type': 'json',
+            'label': 'Active Filters',
+            'description': 'Active filters',
+            'tier': 'presentation',
+          },
+          'pageSize': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page Size',
+            'description': 'Number of items per page',
+            'tier': 'presentation',
+          },
+          'sortBy': {
             'type': 'string',
-            'default': 'Search Value',
-            'label': 'Search Value',
-            'description': 'Current search query value',
+            'default': 'Sort By',
+            'label': 'Sort By',
+            'description': 'Current sort field',
             'tier': 'presentation',
           },
           'totalCount': {
@@ -212,17 +225,54 @@ export function stdUiHeroOrganismHeroOrganismOrbital(params: StdUiHeroOrganismHe
             'description': 'Total number of items',
             'tier': 'presentation',
           },
+          'selectedIds': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Selected Ids',
+            'description': 'Currently selected item IDs',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
+          'sortDirection': {
+            'type': 'string',
+            'default': 'asc',
+            'label': 'Sort Direction',
+            'description': 'Current sort direction',
+            'tier': 'presentation',
+            'values': [
+              'asc',
+              'desc',
+            ],
+          },
+          'searchValue': {
+            'type': 'string',
+            'default': 'Search Value',
+            'label': 'Search Value',
+            'description': 'Current search query value',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
           'error': {
             'type': 'HeroOrganismError',
             'label': 'Error',
             'description': 'Error state (UiError)',
             'tier': 'presentation',
             'properties': {
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
               'stack': {
                 'name': 'stack',
                 'type': 'string',
@@ -238,21 +288,12 @@ export function stdUiHeroOrganismHeroOrganismOrbital(params: StdUiHeroOrganismHe
                 'type': 'string',
                 'required': true,
               },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
             },
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
-            'tier': 'presentation',
           },
           'pageProp': {
             'type': 'number',
@@ -261,47 +302,6 @@ export function stdUiHeroOrganismHeroOrganismOrbital(params: StdUiHeroOrganismHe
             'description': 'Current page number',
             'synonyms': 'page',
             'tier': 'presentation',
-          },
-          'sortBy': {
-            'type': 'string',
-            'default': 'Sort By',
-            'label': 'Sort By',
-            'description': 'Current sort field',
-            'tier': 'presentation',
-          },
-          'activeFilters': {
-            'type': 'json',
-            'label': 'Active Filters',
-            'description': 'Active filters',
-            'tier': 'presentation',
-          },
-          'pageSize': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page Size',
-            'description': 'Number of items per page',
-            'tier': 'presentation',
-          },
-          'selectedIds': {
-            'type': '[string]',
-            'default': [],
-            'label': 'Selected Ids',
-            'description': 'Currently selected item IDs',
-            'tier': 'presentation',
-            'items': {
-              'type': 'string',
-            },
-          },
-          'sortDirection': {
-            'type': 'string',
-            'default': 'asc',
-            'label': 'Sort Direction',
-            'description': 'Current sort direction',
-            'tier': 'presentation',
-            'values': [
-              'asc',
-              'desc',
-            ],
           },
         },
         'scope': 'instance',

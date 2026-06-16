@@ -47,29 +47,29 @@ export interface StdUiRelationSelectChangePayload {
  */
 export interface StdUiRelationSelectConfig {
   /** Default: `false` */
-  disabled?: boolean;
-  /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `"Placeholder"` */
-  placeholder?: string;
-  /** Default: `""` */
-  error?: string;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"Empty Message"` */
-  emptyMessage?: string;
-  /** Default: `"Search Placeholder"` */
-  searchPlaceholder?: string;
-  /** Default: `false` */
-  required?: boolean;
-  /** Default: `"Value"` */
-  value?: string;
   /** Default: `true` */
   clearable?: boolean;
   /** Default: `"Name"` */
   name?: string;
-  /** Default: `[{"value":"Value","label":"Label"}]` */
+  /** Default: `"Empty Message"` */
+  emptyMessage?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `[{"disabled":false,"value":"Value","label":"Label","description":"Description"}]` */
   options?: EntityRow[];
+  /** Default: `"Search Placeholder"` */
+  searchPlaceholder?: string;
+  /** Default: `"Value"` */
+  value?: string;
+  /** Default: `false` */
+  required?: boolean;
+  /** Default: `false` */
+  disabled?: boolean;
+  /** Default: `""` */
+  error?: string;
+  /** Default: `"Placeholder"` */
+  placeholder?: string;
 }
 
 /**

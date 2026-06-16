@@ -39,13 +39,13 @@ export type StdUiGameTemplateEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiGameTemplateConfig {
-  debugPanel?: unknown;
-  hud?: unknown;
-  /** Default: `""` */
-  className?: string;
+  /** Default: `{"isPlaying":false}` */
+  controls?: EntityRow;
   /** Default: `false` */
   showDebugPanel?: boolean;
-  controls?: EntityRow;
+  /** Default: `""` */
+  className?: string;
+  debugPanel?: unknown;
   /** Default: `"Game"` */
   title?: string;
 }

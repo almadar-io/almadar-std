@@ -50,10 +50,10 @@ export interface StdUiProgressDotsConfig {
   count?: number;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
-  /** Default: `0` */
-  currentIndex?: number;
   /** Default: `""` */
   className?: string;
+  /** Default: `0` */
+  currentIndex?: number;
 }
 
 /**

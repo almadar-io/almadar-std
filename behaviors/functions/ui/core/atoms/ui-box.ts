@@ -53,41 +53,42 @@ export interface StdUiBoxHoverPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiBoxConfig {
+  /** Default: `{}` */
   actionPayload?: unknown;
   /** Default: `"none"` */
   shadow?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
-  /** Default: `"none"` */
-  rounded?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
   /** Default: `"auto"` */
   overflow?: 'auto' | 'hidden' | 'visible' | 'scroll';
-  /** Default: `false` */
-  border?: boolean;
-  /** Default: `"Max Width"` */
-  maxWidth?: string;
+  /** Default: `"none"` */
+  rounded?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
   /** Default: `"none"` */
   paddingY?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  /** Default: `false` */
+  border?: boolean;
   /** Default: `"none"` */
   padding?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   /** Default: `"none"` */
-  marginX?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'auto';
-  /** Default: `"block"` */
-  display?: 'block' | 'inline' | 'inline-block' | 'flex' | 'inline-flex' | 'grid';
+  margin?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'auto';
   /** Default: `false` */
   fullWidth?: boolean;
   /** Default: `""` */
   className?: string;
+  /** Default: `false` */
+  fullHeight?: boolean;
   /** Default: `"relative"` */
   position?: 'relative' | 'absolute' | 'fixed' | 'sticky';
-  /** Default: `"none"` */
-  paddingX?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   /** Default: `"none"` */
   marginY?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'auto';
   /** Default: `"transparent"` */
   bg?: 'transparent' | 'primary' | 'secondary' | 'muted' | 'accent' | 'surface' | 'overlay';
-  /** Default: `false` */
-  fullHeight?: boolean;
+  /** Default: `"Max Width"` */
+  maxWidth?: string;
   /** Default: `"none"` */
-  margin?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'auto';
+  paddingX?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  /** Default: `"none"` */
+  marginX?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'auto';
+  /** Default: `"block"` */
+  display?: 'block' | 'inline' | 'inline-block' | 'flex' | 'inline-flex' | 'grid';
 }
 
 /**

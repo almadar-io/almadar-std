@@ -63,18 +63,18 @@ export interface StdUiMapViewMapClickPayload {
 export interface StdUiMapViewConfig {
   /** Default: `51.505` */
   centerLat?: number;
-  /** Default: `13` */
-  zoom?: number;
+  /** Default: `[{"lat":1,"label":"Label","id":"Id","category":"Category","lng":1}]` */
+  markers?: EntityRow[];
+  /** Default: `[{"label":"Label","dashArray":"Dash Array","weight":1,"id":"Id","waypoints":[{"lat":1,"lng":1}],"opacity":1,"color":"Color"}]` */
+  routes?: EntityRow[];
   /** Default: `-0.09` */
   centerLng?: number;
-  /** Default: `"400px"` */
-  height?: string;
-  /** Default: `[]` */
-  markers?: EntityRow[];
-  /** Default: `[]` */
-  routes?: EntityRow[];
   /** Default: `""` */
   className?: string;
+  /** Default: `13` */
+  zoom?: number;
+  /** Default: `"400px"` */
+  height?: string;
   /** Default: `true` */
   showAttribution?: boolean;
   /** Default: `false` */

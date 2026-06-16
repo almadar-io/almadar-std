@@ -49,14 +49,14 @@
                     "render-ui",
                     "main",
                     {
+                      "size": "@config.size",
+                      "stats": "@config.stats",
                       "type": "game-hud",
+                      "elements": "@config.elements",
                       "items": "@config.items",
                       "className": "@config.className",
                       "transparent": "@config.transparent",
-                      "position": "@config.position",
-                      "size": "@config.size",
-                      "stats": "@config.stats",
-                      "elements": "@config.elements"
+                      "position": "@config.position"
                     }
                   ]
                 ]
@@ -64,17 +64,19 @@
             ]
           },
           "config": {
-            "position": {
+            "className": {
               "type": "string",
-              "default": "top",
-              "label": "Position",
-              "description": "Position of the HUD",
-              "tier": "presentation",
-              "values": [
-                "top",
-                "bottom",
-                "corners"
-              ]
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "transparent": {
+              "type": "boolean",
+              "default": true,
+              "label": "Transparent",
+              "description": "Whether to use a semi-transparent background",
+              "tier": "presentation"
             },
             "stats": {
               "type": "[GameHudStatsItem]",
@@ -103,6 +105,18 @@
                 }
               }
             },
+            "position": {
+              "type": "string",
+              "default": "top",
+              "label": "Position",
+              "description": "Position of the HUD",
+              "tier": "presentation",
+              "values": [
+                "top",
+                "bottom",
+                "corners"
+              ]
+            },
             "size": {
               "type": "string",
               "default": "md",
@@ -115,44 +129,28 @@
                 "lg"
               ]
             },
-            "transparent": {
-              "type": "boolean",
-              "default": true,
-              "label": "Transparent",
-              "description": "Whether to use a semi-transparent background",
-              "tier": "presentation"
-            },
             "elements": {
               "type": "[GameHudElementsItem]",
-              "default": [],
+              "default": [
+                {
+                  "format": "Format",
+                  "value": "Value",
+                  "bind": "Bind",
+                  "type": "Type",
+                  "position": "Position",
+                  "icon": "circle",
+                  "label": "Label",
+                  "max": 1.0
+                }
+              ],
               "label": "Elements",
               "description": "Schema-style elements array (alternative to stats). Converted to stats internally for backwards compatibility.",
               "tier": "presentation",
               "items": {
                 "type": "object",
                 "properties": {
-                  "value": {
-                    "name": "value",
-                    "type": "string",
-                    "required": false
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "type": {
-                    "name": "type",
-                    "type": "string",
-                    "required": false
-                  },
-                  "max": {
-                    "name": "max",
-                    "type": "number",
-                    "required": false
-                  },
-                  "bind": {
-                    "name": "bind",
+                  "label": {
+                    "name": "label",
                     "type": "string",
                     "required": false
                   },
@@ -161,8 +159,18 @@
                     "type": "string",
                     "required": false
                   },
-                  "label": {
-                    "name": "label",
+                  "bind": {
+                    "name": "bind",
+                    "type": "string",
+                    "required": false
+                  },
+                  "type": {
+                    "name": "type",
+                    "type": "string",
+                    "required": false
+                  },
+                  "value": {
+                    "name": "value",
                     "type": "string",
                     "required": false
                   },
@@ -170,23 +178,26 @@
                     "name": "position",
                     "type": "string",
                     "required": false
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "max": {
+                    "name": "max",
+                    "type": "number",
+                    "required": false
                   }
                 }
               }
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
             },
             "items": {
               "type": "[GameHudItemsItem]",
               "default": [
                 {
-                  "source": "Source",
-                  "field": "Field"
+                  "field": "Field",
+                  "source": "Source"
                 }
               ],
               "label": "Items",
@@ -195,13 +206,13 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "field": {
-                    "name": "field",
+                  "source": {
+                    "name": "source",
                     "type": "string",
                     "required": false
                   },
-                  "source": {
-                    "name": "source",
+                  "field": {
+                    "name": "field",
                     "type": "string",
                     "required": false
                   }

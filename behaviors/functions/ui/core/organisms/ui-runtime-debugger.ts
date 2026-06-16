@@ -39,17 +39,17 @@ export type StdUiRuntimeDebuggerEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiRuntimeDebuggerConfig {
-  /** Default: `"Default Tab"` */
-  defaultTab?: string;
-  /** Default: `"floating"` */
-  mode?: 'floating' | 'inline' | 'verify';
+  schema?: unknown;
   /** Default: `"bottom-right"` */
   position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
-  schema?: unknown;
   /** Default: `true` */
   defaultCollapsed?: boolean;
+  /** Default: `"Default Tab"` */
+  defaultTab?: string;
   /** Default: `""` */
   className?: string;
+  /** Default: `"floating"` */
+  mode?: 'floating' | 'inline' | 'verify';
 }
 
 /**
@@ -153,13 +153,13 @@ export function stdUiRuntimeDebuggerRuntimeDebuggerOrbital(params: StdUiRuntimeD
                   'render-ui',
                   'main',
                   {
-                    'defaultCollapsed': '@config.defaultCollapsed',
-                    'className': '@config.className',
-                    'mode': '@config.mode',
                     'defaultTab': '@config.defaultTab',
                     'schema': '@config.schema',
                     'type': 'runtime-debugger',
+                    'defaultCollapsed': '@config.defaultCollapsed',
+                    'className': '@config.className',
                     'position': '@config.position',
+                    'mode': '@config.mode',
                   },
                 ],
               ],
@@ -167,24 +167,11 @@ export function stdUiRuntimeDebuggerRuntimeDebuggerOrbital(params: StdUiRuntimeD
           ],
         },
         'config': {
-          'defaultTab': {
-            'type': 'string',
-            'default': 'Default Tab',
-            'label': 'Default Tab',
-            'description': 'Default active tab id',
+          'schema': {
+            'type': 'json',
+            'label': 'Schema',
+            'description': 'Raw schema for EventDispatcherTab payload extraction',
             'tier': 'presentation',
-          },
-          'mode': {
-            'type': 'string',
-            'default': 'floating',
-            'label': 'Mode',
-            'description': 'Display mode: floating (fixed overlay), inline (block element), or verify (always-visible compact overlay for verification runs)',
-            'tier': 'presentation',
-            'values': [
-              'floating',
-              'inline',
-              'verify',
-            ],
           },
           'position': {
             'type': 'string',
@@ -199,17 +186,18 @@ export function stdUiRuntimeDebuggerRuntimeDebuggerOrbital(params: StdUiRuntimeD
               'top-left',
             ],
           },
-          'schema': {
-            'type': 'json',
-            'label': 'Schema',
-            'description': 'Raw schema for EventDispatcherTab payload extraction',
-            'tier': 'presentation',
-          },
           'defaultCollapsed': {
             'type': 'boolean',
             'default': true,
             'label': 'Default Collapsed',
             'description': 'Initial collapsed state',
+            'tier': 'presentation',
+          },
+          'defaultTab': {
+            'type': 'string',
+            'default': 'Default Tab',
+            'label': 'Default Tab',
+            'description': 'Default active tab id',
             'tier': 'presentation',
           },
           'className': {
@@ -218,6 +206,18 @@ export function stdUiRuntimeDebuggerRuntimeDebuggerOrbital(params: StdUiRuntimeD
             'label': 'Class Name',
             'description': 'Additional CSS classes',
             'tier': 'presentation',
+          },
+          'mode': {
+            'type': 'string',
+            'default': 'floating',
+            'label': 'Mode',
+            'description': 'Display mode: floating (fixed overlay), inline (block element), or verify (always-visible compact overlay for verification runs)',
+            'tier': 'presentation',
+            'values': [
+              'floating',
+              'inline',
+              'verify',
+            ],
           },
         },
         'scope': 'instance',

@@ -39,12 +39,12 @@ export type StdUiBookTableOfContentsEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiBookTableOfContentsConfig {
-  /** Default: `"Current Chapter Id"` */
-  currentChapterId?: string;
   /** Default: `"rtl"` */
   direction?: 'rtl' | 'ltr';
   /** Default: `""` */
   className?: string;
+  /** Default: `"Current Chapter Id"` */
+  currentChapterId?: string;
 }
 
 /**
@@ -153,11 +153,11 @@ export function stdUiBookTableOfContentsBookTableOfContentsOrbital(params: StdUi
                   'render-ui',
                   'main',
                   {
-                    'type': 'book-table-of-contents',
-                    'parts': '@entity',
-                    'currentChapterId': '@config.currentChapterId',
-                    'className': '@config.className',
                     'direction': '@config.direction',
+                    'parts': '@entity',
+                    'type': 'book-table-of-contents',
+                    'className': '@config.className',
+                    'currentChapterId': '@config.currentChapterId',
                   },
                 ],
               ],
@@ -165,13 +165,6 @@ export function stdUiBookTableOfContentsBookTableOfContentsOrbital(params: StdUi
           ],
         },
         'config': {
-          'currentChapterId': {
-            'type': 'string',
-            'default': 'Current Chapter Id',
-            'label': 'Current Chapter Id',
-            'description': 'currentChapterId prop',
-            'tier': 'presentation',
-          },
           'direction': {
             'type': 'string',
             'default': 'rtl',
@@ -188,6 +181,13 @@ export function stdUiBookTableOfContentsBookTableOfContentsOrbital(params: StdUi
             'default': '',
             'label': 'Class Name',
             'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'currentChapterId': {
+            'type': 'string',
+            'default': 'Current Chapter Id',
+            'label': 'Current Chapter Id',
+            'description': 'currentChapterId prop',
             'tier': 'presentation',
           },
         },

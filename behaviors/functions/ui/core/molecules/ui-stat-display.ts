@@ -39,48 +39,48 @@ export type StdUiStatDisplayEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiStatDisplayConfig {
-  icon?: unknown;
-  /** Default: `"elevated"` */
-  look?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
-  error?: EntityRow;
-  /** Default: `0` */
-  trend?: number;
-  /** Default: `"Label"` */
-  label?: string;
-  /** Default: `"bg-muted"` */
-  iconBg?: string;
-  /** Default: `[]` */
-  sparklineData?: number[];
-  /** Default: `"Click Event"` */
-  clickEvent?: string;
-  /** Default: `"default"` */
-  variant?: 'default' | 'primary' | 'success' | 'warning' | 'error' | 'info';
-  /** Default: `"text-foreground"` */
-  iconColor?: string;
-  /** Default: `false` */
-  compact?: boolean;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"higher-is-better"` */
-  trendPolarity?: 'higher-is-better' | 'lower-is-better';
-  /** Default: `"absolute"` */
-  trendFormat?: 'absolute' | 'percent';
-  /** Default: `"Format"` */
-  format?: string;
-  /** Default: `"Value"` */
-  value?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `0` */
-  max?: number;
-  /** Default: `"Prefix"` */
-  prefix?: string;
   /** Default: `"Suffix"` */
   suffix?: string;
+  /** Default: `"text-foreground"` */
+  iconColor?: string;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
+  /** Default: `"default"` */
+  variant?: 'default' | 'primary' | 'success' | 'warning' | 'error' | 'info';
+  /** Default: `"higher-is-better"` */
+  trendPolarity?: 'higher-is-better' | 'lower-is-better';
   /** Default: `0` */
   target?: number;
+  /** Default: `"Prefix"` */
+  prefix?: string;
+  /** Default: `"elevated"` */
+  look?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
+  /** Default: `"bg-muted"` */
+  iconBg?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"absolute"` */
+  trendFormat?: 'absolute' | 'percent';
+  icon?: unknown;
+  /** Default: `"Label"` */
+  label?: string;
+  /** Default: `"Format"` */
+  format?: string;
+  error?: EntityRow;
+  /** Default: `[]` */
+  sparklineData?: number[];
+  /** Default: `false` */
+  compact?: boolean;
+  /** Default: `0` */
+  trend?: number;
+  /** Default: `"Value"` */
+  value?: string;
+  /** Default: `0` */
+  max?: number;
+  /** Default: `"Click Event"` */
+  clickEvent?: string;
 }
 
 /**

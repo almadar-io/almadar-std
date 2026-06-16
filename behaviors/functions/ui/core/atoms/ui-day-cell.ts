@@ -48,10 +48,10 @@ export interface StdUiDayCellClickPayload {
 export interface StdUiDayCellConfig {
   /** Default: `false` */
   isToday?: boolean;
-  /** Default: `"2024-01-01"` */
-  date?: string;
   /** Default: `""` */
   className?: string;
+  /** Default: `"2024-01-01"` */
+  date?: string;
 }
 
 /**

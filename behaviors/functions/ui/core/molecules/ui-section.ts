@@ -39,26 +39,26 @@ export type StdUiSectionEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiSectionConfig {
-  /** Default: `"Title"` */
-  title?: string;
-  /** Default: `"Header Class Name"` */
-  headerClassName?: string;
-  /** Default: `""` */
-  className?: string;
   /** Default: `"Description"` */
   description?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `"md"` */
+  padding?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
   action?: unknown;
   /** Default: `false` */
   divider?: boolean;
-  /** Default: `"default"` */
-  variant?: 'default' | 'card' | 'bordered' | 'filled';
-  /** Default: `false` */
-  isLoading?: boolean;
-  error?: EntityRow;
   /** Default: `"Content Class Name"` */
   contentClassName?: string;
-  /** Default: `"md"` */
-  padding?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
+  /** Default: `"Title"` */
+  title?: string;
+  /** Default: `""` */
+  className?: string;
+  error?: EntityRow;
+  /** Default: `"default"` */
+  variant?: 'default' | 'card' | 'bordered' | 'filled';
+  /** Default: `"Header Class Name"` */
+  headerClassName?: string;
 }
 
 /**
