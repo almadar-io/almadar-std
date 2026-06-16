@@ -194,7 +194,6 @@ export * from './ui/game/atoms/ui-turn-indicator.js';
 export * from './ui/core/atoms/ui-typewriter-text.js';
 export * from './ui/core/atoms/ui-typography.js';
 export * from './ui/game/atoms/ui-waypoint-marker.js';
-export * from './ui/core/atoms/ui-xp-bar.js';
 export * from './ui/game/atoms/ui-xp-bar.js';
 
 // Molecules
@@ -258,7 +257,6 @@ export * from './ui/core/molecules/ui-floating-action-button.js';
 export * from './ui/core/molecules/ui-form-actions.js';
 export * from './ui/core/molecules/ui-form-field.js';
 export * from './ui/core/molecules/ui-form-section-header.js';
-export * from './ui/core/molecules/ui-game-canvas-2d.js';
 export * from './ui/game/molecules/ui-game-canvas-2d.js';
 export * from './ui/game/molecules/ui-game-hud.js';
 export * from './ui/game/molecules/ui-game-menu.js';
