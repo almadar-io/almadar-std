@@ -209,11 +209,6 @@ import {
   isStdUiClassifierBoardClassifierBoardOrbitalParams,
 } from './ui/game/organisms/ui-classifier-board.js';
 import {
-  stdUiCodeViewCodeViewOrbital,
-  StdUiCodeViewCodeViewOrbitalManifest,
-  isStdUiCodeViewCodeViewOrbitalParams,
-} from './ui/game/organisms/ui-code-view.js';
-import {
   stdUiDashboardGridDashboardGridOrbital,
   StdUiDashboardGridDashboardGridOrbitalManifest,
   isStdUiDashboardGridDashboardGridOrbitalParams,
@@ -951,15 +946,6 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdUiClassifierBoardClassifierBoardOrbital(p);
     },
     manifest: StdUiClassifierBoardClassifierBoardOrbitalManifest,
-  }],
-  ['ui-code-view::CodeViewOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiCodeViewCodeViewOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-code-view::CodeViewOrbital');
-      }
-      return stdUiCodeViewCodeViewOrbital(p);
-    },
-    manifest: StdUiCodeViewCodeViewOrbitalManifest,
   }],
   ['ui-dashboard-grid::DashboardGridOrbital', {
     factory: (p: object): OrbitalDefinition => {
