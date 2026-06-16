@@ -39,21 +39,21 @@ export type StdUiMiniMapEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiMiniMapConfig {
-  viewportRect?: EntityRow;
-  /** Default: `100` */
-  mapWidth?: number;
-  /** Default: `[]` */
-  tiles?: EntityRow[];
-  /** Default: `150` */
-  width?: number;
-  /** Default: `150` */
-  height?: number;
   /** Default: `100` */
   mapHeight?: number;
   /** Default: `[]` */
-  units?: EntityRow[];
+  tiles?: EntityRow[];
+  viewportRect?: EntityRow;
+  /** Default: `100` */
+  mapWidth?: number;
+  /** Default: `150` */
+  height?: number;
+  /** Default: `150` */
+  width?: number;
   /** Default: `""` */
   className?: string;
+  /** Default: `[]` */
+  units?: EntityRow[];
 }
 
 /**

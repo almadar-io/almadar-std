@@ -189,9 +189,9 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
                   'render-ui',
                   'main',
                   {
-                    'entity': '@config.entityProp',
                     'type': 'classifier-board',
                     'completeEvent': 'COMPLETE',
+                    'entity': '@config.entityProp',
                   },
                 ],
               ],
@@ -206,33 +206,23 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
             'synonyms': 'entity',
             'tier': 'presentation',
             'properties': {
-              'description': {
-                'name': 'description',
-                'type': 'string',
-                'required': true,
-              },
-              'failMessage': {
-                'name': 'failMessage',
+              'hint': {
+                'name': 'hint',
                 'type': 'string',
                 'required': false,
-              },
-              'id': {
-                'name': 'id',
-                'type': 'string',
-                'required': true,
               },
               'theme': {
                 'name': 'theme',
                 'type': 'object',
                 'required': false,
                 'properties': {
-                  'accentColor': {
-                    'name': 'accentColor',
+                  'background': {
+                    'name': 'background',
                     'type': 'string',
                     'required': false,
                   },
-                  'background': {
-                    'name': 'background',
+                  'accentColor': {
+                    'name': 'accentColor',
                     'type': 'string',
                     'required': false,
                   },
@@ -250,11 +240,6 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
                 'items': {
                   'type': 'object',
                   'properties': {
-                    'correctCategory': {
-                      'name': 'correctCategory',
-                      'type': 'string',
-                      'required': true,
-                    },
                     'label': {
                       'name': 'label',
                       'type': 'string',
@@ -265,8 +250,8 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
                       'type': 'string',
                       'required': false,
                     },
-                    'id': {
-                      'name': 'id',
+                    'correctCategory': {
+                      'name': 'correctCategory',
                       'type': 'string',
                       'required': true,
                     },
@@ -275,8 +260,23 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
                       'type': 'string',
                       'required': false,
                     },
+                    'id': {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
                   },
                 },
+              },
+              'headerImage': {
+                'name': 'headerImage',
+                'type': 'string',
+                'required': false,
+              },
+              'id': {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
               },
               'categories': {
                 'name': 'categories',
@@ -285,8 +285,8 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
                 'items': {
                   'type': 'object',
                   'properties': {
-                    'id': {
-                      'name': 'id',
+                    'label': {
+                      'name': 'label',
                       'type': 'string',
                       'required': true,
                     },
@@ -300,26 +300,26 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
                       'type': 'string',
                       'required': false,
                     },
-                    'label': {
-                      'name': 'label',
+                    'id': {
+                      'name': 'id',
                       'type': 'string',
                       'required': true,
                     },
                   },
                 },
               },
-              'hint': {
-                'name': 'hint',
-                'type': 'string',
-                'required': false,
-              },
-              'headerImage': {
-                'name': 'headerImage',
-                'type': 'string',
-                'required': false,
-              },
               'successMessage': {
                 'name': 'successMessage',
+                'type': 'string',
+                'required': false,
+              },
+              'description': {
+                'name': 'description',
+                'type': 'string',
+                'required': true,
+              },
+              'failMessage': {
+                'name': 'failMessage',
                 'type': 'string',
                 'required': false,
               },

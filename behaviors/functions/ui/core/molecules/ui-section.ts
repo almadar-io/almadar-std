@@ -39,26 +39,26 @@ export type StdUiSectionEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiSectionConfig {
-  /** Default: `"default"` */
-  variant?: 'default' | 'card' | 'bordered' | 'filled';
-  /** Default: `""` */
-  className?: string;
   /** Default: `"Content Class Name"` */
   contentClassName?: string;
-  action?: unknown;
-  /** Default: `"md"` */
-  padding?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
-  /** Default: `"Header Class Name"` */
-  headerClassName?: string;
-  /** Default: `"Description"` */
-  description?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `false` */
-  divider?: boolean;
-  error?: EntityRow;
   /** Default: `"Title"` */
   title?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `"md"` */
+  padding?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
+  error?: EntityRow;
+  /** Default: `"Description"` */
+  description?: string;
+  /** Default: `"default"` */
+  variant?: 'default' | 'card' | 'bordered' | 'filled';
+  /** Default: `"Header Class Name"` */
+  headerClassName?: string;
+  action?: unknown;
+  /** Default: `false` */
+  divider?: boolean;
 }
 
 /**

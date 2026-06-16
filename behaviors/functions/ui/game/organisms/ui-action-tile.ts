@@ -41,12 +41,12 @@ export type StdUiActionTileEventKey = 'INIT';
 export interface StdUiActionTileConfig {
   /** Default: `{}` */
   categoryColors?: unknown;
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
-  /** Default: `{"name":"","category":"","id":""}` */
+  /** Default: `{"category":"","id":"","name":""}` */
   action?: EntityRow;
   /** Default: `false` */
   disabled?: boolean;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
 }
 
 /**
@@ -150,9 +150,9 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
                   'render-ui',
                   'main',
                   {
-                    'categoryColors': '@config.categoryColors',
                     'action': '@config.action',
                     'disabled': '@config.disabled',
+                    'categoryColors': '@config.categoryColors',
                     'size': '@config.size',
                     'type': 'action-tile',
                   },
@@ -171,37 +171,25 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
             'items': {
               'type': 'object',
               'properties': {
-                'bg': {
-                  'name': 'bg',
+                'border': {
+                  'name': 'border',
                   'type': 'string',
                   'required': true,
                 },
-                'border': {
-                  'name': 'border',
+                'bg': {
+                  'name': 'bg',
                   'type': 'string',
                   'required': true,
                 },
               },
             },
           },
-          'size': {
-            'type': 'string',
-            'default': 'md',
-            'label': 'Size',
-            'description': 'Size variant',
-            'tier': 'presentation',
-            'values': [
-              'sm',
-              'md',
-              'lg',
-            ],
-          },
           'action': {
             'type': 'ActionTileAction',
             'default': {
-              'name': '',
               'category': '',
               'id': '',
+              'name': '',
             },
             'label': 'Action',
             'description': 'The action data',
@@ -217,23 +205,23 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
                 'type': 'string',
                 'required': true,
               },
-              'description': {
-                'name': 'description',
-                'type': 'string',
-                'required': false,
-              },
-              'iconUrl': {
-                'name': 'iconUrl',
-                'type': 'string',
-                'required': false,
-              },
               'id': {
                 'name': 'id',
                 'type': 'string',
                 'required': true,
               },
+              'description': {
+                'name': 'description',
+                'type': 'string',
+                'required': false,
+              },
               'iconEmoji': {
                 'name': 'iconEmoji',
+                'type': 'string',
+                'required': false,
+              },
+              'iconUrl': {
+                'name': 'iconUrl',
                 'type': 'string',
                 'required': false,
               },
@@ -259,23 +247,18 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
                           'type': 'string',
                           'required': true,
                         },
-                        'guardHint': {
-                          'name': 'guardHint',
-                          'type': 'string',
-                          'required': false,
-                        },
                         'event': {
                           'name': 'event',
                           'type': 'string',
                           'required': true,
                         },
+                        'guardHint': {
+                          'name': 'guardHint',
+                          'type': 'string',
+                          'required': false,
+                        },
                       },
                     },
-                  },
-                  'currentState': {
-                    'name': 'currentState',
-                    'type': 'string',
-                    'required': true,
                   },
                   'states': {
                     'name': 'states',
@@ -295,6 +278,11 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
                     'type': 'string',
                     'required': true,
                   },
+                  'currentState': {
+                    'name': 'currentState',
+                    'type': 'string',
+                    'required': true,
+                  },
                 },
               },
             },
@@ -305,6 +293,18 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
             'label': 'Disabled',
             'description': 'Whether the tile is disabled / already used',
             'tier': 'presentation',
+          },
+          'size': {
+            'type': 'string',
+            'default': 'md',
+            'label': 'Size',
+            'description': 'Size variant',
+            'tier': 'presentation',
+            'values': [
+              'sm',
+              'md',
+              'lg',
+            ],
           },
         },
         'scope': 'instance',

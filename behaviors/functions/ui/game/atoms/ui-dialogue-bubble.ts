@@ -39,16 +39,16 @@ export type StdUiDialogueBubbleEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiDialogueBubbleConfig {
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/04_hero.png"` */
-  portrait?: string;
   /** Default: `"Speaker"` */
   speaker?: string;
-  /** Default: `"Text"` */
-  text?: string;
-  /** Default: `"bottom"` */
-  position?: 'top' | 'bottom';
   /** Default: `""` */
   className?: string;
+  /** Default: `"bottom"` */
+  position?: 'top' | 'bottom';
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/04_hero.png"` */
+  portrait?: unknown;
+  /** Default: `"Text"` */
+  text?: string;
 }
 
 /**

@@ -139,11 +139,16 @@
                     "render-ui",
                     "main",
                     {
+                      "readOnly": "@config.readOnly",
+                      "className": "@config.className",
+                      "onReorder": "REORDER",
+                      "title": "@config.title",
+                      "addLabel": "@config.addLabel",
+                      "type": "repeatable-form-section",
+                      "items": "@config.items",
                       "minItems": "@config.minItems",
                       "onAdd": "ADD",
-                      "addLabel": "@config.addLabel",
-                      "className": "@config.className",
-                      "allowReorder": "@config.allowReorder",
+                      "sectionType": "@config.sectionType",
                       "renderItem": [
                         "fn",
                         "item",
@@ -152,18 +157,13 @@
                           "content": "@item.id"
                         }
                       ],
-                      "onReorder": "REORDER",
-                      "items": "@config.items",
-                      "sectionType": "@config.sectionType",
-                      "maxItems": "@config.maxItems",
-                      "readOnly": "@config.readOnly",
                       "currentState": "@config.currentState",
+                      "allowReorder": "@config.allowReorder",
+                      "trackAddedInState": "@config.trackAddedInState",
+                      "maxItems": "@config.maxItems",
                       "emptyMessage": "@config.emptyMessage",
-                      "showAuditInfo": "@config.showAuditInfo",
                       "onRemove": "REMOVE",
-                      "type": "repeatable-form-section",
-                      "title": "@config.title",
-                      "trackAddedInState": "@config.trackAddedInState"
+                      "showAuditInfo": "@config.showAuditInfo"
                     }
                   ]
                 ]
@@ -171,18 +171,56 @@
             ]
           },
           "config": {
-            "allowReorder": {
+            "readOnly": {
               "type": "boolean",
               "default": false,
-              "label": "Allow Reorder",
-              "description": "Allow reordering",
+              "label": "Read Only",
+              "description": "Read-only mode",
               "tier": "presentation"
             },
-            "title": {
+            "currentState": {
               "type": "string",
-              "default": "Title",
-              "label": "Title",
-              "description": "Section title",
+              "default": "Current State",
+              "label": "Current State",
+              "description": "Current inspection state (used when trackAddedInState is true)",
+              "tier": "presentation"
+            },
+            "items": {
+              "type": "[RepeatableFormSectionItemsItem]",
+              "default": [
+                {
+                  "id": "Id"
+                }
+              ],
+              "label": "Items",
+              "description": "Items in the section",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "addedAt": {
+                    "name": "addedAt",
+                    "type": "string",
+                    "required": false
+                  },
+                  "addedInState": {
+                    "name": "addedInState",
+                    "type": "string",
+                    "required": false
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "minItems": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Min Items",
+              "description": "Minimum items required",
               "tier": "presentation"
             },
             "emptyMessage": {
@@ -192,11 +230,25 @@
               "description": "Empty state message",
               "tier": "presentation"
             },
-            "readOnly": {
-              "type": "boolean",
-              "default": false,
-              "label": "Read Only",
-              "description": "Read-only mode",
+            "sectionType": {
+              "type": "string",
+              "default": "Section Type",
+              "label": "Section Type",
+              "description": "Section type identifier",
+              "tier": "presentation"
+            },
+            "maxItems": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Max Items",
+              "description": "Maximum items allowed",
+              "tier": "presentation"
+            },
+            "title": {
+              "type": "string",
+              "default": "Title",
+              "label": "Title",
+              "description": "Section title",
               "tier": "presentation"
             },
             "className": {
@@ -213,18 +265,11 @@
               "description": "Inspection-specific enhancements",
               "tier": "presentation"
             },
-            "currentState": {
+            "addLabel": {
               "type": "string",
-              "default": "Current State",
-              "label": "Current State",
-              "description": "Current inspection state (used when trackAddedInState is true)",
-              "tier": "presentation"
-            },
-            "sectionType": {
-              "type": "string",
-              "default": "Section Type",
-              "label": "Section Type",
-              "description": "Section type identifier",
+              "default": "Add Label",
+              "label": "Add Label",
+              "description": "Add button label",
               "tier": "presentation"
             },
             "showAuditInfo": {
@@ -234,56 +279,11 @@
               "description": "Show audit metadata (addedInState, addedAt)",
               "tier": "presentation"
             },
-            "maxItems": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Max Items",
-              "description": "Maximum items allowed",
-              "tier": "presentation"
-            },
-            "items": {
-              "type": "[RepeatableFormSectionItemsItem]",
-              "default": [
-                {
-                  "id": "Id"
-                }
-              ],
-              "label": "Items",
-              "description": "Items in the section",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  "addedInState": {
-                    "name": "addedInState",
-                    "type": "string",
-                    "required": false
-                  },
-                  "addedAt": {
-                    "name": "addedAt",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "addLabel": {
-              "type": "string",
-              "default": "Add Label",
-              "label": "Add Label",
-              "description": "Add button label",
-              "tier": "presentation"
-            },
-            "minItems": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Min Items",
-              "description": "Minimum items required",
+            "allowReorder": {
+              "type": "boolean",
+              "default": false,
+              "label": "Allow Reorder",
+              "description": "Allow reordering",
               "tier": "presentation"
             }
           },

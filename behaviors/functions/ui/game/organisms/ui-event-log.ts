@@ -151,10 +151,10 @@ export function stdUiEventLogEventLogOrbital(params: StdUiEventLogEventLogOrbita
                   'main',
                   {
                     'entries': '@config.entries',
-                    'label': '@config.label',
+                    'maxHeight': '@config.maxHeight',
                     'className': '@config.className',
                     'type': 'event-log',
-                    'maxHeight': '@config.maxHeight',
+                    'label': '@config.label',
                   },
                 ],
               ],
@@ -192,6 +192,16 @@ export function stdUiEventLogEventLogOrbital(params: StdUiEventLogEventLogOrbita
             'items': {
               'type': 'object',
               'properties': {
+                'icon': {
+                  'name': 'icon',
+                  'type': 'string',
+                  'required': true,
+                },
+                'timestamp': {
+                  'name': 'timestamp',
+                  'type': 'number',
+                  'required': true,
+                },
                 'id': {
                   'name': 'id',
                   'type': 'string',
@@ -200,11 +210,6 @@ export function stdUiEventLogEventLogOrbital(params: StdUiEventLogEventLogOrbita
                 'message': {
                   'name': 'message',
                   'type': 'string',
-                  'required': true,
-                },
-                'timestamp': {
-                  'name': 'timestamp',
-                  'type': 'number',
                   'required': true,
                 },
                 'status': {
@@ -217,11 +222,6 @@ export function stdUiEventLogEventLogOrbital(params: StdUiEventLogEventLogOrbita
                     'done',
                     'error',
                   ],
-                },
-                'icon': {
-                  'name': 'icon',
-                  'type': 'string',
-                  'required': true,
                 },
               },
             },

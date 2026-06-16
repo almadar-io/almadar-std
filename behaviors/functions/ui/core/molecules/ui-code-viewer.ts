@@ -39,37 +39,37 @@ export type StdUiCodeViewerEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiCodeViewerConfig {
-  /** Default: `"Old Value"` */
-  oldValue?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `"Title"` */
-  title?: string;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `false` */
-  wordWrap?: boolean;
   /** Default: `true` */
   showCopy?: boolean;
-  /** Default: `true` */
-  showLineNumbers?: boolean;
-  /** Default: `"Code"` */
-  code?: string;
-  error?: EntityRow;
+  /** Default: `false` */
+  wordWrap?: boolean;
   /** Default: `[]` */
-  files?: EntityRow[];
+  actions?: EntityRow[];
+  error?: EntityRow;
   /** Default: `"New Value"` */
   newValue?: string;
   /** Default: `"Language"` */
   language?: string;
-  /** Default: `"Max Height"` */
-  maxHeight?: string;
-  /** Default: `[]` */
-  actions?: EntityRow[];
+  /** Default: `"Code"` */
+  code?: string;
   /** Default: `"code"` */
   mode?: 'code' | 'diff';
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"Title"` */
+  title?: string;
+  /** Default: `"Old Value"` */
+  oldValue?: string;
   /** Default: `[]` */
   diff?: EntityRow[];
+  /** Default: `true` */
+  showLineNumbers?: boolean;
+  /** Default: `"Max Height"` */
+  maxHeight?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `[]` */
+  files?: EntityRow[];
 }
 
 /**

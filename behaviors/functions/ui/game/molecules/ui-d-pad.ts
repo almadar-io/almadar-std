@@ -47,14 +47,14 @@ export interface StdUiDPadDirectionPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiDPadConfig {
-  /** Default: `false` */
-  includeDiagonals?: boolean;
-  /** Default: `false` */
-  disabled?: boolean;
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
   /** Default: `""` */
   className?: string;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
+  /** Default: `false` */
+  disabled?: boolean;
+  /** Default: `false` */
+  includeDiagonals?: boolean;
 }
 
 /**

@@ -222,11 +222,11 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                   'render-ui',
                   'main',
                   {
-                    'type': 'state-architect-board',
                     'entity': '@config.entityProp',
                     'completeEvent': 'COMPLETE',
-                    'stepDurationMs': '@config.stepDurationMs',
+                    'type': 'state-architect-board',
                     'testEvent': 'TEST',
+                    'stepDurationMs': '@config.stepDurationMs',
                   },
                 ],
               ],
@@ -248,6 +248,72 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
             'synonyms': 'entity',
             'tier': 'presentation',
             'properties': {
+              'states': {
+                'name': 'states',
+                'type': 'array',
+                'required': true,
+                'items': {
+                  'type': 'string',
+                },
+              },
+              'availableEvents': {
+                'name': 'availableEvents',
+                'type': 'array',
+                'required': true,
+                'items': {
+                  'type': 'string',
+                },
+              },
+              'headerImage': {
+                'name': 'headerImage',
+                'type': 'string',
+                'required': false,
+              },
+              'description': {
+                'name': 'description',
+                'type': 'string',
+                'required': true,
+              },
+              'failMessage': {
+                'name': 'failMessage',
+                'type': 'string',
+                'required': false,
+              },
+              'variables': {
+                'name': 'variables',
+                'type': 'array',
+                'required': true,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'min': {
+                      'name': 'min',
+                      'type': 'number',
+                      'required': false,
+                    },
+                    'value': {
+                      'name': 'value',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'unit': {
+                      'name': 'unit',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'max': {
+                      'name': 'max',
+                      'type': 'number',
+                      'required': false,
+                    },
+                  },
+                },
+              },
               'theme': {
                 'name': 'theme',
                 'type': 'object',
@@ -265,58 +331,15 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                   },
                 },
               },
+              'id': {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
               'showCodeView': {
                 'name': 'showCodeView',
                 'type': 'boolean',
                 'required': false,
-              },
-              'states': {
-                'name': 'states',
-                'type': 'array',
-                'required': true,
-                'items': {
-                  'type': 'string',
-                },
-              },
-              'variables': {
-                'name': 'variables',
-                'type': 'array',
-                'required': true,
-                'items': {
-                  'type': 'object',
-                  'properties': {
-                    'name': {
-                      'name': 'name',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'max': {
-                      'name': 'max',
-                      'type': 'number',
-                      'required': false,
-                    },
-                    'value': {
-                      'name': 'value',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'unit': {
-                      'name': 'unit',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'min': {
-                      'name': 'min',
-                      'type': 'number',
-                      'required': false,
-                    },
-                  },
-                },
-              },
-              'title': {
-                'name': 'title',
-                'type': 'string',
-                'required': true,
               },
               'availableStates': {
                 'name': 'availableStates',
@@ -326,23 +349,15 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                   'type': 'string',
                 },
               },
+              'title': {
+                'name': 'title',
+                'type': 'string',
+                'required': true,
+              },
               'initialState': {
                 'name': 'initialState',
                 'type': 'string',
                 'required': true,
-              },
-              'description': {
-                'name': 'description',
-                'type': 'string',
-                'required': true,
-              },
-              'availableEvents': {
-                'name': 'availableEvents',
-                'type': 'array',
-                'required': true,
-                'items': {
-                  'type': 'string',
-                },
               },
               'transitions': {
                 'name': 'transitions',
@@ -351,23 +366,13 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                 'items': {
                   'type': 'object',
                   'properties': {
-                    'event': {
-                      'name': 'event',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'id': {
-                      'name': 'id',
-                      'type': 'string',
-                      'required': true,
-                    },
                     'from': {
                       'name': 'from',
                       'type': 'string',
                       'required': true,
                     },
-                    'to': {
-                      'name': 'to',
+                    'event': {
+                      'name': 'event',
                       'type': 'string',
                       'required': true,
                     },
@@ -376,28 +381,28 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                       'type': 'string',
                       'required': false,
                     },
+                    'id': {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'to': {
+                      'name': 'to',
+                      'type': 'string',
+                      'required': true,
+                    },
                   },
                 },
-              },
-              'id': {
-                'name': 'id',
-                'type': 'string',
-                'required': true,
-              },
-              'hint': {
-                'name': 'hint',
-                'type': 'string',
-                'required': true,
               },
               'successMessage': {
                 'name': 'successMessage',
                 'type': 'string',
                 'required': false,
               },
-              'headerImage': {
-                'name': 'headerImage',
+              'hint': {
+                'name': 'hint',
                 'type': 'string',
-                'required': false,
+                'required': true,
               },
               'testCases': {
                 'name': 'testCases',
@@ -406,11 +411,6 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                 'items': {
                   'type': 'object',
                   'properties': {
-                    'expectedState': {
-                      'name': 'expectedState',
-                      'type': 'string',
-                      'required': true,
-                    },
                     'events': {
                       'name': 'events',
                       'type': 'array',
@@ -419,6 +419,11 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                         'type': 'string',
                       },
                     },
+                    'expectedState': {
+                      'name': 'expectedState',
+                      'type': 'string',
+                      'required': true,
+                    },
                     'label': {
                       'name': 'label',
                       'type': 'string',
@@ -426,11 +431,6 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                     },
                   },
                 },
-              },
-              'failMessage': {
-                'name': 'failMessage',
-                'type': 'string',
-                'required': false,
               },
               'entityName': {
                 'name': 'entityName',

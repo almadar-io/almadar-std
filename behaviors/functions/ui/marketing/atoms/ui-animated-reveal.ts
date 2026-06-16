@@ -41,22 +41,22 @@ export type StdUiAnimatedRevealEventKey = 'INIT';
 export interface StdUiAnimatedRevealConfig {
   /** Default: `false` */
   animate?: boolean;
+  /** Default: `0.15` */
+  threshold?: number;
   /** Default: `"cubic-bezier(0.16, 1, 0.3, 1)"` */
   easing?: string;
   /** Default: `0` */
   delay?: number;
-  /** Default: `600` */
-  duration?: number;
-  /** Default: `"fade-up"` */
-  animation?: 'fade-up' | 'fade-down' | 'fade-in' | 'fade-left' | 'fade-right' | 'scale' | 'scale-up' | 'none';
-  /** Default: `""` */
-  className?: string;
   /** Default: `true` */
   once?: boolean;
-  /** Default: `0.15` */
-  threshold?: number;
+  /** Default: `"fade-up"` */
+  animation?: 'fade-up' | 'fade-down' | 'fade-in' | 'fade-left' | 'fade-right' | 'scale' | 'scale-up' | 'none';
+  /** Default: `600` */
+  duration?: number;
   /** Default: `"scroll"` */
   trigger?: 'scroll' | 'hover' | 'manual';
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

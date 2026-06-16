@@ -39,17 +39,17 @@ export type StdUiGameAudioProviderEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiGameAudioProviderConfig {
-  /** Default: `{}` */
-  manifest?: unknown;
   error?: EntityRow;
   /** Default: `"Base Url"` */
   baseUrl?: string;
+  /** Default: `false` */
+  initialMuted?: boolean;
   /** Default: `""` */
   className?: string;
   /** Default: `false` */
-  initialMuted?: boolean;
-  /** Default: `false` */
   isLoading?: boolean;
+  /** Default: `{}` */
+  manifest?: unknown;
 }
 
 /**
@@ -160,18 +160,18 @@ export function stdUiGameAudioProviderGameAudioProviderOrbital(params: StdUiGame
                   {
                     'children': [
                       {
-                        'content': 'Sample content',
                         'type': 'text',
+                        'content': 'Sample content',
                       },
                     ],
-                    'entity': 'GameAudioProviderItem',
-                    'baseUrl': '@config.baseUrl',
-                    'isLoading': '@config.isLoading',
                     'className': '@config.className',
-                    'type': 'game-audio-provider',
+                    'baseUrl': '@config.baseUrl',
                     'manifest': '@config.manifest',
-                    'initialMuted': '@config.initialMuted',
                     'error': '@config.error',
+                    'initialMuted': '@config.initialMuted',
+                    'entity': 'GameAudioProviderItem',
+                    'type': 'game-audio-provider',
+                    'isLoading': '@config.isLoading',
                   },
                 ],
               ],
@@ -179,79 +179,29 @@ export function stdUiGameAudioProviderGameAudioProviderOrbital(params: StdUiGame
           ],
         },
         'config': {
-          'manifest': {
-            'type': 'Map<string,GameAudioProviderManifestValue>',
-            'default': {},
-            'label': 'Manifest',
-            'description': 'Sound manifest — keys mapped to SoundEntry definitions',
-            'tier': 'presentation',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'poolSize': {
-                  'name': 'poolSize',
-                  'type': 'number',
-                  'required': false,
-                },
-                'crossfade': {
-                  'name': 'crossfade',
-                  'type': 'boolean',
-                  'required': false,
-                },
-                'volume': {
-                  'name': 'volume',
-                  'type': 'number',
-                  'required': false,
-                },
-                'autostart': {
-                  'name': 'autostart',
-                  'type': 'boolean',
-                  'required': false,
-                },
-                'crossfadeDurationMs': {
-                  'name': 'crossfadeDurationMs',
-                  'type': 'number',
-                  'required': false,
-                },
-                'loop': {
-                  'name': 'loop',
-                  'type': 'boolean',
-                  'required': false,
-                },
-                'path': {
-                  'name': 'path',
-                  'type': 'array',
-                  'required': true,
-                  'items': {
-                    'type': 'string',
-                  },
-                },
-              },
-            },
-          },
           'error': {
             'type': 'GameAudioProviderError',
             'label': 'Error',
             'description': 'error prop',
             'tier': 'presentation',
             'properties': {
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
               'name': {
                 'name': 'name',
                 'type': 'string',
                 'required': false,
               },
-              'code': {
-                'name': 'code',
+              'stack': {
+                'name': 'stack',
                 'type': 'string',
                 'required': false,
               },
-              'stack': {
-                'name': 'stack',
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'code': {
+                'name': 'code',
                 'type': 'string',
                 'required': false,
               },
@@ -264,18 +214,18 @@ export function stdUiGameAudioProviderGameAudioProviderOrbital(params: StdUiGame
             'description': 'Base URL prepended to all sound paths (default \'\')',
             'tier': 'presentation',
           },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Closed-circuit props (unused, accepted for runtime compatibility)',
-            'tier': 'presentation',
-          },
           'initialMuted': {
             'type': 'boolean',
             'default': false,
             'label': 'Initial Muted',
             'description': 'Initial muted state',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Closed-circuit props (unused, accepted for runtime compatibility)',
             'tier': 'presentation',
           },
           'isLoading': {
@@ -284,6 +234,56 @@ export function stdUiGameAudioProviderGameAudioProviderOrbital(params: StdUiGame
             'label': 'Is Loading',
             'description': 'isLoading prop',
             'tier': 'presentation',
+          },
+          'manifest': {
+            'type': 'Map<string,GameAudioProviderManifestValue>',
+            'default': {},
+            'label': 'Manifest',
+            'description': 'Sound manifest — keys mapped to SoundEntry definitions',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'loop': {
+                  'name': 'loop',
+                  'type': 'boolean',
+                  'required': false,
+                },
+                'poolSize': {
+                  'name': 'poolSize',
+                  'type': 'number',
+                  'required': false,
+                },
+                'crossfade': {
+                  'name': 'crossfade',
+                  'type': 'boolean',
+                  'required': false,
+                },
+                'autostart': {
+                  'name': 'autostart',
+                  'type': 'boolean',
+                  'required': false,
+                },
+                'crossfadeDurationMs': {
+                  'name': 'crossfadeDurationMs',
+                  'type': 'number',
+                  'required': false,
+                },
+                'path': {
+                  'name': 'path',
+                  'type': 'array',
+                  'required': true,
+                  'items': {
+                    'type': 'string',
+                  },
+                },
+                'volume': {
+                  'name': 'volume',
+                  'type': 'number',
+                  'required': false,
+                },
+              },
+            },
           },
         },
         'scope': 'instance',

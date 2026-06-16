@@ -53,55 +53,55 @@ export interface StdUiDataGridLoadMorePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiDataGridConfig {
-  /** Default: `"md"` */
-  gap?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"Dnd Item Id Field"` */
-  dndItemIdField?: string;
   /** Default: `false` */
   dndRoot?: boolean;
-  /** Default: `false` */
-  isLoading?: boolean;
   /** Default: `"Drop Event"` */
   dropEvent?: string;
-  error?: EntityRow;
-  /** Default: `false` */
-  selectable?: boolean;
+  /** Default: `"Reorder Event"` */
+  reorderEvent?: string;
+  /** Default: `1` */
+  cols?: number;
+  /** Default: `"Image Field"` */
+  imageField?: string;
+  /** Default: `"Drag Group"` */
+  dragGroup?: string;
   /** Default: `false` */
   hasMore?: boolean;
   /** Default: `[]` */
-  fields?: EntityRow[];
-  /** Default: `[]` */
-  itemActions?: EntityRow[];
+  columns?: EntityRow[];
+  /** Default: `"dense"` */
+  look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
+  error?: EntityRow;
+  /** Default: `"Accepts"` */
+  accepts?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `0` */
+  maxInlineActions?: number;
   /** Default: `0` */
   pageSize?: number;
   /** Default: `false` */
-  sortable?: boolean;
-  /** Default: `"dense"` */
-  look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
-  /** Default: `false` */
-  infiniteScroll?: boolean;
-  /** Default: `[]` */
-  columns?: EntityRow[];
-  /** Default: `280` */
-  minCardWidth?: number;
-  /** Default: `"Image Field"` */
-  imageField?: string;
-  /** Default: `1` */
-  cols?: number;
-  /** Default: `"Drag Group"` */
-  dragGroup?: string;
-  /** Default: `0` */
-  maxInlineActions?: number;
-  /** Default: `"Accepts"` */
-  accepts?: string;
-  /** Default: `"Reorder Event"` */
-  reorderEvent?: string;
-  /** Default: `"Position Event"` */
-  positionEvent?: string;
+  isLoading?: boolean;
   /** Default: `false` */
   scrollX?: boolean;
+  /** Default: `false` */
+  sortable?: boolean;
+  /** Default: `"Dnd Item Id Field"` */
+  dndItemIdField?: string;
+  /** Default: `false` */
+  selectable?: boolean;
+  /** Default: `false` */
+  infiniteScroll?: boolean;
+  /** Default: `"Position Event"` */
+  positionEvent?: string;
+  /** Default: `"md"` */
+  gap?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
+  /** Default: `[]` */
+  fields?: EntityRow[];
+  /** Default: `280` */
+  minCardWidth?: number;
+  /** Default: `[]` */
+  itemActions?: EntityRow[];
 }
 
 /**

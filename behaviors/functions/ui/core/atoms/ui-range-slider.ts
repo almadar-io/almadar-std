@@ -53,27 +53,27 @@ export interface StdUiRangeSliderChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiRangeSliderConfig {
-  /** Default: `""` */
-  className?: string;
-  /** Default: `100` */
-  max?: number;
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
-  /** Default: `false` */
-  disabled?: boolean;
-  /** Default: `0` */
-  buffered?: number;
-  /** Default: `false` */
-  showTooltip?: boolean;
   /** Default: `0` */
   min?: number;
+  /** Default: `false` */
+  disabled?: boolean;
+  /** Default: `""` */
+  className?: string;
   actionPayload?: unknown;
-  /** Default: `0` */
-  value?: number;
-  /** Default: `1` */
-  step?: number;
+  /** Default: `false` */
+  showTooltip?: boolean;
   /** Default: `false` */
   showTicks?: boolean;
+  /** Default: `100` */
+  max?: number;
+  /** Default: `0` */
+  buffered?: number;
+  /** Default: `1` */
+  step?: number;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
+  /** Default: `0` */
+  value?: number;
 }
 
 /**

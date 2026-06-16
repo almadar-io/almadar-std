@@ -53,18 +53,18 @@ export interface StdUiWizardContainerCompletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiWizardContainerConfig {
-  error?: EntityRow;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `true` */
-  allowBack?: boolean;
   /** Default: `[]` */
   steps?: EntityRow[];
   currentStep?: unknown;
   /** Default: `true` */
   showProgress?: boolean;
+  /** Default: `true` */
+  allowBack?: boolean;
+  error?: EntityRow;
   /** Default: `false` */
   isLoading?: boolean;
+  /** Default: `""` */
+  className?: string;
   /** Default: `false` */
   compact?: boolean;
 }

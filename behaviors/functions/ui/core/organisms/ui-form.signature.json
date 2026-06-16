@@ -87,16 +87,6 @@
             "description": "Error state",
             "tier": "presentation",
             "properties": {
-              "stack": {
-                "name": "stack",
-                "required": false,
-                "type": "string"
-              },
-              "message": {
-                "name": "message",
-                "required": true,
-                "type": "string"
-              },
               "code": {
                 "name": "code",
                 "required": false,
@@ -105,6 +95,16 @@
               "name": {
                 "name": "name",
                 "required": false,
+                "type": "string"
+              },
+              "stack": {
+                "name": "stack",
+                "required": false,
+                "type": "string"
+              },
+              "message": {
+                "name": "message",
+                "required": true,
                 "type": "string"
               }
             }
@@ -116,9 +116,9 @@
             "description": "Context for S-expression evaluation - accepts flexible types from generated code",
             "tier": "presentation",
             "properties": {
-              "localVariables": {
-                "name": "localVariables",
-                "required": false,
+              "globalVariables": {
+                "name": "globalVariables",
+                "required": true,
                 "type": "string"
               },
               "formValues": {
@@ -126,9 +126,9 @@
                 "required": true,
                 "type": "string"
               },
-              "globalVariables": {
-                "name": "globalVariables",
-                "required": true,
+              "localVariables": {
+                "name": "localVariables",
+                "required": false,
                 "type": "string"
               },
               "entity": {
@@ -147,18 +147,13 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "label": {
-                  "name": "label",
+                "name": {
+                  "name": "name",
                   "required": false,
                   "type": "string"
                 },
-                "readonly": {
-                  "name": "readonly",
-                  "required": false,
-                  "type": "boolean"
-                },
-                "name": {
-                  "name": "name",
+                "placeholder": {
+                  "name": "placeholder",
                   "required": false,
                   "type": "string"
                 },
@@ -167,48 +162,23 @@
                   "required": false,
                   "type": "boolean"
                 },
-                "options": {
-                  "name": "options",
+                "type": {
+                  "name": "type",
                   "required": false,
-                  "type": "array",
-                  "items": {
-                    "properties": {
-                      "label": {
-                        "name": "label",
-                        "required": true,
-                        "type": "string"
-                      },
-                      "value": {
-                        "name": "value",
-                        "required": true,
-                        "type": "string"
-                      }
-                    },
-                    "type": "object"
-                  }
+                  "type": "string"
                 },
-                "disabled": {
-                  "name": "disabled",
+                "readonly": {
+                  "name": "readonly",
                   "required": false,
                   "type": "boolean"
                 },
-                "placeholder": {
-                  "name": "placeholder",
+                "field": {
+                  "name": "field",
                   "required": false,
                   "type": "string"
                 },
-                "max": {
-                  "name": "max",
-                  "required": false,
-                  "type": "number"
-                },
-                "pattern": {
-                  "name": "pattern",
-                  "required": false,
-                  "type": "string"
-                },
-                "validation": {
-                  "name": "validation",
+                "label": {
+                  "name": "label",
                   "required": false,
                   "type": "string"
                 },
@@ -217,13 +187,33 @@
                   "required": false,
                   "type": "string"
                 },
-                "field": {
-                  "name": "field",
+                "validation": {
+                  "name": "validation",
                   "required": false,
                   "type": "string"
                 },
-                "type": {
-                  "name": "type",
+                "options": {
+                  "name": "options",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "properties": {
+                      "value": {
+                        "name": "value",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "label": {
+                        "name": "label",
+                        "required": true,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "pattern": {
+                  "name": "pattern",
                   "required": false,
                   "type": "string"
                 },
@@ -235,25 +225,20 @@
                     "type": "string"
                   }
                 },
-                "min": {
-                  "name": "min",
+                "disabled": {
+                  "name": "disabled",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "max": {
+                  "name": "max",
                   "required": false,
                   "type": "number"
-                },
-                "inputType": {
-                  "name": "inputType",
-                  "required": false,
-                  "type": "string"
                 },
                 "relation": {
                   "name": "relation",
                   "required": false,
                   "properties": {
-                    "displayField": {
-                      "name": "displayField",
-                      "required": false,
-                      "type": "string"
-                    },
                     "entity": {
                       "name": "entity",
                       "required": true,
@@ -267,9 +252,24 @@
                         "one",
                         "many"
                       ]
+                    },
+                    "displayField": {
+                      "name": "displayField",
+                      "required": false,
+                      "type": "string"
                     }
                   },
                   "type": "object"
+                },
+                "min": {
+                  "name": "min",
+                  "required": false,
+                  "type": "number"
+                },
+                "inputType": {
+                  "name": "inputType",
+                  "required": false,
+                  "type": "string"
                 }
               },
               "type": "object"
@@ -302,6 +302,11 @@
                   "required": true,
                   "type": "string"
                 },
+                "expression": {
+                  "name": "expression",
+                  "required": true,
+                  "type": "object"
+                },
                 "triggerFields": {
                   "name": "triggerFields",
                   "required": true,
@@ -309,11 +314,6 @@
                   "items": {
                     "type": "string"
                   }
-                },
-                "expression": {
-                  "name": "expression",
-                  "required": true,
-                  "type": "object"
                 }
               },
               "type": "object"
@@ -386,25 +386,25 @@
               "type": "array",
               "items": {
                 "properties": {
-                  "label": {
-                    "name": "label",
-                    "required": true,
-                    "type": "string"
-                  },
                   "value": {
                     "name": "value",
                     "required": true,
-                    "type": "string"
-                  },
-                  "description": {
-                    "name": "description",
-                    "required": false,
                     "type": "string"
                   },
                   "disabled": {
                     "name": "disabled",
                     "required": false,
                     "type": "boolean"
+                  },
+                  "description": {
+                    "name": "description",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
                   }
                 },
                 "type": "object"
@@ -439,79 +439,14 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "condition": {
-                  "name": "condition",
-                  "required": false,
-                  "type": "object"
-                },
-                "id": {
-                  "name": "id",
-                  "required": true,
-                  "type": "string"
-                },
-                "title": {
-                  "name": "title",
-                  "required": true,
-                  "type": "string"
-                },
                 "fields": {
                   "name": "fields",
                   "required": true,
                   "type": "array",
                   "items": {
                     "properties": {
-                      "pattern": {
-                        "name": "pattern",
-                        "required": false,
-                        "type": "string"
-                      },
-                      "label": {
-                        "name": "label",
-                        "required": false,
-                        "type": "string"
-                      },
-                      "inputType": {
-                        "name": "inputType",
-                        "required": false,
-                        "type": "string"
-                      },
-                      "options": {
-                        "name": "options",
-                        "required": false,
-                        "type": "array",
-                        "items": {
-                          "properties": {
-                            "value": {
-                              "name": "value",
-                              "required": true,
-                              "type": "string"
-                            },
-                            "label": {
-                              "name": "label",
-                              "required": true,
-                              "type": "string"
-                            }
-                          },
-                          "type": "object"
-                        }
-                      },
-                      "field": {
-                        "name": "field",
-                        "required": false,
-                        "type": "string"
-                      },
-                      "max": {
-                        "name": "max",
-                        "required": false,
-                        "type": "number"
-                      },
-                      "defaultValue": {
-                        "name": "defaultValue",
-                        "required": false,
-                        "type": "string"
-                      },
-                      "name": {
-                        "name": "name",
+                      "validation": {
+                        "name": "validation",
                         "required": false,
                         "type": "string"
                       },
@@ -520,28 +455,18 @@
                         "required": false,
                         "type": "string"
                       },
-                      "readonly": {
-                        "name": "readonly",
-                        "required": false,
-                        "type": "boolean"
-                      },
-                      "placeholder": {
-                        "name": "placeholder",
-                        "required": false,
-                        "type": "string"
-                      },
                       "relation": {
                         "name": "relation",
                         "required": false,
                         "properties": {
-                          "entity": {
-                            "name": "entity",
-                            "required": true,
-                            "type": "string"
-                          },
                           "displayField": {
                             "name": "displayField",
                             "required": false,
+                            "type": "string"
+                          },
+                          "entity": {
+                            "name": "entity",
+                            "required": true,
                             "type": "string"
                           },
                           "cardinality": {
@@ -556,8 +481,48 @@
                         },
                         "type": "object"
                       },
-                      "validation": {
-                        "name": "validation",
+                      "inputType": {
+                        "name": "inputType",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "readonly": {
+                        "name": "readonly",
+                        "required": false,
+                        "type": "boolean"
+                      },
+                      "min": {
+                        "name": "min",
+                        "required": false,
+                        "type": "number"
+                      },
+                      "name": {
+                        "name": "name",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "disabled": {
+                        "name": "disabled",
+                        "required": false,
+                        "type": "boolean"
+                      },
+                      "max": {
+                        "name": "max",
+                        "required": false,
+                        "type": "number"
+                      },
+                      "pattern": {
+                        "name": "pattern",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "placeholder": {
+                        "name": "placeholder",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "field": {
+                        "name": "field",
                         "required": false,
                         "type": "string"
                       },
@@ -566,10 +531,25 @@
                         "required": false,
                         "type": "boolean"
                       },
-                      "disabled": {
-                        "name": "disabled",
+                      "options": {
+                        "name": "options",
                         "required": false,
-                        "type": "boolean"
+                        "type": "array",
+                        "items": {
+                          "properties": {
+                            "label": {
+                              "name": "label",
+                              "required": true,
+                              "type": "string"
+                            },
+                            "value": {
+                              "name": "value",
+                              "required": true,
+                              "type": "string"
+                            }
+                          },
+                          "type": "object"
+                        }
                       },
                       "values": {
                         "name": "values",
@@ -579,19 +559,39 @@
                           "type": "string"
                         }
                       },
-                      "min": {
-                        "name": "min",
+                      "defaultValue": {
+                        "name": "defaultValue",
                         "required": false,
-                        "type": "number"
+                        "type": "string"
+                      },
+                      "label": {
+                        "name": "label",
+                        "required": false,
+                        "type": "string"
                       }
                     },
                     "type": "object"
                   }
                 },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "title": {
+                  "name": "title",
+                  "required": true,
+                  "type": "string"
+                },
                 "collapsible": {
                   "name": "collapsible",
                   "required": false,
                   "type": "boolean"
+                },
+                "condition": {
+                  "name": "condition",
+                  "required": false,
+                  "type": "object"
                 }
               },
               "type": "object"
@@ -647,6 +647,11 @@
                   "name": "violation",
                   "required": true,
                   "properties": {
+                    "article": {
+                      "name": "article",
+                      "required": true,
+                      "type": "string"
+                    },
                     "actionType": {
                       "name": "actionType",
                       "required": true,
@@ -659,11 +664,6 @@
                     },
                     "law": {
                       "name": "law",
-                      "required": true,
-                      "type": "string"
-                    },
-                    "article": {
-                      "name": "article",
                       "required": true,
                       "type": "string"
                     },

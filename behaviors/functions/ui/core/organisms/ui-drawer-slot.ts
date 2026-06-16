@@ -39,8 +39,6 @@ export type StdUiDrawerSlotEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiDrawerSlotConfig {
-  /** Default: `""` */
-  className?: string;
   /** Default: `false` */
   isLoading?: boolean;
   error?: EntityRow;
@@ -50,6 +48,8 @@ export interface StdUiDrawerSlotConfig {
   title?: string;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  /** Default: `""` */
+  className?: string;
 }
 
 /**
@@ -158,20 +158,20 @@ export function stdUiDrawerSlotDrawerSlotOrbital(params: StdUiDrawerSlotDrawerSl
                   'render-ui',
                   'main',
                   {
+                    'title': '@config.title',
                     'className': '@config.className',
                     'children': [
                       {
-                        'type': 'text',
                         'content': 'Sample content',
+                        'type': 'text',
                       },
                     ],
-                    'error': '@config.error',
                     'entity': 'DrawerSlotItem',
-                    'title': '@config.title',
+                    'isLoading': '@config.isLoading',
+                    'size': '@config.size',
+                    'error': '@config.error',
                     'type': 'drawer-slot',
                     'position': '@config.position',
-                    'size': '@config.size',
-                    'isLoading': '@config.isLoading',
                   },
                 ],
               ],
@@ -179,13 +179,6 @@ export function stdUiDrawerSlotDrawerSlotOrbital(params: StdUiDrawerSlotDrawerSl
           ],
         },
         'config': {
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Custom class name',
-            'tier': 'presentation',
-          },
           'isLoading': {
             'type': 'boolean',
             'default': false,
@@ -199,16 +192,6 @@ export function stdUiDrawerSlotDrawerSlotOrbital(params: StdUiDrawerSlotDrawerSl
             'description': 'Error state',
             'tier': 'presentation',
             'properties': {
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
               'stack': {
                 'name': 'stack',
                 'type': 'string',
@@ -218,6 +201,16 @@ export function stdUiDrawerSlotDrawerSlotOrbital(params: StdUiDrawerSlotDrawerSl
                 'name': 'code',
                 'type': 'string',
                 'required': false,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
               },
             },
           },
@@ -252,6 +245,13 @@ export function stdUiDrawerSlotDrawerSlotOrbital(params: StdUiDrawerSlotDrawerSl
               'xl',
               'full',
             ],
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Custom class name',
+            'tier': 'presentation',
           },
         },
         'scope': 'instance',

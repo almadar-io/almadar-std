@@ -47,18 +47,18 @@ export interface StdUiMatrixQuestionChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiMatrixQuestionConfig {
-  /** Default: `false` */
-  disabled?: boolean;
-  /** Default: `"Title"` */
-  title?: string;
-  /** Default: `[{"label":"Label","id":"Id"}]` */
-  rows?: EntityRow[];
   /** Default: `{}` */
   values?: unknown;
-  /** Default: `[]` */
-  columns?: EntityRow[];
   /** Default: `""` */
   className?: string;
+  /** Default: `"Title"` */
+  title?: string;
+  /** Default: `[{"id":"Id","label":"Label"}]` */
+  rows?: EntityRow[];
+  /** Default: `[]` */
+  columns?: EntityRow[];
+  /** Default: `false` */
+  disabled?: boolean;
   /** Default: `"md"` */
   size?: 'sm' | 'md';
 }

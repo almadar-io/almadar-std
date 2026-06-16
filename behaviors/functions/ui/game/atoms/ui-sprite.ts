@@ -54,33 +54,33 @@ export interface StdUiSpriteActionPayload {
  */
 export interface StdUiSpriteConfig {
   /** Default: `0` */
-  rotation?: number;
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/sprite-sheets/amir-sprite-sheet-se.png"` */
-  spritesheet?: string;
-  /** Default: `0` */
   frame?: number;
   /** Default: `0` */
-  x?: number;
+  frameHeight?: number;
   /** Default: `0` */
   y?: number;
   /** Default: `0` */
   zIndex?: number;
-  /** Default: `1` */
-  scale?: number;
-  /** Default: `0` */
-  frameWidth?: number;
-  /** Default: `0` */
-  frameHeight?: number;
-  /** Default: `false` */
-  flipX?: boolean;
-  /** Default: `1` */
-  opacity?: number;
   /** Default: `16` */
   columns?: number;
   /** Default: `""` */
   className?: string;
+  /** Default: `1` */
+  scale?: number;
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/sprite-sheets/amir-sprite-sheet-se.png"` */
+  spritesheet?: unknown;
+  /** Default: `0` */
+  x?: number;
   /** Default: `false` */
   flipY?: boolean;
+  /** Default: `0` */
+  rotation?: number;
+  /** Default: `1` */
+  opacity?: number;
+  /** Default: `0` */
+  frameWidth?: number;
+  /** Default: `false` */
+  flipX?: boolean;
 }
 
 /**

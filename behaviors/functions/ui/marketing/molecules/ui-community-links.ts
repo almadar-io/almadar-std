@@ -41,11 +41,11 @@ export type StdUiCommunityLinksEventKey = 'INIT';
 export interface StdUiCommunityLinksConfig {
   /** Default: `"Heading"` */
   heading?: string;
+  twitter?: EntityRow;
   /** Default: `""` */
   className?: string;
-  twitter?: EntityRow;
-  github?: EntityRow;
   discord?: EntityRow;
+  github?: EntityRow;
   /** Default: `"Subtitle"` */
   subtitle?: string;
 }

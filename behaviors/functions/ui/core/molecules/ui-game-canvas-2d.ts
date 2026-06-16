@@ -46,22 +46,22 @@ export interface StdUiGameCanvas2dTickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiGameCanvas2dConfig {
-  /** Default: `""` */
-  className?: string;
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/isometric-blocks/Preview.png"` */
+  backgroundImage?: unknown;
+  /** Default: `600` */
+  height?: number;
   /** Default: `800` */
   width?: number;
   /** Default: `"https://almadar-kflow-assets.web.app/shared/"` */
-  assetBaseUrl?: string;
-  /** Default: `"Draw Event"` */
-  drawEvent?: string;
+  assetBaseUrl?: unknown;
   /** Default: `"Tick Event"` */
   tickEvent?: string;
-  /** Default: `600` */
-  height?: number;
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/isometric-blocks/Preview.png"` */
-  backgroundImage?: string;
+  /** Default: `""` */
+  className?: string;
   /** Default: `60` */
   fps?: number;
+  /** Default: `"Draw Event"` */
+  drawEvent?: string;
 }
 
 /**

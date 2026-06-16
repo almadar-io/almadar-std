@@ -41,12 +41,12 @@ export type StdUiStepFlowEventKey = 'INIT';
 export interface StdUiStepFlowConfig {
   /** Default: `true` */
   showConnectors?: boolean;
-  /** Default: `"horizontal"` */
-  orientation?: 'horizontal' | 'vertical';
   /** Default: `""` */
   className?: string;
   /** Default: `[]` */
   steps?: EntityRow[];
+  /** Default: `"horizontal"` */
+  orientation?: 'horizontal' | 'vertical';
 }
 
 /**

@@ -54,7 +54,7 @@
         "overridableConfigKeys": [
           {
             "key": "assetBaseUrl",
-            "type": "string",
+            "type": "asset",
             "default": "https://almadar-kflow-assets.web.app/shared/",
             "label": "Asset Base Url",
             "description": "--- Remote asset loading ---",
@@ -67,8 +67,8 @@
             "description": "Manifest mapping entity keys to relative sprite paths. Combined with assetBaseUrl to produce full URLs. Used as a fallback when inline URLs and callbacks don't resolve.",
             "tier": "presentation",
             "properties": {
-              "units": {
-                "name": "units",
+              "effects": {
+                "name": "effects",
                 "required": false,
                 "type": "object"
               },
@@ -77,13 +77,13 @@
                 "required": false,
                 "type": "object"
               },
-              "features": {
-                "name": "features",
+              "units": {
+                "name": "units",
                 "required": false,
                 "type": "object"
               },
-              "effects": {
-                "name": "effects",
+              "features": {
+                "name": "features",
                 "required": false,
                 "type": "object"
               }
@@ -98,13 +98,13 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "x": {
-                  "name": "x",
+                "y": {
+                  "name": "y",
                   "required": true,
                   "type": "number"
                 },
-                "y": {
-                  "name": "y",
+                "x": {
+                  "name": "x",
                   "required": true,
                   "type": "number"
                 }
@@ -114,7 +114,7 @@
           },
           {
             "key": "backgroundImage",
-            "type": "string",
+            "type": "asset",
             "default": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/Preview.png",
             "label": "Background Image",
             "description": "Background image URL tiled behind the isometric grid",
@@ -186,14 +186,14 @@
             "description": "Error state",
             "tier": "presentation",
             "properties": {
-              "message": {
-                "name": "message",
-                "required": true,
-                "type": "string"
-              },
               "stack": {
                 "name": "stack",
                 "required": false,
+                "type": "string"
+              },
+              "message": {
+                "name": "message",
+                "required": true,
                 "type": "string"
               },
               "code": {
@@ -217,6 +217,11 @@
             "tier": "presentation",
             "items": {
               "properties": {
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                },
                 "z": {
                   "name": "z",
                   "required": false,
@@ -227,10 +232,15 @@
                   "required": true,
                   "type": "string"
                 },
-                "id": {
-                  "name": "id",
+                "assetUrl": {
+                  "name": "assetUrl",
                   "required": false,
                   "type": "string"
+                },
+                "elevation": {
+                  "name": "elevation",
+                  "required": false,
+                  "type": "number"
                 },
                 "x": {
                   "name": "x",
@@ -242,25 +252,15 @@
                   "required": false,
                   "type": "string"
                 },
-                "y": {
-                  "name": "y",
-                  "required": true,
-                  "type": "number"
-                },
-                "assetUrl": {
-                  "name": "assetUrl",
-                  "required": false,
-                  "type": "string"
-                },
                 "color": {
                   "name": "color",
                   "required": false,
                   "type": "string"
                 },
-                "elevation": {
-                  "name": "elevation",
+                "id": {
+                  "name": "id",
                   "required": false,
-                  "type": "number"
+                  "type": "string"
                 }
               },
               "type": "object"
@@ -281,13 +281,13 @@
             "description": "Hovered tile position",
             "tier": "presentation",
             "properties": {
-              "y": {
-                "name": "y",
+              "x": {
+                "name": "x",
                 "required": true,
                 "type": "number"
               },
-              "x": {
-                "name": "x",
+              "y": {
+                "name": "y",
                 "required": true,
                 "type": "number"
               }
@@ -334,44 +334,39 @@
             "tier": "presentation",
             "items": {
               "properties": {
+                "passable": {
+                  "name": "passable",
+                  "required": false,
+                  "type": "boolean"
+                },
                 "type": {
                   "name": "type",
                   "required": false,
                   "type": "string"
-                },
-                "terrain": {
-                  "name": "terrain",
-                  "required": false,
-                  "type": "string"
-                },
-                "movementCost": {
-                  "name": "movementCost",
-                  "required": false,
-                  "type": "number"
-                },
-                "y": {
-                  "name": "y",
-                  "required": true,
-                  "type": "number"
-                },
-                "z": {
-                  "name": "z",
-                  "required": false,
-                  "type": "number"
                 },
                 "terrainSprite": {
                   "name": "terrainSprite",
                   "required": false,
                   "type": "string"
                 },
-                "passable": {
-                  "name": "passable",
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                },
+                "tileType": {
+                  "name": "tileType",
                   "required": false,
-                  "type": "boolean"
+                  "type": "string"
                 },
                 "x": {
                   "name": "x",
                   "required": true,
+                  "type": "number"
+                },
+                "movementCost": {
+                  "name": "movementCost",
+                  "required": false,
                   "type": "number"
                 },
                 "elevation": {
@@ -384,10 +379,15 @@
                   "required": false,
                   "type": "string"
                 },
-                "tileType": {
-                  "name": "tileType",
+                "terrain": {
+                  "name": "terrain",
                   "required": false,
                   "type": "string"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
                 }
               },
               "type": "object"
@@ -410,8 +410,13 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "x": {
-                  "name": "x",
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "y": {
+                  "name": "y",
                   "required": false,
                   "type": "number"
                 },
@@ -421,6 +426,11 @@
                   "type": "array",
                   "items": {
                     "properties": {
+                      "cooldown": {
+                        "name": "cooldown",
+                        "required": true,
+                        "type": "number"
+                      },
                       "states": {
                         "name": "states",
                         "required": true,
@@ -434,11 +444,6 @@
                         "required": true,
                         "type": "string"
                       },
-                      "cooldown": {
-                        "name": "cooldown",
-                        "required": true,
-                        "type": "number"
-                      },
                       "name": {
                         "name": "name",
                         "required": true,
@@ -448,37 +453,35 @@
                     "type": "object"
                   }
                 },
+                "maxHealth": {
+                  "name": "maxHealth",
+                  "required": false,
+                  "type": "number"
+                },
+                "faction": {
+                  "name": "faction",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "player",
+                    "enemy",
+                    "neutral"
+                  ]
+                },
                 "elevation": {
                   "name": "elevation",
                   "required": false,
                   "type": "number"
                 },
-                "previousPosition": {
-                  "name": "previousPosition",
-                  "required": false,
-                  "properties": {
-                    "y": {
-                      "name": "y",
-                      "required": true,
-                      "type": "number"
-                    },
-                    "x": {
-                      "name": "x",
-                      "required": true,
-                      "type": "number"
-                    }
-                  },
-                  "type": "object"
-                },
-                "unitType": {
-                  "name": "unitType",
-                  "required": false,
-                  "type": "string"
-                },
                 "id": {
                   "name": "id",
                   "required": true,
                   "type": "string"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
                 },
                 "team": {
                   "name": "team",
@@ -489,6 +492,23 @@
                     "enemy",
                     "neutral"
                   ]
+                },
+                "previousPosition": {
+                  "name": "previousPosition",
+                  "required": false,
+                  "properties": {
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "y": {
+                      "name": "y",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "type": "object"
                 },
                 "position": {
                   "name": "position",
@@ -507,13 +527,8 @@
                   },
                   "type": "object"
                 },
-                "z": {
-                  "name": "z",
-                  "required": false,
-                  "type": "number"
-                },
-                "y": {
-                  "name": "y",
+                "x": {
+                  "name": "x",
                   "required": false,
                   "type": "number"
                 },
@@ -527,30 +542,15 @@
                   "required": false,
                   "type": "string"
                 },
-                "maxHealth": {
-                  "name": "maxHealth",
-                  "required": false,
-                  "type": "number"
-                },
-                "name": {
-                  "name": "name",
-                  "required": false,
-                  "type": "string"
-                },
                 "health": {
                   "name": "health",
                   "required": false,
                   "type": "number"
                 },
-                "faction": {
-                  "name": "faction",
+                "unitType": {
+                  "name": "unitType",
                   "required": false,
-                  "type": "string",
-                  "values": [
-                    "player",
-                    "enemy",
-                    "neutral"
-                  ]
+                  "type": "string"
                 }
               },
               "type": "object"
