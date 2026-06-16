@@ -47,26 +47,26 @@ export interface StdUiSimulatorBoardCompletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiSimulatorBoardConfig {
+  /** Default: `0` */
+  pageProp?: number;
+  error?: EntityRow;
+  /** Default: `"asc"` */
+  sortDirection?: 'asc' | 'desc';
   /** Default: `"Search Value"` */
   searchValue?: string;
-  /** Default: `""` */
-  className?: string;
-  error?: EntityRow;
   /** Default: `"Sort By"` */
   sortBy?: string;
   /** Default: `0` */
   pageSize?: number;
-  /** Default: `0` */
-  totalCount?: number;
-  /** Default: `"asc"` */
-  sortDirection?: 'asc' | 'desc';
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `0` */
-  pageProp?: number;
   activeFilters?: unknown;
   /** Default: `[]` */
   selectedIds?: string[];
+  /** Default: `""` */
+  className?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `0` */
+  totalCount?: number;
 }
 
 /**
@@ -213,20 +213,20 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
                   'render-ui',
                   'main',
                   {
-                    'sortBy': '@config.sortBy',
-                    'className': '@config.className',
-                    'sortDirection': '@config.sortDirection',
-                    'activeFilters': '@config.activeFilters',
-                    'entity': '@entity',
-                    'type': 'simulator-board',
-                    'totalCount': '@config.totalCount',
-                    'selectedIds': '@config.selectedIds',
                     'isLoading': '@config.isLoading',
-                    'searchValue': '@config.searchValue',
-                    'pageSize': '@config.pageSize',
                     'error': '@config.error',
-                    'completeEvent': 'COMPLETE',
+                    'sortBy': '@config.sortBy',
+                    'searchValue': '@config.searchValue',
                     'page': '@config.pageProp',
+                    'entity': '@entity',
+                    'completeEvent': 'COMPLETE',
+                    'type': 'simulator-board',
+                    'pageSize': '@config.pageSize',
+                    'sortDirection': '@config.sortDirection',
+                    'totalCount': '@config.totalCount',
+                    'className': '@config.className',
+                    'activeFilters': '@config.activeFilters',
+                    'selectedIds': '@config.selectedIds',
                   },
                 ],
               ],
@@ -234,18 +234,12 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
           ],
         },
         'config': {
-          'searchValue': {
-            'type': 'string',
-            'default': 'Search Value',
-            'label': 'Search Value',
-            'description': 'Current search query value',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
+          'pageProp': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page',
+            'description': 'Current page number',
+            'synonyms': 'page',
             'tier': 'presentation',
           },
           'error': {
@@ -254,13 +248,8 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
             'description': 'Error state (UiError)',
             'tier': 'presentation',
             'properties': {
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'stack': {
-                'name': 'stack',
+              'code': {
+                'name': 'code',
                 'type': 'string',
                 'required': false,
               },
@@ -269,12 +258,35 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
                 'type': 'string',
                 'required': true,
               },
-              'code': {
-                'name': 'code',
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
                 'type': 'string',
                 'required': false,
               },
             },
+          },
+          'sortDirection': {
+            'type': 'string',
+            'default': 'asc',
+            'label': 'Sort Direction',
+            'description': 'Current sort direction',
+            'tier': 'presentation',
+            'values': [
+              'asc',
+              'desc',
+            ],
+          },
+          'searchValue': {
+            'type': 'string',
+            'default': 'Search Value',
+            'label': 'Search Value',
+            'description': 'Current search query value',
+            'tier': 'presentation',
           },
           'sortBy': {
             'type': 'string',
@@ -288,39 +300,6 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
             'default': 0,
             'label': 'Page Size',
             'description': 'Number of items per page',
-            'tier': 'presentation',
-          },
-          'totalCount': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Total Count',
-            'description': 'Total number of items',
-            'tier': 'presentation',
-          },
-          'sortDirection': {
-            'type': 'string',
-            'default': 'asc',
-            'label': 'Sort Direction',
-            'description': 'Current sort direction',
-            'tier': 'presentation',
-            'values': [
-              'asc',
-              'desc',
-            ],
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
-            'tier': 'presentation',
-          },
-          'pageProp': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page',
-            'description': 'Current page number',
-            'synonyms': 'page',
             'tier': 'presentation',
           },
           'activeFilters': {
@@ -338,6 +317,27 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
             'items': {
               'type': 'string',
             },
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
+          'totalCount': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Total Count',
+            'description': 'Total number of items',
+            'tier': 'presentation',
           },
         },
         'scope': 'instance',

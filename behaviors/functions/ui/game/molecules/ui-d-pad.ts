@@ -49,12 +49,12 @@ export interface StdUiDPadDirectionPayload {
 export interface StdUiDPadConfig {
   /** Default: `false` */
   includeDiagonals?: boolean;
-  /** Default: `""` */
-  className?: string;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
   /** Default: `false` */
   disabled?: boolean;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

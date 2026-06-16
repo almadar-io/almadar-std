@@ -66,10 +66,10 @@ export interface StdUiCastleBoardTileClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiCastleBoardConfig {
-  /** Default: `0.45` */
-  scale?: number;
   /** Default: `""` */
   className?: string;
+  /** Default: `0.45` */
+  scale?: number;
 }
 
 /**
@@ -618,15 +618,15 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                   'render-ui',
                   'main',
                   {
-                    'featureClickEvent': 'FEATURE_CLICK',
-                    'onUnitClick': 'UNIT_CLICK',
-                    'unitClickEvent': 'UNIT_CLICK',
+                    'scale': '@config.scale',
                     'entity': '@entity',
+                    'type': 'castle-board',
+                    'onUnitClick': 'UNIT_CLICK',
                     'onTileClick': 'TILE_CLICK',
+                    'featureClickEvent': 'FEATURE_CLICK',
+                    'unitClickEvent': 'UNIT_CLICK',
                     'className': '@config.className',
                     'onFeatureClick': 'FEATURE_CLICK',
-                    'type': 'castle-board',
-                    'scale': '@config.scale',
                     'tileClickEvent': 'TILE_CLICK',
                   },
                 ],
@@ -635,18 +635,18 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
           ],
         },
         'config': {
-          'scale': {
-            'type': 'number',
-            'default': 0.45,
-            'label': 'Scale',
-            'description': 'Canvas render scale',
-            'tier': 'presentation',
-          },
           'className': {
             'type': 'string',
             'default': '',
             'label': 'Class Name',
             'description': 'className prop',
+            'tier': 'presentation',
+          },
+          'scale': {
+            'type': 'number',
+            'default': 0.45,
+            'label': 'Scale',
+            'description': 'Canvas render scale',
             'tier': 'presentation',
           },
         },

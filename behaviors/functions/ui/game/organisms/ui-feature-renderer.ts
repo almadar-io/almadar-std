@@ -53,18 +53,18 @@ export interface StdUiFeatureRendererFeatureHoverPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiFeatureRendererConfig {
+  /** Default: `[{"assetUrl":"Asset Url","sprite":"Sprite","elevation":1,"type":"Type","id":"Id","z":1,"y":1,"color":"Color","x":1}]` */
+  features?: EntityRow[];
+  /** Default: `1` */
+  cellSize?: number;
+  /** Default: `[]` */
+  selectedFeatureIds?: string[];
+  /** Default: `0` */
+  offsetX?: number;
   /** Default: `0` */
   offsetZ?: number;
   /** Default: `{}` */
   featureColors?: unknown;
-  /** Default: `0` */
-  offsetX?: number;
-  /** Default: `1` */
-  cellSize?: number;
-  /** Default: `[{"y":1,"elevation":1,"z":1,"assetUrl":"Asset Url","x":1,"type":"Type","color":"Color","id":"Id","sprite":"Sprite"}]` */
-  features?: EntityRow[];
-  /** Default: `[]` */
-  selectedFeatureIds?: string[];
 }
 
 /**
@@ -382,15 +382,15 @@ export function stdUiFeatureRendererFeatureRendererOrbital(params: StdUiFeatureR
                   'render-ui',
                   'main',
                   {
-                    'cellSize': '@config.cellSize',
-                    'features': '@config.features',
+                    'onFeatureClick': 'FEATURE_CLICK',
+                    'offsetZ': '@config.offsetZ',
+                    'selectedFeatureIds': '@config.selectedFeatureIds',
                     'offsetX': '@config.offsetX',
                     'onFeatureHover': 'FEATURE_HOVER',
-                    'selectedFeatureIds': '@config.selectedFeatureIds',
-                    'type': 'feature-renderer',
-                    'offsetZ': '@config.offsetZ',
+                    'cellSize': '@config.cellSize',
                     'featureColors': '@config.featureColors',
-                    'onFeatureClick': 'FEATURE_CLICK',
+                    'features': '@config.features',
+                    'type': 'feature-renderer',
                   },
                 ],
               ],
@@ -398,18 +398,87 @@ export function stdUiFeatureRendererFeatureRendererOrbital(params: StdUiFeatureR
           ],
         },
         'config': {
-          'offsetZ': {
+          'features': {
+            'type': '[FeatureRendererFeaturesItem]',
+            'default': [
+              {
+                'assetUrl': 'Asset Url',
+                'sprite': 'Sprite',
+                'elevation': 1,
+                'type': 'Type',
+                'id': 'Id',
+                'z': 1,
+                'y': 1,
+                'color': 'Color',
+                'x': 1,
+              },
+            ],
+            'label': 'Features',
+            'description': 'Array of features to render',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'y': {
+                  'name': 'y',
+                  'type': 'number',
+                  'required': true,
+                },
+                'type': {
+                  'name': 'type',
+                  'type': 'string',
+                  'required': true,
+                },
+                'elevation': {
+                  'name': 'elevation',
+                  'type': 'number',
+                  'required': false,
+                },
+                'x': {
+                  'name': 'x',
+                  'type': 'number',
+                  'required': true,
+                },
+                'z': {
+                  'name': 'z',
+                  'type': 'number',
+                  'required': false,
+                },
+                'sprite': {
+                  'name': 'sprite',
+                  'type': 'string',
+                  'required': false,
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': false,
+                },
+                'assetUrl': {
+                  'name': 'assetUrl',
+                  'type': 'string',
+                  'required': false,
+                },
+                'color': {
+                  'name': 'color',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'cellSize': {
             'type': 'number',
-            'default': 0,
-            'label': 'Offset Z',
-            'description': 'Grid offset Z',
+            'default': 1,
+            'label': 'Cell Size',
+            'description': 'Grid cell size',
             'tier': 'presentation',
           },
-          'featureColors': {
-            'type': 'Map<string,string>',
-            'default': {},
-            'label': 'Feature Colors',
-            'description': 'Feature color overrides',
+          'selectedFeatureIds': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Selected Feature Ids',
+            'description': 'Selected feature IDs',
             'tier': 'presentation',
             'items': {
               'type': 'string',
@@ -422,87 +491,18 @@ export function stdUiFeatureRendererFeatureRendererOrbital(params: StdUiFeatureR
             'description': 'Grid offset X',
             'tier': 'presentation',
           },
-          'cellSize': {
+          'offsetZ': {
             'type': 'number',
-            'default': 1,
-            'label': 'Cell Size',
-            'description': 'Grid cell size',
+            'default': 0,
+            'label': 'Offset Z',
+            'description': 'Grid offset Z',
             'tier': 'presentation',
           },
-          'features': {
-            'type': '[FeatureRendererFeaturesItem]',
-            'default': [
-              {
-                'y': 1,
-                'elevation': 1,
-                'z': 1,
-                'assetUrl': 'Asset Url',
-                'x': 1,
-                'type': 'Type',
-                'color': 'Color',
-                'id': 'Id',
-                'sprite': 'Sprite',
-              },
-            ],
-            'label': 'Features',
-            'description': 'Array of features to render',
-            'tier': 'presentation',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'assetUrl': {
-                  'name': 'assetUrl',
-                  'type': 'string',
-                  'required': false,
-                },
-                'id': {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': false,
-                },
-                'type': {
-                  'name': 'type',
-                  'type': 'string',
-                  'required': true,
-                },
-                'color': {
-                  'name': 'color',
-                  'type': 'string',
-                  'required': false,
-                },
-                'y': {
-                  'name': 'y',
-                  'type': 'number',
-                  'required': true,
-                },
-                'z': {
-                  'name': 'z',
-                  'type': 'number',
-                  'required': false,
-                },
-                'x': {
-                  'name': 'x',
-                  'type': 'number',
-                  'required': true,
-                },
-                'sprite': {
-                  'name': 'sprite',
-                  'type': 'string',
-                  'required': false,
-                },
-                'elevation': {
-                  'name': 'elevation',
-                  'type': 'number',
-                  'required': false,
-                },
-              },
-            },
-          },
-          'selectedFeatureIds': {
-            'type': '[string]',
-            'default': [],
-            'label': 'Selected Feature Ids',
-            'description': 'Selected feature IDs',
+          'featureColors': {
+            'type': 'Map<string,string>',
+            'default': {},
+            'label': 'Feature Colors',
+            'description': 'Feature color overrides',
             'tier': 'presentation',
             'items': {
               'type': 'string',

@@ -67,26 +67,26 @@ export interface StdUiDashboardLayoutSignOutPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiDashboardLayoutConfig {
-  sidebarFooter?: unknown;
-  /** Default: `[{"href":"Href","label":"Label","children":[],"icon":"circle","badge":"Badge"}]` */
-  navItems?: EntityRow[];
   /** Default: `true` */
   showThemeToggle?: boolean;
-  headerActions?: unknown;
-  /** Default: `false` */
-  showSearch?: boolean;
-  /** Default: `"sidebar"` */
-  layoutMode?: 'sidebar' | 'topnav' | 'bottomnav' | 'minimal';
+  /** Default: `[{"createdAt":"Created At","id":"Id","read":false,"description":"Description","message":"Message"}]` */
+  notifications?: EntityRow[];
+  /** Default: `[{"badge":"Badge","icon":"circle","href":"Href","label":"Label","children":[]}]` */
+  navItems?: EntityRow[];
   /** Default: `"{{APP_TITLE}}"` */
   appName?: string;
-  /** Default: `{"avatar":"Avatar","email":"Email","name":"Name"}` */
-  user?: EntityRow;
-  /** Default: `[]` */
-  topBarActions?: EntityRow[];
-  /** Default: `[{"id":"Id","description":"Description","createdAt":"Created At","message":"Message","read":false}]` */
-  notifications?: EntityRow[];
+  /** Default: `false` */
+  showSearch?: boolean;
   /** Default: `"Current Path"` */
   currentPath?: string;
+  /** Default: `[]` */
+  topBarActions?: EntityRow[];
+  sidebarFooter?: unknown;
+  headerActions?: unknown;
+  /** Default: `{"avatar":"Avatar","name":"Name","email":"Email"}` */
+  user?: EntityRow;
+  /** Default: `"sidebar"` */
+  layoutMode?: 'sidebar' | 'topnav' | 'bottomnav' | 'minimal';
 }
 
 /**

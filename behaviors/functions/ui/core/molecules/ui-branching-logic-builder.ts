@@ -46,12 +46,12 @@ export interface StdUiBranchingLogicBuilderRulesChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiBranchingLogicBuilderConfig {
-  /** Default: `[{"sourceQuestionId":"Source Question Id","id":"Id","value":["Item"],"operator":"equals","targetQuestionId":"Target Question Id"}]` */
-  rules?: EntityRow[];
+  /** Default: `[{"id":"Id","label":"Label","optionValues":["Item"]}]` */
+  questions?: EntityRow[];
   /** Default: `false` */
   readOnly?: boolean;
-  /** Default: `[{"label":"Label","optionValues":["Item"],"id":"Id"}]` */
-  questions?: EntityRow[];
+  /** Default: `[{"operator":"equals","targetQuestionId":"Target Question Id","sourceQuestionId":"Source Question Id","id":"Id","value":["Item"]}]` */
+  rules?: EntityRow[];
   /** Default: `""` */
   className?: string;
 }

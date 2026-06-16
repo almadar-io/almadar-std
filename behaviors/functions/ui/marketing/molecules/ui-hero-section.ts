@@ -39,33 +39,33 @@ export type StdUiHeroSectionEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiHeroSectionConfig {
-  /** Default: `"center"` */
-  align?: 'center' | 'left';
+  /** Default: `"Subtitle"` */
+  subtitle?: string;
+  /** Default: `"Title"` */
+  title?: string;
+  /** Default: `"Tag"` */
+  tag?: string;
+  /** Default: `"Title Accent"` */
+  titleAccent?: string;
+  /** Default: `"subtle"` */
+  background?: 'dark' | 'gradient' | 'subtle';
+  /** Default: `{"href":"Href","label":"Label"}` */
+  primaryAction?: EntityRow;
+  /** Default: `"Install Command"` */
+  installCommand?: string;
   backgroundElement?: unknown;
   /** Default: `""` */
   className?: string;
-  /** Default: `"Tag"` */
-  tag?: string;
-  /** Default: `"Title"` */
-  title?: string;
-  /** Default: `"primary"` */
-  tagVariant?: 'primary' | 'secondary' | 'accent';
-  /** Default: `"Title Accent"` */
-  titleAccent?: string;
-  /** Default: `"Subtitle"` */
-  subtitle?: string;
-  /** Default: `{"label":"Label","href":"Href"}` */
-  primaryAction?: EntityRow;
-  /** Default: `{"href":"Href","label":"Label"}` */
-  secondaryAction?: EntityRow;
-  /** Default: `"subtle"` */
-  background?: 'dark' | 'gradient' | 'subtle';
-  /** Default: `"Install Command"` */
-  installCommand?: string;
-  /** Default: `{"alt":"Alt","src":"Src"}` */
-  image?: EntityRow;
   /** Default: `"below"` */
   imagePosition?: 'below' | 'right' | 'background';
+  /** Default: `"center"` */
+  align?: 'center' | 'left';
+  /** Default: `{"label":"Label","href":"Href"}` */
+  secondaryAction?: EntityRow;
+  /** Default: `{"alt":"Alt","src":"Src"}` */
+  image?: EntityRow;
+  /** Default: `"primary"` */
+  tagVariant?: 'primary' | 'secondary' | 'accent';
 }
 
 /**

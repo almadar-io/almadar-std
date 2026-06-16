@@ -88,57 +88,57 @@ export interface StdUiDataListViewPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiDataListConfig {
-  /** Default: `"Drop Event"` */
-  dropEvent?: string;
-  /** Default: `"Accepts"` */
-  accepts?: string;
   /** Default: `"Dnd Item Id Field"` */
   dndItemIdField?: string;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `"Sender Field"` */
-  senderField?: string;
   error?: EntityRow;
-  /** Default: `0` */
-  maxInlineActions?: number;
-  /** Default: `"Drag Group"` */
-  dragGroup?: string;
-  /** Default: `"default"` */
-  variant?: 'default' | 'card' | 'compact' | 'message';
+  /** Default: `[{"variant":"primary","icon":"circle","label":"Label"}]` */
+  swipeLeftActions?: EntityRow[];
   /** Default: `false` */
-  reorderable?: boolean;
-  /** Default: `false` */
-  infiniteScroll?: boolean;
-  /** Default: `[{"icon":"circle","name":"Name","variant":"h3","format":"date","label":"Label"}]` */
-  fields?: EntityRow[];
-  /** Default: `false` */
-  hasMore?: boolean;
+  sortable?: boolean;
   /** Default: `5` */
   pageSize?: number;
-  /** Default: `[{"icon":"circle","label":"Label","variant":"primary"}]` */
-  swipeRightActions?: EntityRow[];
-  /** Default: `"Group By"` */
-  groupBy?: string;
   /** Default: `false` */
   dndRoot?: boolean;
+  /** Default: `"Accepts"` */
+  accepts?: string;
+  /** Default: `"dense"` */
+  look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
+  /** Default: `0` */
+  maxInlineActions?: number;
+  /** Default: `[{"variant":"primary","icon":"circle","label":"Label"}]` */
+  swipeRightActions?: EntityRow[];
+  /** Default: `"Position Event"` */
+  positionEvent?: string;
   /** Default: `"Current User"` */
   currentUser?: string;
   /** Default: `false` */
-  sortable?: boolean;
-  /** Default: `"Position Event"` */
-  positionEvent?: string;
-  /** Default: `[{"label":"Label","icon":"circle","variant":"primary"}]` */
-  swipeLeftActions?: EntityRow[];
+  reorderable?: boolean;
+  /** Default: `false` */
+  hasMore?: boolean;
+  /** Default: `false` */
+  infiniteScroll?: boolean;
+  /** Default: `"Drag Group"` */
+  dragGroup?: string;
+  /** Default: `[{"format":"date","name":"Name","variant":"h3","label":"Label","icon":"circle"}]` */
+  fields?: EntityRow[];
+  /** Default: `"default"` */
+  variant?: 'default' | 'card' | 'compact' | 'message';
+  /** Default: `"Sender Field"` */
+  senderField?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
   /** Default: `"none"` */
   gap?: 'none' | 'sm' | 'md' | 'lg';
+  /** Default: `"Group By"` */
+  groupBy?: string;
+  /** Default: `[{"icon":"circle","format":"date","name":"Name","label":"Label","variant":"h3"}]` */
+  columns?: EntityRow[];
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"Drop Event"` */
+  dropEvent?: string;
   /** Default: `[]` */
   itemActions?: EntityRow[];
-  /** Default: `"dense"` */
-  look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
-  /** Default: `[{"label":"Label","format":"date","icon":"circle","variant":"h3","name":"Name"}]` */
-  columns?: EntityRow[];
 }
 
 /**

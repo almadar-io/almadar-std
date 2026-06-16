@@ -50,14 +50,14 @@ export interface StdUiLikertScaleConfig {
   variant?: 'radios' | 'buttons';
   /** Default: `""` */
   className?: string;
-  /** Default: `"Question"` */
-  question?: string;
   /** Default: `false` */
   disabled?: boolean;
-  /** Default: `"Value"` */
-  value?: string;
   /** Default: `[{"label":"Label","value":"Value"}]` */
   options?: EntityRow[];
+  /** Default: `"Value"` */
+  value?: string;
+  /** Default: `"Question"` */
+  question?: string;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
 }

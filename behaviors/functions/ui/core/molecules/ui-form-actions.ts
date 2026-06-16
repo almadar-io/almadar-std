@@ -39,20 +39,20 @@ export type StdUiFormActionsEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiFormActionsConfig {
-  /** Default: `"right-aligned-buttons"` */
-  look?: 'right-aligned-buttons' | 'floating-bar' | 'inline-row' | 'dropdown-menu' | 'command-palette-trigger';
-  /** Default: `[{"label":"Label","variant":"Variant","navigatesTo":"Navigates To","actionType":"Action Type"}]` */
+  /** Default: `{"actionType":"Action Type","label":"Label","variant":"Variant","navigatesTo":"Navigates To"}` */
+  primary?: EntityRow;
+  /** Default: `[{"actionType":"Action Type","navigatesTo":"Navigates To","label":"Label","variant":"Variant"}]` */
   secondary?: EntityRow[];
   /** Default: `"default"` */
   variant?: 'default' | 'segmented' | 'toggle';
-  /** Default: `{"variant":"Variant","navigatesTo":"Navigates To","label":"Label","actionType":"Action Type"}` */
-  primary?: EntityRow;
   /** Default: `"horizontal"` */
   orientation?: 'horizontal' | 'vertical';
-  /** Default: `[{"options":["Item"],"label":"Label","field":"Field","type":"checkbox"}]` */
-  filters?: EntityRow[];
   /** Default: `""` */
   className?: string;
+  /** Default: `[{"label":"Label","type":"checkbox","field":"Field","options":["Item"]}]` */
+  filters?: EntityRow[];
+  /** Default: `"right-aligned-buttons"` */
+  look?: 'right-aligned-buttons' | 'floating-bar' | 'inline-row' | 'dropdown-menu' | 'command-palette-trigger';
 }
 
 /**

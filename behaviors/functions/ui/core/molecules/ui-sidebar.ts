@@ -60,27 +60,27 @@ export interface StdUiSidebarLogoClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiSidebarConfig {
-  /** Default: `[{"icon":"circle","badge":"Badge","active":false,"isActive":false,"subItems":[],"id":"Id","label":"Label","href":"Href"}]` */
-  items?: EntityRow[];
+  /** Default: `false` */
+  hideCollapseButton?: boolean;
   footerContent?: unknown;
+  error?: EntityRow;
+  userSection?: unknown;
+  /** Default: `[{"label":"Label","icon":"circle","isActive":false,"subItems":[],"active":false,"href":"Href","badge":"Badge","id":"Id"}]` */
+  items?: EntityRow[];
+  /** Default: `"Logo Src"` */
+  logoSrc?: string;
   /** Default: `false` */
   collapsed?: boolean;
-  /** Default: `false` */
-  defaultCollapsed?: boolean;
-  error?: EntityRow;
   /** Default: `"KFlow"` */
   brandName?: string;
   /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `false` */
-  hideCollapseButton?: boolean;
+  defaultCollapsed?: boolean;
   /** Default: `false` */
   showCloseButton?: boolean;
-  userSection?: unknown;
-  /** Default: `"Logo Src"` */
-  logoSrc?: string;
   /** Default: `""` */
   className?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
 }
 
 /**

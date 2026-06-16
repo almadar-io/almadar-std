@@ -54,20 +54,20 @@ export interface StdUiFilterGroupClearAllPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiFilterGroupConfig {
-  /** Default: `true` */
-  showIcon?: boolean;
-  /** Default: `"Query"` */
-  query?: string;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `[{"label":"Label","type":"checkbox","options":["Item"],"field":"Field"}]` */
+  /** Default: `"toolbar"` */
+  look?: 'toolbar' | 'chips' | 'pills' | 'popover-trigger' | 'inline-column-header';
+  /** Default: `[{"type":"checkbox","field":"Field","label":"Label","options":["Item"]}]` */
   filters?: EntityRow[];
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `"toolbar"` */
-  look?: 'toolbar' | 'chips' | 'pills' | 'popover-trigger' | 'inline-column-header';
+  /** Default: `true` */
+  showIcon?: boolean;
+  /** Default: `""` */
+  className?: string;
   /** Default: `"default"` */
   variant?: 'default' | 'compact' | 'pills' | 'vertical';
+  /** Default: `"Query"` */
+  query?: string;
 }
 
 /**

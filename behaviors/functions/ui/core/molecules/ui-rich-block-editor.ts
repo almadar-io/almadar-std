@@ -47,15 +47,15 @@ export interface StdUiRichBlockEditorChangePayload {
  */
 export interface StdUiRichBlockEditorConfig {
   /** Default: `false` */
-  readOnly?: boolean;
-  /** Default: `true` */
-  showToolbar?: boolean;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `false` */
   enableBlocks?: boolean;
   /** Default: `"Placeholder"` */
   placeholder?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `false` */
+  readOnly?: boolean;
+  /** Default: `true` */
+  showToolbar?: boolean;
 }
 
 /**

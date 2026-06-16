@@ -39,17 +39,17 @@ export type StdUiMasterDetailLayoutEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiMasterDetailLayoutConfig {
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"350px"` */
-  masterWidth?: string;
   /** Default: `"Master Class Name"` */
   masterClassName?: string;
-  /** Default: `"Detail Class Name"` */
-  detailClassName?: string;
+  /** Default: `"350px"` */
+  masterWidth?: string;
   emptyDetail?: unknown;
   /** Default: `false` */
   hasSelection?: boolean;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"Detail Class Name"` */
+  detailClassName?: string;
 }
 
 /**
@@ -153,25 +153,25 @@ export function stdUiMasterDetailLayoutMasterDetailLayoutOrbital(params: StdUiMa
                   'render-ui',
                   'main',
                   {
-                    'hasSelection': '@config.hasSelection',
-                    'detailClassName': '@config.detailClassName',
-                    'emptyDetail': '@config.emptyDetail',
-                    'type': 'master-detail-layout',
                     'detail': [
                       {
-                        'type': 'typography',
                         'content': 'Detail',
+                        'type': 'typography',
                       },
                     ],
+                    'emptyDetail': '@config.emptyDetail',
                     'masterClassName': '@config.masterClassName',
+                    'hasSelection': '@config.hasSelection',
+                    'masterWidth': '@config.masterWidth',
                     'className': '@config.className',
+                    'type': 'master-detail-layout',
+                    'detailClassName': '@config.detailClassName',
                     'master': [
                       {
                         'content': 'Master',
                         'type': 'typography',
                       },
                     ],
-                    'masterWidth': '@config.masterWidth',
                   },
                 ],
               ],
@@ -179,20 +179,6 @@ export function stdUiMasterDetailLayoutMasterDetailLayoutOrbital(params: StdUiMa
           ],
         },
         'config': {
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'masterWidth': {
-            'type': 'string',
-            'default': '350px',
-            'label': 'Master Width',
-            'description': 'Width of master panel (e.g., \'350px\', \'30%\')',
-            'tier': 'presentation',
-          },
           'masterClassName': {
             'type': 'string',
             'default': 'Master Class Name',
@@ -200,11 +186,11 @@ export function stdUiMasterDetailLayoutMasterDetailLayoutOrbital(params: StdUiMa
             'description': 'Class for master pane',
             'tier': 'presentation',
           },
-          'detailClassName': {
+          'masterWidth': {
             'type': 'string',
-            'default': 'Detail Class Name',
-            'label': 'Detail Class Name',
-            'description': 'Class for detail pane',
+            'default': '350px',
+            'label': 'Master Width',
+            'description': 'Width of master panel (e.g., \'350px\', \'30%\')',
             'tier': 'presentation',
           },
           'emptyDetail': {
@@ -218,6 +204,20 @@ export function stdUiMasterDetailLayoutMasterDetailLayoutOrbital(params: StdUiMa
             'default': false,
             'label': 'Has Selection',
             'description': 'Whether an item is currently selected',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'detailClassName': {
+            'type': 'string',
+            'default': 'Detail Class Name',
+            'label': 'Detail Class Name',
+            'description': 'Class for detail pane',
             'tier': 'presentation',
           },
         },

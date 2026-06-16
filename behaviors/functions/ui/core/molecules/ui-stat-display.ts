@@ -39,48 +39,48 @@ export type StdUiStatDisplayEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiStatDisplayConfig {
-  /** Default: `"Suffix"` */
-  suffix?: string;
-  /** Default: `"text-foreground"` */
-  iconColor?: string;
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
-  /** Default: `"default"` */
-  variant?: 'default' | 'primary' | 'success' | 'warning' | 'error' | 'info';
-  /** Default: `"higher-is-better"` */
-  trendPolarity?: 'higher-is-better' | 'lower-is-better';
-  /** Default: `0` */
-  target?: number;
-  /** Default: `"Prefix"` */
-  prefix?: string;
-  /** Default: `"elevated"` */
-  look?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
   /** Default: `"bg-muted"` */
   iconBg?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"absolute"` */
-  trendFormat?: 'absolute' | 'percent';
-  icon?: unknown;
-  /** Default: `"Label"` */
-  label?: string;
+  /** Default: `"higher-is-better"` */
+  trendPolarity?: 'higher-is-better' | 'lower-is-better';
   /** Default: `"Format"` */
   format?: string;
-  error?: EntityRow;
+  /** Default: `"Click Event"` */
+  clickEvent?: string;
+  /** Default: `"Suffix"` */
+  suffix?: string;
+  /** Default: `"Label"` */
+  label?: string;
+  /** Default: `"elevated"` */
+  look?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
+  /** Default: `"absolute"` */
+  trendFormat?: 'absolute' | 'percent';
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
+  /** Default: `0` */
+  trend?: number;
+  icon?: unknown;
+  /** Default: `"Value"` */
+  value?: string;
+  /** Default: `"text-foreground"` */
+  iconColor?: string;
+  /** Default: `0` */
+  target?: number;
+  /** Default: `0` */
+  max?: number;
   /** Default: `[]` */
   sparklineData?: number[];
   /** Default: `false` */
+  isLoading?: boolean;
+  error?: EntityRow;
+  /** Default: `"Prefix"` */
+  prefix?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `false` */
   compact?: boolean;
-  /** Default: `0` */
-  trend?: number;
-  /** Default: `"Value"` */
-  value?: string;
-  /** Default: `0` */
-  max?: number;
-  /** Default: `"Click Event"` */
-  clickEvent?: string;
+  /** Default: `"default"` */
+  variant?: 'default' | 'primary' | 'success' | 'warning' | 'error' | 'info';
 }
 
 /**

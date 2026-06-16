@@ -62,32 +62,32 @@ export interface StdUiRepeatableFormSectionReorderPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiRepeatableFormSectionConfig {
-  /** Default: `false` */
-  allowReorder?: boolean;
-  /** Default: `false` */
-  readOnly?: boolean;
-  /** Default: `"Section Type"` */
-  sectionType?: string;
   /** Default: `""` */
   className?: string;
+  /** Default: `"Title"` */
+  title?: string;
+  /** Default: `false` */
+  showAuditInfo?: boolean;
+  /** Default: `"Section Type"` */
+  sectionType?: string;
   /** Default: `0` */
   maxItems?: number;
   /** Default: `"Current State"` */
   currentState?: string;
+  /** Default: `0` */
+  minItems?: number;
   /** Default: `false` */
-  showAuditInfo?: boolean;
+  trackAddedInState?: boolean;
+  /** Default: `[{"id":"Id","addedInState":"Added In State","addedAt":"Added At"}]` */
+  items?: EntityRow[];
+  /** Default: `"Add Label"` */
+  addLabel?: string;
+  /** Default: `false` */
+  allowReorder?: boolean;
   /** Default: `"Empty Message"` */
   emptyMessage?: string;
   /** Default: `false` */
-  trackAddedInState?: boolean;
-  /** Default: `0` */
-  minItems?: number;
-  /** Default: `"Title"` */
-  title?: string;
-  /** Default: `"Add Label"` */
-  addLabel?: string;
-  /** Default: `[{"id":"Id","addedInState":"Added In State","addedAt":"Added At"}]` */
-  items?: EntityRow[];
+  readOnly?: boolean;
 }
 
 /**

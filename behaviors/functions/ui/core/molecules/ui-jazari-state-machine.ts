@@ -41,12 +41,12 @@ export type StdUiJazariStateMachineEventKey = 'INIT';
 export interface StdUiJazariStateMachineConfig {
   /** Default: `""` */
   className?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
   /** Default: `0` */
   traitIndex?: number;
   /** Default: `"ltr"` */
   direction?: 'ltr' | 'rtl';
-  /** Default: `false` */
-  isLoading?: boolean;
   /** Default: `[]` */
   entityFields?: string[];
   error?: EntityRow;

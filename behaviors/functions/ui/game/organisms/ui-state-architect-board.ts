@@ -54,28 +54,28 @@ export interface StdUiStateArchitectBoardCompletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiStateArchitectBoardConfig {
-  /** Default: `0` */
-  pageSize?: number;
-  /** Default: `"asc"` */
-  sortDirection?: 'asc' | 'desc';
+  activeFilters?: unknown;
   /** Default: `false` */
   isLoading?: boolean;
+  /** Default: `"asc"` */
+  sortDirection?: 'asc' | 'desc';
   /** Default: `"Sort By"` */
   sortBy?: string;
-  /** Default: `0` */
-  pageProp?: number;
-  error?: EntityRow;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `0` */
-  totalCount?: number;
-  activeFilters?: unknown;
   /** Default: `"Search Value"` */
   searchValue?: string;
-  /** Default: `[]` */
-  selectedIds?: string[];
+  /** Default: `0` */
+  pageSize?: number;
   /** Default: `600` */
   stepDurationMs?: number;
+  /** Default: `""` */
+  className?: string;
+  error?: EntityRow;
+  /** Default: `0` */
+  pageProp?: number;
+  /** Default: `0` */
+  totalCount?: number;
+  /** Default: `[]` */
+  selectedIds?: string[];
 }
 
 /**
@@ -246,22 +246,22 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                   'render-ui',
                   'main',
                   {
-                    'page': '@config.pageProp',
                     'activeFilters': '@config.activeFilters',
-                    'className': '@config.className',
+                    'searchValue': '@config.searchValue',
+                    'error': '@config.error',
+                    'pageSize': '@config.pageSize',
+                    'totalCount': '@config.totalCount',
+                    'testEvent': 'TEST',
+                    'completeEvent': 'COMPLETE',
+                    'selectedIds': '@config.selectedIds',
+                    'isLoading': '@config.isLoading',
+                    'sortBy': '@config.sortBy',
+                    'page': '@config.pageProp',
                     'entity': '@entity',
+                    'className': '@config.className',
+                    'sortDirection': '@config.sortDirection',
                     'stepDurationMs': '@config.stepDurationMs',
                     'type': 'state-architect-board',
-                    'sortDirection': '@config.sortDirection',
-                    'testEvent': 'TEST',
-                    'pageSize': '@config.pageSize',
-                    'isLoading': '@config.isLoading',
-                    'totalCount': '@config.totalCount',
-                    'searchValue': '@config.searchValue',
-                    'selectedIds': '@config.selectedIds',
-                    'sortBy': '@config.sortBy',
-                    'error': '@config.error',
-                    'completeEvent': 'COMPLETE',
                   },
                 ],
               ],
@@ -269,11 +269,17 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
           ],
         },
         'config': {
-          'pageSize': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page Size',
-            'description': 'Number of items per page',
+          'activeFilters': {
+            'type': 'json',
+            'label': 'Active Filters',
+            'description': 'Active filters',
+            'tier': 'presentation',
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
             'tier': 'presentation',
           },
           'sortDirection': {
@@ -287,19 +293,68 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
               'desc',
             ],
           },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
-            'tier': 'presentation',
-          },
           'sortBy': {
             'type': 'string',
             'default': 'Sort By',
             'label': 'Sort By',
             'description': 'Current sort field',
             'tier': 'presentation',
+          },
+          'searchValue': {
+            'type': 'string',
+            'default': 'Search Value',
+            'label': 'Search Value',
+            'description': 'Current search query value',
+            'tier': 'presentation',
+          },
+          'pageSize': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page Size',
+            'description': 'Number of items per page',
+            'tier': 'presentation',
+          },
+          'stepDurationMs': {
+            'type': 'number',
+            'default': 600,
+            'label': 'Step Duration Ms',
+            'description': 'Playback speed',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'error': {
+            'type': 'StateArchitectBoardError',
+            'label': 'Error',
+            'description': 'Error state (UiError)',
+            'tier': 'presentation',
+            'properties': {
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+            },
           },
           'pageProp': {
             'type': 'number',
@@ -309,59 +364,11 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
             'synonyms': 'page',
             'tier': 'presentation',
           },
-          'error': {
-            'type': 'StateArchitectBoardError',
-            'label': 'Error',
-            'description': 'Error state (UiError)',
-            'tier': 'presentation',
-            'properties': {
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-            },
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
           'totalCount': {
             'type': 'number',
             'default': 0,
             'label': 'Total Count',
             'description': 'Total number of items',
-            'tier': 'presentation',
-          },
-          'activeFilters': {
-            'type': 'json',
-            'label': 'Active Filters',
-            'description': 'Active filters',
-            'tier': 'presentation',
-          },
-          'searchValue': {
-            'type': 'string',
-            'default': 'Search Value',
-            'label': 'Search Value',
-            'description': 'Current search query value',
             'tier': 'presentation',
           },
           'selectedIds': {
@@ -373,13 +380,6 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
             'items': {
               'type': 'string',
             },
-          },
-          'stepDurationMs': {
-            'type': 'number',
-            'default': 600,
-            'label': 'Step Duration Ms',
-            'description': 'Playback speed',
-            'tier': 'presentation',
           },
         },
         'scope': 'instance',

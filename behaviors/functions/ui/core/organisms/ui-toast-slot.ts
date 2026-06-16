@@ -41,13 +41,13 @@ export type StdUiToastSlotEventKey = 'INIT';
 export interface StdUiToastSlotConfig {
   /** Default: `""` */
   className?: string;
+  error?: EntityRow;
   /** Default: `"Title"` */
   title?: string;
   /** Default: `"success"` */
   variant?: 'success' | 'error' | 'info' | 'warning';
   /** Default: `false` */
   isLoading?: boolean;
-  error?: EntityRow;
   /** Default: `5000` */
   duration?: number;
 }
@@ -158,20 +158,20 @@ export function stdUiToastSlotToastSlotOrbital(params: StdUiToastSlotToastSlotOr
                   'render-ui',
                   'main',
                   {
-                    'className': '@config.className',
-                    'type': 'toast-slot',
-                    'duration': '@config.duration',
-                    'variant': '@config.variant',
-                    'isLoading': '@config.isLoading',
                     'title': '@config.title',
+                    'duration': '@config.duration',
+                    'type': 'toast-slot',
+                    'entity': 'ToastSlotItem',
+                    'variant': '@config.variant',
+                    'error': '@config.error',
                     'children': [
                       {
                         'content': 'Sample content',
                         'type': 'typography',
                       },
                     ],
-                    'error': '@config.error',
-                    'entity': 'ToastSlotItem',
+                    'className': '@config.className',
+                    'isLoading': '@config.isLoading',
                   },
                 ],
               ],
@@ -185,6 +185,34 @@ export function stdUiToastSlotToastSlotOrbital(params: StdUiToastSlotToastSlotOr
             'label': 'Class Name',
             'description': 'Custom class name',
             'tier': 'presentation',
+          },
+          'error': {
+            'type': 'ToastSlotError',
+            'label': 'Error',
+            'description': 'Error state',
+            'tier': 'presentation',
+            'properties': {
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+            },
           },
           'title': {
             'type': 'string',
@@ -212,34 +240,6 @@ export function stdUiToastSlotToastSlotOrbital(params: StdUiToastSlotToastSlotOr
             'label': 'Is Loading',
             'description': 'Loading state indicator',
             'tier': 'presentation',
-          },
-          'error': {
-            'type': 'ToastSlotError',
-            'label': 'Error',
-            'description': 'Error state',
-            'tier': 'presentation',
-            'properties': {
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-            },
           },
           'duration': {
             'type': 'number',

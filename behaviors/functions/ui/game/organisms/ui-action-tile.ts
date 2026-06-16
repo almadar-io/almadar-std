@@ -39,34 +39,34 @@ export type StdUiActionTileEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiActionTileConfig {
-  activeFilters?: unknown;
-  /** Default: `"asc"` */
-  sortDirection?: 'asc' | 'desc';
-  /** Default: `"Sort By"` */
-  sortBy?: string;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `false` */
-  disabled?: boolean;
   error?: EntityRow;
-  /** Default: `{}` */
-  categoryColors?: unknown;
   /** Default: `[]` */
   selectedIds?: string[];
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `0` */
-  pageSize?: number;
+  /** Default: `{"category":"Category","name":"Name","description":"Description","iconEmoji":"Icon Emoji","iconUrl":"Icon Url","stateMachine":{"states":["Item"],"description":"Description","name":"Name","currentState":"Current State","transitions":[{"from":"From","guardHint":"Guard Hint","event":"Event","to":"To"}]},"id":"Id"}` */
+  action?: EntityRow;
+  /** Default: `{}` */
+  categoryColors?: unknown;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
   /** Default: `0` */
   totalCount?: number;
-  /** Default: `"Search Value"` */
-  searchValue?: string;
-  /** Default: `{"name":"Name","id":"Id","category":"Category","iconEmoji":"Icon Emoji","description":"Description","iconUrl":"Icon Url","stateMachine":{"transitions":[{"to":"To","event":"Event","from":"From","guardHint":"Guard Hint"}],"states":["Item"],"name":"Name","currentState":"Current State","description":"Description"}}` */
-  action?: EntityRow;
+  /** Default: `false` */
+  disabled?: boolean;
+  /** Default: `"asc"` */
+  sortDirection?: 'asc' | 'desc';
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `"Sort By"` */
+  sortBy?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `0` */
+  pageSize?: number;
   /** Default: `0` */
   pageProp?: number;
+  /** Default: `"Search Value"` */
+  searchValue?: string;
+  activeFilters?: unknown;
 }
 
 /**
@@ -170,22 +170,22 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
                   'render-ui',
                   'main',
                   {
-                    'sortBy': '@config.sortBy',
+                    'className': '@config.className',
                     'categoryColors': '@config.categoryColors',
-                    'error': '@config.error',
+                    'page': '@config.pageProp',
+                    'type': 'action-tile',
                     'searchValue': '@config.searchValue',
                     'action': '@config.action',
-                    'selectedIds': '@config.selectedIds',
-                    'className': '@config.className',
-                    'type': 'action-tile',
-                    'totalCount': '@config.totalCount',
-                    'sortDirection': '@config.sortDirection',
                     'pageSize': '@config.pageSize',
+                    'selectedIds': '@config.selectedIds',
+                    'sortBy': '@config.sortBy',
                     'isLoading': '@config.isLoading',
-                    'page': '@config.pageProp',
-                    'size': '@config.size',
                     'disabled': '@config.disabled',
+                    'totalCount': '@config.totalCount',
                     'activeFilters': '@config.activeFilters',
+                    'sortDirection': '@config.sortDirection',
+                    'error': '@config.error',
+                    'size': '@config.size',
                   },
                 ],
               ],
@@ -193,44 +193,6 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
           ],
         },
         'config': {
-          'activeFilters': {
-            'type': 'json',
-            'label': 'Active Filters',
-            'description': 'Active filters',
-            'tier': 'presentation',
-          },
-          'sortDirection': {
-            'type': 'string',
-            'default': 'asc',
-            'label': 'Sort Direction',
-            'description': 'Current sort direction',
-            'tier': 'presentation',
-            'values': [
-              'asc',
-              'desc',
-            ],
-          },
-          'sortBy': {
-            'type': 'string',
-            'default': 'Sort By',
-            'label': 'Sort By',
-            'description': 'Current sort field',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'disabled': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Disabled',
-            'description': 'Whether the tile is disabled / already used',
-            'tier': 'presentation',
-          },
           'error': {
             'type': 'ActionTileError',
             'label': 'Error',
@@ -242,13 +204,13 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
                 'type': 'string',
                 'required': true,
               },
-              'name': {
-                'name': 'name',
+              'code': {
+                'name': 'code',
                 'type': 'string',
                 'required': false,
               },
-              'code': {
-                'name': 'code',
+              'name': {
+                'name': 'name',
                 'type': 'string',
                 'required': false,
               },
@@ -256,6 +218,138 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
                 'name': 'stack',
                 'type': 'string',
                 'required': false,
+              },
+            },
+          },
+          'selectedIds': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Selected Ids',
+            'description': 'Currently selected item IDs',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'action': {
+            'type': 'ActionTileAction',
+            'default': {
+              'category': 'Category',
+              'name': 'Name',
+              'description': 'Description',
+              'iconEmoji': 'Icon Emoji',
+              'iconUrl': 'Icon Url',
+              'stateMachine': {
+                'states': [
+                  'Item',
+                ],
+                'description': 'Description',
+                'name': 'Name',
+                'currentState': 'Current State',
+                'transitions': [
+                  {
+                    'from': 'From',
+                    'guardHint': 'Guard Hint',
+                    'event': 'Event',
+                    'to': 'To',
+                  },
+                ],
+              },
+              'id': 'Id',
+            },
+            'label': 'Action',
+            'description': 'The action data',
+            'tier': 'presentation',
+            'properties': {
+              'category': {
+                'name': 'category',
+                'type': 'string',
+                'required': true,
+              },
+              'id': {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              'description': {
+                'name': 'description',
+                'type': 'string',
+                'required': false,
+              },
+              'iconUrl': {
+                'name': 'iconUrl',
+                'type': 'string',
+                'required': false,
+              },
+              'stateMachine': {
+                'name': 'stateMachine',
+                'type': 'object',
+                'required': false,
+                'properties': {
+                  'transitions': {
+                    'name': 'transitions',
+                    'type': 'array',
+                    'required': true,
+                    'items': {
+                      'type': 'object',
+                      'properties': {
+                        'from': {
+                          'name': 'from',
+                          'type': 'string',
+                          'required': true,
+                        },
+                        'event': {
+                          'name': 'event',
+                          'type': 'string',
+                          'required': true,
+                        },
+                        'to': {
+                          'name': 'to',
+                          'type': 'string',
+                          'required': true,
+                        },
+                        'guardHint': {
+                          'name': 'guardHint',
+                          'type': 'string',
+                          'required': false,
+                        },
+                      },
+                    },
+                  },
+                  'description': {
+                    'name': 'description',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'states': {
+                    'name': 'states',
+                    'type': 'array',
+                    'required': true,
+                    'items': {
+                      'type': 'string',
+                    },
+                  },
+                  'currentState': {
+                    'name': 'currentState',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  'name': {
+                    'name': 'name',
+                    'type': 'string',
+                    'required': true,
+                  },
+                },
+              },
+              'iconEmoji': {
+                'name': 'iconEmoji',
+                'type': 'string',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': true,
               },
             },
           },
@@ -281,30 +375,6 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
               },
             },
           },
-          'selectedIds': {
-            'type': '[string]',
-            'default': [],
-            'label': 'Selected Ids',
-            'description': 'Currently selected item IDs',
-            'tier': 'presentation',
-            'items': {
-              'type': 'string',
-            },
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
-            'tier': 'presentation',
-          },
-          'pageSize': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page Size',
-            'description': 'Number of items per page',
-            'tier': 'presentation',
-          },
           'size': {
             'type': 'string',
             'default': 'md',
@@ -324,134 +394,51 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
             'description': 'Total number of items',
             'tier': 'presentation',
           },
-          'searchValue': {
-            'type': 'string',
-            'default': 'Search Value',
-            'label': 'Search Value',
-            'description': 'Current search query value',
+          'disabled': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Disabled',
+            'description': 'Whether the tile is disabled / already used',
             'tier': 'presentation',
           },
-          'action': {
-            'type': 'ActionTileAction',
-            'default': {
-              'name': 'Name',
-              'id': 'Id',
-              'category': 'Category',
-              'iconEmoji': 'Icon Emoji',
-              'description': 'Description',
-              'iconUrl': 'Icon Url',
-              'stateMachine': {
-                'transitions': [
-                  {
-                    'to': 'To',
-                    'event': 'Event',
-                    'from': 'From',
-                    'guardHint': 'Guard Hint',
-                  },
-                ],
-                'states': [
-                  'Item',
-                ],
-                'name': 'Name',
-                'currentState': 'Current State',
-                'description': 'Description',
-              },
-            },
-            'label': 'Action',
-            'description': 'The action data',
+          'sortDirection': {
+            'type': 'string',
+            'default': 'asc',
+            'label': 'Sort Direction',
+            'description': 'Current sort direction',
             'tier': 'presentation',
-            'properties': {
-              'description': {
-                'name': 'description',
-                'type': 'string',
-                'required': false,
-              },
-              'iconUrl': {
-                'name': 'iconUrl',
-                'type': 'string',
-                'required': false,
-              },
-              'category': {
-                'name': 'category',
-                'type': 'string',
-                'required': true,
-              },
-              'stateMachine': {
-                'name': 'stateMachine',
-                'type': 'object',
-                'required': false,
-                'properties': {
-                  'states': {
-                    'name': 'states',
-                    'type': 'array',
-                    'required': true,
-                    'items': {
-                      'type': 'string',
-                    },
-                  },
-                  'transitions': {
-                    'name': 'transitions',
-                    'type': 'array',
-                    'required': true,
-                    'items': {
-                      'type': 'object',
-                      'properties': {
-                        'event': {
-                          'name': 'event',
-                          'type': 'string',
-                          'required': true,
-                        },
-                        'to': {
-                          'name': 'to',
-                          'type': 'string',
-                          'required': true,
-                        },
-                        'from': {
-                          'name': 'from',
-                          'type': 'string',
-                          'required': true,
-                        },
-                        'guardHint': {
-                          'name': 'guardHint',
-                          'type': 'string',
-                          'required': false,
-                        },
-                      },
-                    },
-                  },
-                  'description': {
-                    'name': 'description',
-                    'type': 'string',
-                    'required': false,
-                  },
-                  'name': {
-                    'name': 'name',
-                    'type': 'string',
-                    'required': true,
-                  },
-                  'currentState': {
-                    'name': 'currentState',
-                    'type': 'string',
-                    'required': true,
-                  },
-                },
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': true,
-              },
-              'iconEmoji': {
-                'name': 'iconEmoji',
-                'type': 'string',
-                'required': false,
-              },
-              'id': {
-                'name': 'id',
-                'type': 'string',
-                'required': true,
-              },
-            },
+            'values': [
+              'asc',
+              'desc',
+            ],
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
+          'sortBy': {
+            'type': 'string',
+            'default': 'Sort By',
+            'label': 'Sort By',
+            'description': 'Current sort field',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'pageSize': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page Size',
+            'description': 'Number of items per page',
+            'tier': 'presentation',
           },
           'pageProp': {
             'type': 'number',
@@ -459,6 +446,19 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
             'label': 'Page',
             'description': 'Current page number',
             'synonyms': 'page',
+            'tier': 'presentation',
+          },
+          'searchValue': {
+            'type': 'string',
+            'default': 'Search Value',
+            'label': 'Search Value',
+            'description': 'Current search query value',
+            'tier': 'presentation',
+          },
+          'activeFilters': {
+            'type': 'json',
+            'label': 'Active Filters',
+            'description': 'Active filters',
             'tier': 'presentation',
           },
         },

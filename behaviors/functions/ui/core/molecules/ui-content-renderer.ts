@@ -39,32 +39,32 @@ export type StdUiContentRendererEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiContentRendererConfig {
+  /** Default: `"Search Value"` */
+  searchValue?: string;
   /** Default: `0` */
   pageProp?: number;
+  activeFilters?: unknown;
+  /** Default: `0` */
+  totalCount?: number;
+  /** Default: `"Content"` */
+  content?: string;
+  /** Default: `0` */
+  pageSize?: number;
   /** Default: `"Sort By"` */
   sortBy?: string;
   /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
-  activeFilters?: unknown;
-  /** Default: `[]` */
-  selectedIds?: string[];
   /** Default: `[{"content":"Content","type":"markdown"}]` */
   segments?: EntityRow[];
-  /** Default: `"Content"` */
-  content?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
   error?: EntityRow;
   /** Default: `""` */
   className?: string;
-  /** Default: `0` */
-  pageSize?: number;
-  /** Default: `0` */
-  totalCount?: number;
-  /** Default: `"Search Value"` */
-  searchValue?: string;
   /** Default: `"rtl"` */
   direction?: 'rtl' | 'ltr';
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `[]` */
+  selectedIds?: string[];
 }
 
 /**

@@ -39,15 +39,15 @@ export type StdUiUiSlotRendererEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiUiSlotRendererConfig {
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `{"enabled":false}` */
+  suspense?: EntityRow;
   /** Default: `""` */
   className?: string;
   /** Default: `false` */
-  isLoading?: boolean;
-  error?: EntityRow;
-  /** Default: `false` */
   includeFloating?: boolean;
-  /** Default: `{"enabled":false}` */
-  suspense?: EntityRow;
+  error?: EntityRow;
   /** Default: `false` */
   includeHud?: boolean;
   /** Default: `"fixed"` */
@@ -160,15 +160,15 @@ export function stdUiUiSlotRendererUiSlotRendererOrbital(params: StdUiUiSlotRend
                   'render-ui',
                   'main',
                   {
+                    'className': '@config.className',
                     'error': '@config.error',
                     'entity': 'UiSlotRendererItem',
-                    'suspense': '@config.suspense',
+                    'type': 'ui-slot-renderer',
                     'includeFloating': '@config.includeFloating',
                     'includeHud': '@config.includeHud',
-                    'hudMode': '@config.hudMode',
-                    'className': '@config.className',
                     'isLoading': '@config.isLoading',
-                    'type': 'ui-slot-renderer',
+                    'hudMode': '@config.hudMode',
+                    'suspense': '@config.suspense',
                   },
                 ],
               ],
@@ -176,6 +176,37 @@ export function stdUiUiSlotRendererUiSlotRendererOrbital(params: StdUiUiSlotRend
           ],
         },
         'config': {
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
+          'suspense': {
+            'type': 'UiSlotRendererSuspense',
+            'default': {
+              'enabled': false,
+            },
+            'label': 'Suspense',
+            'description': 'Enable Suspense boundaries around each slot. When true, each inline slot is wrapped in `<ErrorBoundary><Suspense>` with Skeleton fallbacks. Opt-in — existing isLoading prop pattern still works.',
+            'tier': 'presentation',
+            'properties': {
+              'enabled': {
+                'name': 'enabled',
+                'type': 'boolean',
+                'required': true,
+              },
+              'slotFallbacks': {
+                'name': 'slotFallbacks',
+                'type': 'object',
+                'required': false,
+                'items': {
+                  'type': 'string',
+                },
+              },
+            },
+          },
           'className': {
             'type': 'string',
             'default': '',
@@ -183,11 +214,11 @@ export function stdUiUiSlotRendererUiSlotRendererOrbital(params: StdUiUiSlotRend
             'description': 'Additional class name for the container',
             'tier': 'presentation',
           },
-          'isLoading': {
+          'includeFloating': {
             'type': 'boolean',
             'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
+            'label': 'Include Floating',
+            'description': 'Include floating slot',
             'tier': 'presentation',
           },
           'error': {
@@ -201,6 +232,11 @@ export function stdUiUiSlotRendererUiSlotRendererOrbital(params: StdUiUiSlotRend
                 'type': 'string',
                 'required': false,
               },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
               'code': {
                 'name': 'code',
                 'type': 'string',
@@ -210,42 +246,6 @@ export function stdUiUiSlotRendererUiSlotRendererOrbital(params: StdUiUiSlotRend
                 'name': 'stack',
                 'type': 'string',
                 'required': false,
-              },
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-            },
-          },
-          'includeFloating': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Include Floating',
-            'description': 'Include floating slot',
-            'tier': 'presentation',
-          },
-          'suspense': {
-            'type': 'UiSlotRendererSuspense',
-            'default': {
-              'enabled': false,
-            },
-            'label': 'Suspense',
-            'description': 'Enable Suspense boundaries around each slot. When true, each inline slot is wrapped in `<ErrorBoundary><Suspense>` with Skeleton fallbacks. Opt-in — existing isLoading prop pattern still works.',
-            'tier': 'presentation',
-            'properties': {
-              'slotFallbacks': {
-                'name': 'slotFallbacks',
-                'type': 'object',
-                'required': false,
-                'items': {
-                  'type': 'string',
-                },
-              },
-              'enabled': {
-                'name': 'enabled',
-                'type': 'boolean',
-                'required': true,
               },
             },
           },

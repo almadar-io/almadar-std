@@ -80,23 +80,23 @@ export interface StdUiWorldMapBoardTileClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiWorldMapBoardConfig {
+  /** Default: `0` */
+  diamondTopY?: number;
+  /** Default: `false` */
+  enableCamera?: boolean;
   /** Default: `[]` */
   effectSpriteUrls?: string[];
   /** Default: `false` */
-  enableCamera?: boolean;
-  /** Default: `false` */
   allowMoveAllHeroes?: boolean;
-  error?: EntityRow;
-  /** Default: `false` */
-  isLoading?: boolean;
   /** Default: `0.4` */
   scale?: number;
-  /** Default: `0` */
-  diamondTopY?: number;
-  /** Default: `""` */
-  className?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
   /** Default: `2.5` */
   unitScale?: number;
+  /** Default: `""` */
+  className?: string;
+  error?: EntityRow;
 }
 
 /**
@@ -397,26 +397,26 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
                   'render-ui',
                   'main',
                   {
-                    'onBattleEncounter': 'BATTLE_ENCOUNTER',
-                    'onHeroSelect': 'HERO_SELECT',
-                    'heroMoveEvent': 'HERO_MOVE',
-                    'tileClickEvent': 'TILE_CLICK',
-                    'entity': '@entity',
-                    'enableCamera': '@config.enableCamera',
-                    'scale': '@config.scale',
-                    'battleEncounterEvent': 'BATTLE_ENCOUNTER',
-                    'onHeroMove': 'HERO_MOVE',
                     'error': '@config.error',
-                    'type': 'world-map-board',
+                    'heroMoveEvent': 'HERO_MOVE',
                     'effectSpriteUrls': '@config.effectSpriteUrls',
-                    'isLoading': '@config.isLoading',
+                    'onFeatureEnter': 'FEATURE_ENTER',
                     'unitScale': '@config.unitScale',
-                    'heroSelectEvent': 'HERO_SELECT',
-                    'diamondTopY': '@config.diamondTopY',
+                    'entity': '@entity',
+                    'onHeroMove': 'HERO_MOVE',
+                    'battleEncounterEvent': 'BATTLE_ENCOUNTER',
                     'className': '@config.className',
                     'allowMoveAllHeroes': '@config.allowMoveAllHeroes',
+                    'scale': '@config.scale',
+                    'heroSelectEvent': 'HERO_SELECT',
+                    'diamondTopY': '@config.diamondTopY',
+                    'isLoading': '@config.isLoading',
+                    'onBattleEncounter': 'BATTLE_ENCOUNTER',
+                    'onHeroSelect': 'HERO_SELECT',
+                    'type': 'world-map-board',
+                    'enableCamera': '@config.enableCamera',
                     'featureEnterEvent': 'FEATURE_ENTER',
-                    'onFeatureEnter': 'FEATURE_ENTER',
+                    'tileClickEvent': 'TILE_CLICK',
                   },
                 ],
               ],
@@ -424,6 +424,20 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
           ],
         },
         'config': {
+          'diamondTopY': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Diamond Top Y',
+            'description': '-- Canvas pass-through --',
+            'tier': 'presentation',
+          },
+          'enableCamera': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Enable Camera',
+            'description': 'Disable pan/zoom camera (default: true). Set false for fixed maps where overlay labels need stable positions.',
+            'tier': 'presentation',
+          },
           'effectSpriteUrls': {
             'type': '[string]',
             'default': [],
@@ -434,53 +448,11 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
               'type': 'string',
             },
           },
-          'enableCamera': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Enable Camera',
-            'description': 'Disable pan/zoom camera (default: true). Set false for fixed maps where overlay labels need stable positions.',
-            'tier': 'presentation',
-          },
           'allowMoveAllHeroes': {
             'type': 'boolean',
             'default': false,
             'label': 'Allow Move All Heroes',
             'description': 'Allow selecting / moving ALL heroes (including enemy). For testing.',
-            'tier': 'presentation',
-          },
-          'error': {
-            'type': 'WorldMapBoardError',
-            'label': 'Error',
-            'description': 'Error state',
-            'tier': 'presentation',
-            'properties': {
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-            },
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
             'tier': 'presentation',
           },
           'scale': {
@@ -490,11 +462,18 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
             'description': 'Canvas render scale',
             'tier': 'presentation',
           },
-          'diamondTopY': {
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
+          'unitScale': {
             'type': 'number',
-            'default': 0,
-            'label': 'Diamond Top Y',
-            'description': '-- Canvas pass-through --',
+            'default': 2.5,
+            'label': 'Unit Scale',
+            'description': 'Unit draw-size multiplier',
             'tier': 'presentation',
           },
           'className': {
@@ -504,12 +483,33 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
             'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
-          'unitScale': {
-            'type': 'number',
-            'default': 2.5,
-            'label': 'Unit Scale',
-            'description': 'Unit draw-size multiplier',
+          'error': {
+            'type': 'WorldMapBoardError',
+            'label': 'Error',
+            'description': 'Error state',
             'tier': 'presentation',
+            'properties': {
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+            },
           },
         },
         'scope': 'instance',

@@ -70,49 +70,49 @@ export interface StdUiIsometricCanvasTileLeavePayload {
  */
 export interface StdUiIsometricCanvasConfig {
   /** Default: `false` */
-  hasActiveEffects?: boolean;
-  /** Default: `"Background Image"` */
-  backgroundImage?: string;
-  /** Default: `true` */
-  enableCamera?: boolean;
-  /** Default: `1` */
-  unitScale?: number;
-  /** Default: `[]` */
-  effectSpriteUrls?: string[];
-  /** Default: `"Asset Base Url"` */
-  assetBaseUrl?: string;
-  /** Default: `true` */
-  showMinimap?: boolean;
-  /** Default: `"Selected Unit Id"` */
-  selectedUnitId?: string;
-  /** Default: `""` */
-  className?: string;
-  error?: EntityRow;
-  /** Default: `[{"position":{"x":1,"y":1},"heroId":"Hero Id","traits":[{"currentState":"Current State","cooldown":1,"states":["Item"],"name":"Name"}],"name":"Name","x":1,"previousPosition":{"y":1,"x":1},"id":"Id","unitType":"Unit Type","health":1,"y":1,"z":1,"elevation":1,"maxHealth":1,"team":"player","faction":"player","sprite":"Sprite"}]` */
-  units?: EntityRow[];
-  /** Default: `[{"x":1,"y":1}]` */
-  validMoves?: EntityRow[];
-  /** Default: `{"x":1,"y":1}` */
-  hoveredTile?: EntityRow;
-  /** Default: `[{"y":1,"z":1,"id":"Id","assetUrl":"Asset Url","x":1,"sprite":"Sprite","type":"Type","color":"Color","elevation":1}]` */
-  features?: EntityRow[];
-  /** Default: `0` */
-  diamondTopY?: number;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `false` */
   debug?: boolean;
   /** Default: `0` */
   boardWidth?: number;
-  /** Default: `0.4` */
-  scale?: number;
-  /** Default: `[{"tileType":"Tile Type","elevation":1,"y":1,"terrain":"Terrain","type":"Type","terrainSprite":"Terrain Sprite","passable":false,"movementCost":1,"id":"Id","x":1,"z":1}]` */
-  tiles?: EntityRow[];
-  /** Default: `[{"y":1,"x":1}]` */
-  attackTargets?: EntityRow[];
-  assetManifest?: EntityRow;
+  /** Default: `false` */
+  hasActiveEffects?: boolean;
+  /** Default: `[]` */
+  effectSpriteUrls?: string[];
+  /** Default: `true` */
+  enableCamera?: boolean;
+  /** Default: `[{"id":"Id","type":"Type","z":1,"color":"Color","elevation":1,"y":1,"sprite":"Sprite","x":1,"assetUrl":"Asset Url"}]` */
+  features?: EntityRow[];
+  /** Default: `0` */
+  diamondTopY?: number;
   /** Default: `0` */
   boardHeight?: number;
+  /** Default: `true` */
+  showMinimap?: boolean;
+  /** Default: `0.4` */
+  scale?: number;
+  /** Default: `[{"z":1,"x":1,"y":1,"movementCost":1,"terrainSprite":"Terrain Sprite","terrain":"Terrain","tileType":"Tile Type","id":"Id","elevation":1,"passable":false,"type":"Type"}]` */
+  tiles?: EntityRow[];
+  /** Default: `{"x":1,"y":1}` */
+  hoveredTile?: EntityRow;
+  /** Default: `"Background Image"` */
+  backgroundImage?: string;
+  assetManifest?: EntityRow;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `1` */
+  unitScale?: number;
+  /** Default: `[{"x":1,"y":1}]` */
+  attackTargets?: EntityRow[];
+  error?: EntityRow;
+  /** Default: `"Asset Base Url"` */
+  assetBaseUrl?: string;
+  /** Default: `"Selected Unit Id"` */
+  selectedUnitId?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `[{"x":1,"y":1}]` */
+  validMoves?: EntityRow[];
+  /** Default: `[{"y":1,"sprite":"Sprite","unitType":"Unit Type","faction":"player","z":1,"id":"Id","health":1,"team":"player","traits":[{"name":"Name","cooldown":1,"states":["Item"],"currentState":"Current State"}],"x":1,"position":{"y":1,"x":1},"elevation":1,"previousPosition":{"x":1,"y":1},"heroId":"Hero Id","maxHealth":1,"name":"Name"}]` */
+  units?: EntityRow[];
 }
 
 /**

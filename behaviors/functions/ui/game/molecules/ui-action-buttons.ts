@@ -47,14 +47,14 @@ export interface StdUiActionButtonsActionPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiActionButtonsConfig {
-  /** Default: `[{"label":"Label","id":"Id","variant":"primary","icon":"circle"}]` */
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
+  /** Default: `[{"id":"Id","variant":"primary","label":"Label","icon":"circle"}]` */
   buttons?: EntityRow[];
   /** Default: `""` */
   className?: string;
   /** Default: `false` */
   disabled?: boolean;
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
   /** Default: `"horizontal"` */
   layout?: 'horizontal' | 'vertical' | 'diamond';
 }

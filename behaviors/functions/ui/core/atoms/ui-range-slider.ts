@@ -56,25 +56,25 @@ export interface StdUiRangeSliderConfig {
   /** Default: `0` */
   buffered?: number;
   /** Default: `false` */
-  showTicks?: boolean;
+  disabled?: boolean;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
+  /** Default: `0` */
+  min?: number;
+  /** Default: `0` */
+  value?: number;
+  /** Default: `false` */
+  showTooltip?: boolean;
   /** Default: `100` */
   max?: number;
   /** Default: `1` */
   step?: number;
-  /** Default: `false` */
-  disabled?: boolean;
-  /** Default: `false` */
-  showTooltip?: boolean;
-  /** Default: `0` */
-  min?: number;
   /** Default: `""` */
   className?: string;
+  /** Default: `false` */
+  showTicks?: boolean;
   /** Default: `{}` */
   actionPayload?: unknown;
-  /** Default: `0` */
-  value?: number;
 }
 
 /**

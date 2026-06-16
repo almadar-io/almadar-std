@@ -46,45 +46,45 @@ export interface StdUiCodeBlockChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiCodeBlockConfig {
-  /** Default: `[{"code":"Code","language":"text","label":"Label"}]` */
-  files?: EntityRow[];
-  /** Default: `[{"label":"Label","variant":"primary","navigatesTo":"Navigates To"}]` */
-  actions?: EntityRow[];
   error?: EntityRow;
   /** Default: `false` */
-  showCopy?: boolean;
-  /** Default: `"60vh"` */
-  maxHeight?: string;
-  /** Default: `"Title"` */
-  title?: string;
-  /** Default: `"New Value"` */
-  newValue?: string;
-  /** Default: `"Code"` */
-  code?: string;
-  /** Default: `true` */
-  showLanguageBadge?: boolean;
-  /** Default: `false` */
-  wordWrap?: boolean;
-  /** Default: `"text"` */
-  language?: 'text' | 'json' | 'javascript' | 'js' | 'typescript' | 'ts' | 'jsx' | 'tsx' | 'css' | 'markdown' | 'md' | 'bash' | 'shell' | 'sh' | 'yaml' | 'yml' | 'rust' | 'python' | 'py' | 'sql' | 'diff' | 'toml' | 'go' | 'graphql' | 'html' | 'xml' | 'orb' | 'lolo';
+  showLineNumbers?: boolean;
+  /** Default: `"code"` */
+  mode?: 'code' | 'diff';
   /** Default: `false` */
   foldable?: boolean;
   /** Default: `true` */
   showCopyButton?: boolean;
-  /** Default: `[{"afterLineNumber":1,"type":"added","content":"Content","beforeLineNumber":1}]` */
-  diff?: EntityRow[];
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `false` */
-  showLineNumbers?: boolean;
+  /** Default: `"Code"` */
+  code?: string;
+  /** Default: `"60vh"` */
+  maxHeight?: string;
+  /** Default: `true` */
+  showLanguageBadge?: boolean;
   /** Default: `""` */
   className?: string;
+  /** Default: `[{"language":"text","code":"Code","label":"Label"}]` */
+  files?: EntityRow[];
+  /** Default: `false` */
+  isLoading?: boolean;
   /** Default: `"Old Value"` */
   oldValue?: string;
   /** Default: `false` */
+  showCopy?: boolean;
+  /** Default: `[{"variant":"primary","label":"Label","navigatesTo":"Navigates To"}]` */
+  actions?: EntityRow[];
+  /** Default: `false` */
+  wordWrap?: boolean;
+  /** Default: `"Title"` */
+  title?: string;
+  /** Default: `"New Value"` */
+  newValue?: string;
+  /** Default: `"text"` */
+  language?: 'text' | 'json' | 'javascript' | 'js' | 'typescript' | 'ts' | 'jsx' | 'tsx' | 'css' | 'markdown' | 'md' | 'bash' | 'shell' | 'sh' | 'yaml' | 'yml' | 'rust' | 'python' | 'py' | 'sql' | 'diff' | 'toml' | 'go' | 'graphql' | 'html' | 'xml' | 'orb' | 'lolo';
+  /** Default: `false` */
   editable?: boolean;
-  /** Default: `"code"` */
-  mode?: 'code' | 'diff';
+  /** Default: `[{"afterLineNumber":1,"type":"added","content":"Content","beforeLineNumber":1}]` */
+  diff?: EntityRow[];
 }
 
 /**

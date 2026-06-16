@@ -53,24 +53,24 @@ export interface StdUiPageHeaderTabChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiPageHeaderConfig {
-  title?: unknown;
-  /** Default: `[{"label":"Label","href":"Href"}]` */
-  breadcrumbs?: EntityRow[];
-  /** Default: `[{"disabled":false,"icon":"circle","variant":"primary","navigatesTo":"Navigates To","loading":false,"label":"Label"}]` */
-  actions?: EntityRow[];
-  status?: EntityRow;
-  /** Default: `false` */
-  isLoading?: boolean;
-  error?: EntityRow;
-  /** Default: `[{"count":1,"value":"Value","label":"Label"}]` */
-  tabs?: EntityRow[];
-  /** Default: `false` */
-  showBack?: boolean;
   /** Default: `"Active Tab"` */
   activeTab?: string;
+  error?: EntityRow;
+  title?: unknown;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `false` */
+  showBack?: boolean;
+  /** Default: `[{"count":1,"label":"Label","value":"Value"}]` */
+  tabs?: EntityRow[];
+  subtitle?: unknown;
+  /** Default: `[{"label":"Label","href":"Href"}]` */
+  breadcrumbs?: EntityRow[];
+  /** Default: `[{"loading":false,"navigatesTo":"Navigates To","label":"Label","variant":"primary","icon":"circle","disabled":false}]` */
+  actions?: EntityRow[];
+  status?: EntityRow;
   /** Default: `""` */
   className?: string;
-  subtitle?: unknown;
 }
 
 /**

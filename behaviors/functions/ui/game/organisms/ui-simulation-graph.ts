@@ -39,8 +39,6 @@ export type StdUiSimulationGraphEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiSimulationGraphConfig {
-  /** Default: `[{"value":1,"time":1}]` */
-  data?: EntityRow[];
   /** Default: `300` */
   width?: number;
   /** Default: `"Label"` */
@@ -49,12 +47,14 @@ export interface StdUiSimulationGraphConfig {
   height?: number;
   /** Default: `"#e94560"` */
   color?: string;
-  /** Default: `200` */
-  maxPoints?: number;
-  /** Default: `""` */
-  className?: string;
   /** Default: `"Unit"` */
   unit?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `[{"time":1,"value":1}]` */
+  data?: EntityRow[];
+  /** Default: `200` */
+  maxPoints?: number;
 }
 
 /**
@@ -158,15 +158,15 @@ export function stdUiSimulationGraphSimulationGraphOrbital(params: StdUiSimulati
                   'render-ui',
                   'main',
                   {
-                    'unit': '@config.unit',
-                    'label': '@config.label',
-                    'className': '@config.className',
-                    'height': '@config.height',
                     'color': '@config.color',
-                    'data': '@config.data',
-                    'maxPoints': '@config.maxPoints',
                     'type': 'simulation-graph',
                     'width': '@config.width',
+                    'unit': '@config.unit',
+                    'maxPoints': '@config.maxPoints',
+                    'height': '@config.height',
+                    'data': '@config.data',
+                    'label': '@config.label',
+                    'className': '@config.className',
                   },
                 ],
               ],
@@ -174,33 +174,6 @@ export function stdUiSimulationGraphSimulationGraphOrbital(params: StdUiSimulati
           ],
         },
         'config': {
-          'data': {
-            'type': '[SimulationGraphDataItem]',
-            'default': [
-              {
-                'value': 1,
-                'time': 1,
-              },
-            ],
-            'label': 'Data',
-            'description': 'data prop',
-            'tier': 'presentation',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'value': {
-                  'name': 'value',
-                  'type': 'number',
-                  'required': true,
-                },
-                'time': {
-                  'name': 'time',
-                  'type': 'number',
-                  'required': true,
-                },
-              },
-            },
-          },
           'width': {
             'type': 'number',
             'default': 300,
@@ -229,11 +202,11 @@ export function stdUiSimulationGraphSimulationGraphOrbital(params: StdUiSimulati
             'description': 'color prop',
             'tier': 'presentation',
           },
-          'maxPoints': {
-            'type': 'number',
-            'default': 200,
-            'label': 'Max Points',
-            'description': 'maxPoints prop',
+          'unit': {
+            'type': 'string',
+            'default': 'Unit',
+            'label': 'Unit',
+            'description': 'unit prop',
             'tier': 'presentation',
           },
           'className': {
@@ -243,11 +216,38 @@ export function stdUiSimulationGraphSimulationGraphOrbital(params: StdUiSimulati
             'description': 'className prop',
             'tier': 'presentation',
           },
-          'unit': {
-            'type': 'string',
-            'default': 'Unit',
-            'label': 'Unit',
-            'description': 'unit prop',
+          'data': {
+            'type': '[SimulationGraphDataItem]',
+            'default': [
+              {
+                'time': 1,
+                'value': 1,
+              },
+            ],
+            'label': 'Data',
+            'description': 'data prop',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'value': {
+                  'name': 'value',
+                  'type': 'number',
+                  'required': true,
+                },
+                'time': {
+                  'name': 'time',
+                  'type': 'number',
+                  'required': true,
+                },
+              },
+            },
+          },
+          'maxPoints': {
+            'type': 'number',
+            'default': 200,
+            'label': 'Max Points',
+            'description': 'maxPoints prop',
             'tier': 'presentation',
           },
         },

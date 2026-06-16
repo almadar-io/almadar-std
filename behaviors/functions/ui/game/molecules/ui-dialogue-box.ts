@@ -60,14 +60,14 @@ export interface StdUiDialogueBoxAdvancePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiDialogueBoxConfig {
-  /** Default: `30` */
-  typewriterSpeed?: number;
-  /** Default: `{"autoAdvance":1,"choices":[{"disabled":false,"action":"Action","next":"Next","text":"Text"}],"speaker":"Speaker","portrait":"Portrait","text":"Text","id":"Id"}` */
-  dialogue?: EntityRow;
   /** Default: `""` */
   className?: string;
   /** Default: `"bottom"` */
   position?: 'top' | 'bottom';
+  /** Default: `{"text":"Text","id":"Id","choices":[{"next":"Next","disabled":false,"text":"Text","action":"Action"}],"autoAdvance":1,"speaker":"Speaker","portrait":"Portrait"}` */
+  dialogue?: EntityRow;
+  /** Default: `30` */
+  typewriterSpeed?: number;
 }
 
 /**

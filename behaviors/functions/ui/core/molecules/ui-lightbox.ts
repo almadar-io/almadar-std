@@ -60,18 +60,18 @@ export interface StdUiLightboxOpenPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiLightboxConfig {
-  /** Default: `[{"alt":"Alt","src":"Src","caption":"Caption"}]` */
-  images?: EntityRow[];
-  /** Default: `0` */
-  currentIndex?: number;
-  /** Default: `false` */
-  isOpen?: boolean;
   /** Default: `"Close Action"` */
   closeAction?: string;
-  /** Default: `""` */
-  className?: string;
+  /** Default: `[{"src":"Src","alt":"Alt","caption":"Caption"}]` */
+  images?: EntityRow[];
+  /** Default: `false` */
+  isOpen?: boolean;
   /** Default: `true` */
   showCounter?: boolean;
+  /** Default: `0` */
+  currentIndex?: number;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

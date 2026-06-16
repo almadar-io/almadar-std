@@ -46,24 +46,24 @@ export interface StdUiUploadDropZoneActionPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiUploadDropZoneConfig {
-  /** Default: `1` */
-  maxFiles?: number;
-  /** Default: `0` */
-  maxSize?: number;
-  /** Default: `"Label"` */
-  label?: string;
-  /** Default: `"Description"` */
-  description?: string;
-  /** Default: `"circle"` */
-  icon?: unknown;
-  /** Default: `false` */
-  disabled?: boolean;
   /** Default: `"Accept"` */
   accept?: string;
-  /** Default: `{}` */
-  actionPayload?: unknown;
+  /** Default: `1` */
+  maxFiles?: number;
   /** Default: `""` */
   className?: string;
+  /** Default: `"Description"` */
+  description?: string;
+  /** Default: `false` */
+  disabled?: boolean;
+  /** Default: `"circle"` */
+  icon?: unknown;
+  /** Default: `{}` */
+  actionPayload?: unknown;
+  /** Default: `"Label"` */
+  label?: string;
+  /** Default: `0` */
+  maxSize?: number;
 }
 
 /**

@@ -39,20 +39,20 @@ export type StdUiSparklineEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiSparklineConfig {
-  /** Default: `"auto"` */
-  color?: 'auto' | 'primary' | 'success' | 'warning' | 'error' | 'info' | 'muted';
-  /** Default: `false` */
-  fill?: boolean;
   /** Default: `[1]` */
   data?: number[];
-  /** Default: `32` */
-  height?: number;
   /** Default: `2` */
   strokeWidth?: number;
-  /** Default: `80` */
-  width?: number;
   /** Default: `""` */
   className?: string;
+  /** Default: `80` */
+  width?: number;
+  /** Default: `false` */
+  fill?: boolean;
+  /** Default: `"auto"` */
+  color?: 'auto' | 'primary' | 'success' | 'warning' | 'error' | 'info' | 'muted';
+  /** Default: `32` */
+  height?: number;
 }
 
 /**

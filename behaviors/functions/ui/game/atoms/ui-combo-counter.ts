@@ -40,15 +40,15 @@ export type StdUiComboCounterEventKey = 'INIT';
  */
 export interface StdUiComboCounterConfig {
   /** Default: `0` */
-  streak?: number;
-  /** Default: `0` */
   combo?: number;
+  /** Default: `0` */
+  multiplier?: number;
+  /** Default: `0` */
+  streak?: number;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
   /** Default: `""` */
   className?: string;
-  /** Default: `0` */
-  multiplier?: number;
 }
 
 /**

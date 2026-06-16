@@ -46,20 +46,20 @@ export interface StdUiTabsTabChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiTabsConfig {
-  /** Default: `[{"badge":"Badge","content":"Content","value":"Value","disabled":false,"active":false,"label":"Label","icon":"circle","id":"Id"}]` */
+  /** Default: `[{"id":"Id","active":false,"value":"Value","disabled":false,"icon":"circle","content":"Content","label":"Label","badge":"Badge"}]` */
   tabs?: EntityRow[];
-  /** Default: `"horizontal"` */
-  orientation?: 'horizontal' | 'vertical';
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"default"` */
-  variant?: 'default' | 'pills' | 'underline';
   /** Default: `"Active Tab"` */
   activeTab?: string;
+  /** Default: `"default"` */
+  variant?: 'default' | 'pills' | 'underline';
+  /** Default: `""` */
+  className?: string;
+  /** Default: `[{"value":"Value","disabled":false,"badge":"Badge","active":false,"label":"Label","id":"Id","content":"Content","icon":"circle"}]` */
+  items?: EntityRow[];
   /** Default: `"Default Active Tab"` */
   defaultActiveTab?: string;
-  /** Default: `[{"disabled":false,"content":"Content","id":"Id","label":"Label","icon":"circle","value":"Value","badge":"Badge","active":false}]` */
-  items?: EntityRow[];
+  /** Default: `"horizontal"` */
+  orientation?: 'horizontal' | 'vertical';
 }
 
 /**

@@ -152,20 +152,16 @@
                     "render-ui",
                     "main",
                     {
-                      "logoSrc": "@config.logoSrc",
+                      "isLoading": "@config.isLoading",
+                      "userName": "@config.userName",
                       "searchPlaceholder": "@config.searchPlaceholder",
-                      "isMenuOpen": "@config.isMenuOpen",
-                      "navigationItems": "@config.navigationItems",
-                      "onSearch": "SEARCH",
-                      "userAvatar": "@config.userAvatar",
-                      "showSearch": "@config.showSearch",
-                      "onMenuToggle": "MENU_TOGGLE",
+                      "error": "@config.error",
+                      "entity": "HeaderItem",
                       "sticky": "@config.sticky",
                       "look": "@config.look",
-                      "error": "@config.error",
-                      "userName": "@config.userName",
-                      "onUserClick": "USER_CLICK",
                       "type": "header",
+                      "isMenuOpen": "@config.isMenuOpen",
+                      "onUserClick": "USER_CLICK",
                       "variant": "@config.variant",
                       "logo": [
                         {
@@ -173,13 +169,17 @@
                           "type": "typography"
                         }
                       ],
-                      "className": "@config.className",
-                      "actions": "@config.actions",
                       "brandName": "@config.brandName",
+                      "navigationItems": "@config.navigationItems",
                       "showMenuToggle": "@config.showMenuToggle",
+                      "onMenuToggle": "MENU_TOGGLE",
+                      "showSearch": "@config.showSearch",
+                      "onSearch": "SEARCH",
+                      "userAvatar": "@config.userAvatar",
                       "onLogoClick": "LOGO_CLICK",
-                      "isLoading": "@config.isLoading",
-                      "entity": "HeaderItem"
+                      "logoSrc": "@config.logoSrc",
+                      "actions": "@config.actions",
+                      "className": "@config.className"
                     }
                   ]
                 ]
@@ -187,26 +187,40 @@
             ]
           },
           "config": {
-            "showMenuToggle": {
+            "showSearch": {
               "type": "boolean",
-              "default": true,
-              "label": "Show Menu Toggle",
-              "description": "Show menu toggle button",
+              "default": false,
+              "label": "Show Search",
+              "description": "Show search input",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator (closed circuit)",
               "tier": "presentation"
             },
             "userAvatar": {
               "type": "HeaderUserAvatar",
               "default": {
+                "initials": "Initials",
                 "alt": "Alt",
-                "src": "Src",
-                "initials": "Initials"
+                "src": "Src"
               },
               "label": "User Avatar",
               "description": "User avatar configuration",
               "tier": "presentation",
               "properties": {
-                "alt": {
-                  "name": "alt",
+                "initials": {
+                  "name": "initials",
                   "type": "string",
                   "required": false
                 },
@@ -215,90 +229,18 @@
                   "type": "string",
                   "required": false
                 },
-                "initials": {
-                  "name": "initials",
+                "alt": {
+                  "name": "alt",
                   "type": "string",
                   "required": false
                 }
               }
-            },
-            "navigationItems": {
-              "type": "[HeaderNavigationItemsItem]",
-              "default": [
-                {
-                  "badge": "Badge",
-                  "active": false,
-                  "label": "Label",
-                  "href": "Href",
-                  "icon": "circle"
-                }
-              ],
-              "label": "Navigation Items",
-              "description": "Navigation items (for desktop header variant)",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "href": {
-                    "name": "href",
-                    "type": "string",
-                    "required": false
-                  },
-                  "active": {
-                    "name": "active",
-                    "type": "boolean",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "badge": {
-                    "name": "badge",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "actions": {
-              "type": "node",
-              "label": "Actions",
-              "description": "Action buttons (right side)",
-              "tier": "presentation"
-            },
-            "brandName": {
-              "type": "string",
-              "default": "KFlow",
-              "label": "Brand Name",
-              "description": "Brand/App name",
-              "tier": "presentation"
-            },
-            "isMenuOpen": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Menu Open",
-              "description": "Is menu open (for toggle icon)",
-              "tier": "presentation"
             },
             "searchPlaceholder": {
               "type": "string",
               "default": "Search Placeholder",
               "label": "Search Placeholder",
               "description": "Search placeholder",
-              "tier": "presentation"
-            },
-            "sticky": {
-              "type": "boolean",
-              "default": true,
-              "label": "Sticky",
-              "description": "Sticky header",
               "tier": "presentation"
             },
             "look": {
@@ -315,11 +257,25 @@
                 "editorial-banner"
               ]
             },
-            "userName": {
+            "showMenuToggle": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Menu Toggle",
+              "description": "Show menu toggle button",
+              "tier": "presentation"
+            },
+            "logoSrc": {
               "type": "string",
-              "default": "User Name",
-              "label": "User Name",
-              "description": "User name (display name or email)",
+              "default": "Logo Src",
+              "label": "Logo Src",
+              "description": "Logo image source",
+              "tier": "presentation"
+            },
+            "isMenuOpen": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Menu Open",
+              "description": "Is menu open (for toggle icon)",
               "tier": "presentation"
             },
             "variant": {
@@ -333,12 +289,64 @@
                 "desktop"
               ]
             },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state indicator (closed circuit)",
+            "userName": {
+              "type": "string",
+              "default": "User Name",
+              "label": "User Name",
+              "description": "User name (display name or email)",
               "tier": "presentation"
+            },
+            "brandName": {
+              "type": "string",
+              "default": "KFlow",
+              "label": "Brand Name",
+              "description": "Brand/App name",
+              "tier": "presentation"
+            },
+            "navigationItems": {
+              "type": "[HeaderNavigationItemsItem]",
+              "default": [
+                {
+                  "badge": "Badge",
+                  "label": "Label",
+                  "active": false,
+                  "href": "Href",
+                  "icon": "circle"
+                }
+              ],
+              "label": "Navigation Items",
+              "description": "Navigation items (for desktop header variant)",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "active": {
+                    "name": "active",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "badge": {
+                    "name": "badge",
+                    "type": "string",
+                    "required": false
+                  },
+                  "href": {
+                    "name": "href",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
             },
             "error": {
               "type": "HeaderError",
@@ -346,16 +354,6 @@
               "description": "Error state (closed circuit)",
               "tier": "presentation",
               "properties": {
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                },
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                },
                 "name": {
                   "name": "name",
                   "type": "string",
@@ -365,28 +363,30 @@
                   "name": "stack",
                   "type": "string",
                   "required": false
+                },
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                },
+                "code": {
+                  "name": "code",
+                  "type": "string",
+                  "required": false
                 }
               }
             },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
+            "actions": {
+              "type": "node",
+              "label": "Actions",
+              "description": "Action buttons (right side)",
               "tier": "presentation"
             },
-            "logoSrc": {
-              "type": "string",
-              "default": "Logo Src",
-              "label": "Logo Src",
-              "description": "Logo image source",
-              "tier": "presentation"
-            },
-            "showSearch": {
+            "sticky": {
               "type": "boolean",
-              "default": false,
-              "label": "Show Search",
-              "description": "Show search input",
+              "default": true,
+              "label": "Sticky",
+              "description": "Sticky header",
               "tier": "presentation"
             }
           },

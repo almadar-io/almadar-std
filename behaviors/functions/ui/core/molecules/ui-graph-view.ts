@@ -53,16 +53,16 @@ export interface StdUiGraphViewNodeHoverPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiGraphViewConfig {
-  /** Default: `""` */
-  className?: string;
-  /** Default: `[{"label":"Label","target":"Target","source":"Source","color":"Color"}]` */
+  /** Default: `[{"target":"Target","source":"Source","color":"Color","label":"Label"}]` */
   edges?: EntityRow[];
   /** Default: `0` */
-  height?: number;
-  /** Default: `[{"id":"Id","color":"Color","group":"Group","label":"Label","size":1}]` */
-  nodes?: EntityRow[];
-  /** Default: `0` */
   width?: number;
+  /** Default: `0` */
+  height?: number;
+  /** Default: `[{"color":"Color","size":1,"label":"Label","group":"Group","id":"Id"}]` */
+  nodes?: EntityRow[];
+  /** Default: `""` */
+  className?: string;
   /** Default: `true` */
   showLabels?: boolean;
   /** Default: `true` */

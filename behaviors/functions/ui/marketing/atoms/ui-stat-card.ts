@@ -39,14 +39,14 @@ export type StdUiStatCardEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiStatCardConfig {
-  /** Default: `""` */
-  className?: string;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
-  /** Default: `"Label"` */
-  label?: string;
   /** Default: `"Value"` */
   value?: string;
+  /** Default: `"Label"` */
+  label?: string;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

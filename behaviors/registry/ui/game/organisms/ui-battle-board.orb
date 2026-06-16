@@ -330,33 +330,33 @@
                     "render-ui",
                     "main",
                     {
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "sortBy": "@config.sortBy",
-                      "className": "@config.className",
-                      "scale": "@config.scale",
-                      "selectedIds": "@config.selectedIds",
-                      "unitScale": "@config.unitScale",
-                      "gameEndEvent": "GAME_END",
-                      "activeFilters": "@config.activeFilters",
-                      "effectSpriteUrls": "@config.effectSpriteUrls",
-                      "attackEvent": "ATTACK",
-                      "entity": "@entity",
-                      "totalCount": "@config.totalCount",
-                      "type": "battle-board",
-                      "error": "@config.error",
-                      "tileClickEvent": "TILE_CLICK",
-                      "sortDirection": "@config.sortDirection",
-                      "page": "@config.pageProp",
-                      "hasActiveEffects": "@config.hasActiveEffects",
-                      "unitClickEvent": "UNIT_CLICK",
-                      "endTurnEvent": "END_TURN",
-                      "cancelEvent": "CANCEL",
-                      "searchValue": "@config.searchValue",
-                      "isLoading": "@config.isLoading",
-                      "pageSize": "@config.pageSize",
                       "onAttack": "ATTACK",
+                      "attackEvent": "ATTACK",
+                      "sortDirection": "@config.sortDirection",
+                      "activeFilters": "@config.activeFilters",
+                      "scale": "@config.scale",
+                      "endTurnEvent": "END_TURN",
+                      "unitScale": "@config.unitScale",
+                      "playAgainEvent": "PLAY_AGAIN",
+                      "hasActiveEffects": "@config.hasActiveEffects",
+                      "onUnitMove": "UNIT_MOVE",
+                      "error": "@config.error",
+                      "totalCount": "@config.totalCount",
+                      "tileClickEvent": "TILE_CLICK",
+                      "effectSpriteUrls": "@config.effectSpriteUrls",
+                      "cancelEvent": "CANCEL",
+                      "sortBy": "@config.sortBy",
+                      "page": "@config.pageProp",
                       "onGameEnd": "GAME_END",
-                      "onUnitMove": "UNIT_MOVE"
+                      "unitClickEvent": "UNIT_CLICK",
+                      "type": "battle-board",
+                      "searchValue": "@config.searchValue",
+                      "gameEndEvent": "GAME_END",
+                      "className": "@config.className",
+                      "entity": "@entity",
+                      "selectedIds": "@config.selectedIds",
+                      "isLoading": "@config.isLoading",
+                      "pageSize": "@config.pageSize"
                     }
                   ]
                 ]
@@ -364,11 +364,67 @@
             ]
           },
           "config": {
-            "unitScale": {
+            "error": {
+              "type": "BattleBoardError",
+              "label": "Error",
+              "description": "Error state (UiError)",
+              "tier": "presentation",
+              "properties": {
+                "code": {
+                  "name": "code",
+                  "type": "string",
+                  "required": false
+                },
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": false
+                },
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                },
+                "stack": {
+                  "name": "stack",
+                  "type": "string",
+                  "required": false
+                }
+              }
+            },
+            "selectedIds": {
+              "type": "[string]",
+              "default": [],
+              "label": "Selected Ids",
+              "description": "Currently selected item IDs",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "className prop",
+              "tier": "presentation"
+            },
+            "effectSpriteUrls": {
+              "type": "[string]",
+              "default": [],
+              "label": "Effect Sprite Urls",
+              "description": "effectSpriteUrls prop",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "pageProp": {
               "type": "number",
-              "default": 1.0,
-              "label": "Unit Scale",
-              "description": "Unit draw-size multiplier",
+              "default": 0.0,
+              "label": "Page",
+              "description": "Current page number",
+              "synonyms": "page",
               "tier": "presentation"
             },
             "sortDirection": {
@@ -389,45 +445,6 @@
               "description": "Current search query value",
               "tier": "presentation"
             },
-            "hasActiveEffects": {
-              "type": "boolean",
-              "default": false,
-              "label": "Has Active Effects",
-              "description": "hasActiveEffects prop",
-              "tier": "presentation"
-            },
-            "selectedIds": {
-              "type": "[string]",
-              "default": [],
-              "label": "Selected Ids",
-              "description": "Currently selected item IDs",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
-            },
-            "totalCount": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Total Count",
-              "description": "Total number of items",
-              "tier": "presentation"
-            },
-            "pageProp": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Page",
-              "description": "Current page number",
-              "synonyms": "page",
-              "tier": "presentation"
-            },
-            "scale": {
-              "type": "number",
-              "default": 0.45,
-              "label": "Scale",
-              "description": "Canvas render scale",
-              "tier": "presentation"
-            },
             "isLoading": {
               "type": "boolean",
               "default": false,
@@ -435,49 +452,11 @@
               "description": "Loading state indicator",
               "tier": "presentation"
             },
-            "error": {
-              "type": "BattleBoardError",
-              "label": "Error",
-              "description": "Error state (UiError)",
-              "tier": "presentation",
-              "properties": {
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                },
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                },
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                }
-              }
-            },
-            "effectSpriteUrls": {
-              "type": "[string]",
-              "default": [],
-              "label": "Effect Sprite Urls",
-              "description": "effectSpriteUrls prop",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
-            },
-            "className": {
+            "sortBy": {
               "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "className prop",
+              "default": "Sort By",
+              "label": "Sort By",
+              "description": "Current sort field",
               "tier": "presentation"
             },
             "pageSize": {
@@ -493,11 +472,32 @@
               "description": "Active filters",
               "tier": "presentation"
             },
-            "sortBy": {
-              "type": "string",
-              "default": "Sort By",
-              "label": "Sort By",
-              "description": "Current sort field",
+            "totalCount": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Total Count",
+              "description": "Total number of items",
+              "tier": "presentation"
+            },
+            "unitScale": {
+              "type": "number",
+              "default": 1.0,
+              "label": "Unit Scale",
+              "description": "Unit draw-size multiplier",
+              "tier": "presentation"
+            },
+            "hasActiveEffects": {
+              "type": "boolean",
+              "default": false,
+              "label": "Has Active Effects",
+              "description": "hasActiveEffects prop",
+              "tier": "presentation"
+            },
+            "scale": {
+              "type": "number",
+              "default": 0.45,
+              "label": "Scale",
+              "description": "Canvas render scale",
               "tier": "presentation"
             }
           },

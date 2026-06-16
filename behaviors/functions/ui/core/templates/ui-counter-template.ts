@@ -64,10 +64,10 @@ export interface StdUiCounterTemplateConfig {
   size?: 'sm' | 'md' | 'lg';
   /** Default: `"minimal"` */
   variant?: 'minimal' | 'standard' | 'full';
-  /** Default: `""` */
-  className?: string;
   /** Default: `true` */
   showReset?: boolean;
+  /** Default: `""` */
+  className?: string;
   /** Default: `"Counter"` */
   title?: string;
 }
