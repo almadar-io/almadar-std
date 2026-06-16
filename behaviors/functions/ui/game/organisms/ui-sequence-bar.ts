@@ -54,22 +54,22 @@ export interface StdUiSequenceBarSlotRemovePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiSequenceBarConfig {
-  /** Default: `""` */
-  className?: string;
+  /** Default: `false` */
+  playing?: boolean;
   /** Default: `"lg"` */
   size?: 'sm' | 'md' | 'lg';
-  /** Default: `-1` */
-  currentStep?: number;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `[]` */
+  slotFeedback?: string[];
   /** Default: `0` */
   maxSlots?: number;
   /** Default: `{}` */
   categoryColors?: unknown;
-  /** Default: `[{"name":"Name","iconUrl":"Icon Url","description":"Description","stateMachine":{"name":"Name","states":["Item"],"transitions":[{"guardHint":"Guard Hint","from":"From","to":"To","event":"Event"}],"description":"Description","currentState":"Current State"},"id":"Id","iconEmoji":"Icon Emoji","category":"Category"}]` */
+  /** Default: `-1` */
+  currentStep?: number;
+  /** Default: `[{"name":"Name","category":"Category","description":"Description","iconEmoji":"Icon Emoji","id":"Id","stateMachine":{"states":["Item"],"currentState":"Current State","transitions":[{"from":"From","to":"To","guardHint":"Guard Hint","event":"Event"}],"description":"Description","name":"Name"}}]` */
   slots?: EntityRow[];
-  /** Default: `[]` */
-  slotFeedback?: string[];
-  /** Default: `false` */
-  playing?: boolean;
 }
 
 /**
@@ -190,7 +190,7 @@ export function stdUiSequenceBarSequenceBarOrbital(params: StdUiSequenceBarSeque
                   },
                   {
                     'name': 'iconUrl',
-                    'type': 'string',
+                    'type': 'json',
                   },
                   {
                     'name': 'stateMachine',
@@ -311,7 +311,7 @@ export function stdUiSequenceBarSequenceBarOrbital(params: StdUiSequenceBarSeque
                     },
                     {
                       'name': 'iconUrl',
-                      'type': 'string',
+                      'type': 'json',
                     },
                     {
                       'name': 'stateMachine',
@@ -391,17 +391,17 @@ export function stdUiSequenceBarSequenceBarOrbital(params: StdUiSequenceBarSeque
                   'render-ui',
                   'main',
                   {
-                    'playing': '@config.playing',
-                    'maxSlots': '@config.maxSlots',
                     'slotFeedback': '@config.slotFeedback',
                     'onSlotDrop': 'SLOT_DROP',
-                    'onSlotRemove': 'SLOT_REMOVE',
                     'slots': '@config.slots',
-                    'className': '@config.className',
-                    'type': 'sequence-bar',
+                    'maxSlots': '@config.maxSlots',
+                    'playing': '@config.playing',
+                    'onSlotRemove': 'SLOT_REMOVE',
                     'size': '@config.size',
-                    'categoryColors': '@config.categoryColors',
+                    'className': '@config.className',
                     'currentStep': '@config.currentStep',
+                    'type': 'sequence-bar',
+                    'categoryColors': '@config.categoryColors',
                   },
                 ],
               ],
@@ -409,11 +409,11 @@ export function stdUiSequenceBarSequenceBarOrbital(params: StdUiSequenceBarSeque
           ],
         },
         'config': {
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
+          'playing': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Playing',
+            'description': 'Whether the sequence is currently playing (disable interaction)',
             'tier': 'presentation',
           },
           'size': {
@@ -428,12 +428,26 @@ export function stdUiSequenceBarSequenceBarOrbital(params: StdUiSequenceBarSeque
               'lg',
             ],
           },
-          'currentStep': {
-            'type': 'number',
-            'default': -1,
-            'label': 'Current Step',
-            'description': 'Current step index during playback (-1 = not playing)',
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
             'tier': 'presentation',
+          },
+          'slotFeedback': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Slot Feedback',
+            'description': 'Per-slot correctness feedback shown after a failed attempt',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+              'values': [
+                'correct',
+                'wrong',
+              ],
+            },
           },
           'maxSlots': {
             'type': 'number',
@@ -464,32 +478,38 @@ export function stdUiSequenceBarSequenceBarOrbital(params: StdUiSequenceBarSeque
               },
             },
           },
+          'currentStep': {
+            'type': 'number',
+            'default': -1,
+            'label': 'Current Step',
+            'description': 'Current step index during playback (-1 = not playing)',
+            'tier': 'presentation',
+          },
           'slots': {
             'type': '[SequenceBarSlotsItem]',
             'default': [
               {
                 'name': 'Name',
-                'iconUrl': 'Icon Url',
+                'category': 'Category',
                 'description': 'Description',
+                'iconEmoji': 'Icon Emoji',
+                'id': 'Id',
                 'stateMachine': {
-                  'name': 'Name',
                   'states': [
                     'Item',
                   ],
+                  'currentState': 'Current State',
                   'transitions': [
                     {
-                      'guardHint': 'Guard Hint',
                       'from': 'From',
                       'to': 'To',
+                      'guardHint': 'Guard Hint',
                       'event': 'Event',
                     },
                   ],
                   'description': 'Description',
-                  'currentState': 'Current State',
+                  'name': 'Name',
                 },
-                'id': 'Id',
-                'iconEmoji': 'Icon Emoji',
-                'category': 'Category',
               },
             ],
             'label': 'Slots',
@@ -498,48 +518,55 @@ export function stdUiSequenceBarSequenceBarOrbital(params: StdUiSequenceBarSeque
             'items': {
               'type': 'object',
               'properties': {
-                'name': {
-                  'name': 'name',
+                'iconUrl': {
+                  'name': 'iconUrl',
                   'type': 'string',
-                  'required': true,
-                },
-                'id': {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': true,
-                },
-                'category': {
-                  'name': 'category',
-                  'type': 'string',
-                  'required': true,
+                  'required': false,
                 },
                 'description': {
                   'name': 'description',
                   'type': 'string',
                   'required': false,
                 },
-                'iconUrl': {
-                  'name': 'iconUrl',
+                'category': {
+                  'name': 'category',
                   'type': 'string',
-                  'required': false,
+                  'required': true,
+                },
+                'name': {
+                  'name': 'name',
+                  'type': 'string',
+                  'required': true,
                 },
                 'iconEmoji': {
                   'name': 'iconEmoji',
                   'type': 'string',
                   'required': false,
                 },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
                 'stateMachine': {
                   'name': 'stateMachine',
                   'type': 'object',
                   'required': false,
                   'properties': {
-                    'states': {
-                      'name': 'states',
-                      'type': 'array',
+                    'currentState': {
+                      'name': 'currentState',
+                      'type': 'string',
                       'required': true,
-                      'items': {
-                        'type': 'string',
-                      },
+                    },
+                    'description': {
+                      'name': 'description',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': true,
                     },
                     'transitions': {
                       'name': 'transitions',
@@ -553,13 +580,13 @@ export function stdUiSequenceBarSequenceBarOrbital(params: StdUiSequenceBarSeque
                             'type': 'string',
                             'required': false,
                           },
-                          'to': {
-                            'name': 'to',
+                          'from': {
+                            'name': 'from',
                             'type': 'string',
                             'required': true,
                           },
-                          'from': {
-                            'name': 'from',
+                          'to': {
+                            'name': 'to',
                             'type': 'string',
                             'required': true,
                           },
@@ -571,46 +598,18 @@ export function stdUiSequenceBarSequenceBarOrbital(params: StdUiSequenceBarSeque
                         },
                       },
                     },
-                    'name': {
-                      'name': 'name',
-                      'type': 'string',
+                    'states': {
+                      'name': 'states',
+                      'type': 'array',
                       'required': true,
-                    },
-                    'currentState': {
-                      'name': 'currentState',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'description': {
-                      'name': 'description',
-                      'type': 'string',
-                      'required': false,
+                      'items': {
+                        'type': 'string',
+                      },
                     },
                   },
                 },
               },
             },
-          },
-          'slotFeedback': {
-            'type': '[string]',
-            'default': [],
-            'label': 'Slot Feedback',
-            'description': 'Per-slot correctness feedback shown after a failed attempt',
-            'tier': 'presentation',
-            'items': {
-              'type': 'string',
-              'values': [
-                'correct',
-                'wrong',
-              ],
-            },
-          },
-          'playing': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Playing',
-            'description': 'Whether the sequence is currently playing (disable interaction)',
-            'tier': 'presentation',
           },
         },
         'scope': 'instance',

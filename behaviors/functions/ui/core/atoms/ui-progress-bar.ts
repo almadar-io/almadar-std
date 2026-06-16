@@ -41,26 +41,26 @@ export type StdUiProgressBarEventKey = 'INIT';
 export interface StdUiProgressBarConfig {
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
-  /** Default: `"primary"` */
-  variant?: 'default' | 'primary' | 'success' | 'warning' | 'error' | 'danger';
+  /** Default: `"linear"` */
+  progressType?: 'linear' | 'circular' | 'stepped';
+  /** Default: `"default"` */
+  color?: 'default' | 'primary' | 'success' | 'warning' | 'error' | 'danger';
+  /** Default: `false` */
+  showPercentage?: boolean;
+  /** Default: `"Label"` */
+  label?: string;
   /** Default: `5` */
   steps?: number;
   /** Default: `""` */
   className?: string;
   /** Default: `100` */
   max?: number;
-  /** Default: `false` */
-  showLabel?: boolean;
-  /** Default: `false` */
-  showPercentage?: boolean;
   /** Default: `0` */
   value?: number;
-  /** Default: `"default"` */
-  color?: 'default' | 'primary' | 'success' | 'warning' | 'error' | 'danger';
-  /** Default: `"Label"` */
-  label?: string;
-  /** Default: `"linear"` */
-  progressType?: 'linear' | 'circular' | 'stepped';
+  /** Default: `"primary"` */
+  variant?: 'default' | 'primary' | 'success' | 'warning' | 'error' | 'danger';
+  /** Default: `false` */
+  showLabel?: boolean;
 }
 
 /**

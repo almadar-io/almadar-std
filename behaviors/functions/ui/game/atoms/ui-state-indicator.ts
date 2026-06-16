@@ -41,16 +41,16 @@ export type StdUiStateIndicatorEventKey = 'INIT';
 export interface StdUiStateIndicatorConfig {
   /** Default: `"Label"` */
   label?: string;
-  /** Default: `"State"` */
-  stateProp?: string;
-  /** Default: `""` */
-  className?: string;
+  /** Default: `true` */
+  animated?: boolean;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
   /** Default: `{}` */
   stateStyles?: unknown;
-  /** Default: `true` */
-  animated?: boolean;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"State"` */
+  stateProp?: string;
 }
 
 /**

@@ -60,55 +60,55 @@ export interface StdUiDataGridViewPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiDataGridConfig {
-  /** Default: `280` */
-  minCardWidth?: number;
+  /** Default: `"Position Event"` */
+  positionEvent?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `false` */
+  sortable?: boolean;
+  /** Default: `"Dnd Item Id Field"` */
+  dndItemIdField?: string;
+  /** Default: `false` */
+  hasMore?: boolean;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"Reorder Event"` */
+  reorderEvent?: string;
   /** Default: `1` */
   cols?: number;
+  /** Default: `0` */
+  pageSize?: number;
+  /** Default: `false` */
+  scrollX?: boolean;
+  error?: EntityRow;
+  /** Default: `false` */
+  infiniteScroll?: boolean;
   /** Default: `"Accepts"` */
   accepts?: string;
   /** Default: `[]` */
   itemActions?: EntityRow[];
-  /** Default: `"md"` */
-  gap?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
-  error?: EntityRow;
-  /** Default: `false` */
-  hasMore?: boolean;
-  /** Default: `[{"name":"Name","label":"Label","icon":"circle","variant":"h3","format":"date"}]` */
+  /** Default: `280` */
+  minCardWidth?: number;
+  /** Default: `[{"label":"Label","format":"date","name":"Name","icon":"circle","variant":"h3"}]` */
   fields?: EntityRow[];
-  /** Default: `"Position Event"` */
-  positionEvent?: string;
+  /** Default: `"Image Field"` */
+  imageField?: string;
   /** Default: `"Drop Event"` */
   dropEvent?: string;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `0` */
-  pageSize?: number;
-  /** Default: `false` */
-  infiniteScroll?: boolean;
-  /** Default: `false` */
-  sortable?: boolean;
-  /** Default: `false` */
-  dndRoot?: boolean;
-  /** Default: `[{"name":"Name","label":"Label","format":"date","icon":"circle","variant":"h3"}]` */
+  /** Default: `"Drag Group"` */
+  dragGroup?: string;
+  /** Default: `[{"name":"Name","icon":"circle","format":"date","label":"Label","variant":"h3"}]` */
   columns?: EntityRow[];
   /** Default: `0` */
   maxInlineActions?: number;
   /** Default: `false` */
-  scrollX?: boolean;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `"Image Field"` */
-  imageField?: string;
-  /** Default: `false` */
   selectable?: boolean;
-  /** Default: `"Drag Group"` */
-  dragGroup?: string;
+  /** Default: `false` */
+  dndRoot?: boolean;
   /** Default: `"dense"` */
   look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
-  /** Default: `"Reorder Event"` */
-  reorderEvent?: string;
-  /** Default: `"Dnd Item Id Field"` */
-  dndItemIdField?: string;
+  /** Default: `"md"` */
+  gap?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
 }
 
 /**

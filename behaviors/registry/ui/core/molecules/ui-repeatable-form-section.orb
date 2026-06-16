@@ -139,31 +139,31 @@
                     "render-ui",
                     "main",
                     {
-                      "title": "@config.title",
-                      "className": "@config.className",
-                      "onAdd": "ADD",
-                      "currentState": "@config.currentState",
-                      "showAuditInfo": "@config.showAuditInfo",
-                      "onReorder": "REORDER",
+                      "readOnly": "@config.readOnly",
                       "maxItems": "@config.maxItems",
+                      "type": "repeatable-form-section",
+                      "allowReorder": "@config.allowReorder",
+                      "sectionType": "@config.sectionType",
+                      "onRemove": "REMOVE",
+                      "onReorder": "REORDER",
+                      "showAuditInfo": "@config.showAuditInfo",
+                      "onAdd": "ADD",
                       "emptyMessage": "@config.emptyMessage",
+                      "addLabel": "@config.addLabel",
+                      "minItems": "@config.minItems",
+                      "currentState": "@config.currentState",
+                      "className": "@config.className",
+                      "title": "@config.title",
+                      "trackAddedInState": "@config.trackAddedInState",
+                      "items": "@config.items",
                       "renderItem": [
                         "fn",
                         "item",
                         {
-                          "content": "@item.id",
-                          "type": "typography"
+                          "type": "typography",
+                          "content": "@item.id"
                         }
-                      ],
-                      "items": "@config.items",
-                      "addLabel": "@config.addLabel",
-                      "sectionType": "@config.sectionType",
-                      "minItems": "@config.minItems",
-                      "onRemove": "REMOVE",
-                      "trackAddedInState": "@config.trackAddedInState",
-                      "allowReorder": "@config.allowReorder",
-                      "readOnly": "@config.readOnly",
-                      "type": "repeatable-form-section"
+                      ]
                     }
                   ]
                 ]
@@ -171,34 +171,6 @@
             ]
           },
           "config": {
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "title": {
-              "type": "string",
-              "default": "Title",
-              "label": "Title",
-              "description": "Section title",
-              "tier": "presentation"
-            },
-            "showAuditInfo": {
-              "type": "boolean",
-              "default": false,
-              "label": "Show Audit Info",
-              "description": "Show audit metadata (addedInState, addedAt)",
-              "tier": "presentation"
-            },
-            "sectionType": {
-              "type": "string",
-              "default": "Section Type",
-              "label": "Section Type",
-              "description": "Section type identifier",
-              "tier": "presentation"
-            },
             "maxItems": {
               "type": "number",
               "default": 0.0,
@@ -206,11 +178,11 @@
               "description": "Maximum items allowed",
               "tier": "presentation"
             },
-            "currentState": {
+            "addLabel": {
               "type": "string",
-              "default": "Current State",
-              "label": "Current State",
-              "description": "Current inspection state (used when trackAddedInState is true)",
+              "default": "Add Label",
+              "label": "Add Label",
+              "description": "Add button label",
               "tier": "presentation"
             },
             "minItems": {
@@ -220,58 +192,32 @@
               "description": "Minimum items required",
               "tier": "presentation"
             },
+            "title": {
+              "type": "string",
+              "default": "Title",
+              "label": "Title",
+              "description": "Section title",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "readOnly": {
+              "type": "boolean",
+              "default": false,
+              "label": "Read Only",
+              "description": "Read-only mode",
+              "tier": "presentation"
+            },
             "trackAddedInState": {
               "type": "boolean",
               "default": false,
               "label": "Track Added In State",
               "description": "Inspection-specific enhancements",
-              "tier": "presentation"
-            },
-            "items": {
-              "type": "[RepeatableFormSectionItemsItem]",
-              "default": [
-                {
-                  "id": "Id",
-                  "addedInState": "Added In State",
-                  "addedAt": "Added At"
-                }
-              ],
-              "label": "Items",
-              "description": "Items in the section",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "addedAt": {
-                    "name": "addedAt",
-                    "type": "string",
-                    "required": false
-                  },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  "addedInState": {
-                    "name": "addedInState",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "addLabel": {
-              "type": "string",
-              "default": "Add Label",
-              "label": "Add Label",
-              "description": "Add button label",
-              "tier": "presentation"
-            },
-            "allowReorder": {
-              "type": "boolean",
-              "default": false,
-              "label": "Allow Reorder",
-              "description": "Allow reordering",
               "tier": "presentation"
             },
             "emptyMessage": {
@@ -281,11 +227,65 @@
               "description": "Empty state message",
               "tier": "presentation"
             },
-            "readOnly": {
+            "showAuditInfo": {
               "type": "boolean",
               "default": false,
-              "label": "Read Only",
-              "description": "Read-only mode",
+              "label": "Show Audit Info",
+              "description": "Show audit metadata (addedInState, addedAt)",
+              "tier": "presentation"
+            },
+            "allowReorder": {
+              "type": "boolean",
+              "default": false,
+              "label": "Allow Reorder",
+              "description": "Allow reordering",
+              "tier": "presentation"
+            },
+            "items": {
+              "type": "[RepeatableFormSectionItemsItem]",
+              "default": [
+                {
+                  "addedInState": "Added In State",
+                  "addedAt": "Added At",
+                  "id": "Id"
+                }
+              ],
+              "label": "Items",
+              "description": "Items in the section",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "addedInState": {
+                    "name": "addedInState",
+                    "type": "string",
+                    "required": false
+                  },
+                  "addedAt": {
+                    "name": "addedAt",
+                    "type": "string",
+                    "required": false
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "currentState": {
+              "type": "string",
+              "default": "Current State",
+              "label": "Current State",
+              "description": "Current inspection state (used when trackAddedInState is true)",
+              "tier": "presentation"
+            },
+            "sectionType": {
+              "type": "string",
+              "default": "Section Type",
+              "label": "Section Type",
+              "description": "Section type identifier",
               "tier": "presentation"
             }
           },

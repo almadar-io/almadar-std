@@ -30,7 +30,14 @@ const ALIAS = 'UiCard';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiCardEventKey = 'INIT';
+export type StdUiCardEventKey = 'ACTION' | 'INIT';
+
+/**
+ * Payload shape for the `ACTION` event.
+ */
+export interface StdUiCardActionPayload {
+  id?: string;
+}
 
 /**
  * Typed call-site config block for this trait — every
@@ -39,20 +46,20 @@ export type StdUiCardEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiCardConfig {
-  /** Default: `"bordered"` */
-  variant?: 'default' | 'bordered' | 'elevated' | 'interactive';
-  /** Default: `"Subtitle"` */
-  subtitle?: string;
-  /** Default: `""` */
-  className?: string;
   /** Default: `"none"` */
   shadow?: 'none' | 'sm' | 'md' | 'lg';
   /** Default: `"md"` */
   padding?: 'none' | 'sm' | 'md' | 'lg';
-  /** Default: `"Title"` */
-  title?: string;
+  /** Default: `"Subtitle"` */
+  subtitle?: string;
   /** Default: `"elevated"` */
   look?: 'elevated' | 'flat-bordered' | 'borderless-divider' | 'ticket' | 'invoice' | 'chip' | 'tile-image-first';
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"bordered"` */
+  variant?: 'default' | 'bordered' | 'elevated' | 'interactive';
+  /** Default: `"Title"` */
+  title?: string;
 }
 
 /**

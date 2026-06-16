@@ -46,45 +46,45 @@ export interface StdUiCodeBlockChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiCodeBlockConfig {
-  error?: EntityRow;
-  /** Default: `false` */
-  showLineNumbers?: boolean;
-  /** Default: `"code"` */
-  mode?: 'code' | 'diff';
-  /** Default: `false` */
-  foldable?: boolean;
-  /** Default: `true` */
-  showCopyButton?: boolean;
-  /** Default: `"Code"` */
-  code?: string;
   /** Default: `"60vh"` */
   maxHeight?: string;
+  /** Default: `false` */
+  foldable?: boolean;
+  /** Default: `false` */
+  showLineNumbers?: boolean;
   /** Default: `true` */
   showLanguageBadge?: boolean;
+  /** Default: `[{"label":"Label","navigatesTo":"Navigates To","variant":"primary"}]` */
+  actions?: EntityRow[];
+  /** Default: `"Title"` */
+  title?: string;
+  /** Default: `[{"content":"Content","beforeLineNumber":1,"afterLineNumber":1,"type":"added"}]` */
+  diff?: EntityRow[];
+  /** Default: `"text"` */
+  language?: 'text' | 'json' | 'javascript' | 'js' | 'typescript' | 'ts' | 'jsx' | 'tsx' | 'css' | 'markdown' | 'md' | 'bash' | 'shell' | 'sh' | 'yaml' | 'yml' | 'rust' | 'python' | 'py' | 'sql' | 'diff' | 'toml' | 'go' | 'graphql' | 'html' | 'xml' | 'orb' | 'lolo';
+  /** Default: `[{"label":"Label","language":"text","code":"Code"}]` */
+  files?: EntityRow[];
+  error?: EntityRow;
+  /** Default: `"New Value"` */
+  newValue?: string;
+  /** Default: `true` */
+  showCopyButton?: boolean;
   /** Default: `""` */
   className?: string;
-  /** Default: `[{"language":"text","code":"Code","label":"Label"}]` */
-  files?: EntityRow[];
   /** Default: `false` */
   isLoading?: boolean;
+  /** Default: `false` */
+  editable?: boolean;
+  /** Default: `"Code"` */
+  code?: string;
   /** Default: `"Old Value"` */
   oldValue?: string;
   /** Default: `false` */
-  showCopy?: boolean;
-  /** Default: `[{"variant":"primary","label":"Label","navigatesTo":"Navigates To"}]` */
-  actions?: EntityRow[];
-  /** Default: `false` */
   wordWrap?: boolean;
-  /** Default: `"Title"` */
-  title?: string;
-  /** Default: `"New Value"` */
-  newValue?: string;
-  /** Default: `"text"` */
-  language?: 'text' | 'json' | 'javascript' | 'js' | 'typescript' | 'ts' | 'jsx' | 'tsx' | 'css' | 'markdown' | 'md' | 'bash' | 'shell' | 'sh' | 'yaml' | 'yml' | 'rust' | 'python' | 'py' | 'sql' | 'diff' | 'toml' | 'go' | 'graphql' | 'html' | 'xml' | 'orb' | 'lolo';
   /** Default: `false` */
-  editable?: boolean;
-  /** Default: `[{"afterLineNumber":1,"type":"added","content":"Content","beforeLineNumber":1}]` */
-  diff?: EntityRow[];
+  showCopy?: boolean;
+  /** Default: `"code"` */
+  mode?: 'code' | 'diff';
 }
 
 /**

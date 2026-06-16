@@ -39,37 +39,37 @@ export type StdUiChartEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiChartConfig {
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `"Subtitle"` */
-  subtitle?: string;
-  /** Default: `[{"x":1,"y":1,"label":"Label","size":1,"color":"Color"}]` */
-  scatterData?: EntityRow[];
-  /** Default: `"Drill Event"` */
-  drillEvent?: string;
-  /** Default: `"Title"` */
-  title?: string;
-  /** Default: `[{"label":"Label","value":1,"color":"Color"}]` */
-  data?: EntityRow[];
-  /** Default: `200` */
-  height?: number;
-  /** Default: `"bar-vertical"` */
-  look?: 'bar-vertical' | 'bar-horizontal' | 'line' | 'area' | 'pie' | 'donut' | 'scatter' | 'histogram';
-  /** Default: `"bar"` */
-  chartType?: 'bar' | 'line' | 'pie' | 'area' | 'donut' | 'scatter' | 'histogram';
-  /** Default: `[{"name":"Name","color":"Color","data":[{"value":1,"color":"Color","label":"Label"}],"dashed":false}]` */
-  series?: EntityRow[];
-  /** Default: `[{"variant":"primary","label":"Label","navigatesTo":"Navigates To"}]` */
-  actions?: EntityRow[];
   error?: EntityRow;
-  /** Default: `false` */
-  showValues?: boolean;
-  /** Default: `false` */
-  timeAxis?: boolean;
   /** Default: `""` */
   className?: string;
+  /** Default: `[{"data":[{"color":"Color","value":1,"label":"Label"}],"name":"Name","color":"Color","dashed":false}]` */
+  series?: EntityRow[];
+  /** Default: `"Title"` */
+  title?: string;
+  /** Default: `"Drill Event"` */
+  drillEvent?: string;
+  /** Default: `false` */
+  showValues?: boolean;
+  /** Default: `[{"navigatesTo":"Navigates To","variant":"primary","label":"Label"}]` */
+  actions?: EntityRow[];
+  /** Default: `"Subtitle"` */
+  subtitle?: string;
+  /** Default: `[{"label":"Label","color":"Color","x":1,"size":1,"y":1}]` */
+  scatterData?: EntityRow[];
+  /** Default: `200` */
+  height?: number;
+  /** Default: `false` */
+  isLoading?: boolean;
   /** Default: `true` */
   showLegend?: boolean;
+  /** Default: `false` */
+  timeAxis?: boolean;
+  /** Default: `"bar"` */
+  chartType?: 'bar' | 'line' | 'pie' | 'area' | 'donut' | 'scatter' | 'histogram';
+  /** Default: `"bar-vertical"` */
+  look?: 'bar-vertical' | 'bar-horizontal' | 'line' | 'area' | 'pie' | 'donut' | 'scatter' | 'histogram';
+  /** Default: `[{"value":1,"label":"Label","color":"Color"}]` */
+  data?: EntityRow[];
   /** Default: `"none"` */
   stack?: 'none' | 'stack' | 'normalize';
 }

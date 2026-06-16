@@ -102,33 +102,33 @@ export interface StdUiBattleBoardPlayAgainPayload {
  */
 export interface StdUiBattleBoardConfig {
   error?: EntityRow;
-  /** Default: `[]` */
-  selectedIds?: string[];
-  /** Default: `""` */
-  className?: string;
-  /** Default: `[]` */
-  effectSpriteUrls?: string[];
-  /** Default: `0` */
-  pageProp?: number;
-  /** Default: `"asc"` */
-  sortDirection?: 'asc' | 'desc';
-  /** Default: `"Search Value"` */
-  searchValue?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `"Sort By"` */
-  sortBy?: string;
   /** Default: `0` */
   pageSize?: number;
-  activeFilters?: unknown;
   /** Default: `0` */
-  totalCount?: number;
+  pageProp?: number;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"Search Value"` */
+  searchValue?: string;
+  activeFilters?: unknown;
   /** Default: `1` */
   unitScale?: number;
+  /** Default: `"Sort By"` */
+  sortBy?: string;
+  /** Default: `"asc"` */
+  sortDirection?: 'asc' | 'desc';
+  /** Default: `[]` */
+  selectedIds?: string[];
   /** Default: `false` */
   hasActiveEffects?: boolean;
   /** Default: `0.45` */
   scale?: number;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `[]` */
+  effectSpriteUrls?: EntityRow[];
+  /** Default: `0` */
+  totalCount?: number;
 }
 
 /**
@@ -513,33 +513,33 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                   'render-ui',
                   'main',
                   {
-                    'onAttack': 'ATTACK',
-                    'attackEvent': 'ATTACK',
-                    'sortDirection': '@config.sortDirection',
-                    'activeFilters': '@config.activeFilters',
-                    'scale': '@config.scale',
-                    'endTurnEvent': 'END_TURN',
-                    'unitScale': '@config.unitScale',
-                    'playAgainEvent': 'PLAY_AGAIN',
                     'hasActiveEffects': '@config.hasActiveEffects',
-                    'onUnitMove': 'UNIT_MOVE',
-                    'error': '@config.error',
-                    'totalCount': '@config.totalCount',
                     'tileClickEvent': 'TILE_CLICK',
-                    'effectSpriteUrls': '@config.effectSpriteUrls',
-                    'cancelEvent': 'CANCEL',
+                    'endTurnEvent': 'END_TURN',
                     'sortBy': '@config.sortBy',
-                    'page': '@config.pageProp',
-                    'onGameEnd': 'GAME_END',
-                    'unitClickEvent': 'UNIT_CLICK',
                     'type': 'battle-board',
-                    'searchValue': '@config.searchValue',
-                    'gameEndEvent': 'GAME_END',
                     'className': '@config.className',
-                    'entity': '@entity',
-                    'selectedIds': '@config.selectedIds',
-                    'isLoading': '@config.isLoading',
                     'pageSize': '@config.pageSize',
+                    'isLoading': '@config.isLoading',
+                    'unitScale': '@config.unitScale',
+                    'selectedIds': '@config.selectedIds',
+                    'totalCount': '@config.totalCount',
+                    'searchValue': '@config.searchValue',
+                    'entity': '@entity',
+                    'cancelEvent': 'CANCEL',
+                    'unitClickEvent': 'UNIT_CLICK',
+                    'sortDirection': '@config.sortDirection',
+                    'gameEndEvent': 'GAME_END',
+                    'page': '@config.pageProp',
+                    'activeFilters': '@config.activeFilters',
+                    'onAttack': 'ATTACK',
+                    'onGameEnd': 'GAME_END',
+                    'attackEvent': 'ATTACK',
+                    'playAgainEvent': 'PLAY_AGAIN',
+                    'scale': '@config.scale',
+                    'effectSpriteUrls': '@config.effectSpriteUrls',
+                    'error': '@config.error',
+                    'onUnitMove': 'UNIT_MOVE',
                   },
                 ],
               ],
@@ -553,6 +553,16 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
             'description': 'Error state (UiError)',
             'tier': 'presentation',
             'properties': {
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
               'code': {
                 'name': 'code',
                 'type': 'string',
@@ -563,27 +573,22 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                 'type': 'string',
                 'required': false,
               },
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
             },
           },
-          'selectedIds': {
-            'type': '[string]',
-            'default': [],
-            'label': 'Selected Ids',
-            'description': 'Currently selected item IDs',
+          'pageSize': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page Size',
+            'description': 'Number of items per page',
             'tier': 'presentation',
-            'items': {
-              'type': 'string',
-            },
+          },
+          'pageProp': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page',
+            'description': 'Current page number',
+            'synonyms': 'page',
+            'tier': 'presentation',
           },
           'className': {
             'type': 'string',
@@ -592,22 +597,31 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
             'description': 'className prop',
             'tier': 'presentation',
           },
-          'effectSpriteUrls': {
-            'type': '[string]',
-            'default': [],
-            'label': 'Effect Sprite Urls',
-            'description': 'effectSpriteUrls prop',
+          'searchValue': {
+            'type': 'string',
+            'default': 'Search Value',
+            'label': 'Search Value',
+            'description': 'Current search query value',
             'tier': 'presentation',
-            'items': {
-              'type': 'string',
-            },
           },
-          'pageProp': {
+          'activeFilters': {
+            'type': 'json',
+            'label': 'Active Filters',
+            'description': 'Active filters',
+            'tier': 'presentation',
+          },
+          'unitScale': {
             'type': 'number',
-            'default': 0,
-            'label': 'Page',
-            'description': 'Current page number',
-            'synonyms': 'page',
+            'default': 1,
+            'label': 'Unit Scale',
+            'description': 'Unit draw-size multiplier',
+            'tier': 'presentation',
+          },
+          'sortBy': {
+            'type': 'string',
+            'default': 'Sort By',
+            'label': 'Sort By',
+            'description': 'Current sort field',
             'tier': 'presentation',
           },
           'sortDirection': {
@@ -621,53 +635,15 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
               'desc',
             ],
           },
-          'searchValue': {
-            'type': 'string',
-            'default': 'Search Value',
-            'label': 'Search Value',
-            'description': 'Current search query value',
+          'selectedIds': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Selected Ids',
+            'description': 'Currently selected item IDs',
             'tier': 'presentation',
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
-            'tier': 'presentation',
-          },
-          'sortBy': {
-            'type': 'string',
-            'default': 'Sort By',
-            'label': 'Sort By',
-            'description': 'Current sort field',
-            'tier': 'presentation',
-          },
-          'pageSize': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page Size',
-            'description': 'Number of items per page',
-            'tier': 'presentation',
-          },
-          'activeFilters': {
-            'type': 'json',
-            'label': 'Active Filters',
-            'description': 'Active filters',
-            'tier': 'presentation',
-          },
-          'totalCount': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Total Count',
-            'description': 'Total number of items',
-            'tier': 'presentation',
-          },
-          'unitScale': {
-            'type': 'number',
-            'default': 1,
-            'label': 'Unit Scale',
-            'description': 'Unit draw-size multiplier',
-            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
           },
           'hasActiveEffects': {
             'type': 'boolean',
@@ -681,6 +657,30 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
             'default': 0.45,
             'label': 'Scale',
             'description': 'Canvas render scale',
+            'tier': 'presentation',
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
+          'effectSpriteUrls': {
+            'type': '[asset]',
+            'default': [],
+            'label': 'Effect Sprite Urls',
+            'description': 'effectSpriteUrls prop',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'totalCount': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Total Count',
+            'description': 'Total number of items',
             'tier': 'presentation',
           },
         },

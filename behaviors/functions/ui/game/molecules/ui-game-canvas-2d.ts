@@ -46,22 +46,22 @@ export interface StdUiGameCanvas2dTickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiGameCanvas2dConfig {
-  /** Default: `"Background Image"` */
-  backgroundImage?: string;
-  /** Default: `800` */
-  width?: number;
+  /** Default: `60` */
+  fps?: number;
   /** Default: `"Tick Event"` */
   tickEvent?: string;
+  /** Default: `""` */
+  className?: string;
   /** Default: `"Draw Event"` */
   drawEvent?: string;
   /** Default: `600` */
   height?: number;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `60` */
-  fps?: number;
-  /** Default: `"Asset Base Url"` */
-  assetBaseUrl?: string;
+  /** Default: `800` */
+  width?: number;
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
+  backgroundImage?: unknown;
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
+  assetBaseUrl?: unknown;
 }
 
 /**

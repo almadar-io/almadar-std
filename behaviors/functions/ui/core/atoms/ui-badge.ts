@@ -46,19 +46,20 @@ export interface StdUiBadgeRemovePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiBadgeConfig {
+  /** Default: `"sm"` */
+  size?: 'sm' | 'md' | 'lg';
+  /** Default: `0` */
+  amount?: number;
+  /** Default: `"Remove Label"` */
+  removeLabel?: string;
+  /** Default: `""` */
+  className?: string;
   /** Default: `"default"` */
   variant?: 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'error' | 'info' | 'neutral';
   /** Default: `"Label"` */
   label?: string;
-  /** Default: `"sm"` */
-  size?: 'sm' | 'md' | 'lg';
-  /** Default: `""` */
-  className?: string;
-  /** Default: `0` */
-  amount?: number;
+  /** Default: `"circle"` */
   icon?: unknown;
-  /** Default: `"Remove Label"` */
-  removeLabel?: string;
 }
 
 /**

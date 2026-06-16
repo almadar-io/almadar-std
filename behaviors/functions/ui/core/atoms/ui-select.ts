@@ -30,12 +30,19 @@ const ALIAS = 'UiSelect';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiSelectEventKey = 'ACTION' | 'INIT';
+export type StdUiSelectEventKey = 'ACTION' | 'CHANGE' | 'INIT';
 
 /**
  * Payload shape for the `ACTION` event.
  */
 export interface StdUiSelectActionPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `CHANGE` event.
+ */
+export interface StdUiSelectChangePayload {
   id?: string;
 }
 
@@ -48,12 +55,12 @@ export interface StdUiSelectActionPayload {
 export interface StdUiSelectConfig {
   /** Default: `"Value"` */
   value?: string;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `[{"label":"Label","value":"Value"}]` */
+  /** Default: `[{"value":"Value","label":"Label"}]` */
   options?: EntityRow[];
   /** Default: `"Placeholder"` */
   placeholder?: string;
+  /** Default: `""` */
+  className?: string;
   /** Default: `""` */
   error?: string;
 }

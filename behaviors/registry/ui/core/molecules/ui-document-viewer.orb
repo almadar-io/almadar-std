@@ -54,23 +54,23 @@
                     "render-ui",
                     "main",
                     {
-                      "showDownload": "@config.showDownload",
+                      "showToolbar": "@config.showToolbar",
+                      "content": "@config.content",
                       "actions": "@config.actions",
+                      "error": "@config.error",
+                      "documents": "@config.documents",
                       "title": "@config.title",
+                      "currentPage": "@config.currentPage",
                       "entity": "DocumentViewerItem",
                       "height": "@config.height",
-                      "content": "@config.content",
-                      "showPrint": "@config.showPrint",
-                      "documentType": "@config.documentType",
+                      "showDownload": "@config.showDownload",
                       "isLoading": "@config.isLoading",
-                      "totalPages": "@config.totalPages",
-                      "currentPage": "@config.currentPage",
-                      "documents": "@config.documents",
-                      "type": "document-viewer",
-                      "error": "@config.error",
+                      "showPrint": "@config.showPrint",
                       "className": "@config.className",
                       "src": "@config.src",
-                      "showToolbar": "@config.showToolbar"
+                      "type": "document-viewer",
+                      "totalPages": "@config.totalPages",
+                      "documentType": "@config.documentType"
                     }
                   ]
                 ]
@@ -78,27 +78,55 @@
             ]
           },
           "config": {
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "showPrint": {
+            "showDownload": {
               "type": "boolean",
               "default": false,
-              "label": "Show Print",
-              "description": "Show print button",
+              "label": "Show Download",
+              "description": "Show download button",
+              "tier": "presentation"
+            },
+            "error": {
+              "type": "DocumentViewerError",
+              "label": "Error",
+              "description": "Error state",
+              "tier": "presentation",
+              "properties": {
+                "stack": {
+                  "name": "stack",
+                  "type": "string",
+                  "required": false
+                },
+                "code": {
+                  "name": "code",
+                  "type": "string",
+                  "required": false
+                },
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                },
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": false
+                }
+              }
+            },
+            "title": {
+              "type": "string",
+              "default": "Title",
+              "label": "Title",
+              "description": "Document title",
               "tier": "presentation"
             },
             "documents": {
               "type": "[DocumentViewerDocumentsItem]",
               "default": [
                 {
-                  "documentType": "pdf",
-                  "src": "Src",
+                  "src": "https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png",
                   "content": "Content",
+                  "documentType": "pdf",
                   "label": "Label"
                 }
               ],
@@ -108,16 +136,6 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "src": {
-                    "name": "src",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
                   "documentType": {
                     "name": "documentType",
                     "type": "string",
@@ -133,20 +151,44 @@
                     "name": "content",
                     "type": "string",
                     "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "src": {
+                    "name": "src",
+                    "type": "string",
+                    "required": false
                   }
                 }
               }
             },
-            "title": {
-              "type": "string",
-              "default": "Title",
-              "label": "Title",
-              "description": "Document title",
+            "totalPages": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Total Pages",
+              "description": "Total pages",
+              "tier": "presentation"
+            },
+            "showToolbar": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Toolbar",
+              "description": "Show toolbar",
+              "tier": "presentation"
+            },
+            "currentPage": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Current Page",
+              "description": "Current page (for multi-page documents)",
               "tier": "presentation"
             },
             "src": {
-              "type": "string",
-              "default": "Src",
+              "type": "asset",
+              "default": "https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png",
               "label": "Src",
               "description": "Document URL (for PDF/external documents)",
               "tier": "presentation"
@@ -158,6 +200,49 @@
               "description": "Loading state",
               "tier": "presentation"
             },
+            "actions": {
+              "type": "[DocumentViewerActionsItem]",
+              "default": [
+                {
+                  "navigatesTo": "Navigates To",
+                  "variant": "primary",
+                  "label": "Label"
+                }
+              ],
+              "label": "Actions",
+              "description": "Actions",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": false
+                  },
+                  "navigatesTo": {
+                    "name": "navigatesTo",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "primary",
+                      "secondary",
+                      "ghost"
+                    ]
+                  }
+                }
+              }
+            },
             "height": {
               "type": "string",
               "default": "Height",
@@ -165,33 +250,12 @@
               "description": "Viewer height",
               "tier": "presentation"
             },
-            "error": {
-              "type": "DocumentViewerError",
-              "label": "Error",
-              "description": "Error state",
-              "tier": "presentation",
-              "properties": {
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                },
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                },
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                }
-              }
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
             },
             "documentType": {
               "type": "string",
@@ -206,49 +270,6 @@
                 "markdown"
               ]
             },
-            "actions": {
-              "type": "[DocumentViewerActionsItem]",
-              "default": [
-                {
-                  "variant": "primary",
-                  "label": "Label",
-                  "navigatesTo": "Navigates To"
-                }
-              ],
-              "label": "Actions",
-              "description": "Actions",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "primary",
-                      "secondary",
-                      "ghost"
-                    ]
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "navigatesTo": {
-                    "name": "navigatesTo",
-                    "type": "string",
-                    "required": false
-                  },
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
             "content": {
               "type": "string",
               "default": "Content",
@@ -256,32 +277,11 @@
               "description": "Document content (for text/html/markdown)",
               "tier": "presentation"
             },
-            "currentPage": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Current Page",
-              "description": "Current page (for multi-page documents)",
-              "tier": "presentation"
-            },
-            "totalPages": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Total Pages",
-              "description": "Total pages",
-              "tier": "presentation"
-            },
-            "showDownload": {
+            "showPrint": {
               "type": "boolean",
               "default": false,
-              "label": "Show Download",
-              "description": "Show download button",
-              "tier": "presentation"
-            },
-            "showToolbar": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Toolbar",
-              "description": "Show toolbar",
+              "label": "Show Print",
+              "description": "Show print button",
               "tier": "presentation"
             }
           },

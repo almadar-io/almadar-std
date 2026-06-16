@@ -30,7 +30,14 @@ const ALIAS = 'UiCheckbox';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiCheckboxEventKey = 'INIT';
+export type StdUiCheckboxEventKey = 'CHANGE' | 'INIT';
+
+/**
+ * Payload shape for the `CHANGE` event.
+ */
+export interface StdUiCheckboxChangePayload {
+  id?: string;
+}
 
 /**
  * Typed call-site config block for this trait — every
@@ -39,14 +46,14 @@ export type StdUiCheckboxEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiCheckboxConfig {
-  /** Default: `false` */
-  defaultChecked?: boolean;
-  /** Default: `false` */
-  checked?: boolean;
   /** Default: `"Label"` */
   label?: string;
   /** Default: `""` */
   className?: string;
+  /** Default: `false` */
+  checked?: boolean;
+  /** Default: `false` */
+  defaultChecked?: boolean;
 }
 
 /**

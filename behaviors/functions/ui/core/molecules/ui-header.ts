@@ -68,35 +68,35 @@ export interface StdUiHeaderLogoClickPayload {
  */
 export interface StdUiHeaderConfig {
   /** Default: `false` */
+  isMenuOpen?: boolean;
+  /** Default: `true` */
+  sticky?: boolean;
+  /** Default: `"User Name"` */
+  userName?: string;
+  /** Default: `"KFlow"` */
+  brandName?: string;
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
+  logoSrc?: unknown;
+  /** Default: `true` */
+  showMenuToggle?: boolean;
+  actions?: unknown;
+  /** Default: `false` */
   showSearch?: boolean;
   /** Default: `""` */
   className?: string;
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `{"initials":"Initials","alt":"Alt","src":"Src"}` */
-  userAvatar?: EntityRow;
-  /** Default: `"Search Placeholder"` */
-  searchPlaceholder?: string;
+  error?: EntityRow;
   /** Default: `"compact-bar"` */
   look?: 'hero' | 'compact-bar' | 'breadcrumb' | 'contextual' | 'editorial-banner';
-  /** Default: `true` */
-  showMenuToggle?: boolean;
-  /** Default: `"Logo Src"` */
-  logoSrc?: string;
-  /** Default: `false` */
-  isMenuOpen?: boolean;
+  /** Default: `[{"href":"Href","icon":"circle","badge":"Badge","active":false,"label":"Label"}]` */
+  navigationItems?: EntityRow[];
+  /** Default: `"Search Placeholder"` */
+  searchPlaceholder?: string;
   /** Default: `"mobile"` */
   variant?: 'mobile' | 'desktop';
-  /** Default: `"User Name"` */
-  userName?: string;
-  /** Default: `"KFlow"` */
-  brandName?: string;
-  /** Default: `[{"badge":"Badge","label":"Label","active":false,"href":"Href","icon":"circle"}]` */
-  navigationItems?: EntityRow[];
-  error?: EntityRow;
-  actions?: unknown;
-  /** Default: `true` */
-  sticky?: boolean;
+  /** Default: `{"initials":"Initials","src":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png","alt":"Alt"}` */
+  userAvatar?: EntityRow;
 }
 
 /**

@@ -39,34 +39,34 @@ export type StdUiActionTileEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiActionTileConfig {
-  error?: EntityRow;
-  /** Default: `[]` */
-  selectedIds?: string[];
-  /** Default: `{"category":"Category","name":"Name","description":"Description","iconEmoji":"Icon Emoji","iconUrl":"Icon Url","stateMachine":{"states":["Item"],"description":"Description","name":"Name","currentState":"Current State","transitions":[{"from":"From","guardHint":"Guard Hint","event":"Event","to":"To"}]},"id":"Id"}` */
-  action?: EntityRow;
+  /** Default: `"Search Value"` */
+  searchValue?: string;
   /** Default: `{}` */
   categoryColors?: unknown;
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
-  /** Default: `0` */
-  totalCount?: number;
-  /** Default: `false` */
-  disabled?: boolean;
-  /** Default: `"asc"` */
-  sortDirection?: 'asc' | 'desc';
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `"Sort By"` */
   sortBy?: string;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `0` */
-  pageSize?: number;
+  error?: EntityRow;
   /** Default: `0` */
   pageProp?: number;
-  /** Default: `"Search Value"` */
-  searchValue?: string;
+  /** Default: `0` */
+  pageSize?: number;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `{"iconEmoji":"Icon Emoji","name":"Name","description":"Description","stateMachine":{"states":["Item"],"currentState":"Current State","description":"Description","name":"Name","transitions":[{"to":"To","from":"From","event":"Event","guardHint":"Guard Hint"}]},"category":"Category","id":"Id"}` */
+  action?: EntityRow;
+  /** Default: `false` */
+  disabled?: boolean;
+  /** Default: `"asc"` */
+  sortDirection?: 'asc' | 'desc';
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
   activeFilters?: unknown;
+  /** Default: `[]` */
+  selectedIds?: string[];
+  /** Default: `0` */
+  totalCount?: number;
 }
 
 /**
@@ -170,22 +170,22 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
                   'render-ui',
                   'main',
                   {
-                    'className': '@config.className',
-                    'categoryColors': '@config.categoryColors',
-                    'page': '@config.pageProp',
-                    'type': 'action-tile',
-                    'searchValue': '@config.searchValue',
-                    'action': '@config.action',
-                    'pageSize': '@config.pageSize',
-                    'selectedIds': '@config.selectedIds',
+                    'sortDirection': '@config.sortDirection',
                     'sortBy': '@config.sortBy',
-                    'isLoading': '@config.isLoading',
-                    'disabled': '@config.disabled',
                     'totalCount': '@config.totalCount',
                     'activeFilters': '@config.activeFilters',
-                    'sortDirection': '@config.sortDirection',
+                    'type': 'action-tile',
+                    'disabled': '@config.disabled',
+                    'className': '@config.className',
+                    'selectedIds': '@config.selectedIds',
+                    'pageSize': '@config.pageSize',
+                    'action': '@config.action',
+                    'searchValue': '@config.searchValue',
+                    'isLoading': '@config.isLoading',
+                    'page': '@config.pageProp',
                     'error': '@config.error',
                     'size': '@config.size',
+                    'categoryColors': '@config.categoryColors',
                   },
                 ],
               ],
@@ -193,19 +193,57 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
           ],
         },
         'config': {
+          'searchValue': {
+            'type': 'string',
+            'default': 'Search Value',
+            'label': 'Search Value',
+            'description': 'Current search query value',
+            'tier': 'presentation',
+          },
+          'categoryColors': {
+            'type': 'Map<string,ActionTileCategoryColorsValue>',
+            'default': {},
+            'label': 'Category Colors',
+            'description': 'Category → color mapping',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'border': {
+                  'name': 'border',
+                  'type': 'string',
+                  'required': true,
+                },
+                'bg': {
+                  'name': 'bg',
+                  'type': 'string',
+                  'required': true,
+                },
+              },
+            },
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
+          'sortBy': {
+            'type': 'string',
+            'default': 'Sort By',
+            'label': 'Sort By',
+            'description': 'Current sort field',
+            'tier': 'presentation',
+          },
           'error': {
             'type': 'ActionTileError',
             'label': 'Error',
             'description': 'Error state (UiError)',
             'tier': 'presentation',
             'properties': {
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-              'code': {
-                'name': 'code',
+              'stack': {
+                'name': 'stack',
                 'type': 'string',
                 'required': false,
               },
@@ -214,47 +252,63 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
                 'type': 'string',
                 'required': false,
               },
-              'stack': {
-                'name': 'stack',
+              'code': {
+                'name': 'code',
                 'type': 'string',
                 'required': false,
               },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
             },
           },
-          'selectedIds': {
-            'type': '[string]',
-            'default': [],
-            'label': 'Selected Ids',
-            'description': 'Currently selected item IDs',
+          'pageProp': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page',
+            'description': 'Current page number',
+            'synonyms': 'page',
             'tier': 'presentation',
-            'items': {
-              'type': 'string',
-            },
+          },
+          'pageSize': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page Size',
+            'description': 'Number of items per page',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
           },
           'action': {
             'type': 'ActionTileAction',
             'default': {
-              'category': 'Category',
+              'iconEmoji': 'Icon Emoji',
               'name': 'Name',
               'description': 'Description',
-              'iconEmoji': 'Icon Emoji',
-              'iconUrl': 'Icon Url',
               'stateMachine': {
                 'states': [
                   'Item',
                 ],
+                'currentState': 'Current State',
                 'description': 'Description',
                 'name': 'Name',
-                'currentState': 'Current State',
                 'transitions': [
                   {
-                    'from': 'From',
-                    'guardHint': 'Guard Hint',
-                    'event': 'Event',
                     'to': 'To',
+                    'from': 'From',
+                    'event': 'Event',
+                    'guardHint': 'Guard Hint',
                   },
                 ],
               },
+              'category': 'Category',
               'id': 'Id',
             },
             'label': 'Action',
@@ -293,8 +347,13 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
                     'items': {
                       'type': 'object',
                       'properties': {
-                        'from': {
-                          'name': 'from',
+                        'guardHint': {
+                          'name': 'guardHint',
+                          'type': 'string',
+                          'required': false,
+                        },
+                        'to': {
+                          'name': 'to',
                           'type': 'string',
                           'required': true,
                         },
@@ -303,23 +362,18 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
                           'type': 'string',
                           'required': true,
                         },
-                        'to': {
-                          'name': 'to',
+                        'from': {
+                          'name': 'from',
                           'type': 'string',
                           'required': true,
-                        },
-                        'guardHint': {
-                          'name': 'guardHint',
-                          'type': 'string',
-                          'required': false,
                         },
                       },
                     },
                   },
-                  'description': {
-                    'name': 'description',
+                  'name': {
+                    'name': 'name',
                     'type': 'string',
-                    'required': false,
+                    'required': true,
                   },
                   'states': {
                     'name': 'states',
@@ -329,13 +383,13 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
                       'type': 'string',
                     },
                   },
+                  'description': {
+                    'name': 'description',
+                    'type': 'string',
+                    'required': false,
+                  },
                   'currentState': {
                     'name': 'currentState',
-                    'type': 'string',
-                    'required': true,
-                  },
-                  'name': {
-                    'name': 'name',
                     'type': 'string',
                     'required': true,
                   },
@@ -352,47 +406,6 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
                 'required': true,
               },
             },
-          },
-          'categoryColors': {
-            'type': 'Map<string,ActionTileCategoryColorsValue>',
-            'default': {},
-            'label': 'Category Colors',
-            'description': 'Category → color mapping',
-            'tier': 'presentation',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'border': {
-                  'name': 'border',
-                  'type': 'string',
-                  'required': true,
-                },
-                'bg': {
-                  'name': 'bg',
-                  'type': 'string',
-                  'required': true,
-                },
-              },
-            },
-          },
-          'size': {
-            'type': 'string',
-            'default': 'md',
-            'label': 'Size',
-            'description': 'Size variant',
-            'tier': 'presentation',
-            'values': [
-              'sm',
-              'md',
-              'lg',
-            ],
-          },
-          'totalCount': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Total Count',
-            'description': 'Total number of items',
-            'tier': 'presentation',
           },
           'disabled': {
             'type': 'boolean',
@@ -412,53 +425,39 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
               'desc',
             ],
           },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
-            'tier': 'presentation',
-          },
-          'sortBy': {
+          'size': {
             'type': 'string',
-            'default': 'Sort By',
-            'label': 'Sort By',
-            'description': 'Current sort field',
+            'default': 'md',
+            'label': 'Size',
+            'description': 'Size variant',
             'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'pageSize': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page Size',
-            'description': 'Number of items per page',
-            'tier': 'presentation',
-          },
-          'pageProp': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page',
-            'description': 'Current page number',
-            'synonyms': 'page',
-            'tier': 'presentation',
-          },
-          'searchValue': {
-            'type': 'string',
-            'default': 'Search Value',
-            'label': 'Search Value',
-            'description': 'Current search query value',
-            'tier': 'presentation',
+            'values': [
+              'sm',
+              'md',
+              'lg',
+            ],
           },
           'activeFilters': {
             'type': 'json',
             'label': 'Active Filters',
             'description': 'Active filters',
+            'tier': 'presentation',
+          },
+          'selectedIds': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Selected Ids',
+            'description': 'Currently selected item IDs',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'totalCount': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Total Count',
+            'description': 'Total number of items',
             'tier': 'presentation',
           },
         },

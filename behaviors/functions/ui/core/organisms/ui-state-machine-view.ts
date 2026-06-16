@@ -39,11 +39,11 @@ export type StdUiStateMachineViewEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiStateMachineViewConfig {
+  /** Default: `""` */
+  className?: string;
   /** Default: `false` */
   isLoading?: boolean;
   error?: EntityRow;
-  /** Default: `""` */
-  className?: string;
 }
 
 /**
@@ -147,10 +147,10 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
                   'render-ui',
                   'main',
                   {
-                    'isLoading': '@config.isLoading',
+                    'type': 'state-machine-view',
                     'error': '@config.error',
                     'className': '@config.className',
-                    'type': 'state-machine-view',
+                    'isLoading': '@config.isLoading',
                   },
                 ],
               ],
@@ -158,6 +158,13 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
           ],
         },
         'config': {
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
           'isLoading': {
             'type': 'boolean',
             'default': false,
@@ -171,11 +178,6 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
             'description': 'Error state',
             'tier': 'presentation',
             'properties': {
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
               'message': {
                 'name': 'message',
                 'type': 'string',
@@ -186,19 +188,17 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
                 'type': 'string',
                 'required': false,
               },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
               'code': {
                 'name': 'code',
                 'type': 'string',
                 'required': false,
               },
             },
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
           },
         },
         'scope': 'instance',

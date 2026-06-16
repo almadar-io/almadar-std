@@ -48,12 +48,12 @@ export interface StdUiErrorStateRetryPayload {
 export interface StdUiErrorStateConfig {
   /** Default: `"Description"` */
   description?: string;
-  /** Default: `""` */
-  className?: string;
   /** Default: `"Title"` */
   title?: string;
   /** Default: `"Message"` */
   message?: string;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

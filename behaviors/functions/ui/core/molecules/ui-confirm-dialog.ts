@@ -62,27 +62,27 @@ export interface StdUiConfirmDialogOpenPayload {
 export interface StdUiConfirmDialogConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `"Cancel Label"` */
-  cancelLabel?: string;
   /** Default: `true` */
   isOpen?: boolean;
-  message?: unknown;
   /** Default: `"Title"` */
   title?: string;
-  error?: EntityRow;
-  /** Default: `"Cancel Text"` */
-  cancelText?: string;
   /** Default: `"Confirm Label"` */
   confirmLabel?: string;
-  /** Default: `"sm"` */
-  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `"Confirm Text"` */
-  confirmText?: string;
+  /** Default: `"Cancel Text"` */
+  cancelText?: string;
+  /** Default: `"Cancel Label"` */
+  cancelLabel?: string;
   description?: unknown;
   /** Default: `"danger"` */
   variant?: 'danger' | 'warning' | 'info' | 'default';
+  /** Default: `"sm"` */
+  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  /** Default: `"Confirm Text"` */
+  confirmText?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  error?: EntityRow;
+  message?: unknown;
 }
 
 /**

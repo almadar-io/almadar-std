@@ -39,7 +39,7 @@ export type StdUiDocSidebarEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiDocSidebarConfig {
-  /** Default: `[{"label":"Label","href":"Href","active":false,"items":[]}]` */
+  /** Default: `[{"href":"Href","active":false,"label":"Label","items":[]}]` */
   items?: EntityRow[];
   /** Default: `""` */
   className?: string;

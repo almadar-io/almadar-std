@@ -53,8 +53,6 @@ export interface StdUiFeatureRendererFeatureHoverPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiFeatureRendererConfig {
-  /** Default: `[{"assetUrl":"Asset Url","sprite":"Sprite","elevation":1,"type":"Type","id":"Id","z":1,"y":1,"color":"Color","x":1}]` */
-  features?: EntityRow[];
   /** Default: `1` */
   cellSize?: number;
   /** Default: `[]` */
@@ -63,6 +61,8 @@ export interface StdUiFeatureRendererConfig {
   offsetX?: number;
   /** Default: `0` */
   offsetZ?: number;
+  /** Default: `[{"z":1,"color":"Color","x":1,"type":"Type","elevation":1,"y":1,"id":"Id"}]` */
+  features?: EntityRow[];
   /** Default: `{}` */
   featureColors?: unknown;
 }
@@ -181,11 +181,11 @@ export function stdUiFeatureRendererFeatureRendererOrbital(params: StdUiFeatureR
                   },
                   {
                     'name': 'sprite',
-                    'type': 'string',
+                    'type': 'json',
                   },
                   {
                     'name': 'assetUrl',
-                    'type': 'string',
+                    'type': 'json',
                   },
                   {
                     'name': 'color',
@@ -234,11 +234,11 @@ export function stdUiFeatureRendererFeatureRendererOrbital(params: StdUiFeatureR
                   },
                   {
                     'name': 'sprite',
-                    'type': 'string',
+                    'type': 'json',
                   },
                   {
                     'name': 'assetUrl',
-                    'type': 'string',
+                    'type': 'json',
                   },
                   {
                     'name': 'color',
@@ -300,11 +300,11 @@ export function stdUiFeatureRendererFeatureRendererOrbital(params: StdUiFeatureR
                     },
                     {
                       'name': 'sprite',
-                      'type': 'string',
+                      'type': 'json',
                     },
                     {
                       'name': 'assetUrl',
-                      'type': 'string',
+                      'type': 'json',
                     },
                     {
                       'name': 'color',
@@ -353,11 +353,11 @@ export function stdUiFeatureRendererFeatureRendererOrbital(params: StdUiFeatureR
                     },
                     {
                       'name': 'sprite',
-                      'type': 'string',
+                      'type': 'json',
                     },
                     {
                       'name': 'assetUrl',
-                      'type': 'string',
+                      'type': 'json',
                     },
                     {
                       'name': 'color',
@@ -382,15 +382,15 @@ export function stdUiFeatureRendererFeatureRendererOrbital(params: StdUiFeatureR
                   'render-ui',
                   'main',
                   {
-                    'onFeatureClick': 'FEATURE_CLICK',
-                    'offsetZ': '@config.offsetZ',
                     'selectedFeatureIds': '@config.selectedFeatureIds',
-                    'offsetX': '@config.offsetX',
-                    'onFeatureHover': 'FEATURE_HOVER',
-                    'cellSize': '@config.cellSize',
                     'featureColors': '@config.featureColors',
                     'features': '@config.features',
+                    'onFeatureHover': 'FEATURE_HOVER',
+                    'onFeatureClick': 'FEATURE_CLICK',
+                    'cellSize': '@config.cellSize',
                     'type': 'feature-renderer',
+                    'offsetZ': '@config.offsetZ',
+                    'offsetX': '@config.offsetX',
                   },
                 ],
               ],
@@ -398,75 +398,6 @@ export function stdUiFeatureRendererFeatureRendererOrbital(params: StdUiFeatureR
           ],
         },
         'config': {
-          'features': {
-            'type': '[FeatureRendererFeaturesItem]',
-            'default': [
-              {
-                'assetUrl': 'Asset Url',
-                'sprite': 'Sprite',
-                'elevation': 1,
-                'type': 'Type',
-                'id': 'Id',
-                'z': 1,
-                'y': 1,
-                'color': 'Color',
-                'x': 1,
-              },
-            ],
-            'label': 'Features',
-            'description': 'Array of features to render',
-            'tier': 'presentation',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'y': {
-                  'name': 'y',
-                  'type': 'number',
-                  'required': true,
-                },
-                'type': {
-                  'name': 'type',
-                  'type': 'string',
-                  'required': true,
-                },
-                'elevation': {
-                  'name': 'elevation',
-                  'type': 'number',
-                  'required': false,
-                },
-                'x': {
-                  'name': 'x',
-                  'type': 'number',
-                  'required': true,
-                },
-                'z': {
-                  'name': 'z',
-                  'type': 'number',
-                  'required': false,
-                },
-                'sprite': {
-                  'name': 'sprite',
-                  'type': 'string',
-                  'required': false,
-                },
-                'id': {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': false,
-                },
-                'assetUrl': {
-                  'name': 'assetUrl',
-                  'type': 'string',
-                  'required': false,
-                },
-                'color': {
-                  'name': 'color',
-                  'type': 'string',
-                  'required': false,
-                },
-              },
-            },
-          },
           'cellSize': {
             'type': 'number',
             'default': 1,
@@ -497,6 +428,73 @@ export function stdUiFeatureRendererFeatureRendererOrbital(params: StdUiFeatureR
             'label': 'Offset Z',
             'description': 'Grid offset Z',
             'tier': 'presentation',
+          },
+          'features': {
+            'type': '[FeatureRendererFeaturesItem]',
+            'default': [
+              {
+                'z': 1,
+                'color': 'Color',
+                'x': 1,
+                'type': 'Type',
+                'elevation': 1,
+                'y': 1,
+                'id': 'Id',
+              },
+            ],
+            'label': 'Features',
+            'description': 'Array of features to render',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'y': {
+                  'name': 'y',
+                  'type': 'number',
+                  'required': true,
+                },
+                'color': {
+                  'name': 'color',
+                  'type': 'string',
+                  'required': false,
+                },
+                'elevation': {
+                  'name': 'elevation',
+                  'type': 'number',
+                  'required': false,
+                },
+                'type': {
+                  'name': 'type',
+                  'type': 'string',
+                  'required': true,
+                },
+                'x': {
+                  'name': 'x',
+                  'type': 'number',
+                  'required': true,
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': false,
+                },
+                'sprite': {
+                  'name': 'sprite',
+                  'type': 'string',
+                  'required': false,
+                },
+                'assetUrl': {
+                  'name': 'assetUrl',
+                  'type': 'string',
+                  'required': false,
+                },
+                'z': {
+                  'name': 'z',
+                  'type': 'number',
+                  'required': false,
+                },
+              },
+            },
           },
           'featureColors': {
             'type': 'Map<string,string>',

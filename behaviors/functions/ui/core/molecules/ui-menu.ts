@@ -41,10 +41,10 @@ export type StdUiMenuEventKey = 'INIT';
 export interface StdUiMenuConfig {
   /** Default: `""` */
   className?: string;
+  /** Default: `[{"variant":"default","subMenu":[],"label":"Label","id":"Id","icon":"circle","badge":"Badge","disabled":false}]` */
+  items?: EntityRow[];
   /** Default: `"bottom-left"` */
   position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'top-start' | 'top-end' | 'bottom-start' | 'bottom-end';
-  /** Default: `[{"variant":"default","subMenu":[],"id":"Id","disabled":false,"label":"Label","icon":"circle","badge":"Badge"}]` */
-  items?: EntityRow[];
 }
 
 /**

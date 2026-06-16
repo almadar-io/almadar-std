@@ -57,23 +57,23 @@ export interface StdUiPaginationConfig {
   /** Default: `false` */
   showPageSize?: boolean;
   /** Default: `0` */
+  currentPage?: number;
+  /** Default: `0` */
   totalItems?: number;
+  /** Default: `0` */
+  totalPages?: number;
+  /** Default: `false` */
+  showTotal?: boolean;
   /** Default: `false` */
   showJumpToPage?: boolean;
+  /** Default: `""` */
+  className?: string;
   /** Default: `7` */
   maxVisiblePages?: number;
   /** Default: `[]` */
   pageSizeOptions?: number[];
   /** Default: `0` */
-  totalPages?: number;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `false` */
-  showTotal?: boolean;
-  /** Default: `0` */
   pageSize?: number;
-  /** Default: `0` */
-  currentPage?: number;
 }
 
 /**

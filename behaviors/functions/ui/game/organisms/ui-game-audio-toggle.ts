@@ -39,12 +39,12 @@ export type StdUiGameAudioToggleEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiGameAudioToggleConfig {
+  /** Default: `false` */
+  isLoading?: boolean;
   /** Default: `"sm"` */
   size?: 'sm' | 'md' | 'lg';
   /** Default: `""` */
   className?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
   error?: EntityRow;
 }
 
@@ -155,10 +155,10 @@ export function stdUiGameAudioToggleGameAudioToggleOrbital(params: StdUiGameAudi
                   'main',
                   {
                     'isLoading': '@config.isLoading',
+                    'error': '@config.error',
                     'type': 'game-audio-toggle',
                     'size': '@config.size',
                     'className': '@config.className',
-                    'error': '@config.error',
                     'entity': 'GameAudioToggleItem',
                   },
                 ],
@@ -167,6 +167,13 @@ export function stdUiGameAudioToggleGameAudioToggleOrbital(params: StdUiGameAudi
           ],
         },
         'config': {
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state (passed through)',
+            'tier': 'presentation',
+          },
           'size': {
             'type': 'string',
             'default': 'sm',
@@ -186,24 +193,12 @@ export function stdUiGameAudioToggleGameAudioToggleOrbital(params: StdUiGameAudi
             'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state (passed through)',
-            'tier': 'presentation',
-          },
           'error': {
             'type': 'GameAudioToggleError',
             'label': 'Error',
             'description': 'Error state (passed through)',
             'tier': 'presentation',
             'properties': {
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
               'code': {
                 'name': 'code',
                 'type': 'string',
@@ -218,6 +213,11 @@ export function stdUiGameAudioToggleGameAudioToggleOrbital(params: StdUiGameAudi
                 'name': 'stack',
                 'type': 'string',
                 'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
               },
             },
           },

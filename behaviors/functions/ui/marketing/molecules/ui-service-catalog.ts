@@ -41,7 +41,7 @@ export type StdUiServiceCatalogEventKey = 'INIT';
 export interface StdUiServiceCatalogConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `[{"layer":"Layer","name":"Name","layerColor":"Layer Color"}]` */
+  /** Default: `[{"name":"Name","layerColor":"Layer Color","layer":"Layer"}]` */
   services?: EntityRow[];
 }
 

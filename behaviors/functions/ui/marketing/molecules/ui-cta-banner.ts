@@ -43,16 +43,16 @@ export interface StdUiCtaBannerConfig {
   primaryAction?: EntityRow;
   /** Default: `"Subtitle"` */
   subtitle?: string;
-  /** Default: `"Title"` */
-  title?: string;
   /** Default: `"alt"` */
   background?: 'default' | 'alt' | 'dark' | 'gradient' | 'primary';
+  /** Default: `"center"` */
+  align?: 'center' | 'left';
+  /** Default: `"Title"` */
+  title?: string;
   /** Default: `{"label":"Label","href":"Href"}` */
   secondaryAction?: EntityRow;
   /** Default: `""` */
   className?: string;
-  /** Default: `"center"` */
-  align?: 'center' | 'left';
 }
 
 /**

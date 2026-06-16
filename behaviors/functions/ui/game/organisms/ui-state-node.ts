@@ -47,17 +47,17 @@ export interface StdUiStateNodeClickPayload {
  */
 export interface StdUiStateNodeConfig {
   /** Default: `false` */
-  isInitial?: boolean;
-  /** Default: `"Name"` */
-  name?: string;
-  /** Default: `false` */
   isCurrent?: boolean;
   /** Default: `false` */
   isSelected?: boolean;
   /** Default: `{"y":1,"x":1}` */
   position?: EntityRow;
+  /** Default: `false` */
+  isInitial?: boolean;
   /** Default: `""` */
   className?: string;
+  /** Default: `"Name"` */
+  name?: string;
 }
 
 /**
@@ -187,13 +187,13 @@ export function stdUiStateNodeStateNodeOrbital(params: StdUiStateNodeStateNodeOr
                   'render-ui',
                   'main',
                   {
-                    'onClick': 'CLICK',
                     'name': '@config.name',
-                    'isInitial': '@config.isInitial',
-                    'type': 'state-node',
                     'className': '@config.className',
+                    'type': 'state-node',
                     'position': '@config.position',
+                    'isInitial': '@config.isInitial',
                     'isSelected': '@config.isSelected',
+                    'onClick': 'CLICK',
                     'isCurrent': '@config.isCurrent',
                   },
                 ],
@@ -202,20 +202,6 @@ export function stdUiStateNodeStateNodeOrbital(params: StdUiStateNodeStateNodeOr
           ],
         },
         'config': {
-          'isInitial': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Initial',
-            'description': 'Whether this is the initial state',
-            'tier': 'presentation',
-          },
-          'name': {
-            'type': 'string',
-            'default': 'Name',
-            'label': 'Name',
-            'description': 'State name',
-            'tier': 'presentation',
-          },
           'isCurrent': {
             'type': 'boolean',
             'default': false,
@@ -240,23 +226,37 @@ export function stdUiStateNodeStateNodeOrbital(params: StdUiStateNodeStateNodeOr
             'description': 'Position on the graph canvas',
             'tier': 'presentation',
             'properties': {
-              'x': {
-                'name': 'x',
-                'type': 'number',
-                'required': true,
-              },
               'y': {
                 'name': 'y',
                 'type': 'number',
                 'required': true,
               },
+              'x': {
+                'name': 'x',
+                'type': 'number',
+                'required': true,
+              },
             },
+          },
+          'isInitial': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Initial',
+            'description': 'Whether this is the initial state',
+            'tier': 'presentation',
           },
           'className': {
             'type': 'string',
             'default': '',
             'label': 'Class Name',
             'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'name': {
+            'type': 'string',
+            'default': 'Name',
+            'label': 'Name',
+            'description': 'State name',
             'tier': 'presentation',
           },
         },

@@ -64,7 +64,7 @@ export interface StdUiDialogueBoxConfig {
   className?: string;
   /** Default: `"bottom"` */
   position?: 'top' | 'bottom';
-  /** Default: `{"text":"Text","id":"Id","choices":[{"next":"Next","disabled":false,"text":"Text","action":"Action"}],"autoAdvance":1,"speaker":"Speaker","portrait":"Portrait"}` */
+  /** Default: `{"portrait":"Portrait","speaker":"Speaker","id":"Id","text":"Text","autoAdvance":1,"choices":[{"action":"Action","next":"Next","disabled":false,"text":"Text"}]}` */
   dialogue?: EntityRow;
   /** Default: `30` */
   typewriterSpeed?: number;

@@ -41,7 +41,7 @@
             },
             {
               "event": "CLEAR",
-              "description": "Callback when clear button is clicked",
+              "description": "Callback or declarative event key when clear button is clicked",
               "tier": "essential",
               "scope": "external",
               "payloadSchema": [
@@ -53,7 +53,7 @@
             },
             {
               "event": "CHANGE",
-              "description": "onChange handler - accepts events from input, select, or textarea",
+              "description": "onChange handler or declarative event key for trait dispatch",
               "tier": "essential",
               "scope": "external",
               "payloadSchema": [
@@ -91,7 +91,7 @@
               {
                 "key": "CLEAR",
                 "name": "Clear",
-                "description": "Callback when clear button is clicked",
+                "description": "Callback or declarative event key when clear button is clicked",
                 "tier": "essential",
                 "payloadSchema": [
                   {
@@ -103,7 +103,7 @@
               {
                 "key": "CHANGE",
                 "name": "Change",
-                "description": "onChange handler - accepts events from input, select, or textarea",
+                "description": "onChange handler or declarative event key for trait dispatch",
                 "tier": "essential",
                 "payloadSchema": [
                   {
@@ -124,21 +124,21 @@
                     "main",
                     {
                       "inputType": "@config.inputType",
-                      "rows": "@config.rows",
-                      "leftIcon": "@config.leftIcon",
-                      "disabled": "@config.disabled",
-                      "onChange": "CHANGE",
-                      "onClear": "CLEAR",
-                      "rightIcon": "@config.rightIcon",
-                      "error": "@config.error",
                       "icon": "@config.icon",
+                      "leftIcon": "@config.leftIcon",
+                      "options": "@config.options",
+                      "onChange": "CHANGE",
+                      "error": "@config.error",
                       "clearable": "@config.clearable",
                       "placeholder": "@config.placeholder",
-                      "value": "@config.value",
-                      "action": "ACTION",
-                      "type": "input",
                       "className": "@config.className",
-                      "options": "@config.options"
+                      "action": "ACTION",
+                      "onClear": "CLEAR",
+                      "disabled": "@config.disabled",
+                      "type": "input",
+                      "rightIcon": "@config.rightIcon",
+                      "rows": "@config.rows",
+                      "value": "@config.value"
                     }
                   ]
                 ]
@@ -146,37 +146,25 @@
             ]
           },
           "config": {
-            "placeholder": {
-              "type": "string",
-              "default": "Placeholder",
-              "label": "Placeholder",
-              "description": "Placeholder text",
+            "rows": {
+              "type": "number",
+              "default": 3.0,
+              "label": "Rows",
+              "description": "Rows for textarea type",
               "tier": "presentation"
             },
-            "leftIcon": {
-              "type": "node",
-              "label": "Left Icon",
-              "description": "leftIcon prop",
-              "tier": "presentation"
-            },
-            "className": {
+            "error": {
               "type": "string",
               "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes applied to the root element.",
+              "label": "Error",
+              "description": "error prop",
               "tier": "presentation"
             },
-            "rightIcon": {
-              "type": "node",
-              "label": "Right Icon",
-              "description": "rightIcon prop",
-              "tier": "presentation"
-            },
-            "icon": {
-              "type": "icon",
-              "default": "circle",
-              "label": "Icon",
-              "description": "Lucide icon component for left side (convenience prop), or a canonical kebab-case icon name string (resolved via `resolveIcon`).",
+            "value": {
+              "type": "string",
+              "default": "Value",
+              "label": "Value",
+              "description": "Current value",
               "tier": "presentation"
             },
             "disabled": {
@@ -186,12 +174,33 @@
               "description": "Whether input is disabled",
               "tier": "presentation"
             },
-            "error": {
-              "type": "string",
-              "default": "",
-              "label": "Error",
-              "description": "error prop",
+            "rightIcon": {
+              "type": "icon",
+              "label": "Right Icon",
+              "description": "rightIcon prop",
               "tier": "presentation"
+            },
+            "inputType": {
+              "type": "string",
+              "default": "text",
+              "label": "Input Type",
+              "description": "Input type - supports 'select' and 'textarea' in addition to standard types",
+              "tier": "presentation",
+              "values": [
+                "text",
+                "email",
+                "password",
+                "number",
+                "tel",
+                "url",
+                "search",
+                "date",
+                "datetime-local",
+                "time",
+                "checkbox",
+                "select",
+                "textarea"
+              ]
             },
             "options": {
               "type": "[InputOptionsItem]",
@@ -220,47 +229,38 @@
                 }
               }
             },
-            "rows": {
-              "type": "number",
-              "default": 3.0,
-              "label": "Rows",
-              "description": "Rows for textarea type",
+            "leftIcon": {
+              "type": "icon",
+              "label": "Left Icon",
+              "description": "leftIcon prop",
               "tier": "presentation"
             },
-            "value": {
-              "type": "string",
-              "default": "Value",
-              "label": "Value",
-              "description": "Current value",
+            "icon": {
+              "type": "icon",
+              "default": "circle",
+              "label": "Icon",
+              "description": "Lucide icon component or canonical kebab-case icon name string for left side",
               "tier": "presentation"
             },
-            "inputType": {
+            "placeholder": {
               "type": "string",
-              "default": "text",
-              "label": "Input Type",
-              "description": "Input type - supports 'select' and 'textarea' in addition to standard types",
-              "tier": "presentation",
-              "values": [
-                "text",
-                "email",
-                "password",
-                "number",
-                "tel",
-                "url",
-                "search",
-                "date",
-                "datetime-local",
-                "time",
-                "checkbox",
-                "select",
-                "textarea"
-              ]
+              "default": "Placeholder",
+              "label": "Placeholder",
+              "description": "Placeholder text",
+              "tier": "presentation"
             },
             "clearable": {
               "type": "boolean",
               "default": false,
               "label": "Clearable",
               "description": "Show clear button when input has value",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes applied to the root element.",
               "tier": "presentation"
             }
           },

@@ -26,6 +26,20 @@
           },
           "category": "interaction",
           "linkedEntity": "CardItem",
+          "emits": [
+            {
+              "event": "ACTION",
+              "description": "Declarative event key emitted on click for trait dispatch",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -37,6 +51,18 @@
               {
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "key": "ACTION",
+                "name": "Action",
+                "description": "Declarative event key emitted on click for trait dispatch",
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -49,20 +75,21 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "@config.variant",
-                      "padding": "@config.padding",
                       "className": "@config.className",
+                      "action": "ACTION",
+                      "variant": "@config.variant",
+                      "title": "@config.title",
                       "look": "@config.look",
+                      "subtitle": "@config.subtitle",
+                      "padding": "@config.padding",
                       "children": [
                         {
-                          "type": "typography",
-                          "content": "Sample content"
+                          "content": "Sample content",
+                          "type": "typography"
                         }
                       ],
                       "type": "card",
-                      "subtitle": "@config.subtitle",
-                      "shadow": "@config.shadow",
-                      "title": "@config.title"
+                      "shadow": "@config.shadow"
                     }
                   ]
                 ]
@@ -70,33 +97,6 @@
             ]
           },
           "config": {
-            "variant": {
-              "type": "string",
-              "default": "bordered",
-              "label": "Variant",
-              "description": "variant prop",
-              "tier": "presentation",
-              "values": [
-                "default",
-                "bordered",
-                "elevated",
-                "interactive"
-              ]
-            },
-            "subtitle": {
-              "type": "string",
-              "default": "Subtitle",
-              "label": "Subtitle",
-              "description": "Card subtitle - renders below title",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes applied to the root element.",
-              "tier": "presentation"
-            },
             "shadow": {
               "type": "string",
               "default": "none",
@@ -123,11 +123,11 @@
                 "lg"
               ]
             },
-            "title": {
+            "subtitle": {
               "type": "string",
-              "default": "Title",
-              "label": "Title",
-              "description": "Card title - renders in header if provided",
+              "default": "Subtitle",
+              "label": "Subtitle",
+              "description": "Card subtitle - renders below title",
               "tier": "presentation"
             },
             "look": {
@@ -145,6 +145,33 @@
                 "chip",
                 "tile-image-first"
               ]
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes applied to the root element.",
+              "tier": "presentation"
+            },
+            "variant": {
+              "type": "string",
+              "default": "bordered",
+              "label": "Variant",
+              "description": "variant prop",
+              "tier": "presentation",
+              "values": [
+                "default",
+                "bordered",
+                "elevated",
+                "interactive"
+              ]
+            },
+            "title": {
+              "type": "string",
+              "default": "Title",
+              "label": "Title",
+              "description": "Card title - renders in header if provided",
+              "tier": "presentation"
             }
           },
           "scope": "instance"

@@ -39,7 +39,7 @@ export type StdUiBehaviorViewEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiBehaviorViewConfig {
-  /** Default: `{"persistence":"Persistence","externalLinks":[{"targetOrbital":"Target Orbital","eventName":"Event Name","direction":"out","traitName":"Trait Name"}],"fields":[{"required":false,"type":"Type","name":"Name","hasDefault":false}],"pages":[{"route":"Route","name":"Name"}],"entityName":"Entity Name","orbitalName":"Orbital Name","traitDetails":{},"traits":[{"transitionCount":1,"listens":["Item"],"eventCount":1,"stateCount":1,"name":"Name","emits":["Item"]}]}` */
+  /** Default: `{"persistence":"Persistence","traits":[{"name":"Name","stateCount":1,"emits":["Item"],"eventCount":1,"transitionCount":1,"listens":["Item"]}],"fields":[{"required":false,"name":"Name","hasDefault":false,"type":"Type"}],"externalLinks":[{"direction":"out","traitName":"Trait Name","eventName":"Event Name","targetOrbital":"Target Orbital"}],"entityName":"Entity Name","traitDetails":{},"orbitalName":"Orbital Name","pages":[{"route":"Route","name":"Name"}]}` */
   data?: EntityRow;
 }
 

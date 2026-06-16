@@ -39,18 +39,18 @@ export type StdUiBookCoverPageEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiBookCoverPageConfig {
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
+  coverImageUrl?: unknown;
   /** Default: `"Title"` */
   title?: string;
-  /** Default: `"Subtitle"` */
-  subtitle?: string;
   /** Default: `""` */
   className?: string;
   /** Default: `"Author"` */
   author?: string;
-  /** Default: `"Cover Image Url"` */
-  coverImageUrl?: string;
   /** Default: `"rtl"` */
   direction?: 'rtl' | 'ltr';
+  /** Default: `"Subtitle"` */
+  subtitle?: string;
 }
 
 /**
@@ -154,13 +154,13 @@ export function stdUiBookCoverPageBookCoverPageOrbital(params: StdUiBookCoverPag
                   'render-ui',
                   'main',
                   {
-                    'direction': '@config.direction',
-                    'type': 'book-cover-page',
                     'subtitle': '@config.subtitle',
                     'coverImageUrl': '@config.coverImageUrl',
-                    'title': '@config.title',
+                    'type': 'book-cover-page',
+                    'direction': '@config.direction',
                     'className': '@config.className',
                     'author': '@config.author',
+                    'title': '@config.title',
                   },
                 ],
               ],
@@ -168,18 +168,18 @@ export function stdUiBookCoverPageBookCoverPageOrbital(params: StdUiBookCoverPag
           ],
         },
         'config': {
+          'coverImageUrl': {
+            'type': 'asset',
+            'default': 'https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png',
+            'label': 'Cover Image Url',
+            'description': 'coverImageUrl prop',
+            'tier': 'presentation',
+          },
           'title': {
             'type': 'string',
             'default': 'Title',
             'label': 'Title',
             'description': 'title prop',
-            'tier': 'presentation',
-          },
-          'subtitle': {
-            'type': 'string',
-            'default': 'Subtitle',
-            'label': 'Subtitle',
-            'description': 'subtitle prop',
             'tier': 'presentation',
           },
           'className': {
@@ -196,13 +196,6 @@ export function stdUiBookCoverPageBookCoverPageOrbital(params: StdUiBookCoverPag
             'description': 'author prop',
             'tier': 'presentation',
           },
-          'coverImageUrl': {
-            'type': 'string',
-            'default': 'Cover Image Url',
-            'label': 'Cover Image Url',
-            'description': 'coverImageUrl prop',
-            'tier': 'presentation',
-          },
           'direction': {
             'type': 'string',
             'default': 'rtl',
@@ -213,6 +206,13 @@ export function stdUiBookCoverPageBookCoverPageOrbital(params: StdUiBookCoverPag
               'rtl',
               'ltr',
             ],
+          },
+          'subtitle': {
+            'type': 'string',
+            'default': 'Subtitle',
+            'label': 'Subtitle',
+            'description': 'subtitle prop',
+            'tier': 'presentation',
           },
         },
         'scope': 'instance',

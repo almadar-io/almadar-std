@@ -99,14 +99,14 @@
                     "render-ui",
                     "main",
                     {
+                      "dismissible": "@config.dismissible",
                       "type": "violation-alert",
-                      "severity": "@config.severity",
-                      "className": "@config.className",
+                      "onDismiss": "DISMISS",
                       "violation": "@config.violation",
                       "compact": "@config.compact",
-                      "dismissible": "@config.dismissible",
                       "onNavigateToField": "NAVIGATE_TO_FIELD",
-                      "onDismiss": "DISMISS"
+                      "severity": "@config.severity",
+                      "className": "@config.className"
                     }
                   ]
                 ]
@@ -114,18 +114,25 @@
             ]
           },
           "config": {
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
             "violation": {
               "type": "ViolationAlertViolation",
               "default": {
+                "message": "Message",
+                "id": "Id",
+                "fieldId": "Field Id",
+                "tabId": "Tab Id",
                 "article": "Article",
-                "penaltyAction": "Penalty Action",
                 "law": "Law",
                 "actionType": "measure",
-                "adminAction": "Admin Action",
-                "fieldId": "Field Id",
-                "id": "Id",
-                "tabId": "Tab Id",
-                "message": "Message"
+                "penaltyAction": "Penalty Action",
+                "adminAction": "Admin Action"
               },
               "label": "Violation",
               "description": "Violation data",
@@ -136,15 +143,30 @@
                   "type": "string",
                   "required": true
                 },
-                "tabId": {
-                  "name": "tabId",
-                  "type": "string",
-                  "required": false
-                },
                 "id": {
                   "name": "id",
                   "type": "string",
                   "required": true
+                },
+                "actionType": {
+                  "name": "actionType",
+                  "type": "string",
+                  "required": true,
+                  "values": [
+                    "measure",
+                    "admin",
+                    "penalty"
+                  ]
+                },
+                "penaltyAction": {
+                  "name": "penaltyAction",
+                  "type": "string",
+                  "required": false
+                },
+                "tabId": {
+                  "name": "tabId",
+                  "type": "string",
+                  "required": false
                 },
                 "message": {
                   "name": "message",
@@ -165,21 +187,6 @@
                   "name": "law",
                   "type": "string",
                   "required": true
-                },
-                "penaltyAction": {
-                  "name": "penaltyAction",
-                  "type": "string",
-                  "required": false
-                },
-                "actionType": {
-                  "name": "actionType",
-                  "type": "string",
-                  "required": true,
-                  "values": [
-                    "measure",
-                    "admin",
-                    "penalty"
-                  ]
                 }
               }
             },
@@ -194,13 +201,6 @@
                 "error"
               ]
             },
-            "compact": {
-              "type": "boolean",
-              "default": false,
-              "label": "Compact",
-              "description": "Compact display mode",
-              "tier": "presentation"
-            },
             "dismissible": {
               "type": "boolean",
               "default": false,
@@ -208,11 +208,11 @@
               "description": "Dismissible alert",
               "tier": "presentation"
             },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
+            "compact": {
+              "type": "boolean",
+              "default": false,
+              "label": "Compact",
+              "description": "Compact display mode",
               "tier": "presentation"
             }
           },

@@ -39,14 +39,14 @@ export type StdUiMarketingFooterEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiMarketingFooterConfig {
-  /** Default: `{"alt":"Alt","href":"Href","src":"Src"}` */
+  /** Default: `"Copyright"` */
+  copyright?: string;
+  /** Default: `{"src":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png","alt":"Alt","href":"Href"}` */
   logo?: EntityRow;
-  /** Default: `[{"items":[{"href":"Href","label":"Label"}],"title":"Title"}]` */
+  /** Default: `[{"title":"Title","items":[{"label":"Label","href":"Href"}]}]` */
   columns?: EntityRow[];
   /** Default: `""` */
   className?: string;
-  /** Default: `"Copyright"` */
-  copyright?: string;
 }
 
 /**

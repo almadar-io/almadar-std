@@ -69,50 +69,50 @@ export interface StdUiIsometricCanvasTileLeavePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiIsometricCanvasConfig {
-  /** Default: `false` */
-  debug?: boolean;
-  /** Default: `0` */
-  boardWidth?: number;
-  /** Default: `false` */
-  hasActiveEffects?: boolean;
-  /** Default: `[]` */
-  effectSpriteUrls?: string[];
-  /** Default: `true` */
-  enableCamera?: boolean;
-  /** Default: `[{"id":"Id","type":"Type","z":1,"color":"Color","elevation":1,"y":1,"sprite":"Sprite","x":1,"assetUrl":"Asset Url"}]` */
-  features?: EntityRow[];
-  /** Default: `0` */
-  diamondTopY?: number;
+  /** Default: `{"y":1,"x":1}` */
+  hoveredTile?: EntityRow;
+  error?: EntityRow;
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
+  assetBaseUrl?: unknown;
   /** Default: `0` */
   boardHeight?: number;
-  /** Default: `true` */
-  showMinimap?: boolean;
-  /** Default: `0.4` */
-  scale?: number;
-  /** Default: `[{"z":1,"x":1,"y":1,"movementCost":1,"terrainSprite":"Terrain Sprite","terrain":"Terrain","tileType":"Tile Type","id":"Id","elevation":1,"passable":false,"type":"Type"}]` */
-  tiles?: EntityRow[];
-  /** Default: `{"x":1,"y":1}` */
-  hoveredTile?: EntityRow;
-  /** Default: `"Background Image"` */
-  backgroundImage?: string;
   assetManifest?: EntityRow;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `1` */
-  unitScale?: number;
+  /** Default: `false` */
+  hasActiveEffects?: boolean;
   /** Default: `[{"x":1,"y":1}]` */
   attackTargets?: EntityRow[];
-  error?: EntityRow;
-  /** Default: `"Asset Base Url"` */
-  assetBaseUrl?: string;
-  /** Default: `"Selected Unit Id"` */
-  selectedUnitId?: string;
+  /** Default: `0` */
+  diamondTopY?: number;
   /** Default: `false` */
   isLoading?: boolean;
+  /** Default: `true` */
+  enableCamera?: boolean;
+  /** Default: `0` */
+  boardWidth?: number;
+  /** Default: `[{"passable":false,"y":1,"z":1,"movementCost":1,"type":"Type","tileType":"Tile Type","x":1,"terrainSprite":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png","id":"Id","terrain":"Terrain","elevation":1}]` */
+  tiles?: EntityRow[];
+  /** Default: `"Selected Unit Id"` */
+  selectedUnitId?: string;
+  /** Default: `""` */
+  className?: string;
   /** Default: `[{"x":1,"y":1}]` */
   validMoves?: EntityRow[];
-  /** Default: `[{"y":1,"sprite":"Sprite","unitType":"Unit Type","faction":"player","z":1,"id":"Id","health":1,"team":"player","traits":[{"name":"Name","cooldown":1,"states":["Item"],"currentState":"Current State"}],"x":1,"position":{"y":1,"x":1},"elevation":1,"previousPosition":{"x":1,"y":1},"heroId":"Hero Id","maxHealth":1,"name":"Name"}]` */
+  /** Default: `true` */
+  showMinimap?: boolean;
+  /** Default: `[{"name":"Name","x":1,"elevation":1,"previousPosition":{"x":1,"y":1},"id":"Id","sprite":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png","unitType":"Unit Type","team":"player","traits":[{"states":["Item"],"currentState":"Current State","cooldown":1,"name":"Name"}],"y":1,"heroId":"Hero Id","health":1,"maxHealth":1,"z":1,"position":{"y":1,"x":1},"faction":"player"}]` */
   units?: EntityRow[];
+  /** Default: `[]` */
+  effectSpriteUrls?: EntityRow[];
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
+  backgroundImage?: unknown;
+  /** Default: `0.4` */
+  scale?: number;
+  /** Default: `[{"type":"Type","sprite":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png","id":"Id","assetUrl":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png","y":1,"x":1,"elevation":1,"z":1,"color":"Color"}]` */
+  features?: EntityRow[];
+  /** Default: `1` */
+  unitScale?: number;
+  /** Default: `false` */
+  debug?: boolean;
 }
 
 /**

@@ -30,12 +30,19 @@ const ALIAS = 'UiTextarea';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiTextareaEventKey = 'ACTION' | 'INIT';
+export type StdUiTextareaEventKey = 'ACTION' | 'CHANGE' | 'INIT';
 
 /**
  * Payload shape for the `ACTION` event.
  */
 export interface StdUiTextareaActionPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `CHANGE` event.
+ */
+export interface StdUiTextareaChangePayload {
   id?: string;
 }
 
@@ -48,12 +55,12 @@ export interface StdUiTextareaActionPayload {
 export interface StdUiTextareaConfig {
   /** Default: `"Placeholder"` */
   placeholder?: string;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `""` */
-  error?: string;
   /** Default: `0` */
   rows?: number;
+  /** Default: `""` */
+  error?: string;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

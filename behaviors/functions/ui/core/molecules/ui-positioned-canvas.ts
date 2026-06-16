@@ -61,10 +61,10 @@ export interface StdUiPositionedCanvasConfig {
   editable?: boolean;
   /** Default: `""` */
   className?: string;
-  /** Default: `600` */
-  height?: number;
   /** Default: `800` */
   width?: number;
+  /** Default: `600` */
+  height?: number;
 }
 
 /**

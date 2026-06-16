@@ -39,30 +39,30 @@ export type StdUiBookViewerEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiBookViewerConfig {
-  /** Default: `0` */
-  totalCount?: number;
-  /** Default: `[]` */
-  selectedIds?: string[];
-  /** Default: `"Sort By"` */
-  sortBy?: string;
   activeFilters?: unknown;
-  /** Default: `"asc"` */
-  sortDirection?: 'asc' | 'desc';
-  /** Default: `"Search Value"` */
-  searchValue?: string;
   error?: EntityRow;
-  /** Default: `{"subtitle":"Subtitle","title":"Title","parts":"Parts","chapterTitle":"Chapter Title","author":"Author","coverImageUrl":"Cover Image Url","partTitle":"Part Title","chapterContent":"Chapter Content","direction":"Direction","chapterId":"Chapter Id","chapterOrbitalSchema":"Chapter Orbital Schema","chapters":"Chapters"}` */
-  fieldMap?: EntityRow;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
+  /** Default: `0` */
+  pageSize?: number;
   /** Default: `0` */
   initialPage?: number;
   /** Default: `0` */
   pageProp?: number;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `[]` */
+  selectedIds?: string[];
   /** Default: `0` */
-  pageSize?: number;
+  totalCount?: number;
+  /** Default: `"Search Value"` */
+  searchValue?: string;
+  /** Default: `{"title":"Title","coverImageUrl":"Cover Image Url","author":"Author","chapterContent":"Chapter Content","subtitle":"Subtitle","chapters":"Chapters","partTitle":"Part Title","chapterId":"Chapter Id","chapterOrbitalSchema":"Chapter Orbital Schema","chapterTitle":"Chapter Title","direction":"Direction","parts":"Parts"}` */
+  fieldMap?: EntityRow;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"asc"` */
+  sortDirection?: 'asc' | 'desc';
+  /** Default: `"Sort By"` */
+  sortBy?: string;
 }
 
 /**
@@ -171,21 +171,21 @@ export function stdUiBookViewerBookViewerOrbital(params: StdUiBookViewerBookView
                   'render-ui',
                   'main',
                   {
-                    'page': '@config.pageProp',
-                    'activeFilters': '@config.activeFilters',
-                    'error': '@config.error',
-                    'sortBy': '@config.sortBy',
                     'pageSize': '@config.pageSize',
-                    'sortDirection': '@config.sortDirection',
-                    'initialPage': '@config.initialPage',
-                    'selectedIds': '@config.selectedIds',
-                    'isLoading': '@config.isLoading',
-                    'className': '@config.className',
+                    'sortBy': '@config.sortBy',
                     'type': 'book-viewer',
-                    'entity': '@entity',
+                    'error': '@config.error',
                     'searchValue': '@config.searchValue',
+                    'entity': '@entity',
+                    'page': '@config.pageProp',
                     'totalCount': '@config.totalCount',
+                    'selectedIds': '@config.selectedIds',
+                    'sortDirection': '@config.sortDirection',
+                    'isLoading': '@config.isLoading',
                     'fieldMap': '@config.fieldMap',
+                    'initialPage': '@config.initialPage',
+                    'activeFilters': '@config.activeFilters',
+                    'className': '@config.className',
                   },
                 ],
               ],
@@ -193,52 +193,10 @@ export function stdUiBookViewerBookViewerOrbital(params: StdUiBookViewerBookView
           ],
         },
         'config': {
-          'totalCount': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Total Count',
-            'description': 'Total number of items',
-            'tier': 'presentation',
-          },
-          'selectedIds': {
-            'type': '[string]',
-            'default': [],
-            'label': 'Selected Ids',
-            'description': 'Currently selected item IDs',
-            'tier': 'presentation',
-            'items': {
-              'type': 'string',
-            },
-          },
-          'sortBy': {
-            'type': 'string',
-            'default': 'Sort By',
-            'label': 'Sort By',
-            'description': 'Current sort field',
-            'tier': 'presentation',
-          },
           'activeFilters': {
             'type': 'json',
             'label': 'Active Filters',
             'description': 'Active filters',
-            'tier': 'presentation',
-          },
-          'sortDirection': {
-            'type': 'string',
-            'default': 'asc',
-            'label': 'Sort Direction',
-            'description': 'Current sort direction',
-            'tier': 'presentation',
-            'values': [
-              'asc',
-              'desc',
-            ],
-          },
-          'searchValue': {
-            'type': 'string',
-            'default': 'Search Value',
-            'label': 'Search Value',
-            'description': 'Current search query value',
             'tier': 'presentation',
           },
           'error': {
@@ -247,16 +205,6 @@ export function stdUiBookViewerBookViewerOrbital(params: StdUiBookViewerBookView
             'description': 'Error state (UiError)',
             'tier': 'presentation',
             'properties': {
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
               'code': {
                 'name': 'code',
                 'type': 'string',
@@ -267,102 +215,23 @@ export function stdUiBookViewerBookViewerOrbital(params: StdUiBookViewerBookView
                 'type': 'string',
                 'required': false,
               },
-            },
-          },
-          'fieldMap': {
-            'type': 'BookViewerFieldMap',
-            'default': {
-              'subtitle': 'Subtitle',
-              'title': 'Title',
-              'parts': 'Parts',
-              'chapterTitle': 'Chapter Title',
-              'author': 'Author',
-              'coverImageUrl': 'Cover Image Url',
-              'partTitle': 'Part Title',
-              'chapterContent': 'Chapter Content',
-              'direction': 'Direction',
-              'chapterId': 'Chapter Id',
-              'chapterOrbitalSchema': 'Chapter Orbital Schema',
-              'chapters': 'Chapters',
-            },
-            'label': 'Field Map',
-            'description': 'Field name translation map — a BookFieldMap object or locale key (\'ar\')',
-            'tier': 'presentation',
-            'properties': {
-              'chapterTitle': {
-                'name': 'chapterTitle',
+              'stack': {
+                'name': 'stack',
                 'type': 'string',
-                'required': true,
+                'required': false,
               },
-              'coverImageUrl': {
-                'name': 'coverImageUrl',
-                'type': 'string',
-                'required': true,
-              },
-              'partTitle': {
-                'name': 'partTitle',
-                'type': 'string',
-                'required': true,
-              },
-              'chapterOrbitalSchema': {
-                'name': 'chapterOrbitalSchema',
-                'type': 'string',
-                'required': true,
-              },
-              'author': {
-                'name': 'author',
-                'type': 'string',
-                'required': true,
-              },
-              'title': {
-                'name': 'title',
-                'type': 'string',
-                'required': true,
-              },
-              'direction': {
-                'name': 'direction',
-                'type': 'string',
-                'required': true,
-              },
-              'chapters': {
-                'name': 'chapters',
-                'type': 'string',
-                'required': true,
-              },
-              'chapterId': {
-                'name': 'chapterId',
-                'type': 'string',
-                'required': true,
-              },
-              'parts': {
-                'name': 'parts',
-                'type': 'string',
-                'required': true,
-              },
-              'subtitle': {
-                'name': 'subtitle',
-                'type': 'string',
-                'required': true,
-              },
-              'chapterContent': {
-                'name': 'chapterContent',
+              'message': {
+                'name': 'message',
                 'type': 'string',
                 'required': true,
               },
             },
           },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
+          'pageSize': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page Size',
+            'description': 'Number of items per page',
             'tier': 'presentation',
           },
           'initialPage': {
@@ -380,11 +249,142 @@ export function stdUiBookViewerBookViewerOrbital(params: StdUiBookViewerBookView
             'synonyms': 'page',
             'tier': 'presentation',
           },
-          'pageSize': {
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
+          'selectedIds': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Selected Ids',
+            'description': 'Currently selected item IDs',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'totalCount': {
             'type': 'number',
             'default': 0,
-            'label': 'Page Size',
-            'description': 'Number of items per page',
+            'label': 'Total Count',
+            'description': 'Total number of items',
+            'tier': 'presentation',
+          },
+          'searchValue': {
+            'type': 'string',
+            'default': 'Search Value',
+            'label': 'Search Value',
+            'description': 'Current search query value',
+            'tier': 'presentation',
+          },
+          'fieldMap': {
+            'type': 'BookViewerFieldMap',
+            'default': {
+              'title': 'Title',
+              'coverImageUrl': 'Cover Image Url',
+              'author': 'Author',
+              'chapterContent': 'Chapter Content',
+              'subtitle': 'Subtitle',
+              'chapters': 'Chapters',
+              'partTitle': 'Part Title',
+              'chapterId': 'Chapter Id',
+              'chapterOrbitalSchema': 'Chapter Orbital Schema',
+              'chapterTitle': 'Chapter Title',
+              'direction': 'Direction',
+              'parts': 'Parts',
+            },
+            'label': 'Field Map',
+            'description': 'Field name translation map — a BookFieldMap object or locale key (\'ar\')',
+            'tier': 'presentation',
+            'properties': {
+              'chapterContent': {
+                'name': 'chapterContent',
+                'type': 'string',
+                'required': true,
+              },
+              'partTitle': {
+                'name': 'partTitle',
+                'type': 'string',
+                'required': true,
+              },
+              'title': {
+                'name': 'title',
+                'type': 'string',
+                'required': true,
+              },
+              'coverImageUrl': {
+                'name': 'coverImageUrl',
+                'type': 'string',
+                'required': true,
+              },
+              'chapterId': {
+                'name': 'chapterId',
+                'type': 'string',
+                'required': true,
+              },
+              'chapterTitle': {
+                'name': 'chapterTitle',
+                'type': 'string',
+                'required': true,
+              },
+              'chapters': {
+                'name': 'chapters',
+                'type': 'string',
+                'required': true,
+              },
+              'direction': {
+                'name': 'direction',
+                'type': 'string',
+                'required': true,
+              },
+              'author': {
+                'name': 'author',
+                'type': 'string',
+                'required': true,
+              },
+              'chapterOrbitalSchema': {
+                'name': 'chapterOrbitalSchema',
+                'type': 'string',
+                'required': true,
+              },
+              'subtitle': {
+                'name': 'subtitle',
+                'type': 'string',
+                'required': true,
+              },
+              'parts': {
+                'name': 'parts',
+                'type': 'string',
+                'required': true,
+              },
+            },
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'sortDirection': {
+            'type': 'string',
+            'default': 'asc',
+            'label': 'Sort Direction',
+            'description': 'Current sort direction',
+            'tier': 'presentation',
+            'values': [
+              'asc',
+              'desc',
+            ],
+          },
+          'sortBy': {
+            'type': 'string',
+            'default': 'Sort By',
+            'label': 'Sort By',
+            'description': 'Current sort field',
             'tier': 'presentation',
           },
         },

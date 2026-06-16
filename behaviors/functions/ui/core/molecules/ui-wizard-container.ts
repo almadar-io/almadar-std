@@ -53,20 +53,20 @@ export interface StdUiWizardContainerCompletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiWizardContainerConfig {
+  /** Default: `true` */
+  allowBack?: boolean;
+  error?: EntityRow;
+  /** Default: `""` */
+  className?: string;
+  currentStep?: unknown;
   /** Default: `false` */
   compact?: boolean;
-  currentStep?: unknown;
   /** Default: `true` */
   showProgress?: boolean;
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `[{"globalVariablesRequired":["Item"],"sections":[{"description":"Description","minItems":1,"title":"Title","condition":[],"addButtonLabel":"Add Button Label","id":"Id","hiddenCalculations":[{"variable":"Variable","expression":"Expression","scope":"Scope"}],"subsections":[],"fields":[{"stats":[],"repeatable":false,"id":"Id","type":"Type","maxLength":1,"contextMenu":[],"label":"Label","required":false,"displayFields":[],"entityField":"Entity Field","options":[],"condition":[],"hiddenCalculations":[],"placeholder":"Placeholder","readOnly":false,"minLength":1,"items":[]}],"repeatable":false,"readOnly":false}],"entityMapping":{"entity":"Entity","parentField":"Parent Field","mode":"search_or_create","idField":"Id Field"},"tabId":"Tab Id","localVariables":["Item"],"lawReferences":[{"description":"Description","law":"Law","article":"Article"}],"name":"Name","title":"Title","description":"Description","phase":"Phase","contextMenu":["Item"],"globalVariablesSet":["Item"],"optional":false,"content":"Content","id":"Id","validationRules":[{"message":"Message","condition":[]}]}]` */
+  /** Default: `[{"title":"Title","phase":"Phase","content":"Content","id":"Id","validationRules":[{"message":"Message","condition":[]}],"localVariables":["Item"],"contextMenu":["Item"],"optional":false,"sections":[{"description":"Description","repeatable":false,"condition":[],"fields":[{"options":[],"condition":[],"placeholder":"Placeholder","maxLength":1,"minLength":1,"displayFields":[],"entityField":"Entity Field","contextMenu":[],"readOnly":false,"repeatable":false,"hiddenCalculations":[],"label":"Label","id":"Id","required":false,"type":"Type","stats":[],"items":[]}],"id":"Id","minItems":1,"hiddenCalculations":[{"expression":"Expression","variable":"Variable","scope":"Scope"}],"subsections":[],"addButtonLabel":"Add Button Label","readOnly":false,"title":"Title"}],"description":"Description","globalVariablesRequired":["Item"],"globalVariablesSet":["Item"],"entityMapping":{"mode":"search_or_create","entity":"Entity","idField":"Id Field","parentField":"Parent Field"},"tabId":"Tab Id","name":"Name","lawReferences":[{"article":"Article","description":"Description","law":"Law"}]}]` */
   steps?: EntityRow[];
-  /** Default: `true` */
-  allowBack?: boolean;
-  /** Default: `""` */
-  className?: string;
-  error?: EntityRow;
 }
 
 /**

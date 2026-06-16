@@ -39,20 +39,20 @@ export type StdUiShowcaseCardEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiShowcaseCardConfig {
-  /** Default: `"Badge"` */
-  badge?: string;
-  /** Default: `"Href"` */
-  href?: string;
-  /** Default: `{"alt":"Alt","src":"Src"}` */
-  image?: EntityRow;
   /** Default: `"Description"` */
   description?: string;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"Accent Color"` */
-  accentColor?: string;
   /** Default: `"Title"` */
   title?: string;
+  /** Default: `"Accent Color"` */
+  accentColor?: string;
+  /** Default: `"Href"` */
+  href?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `{"alt":"Alt","src":{}}` */
+  image?: EntityRow;
+  /** Default: `"Badge"` */
+  badge?: string;
 }
 
 /**
