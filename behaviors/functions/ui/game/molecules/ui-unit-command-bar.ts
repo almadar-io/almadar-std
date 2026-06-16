@@ -39,10 +39,10 @@ export type StdUiUnitCommandBarEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiUnitCommandBarConfig {
-  /** Default: `[{"icon":"circle","label":"Label","hotkey":"Hotkey","disabled":false}]` */
-  commands?: EntityRow[];
   /** Default: `"Selected Unit Id"` */
   selectedUnitId?: string;
+  /** Default: `[{"icon":"circle","label":"Label","disabled":false,"hotkey":"Hotkey"}]` */
+  commands?: EntityRow[];
   /** Default: `""` */
   className?: string;
 }

@@ -53,26 +53,26 @@ export interface StdUiAvatarActionPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiAvatarConfig {
-  /** Default: `"Src"` */
-  src?: string;
-  /** Default: `"online"` */
-  status?: 'online' | 'offline' | 'away' | 'busy';
   /** Default: `"Alt"` */
   alt?: string;
-  /** Default: `"circle"` */
-  icon?: unknown;
-  /** Default: `"Initials"` */
-  initials?: string;
-  /** Default: `"Badge"` */
-  badge?: string;
-  /** Default: `"Name"` */
-  name?: string;
   /** Default: `{}` */
   actionPayload?: unknown;
+  /** Default: `"Name"` */
+  name?: string;
+  /** Default: `"circle"` */
+  icon?: unknown;
   /** Default: `""` */
   className?: string;
+  /** Default: `"online"` */
+  status?: 'online' | 'offline' | 'away' | 'busy';
+  /** Default: `"Badge"` */
+  badge?: string;
   /** Default: `"md"` */
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  /** Default: `"Initials"` */
+  initials?: string;
+  /** Default: `"Src"` */
+  src?: string;
 }
 
 /**

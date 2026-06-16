@@ -46,24 +46,24 @@ export interface StdUiEmptyStateActionPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiEmptyStateConfig {
-  /** Default: `"icon-only"` */
-  look?: 'illustrated' | 'icon-only' | 'text-only' | 'mascot';
-  /** Default: `"circle"` */
-  icon?: unknown;
   /** Default: `"Message"` */
   message?: string;
-  /** Default: `"Action Label"` */
-  actionLabel?: string;
-  /** Default: `"Title"` */
-  title?: string;
   /** Default: `false` */
   destructive?: boolean;
-  /** Default: `"default"` */
-  variant?: 'default' | 'success' | 'error' | 'warning' | 'info';
   /** Default: `"Description"` */
   description?: string;
   /** Default: `""` */
   className?: string;
+  /** Default: `"default"` */
+  variant?: 'default' | 'success' | 'error' | 'warning' | 'info';
+  /** Default: `"icon-only"` */
+  look?: 'illustrated' | 'icon-only' | 'text-only' | 'mascot';
+  /** Default: `"circle"` */
+  icon?: unknown;
+  /** Default: `"Title"` */
+  title?: string;
+  /** Default: `"Action Label"` */
+  actionLabel?: string;
 }
 
 /**

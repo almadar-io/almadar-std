@@ -39,39 +39,39 @@ export type StdUiChartEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiChartConfig {
-  /** Default: `200` */
-  height?: number;
-  /** Default: `true` */
-  showLegend?: boolean;
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `false` */
-  timeAxis?: boolean;
-  error?: EntityRow;
-  /** Default: `"bar-vertical"` */
-  look?: 'bar-vertical' | 'bar-horizontal' | 'line' | 'area' | 'pie' | 'donut' | 'scatter' | 'histogram';
   /** Default: `"Subtitle"` */
   subtitle?: string;
-  /** Default: `"none"` */
-  stack?: 'none' | 'stack' | 'normalize';
+  /** Default: `[{"x":1,"y":1,"label":"Label","size":1,"color":"Color"}]` */
+  scatterData?: EntityRow[];
   /** Default: `"Drill Event"` */
   drillEvent?: string;
   /** Default: `"Title"` */
   title?: string;
-  /** Default: `[{"data":[{"label":"Label","color":"Color","value":1}],"name":"Name","color":"Color","dashed":false}]` */
-  series?: EntityRow[];
-  /** Default: `[{"label":"Label","color":"Color","value":1}]` */
+  /** Default: `[{"label":"Label","value":1,"color":"Color"}]` */
   data?: EntityRow[];
-  /** Default: `false` */
-  showValues?: boolean;
-  /** Default: `""` */
-  className?: string;
+  /** Default: `200` */
+  height?: number;
+  /** Default: `"bar-vertical"` */
+  look?: 'bar-vertical' | 'bar-horizontal' | 'line' | 'area' | 'pie' | 'donut' | 'scatter' | 'histogram';
   /** Default: `"bar"` */
   chartType?: 'bar' | 'line' | 'pie' | 'area' | 'donut' | 'scatter' | 'histogram';
-  /** Default: `[{"y":1,"color":"Color","x":1,"size":1,"label":"Label"}]` */
-  scatterData?: EntityRow[];
-  /** Default: `[{"variant":"primary","navigatesTo":"Navigates To","label":"Label"}]` */
+  /** Default: `[{"name":"Name","color":"Color","data":[{"value":1,"color":"Color","label":"Label"}],"dashed":false}]` */
+  series?: EntityRow[];
+  /** Default: `[{"variant":"primary","label":"Label","navigatesTo":"Navigates To"}]` */
   actions?: EntityRow[];
+  error?: EntityRow;
+  /** Default: `false` */
+  showValues?: boolean;
+  /** Default: `false` */
+  timeAxis?: boolean;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `true` */
+  showLegend?: boolean;
+  /** Default: `"none"` */
+  stack?: 'none' | 'stack' | 'normalize';
 }
 
 /**

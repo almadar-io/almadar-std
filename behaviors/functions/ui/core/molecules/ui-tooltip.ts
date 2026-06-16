@@ -41,14 +41,14 @@ export type StdUiTooltipEventKey = 'INIT';
 export interface StdUiTooltipConfig {
   /** Default: `true` */
   showArrow?: boolean;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `200` */
+  delay?: number;
   /** Default: `"top"` */
   position?: 'top' | 'bottom' | 'left' | 'right';
   /** Default: `0` */
   hideDelay?: number;
-  /** Default: `200` */
-  delay?: number;
-  /** Default: `""` */
-  className?: string;
 }
 
 /**

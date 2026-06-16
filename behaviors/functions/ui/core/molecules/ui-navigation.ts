@@ -40,14 +40,14 @@ export type StdUiNavigationEventKey = 'INIT';
  */
 export interface StdUiNavigationConfig {
   error?: EntityRow;
-  /** Default: `[{"icon":"circle","badge":"Badge","isActive":false,"subMenu":[],"href":"Href","id":"Id","disabled":false,"label":"Label"}]` */
-  items?: EntityRow[];
   /** Default: `"horizontal"` */
   orientation?: 'horizontal' | 'vertical';
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `""` */
   className?: string;
+  /** Default: `[{"label":"Label","icon":"circle","disabled":false,"subMenu":[],"href":"Href","id":"Id","badge":"Badge","isActive":false}]` */
+  items?: EntityRow[];
 }
 
 /**

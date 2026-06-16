@@ -41,17 +41,17 @@ export type StdUiResourceCounterEventKey = 'INIT';
 export interface StdUiResourceCounterConfig {
   /** Default: `"primary"` */
   color?: 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'muted';
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
-  /** Default: `"Label"` */
-  label?: string;
-  /** Default: `0` */
-  value?: number;
-  /** Default: `""` */
-  className?: string;
   /** Default: `0` */
   max?: number;
+  /** Default: `0` */
+  value?: number;
+  /** Default: `"Label"` */
+  label?: string;
+  /** Default: `""` */
+  className?: string;
   icon?: unknown;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
 }
 
 /**

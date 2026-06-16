@@ -46,20 +46,20 @@ export interface StdUiOrbitalVisualizationClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiOrbitalVisualizationConfig {
+  error?: EntityRow;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg' | 'xl';
   /** Default: `true` */
-  showLabel?: boolean;
-  /** Default: `true` */
   animated?: boolean;
-  /** Default: `0` */
-  complexity?: number;
-  /** Default: `false` */
-  isLoading?: boolean;
+  /** Default: `true` */
+  showLabel?: boolean;
   /** Default: `""` */
   className?: string;
   schema?: EntityRow;
-  error?: EntityRow;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `0` */
+  complexity?: number;
 }
 
 /**

@@ -99,16 +99,16 @@
                     "render-ui",
                     "main",
                     {
-                      "action": "ACTION",
-                      "variant": "@config.variant",
+                      "actionPayload": "@config.actionPayload",
                       "className": "@config.className",
                       "icon": "@config.icon",
                       "position": "@config.position",
+                      "variant": "@config.variant",
                       "type": "floating-action-button",
                       "label": "@config.label",
-                      "actions": "@config.actions",
+                      "action": "ACTION",
                       "onClick": "CLICK",
-                      "actionPayload": "@config.actionPayload"
+                      "actions": "@config.actions"
                     }
                   ]
                 ]
@@ -116,6 +116,13 @@
             ]
           },
           "config": {
+            "actionPayload": {
+              "type": "json",
+              "default": {},
+              "label": "Action Payload",
+              "description": "Payload to include with the dispatched action event.",
+              "tier": "presentation"
+            },
             "icon": {
               "type": "icon",
               "default": "circle",
@@ -123,19 +130,12 @@
               "description": "Icon name (resolves to a Lucide icon by PascalCase / kebab-case lookup).",
               "tier": "presentation"
             },
-            "variant": {
+            "label": {
               "type": "string",
-              "default": "primary",
-              "label": "Variant",
-              "description": "Visual variant.",
-              "tier": "presentation",
-              "values": [
-                "primary",
-                "secondary",
-                "success",
-                "danger",
-                "warning"
-              ]
+              "default": "Label",
+              "label": "Label",
+              "description": "Optional label shown via `aria-label` (visually hidden in single-action mode; rendered as a tooltip beside expanded actions in multi-action mode).",
+              "tier": "presentation"
             },
             "position": {
               "type": "string",
@@ -152,12 +152,19 @@
                 "top-center"
               ]
             },
-            "label": {
+            "variant": {
               "type": "string",
-              "default": "Label",
-              "label": "Label",
-              "description": "Optional label shown via `aria-label` (visually hidden in single-action mode; rendered as a tooltip beside expanded actions in multi-action mode).",
-              "tier": "presentation"
+              "default": "primary",
+              "label": "Variant",
+              "description": "Visual variant.",
+              "tier": "presentation",
+              "values": [
+                "primary",
+                "secondary",
+                "success",
+                "danger",
+                "warning"
+              ]
             },
             "className": {
               "type": "string",
@@ -170,10 +177,10 @@
               "type": "[FloatingActionButtonActionsItem]",
               "default": [
                 {
-                  "label": "Label",
+                  "icon": "circle",
                   "id": "Id",
                   "variant": "primary",
-                  "icon": "circle"
+                  "label": "Label"
                 }
               ],
               "label": "Actions",
@@ -182,25 +189,10 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
                   "id": {
                     "name": "id",
                     "type": "string",
                     "required": true
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": true
-                  },
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": false
                   },
                   "variant": {
                     "name": "variant",
@@ -213,16 +205,24 @@
                       "danger",
                       "warning"
                     ]
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": true
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": false
                   }
                 }
               }
-            },
-            "actionPayload": {
-              "type": "json",
-              "default": {},
-              "label": "Action Payload",
-              "description": "Payload to include with the dispatched action event.",
-              "tier": "presentation"
             }
           },
           "scope": "instance"

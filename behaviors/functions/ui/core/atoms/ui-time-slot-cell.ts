@@ -48,10 +48,10 @@ export interface StdUiTimeSlotCellClickPayload {
 export interface StdUiTimeSlotCellConfig {
   /** Default: `"Time"` */
   time?: string;
-  /** Default: `""` */
-  className?: string;
   /** Default: `false` */
   isOccupied?: boolean;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

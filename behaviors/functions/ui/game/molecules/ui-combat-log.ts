@@ -39,18 +39,18 @@ export type StdUiCombatLogEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiCombatLogConfig {
-  /** Default: `false` */
-  showTimestamps?: boolean;
+  /** Default: `[{"actorName":"Actor Name","targetName":"Target Name","value":1,"turn":1,"message":"Message","timestamp":1,"type":"attack","id":"Id"}]` */
+  events?: EntityRow[];
   /** Default: `50` */
   maxVisible?: number;
-  /** Default: `true` */
-  autoScroll?: boolean;
-  /** Default: `[{"id":"Id","targetName":"Target Name","type":"attack","actorName":"Actor Name","turn":1,"message":"Message","timestamp":1,"value":1}]` */
-  events?: EntityRow[];
-  /** Default: `"Combat Log"` */
-  title?: string;
   /** Default: `""` */
   className?: string;
+  /** Default: `true` */
+  autoScroll?: boolean;
+  /** Default: `false` */
+  showTimestamps?: boolean;
+  /** Default: `"Combat Log"` */
+  title?: string;
 }
 
 /**

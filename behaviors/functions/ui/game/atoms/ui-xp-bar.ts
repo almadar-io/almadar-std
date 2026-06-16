@@ -39,20 +39,20 @@ export type StdUiXpBarEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiXpBarConfig {
-  /** Default: `0` */
-  max?: number;
   /** Default: `""` */
   className?: string;
-  /** Default: `0` */
-  current?: number;
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
-  /** Default: `false` */
-  showLabel?: boolean;
   /** Default: `true` */
   animated?: boolean;
   /** Default: `0` */
+  current?: number;
+  /** Default: `false` */
+  showLabel?: boolean;
+  /** Default: `0` */
+  max?: number;
+  /** Default: `0` */
   level?: number;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
 }
 
 /**

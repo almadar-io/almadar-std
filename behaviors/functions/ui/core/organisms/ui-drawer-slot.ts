@@ -39,17 +39,17 @@ export type StdUiDrawerSlotEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiDrawerSlotConfig {
-  /** Default: `"right"` */
-  position?: 'left' | 'right';
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
-  /** Default: `false` */
-  isLoading?: boolean;
-  error?: EntityRow;
+  /** Default: `"right"` */
+  position?: 'left' | 'right';
   /** Default: `"Title"` */
   title?: string;
   /** Default: `""` */
   className?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  error?: EntityRow;
 }
 
 /**
@@ -158,20 +158,20 @@ export function stdUiDrawerSlotDrawerSlotOrbital(params: StdUiDrawerSlotDrawerSl
                   'render-ui',
                   'main',
                   {
+                    'position': '@config.position',
+                    'type': 'drawer-slot',
+                    'title': '@config.title',
+                    'error': '@config.error',
+                    'className': '@config.className',
+                    'isLoading': '@config.isLoading',
                     'children': [
                       {
-                        'content': 'Sample content',
                         'type': 'typography',
+                        'content': 'Sample content',
                       },
                     ],
-                    'entity': 'DrawerSlotItem',
-                    'title': '@config.title',
-                    'className': '@config.className',
-                    'type': 'drawer-slot',
-                    'position': '@config.position',
-                    'isLoading': '@config.isLoading',
                     'size': '@config.size',
-                    'error': '@config.error',
+                    'entity': 'DrawerSlotItem',
                   },
                 ],
               ],
@@ -179,17 +179,6 @@ export function stdUiDrawerSlotDrawerSlotOrbital(params: StdUiDrawerSlotDrawerSl
           ],
         },
         'config': {
-          'position': {
-            'type': 'string',
-            'default': 'right',
-            'label': 'Position',
-            'description': 'Drawer position',
-            'tier': 'presentation',
-            'values': [
-              'left',
-              'right',
-            ],
-          },
           'size': {
             'type': 'string',
             'default': 'md',
@@ -204,40 +193,16 @@ export function stdUiDrawerSlotDrawerSlotOrbital(params: StdUiDrawerSlotDrawerSl
               'full',
             ],
           },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state',
+          'position': {
+            'type': 'string',
+            'default': 'right',
+            'label': 'Position',
+            'description': 'Drawer position',
             'tier': 'presentation',
-          },
-          'error': {
-            'type': 'DrawerSlotError',
-            'label': 'Error',
-            'description': 'Error state',
-            'tier': 'presentation',
-            'properties': {
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-            },
+            'values': [
+              'left',
+              'right',
+            ],
           },
           'title': {
             'type': 'string',
@@ -252,6 +217,41 @@ export function stdUiDrawerSlotDrawerSlotOrbital(params: StdUiDrawerSlotDrawerSl
             'label': 'Class Name',
             'description': 'Custom class name',
             'tier': 'presentation',
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state',
+            'tier': 'presentation',
+          },
+          'error': {
+            'type': 'DrawerSlotError',
+            'label': 'Error',
+            'description': 'Error state',
+            'tier': 'presentation',
+            'properties': {
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+            },
           },
         },
         'scope': 'instance',

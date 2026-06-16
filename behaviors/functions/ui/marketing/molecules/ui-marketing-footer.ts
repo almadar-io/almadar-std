@@ -39,14 +39,14 @@ export type StdUiMarketingFooterEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiMarketingFooterConfig {
-  /** Default: `"Copyright"` */
-  copyright?: string;
-  /** Default: `{"alt":"Alt","src":"Src","href":"Href"}` */
+  /** Default: `{"alt":"Alt","href":"Href","src":"Src"}` */
   logo?: EntityRow;
-  /** Default: `[{"items":[{"label":"Label","href":"Href"}],"title":"Title"}]` */
+  /** Default: `[{"items":[{"href":"Href","label":"Label"}],"title":"Title"}]` */
   columns?: EntityRow[];
   /** Default: `""` */
   className?: string;
+  /** Default: `"Copyright"` */
+  copyright?: string;
 }
 
 /**

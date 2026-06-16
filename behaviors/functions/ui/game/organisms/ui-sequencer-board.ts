@@ -54,30 +54,30 @@ export interface StdUiSequencerBoardCompletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiSequencerBoardConfig {
-  /** Default: `{}` */
-  categoryColors?: unknown;
+  error?: EntityRow;
   /** Default: `1000` */
   stepDurationMs?: number;
-  /** Default: `"asc"` */
-  sortDirection?: 'asc' | 'desc';
-  /** Default: `0` */
-  pageSize?: number;
   /** Default: `[]` */
   selectedIds?: string[];
   /** Default: `0` */
   pageProp?: number;
+  /** Default: `"Sort By"` */
+  sortBy?: string;
+  activeFilters?: unknown;
   /** Default: `""` */
   className?: string;
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `"Sort By"` */
-  sortBy?: string;
+  /** Default: `"asc"` */
+  sortDirection?: 'asc' | 'desc';
   /** Default: `0` */
-  totalCount?: number;
-  error?: EntityRow;
+  pageSize?: number;
   /** Default: `"Search Value"` */
   searchValue?: string;
-  activeFilters?: unknown;
+  /** Default: `0` */
+  totalCount?: number;
+  /** Default: `{}` */
+  categoryColors?: unknown;
 }
 
 /**
@@ -250,23 +250,23 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                   'render-ui',
                   'main',
                   {
-                    'error': '@config.error',
-                    'page': '@config.pageProp',
-                    'stepDurationMs': '@config.stepDurationMs',
-                    'sortBy': '@config.sortBy',
-                    'playEvent': 'PLAY',
-                    'pageSize': '@config.pageSize',
-                    'type': 'sequencer-board',
-                    'activeFilters': '@config.activeFilters',
-                    'entity': '@entity',
                     'searchValue': '@config.searchValue',
-                    'className': '@config.className',
-                    'totalCount': '@config.totalCount',
-                    'categoryColors': '@config.categoryColors',
-                    'sortDirection': '@config.sortDirection',
-                    'completeEvent': 'COMPLETE',
+                    'entity': '@entity',
                     'isLoading': '@config.isLoading',
+                    'playEvent': 'PLAY',
+                    'error': '@config.error',
+                    'activeFilters': '@config.activeFilters',
+                    'completeEvent': 'COMPLETE',
+                    'type': 'sequencer-board',
+                    'totalCount': '@config.totalCount',
                     'selectedIds': '@config.selectedIds',
+                    'stepDurationMs': '@config.stepDurationMs',
+                    'sortDirection': '@config.sortDirection',
+                    'categoryColors': '@config.categoryColors',
+                    'className': '@config.className',
+                    'page': '@config.pageProp',
+                    'pageSize': '@config.pageSize',
+                    'sortBy': '@config.sortBy',
                   },
                 ],
               ],
@@ -274,25 +274,31 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
           ],
         },
         'config': {
-          'categoryColors': {
-            'type': 'Map<string,SequencerBoardCategoryColorsValue>',
-            'default': {},
-            'label': 'Category Colors',
-            'description': 'Category → color mapping',
+          'error': {
+            'type': 'SequencerBoardError',
+            'label': 'Error',
+            'description': 'Error state (UiError)',
             'tier': 'presentation',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'bg': {
-                  'name': 'bg',
-                  'type': 'string',
-                  'required': true,
-                },
-                'border': {
-                  'name': 'border',
-                  'type': 'string',
-                  'required': true,
-                },
+            'properties': {
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
               },
             },
           },
@@ -301,24 +307,6 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
             'default': 1000,
             'label': 'Step Duration Ms',
             'description': 'Playback speed in ms per step',
-            'tier': 'presentation',
-          },
-          'sortDirection': {
-            'type': 'string',
-            'default': 'asc',
-            'label': 'Sort Direction',
-            'description': 'Current sort direction',
-            'tier': 'presentation',
-            'values': [
-              'asc',
-              'desc',
-            ],
-          },
-          'pageSize': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page Size',
-            'description': 'Number of items per page',
             'tier': 'presentation',
           },
           'selectedIds': {
@@ -339,6 +327,19 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
             'synonyms': 'page',
             'tier': 'presentation',
           },
+          'sortBy': {
+            'type': 'string',
+            'default': 'Sort By',
+            'label': 'Sort By',
+            'description': 'Current sort field',
+            'tier': 'presentation',
+          },
+          'activeFilters': {
+            'type': 'json',
+            'label': 'Active Filters',
+            'description': 'Active filters',
+            'tier': 'presentation',
+          },
           'className': {
             'type': 'string',
             'default': '',
@@ -353,11 +354,29 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
             'description': 'Loading state indicator',
             'tier': 'presentation',
           },
-          'sortBy': {
+          'sortDirection': {
             'type': 'string',
-            'default': 'Sort By',
-            'label': 'Sort By',
-            'description': 'Current sort field',
+            'default': 'asc',
+            'label': 'Sort Direction',
+            'description': 'Current sort direction',
+            'tier': 'presentation',
+            'values': [
+              'asc',
+              'desc',
+            ],
+          },
+          'pageSize': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page Size',
+            'description': 'Number of items per page',
+            'tier': 'presentation',
+          },
+          'searchValue': {
+            'type': 'string',
+            'default': 'Search Value',
+            'label': 'Search Value',
+            'description': 'Current search query value',
             'tier': 'presentation',
           },
           'totalCount': {
@@ -367,46 +386,27 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
             'description': 'Total number of items',
             'tier': 'presentation',
           },
-          'error': {
-            'type': 'SequencerBoardError',
-            'label': 'Error',
-            'description': 'Error state (UiError)',
+          'categoryColors': {
+            'type': 'Map<string,SequencerBoardCategoryColorsValue>',
+            'default': {},
+            'label': 'Category Colors',
+            'description': 'Category → color mapping',
             'tier': 'presentation',
-            'properties': {
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
+            'items': {
+              'type': 'object',
+              'properties': {
+                'border': {
+                  'name': 'border',
+                  'type': 'string',
+                  'required': true,
+                },
+                'bg': {
+                  'name': 'bg',
+                  'type': 'string',
+                  'required': true,
+                },
               },
             },
-          },
-          'searchValue': {
-            'type': 'string',
-            'default': 'Search Value',
-            'label': 'Search Value',
-            'description': 'Current search query value',
-            'tier': 'presentation',
-          },
-          'activeFilters': {
-            'type': 'json',
-            'label': 'Active Filters',
-            'description': 'Active filters',
-            'tier': 'presentation',
           },
         },
         'scope': 'instance',

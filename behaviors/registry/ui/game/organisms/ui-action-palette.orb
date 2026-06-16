@@ -50,13 +50,13 @@
                     "main",
                     {
                       "actions": "@config.actions",
-                      "allowDuplicates": "@config.allowDuplicates",
-                      "usedActionIds": "@config.usedActionIds",
-                      "size": "@config.size",
                       "label": "@config.label",
+                      "allowDuplicates": "@config.allowDuplicates",
                       "className": "@config.className",
+                      "categoryColors": "@config.categoryColors",
                       "type": "action-palette",
-                      "categoryColors": "@config.categoryColors"
+                      "usedActionIds": "@config.usedActionIds",
+                      "size": "@config.size"
                     }
                   ]
                 ]
@@ -90,32 +90,49 @@
               "description": "Additional CSS classes",
               "tier": "presentation"
             },
+            "allowDuplicates": {
+              "type": "boolean",
+              "default": true,
+              "label": "Allow Duplicates",
+              "description": "Whether each action can be used multiple times",
+              "tier": "presentation"
+            },
+            "usedActionIds": {
+              "type": "[string]",
+              "default": [],
+              "label": "Used Action Ids",
+              "description": "IDs of actions that are already used (shown as disabled)",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
             "actions": {
               "type": "[ActionPaletteActionsItem]",
               "default": [
                 {
+                  "name": "Name",
                   "iconUrl": "Icon Url",
+                  "id": "Id",
+                  "iconEmoji": "Icon Emoji",
                   "stateMachine": {
-                    "description": "Description",
-                    "currentState": "Current State",
                     "name": "Name",
                     "states": [
                       "Item"
                     ],
+                    "description": "Description",
                     "transitions": [
                       {
-                        "to": "To",
-                        "event": "Event",
                         "guardHint": "Guard Hint",
-                        "from": "From"
+                        "from": "From",
+                        "to": "To",
+                        "event": "Event"
                       }
-                    ]
+                    ],
+                    "currentState": "Current State"
                   },
                   "category": "Category",
-                  "name": "Name",
-                  "description": "Description",
-                  "id": "Id",
-                  "iconEmoji": "Icon Emoji"
+                  "description": "Description"
                 }
               ],
               "label": "Actions",
@@ -129,18 +146,8 @@
                     "type": "string",
                     "required": false
                   },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
                   "iconEmoji": {
                     "name": "iconEmoji",
-                    "type": "string",
-                    "required": false
-                  },
-                  "iconUrl": {
-                    "name": "iconUrl",
                     "type": "string",
                     "required": false
                   },
@@ -149,13 +156,18 @@
                     "type": "object",
                     "required": false,
                     "properties": {
+                      "currentState": {
+                        "name": "currentState",
+                        "type": "string",
+                        "required": true
+                      },
                       "description": {
                         "name": "description",
                         "type": "string",
                         "required": false
                       },
-                      "currentState": {
-                        "name": "currentState",
+                      "name": {
+                        "name": "name",
                         "type": "string",
                         "required": true
                       },
@@ -174,18 +186,8 @@
                         "items": {
                           "type": "object",
                           "properties": {
-                            "from": {
-                              "name": "from",
-                              "type": "string",
-                              "required": true
-                            },
                             "to": {
                               "name": "to",
-                              "type": "string",
-                              "required": true
-                            },
-                            "event": {
-                              "name": "event",
                               "type": "string",
                               "required": true
                             },
@@ -193,19 +195,29 @@
                               "name": "guardHint",
                               "type": "string",
                               "required": false
+                            },
+                            "from": {
+                              "name": "from",
+                              "type": "string",
+                              "required": true
+                            },
+                            "event": {
+                              "name": "event",
+                              "type": "string",
+                              "required": true
                             }
                           }
                         }
-                      },
-                      "name": {
-                        "name": "name",
-                        "type": "string",
-                        "required": true
                       }
                     }
                   },
-                  "name": {
-                    "name": "name",
+                  "iconUrl": {
+                    "name": "iconUrl",
+                    "type": "string",
+                    "required": false
+                  },
+                  "id": {
+                    "name": "id",
                     "type": "string",
                     "required": true
                   },
@@ -213,26 +225,14 @@
                     "name": "category",
                     "type": "string",
                     "required": true
+                  },
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
                   }
                 }
               }
-            },
-            "usedActionIds": {
-              "type": "[string]",
-              "default": [],
-              "label": "Used Action Ids",
-              "description": "IDs of actions that are already used (shown as disabled)",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
-            },
-            "allowDuplicates": {
-              "type": "boolean",
-              "default": true,
-              "label": "Allow Duplicates",
-              "description": "Whether each action can be used multiple times",
-              "tier": "presentation"
             },
             "categoryColors": {
               "type": "Map<string,ActionPaletteCategoryColorsValue>",
@@ -243,13 +243,13 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "bg": {
-                    "name": "bg",
+                  "border": {
+                    "name": "border",
                     "type": "string",
                     "required": true
                   },
-                  "border": {
-                    "name": "border",
+                  "bg": {
+                    "name": "bg",
                     "type": "string",
                     "required": true
                   }

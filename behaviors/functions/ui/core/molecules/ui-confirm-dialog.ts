@@ -60,29 +60,29 @@ export interface StdUiConfirmDialogOpenPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiConfirmDialogConfig {
-  message?: unknown;
-  /** Default: `"danger"` */
-  variant?: 'danger' | 'warning' | 'info' | 'default';
-  /** Default: `true` */
-  isOpen?: boolean;
   /** Default: `""` */
   className?: string;
-  /** Default: `"Title"` */
-  title?: string;
-  /** Default: `"Cancel Text"` */
-  cancelText?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
   /** Default: `"Cancel Label"` */
   cancelLabel?: string;
+  /** Default: `true` */
+  isOpen?: boolean;
+  message?: unknown;
+  /** Default: `"Title"` */
+  title?: string;
   error?: EntityRow;
+  /** Default: `"Cancel Text"` */
+  cancelText?: string;
+  /** Default: `"Confirm Label"` */
+  confirmLabel?: string;
+  /** Default: `"sm"` */
+  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  /** Default: `false` */
+  isLoading?: boolean;
   /** Default: `"Confirm Text"` */
   confirmText?: string;
   description?: unknown;
-  /** Default: `"sm"` */
-  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
-  /** Default: `"Confirm Label"` */
-  confirmLabel?: string;
+  /** Default: `"danger"` */
+  variant?: 'danger' | 'warning' | 'info' | 'default';
 }
 
 /**

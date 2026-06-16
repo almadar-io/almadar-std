@@ -54,21 +54,21 @@
                     "render-ui",
                     "main",
                     {
+                      "primary": "@config.primary",
+                      "type": "form-actions",
                       "entity": "FormActionsItem",
-                      "orientation": "@config.orientation",
+                      "variant": "@config.variant",
                       "children": [
                         {
                           "content": "Sample content",
                           "type": "typography"
                         }
                       ],
-                      "className": "@config.className",
-                      "variant": "@config.variant",
-                      "filters": "@config.filters",
-                      "primary": "@config.primary",
-                      "secondary": "@config.secondary",
                       "look": "@config.look",
-                      "type": "form-actions"
+                      "orientation": "@config.orientation",
+                      "className": "@config.className",
+                      "filters": "@config.filters",
+                      "secondary": "@config.secondary"
                     }
                   ]
                 ]
@@ -76,28 +76,53 @@
             ]
           },
           "config": {
-            "look": {
-              "type": "string",
-              "default": "right-aligned-buttons",
-              "label": "Look",
-              "description": "Layer 2 visual treatment for the action-cluster (form-actions) pattern.",
+            "primary": {
+              "type": "FormActionsPrimary",
+              "default": {
+                "actionType": "Action Type",
+                "label": "Label",
+                "variant": "Variant",
+                "navigatesTo": "Navigates To"
+              },
+              "label": "Primary",
+              "description": "Primary action button config (for form-actions pattern) Accepts Readonly for compatibility with generated const objects",
               "tier": "presentation",
-              "values": [
-                "right-aligned-buttons",
-                "floating-bar",
-                "inline-row",
-                "dropdown-menu",
-                "command-palette-trigger"
-              ]
+              "properties": {
+                "actionType": {
+                  "name": "actionType",
+                  "type": "string",
+                  "required": false
+                },
+                "event": {
+                  "name": "event",
+                  "type": "string",
+                  "required": false
+                },
+                "navigatesTo": {
+                  "name": "navigatesTo",
+                  "type": "string",
+                  "required": false
+                },
+                "variant": {
+                  "name": "variant",
+                  "type": "string",
+                  "required": false
+                },
+                "label": {
+                  "name": "label",
+                  "type": "string",
+                  "required": true
+                }
+              }
             },
             "secondary": {
               "type": "[FormActionsSecondaryItem]",
               "default": [
                 {
-                  "label": "Label",
-                  "variant": "Variant",
+                  "actionType": "Action Type",
                   "navigatesTo": "Navigates To",
-                  "actionType": "Action Type"
+                  "label": "Label",
+                  "variant": "Variant"
                 }
               ],
               "label": "Secondary",
@@ -106,18 +131,8 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "actionType": {
-                    "name": "actionType",
-                    "type": "string",
-                    "required": false
-                  },
-                  "navigatesTo": {
-                    "name": "navigatesTo",
-                    "type": "string",
-                    "required": false
-                  },
-                  "event": {
-                    "name": "event",
+                  "variant": {
+                    "name": "variant",
                     "type": "string",
                     "required": false
                   },
@@ -126,8 +141,18 @@
                     "type": "string",
                     "required": true
                   },
-                  "variant": {
-                    "name": "variant",
+                  "actionType": {
+                    "name": "actionType",
+                    "type": "string",
+                    "required": false
+                  },
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": false
+                  },
+                  "navigatesTo": {
+                    "name": "navigatesTo",
                     "type": "string",
                     "required": false
                   }
@@ -146,45 +171,6 @@
                 "toggle"
               ]
             },
-            "primary": {
-              "type": "FormActionsPrimary",
-              "default": {
-                "variant": "Variant",
-                "navigatesTo": "Navigates To",
-                "label": "Label",
-                "actionType": "Action Type"
-              },
-              "label": "Primary",
-              "description": "Primary action button config (for form-actions pattern) Accepts Readonly for compatibility with generated const objects",
-              "tier": "presentation",
-              "properties": {
-                "variant": {
-                  "name": "variant",
-                  "type": "string",
-                  "required": false
-                },
-                "actionType": {
-                  "name": "actionType",
-                  "type": "string",
-                  "required": false
-                },
-                "event": {
-                  "name": "event",
-                  "type": "string",
-                  "required": false
-                },
-                "navigatesTo": {
-                  "name": "navigatesTo",
-                  "type": "string",
-                  "required": false
-                },
-                "label": {
-                  "name": "label",
-                  "type": "string",
-                  "required": true
-                }
-              }
-            },
             "orientation": {
               "type": "string",
               "default": "horizontal",
@@ -196,16 +182,23 @@
                 "vertical"
               ]
             },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
             "filters": {
               "type": "[FormActionsFiltersItem]",
               "default": [
                 {
+                  "label": "Label",
+                  "type": "checkbox",
+                  "field": "Field",
                   "options": [
                     "Item"
-                  ],
-                  "label": "Label",
-                  "field": "Field",
-                  "type": "checkbox"
+                  ]
                 }
               ],
               "label": "Filters",
@@ -214,6 +207,16 @@
               "items": {
                 "type": "object",
                 "properties": {
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "field": {
+                    "name": "field",
+                    "type": "string",
+                    "required": true
+                  },
                   "options": {
                     "name": "options",
                     "type": "array",
@@ -221,11 +224,6 @@
                     "items": {
                       "type": "string"
                     }
-                  },
-                  "field": {
-                    "name": "field",
-                    "type": "string",
-                    "required": true
                   },
                   "type": {
                     "name": "type",
@@ -236,21 +234,23 @@
                       "select",
                       "toggle"
                     ]
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
                   }
                 }
               }
             },
-            "className": {
+            "look": {
               "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
+              "default": "right-aligned-buttons",
+              "label": "Look",
+              "description": "Layer 2 visual treatment for the action-cluster (form-actions) pattern.",
+              "tier": "presentation",
+              "values": [
+                "right-aligned-buttons",
+                "floating-bar",
+                "inline-row",
+                "dropdown-menu",
+                "command-palette-trigger"
+              ]
             }
           },
           "scope": "instance"

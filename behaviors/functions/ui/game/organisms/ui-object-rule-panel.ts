@@ -194,10 +194,10 @@ export function stdUiObjectRulePanelObjectRulePanelOrbital(params: StdUiObjectRu
                   'main',
                   {
                     'onRulesChange': 'RULES_CHANGE',
-                    'type': 'object-rule-panel',
-                    'className': '@config.className',
                     'object': '@entity',
+                    'className': '@config.className',
                     'disabled': '@config.disabled',
+                    'type': 'object-rule-panel',
                   },
                 ],
               ],

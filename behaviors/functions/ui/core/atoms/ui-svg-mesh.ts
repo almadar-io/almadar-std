@@ -39,24 +39,24 @@ export type StdUiSvgMeshEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiSvgMeshConfig {
-  /** Default: `""` */
-  className?: string;
-  /** Default: `60` */
-  cy?: number;
-  /** Default: `50` */
-  radius?: number;
   /** Default: `60` */
   cx?: number;
   /** Default: `120` */
-  height?: number;
-  /** Default: `120` */
   width?: number;
-  /** Default: `1` */
-  opacity?: number;
-  /** Default: `true` */
-  asRoot?: boolean;
   /** Default: `"var(--color-primary)"` */
   color?: string;
+  /** Default: `120` */
+  height?: number;
+  /** Default: `60` */
+  cy?: number;
+  /** Default: `1` */
+  opacity?: number;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `50` */
+  radius?: number;
+  /** Default: `true` */
+  asRoot?: boolean;
   /** Default: `6` */
   nodes?: number;
   /** Default: `0.5` */

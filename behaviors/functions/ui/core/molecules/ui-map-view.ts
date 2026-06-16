@@ -61,24 +61,24 @@ export interface StdUiMapViewMapClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiMapViewConfig {
-  /** Default: `51.505` */
-  centerLat?: number;
-  /** Default: `[{"lat":1,"label":"Label","id":"Id","category":"Category","lng":1}]` */
-  markers?: EntityRow[];
-  /** Default: `[{"label":"Label","dashArray":"Dash Array","weight":1,"id":"Id","waypoints":[{"lat":1,"lng":1}],"opacity":1,"color":"Color"}]` */
-  routes?: EntityRow[];
   /** Default: `-0.09` */
   centerLng?: number;
+  /** Default: `[{"weight":1,"opacity":1,"dashArray":"Dash Array","label":"Label","id":"Id","waypoints":[{"lat":1,"lng":1}],"color":"Color"}]` */
+  routes?: EntityRow[];
+  /** Default: `false` */
+  showClickedPin?: boolean;
+  /** Default: `true` */
+  showAttribution?: boolean;
   /** Default: `""` */
   className?: string;
+  /** Default: `[{"label":"Label","lng":1,"category":"Category","lat":1,"id":"Id"}]` */
+  markers?: EntityRow[];
+  /** Default: `51.505` */
+  centerLat?: number;
   /** Default: `13` */
   zoom?: number;
   /** Default: `"400px"` */
   height?: string;
-  /** Default: `true` */
-  showAttribution?: boolean;
-  /** Default: `false` */
-  showClickedPin?: boolean;
 }
 
 /**

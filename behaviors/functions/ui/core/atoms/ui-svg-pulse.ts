@@ -39,28 +39,28 @@ export type StdUiSvgPulseEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiSvgPulseConfig {
-  /** Default: `60` */
-  maxRadius?: number;
-  /** Default: `70` */
-  cy?: number;
+  /** Default: `1` */
+  opacity?: number;
+  /** Default: `"var(--color-primary)"` */
+  color?: string;
   /** Default: `true` */
   asRoot?: boolean;
   /** Default: `140` */
   height?: number;
-  /** Default: `3` */
-  rings?: number;
   /** Default: `""` */
   className?: string;
-  /** Default: `140` */
-  width?: number;
-  /** Default: `"var(--color-primary)"` */
-  color?: string;
-  /** Default: `70` */
-  cx?: number;
-  /** Default: `1` */
-  opacity?: number;
   /** Default: `true` */
   animated?: boolean;
+  /** Default: `140` */
+  width?: number;
+  /** Default: `70` */
+  cy?: number;
+  /** Default: `3` */
+  rings?: number;
+  /** Default: `60` */
+  maxRadius?: number;
+  /** Default: `70` */
+  cx?: number;
 }
 
 /**

@@ -400,7 +400,6 @@ export * from './ui/game/organisms/ui-simulation-graph.js';
 export * from './ui/game/organisms/ui-simulator-board.js';
 export * from './ui/core/organisms/ui-split-pane.js';
 export * from './ui/game/organisms/ui-state-architect-board.js';
-export * from './ui/game/organisms/ui-state-json-view.js';
 export * from './ui/core/organisms/ui-state-machine-view.js';
 export * from './ui/game/organisms/ui-state-node.js';
 export * from './ui/marketing/organisms/ui-stats-organism.js';

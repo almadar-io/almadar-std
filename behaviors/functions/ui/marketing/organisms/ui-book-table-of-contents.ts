@@ -39,12 +39,12 @@ export type StdUiBookTableOfContentsEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiBookTableOfContentsConfig {
-  /** Default: `"rtl"` */
-  direction?: 'rtl' | 'ltr';
   /** Default: `""` */
   className?: string;
   /** Default: `"Current Chapter Id"` */
   currentChapterId?: string;
+  /** Default: `"rtl"` */
+  direction?: 'rtl' | 'ltr';
 }
 
 /**
@@ -153,11 +153,11 @@ export function stdUiBookTableOfContentsBookTableOfContentsOrbital(params: StdUi
                   'render-ui',
                   'main',
                   {
-                    'direction': '@config.direction',
                     'parts': '@entity',
-                    'type': 'book-table-of-contents',
                     'className': '@config.className',
                     'currentChapterId': '@config.currentChapterId',
+                    'direction': '@config.direction',
+                    'type': 'book-table-of-contents',
                   },
                 ],
               ],
@@ -165,17 +165,6 @@ export function stdUiBookTableOfContentsBookTableOfContentsOrbital(params: StdUi
           ],
         },
         'config': {
-          'direction': {
-            'type': 'string',
-            'default': 'rtl',
-            'label': 'Direction',
-            'description': 'direction prop',
-            'tier': 'presentation',
-            'values': [
-              'rtl',
-              'ltr',
-            ],
-          },
           'className': {
             'type': 'string',
             'default': '',
@@ -189,6 +178,17 @@ export function stdUiBookTableOfContentsBookTableOfContentsOrbital(params: StdUi
             'label': 'Current Chapter Id',
             'description': 'currentChapterId prop',
             'tier': 'presentation',
+          },
+          'direction': {
+            'type': 'string',
+            'default': 'rtl',
+            'label': 'Direction',
+            'description': 'direction prop',
+            'tier': 'presentation',
+            'values': [
+              'rtl',
+              'ltr',
+            ],
           },
         },
         'scope': 'instance',

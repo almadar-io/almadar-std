@@ -60,51 +60,51 @@ export interface StdUiTableViewViewPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiTableViewConfig {
-  /** Default: `"dense"` */
-  look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'bordered';
-  /** Default: `"Empty Message"` */
-  emptyMessage?: string;
-  /** Default: `false` */
-  sortable?: boolean;
-  /** Default: `"Group By"` */
-  groupBy?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `false` */
-  dndRoot?: boolean;
-  /** Default: `"asc"` */
-  sortDirection?: 'asc' | 'desc';
-  /** Default: `[{"header":"Header","label":"Label","width":"Width","field":"Field","weight":"normal","format":"badge","icon":"circle","sortable":false,"key":"Key","align":"left","className":"Class Name"}]` */
-  fields?: EntityRow[];
-  /** Default: `""` */
-  className?: string;
-  /** Default: `[]` */
-  itemActions?: EntityRow[];
-  /** Default: `"Accepts"` */
-  accepts?: string;
-  error?: EntityRow;
-  /** Default: `0` */
-  pageSize?: number;
   /** Default: `"Position Event"` */
   positionEvent?: string;
-  /** Default: `[{"field":"Field","format":"badge","width":"Width","header":"Header","label":"Label","align":"left","icon":"circle","className":"Class Name","key":"Key","weight":"normal","sortable":false}]` */
-  columns?: EntityRow[];
-  /** Default: `false` */
-  selectable?: boolean;
+  /** Default: `"Accepts"` */
+  accepts?: string;
   /** Default: `"Dnd Item Id Field"` */
   dndItemIdField?: string;
   /** Default: `"Reorder Event"` */
   reorderEvent?: string;
-  /** Default: `"Drop Event"` */
-  dropEvent?: string;
   /** Default: `0` */
   maxInlineActions?: number;
+  /** Default: `"Empty Message"` */
+  emptyMessage?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
   /** Default: `[]` */
   selectedIds?: string[];
-  /** Default: `"Drag Group"` */
-  dragGroup?: string;
+  /** Default: `false` */
+  dndRoot?: boolean;
+  /** Default: `[{"format":"badge","width":"Width","icon":"circle","label":"Label","align":"left","sortable":false,"field":"Field","className":"Class Name","weight":"normal","header":"Header","key":"Key"}]` */
+  fields?: EntityRow[];
+  /** Default: `false` */
+  sortable?: boolean;
+  /** Default: `[]` */
+  itemActions?: EntityRow[];
+  /** Default: `false` */
+  selectable?: boolean;
   /** Default: `"Sort Column"` */
   sortColumn?: string;
+  /** Default: `""` */
+  className?: string;
+  error?: EntityRow;
+  /** Default: `"Drop Event"` */
+  dropEvent?: string;
+  /** Default: `"dense"` */
+  look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'bordered';
+  /** Default: `"Drag Group"` */
+  dragGroup?: string;
+  /** Default: `"asc"` */
+  sortDirection?: 'asc' | 'desc';
+  /** Default: `[{"className":"Class Name","header":"Header","align":"left","field":"Field","weight":"normal","key":"Key","format":"badge","icon":"circle","sortable":false,"label":"Label","width":"Width"}]` */
+  columns?: EntityRow[];
+  /** Default: `"Group By"` */
+  groupBy?: string;
+  /** Default: `0` */
+  pageSize?: number;
 }
 
 /**

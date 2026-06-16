@@ -128,40 +128,40 @@
                     "render-ui",
                     "main",
                     {
-                      "fields": "@config.fields",
-                      "hasMore": "@config.hasMore",
+                      "reorderEvent": "@config.reorderEvent",
+                      "dropEvent": "@config.dropEvent",
+                      "positionEvent": "@config.positionEvent",
+                      "entity": "@entity",
+                      "dragGroup": "@config.dragGroup",
                       "maxInlineActions": "@config.maxInlineActions",
-                      "isLoading": "@config.isLoading",
+                      "scrollX": "@config.scrollX",
+                      "loadMoreEvent": "LOAD_MORE",
                       "pageSize": "@config.pageSize",
+                      "isLoading": "@config.isLoading",
+                      "minCardWidth": "@config.minCardWidth",
+                      "error": "@config.error",
+                      "selectionEvent": "SELECTION",
+                      "className": "@config.className",
+                      "gap": "@config.gap",
                       "itemActions": [
                         {
                           "label": "View",
                           "event": "VIEW"
                         }
                       ],
-                      "minCardWidth": "@config.minCardWidth",
-                      "selectable": "@config.selectable",
-                      "dragGroup": "@config.dragGroup",
-                      "look": "@config.look",
-                      "columns": "@config.columns",
-                      "className": "@config.className",
-                      "dropEvent": "@config.dropEvent",
-                      "dndRoot": "@config.dndRoot",
-                      "error": "@config.error",
-                      "cols": "@config.cols",
-                      "sortable": "@config.sortable",
-                      "infiniteScroll": "@config.infiniteScroll",
-                      "selectionEvent": "SELECTION",
                       "accepts": "@config.accepts",
-                      "gap": "@config.gap",
-                      "reorderEvent": "@config.reorderEvent",
+                      "sortable": "@config.sortable",
                       "imageField": "@config.imageField",
-                      "loadMoreEvent": "LOAD_MORE",
-                      "scrollX": "@config.scrollX",
-                      "positionEvent": "@config.positionEvent",
-                      "entity": "@entity",
+                      "selectable": "@config.selectable",
+                      "cols": "@config.cols",
+                      "hasMore": "@config.hasMore",
                       "type": "data-grid",
-                      "dndItemIdField": "@config.dndItemIdField"
+                      "look": "@config.look",
+                      "dndRoot": "@config.dndRoot",
+                      "columns": "@config.columns",
+                      "fields": "@config.fields",
+                      "dndItemIdField": "@config.dndItemIdField",
+                      "infiniteScroll": "@config.infiniteScroll"
                     }
                   ]
                 ]
@@ -181,32 +181,25 @@
             ]
           },
           "config": {
-            "infiniteScroll": {
-              "type": "boolean",
-              "default": false,
-              "label": "Infinite Scroll",
-              "description": "Enable infinite scroll loading",
+            "minCardWidth": {
+              "type": "number",
+              "default": 280.0,
+              "label": "Min Card Width",
+              "description": "Minimum card width in pixels (used when cols is not set, default 280)",
               "tier": "presentation"
             },
-            "dragGroup": {
+            "cols": {
+              "type": "number",
+              "default": 1.0,
+              "label": "Cols",
+              "description": "Number of columns (uses auto-fit if omitted)",
+              "tier": "presentation"
+            },
+            "accepts": {
               "type": "string",
-              "default": "Drag Group",
-              "label": "Drag Group",
-              "description": "When set, items in this container are draggable and announce this group as their source",
-              "tier": "presentation"
-            },
-            "hasMore": {
-              "type": "boolean",
-              "default": false,
-              "label": "Has More",
-              "description": "Whether more items are available for infinite scroll",
-              "tier": "presentation"
-            },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state",
+              "default": "Accepts",
+              "label": "Accepts",
+              "description": "When set, the container accepts drops whose dragGroup matches this value (or '*' for any group)",
               "tier": "presentation"
             },
             "itemActions": {
@@ -223,16 +216,6 @@
                     "type": "string",
                     "required": true
                   },
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": true
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
                   "variant": {
                     "name": "variant",
                     "type": "string",
@@ -243,15 +226,67 @@
                       "ghost",
                       "danger"
                     ]
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": true
                   }
                 }
               }
             },
-            "reorderEvent": {
+            "gap": {
               "type": "string",
-              "default": "Reorder Event",
-              "label": "Reorder Event",
-              "description": "Bus event fired on in-container reorder. Payload: { id, oldIndex, newIndex }",
+              "default": "md",
+              "label": "Gap",
+              "description": "Gap between cards",
+              "tier": "presentation",
+              "values": [
+                "none",
+                "sm",
+                "md",
+                "lg",
+                "xl"
+              ]
+            },
+            "error": {
+              "type": "DataGridError",
+              "label": "Error",
+              "description": "Error state",
+              "tier": "presentation",
+              "properties": {
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": false
+                },
+                "code": {
+                  "name": "code",
+                  "type": "string",
+                  "required": false
+                },
+                "stack": {
+                  "name": "stack",
+                  "type": "string",
+                  "required": false
+                },
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                }
+              }
+            },
+            "hasMore": {
+              "type": "boolean",
+              "default": false,
+              "label": "Has More",
+              "description": "Whether more items are available for infinite scroll",
               "tier": "presentation"
             },
             "fields": {
@@ -260,9 +295,9 @@
                 {
                   "name": "Name",
                   "label": "Label",
-                  "format": "date",
                   "icon": "circle",
-                  "variant": "h3"
+                  "variant": "h3",
+                  "format": "date"
                 }
               ],
               "label": "Fields",
@@ -271,17 +306,15 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "format": {
-                    "name": "format",
+                  "icon": {
+                    "name": "icon",
                     "type": "string",
-                    "required": false,
-                    "values": [
-                      "date",
-                      "currency",
-                      "number",
-                      "boolean",
-                      "percent"
-                    ]
+                    "required": false
+                  },
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
                   },
                   "colorMap": {
                     "name": "colorMap",
@@ -290,16 +323,6 @@
                     "items": {
                       "type": "string"
                     }
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
                   },
                   "variant": {
                     "name": "variant",
@@ -315,19 +338,31 @@
                       "progress"
                     ]
                   },
-                  "name": {
-                    "name": "name",
+                  "format": {
+                    "name": "format",
                     "type": "string",
-                    "required": true
+                    "required": false,
+                    "values": [
+                      "date",
+                      "currency",
+                      "number",
+                      "boolean",
+                      "percent"
+                    ]
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
                   }
                 }
               }
             },
-            "cols": {
-              "type": "number",
-              "default": 1.0,
-              "label": "Cols",
-              "description": "Number of columns (uses auto-fit if omitted)",
+            "positionEvent": {
+              "type": "string",
+              "default": "Position Event",
+              "label": "Position Event",
+              "description": "Bus event fired N times per drop (one per item in affected zones) so the trait can persist new positions for the WHOLE zone, not just the moved item. Payload: { id, position }",
               "tier": "presentation"
             },
             "dropEvent": {
@@ -337,18 +372,25 @@
               "description": "Bus event fired on cross-container drop. Payload: { id, sourceGroup, targetGroup, newIndex }",
               "tier": "presentation"
             },
-            "dndRoot": {
-              "type": "boolean",
-              "default": false,
-              "label": "Dnd Root",
-              "description": "Mark this container as the DnD root for its subtree — descendant zones share one DndContext (cross-container drag). Use on an outer container whose own items are not draggable.",
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
               "tier": "presentation"
             },
-            "minCardWidth": {
+            "pageSize": {
               "type": "number",
-              "default": 280.0,
-              "label": "Min Card Width",
-              "description": "Minimum card width in pixels (used when cols is not set, default 280)",
+              "default": 0.0,
+              "label": "Page Size",
+              "description": "Max items to show before 'Show More' button. Defaults to 0 (disabled).",
+              "tier": "presentation"
+            },
+            "infiniteScroll": {
+              "type": "boolean",
+              "default": false,
+              "label": "Infinite Scroll",
+              "description": "Enable infinite scroll loading",
               "tier": "presentation"
             },
             "sortable": {
@@ -358,39 +400,122 @@
               "description": "Enable in-container reorder; items can be dragged to new positions among siblings",
               "tier": "presentation"
             },
-            "error": {
-              "type": "DataGridError",
-              "label": "Error",
-              "description": "Error state",
+            "dndRoot": {
+              "type": "boolean",
+              "default": false,
+              "label": "Dnd Root",
+              "description": "Mark this container as the DnD root for its subtree — descendant zones share one DndContext (cross-container drag). Use on an outer container whose own items are not draggable.",
+              "tier": "presentation"
+            },
+            "columns": {
+              "type": "[DataGridColumnsItem]",
+              "default": [
+                {
+                  "name": "Name",
+                  "label": "Label",
+                  "format": "date",
+                  "icon": "circle",
+                  "variant": "h3"
+                }
+              ],
+              "label": "Columns",
+              "description": "Alias for `fields` — the compiler emits `columns` for field defs.",
               "tier": "presentation",
-              "properties": {
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                },
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
+              "items": {
+                "type": "object",
+                "properties": {
+                  "colorMap": {
+                    "name": "colorMap",
+                    "type": "object",
+                    "required": false,
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "h3",
+                      "h4",
+                      "body",
+                      "caption",
+                      "badge",
+                      "small",
+                      "progress"
+                    ]
+                  },
+                  "format": {
+                    "name": "format",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "date",
+                      "currency",
+                      "number",
+                      "boolean",
+                      "percent"
+                    ]
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
+                  }
                 }
               }
             },
-            "pageSize": {
+            "maxInlineActions": {
               "type": "number",
               "default": 0.0,
-              "label": "Page Size",
-              "description": "Max items to show before 'Show More' button. Defaults to 0 (disabled).",
+              "label": "Max Inline Actions",
+              "description": "Max inline primary action buttons before the rest collapse into a '⋯' overflow menu. Omit = all inline.",
+              "tier": "presentation"
+            },
+            "scrollX": {
+              "type": "boolean",
+              "default": false,
+              "label": "Scroll X",
+              "description": "Lay items in a single horizontally-scrolling row (kanban columns) sized to `minCardWidth` instead of a wrapping grid.",
+              "tier": "presentation"
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state",
+              "tier": "presentation"
+            },
+            "imageField": {
+              "type": "string",
+              "default": "Image Field",
+              "label": "Image Field",
+              "description": "Entity field name containing an image URL for card thumbnails",
+              "tier": "presentation"
+            },
+            "selectable": {
+              "type": "boolean",
+              "default": false,
+              "label": "Selectable",
+              "description": "Enable multi-select with checkboxes",
+              "tier": "presentation"
+            },
+            "dragGroup": {
+              "type": "string",
+              "default": "Drag Group",
+              "label": "Drag Group",
+              "description": "When set, items in this container are draggable and announce this group as their source",
               "tier": "presentation"
             },
             "look": {
@@ -407,39 +532,11 @@
                 "card-rows"
               ]
             },
-            "positionEvent": {
+            "reorderEvent": {
               "type": "string",
-              "default": "Position Event",
-              "label": "Position Event",
-              "description": "Bus event fired N times per drop (one per item in affected zones) so the trait can persist new positions for the WHOLE zone, not just the moved item. Payload: { id, position }",
-              "tier": "presentation"
-            },
-            "selectable": {
-              "type": "boolean",
-              "default": false,
-              "label": "Selectable",
-              "description": "Enable multi-select with checkboxes",
-              "tier": "presentation"
-            },
-            "gap": {
-              "type": "string",
-              "default": "md",
-              "label": "Gap",
-              "description": "Gap between cards",
-              "tier": "presentation",
-              "values": [
-                "none",
-                "sm",
-                "md",
-                "lg",
-                "xl"
-              ]
-            },
-            "accepts": {
-              "type": "string",
-              "default": "Accepts",
-              "label": "Accepts",
-              "description": "When set, the container accepts drops whose dragGroup matches this value (or '*' for any group)",
+              "default": "Reorder Event",
+              "label": "Reorder Event",
+              "description": "Bus event fired on in-container reorder. Payload: { id, oldIndex, newIndex }",
               "tier": "presentation"
             },
             "dndItemIdField": {
@@ -447,103 +544,6 @@
               "default": "Dnd Item Id Field",
               "label": "Dnd Item Id Field",
               "description": "Row field used as the @dnd-kit draggable id (default 'id')",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "columns": {
-              "type": "[DataGridColumnsItem]",
-              "default": [
-                {
-                  "icon": "circle",
-                  "variant": "h3",
-                  "name": "Name",
-                  "label": "Label",
-                  "format": "date"
-                }
-              ],
-              "label": "Columns",
-              "description": "Alias for `fields` — the compiler emits `columns` for field defs.",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "format": {
-                    "name": "format",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "date",
-                      "currency",
-                      "number",
-                      "boolean",
-                      "percent"
-                    ]
-                  },
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "h3",
-                      "h4",
-                      "body",
-                      "caption",
-                      "badge",
-                      "small",
-                      "progress"
-                    ]
-                  },
-                  "colorMap": {
-                    "name": "colorMap",
-                    "type": "object",
-                    "required": false,
-                    "items": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            },
-            "imageField": {
-              "type": "string",
-              "default": "Image Field",
-              "label": "Image Field",
-              "description": "Entity field name containing an image URL for card thumbnails",
-              "tier": "presentation"
-            },
-            "maxInlineActions": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Max Inline Actions",
-              "description": "Max inline primary action buttons before the rest collapse into a '⋯' overflow menu. Omit = all inline.",
-              "tier": "presentation"
-            },
-            "scrollX": {
-              "type": "boolean",
-              "default": false,
-              "label": "Scroll X",
-              "description": "Lay items in a single horizontally-scrolling row (kanban columns) sized to `minCardWidth` instead of a wrapping grid.",
               "tier": "presentation"
             }
           },

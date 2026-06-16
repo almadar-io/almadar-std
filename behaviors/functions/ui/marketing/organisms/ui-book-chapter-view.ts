@@ -151,10 +151,10 @@ export function stdUiBookChapterViewBookChapterViewOrbital(params: StdUiBookChap
                   'render-ui',
                   'main',
                   {
-                    'direction': '@config.direction',
-                    'className': '@config.className',
-                    'type': 'book-chapter-view',
                     'chapter': '@entity',
+                    'type': 'book-chapter-view',
+                    'className': '@config.className',
+                    'direction': '@config.direction',
                   },
                 ],
               ],

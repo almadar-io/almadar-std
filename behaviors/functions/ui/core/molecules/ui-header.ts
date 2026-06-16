@@ -67,36 +67,36 @@ export interface StdUiHeaderLogoClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiHeaderConfig {
-  /** Default: `true` */
-  showMenuToggle?: boolean;
-  /** Default: `{"alt":"Alt","src":"Src","initials":"Initials"}` */
-  userAvatar?: EntityRow;
-  /** Default: `[{"badge":"Badge","active":false,"label":"Label","href":"Href","icon":"circle"}]` */
-  navigationItems?: EntityRow[];
-  actions?: unknown;
-  /** Default: `"KFlow"` */
-  brandName?: string;
   /** Default: `false` */
-  isMenuOpen?: boolean;
-  /** Default: `"Search Placeholder"` */
-  searchPlaceholder?: string;
-  /** Default: `true` */
-  sticky?: boolean;
-  /** Default: `"compact-bar"` */
-  look?: 'hero' | 'compact-bar' | 'breadcrumb' | 'contextual' | 'editorial-banner';
-  /** Default: `"User Name"` */
-  userName?: string;
-  /** Default: `"mobile"` */
-  variant?: 'mobile' | 'desktop';
-  /** Default: `false` */
-  isLoading?: boolean;
-  error?: EntityRow;
+  showSearch?: boolean;
   /** Default: `""` */
   className?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `{"initials":"Initials","alt":"Alt","src":"Src"}` */
+  userAvatar?: EntityRow;
+  /** Default: `"Search Placeholder"` */
+  searchPlaceholder?: string;
+  /** Default: `"compact-bar"` */
+  look?: 'hero' | 'compact-bar' | 'breadcrumb' | 'contextual' | 'editorial-banner';
+  /** Default: `true` */
+  showMenuToggle?: boolean;
   /** Default: `"Logo Src"` */
   logoSrc?: string;
   /** Default: `false` */
-  showSearch?: boolean;
+  isMenuOpen?: boolean;
+  /** Default: `"mobile"` */
+  variant?: 'mobile' | 'desktop';
+  /** Default: `"User Name"` */
+  userName?: string;
+  /** Default: `"KFlow"` */
+  brandName?: string;
+  /** Default: `[{"badge":"Badge","label":"Label","active":false,"href":"Href","icon":"circle"}]` */
+  navigationItems?: EntityRow[];
+  error?: EntityRow;
+  actions?: unknown;
+  /** Default: `true` */
+  sticky?: boolean;
 }
 
 /**
