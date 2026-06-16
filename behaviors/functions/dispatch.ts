@@ -147,7 +147,7 @@ import {
   stdUiActionPaletteActionPaletteOrbital,
   StdUiActionPaletteActionPaletteOrbitalManifest,
   isStdUiActionPaletteActionPaletteOrbitalParams,
-} from './ui/core/organisms/ui-action-palette.js';
+} from './ui/game/organisms/ui-action-palette.js';
 import {
   stdUiActionTileActionTileOrbital,
   StdUiActionTileActionTileOrbitalManifest,
@@ -197,7 +197,7 @@ import {
   stdUiCaseStudyOrganismCaseStudyOrganismOrbital,
   StdUiCaseStudyOrganismCaseStudyOrganismOrbitalManifest,
   isStdUiCaseStudyOrganismCaseStudyOrganismOrbitalParams,
-} from './ui/core/organisms/ui-case-study-organism.js';
+} from './ui/marketing/organisms/ui-case-study-organism.js';
 import {
   stdUiCastleBoardCastleBoardOrbital,
   StdUiCastleBoardCastleBoardOrbitalManifest,
@@ -212,7 +212,7 @@ import {
   stdUiCodeViewCodeViewOrbital,
   StdUiCodeViewCodeViewOrbitalManifest,
   isStdUiCodeViewCodeViewOrbitalParams,
-} from './ui/core/organisms/ui-code-view.js';
+} from './ui/game/organisms/ui-code-view.js';
 import {
   stdUiDashboardGridDashboardGridOrbital,
   StdUiDashboardGridDashboardGridOrbitalManifest,
@@ -257,17 +257,17 @@ import {
   stdUiEventLogEventLogOrbital,
   StdUiEventLogEventLogOrbitalManifest,
   isStdUiEventLogEventLogOrbitalParams,
-} from './ui/core/organisms/ui-event-log.js';
+} from './ui/game/organisms/ui-event-log.js';
 import {
   stdUiFeatureGridOrganismFeatureGridOrganismOrbital,
   StdUiFeatureGridOrganismFeatureGridOrganismOrbitalManifest,
   isStdUiFeatureGridOrganismFeatureGridOrganismOrbitalParams,
-} from './ui/core/organisms/ui-feature-grid-organism.js';
+} from './ui/marketing/organisms/ui-feature-grid-organism.js';
 import {
   stdUiFeatureRendererFeatureRendererOrbital,
   StdUiFeatureRendererFeatureRendererOrbitalManifest,
   isStdUiFeatureRendererFeatureRendererOrbitalParams,
-} from './ui/core/organisms/ui-feature-renderer.js';
+} from './ui/game/organisms/ui-feature-renderer.js';
 import {
   stdUiFormFormOrbital,
   StdUiFormFormOrbitalManifest,
@@ -292,7 +292,7 @@ import {
   stdUiHeroOrganismHeroOrganismOrbital,
   StdUiHeroOrganismHeroOrganismOrbitalManifest,
   isStdUiHeroOrganismHeroOrganismOrbitalParams,
-} from './ui/core/organisms/ui-hero-organism.js';
+} from './ui/marketing/organisms/ui-hero-organism.js';
 import {
   stdUiMasterDetailMasterDetailOrbital,
   StdUiMasterDetailMasterDetailOrbitalManifest,
@@ -322,7 +322,7 @@ import {
   stdUiObjectRulePanelObjectRulePanelOrbital,
   StdUiObjectRulePanelObjectRulePanelOrbitalManifest,
   isStdUiObjectRulePanelObjectRulePanelOrbitalParams,
-} from './ui/core/organisms/ui-object-rule-panel.js';
+} from './ui/game/organisms/ui-object-rule-panel.js';
 import {
   stdUiPricingOrganismPricingOrganismOrbital,
   StdUiPricingOrganismPricingOrganismOrbitalManifest,
@@ -332,7 +332,7 @@ import {
   stdUiRuleEditorRuleEditorOrbital,
   StdUiRuleEditorRuleEditorOrbitalManifest,
   isStdUiRuleEditorRuleEditorOrbitalParams,
-} from './ui/core/organisms/ui-rule-editor.js';
+} from './ui/game/organisms/ui-rule-editor.js';
 import {
   stdUiRuntimeDebuggerRuntimeDebuggerOrbital,
   StdUiRuntimeDebuggerRuntimeDebuggerOrbitalManifest,
@@ -342,7 +342,7 @@ import {
   stdUiSequenceBarSequenceBarOrbital,
   StdUiSequenceBarSequenceBarOrbitalManifest,
   isStdUiSequenceBarSequenceBarOrbitalParams,
-} from './ui/core/organisms/ui-sequence-bar.js';
+} from './ui/game/organisms/ui-sequence-bar.js';
 import {
   stdUiSequencerBoardSequencerBoardOrbital,
   StdUiSequencerBoardSequencerBoardOrbitalManifest,
@@ -352,22 +352,22 @@ import {
   stdUiShowcaseOrganismShowcaseOrganismOrbital,
   StdUiShowcaseOrganismShowcaseOrganismOrbitalManifest,
   isStdUiShowcaseOrganismShowcaseOrganismOrbitalParams,
-} from './ui/core/organisms/ui-showcase-organism.js';
+} from './ui/marketing/organisms/ui-showcase-organism.js';
 import {
   stdUiSimulationCanvasSimulationCanvasOrbital,
   StdUiSimulationCanvasSimulationCanvasOrbitalManifest,
   isStdUiSimulationCanvasSimulationCanvasOrbitalParams,
-} from './ui/core/organisms/ui-simulation-canvas.js';
+} from './ui/game/organisms/ui-simulation-canvas.js';
 import {
   stdUiSimulationControlsSimulationControlsOrbital,
   StdUiSimulationControlsSimulationControlsOrbitalManifest,
   isStdUiSimulationControlsSimulationControlsOrbitalParams,
-} from './ui/core/organisms/ui-simulation-controls.js';
+} from './ui/game/organisms/ui-simulation-controls.js';
 import {
   stdUiSimulationGraphSimulationGraphOrbital,
   StdUiSimulationGraphSimulationGraphOrbitalManifest,
   isStdUiSimulationGraphSimulationGraphOrbitalParams,
-} from './ui/core/organisms/ui-simulation-graph.js';
+} from './ui/game/organisms/ui-simulation-graph.js';
 import {
   stdUiSimulatorBoardSimulatorBoardOrbital,
   StdUiSimulatorBoardSimulatorBoardOrbitalManifest,
@@ -392,7 +392,7 @@ import {
   stdUiStateNodeStateNodeOrbital,
   StdUiStateNodeStateNodeOrbitalManifest,
   isStdUiStateNodeStateNodeOrbitalParams,
-} from './ui/core/organisms/ui-state-node.js';
+} from './ui/game/organisms/ui-state-node.js';
 import {
   stdUiStatsOrganismStatsOrganismOrbital,
   StdUiStatsOrganismStatsOrganismOrbitalManifest,
@@ -402,7 +402,7 @@ import {
   stdUiStepFlowOrganismStepFlowOrganismOrbital,
   StdUiStepFlowOrganismStepFlowOrganismOrbitalManifest,
   isStdUiStepFlowOrganismStepFlowOrganismOrbitalParams,
-} from './ui/core/organisms/ui-step-flow-organism.js';
+} from './ui/marketing/organisms/ui-step-flow-organism.js';
 import {
   stdUiTabbedContainerTabbedContainerOrbital,
   StdUiTabbedContainerTabbedContainerOrbitalManifest,
@@ -437,7 +437,7 @@ import {
   stdUiTransitionArrowTransitionArrowOrbital,
   StdUiTransitionArrowTransitionArrowOrbitalManifest,
   isStdUiTransitionArrowTransitionArrowOrbitalParams,
-} from './ui/core/organisms/ui-transition-arrow.js';
+} from './ui/game/organisms/ui-transition-arrow.js';
 import {
   stdUiUiSlotRendererUiSlotRendererOrbital,
   StdUiUiSlotRendererUiSlotRendererOrbitalManifest,
@@ -447,12 +447,12 @@ import {
   stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital,
   StdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbitalManifest,
   isStdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbitalParams,
-} from './ui/core/organisms/ui-uncontrolled-battle-board.js';
+} from './ui/game/organisms/ui-uncontrolled-battle-board.js';
 import {
   stdUiVariablePanelVariablePanelOrbital,
   StdUiVariablePanelVariablePanelOrbitalManifest,
   isStdUiVariablePanelVariablePanelOrbitalParams,
-} from './ui/core/organisms/ui-variable-panel.js';
+} from './ui/game/organisms/ui-variable-panel.js';
 import {
   stdUiWorldMapBoardWorldMapBoardOrbital,
   StdUiWorldMapBoardWorldMapBoardOrbitalManifest,

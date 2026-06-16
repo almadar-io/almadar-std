@@ -1,0 +1,367 @@
+{
+  "name": "ui-platformer-canvas",
+  "version": "1.0.0",
+  "description": "PlatformerCanvas — UI factory (1:1 with the @almadar/ui platformer-canvas pattern).",
+  "orbitals": [
+    {
+      "name": "PlatformerCanvasOrbital",
+      "entity": {
+        "name": "PlatformerCanvasItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "PlatformerCanvasRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "PlatformerCanvasItem",
+          "emits": [
+            {
+              "event": "LEFT",
+              "description": "Event names for keyboard controls",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "direction",
+                  "type": "number",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "RIGHT",
+              "description": "rightEvent prop",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "direction",
+                  "type": "number",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "JUMP",
+              "description": "jumpEvent prop",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "STOP",
+              "description": "stopEvent prop",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "LEFT",
+                "name": "Left",
+                "description": "Event names for keyboard controls",
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "direction",
+                    "type": "number",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "RIGHT",
+                "name": "Right",
+                "description": "rightEvent prop",
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "direction",
+                    "type": "number",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "JUMP",
+                "name": "Jump",
+                "description": "jumpEvent prop",
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "STOP",
+                "name": "Stop",
+                "description": "stopEvent prop",
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "rightEvent": "RIGHT",
+                      "backgroundImage": "@config.backgroundImage",
+                      "platforms": "@config.platforms",
+                      "assetBaseUrl": "@config.assetBaseUrl",
+                      "leftEvent": "LEFT",
+                      "stopEvent": "STOP",
+                      "canvasWidth": "@config.canvasWidth",
+                      "tileSprites": "@config.tileSprites",
+                      "worldHeight": "@config.worldHeight",
+                      "jumpEvent": "JUMP",
+                      "type": "platformer-canvas",
+                      "canvasHeight": "@config.canvasHeight",
+                      "followCamera": "@config.followCamera",
+                      "bgColor": "@config.bgColor",
+                      "className": "@config.className",
+                      "player": "@config.player",
+                      "playerSprite": "@config.playerSprite",
+                      "worldWidth": "@config.worldWidth"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "bgColor": {
+              "type": "string",
+              "default": "Bg Color",
+              "label": "Bg Color",
+              "description": "Background color",
+              "tier": "presentation"
+            },
+            "assetBaseUrl": {
+              "type": "string",
+              "default": "https://almadar-kflow-assets.web.app/shared/platformer/",
+              "label": "Asset Base Url",
+              "description": "Base URL prefix for asset URLs",
+              "tier": "presentation"
+            },
+            "worldWidth": {
+              "type": "number",
+              "default": 800.0,
+              "label": "World Width",
+              "description": "World dimensions",
+              "tier": "presentation"
+            },
+            "playerSprite": {
+              "type": "string",
+              "default": "https://almadar-kflow-assets.web.app/shared/platformer/tilesheets/platformerPack_character.png",
+              "label": "Player Sprite",
+              "description": "Player sprite image URL",
+              "tier": "presentation"
+            },
+            "followCamera": {
+              "type": "boolean",
+              "default": true,
+              "label": "Follow Camera",
+              "description": "Camera follows player",
+              "tier": "presentation"
+            },
+            "tileSprites": {
+              "type": "Map<string,string>",
+              "default": {},
+              "label": "Tile Sprites",
+              "description": "Map of platform type to tile sprite URL",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "backgroundImage": {
+              "type": "string",
+              "default": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/Preview.png",
+              "label": "Background Image",
+              "description": "Background image URL",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "platforms": {
+              "type": "[PlatformerCanvasPlatformsItem]",
+              "default": [],
+              "label": "Platforms",
+              "description": "Static platforms / level geometry",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "width": {
+                    "name": "width",
+                    "type": "number",
+                    "required": true
+                  },
+                  "height": {
+                    "name": "height",
+                    "type": "number",
+                    "required": true
+                  },
+                  "y": {
+                    "name": "y",
+                    "type": "number",
+                    "required": true
+                  },
+                  "type": {
+                    "name": "type",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "ground",
+                      "platform",
+                      "hazard",
+                      "goal"
+                    ]
+                  },
+                  "x": {
+                    "name": "x",
+                    "type": "number",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "canvasWidth": {
+              "type": "number",
+              "default": 800.0,
+              "label": "Canvas Width",
+              "description": "Canvas display size",
+              "tier": "presentation"
+            },
+            "player": {
+              "type": "PlatformerCanvasPlayer",
+              "label": "Player",
+              "description": "Player state data",
+              "tier": "presentation",
+              "properties": {
+                "vy": {
+                  "name": "vy",
+                  "type": "number",
+                  "required": false
+                },
+                "grounded": {
+                  "name": "grounded",
+                  "type": "boolean",
+                  "required": false
+                },
+                "width": {
+                  "name": "width",
+                  "type": "number",
+                  "required": false
+                },
+                "y": {
+                  "name": "y",
+                  "type": "number",
+                  "required": true
+                },
+                "vx": {
+                  "name": "vx",
+                  "type": "number",
+                  "required": false
+                },
+                "x": {
+                  "name": "x",
+                  "type": "number",
+                  "required": true
+                },
+                "facingRight": {
+                  "name": "facingRight",
+                  "type": "boolean",
+                  "required": false
+                },
+                "height": {
+                  "name": "height",
+                  "type": "number",
+                  "required": false
+                }
+              }
+            },
+            "worldHeight": {
+              "type": "number",
+              "default": 400.0,
+              "label": "World Height",
+              "description": "worldHeight prop",
+              "tier": "presentation"
+            },
+            "canvasHeight": {
+              "type": "number",
+              "default": 400.0,
+              "label": "Canvas Height",
+              "description": "canvasHeight prop",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "PlatformerCanvasPage",
+          "path": "/platformer-canvas",
+          "traits": [
+            {
+              "ref": "PlatformerCanvasRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

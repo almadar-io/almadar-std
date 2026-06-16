@@ -1,0 +1,98 @@
+app ui-game-menu "1.0.0"
+"GameMenu — UI factory (1:1 with the @almadar/ui game-menu pattern)."
+orbital GameMenuOrbital {
+  type GameMenuOptionsItem = {
+    id : string
+    label : string!
+    event : string
+    navigatesTo : string
+    variant : "primary" | "secondary" | "ghost"
+    disabled : boolean
+    subLabel : string
+    action : string
+  }
+  type GameMenuMenuItemsItem = {
+    id : string
+    label : string!
+    event : string
+    navigatesTo : string
+    variant : "primary" | "secondary" | "ghost"
+    disabled : boolean
+    subLabel : string
+    action : string
+  }
+  type GameMenuSELECTOption = {
+    id : string
+    label : string!
+    event : string
+    navigatesTo : string
+    variant : "primary" | "secondary" | "ghost"
+    disabled : boolean
+    subLabel : string
+    action : string
+  }
+
+  entity GameMenuItem [runtime] {
+    id : string!
+  }
+
+  trait GameMenuRender -> @rebindable GameMenuItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          title: @config.title
+          subtitle: @config.subtitle
+          options: @config.options
+          menuItems: @config.menuItems
+          onSelect: SELECT
+          background: @config.background
+          logo: @config.logo
+          className: @config.className
+          type: game-menu
+        })
+    }
+
+    emits {
+      SELECT -> external {
+        option : GameMenuSELECTOption
+      }
+        @description "Called when an option is selected (legacy callback, prefer event bus)"
+        @tier "essential"
+    }
+
+    config {
+      title : string = "Title"
+        @label "Title"
+        @description "Menu title"
+        @tier "presentation"
+      subtitle : string = "Subtitle"
+        @label "Subtitle"
+        @description "Optional subtitle or version"
+        @tier "presentation"
+      options : [GameMenuOptionsItem] = []
+        @label "Options"
+        @description "Menu options - accepts readonly for compatibility with generated const arrays"
+        @tier "presentation"
+      menuItems : [GameMenuMenuItemsItem] = []
+        @label "Menu Items"
+        @description "Alias for options (schema compatibility)"
+        @tier "presentation"
+      background : string = "https://almadar-kflow-assets.web.app/shared/isometric-blocks/Preview.png"
+        @label "Background"
+        @description "Background image or gradient"
+        @tier "presentation"
+      logo : string = "Logo"
+        @label "Logo"
+        @description "Logo image URL"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/game-menu" as GameMenuPage -> GameMenuRender
+}

@@ -1,0 +1,133 @@
+app ui-platformer-canvas "1.0.0"
+"PlatformerCanvas — UI factory (1:1 with the @almadar/ui platformer-canvas pattern)."
+orbital PlatformerCanvasOrbital {
+  type PlatformerCanvasPlayer = {
+    x : number!
+    y : number!
+    width : number
+    height : number
+    vx : number
+    vy : number
+    grounded : boolean
+    facingRight : boolean
+  }
+  type PlatformerCanvasPlatformsItem = {
+    x : number!
+    y : number!
+    width : number!
+    height : number!
+    type : "ground" | "platform" | "hazard" | "goal"
+  }
+
+  entity PlatformerCanvasItem [runtime] {
+    id : string!
+  }
+
+  trait PlatformerCanvasRender -> @rebindable PlatformerCanvasItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          player: @config.player
+          platforms: @config.platforms
+          worldWidth: @config.worldWidth
+          worldHeight: @config.worldHeight
+          canvasWidth: @config.canvasWidth
+          canvasHeight: @config.canvasHeight
+          followCamera: @config.followCamera
+          bgColor: @config.bgColor
+          playerSprite: @config.playerSprite
+          tileSprites: @config.tileSprites
+          backgroundImage: @config.backgroundImage
+          assetBaseUrl: @config.assetBaseUrl
+          leftEvent: LEFT
+          rightEvent: RIGHT
+          jumpEvent: JUMP
+          stopEvent: STOP
+          className: @config.className
+          type: platformer-canvas
+        })
+    }
+
+    emits {
+      LEFT -> external {
+        direction : number!
+      }
+        @description "Event names for keyboard controls"
+        @tier "essential"
+      RIGHT -> external {
+        direction : number!
+      }
+        @description "rightEvent prop"
+        @tier "essential"
+      JUMP -> external {
+        id : string
+      }
+        @description "jumpEvent prop"
+        @tier "essential"
+      STOP -> external {
+        id : string
+      }
+        @description "stopEvent prop"
+        @tier "essential"
+    }
+
+    config {
+      player : PlatformerCanvasPlayer
+        @label "Player"
+        @description "Player state data"
+        @tier "presentation"
+      platforms : [PlatformerCanvasPlatformsItem] = []
+        @label "Platforms"
+        @description "Static platforms / level geometry"
+        @tier "presentation"
+      worldWidth : number = 800
+        @label "World Width"
+        @description "World dimensions"
+        @tier "presentation"
+      worldHeight : number = 400
+        @label "World Height"
+        @description "worldHeight prop"
+        @tier "presentation"
+      canvasWidth : number = 800
+        @label "Canvas Width"
+        @description "Canvas display size"
+        @tier "presentation"
+      canvasHeight : number = 400
+        @label "Canvas Height"
+        @description "canvasHeight prop"
+        @tier "presentation"
+      followCamera : boolean = true
+        @label "Follow Camera"
+        @description "Camera follows player"
+        @tier "presentation"
+      bgColor : string = "Bg Color"
+        @label "Bg Color"
+        @description "Background color"
+        @tier "presentation"
+      playerSprite : string = "https://almadar-kflow-assets.web.app/shared/platformer/tilesheets/platformerPack_character.png"
+        @label "Player Sprite"
+        @description "Player sprite image URL"
+        @tier "presentation"
+      tileSprites : Map string string = {}
+        @label "Tile Sprites"
+        @description "Map of platform type to tile sprite URL"
+        @tier "presentation"
+      backgroundImage : string = "https://almadar-kflow-assets.web.app/shared/isometric-blocks/Preview.png"
+        @label "Background Image"
+        @description "Background image URL"
+        @tier "presentation"
+      assetBaseUrl : string = "https://almadar-kflow-assets.web.app/shared/platformer/"
+        @label "Asset Base Url"
+        @description "Base URL prefix for asset URLs"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/platformer-canvas" as PlatformerCanvasPage -> PlatformerCanvasRender
+}

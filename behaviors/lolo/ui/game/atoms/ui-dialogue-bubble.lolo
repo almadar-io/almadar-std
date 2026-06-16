@@ -1,0 +1,48 @@
+app ui-dialogue-bubble "1.0.0"
+"DialogueBubble — UI factory (1:1 with the @almadar/ui dialogue-bubble pattern)."
+orbital DialogueBubbleOrbital {
+  entity DialogueBubbleItem [runtime] {
+    id : string!
+  }
+
+  trait DialogueBubbleRender -> @rebindable DialogueBubbleItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          speaker: @config.speaker
+          text: @config.text
+          portrait: @config.portrait
+          position: @config.position
+          className: @config.className
+          type: dialogue-bubble
+        })
+    }
+
+    config {
+      speaker : string = "Speaker"
+        @label "Speaker"
+        @description "Speaker name displayed at the top"
+        @tier "presentation"
+      text : string = "Text"
+        @label "Text"
+        @description "Dialogue text content"
+        @tier "presentation"
+      portrait : string = "https://almadar-kflow-assets.web.app/shared/characters/archetypes/04_hero.png"
+        @label "Portrait"
+        @description "URL for the speaker portrait image"
+        @tier "presentation"
+      position : "top" | "bottom" = bottom
+        @label "Position"
+        @description "Position of the bubble on screen"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/dialogue-bubble" as DialogueBubblePage -> DialogueBubbleRender
+}
