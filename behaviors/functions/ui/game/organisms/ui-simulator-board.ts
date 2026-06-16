@@ -47,7 +47,26 @@ export interface StdUiSimulatorBoardCompletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiSimulatorBoardConfig {
-  entityProp?: EntityRow;
+  /** Default: `"Sort By"` */
+  sortBy?: string;
+  /** Default: `[]` */
+  selectedIds?: string[];
+  /** Default: `"asc"` */
+  sortDirection?: 'asc' | 'desc';
+  /** Default: `0` */
+  pageSize?: number;
+  /** Default: `0` */
+  pageProp?: number;
+  /** Default: `0` */
+  totalCount?: number;
+  /** Default: `"Search Value"` */
+  searchValue?: string;
+  activeFilters?: unknown;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  error?: EntityRow;
 }
 
 /**
@@ -186,12 +205,28 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
               'event': 'INIT',
               'effects': [
                 [
+                  'fetch',
+                  'SimulatorBoardItem',
+                  {},
+                ],
+                [
                   'render-ui',
                   'main',
                   {
-                    'type': 'simulator-board',
+                    'isLoading': '@config.isLoading',
+                    'sortDirection': '@config.sortDirection',
+                    'totalCount': '@config.totalCount',
+                    'className': '@config.className',
+                    'sortBy': '@config.sortBy',
+                    'page': '@config.pageProp',
+                    'pageSize': '@config.pageSize',
                     'completeEvent': 'COMPLETE',
-                    'entity': '@config.entityProp',
+                    'error': '@config.error',
+                    'selectedIds': '@config.selectedIds',
+                    'entity': '@entity',
+                    'type': 'simulator-board',
+                    'activeFilters': '@config.activeFilters',
+                    'searchValue': '@config.searchValue',
                   },
                 ],
               ],
@@ -199,144 +234,108 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
           ],
         },
         'config': {
-          'entityProp': {
-            'type': 'SimulatorBoardEntity',
-            'label': 'Entity',
-            'description': 'The compiler binds the generic `EntityRow`, so the inlet accepts it (and',
-            'synonyms': 'entity',
+          'sortBy': {
+            'type': 'string',
+            'default': 'Sort By',
+            'label': 'Sort By',
+            'description': 'Current sort field',
+            'tier': 'presentation',
+          },
+          'selectedIds': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Selected Ids',
+            'description': 'Currently selected item IDs',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'sortDirection': {
+            'type': 'string',
+            'default': 'asc',
+            'label': 'Sort Direction',
+            'description': 'Current sort direction',
+            'tier': 'presentation',
+            'values': [
+              'asc',
+              'desc',
+            ],
+          },
+          'pageSize': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page Size',
+            'description': 'Number of items per page',
+            'tier': 'presentation',
+          },
+          'pageProp': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page',
+            'description': 'Current page number',
+            'synonyms': 'page',
+            'tier': 'presentation',
+          },
+          'totalCount': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Total Count',
+            'description': 'Total number of items',
+            'tier': 'presentation',
+          },
+          'searchValue': {
+            'type': 'string',
+            'default': 'Search Value',
+            'label': 'Search Value',
+            'description': 'Current search query value',
+            'tier': 'presentation',
+          },
+          'activeFilters': {
+            'type': 'json',
+            'label': 'Active Filters',
+            'description': 'Active filters',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
+          'error': {
+            'type': 'SimulatorBoardError',
+            'label': 'Error',
+            'description': 'Error state (UiError)',
             'tier': 'presentation',
             'properties': {
-              'hint': {
-                'name': 'hint',
+              'stack': {
+                'name': 'stack',
                 'type': 'string',
                 'required': false,
               },
-              'outputUnit': {
-                'name': 'outputUnit',
-                'type': 'string',
-                'required': true,
-              },
-              'targetValue': {
-                'name': 'targetValue',
-                'type': 'number',
-                'required': true,
-              },
-              'title': {
-                'name': 'title',
-                'type': 'string',
-                'required': true,
-              },
-              'id': {
-                'name': 'id',
-                'type': 'string',
-                'required': true,
-              },
-              'successMessage': {
-                'name': 'successMessage',
+              'name': {
+                'name': 'name',
                 'type': 'string',
                 'required': false,
               },
-              'outputLabel': {
-                'name': 'outputLabel',
+              'message': {
+                'name': 'message',
                 'type': 'string',
                 'required': true,
               },
-              'targetTolerance': {
-                'name': 'targetTolerance',
-                'type': 'number',
-                'required': true,
-              },
-              'failMessage': {
-                'name': 'failMessage',
+              'code': {
+                'name': 'code',
                 'type': 'string',
                 'required': false,
-              },
-              'headerImage': {
-                'name': 'headerImage',
-                'type': 'string',
-                'required': false,
-              },
-              'theme': {
-                'name': 'theme',
-                'type': 'object',
-                'required': false,
-                'properties': {
-                  'background': {
-                    'name': 'background',
-                    'type': 'string',
-                    'required': false,
-                  },
-                  'accentColor': {
-                    'name': 'accentColor',
-                    'type': 'string',
-                    'required': false,
-                  },
-                },
-              },
-              'parameters': {
-                'name': 'parameters',
-                'type': 'array',
-                'required': true,
-                'items': {
-                  'type': 'object',
-                  'properties': {
-                    'step': {
-                      'name': 'step',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'initial': {
-                      'name': 'initial',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'tolerance': {
-                      'name': 'tolerance',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'label': {
-                      'name': 'label',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'max': {
-                      'name': 'max',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'correct': {
-                      'name': 'correct',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'id': {
-                      'name': 'id',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'min': {
-                      'name': 'min',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'unit': {
-                      'name': 'unit',
-                      'type': 'string',
-                      'required': true,
-                    },
-                  },
-                },
-              },
-              'computeExpression': {
-                'name': 'computeExpression',
-                'type': 'string',
-                'required': true,
-              },
-              'description': {
-                'name': 'description',
-                'type': 'string',
-                'required': true,
               },
             },
           },

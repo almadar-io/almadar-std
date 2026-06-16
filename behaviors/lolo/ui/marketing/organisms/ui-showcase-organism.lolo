@@ -1,10 +1,6 @@
 app ui-showcase-organism "1.0.0"
 "ShowcaseOrganism — UI factory (1:1 with the @almadar/ui showcase-organism pattern)."
 orbital ShowcaseOrganismOrbital {
-  type ShowcaseOrganismImage = {
-    src : string!
-    alt : string!
-  }
   type ShowcaseOrganismError = {
     message : string!
     name : string
@@ -15,11 +11,6 @@ orbital ShowcaseOrganismOrbital {
   entity ShowcaseOrganismItem [runtime] {
     id : string!
     title : string = ""
-    description : string = ""
-    image : ShowcaseOrganismImage
-    href : string = ""
-    badge : string = ""
-    accentColor : string = ""
   }
 
   trait ShowcaseOrganismRender -> @rebindable ShowcaseOrganismItem [interaction, instance] {
@@ -29,7 +20,6 @@ orbital ShowcaseOrganismOrbital {
       INIT -> idle
         (fetch ShowcaseOrganismItem {})
         (render-ui main {
-          entity: @entity
           className: @config.className
           isLoading: @config.isLoading
           error: @config.error
@@ -41,6 +31,7 @@ orbital ShowcaseOrganismOrbital {
           totalCount: @config.totalCount
           activeFilters: @config.activeFilters
           selectedIds: @config.selectedIds
+          entity: @entity
           columns: @config.columns
           heading: @config.heading
           subtitle: @config.subtitle

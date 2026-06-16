@@ -54,23 +54,23 @@
                     "render-ui",
                     "main",
                     {
-                      "showDownload": "@config.showDownload",
-                      "showToolbar": "@config.showToolbar",
-                      "title": "@config.title",
-                      "entity": "DocumentViewerItem",
                       "error": "@config.error",
-                      "totalPages": "@config.totalPages",
-                      "type": "document-viewer",
-                      "src": "@config.src",
-                      "currentPage": "@config.currentPage",
-                      "className": "@config.className",
-                      "documents": "@config.documents",
                       "showPrint": "@config.showPrint",
-                      "actions": "@config.actions",
+                      "currentPage": "@config.currentPage",
+                      "type": "document-viewer",
                       "isLoading": "@config.isLoading",
+                      "totalPages": "@config.totalPages",
+                      "src": "@config.src",
+                      "className": "@config.className",
+                      "showDownload": "@config.showDownload",
                       "height": "@config.height",
                       "content": "@config.content",
-                      "documentType": "@config.documentType"
+                      "actions": "@config.actions",
+                      "documents": "@config.documents",
+                      "entity": "DocumentViewerItem",
+                      "title": "@config.title",
+                      "documentType": "@config.documentType",
+                      "showToolbar": "@config.showToolbar"
                     }
                   ]
                 ]
@@ -78,6 +78,20 @@
             ]
           },
           "config": {
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state",
+              "tier": "presentation"
+            },
+            "currentPage": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Current Page",
+              "description": "Current page (for multi-page documents)",
+              "tier": "presentation"
+            },
             "showPrint": {
               "type": "boolean",
               "default": false,
@@ -92,25 +106,73 @@
               "description": "Document title",
               "tier": "presentation"
             },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state",
+            "documentType": {
+              "type": "string",
+              "default": "pdf",
+              "label": "Document Type",
+              "description": "Document type",
+              "tier": "presentation",
+              "values": [
+                "pdf",
+                "text",
+                "html",
+                "markdown"
+              ]
+            },
+            "documents": {
+              "type": "[DocumentViewerDocumentsItem]",
+              "default": [
+                {
+                  "label": "Label"
+                }
+              ],
+              "label": "Documents",
+              "description": "Multiple documents (tabbed view)",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "src": {
+                    "name": "src",
+                    "type": "string",
+                    "required": false
+                  },
+                  "content": {
+                    "name": "content",
+                    "type": "string",
+                    "required": false
+                  },
+                  "documentType": {
+                    "name": "documentType",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "pdf",
+                      "text",
+                      "html",
+                      "markdown"
+                    ]
+                  }
+                }
+              }
+            },
+            "totalPages": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Total Pages",
+              "description": "Total pages",
               "tier": "presentation"
             },
-            "className": {
+            "height": {
               "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "content": {
-              "type": "string",
-              "default": "Content",
-              "label": "Content",
-              "description": "Document content (for text/html/markdown)",
+              "default": "Height",
+              "label": "Height",
+              "description": "Viewer height",
               "tier": "presentation"
             },
             "actions": {
@@ -132,15 +194,15 @@
                       "ghost"
                     ]
                   },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
                   "navigatesTo": {
                     "name": "navigatesTo",
                     "type": "string",
                     "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
                   },
                   "event": {
                     "name": "event",
@@ -150,87 +212,14 @@
                 }
               }
             },
-            "documents": {
-              "type": "[DocumentViewerDocumentsItem]",
-              "default": [],
-              "label": "Documents",
-              "description": "Multiple documents (tabbed view)",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "src": {
-                    "name": "src",
-                    "type": "string",
-                    "required": false
-                  },
-                  "content": {
-                    "name": "content",
-                    "type": "string",
-                    "required": false
-                  },
-                  "documentType": {
-                    "name": "documentType",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "pdf",
-                      "text",
-                      "html",
-                      "markdown"
-                    ]
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            },
-            "height": {
-              "type": "string",
-              "default": "Height",
-              "label": "Height",
-              "description": "Viewer height",
-              "tier": "presentation"
-            },
-            "currentPage": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Current Page",
-              "description": "Current page (for multi-page documents)",
-              "tier": "presentation"
-            },
-            "showToolbar": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Toolbar",
-              "description": "Show toolbar",
-              "tier": "presentation"
-            },
-            "showDownload": {
-              "type": "boolean",
-              "default": false,
-              "label": "Show Download",
-              "description": "Show download button",
-              "tier": "presentation"
-            },
-            "totalPages": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Total Pages",
-              "description": "Total pages",
-              "tier": "presentation"
-            },
             "error": {
               "type": "DocumentViewerError",
               "label": "Error",
               "description": "Error state",
               "tier": "presentation",
               "properties": {
-                "name": {
-                  "name": "name",
+                "code": {
+                  "name": "code",
                   "type": "string",
                   "required": false
                 },
@@ -244,25 +233,40 @@
                   "type": "string",
                   "required": true
                 },
-                "code": {
-                  "name": "code",
+                "name": {
+                  "name": "name",
                   "type": "string",
                   "required": false
                 }
               }
             },
-            "documentType": {
+            "showDownload": {
+              "type": "boolean",
+              "default": false,
+              "label": "Show Download",
+              "description": "Show download button",
+              "tier": "presentation"
+            },
+            "content": {
               "type": "string",
-              "default": "pdf",
-              "label": "Document Type",
-              "description": "Document type",
-              "tier": "presentation",
-              "values": [
-                "pdf",
-                "text",
-                "html",
-                "markdown"
-              ]
+              "default": "Content",
+              "label": "Content",
+              "description": "Document content (for text/html/markdown)",
+              "tier": "presentation"
+            },
+            "showToolbar": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Toolbar",
+              "description": "Show toolbar",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
             },
             "src": {
               "type": "string",

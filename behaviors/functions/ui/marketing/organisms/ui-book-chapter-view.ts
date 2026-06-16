@@ -39,12 +39,10 @@ export type StdUiBookChapterViewEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiBookChapterViewConfig {
-  /** Default: `""` */
-  className?: string;
-  /** Default: `{"title":"","content":"","id":""}` */
-  chapter?: EntityRow;
   /** Default: `"rtl"` */
   direction?: 'rtl' | 'ltr';
+  /** Default: `""` */
+  className?: string;
 }
 
 /**
@@ -145,13 +143,18 @@ export function stdUiBookChapterViewBookChapterViewOrbital(params: StdUiBookChap
               'event': 'INIT',
               'effects': [
                 [
+                  'fetch',
+                  'BookChapterViewItem',
+                  {},
+                ],
+                [
                   'render-ui',
                   'main',
                   {
                     'direction': '@config.direction',
-                    'type': 'book-chapter-view',
-                    'chapter': '@config.chapter',
                     'className': '@config.className',
+                    'chapter': '@entity',
+                    'type': 'book-chapter-view',
                   },
                 ],
               ],
@@ -159,46 +162,6 @@ export function stdUiBookChapterViewBookChapterViewOrbital(params: StdUiBookChap
           ],
         },
         'config': {
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'chapter': {
-            'type': 'BookChapterViewChapter',
-            'default': {
-              'title': '',
-              'content': '',
-              'id': '',
-            },
-            'label': 'Chapter',
-            'description': 'chapter prop',
-            'tier': 'presentation',
-            'properties': {
-              'content': {
-                'name': 'content',
-                'type': 'string',
-                'required': true,
-              },
-              'id': {
-                'name': 'id',
-                'type': 'string',
-                'required': true,
-              },
-              'title': {
-                'name': 'title',
-                'type': 'string',
-                'required': true,
-              },
-              'orbitalSchema': {
-                'name': 'orbitalSchema',
-                'type': 'string',
-                'required': false,
-              },
-            },
-          },
           'direction': {
             'type': 'string',
             'default': 'rtl',
@@ -209,6 +172,13 @@ export function stdUiBookChapterViewBookChapterViewOrbital(params: StdUiBookChap
               'rtl',
               'ltr',
             ],
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
           },
         },
         'scope': 'instance',

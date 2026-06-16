@@ -45,8 +45,6 @@ export interface StdUiBookTableOfContentsConfig {
   direction?: 'rtl' | 'ltr';
   /** Default: `""` */
   className?: string;
-  /** Default: `[]` */
-  parts?: EntityRow[];
 }
 
 /**
@@ -147,13 +145,18 @@ export function stdUiBookTableOfContentsBookTableOfContentsOrbital(params: StdUi
               'event': 'INIT',
               'effects': [
                 [
+                  'fetch',
+                  'BookTableOfContentsItem',
+                  {},
+                ],
+                [
                   'render-ui',
                   'main',
                   {
+                    'type': 'book-table-of-contents',
+                    'parts': '@entity',
                     'currentChapterId': '@config.currentChapterId',
                     'className': '@config.className',
-                    'type': 'book-table-of-contents',
-                    'parts': '@config.parts',
                     'direction': '@config.direction',
                   },
                 ],
@@ -186,53 +189,6 @@ export function stdUiBookTableOfContentsBookTableOfContentsOrbital(params: StdUi
             'label': 'Class Name',
             'description': 'Additional CSS classes',
             'tier': 'presentation',
-          },
-          'parts': {
-            'type': '[BookTableOfContentsPartsItem]',
-            'default': [],
-            'label': 'Parts',
-            'description': 'parts prop',
-            'tier': 'presentation',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'chapters': {
-                  'name': 'chapters',
-                  'type': 'array',
-                  'required': true,
-                  'items': {
-                    'type': 'object',
-                    'properties': {
-                      'id': {
-                        'name': 'id',
-                        'type': 'string',
-                        'required': true,
-                      },
-                      'orbitalSchema': {
-                        'name': 'orbitalSchema',
-                        'type': 'string',
-                        'required': false,
-                      },
-                      'content': {
-                        'name': 'content',
-                        'type': 'string',
-                        'required': true,
-                      },
-                      'title': {
-                        'name': 'title',
-                        'type': 'string',
-                        'required': true,
-                      },
-                    },
-                  },
-                },
-                'title': {
-                  'name': 'title',
-                  'type': 'string',
-                  'required': true,
-                },
-              },
-            },
           },
         },
         'scope': 'instance',

@@ -1,50 +1,11 @@
 app ui-sequencer-board "1.0.0"
 "SequencerBoard — UI factory (1:1 with the @almadar/ui sequencer-board pattern)."
 orbital SequencerBoardOrbital {
-  type SequencerBoardEntity = {
-    id : string!
-    title : string!
-    description : string!
-    availableActions : [SequencerBoardEntityAvailableActionsItem]!
-    maxSlots : number!
-    allowDuplicates : boolean
-    solutions : [[string]]!
-    successMessage : string
-    failMessage : string
-    hint : string
-    path : [SequencerBoardEntityPathItem]
-    headerImage : string
-    theme : SequencerBoardEntityTheme
-  }
-  type SequencerBoardEntityAvailableActionsItem = {
-    id : string!
-    name : string!
-    category : string!
-    description : string
-    iconEmoji : string
-    iconUrl : string
-    stateMachine : SequencerBoardEntityAvailableActionsItemStateMachine
-  }
-  type SequencerBoardEntityAvailableActionsItemStateMachine = {
-    name : string!
-    states : [string]!
-    currentState : string!
-    transitions : [SequencerBoardEntityAvailableActionsItemStateMachineTransitionsItem]!
-    description : string
-  }
-  type SequencerBoardEntityAvailableActionsItemStateMachineTransitionsItem = {
-    from : string!
-    to : string!
-    event : string!
-    guardHint : string
-  }
-  type SequencerBoardEntityPathItem = {
-    x : number!
-    y : number!
-  }
-  type SequencerBoardEntityTheme = {
-    background : string
-    accentColor : string
+  type SequencerBoardError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
   }
   type SequencerBoardCategoryColorsValue = {
     bg : string!
@@ -60,8 +21,20 @@ orbital SequencerBoardOrbital {
 
     state idle {
       INIT -> idle
+        (fetch SequencerBoardItem {})
         (render-ui main {
-          entity: @config.entityProp
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          sortBy: @config.sortBy
+          sortDirection: @config.sortDirection
+          searchValue: @config.searchValue
+          page: @config.pageProp
+          pageSize: @config.pageSize
+          totalCount: @config.totalCount
+          activeFilters: @config.activeFilters
+          selectedIds: @config.selectedIds
+          entity: @entity
           categoryColors: @config.categoryColors
           stepDurationMs: @config.stepDurationMs
           playEvent: PLAY
@@ -85,10 +58,50 @@ orbital SequencerBoardOrbital {
     }
 
     config {
-      entityProp : SequencerBoardEntity
-        @label "Entity"
-        @description "Puzzle data. Also accepts the canonical `EntityRow` the compiler binds (and arrays); narrowed to `SequencerPuzzleEntity` internally."
-        @synonyms "entity"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : SequencerBoardError
+        @label "Error"
+        @description "Error state (UiError)"
+        @tier "presentation"
+      sortBy : string = "Sort By"
+        @label "Sort By"
+        @description "Current sort field"
+        @tier "presentation"
+      sortDirection : "asc" | "desc" = asc
+        @label "Sort Direction"
+        @description "Current sort direction"
+        @tier "presentation"
+      searchValue : string = "Search Value"
+        @label "Search Value"
+        @description "Current search query value"
+        @tier "presentation"
+      pageProp : number = 0
+        @label "Page"
+        @description "Current page number"
+        @synonyms "page"
+        @tier "presentation"
+      pageSize : number = 0
+        @label "Page Size"
+        @description "Number of items per page"
+        @tier "presentation"
+      totalCount : number = 0
+        @label "Total Count"
+        @description "Total number of items"
+        @tier "presentation"
+      activeFilters : json
+        @label "Active Filters"
+        @description "Active filters"
+        @tier "presentation"
+      selectedIds : [string] = []
+        @label "Selected Ids"
+        @description "Currently selected item IDs"
         @tier "presentation"
       categoryColors : Map string SequencerBoardCategoryColorsValue = {}
         @label "Category Colors"

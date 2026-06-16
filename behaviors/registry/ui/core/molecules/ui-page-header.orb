@@ -104,27 +104,27 @@
                     "render-ui",
                     "main",
                     {
+                      "breadcrumbs": "@config.breadcrumbs",
+                      "activeTab": "@config.activeTab",
                       "onTabChange": "TAB_CHANGE",
-                      "status": "@config.status",
                       "actions": "@config.actions",
-                      "showBack": "@config.showBack",
+                      "isLoading": "@config.isLoading",
+                      "className": "@config.className",
+                      "type": "page-header",
+                      "status": "@config.status",
+                      "backEvent": "BACK",
                       "title": "@config.title",
+                      "showBack": "@config.showBack",
+                      "entity": "PageHeaderItem",
+                      "tabs": "@config.tabs",
                       "children": [
                         {
-                          "type": "text",
-                          "content": "Sample content"
+                          "content": "Sample content",
+                          "type": "typography"
                         }
                       ],
-                      "breadcrumbs": "@config.breadcrumbs",
-                      "subtitle": "@config.subtitle",
-                      "activeTab": "@config.activeTab",
                       "error": "@config.error",
-                      "tabs": "@config.tabs",
-                      "className": "@config.className",
-                      "entity": "PageHeaderItem",
-                      "type": "page-header",
-                      "isLoading": "@config.isLoading",
-                      "backEvent": "BACK"
+                      "subtitle": "@config.subtitle"
                     }
                   ]
                 ]
@@ -132,19 +132,6 @@
             ]
           },
           "config": {
-            "showBack": {
-              "type": "boolean",
-              "default": false,
-              "label": "Show Back",
-              "description": "Show back button",
-              "tier": "presentation"
-            },
-            "title": {
-              "type": "json",
-              "label": "Title",
-              "description": "Page title - accepts unknown to handle generated code accessing dynamic entity data",
-              "tier": "presentation"
-            },
             "activeTab": {
               "type": "string",
               "default": "Active Tab",
@@ -159,37 +146,11 @@
               "description": "Loading state indicator",
               "tier": "presentation"
             },
-            "tabs": {
-              "type": "[PageHeaderTabsItem]",
-              "default": [],
-              "label": "Tabs",
-              "description": "Tabs for sub-navigation",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "value": {
-                    "name": "value",
-                    "type": "string",
-                    "required": true
-                  },
-                  "count": {
-                    "name": "count",
-                    "type": "number",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            },
-            "subtitle": {
-              "type": "json",
-              "label": "Subtitle",
-              "description": "Optional subtitle/description",
+            "showBack": {
+              "type": "boolean",
+              "default": false,
+              "label": "Show Back",
+              "description": "Show back button",
               "tier": "presentation"
             },
             "breadcrumbs": {
@@ -201,16 +162,44 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
                   "href": {
                     "name": "href",
                     "type": "string",
                     "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
                   }
+                }
+              }
+            },
+            "error": {
+              "type": "PageHeaderError",
+              "label": "Error",
+              "description": "Error state",
+              "tier": "presentation",
+              "properties": {
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                },
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": false
+                },
+                "stack": {
+                  "name": "stack",
+                  "type": "string",
+                  "required": false
+                },
+                "code": {
+                  "name": "code",
+                  "type": "string",
+                  "required": false
                 }
               }
             },
@@ -223,8 +212,23 @@
               "items": {
                 "type": "object",
                 "properties": {
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
                   "loading": {
                     "name": "loading",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": false
+                  },
+                  "disabled": {
+                    "name": "disabled",
                     "type": "boolean",
                     "required": false
                   },
@@ -248,24 +252,60 @@
                     "name": "icon",
                     "type": "string",
                     "required": false
-                  },
-                  "disabled": {
-                    "name": "disabled",
-                    "type": "boolean",
-                    "required": false
-                  },
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": false
-                  },
+                  }
+                }
+              }
+            },
+            "tabs": {
+              "type": "[PageHeaderTabsItem]",
+              "default": [
+                {
+                  "label": "Label",
+                  "value": "Value"
+                }
+              ],
+              "label": "Tabs",
+              "description": "Tabs for sub-navigation",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
                   "label": {
                     "name": "label",
                     "type": "string",
                     "required": true
+                  },
+                  "value": {
+                    "name": "value",
+                    "type": "string",
+                    "required": true
+                  },
+                  "count": {
+                    "name": "count",
+                    "type": "number",
+                    "required": false
                   }
                 }
               }
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "className prop",
+              "tier": "presentation"
+            },
+            "subtitle": {
+              "type": "json",
+              "label": "Subtitle",
+              "description": "Optional subtitle/description",
+              "tier": "presentation"
+            },
+            "title": {
+              "type": "json",
+              "label": "Title",
+              "description": "Page title - accepts unknown to handle generated code accessing dynamic entity data",
+              "tier": "presentation"
             },
             "status": {
               "type": "PageHeaderStatus",
@@ -289,41 +329,6 @@
                     "danger",
                     "info"
                   ]
-                }
-              }
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "className prop",
-              "tier": "presentation"
-            },
-            "error": {
-              "type": "PageHeaderError",
-              "label": "Error",
-              "description": "Error state",
-              "tier": "presentation",
-              "properties": {
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                },
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
                 }
               }
             }

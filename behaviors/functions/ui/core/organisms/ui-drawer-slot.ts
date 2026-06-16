@@ -42,12 +42,12 @@ export interface StdUiDrawerSlotConfig {
   /** Default: `false` */
   isLoading?: boolean;
   error?: EntityRow;
-  /** Default: `"right"` */
-  position?: 'left' | 'right';
-  /** Default: `"Title"` */
-  title?: string;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  /** Default: `"Title"` */
+  title?: string;
+  /** Default: `"right"` */
+  position?: 'left' | 'right';
   /** Default: `""` */
   className?: string;
 }
@@ -158,19 +158,19 @@ export function stdUiDrawerSlotDrawerSlotOrbital(params: StdUiDrawerSlotDrawerSl
                   'render-ui',
                   'main',
                   {
-                    'title': '@config.title',
-                    'className': '@config.className',
                     'children': [
                       {
+                        'type': 'typography',
                         'content': 'Sample content',
-                        'type': 'text',
                       },
                     ],
                     'entity': 'DrawerSlotItem',
-                    'isLoading': '@config.isLoading',
-                    'size': '@config.size',
-                    'error': '@config.error',
                     'type': 'drawer-slot',
+                    'size': '@config.size',
+                    'title': '@config.title',
+                    'className': '@config.className',
+                    'error': '@config.error',
+                    'isLoading': '@config.isLoading',
                     'position': '@config.position',
                   },
                 ],
@@ -192,6 +192,16 @@ export function stdUiDrawerSlotDrawerSlotOrbital(params: StdUiDrawerSlotDrawerSl
             'description': 'Error state',
             'tier': 'presentation',
             'properties': {
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
               'stack': {
                 'name': 'stack',
                 'type': 'string',
@@ -202,35 +212,7 @@ export function stdUiDrawerSlotDrawerSlotOrbital(params: StdUiDrawerSlotDrawerSl
                 'type': 'string',
                 'required': false,
               },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
             },
-          },
-          'position': {
-            'type': 'string',
-            'default': 'right',
-            'label': 'Position',
-            'description': 'Drawer position',
-            'tier': 'presentation',
-            'values': [
-              'left',
-              'right',
-            ],
-          },
-          'title': {
-            'type': 'string',
-            'default': 'Title',
-            'label': 'Title',
-            'description': 'Override drawer title (extracted from children if not provided)',
-            'tier': 'presentation',
           },
           'size': {
             'type': 'string',
@@ -244,6 +226,24 @@ export function stdUiDrawerSlotDrawerSlotOrbital(params: StdUiDrawerSlotDrawerSl
               'lg',
               'xl',
               'full',
+            ],
+          },
+          'title': {
+            'type': 'string',
+            'default': 'Title',
+            'label': 'Title',
+            'description': 'Override drawer title (extracted from children if not provided)',
+            'tier': 'presentation',
+          },
+          'position': {
+            'type': 'string',
+            'default': 'right',
+            'label': 'Position',
+            'description': 'Drawer position',
+            'tier': 'presentation',
+            'values': [
+              'left',
+              'right',
             ],
           },
           'className': {

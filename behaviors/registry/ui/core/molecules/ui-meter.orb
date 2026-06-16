@@ -50,20 +50,20 @@
                     "main",
                     {
                       "segments": "@config.segments",
-                      "actions": "@config.actions",
-                      "type": "meter",
-                      "size": "@config.size",
-                      "showValue": "@config.showValue",
-                      "isLoading": "@config.isLoading",
                       "error": "@config.error",
-                      "unit": "@config.unit",
-                      "variant": "@config.variant",
-                      "min": "@config.min",
                       "className": "@config.className",
-                      "max": "@config.max",
+                      "value": "@config.value",
                       "thresholds": "@config.thresholds",
+                      "max": "@config.max",
+                      "min": "@config.min",
+                      "unit": "@config.unit",
+                      "size": "@config.size",
+                      "isLoading": "@config.isLoading",
+                      "variant": "@config.variant",
+                      "showValue": "@config.showValue",
                       "label": "@config.label",
-                      "value": "@config.value"
+                      "type": "meter",
+                      "actions": "@config.actions"
                     }
                   ]
                 ]
@@ -71,25 +71,64 @@
             ]
           },
           "config": {
-            "label": {
-              "type": "string",
-              "default": "Label",
-              "label": "Label",
-              "description": "Display label",
-              "tier": "presentation"
-            },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state",
-              "tier": "presentation"
-            },
             "className": {
               "type": "string",
               "default": "",
               "label": "Class Name",
               "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "thresholds": {
+              "type": "[MeterThresholdsItem]",
+              "default": [
+                {
+                  "value": 1.0,
+                  "color": "Color"
+                }
+              ],
+              "label": "Thresholds",
+              "description": "Color thresholds",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "value": {
+                    "name": "value",
+                    "type": "number",
+                    "required": true
+                  },
+                  "color": {
+                    "name": "color",
+                    "type": "string",
+                    "required": true
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "showValue": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Value",
+              "description": "Show value text",
+              "tier": "presentation"
+            },
+            "value": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Value",
+              "description": "Current value",
+              "tier": "presentation"
+            },
+            "min": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Min",
+              "description": "Minimum value",
               "tier": "presentation"
             },
             "actions": {
@@ -106,10 +145,10 @@
                     "type": "string",
                     "required": false
                   },
-                  "label": {
-                    "name": "label",
+                  "event": {
+                    "name": "event",
                     "type": "string",
-                    "required": true
+                    "required": false
                   },
                   "variant": {
                     "name": "variant",
@@ -121,13 +160,20 @@
                       "ghost"
                     ]
                   },
-                  "event": {
-                    "name": "event",
+                  "label": {
+                    "name": "label",
                     "type": "string",
-                    "required": false
+                    "required": true
                   }
                 }
               }
+            },
+            "label": {
+              "type": "string",
+              "default": "Label",
+              "label": "Label",
+              "description": "Display label",
+              "tier": "presentation"
             },
             "size": {
               "type": "string",
@@ -141,28 +187,14 @@
                 "lg"
               ]
             },
-            "max": {
-              "type": "number",
-              "default": 100.0,
-              "label": "Max",
-              "description": "Maximum value",
-              "tier": "presentation"
-            },
-            "unit": {
-              "type": "string",
-              "default": "Unit",
-              "label": "Unit",
-              "description": "Unit suffix (e.g., '%', 'MB', 'credits')",
-              "tier": "presentation"
-            },
             "error": {
               "type": "MeterError",
               "label": "Error",
               "description": "Error state",
               "tier": "presentation",
               "properties": {
-                "code": {
-                  "name": "code",
+                "name": {
+                  "name": "name",
                   "type": "string",
                   "required": false
                 },
@@ -171,8 +203,8 @@
                   "type": "string",
                   "required": true
                 },
-                "name": {
-                  "name": "name",
+                "code": {
+                  "name": "code",
                   "type": "string",
                   "required": false
                 },
@@ -183,32 +215,19 @@
                 }
               }
             },
-            "thresholds": {
-              "type": "[MeterThresholdsItem]",
-              "default": [],
-              "label": "Thresholds",
-              "description": "Color thresholds",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "color": {
-                    "name": "color",
-                    "type": "string",
-                    "required": true
-                  },
-                  "value": {
-                    "name": "value",
-                    "type": "number",
-                    "required": true
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
+            "unit": {
+              "type": "string",
+              "default": "Unit",
+              "label": "Unit",
+              "description": "Unit suffix (e.g., '%', 'MB', 'credits')",
+              "tier": "presentation"
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state",
+              "tier": "presentation"
             },
             "variant": {
               "type": "string",
@@ -222,18 +241,11 @@
                 "segmented"
               ]
             },
-            "value": {
+            "max": {
               "type": "number",
-              "default": 0.0,
-              "label": "Value",
-              "description": "Current value",
-              "tier": "presentation"
-            },
-            "min": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Min",
-              "description": "Minimum value",
+              "default": 100.0,
+              "label": "Max",
+              "description": "Maximum value",
               "tier": "presentation"
             },
             "segments": {
@@ -241,13 +253,6 @@
               "default": 5.0,
               "label": "Segments",
               "description": "Number of segments (for segmented variant)",
-              "tier": "presentation"
-            },
-            "showValue": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Value",
-              "description": "Show value text",
               "tier": "presentation"
             }
           },

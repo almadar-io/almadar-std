@@ -39,14 +39,14 @@ export type StdUiEventLogEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiEventLogConfig {
+  /** Default: `[{"icon":"circle","message":"Message","status":"pending","id":"Id","timestamp":1}]` */
+  entries?: EntityRow[];
   /** Default: `""` */
   className?: string;
   /** Default: `200` */
   maxHeight?: number;
   /** Default: `"Label"` */
   label?: string;
-  /** Default: `[]` */
-  entries?: EntityRow[];
 }
 
 /**
@@ -151,9 +151,9 @@ export function stdUiEventLogEventLogOrbital(params: StdUiEventLogEventLogOrbita
                   'main',
                   {
                     'entries': '@config.entries',
-                    'maxHeight': '@config.maxHeight',
-                    'className': '@config.className',
                     'type': 'event-log',
+                    'className': '@config.className',
+                    'maxHeight': '@config.maxHeight',
                     'label': '@config.label',
                   },
                 ],
@@ -162,38 +162,25 @@ export function stdUiEventLogEventLogOrbital(params: StdUiEventLogEventLogOrbita
           ],
         },
         'config': {
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'maxHeight': {
-            'type': 'number',
-            'default': 200,
-            'label': 'Max Height',
-            'description': 'Max visible height before scroll',
-            'tier': 'presentation',
-          },
-          'label': {
-            'type': 'string',
-            'default': 'Label',
-            'label': 'Label',
-            'description': 'Title label',
-            'tier': 'presentation',
-          },
           'entries': {
             'type': '[EventLogEntriesItem]',
-            'default': [],
+            'default': [
+              {
+                'icon': 'circle',
+                'message': 'Message',
+                'status': 'pending',
+                'id': 'Id',
+                'timestamp': 1,
+              },
+            ],
             'label': 'Entries',
             'description': 'Log entries',
             'tier': 'presentation',
             'items': {
               'type': 'object',
               'properties': {
-                'icon': {
-                  'name': 'icon',
+                'id': {
+                  'name': 'id',
                   'type': 'string',
                   'required': true,
                 },
@@ -202,8 +189,8 @@ export function stdUiEventLogEventLogOrbital(params: StdUiEventLogEventLogOrbita
                   'type': 'number',
                   'required': true,
                 },
-                'id': {
-                  'name': 'id',
+                'icon': {
+                  'name': 'icon',
                   'type': 'string',
                   'required': true,
                 },
@@ -225,6 +212,27 @@ export function stdUiEventLogEventLogOrbital(params: StdUiEventLogEventLogOrbita
                 },
               },
             },
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'maxHeight': {
+            'type': 'number',
+            'default': 200,
+            'label': 'Max Height',
+            'description': 'Max visible height before scroll',
+            'tier': 'presentation',
+          },
+          'label': {
+            'type': 'string',
+            'default': 'Label',
+            'label': 'Label',
+            'description': 'Title label',
+            'tier': 'presentation',
           },
         },
         'scope': 'instance',

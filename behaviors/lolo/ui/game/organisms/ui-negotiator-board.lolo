@@ -1,35 +1,11 @@
 app ui-negotiator-board "1.0.0"
 "NegotiatorBoard — UI factory (1:1 with the @almadar/ui negotiator-board pattern)."
 orbital NegotiatorBoardOrbital {
-  type NegotiatorBoardEntity = {
-    id : string!
-    title : string!
-    description : string!
-    actions : [NegotiatorBoardEntityActionsItem]!
-    payoffMatrix : [NegotiatorBoardEntityPayoffMatrixItem]!
-    totalRounds : number!
-    opponentStrategy : string!
-    targetScore : number!
-    successMessage : string
-    failMessage : string
-    hint : string
-    headerImage : string
-    theme : NegotiatorBoardEntityTheme
-  }
-  type NegotiatorBoardEntityActionsItem = {
-    id : string!
-    label : string!
-    description : string
-  }
-  type NegotiatorBoardEntityPayoffMatrixItem = {
-    playerAction : string!
-    opponentAction : string!
-    playerPayoff : number!
-    opponentPayoff : number!
-  }
-  type NegotiatorBoardEntityTheme = {
-    background : string
-    accentColor : string
+  type NegotiatorBoardError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
   }
 
   entity NegotiatorBoardItem [runtime] {
@@ -41,8 +17,20 @@ orbital NegotiatorBoardOrbital {
 
     state idle {
       INIT -> idle
+        (fetch NegotiatorBoardItem {})
         (render-ui main {
-          entity: @config.entityProp
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          sortBy: @config.sortBy
+          sortDirection: @config.sortDirection
+          searchValue: @config.searchValue
+          page: @config.pageProp
+          pageSize: @config.pageSize
+          totalCount: @config.totalCount
+          activeFilters: @config.activeFilters
+          selectedIds: @config.selectedIds
+          entity: @entity
           completeEvent: COMPLETE
           type: negotiator-board
         })
@@ -58,10 +46,50 @@ orbital NegotiatorBoardOrbital {
     }
 
     config {
-      entityProp : NegotiatorBoardEntity
-        @label "Entity"
-        @description "The compiler binds the generic `EntityRow`, so the inlet accepts it (and"
-        @synonyms "entity"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : NegotiatorBoardError
+        @label "Error"
+        @description "Error state (UiError)"
+        @tier "presentation"
+      sortBy : string = "Sort By"
+        @label "Sort By"
+        @description "Current sort field"
+        @tier "presentation"
+      sortDirection : "asc" | "desc" = asc
+        @label "Sort Direction"
+        @description "Current sort direction"
+        @tier "presentation"
+      searchValue : string = "Search Value"
+        @label "Search Value"
+        @description "Current search query value"
+        @tier "presentation"
+      pageProp : number = 0
+        @label "Page"
+        @description "Current page number"
+        @synonyms "page"
+        @tier "presentation"
+      pageSize : number = 0
+        @label "Page Size"
+        @description "Number of items per page"
+        @tier "presentation"
+      totalCount : number = 0
+        @label "Total Count"
+        @description "Total number of items"
+        @tier "presentation"
+      activeFilters : json
+        @label "Active Filters"
+        @description "Active filters"
+        @tier "presentation"
+      selectedIds : [string] = []
+        @label "Selected Ids"
+        @description "Currently selected item IDs"
         @tier "presentation"
     }
   }

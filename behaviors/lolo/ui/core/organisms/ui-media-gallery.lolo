@@ -7,15 +7,6 @@ orbital MediaGalleryOrbital {
     code : string
     stack : string
   }
-  type MediaGalleryItemsItem = {
-    id : string!
-    src : string!
-    alt : string
-    thumbnail : string
-    mediaType : "image" | "video"
-    caption : string
-    fileSize : string
-  }
   type MediaGalleryActionsItem = {
     label : string!
     event : string
@@ -34,7 +25,6 @@ orbital MediaGalleryOrbital {
       INIT -> idle
         (fetch MediaGalleryItem {})
         (render-ui main {
-          entity: @entity
           className: @config.className
           isLoading: @config.isLoading
           error: @config.error
@@ -46,6 +36,7 @@ orbital MediaGalleryOrbital {
           totalCount: @config.totalCount
           activeFilters: @config.activeFilters
           selectedIds: @config.selectedIds
+          entity: @entity
           title: @config.title
           items: @config.items
           columns: @config.columns
@@ -117,7 +108,7 @@ orbital MediaGalleryOrbital {
         @label "Title"
         @description "Gallery title"
         @tier "presentation"
-      items : [MediaGalleryItemsItem] = []
+      items : [json] = []
         @label "Items"
         @description "Media items"
         @tier "presentation"

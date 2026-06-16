@@ -1,13 +1,6 @@
 app ui-book-chapter-view "1.0.0"
 "BookChapterView — UI factory (1:1 with the @almadar/ui book-chapter-view pattern)."
 orbital BookChapterViewOrbital {
-  type BookChapterViewChapter = {
-    id : string!
-    title : string!
-    content : string!
-    orbitalSchema : json
-  }
-
   entity BookChapterViewItem [runtime] {
     id : string!
   }
@@ -17,9 +10,10 @@ orbital BookChapterViewOrbital {
 
     state idle {
       INIT -> idle
+        (fetch BookChapterViewItem {})
         (render-ui main {
           className: @config.className
-          chapter: @config.chapter
+          chapter: @entity
           direction: @config.direction
           type: book-chapter-view
         })
@@ -29,10 +23,6 @@ orbital BookChapterViewOrbital {
       className : string = ""
         @label "Class Name"
         @description "Additional CSS classes"
-        @tier "presentation"
-      chapter : BookChapterViewChapter = { id: "", title: "", content: "" }
-        @label "Chapter"
-        @description "chapter prop"
         @tier "presentation"
       direction : "rtl" | "ltr" = rtl
         @label "Direction"

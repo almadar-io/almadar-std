@@ -1,178 +1,11 @@
 app ui-battle-board "1.0.0"
 "BattleBoard — UI factory (1:1 with the @almadar/ui battle-board pattern)."
 orbital BattleBoardOrbital {
-  type BattleBoardEntity = {
-    id : string!
-    tiles : [BattleBoardEntityTilesItem]!
-    features : [BattleBoardEntityFeaturesItem]
-    boardWidth : number
-    boardHeight : number
-    assetManifest : BattleBoardEntityAssetManifest
-    backgroundImage : string
-    units : [BattleBoardEntityUnitsItem]!
-    phase : "observation" | "selection" | "movement" | "action" | "enemy_turn" | "game_over"!
-    turn : number!
-    gameResult : "victory" | "defeat"!
-    selectedUnitId : string!
-  }
-  type BattleBoardEntityTilesItem = {
-    id : string
-    x : number!
-    y : number!
-    z : number
-    terrain : string
-    type : string
-    terrainSprite : string
-    passable : boolean
-    movementCost : number
-    tileType : string
-    elevation : number
-  }
-  type BattleBoardEntityFeaturesItem = {
-    id : string
-    x : number!
-    y : number!
-    z : number
-    type : string!
-    sprite : string
-    assetUrl : string
-    color : string
-    elevation : number
-  }
-  type BattleBoardEntityAssetManifest = {
-    baseUrl : string!
-    terrains : Map string string
-    units : Map string string
-    features : Map string string
-    effects : Map string string
-  }
-  type BattleBoardEntityUnitsItem = {
-    id : string!
-    name : string!
-    unitType : string
-    heroId : string
-    sprite : string
-    spriteSheet : BattleBoardEntityUnitsItemSpriteSheet
-    team : "player" | "enemy"!
-    position : BattleBoardEntityUnitsItemPosition!
-    health : number!
-    maxHealth : number!
-    movement : number!
-    attack : number!
-    defense : number!
-    traits : [BattleBoardEntityUnitsItemTraitsItem]
-  }
-  type BattleBoardEntityUnitsItemSpriteSheet = {
-    se : string!
-    sw : string!
-    frameWidth : number!
-    frameHeight : number!
-  }
-  type BattleBoardEntityUnitsItemPosition = {
-    x : number!
-    y : number!
-  }
-  type BattleBoardEntityUnitsItemTraitsItem = {
-    name : string!
-    currentState : string!
-    states : [string]!
-    cooldown : number
-  }
-  type BattleBoardATTACKAttacker = {
-    id : string!
-    name : string!
-    unitType : string
-    heroId : string
-    sprite : string
-    spriteSheet : BattleBoardATTACKAttackerSpriteSheet
-    team : "player" | "enemy"!
-    position : BattleBoardATTACKAttackerPosition!
-    health : number!
-    maxHealth : number!
-    movement : number!
-    attack : number!
-    defense : number!
-    traits : [BattleBoardATTACKAttackerTraitsItem]
-  }
-  type BattleBoardATTACKAttackerSpriteSheet = {
-    se : string!
-    sw : string!
-    frameWidth : number!
-    frameHeight : number!
-  }
-  type BattleBoardATTACKAttackerPosition = {
-    x : number!
-    y : number!
-  }
-  type BattleBoardATTACKAttackerTraitsItem = {
-    name : string!
-    currentState : string!
-    states : [string]!
-    cooldown : number
-  }
-  type BattleBoardATTACKTarget = {
-    id : string!
-    name : string!
-    unitType : string
-    heroId : string
-    sprite : string
-    spriteSheet : BattleBoardATTACKTargetSpriteSheet
-    team : "player" | "enemy"!
-    position : BattleBoardATTACKTargetPosition!
-    health : number!
-    maxHealth : number!
-    movement : number!
-    attack : number!
-    defense : number!
-    traits : [BattleBoardATTACKTargetTraitsItem]
-  }
-  type BattleBoardATTACKTargetSpriteSheet = {
-    se : string!
-    sw : string!
-    frameWidth : number!
-    frameHeight : number!
-  }
-  type BattleBoardATTACKTargetPosition = {
-    x : number!
-    y : number!
-  }
-  type BattleBoardATTACKTargetTraitsItem = {
-    name : string!
-    currentState : string!
-    states : [string]!
-    cooldown : number
-  }
-  type BattleBoardUNITMOVEUnit = {
-    id : string!
-    name : string!
-    unitType : string
-    heroId : string
-    sprite : string
-    spriteSheet : BattleBoardUNITMOVEUnitSpriteSheet
-    team : "player" | "enemy"!
-    position : BattleBoardUNITMOVEUnitPosition!
-    health : number!
-    maxHealth : number!
-    movement : number!
-    attack : number!
-    defense : number!
-    traits : [BattleBoardUNITMOVEUnitTraitsItem]
-  }
-  type BattleBoardUNITMOVEUnitSpriteSheet = {
-    se : string!
-    sw : string!
-    frameWidth : number!
-    frameHeight : number!
-  }
-  type BattleBoardUNITMOVEUnitPosition = {
-    x : number!
-    y : number!
-  }
-  type BattleBoardUNITMOVEUnitTraitsItem = {
-    name : string!
-    currentState : string!
-    states : [string]!
-    cooldown : number
+  type BattleBoardError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
   }
   type BattleBoardUNITMOVETo = {
     x : number!
@@ -188,8 +21,20 @@ orbital BattleBoardOrbital {
 
     state idle {
       INIT -> idle
+        (fetch BattleBoardItem {})
         (render-ui main {
-          entity: @config.entityProp
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          sortBy: @config.sortBy
+          sortDirection: @config.sortDirection
+          searchValue: @config.searchValue
+          page: @config.pageProp
+          pageSize: @config.pageSize
+          totalCount: @config.totalCount
+          activeFilters: @config.activeFilters
+          selectedIds: @config.selectedIds
+          entity: @entity
           scale: @config.scale
           unitScale: @config.unitScale
           onAttack: ATTACK
@@ -204,15 +49,14 @@ orbital BattleBoardOrbital {
           gameEndEvent: GAME_END
           playAgainEvent: PLAY_AGAIN
           attackEvent: ATTACK
-          className: @config.className
           type: battle-board
         })
     }
 
     emits {
       ATTACK -> external {
-        attacker : BattleBoardATTACKAttacker
-        target : BattleBoardATTACKTarget
+        attacker : object
+        target : object
         damage : number
         attackerId : string!
         targetId : string!
@@ -225,7 +69,7 @@ orbital BattleBoardOrbital {
         @description "Called when battle ends"
         @tier "essential"
       UNIT_MOVE -> external {
-        unit : BattleBoardUNITMOVEUnit
+        unit : object
         to : BattleBoardUNITMOVETo
       }
         @description "Called after a unit moves"
@@ -259,10 +103,50 @@ orbital BattleBoardOrbital {
     }
 
     config {
-      entityProp : BattleBoardEntity = { id: "", tiles: [], units: [], phase: observation, turn: 0, gameResult: victory, selectedUnitId: "" }
-        @label "Entity"
-        @description "Entity containing all board data"
-        @synonyms "entity"
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : BattleBoardError
+        @label "Error"
+        @description "Error state (UiError)"
+        @tier "presentation"
+      sortBy : string = "Sort By"
+        @label "Sort By"
+        @description "Current sort field"
+        @tier "presentation"
+      sortDirection : "asc" | "desc" = asc
+        @label "Sort Direction"
+        @description "Current sort direction"
+        @tier "presentation"
+      searchValue : string = "Search Value"
+        @label "Search Value"
+        @description "Current search query value"
+        @tier "presentation"
+      pageProp : number = 0
+        @label "Page"
+        @description "Current page number"
+        @synonyms "page"
+        @tier "presentation"
+      pageSize : number = 0
+        @label "Page Size"
+        @description "Number of items per page"
+        @tier "presentation"
+      totalCount : number = 0
+        @label "Total Count"
+        @description "Total number of items"
+        @tier "presentation"
+      activeFilters : json
+        @label "Active Filters"
+        @description "Active filters"
+        @tier "presentation"
+      selectedIds : [string] = []
+        @label "Selected Ids"
+        @description "Currently selected item IDs"
         @tier "presentation"
       scale : number = 0.45
         @label "Scale"
@@ -279,10 +163,6 @@ orbital BattleBoardOrbital {
       effectSpriteUrls : [string] = []
         @label "Effect Sprite Urls"
         @description "effectSpriteUrls prop"
-        @tier "presentation"
-      className : string = ""
-        @label "Class Name"
-        @description "className prop"
         @tier "presentation"
     }
   }

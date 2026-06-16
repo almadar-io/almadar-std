@@ -49,15 +49,15 @@
                     "render-ui",
                     "main",
                     {
-                      "units": "@config.units",
-                      "mapWidth": "@config.mapWidth",
-                      "className": "@config.className",
-                      "viewportRect": "@config.viewportRect",
-                      "width": "@config.width",
-                      "height": "@config.height",
-                      "type": "mini-map",
                       "mapHeight": "@config.mapHeight",
-                      "tiles": "@config.tiles"
+                      "mapWidth": "@config.mapWidth",
+                      "width": "@config.width",
+                      "type": "mini-map",
+                      "viewportRect": "@config.viewportRect",
+                      "tiles": "@config.tiles",
+                      "className": "@config.className",
+                      "units": "@config.units",
+                      "height": "@config.height"
                     }
                   ]
                 ]
@@ -65,87 +65,11 @@
             ]
           },
           "config": {
-            "mapHeight": {
-              "type": "number",
-              "default": 100.0,
-              "label": "Map Height",
-              "description": "Logical map height (for coordinate scaling)",
-              "tier": "presentation"
-            },
-            "tiles": {
-              "type": "[MiniMapTilesItem]",
-              "default": [],
-              "label": "Tiles",
-              "description": "Tile data: each tile renders as a 1px dot at (x,y) with the given color",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "x": {
-                    "name": "x",
-                    "type": "number",
-                    "required": true
-                  },
-                  "color": {
-                    "name": "color",
-                    "type": "string",
-                    "required": true
-                  },
-                  "y": {
-                    "name": "y",
-                    "type": "number",
-                    "required": true
-                  }
-                }
-              }
-            },
-            "viewportRect": {
-              "type": "MiniMapViewportRect",
-              "label": "Viewport Rect",
-              "description": "Viewport rectangle outline",
-              "tier": "presentation",
-              "properties": {
-                "h": {
-                  "name": "h",
-                  "type": "number",
-                  "required": true
-                },
-                "w": {
-                  "name": "w",
-                  "type": "number",
-                  "required": true
-                },
-                "y": {
-                  "name": "y",
-                  "type": "number",
-                  "required": true
-                },
-                "x": {
-                  "name": "x",
-                  "type": "number",
-                  "required": true
-                }
-              }
-            },
-            "mapWidth": {
-              "type": "number",
-              "default": 100.0,
-              "label": "Map Width",
-              "description": "Logical map width (for coordinate scaling)",
-              "tier": "presentation"
-            },
             "height": {
               "type": "number",
               "default": 150.0,
               "label": "Height",
               "description": "Canvas display height in pixels",
-              "tier": "presentation"
-            },
-            "width": {
-              "type": "number",
-              "default": 150.0,
-              "label": "Width",
-              "description": "Canvas display width in pixels",
               "tier": "presentation"
             },
             "className": {
@@ -157,13 +81,69 @@
             },
             "units": {
               "type": "[MiniMapUnitsItem]",
-              "default": [],
+              "default": [
+                {
+                  "x": 1.0,
+                  "color": "Color",
+                  "y": 1.0
+                }
+              ],
               "label": "Units",
               "description": "Unit positions: each unit renders as a 2px dot",
               "tier": "presentation",
               "items": {
                 "type": "object",
                 "properties": {
+                  "x": {
+                    "name": "x",
+                    "type": "number",
+                    "required": true
+                  },
+                  "y": {
+                    "name": "y",
+                    "type": "number",
+                    "required": true
+                  },
+                  "color": {
+                    "name": "color",
+                    "type": "string",
+                    "required": true
+                  },
+                  "isPlayer": {
+                    "name": "isPlayer",
+                    "type": "boolean",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "mapHeight": {
+              "type": "number",
+              "default": 100.0,
+              "label": "Map Height",
+              "description": "Logical map height (for coordinate scaling)",
+              "tier": "presentation"
+            },
+            "tiles": {
+              "type": "[MiniMapTilesItem]",
+              "default": [
+                {
+                  "x": 1.0,
+                  "y": 1.0,
+                  "color": "Color"
+                }
+              ],
+              "label": "Tiles",
+              "description": "Tile data: each tile renders as a 1px dot at (x,y) with the given color",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "y": {
+                    "name": "y",
+                    "type": "number",
+                    "required": true
+                  },
                   "color": {
                     "name": "color",
                     "type": "string",
@@ -173,17 +153,49 @@
                     "name": "x",
                     "type": "number",
                     "required": true
-                  },
-                  "isPlayer": {
-                    "name": "isPlayer",
-                    "type": "boolean",
-                    "required": false
-                  },
-                  "y": {
-                    "name": "y",
-                    "type": "number",
-                    "required": true
                   }
+                }
+              }
+            },
+            "width": {
+              "type": "number",
+              "default": 150.0,
+              "label": "Width",
+              "description": "Canvas display width in pixels",
+              "tier": "presentation"
+            },
+            "mapWidth": {
+              "type": "number",
+              "default": 100.0,
+              "label": "Map Width",
+              "description": "Logical map width (for coordinate scaling)",
+              "tier": "presentation"
+            },
+            "viewportRect": {
+              "type": "MiniMapViewportRect",
+              "label": "Viewport Rect",
+              "description": "Viewport rectangle outline",
+              "tier": "presentation",
+              "properties": {
+                "x": {
+                  "name": "x",
+                  "type": "number",
+                  "required": true
+                },
+                "w": {
+                  "name": "w",
+                  "type": "number",
+                  "required": true
+                },
+                "h": {
+                  "name": "h",
+                  "type": "number",
+                  "required": true
+                },
+                "y": {
+                  "name": "y",
+                  "type": "number",
+                  "required": true
                 }
               }
             }

@@ -39,6 +39,13 @@
         ],
         "overridableConfigKeys": [
           {
+            "key": "activeFilters",
+            "type": "json",
+            "label": "Active Filters",
+            "description": "Active filters",
+            "tier": "presentation"
+          },
+          {
             "key": "categoryColors",
             "type": "Map<string,SequencerBoardCategoryColorsValue>",
             "default": {},
@@ -47,13 +54,13 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "border": {
-                  "name": "border",
+                "bg": {
+                  "name": "bg",
                   "required": true,
                   "type": "string"
                 },
-                "bg": {
-                  "name": "bg",
+                "border": {
+                  "name": "border",
                   "required": true,
                   "type": "string"
                 }
@@ -62,207 +69,105 @@
             }
           },
           {
-            "key": "entityProp",
-            "type": "SequencerBoardEntity",
-            "label": "Entity",
-            "description": "Puzzle data. Also accepts the canonical `EntityRow` the compiler binds (and arrays); narrowed to `SequencerPuzzleEntity` internally.",
-            "synonyms": "entity",
+            "key": "className",
+            "type": "string",
+            "default": "",
+            "label": "Class Name",
+            "description": "Additional CSS classes",
+            "tier": "presentation"
+          },
+          {
+            "key": "error",
+            "type": "SequencerBoardError",
+            "label": "Error",
+            "description": "Error state (UiError)",
             "tier": "presentation",
             "properties": {
-              "path": {
-                "name": "path",
-                "required": false,
-                "type": "array",
-                "items": {
-                  "properties": {
-                    "y": {
-                      "name": "y",
-                      "required": true,
-                      "type": "number"
-                    },
-                    "x": {
-                      "name": "x",
-                      "required": true,
-                      "type": "number"
-                    }
-                  },
-                  "type": "object"
-                }
-              },
-              "maxSlots": {
-                "name": "maxSlots",
-                "required": true,
-                "type": "number"
-              },
-              "id": {
-                "name": "id",
-                "required": true,
-                "type": "string"
-              },
-              "headerImage": {
-                "name": "headerImage",
+              "stack": {
+                "name": "stack",
                 "required": false,
                 "type": "string"
               },
-              "title": {
-                "name": "title",
-                "required": true,
-                "type": "string"
-              },
-              "solutions": {
-                "name": "solutions",
-                "required": true,
-                "type": "array",
-                "items": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                }
-              },
-              "hint": {
-                "name": "hint",
+              "name": {
+                "name": "name",
                 "required": false,
                 "type": "string"
               },
-              "description": {
-                "name": "description",
+              "message": {
+                "name": "message",
                 "required": true,
                 "type": "string"
               },
-              "availableActions": {
-                "name": "availableActions",
-                "required": true,
-                "type": "array",
-                "items": {
-                  "properties": {
-                    "name": {
-                      "name": "name",
-                      "required": true,
-                      "type": "string"
-                    },
-                    "iconUrl": {
-                      "name": "iconUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "iconEmoji": {
-                      "name": "iconEmoji",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": true,
-                      "type": "string"
-                    },
-                    "id": {
-                      "name": "id",
-                      "required": true,
-                      "type": "string"
-                    },
-                    "description": {
-                      "name": "description",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "stateMachine": {
-                      "name": "stateMachine",
-                      "required": false,
-                      "properties": {
-                        "description": {
-                          "name": "description",
-                          "required": false,
-                          "type": "string"
-                        },
-                        "name": {
-                          "name": "name",
-                          "required": true,
-                          "type": "string"
-                        },
-                        "currentState": {
-                          "name": "currentState",
-                          "required": true,
-                          "type": "string"
-                        },
-                        "transitions": {
-                          "name": "transitions",
-                          "required": true,
-                          "type": "array",
-                          "items": {
-                            "properties": {
-                              "to": {
-                                "name": "to",
-                                "required": true,
-                                "type": "string"
-                              },
-                              "from": {
-                                "name": "from",
-                                "required": true,
-                                "type": "string"
-                              },
-                              "event": {
-                                "name": "event",
-                                "required": true,
-                                "type": "string"
-                              },
-                              "guardHint": {
-                                "name": "guardHint",
-                                "required": false,
-                                "type": "string"
-                              }
-                            },
-                            "type": "object"
-                          }
-                        },
-                        "states": {
-                          "name": "states",
-                          "required": true,
-                          "type": "array",
-                          "items": {
-                            "type": "string"
-                          }
-                        }
-                      },
-                      "type": "object"
-                    }
-                  },
-                  "type": "object"
-                }
-              },
-              "theme": {
-                "name": "theme",
-                "required": false,
-                "properties": {
-                  "background": {
-                    "name": "background",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "accentColor": {
-                    "name": "accentColor",
-                    "required": false,
-                    "type": "string"
-                  }
-                },
-                "type": "object"
-              },
-              "successMessage": {
-                "name": "successMessage",
-                "required": false,
-                "type": "string"
-              },
-              "allowDuplicates": {
-                "name": "allowDuplicates",
-                "required": false,
-                "type": "boolean"
-              },
-              "failMessage": {
-                "name": "failMessage",
+              "code": {
+                "name": "code",
                 "required": false,
                 "type": "string"
               }
             }
+          },
+          {
+            "key": "isLoading",
+            "type": "boolean",
+            "default": false,
+            "label": "Is Loading",
+            "description": "Loading state indicator",
+            "tier": "presentation"
+          },
+          {
+            "key": "pageProp",
+            "type": "number",
+            "default": 0,
+            "label": "Page",
+            "description": "Current page number",
+            "synonyms": "page",
+            "tier": "presentation"
+          },
+          {
+            "key": "pageSize",
+            "type": "number",
+            "default": 0,
+            "label": "Page Size",
+            "description": "Number of items per page",
+            "tier": "presentation"
+          },
+          {
+            "key": "searchValue",
+            "type": "string",
+            "default": "Search Value",
+            "label": "Search Value",
+            "description": "Current search query value",
+            "tier": "presentation"
+          },
+          {
+            "key": "selectedIds",
+            "type": "[string]",
+            "default": [],
+            "label": "Selected Ids",
+            "description": "Currently selected item IDs",
+            "tier": "presentation",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "sortBy",
+            "type": "string",
+            "default": "Sort By",
+            "label": "Sort By",
+            "description": "Current sort field",
+            "tier": "presentation"
+          },
+          {
+            "key": "sortDirection",
+            "type": "string",
+            "default": "asc",
+            "label": "Sort Direction",
+            "description": "Current sort direction",
+            "tier": "presentation",
+            "enumValues": [
+              "asc",
+              "desc"
+            ]
           },
           {
             "key": "stepDurationMs",
@@ -270,6 +175,14 @@
             "default": 1000,
             "label": "Step Duration Ms",
             "description": "Playback speed in ms per step",
+            "tier": "presentation"
+          },
+          {
+            "key": "totalCount",
+            "type": "number",
+            "default": 0,
+            "label": "Total Count",
+            "description": "Total number of items",
             "tier": "presentation"
           }
         ],

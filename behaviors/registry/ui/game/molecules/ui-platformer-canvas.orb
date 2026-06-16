@@ -151,24 +151,24 @@
                     "render-ui",
                     "main",
                     {
-                      "bgColor": "@config.bgColor",
-                      "assetBaseUrl": "@config.assetBaseUrl",
-                      "stopEvent": "STOP",
-                      "platforms": "@config.platforms",
-                      "jumpEvent": "JUMP",
-                      "followCamera": "@config.followCamera",
-                      "type": "platformer-canvas",
+                      "canvasHeight": "@config.canvasHeight",
+                      "worldWidth": "@config.worldWidth",
                       "rightEvent": "RIGHT",
+                      "assetBaseUrl": "@config.assetBaseUrl",
+                      "playerSprite": "@config.playerSprite",
+                      "bgColor": "@config.bgColor",
+                      "jumpEvent": "JUMP",
+                      "leftEvent": "LEFT",
+                      "className": "@config.className",
+                      "platforms": "@config.platforms",
+                      "stopEvent": "STOP",
+                      "type": "platformer-canvas",
+                      "canvasWidth": "@config.canvasWidth",
                       "tileSprites": "@config.tileSprites",
                       "player": "@config.player",
-                      "className": "@config.className",
-                      "playerSprite": "@config.playerSprite",
-                      "canvasHeight": "@config.canvasHeight",
-                      "canvasWidth": "@config.canvasWidth",
+                      "followCamera": "@config.followCamera",
                       "backgroundImage": "@config.backgroundImage",
-                      "leftEvent": "LEFT",
-                      "worldHeight": "@config.worldHeight",
-                      "worldWidth": "@config.worldWidth"
+                      "worldHeight": "@config.worldHeight"
                     }
                   ]
                 ]
@@ -176,57 +176,23 @@
             ]
           },
           "config": {
-            "player": {
-              "type": "PlatformerCanvasPlayer",
-              "label": "Player",
-              "description": "Player state data",
-              "tier": "presentation",
-              "properties": {
-                "vx": {
-                  "name": "vx",
-                  "type": "number",
-                  "required": false
-                },
-                "vy": {
-                  "name": "vy",
-                  "type": "number",
-                  "required": false
-                },
-                "facingRight": {
-                  "name": "facingRight",
-                  "type": "boolean",
-                  "required": false
-                },
-                "y": {
-                  "name": "y",
-                  "type": "number",
-                  "required": true
-                },
-                "grounded": {
-                  "name": "grounded",
-                  "type": "boolean",
-                  "required": false
-                },
-                "x": {
-                  "name": "x",
-                  "type": "number",
-                  "required": true
-                },
-                "width": {
-                  "name": "width",
-                  "type": "number",
-                  "required": false
-                },
-                "height": {
-                  "name": "height",
-                  "type": "number",
-                  "required": false
-                }
-              }
+            "bgColor": {
+              "type": "string",
+              "default": "Bg Color",
+              "label": "Bg Color",
+              "description": "Background color",
+              "tier": "presentation"
             },
             "platforms": {
               "type": "[PlatformerCanvasPlatformsItem]",
-              "default": [],
+              "default": [
+                {
+                  "width": 1.0,
+                  "x": 1.0,
+                  "y": 1.0,
+                  "height": 1.0
+                }
+              ],
               "label": "Platforms",
               "description": "Static platforms / level geometry",
               "tier": "presentation",
@@ -238,13 +204,13 @@
                     "type": "number",
                     "required": true
                   },
-                  "height": {
-                    "name": "height",
+                  "width": {
+                    "name": "width",
                     "type": "number",
                     "required": true
                   },
-                  "width": {
-                    "name": "width",
+                  "height": {
+                    "name": "height",
                     "type": "number",
                     "required": true
                   },
@@ -267,67 +233,11 @@
                 }
               }
             },
-            "canvasHeight": {
-              "type": "number",
-              "default": 400.0,
-              "label": "Canvas Height",
-              "description": "canvasHeight prop",
-              "tier": "presentation"
-            },
-            "worldHeight": {
-              "type": "number",
-              "default": 400.0,
-              "label": "World Height",
-              "description": "worldHeight prop",
-              "tier": "presentation"
-            },
-            "followCamera": {
-              "type": "boolean",
-              "default": true,
-              "label": "Follow Camera",
-              "description": "Camera follows player",
-              "tier": "presentation"
-            },
             "playerSprite": {
-              "type": "asset",
-              "default": "https://almadar-kflow-assets.web.app/shared/platformer/tilesheets/platformerPack_character.png",
+              "type": "string",
+              "default": "Player Sprite",
               "label": "Player Sprite",
               "description": "Player sprite image URL",
-              "tier": "presentation"
-            },
-            "worldWidth": {
-              "type": "number",
-              "default": 800.0,
-              "label": "World Width",
-              "description": "World dimensions",
-              "tier": "presentation"
-            },
-            "backgroundImage": {
-              "type": "asset",
-              "default": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/Preview.png",
-              "label": "Background Image",
-              "description": "Background image URL",
-              "tier": "presentation"
-            },
-            "assetBaseUrl": {
-              "type": "asset",
-              "default": "https://almadar-kflow-assets.web.app/shared/platformer/",
-              "label": "Asset Base Url",
-              "description": "Base URL prefix for asset URLs",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "bgColor": {
-              "type": "string",
-              "default": "Bg Color",
-              "label": "Bg Color",
-              "description": "Background color",
               "tier": "presentation"
             },
             "tileSprites": {
@@ -345,6 +255,103 @@
               "default": 800.0,
               "label": "Canvas Width",
               "description": "Canvas display size",
+              "tier": "presentation"
+            },
+            "backgroundImage": {
+              "type": "string",
+              "default": "Background Image",
+              "label": "Background Image",
+              "description": "Background image URL",
+              "tier": "presentation"
+            },
+            "canvasHeight": {
+              "type": "number",
+              "default": 400.0,
+              "label": "Canvas Height",
+              "description": "canvasHeight prop",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "player": {
+              "type": "PlatformerCanvasPlayer",
+              "label": "Player",
+              "description": "Player state data",
+              "tier": "presentation",
+              "properties": {
+                "height": {
+                  "name": "height",
+                  "type": "number",
+                  "required": false
+                },
+                "x": {
+                  "name": "x",
+                  "type": "number",
+                  "required": true
+                },
+                "width": {
+                  "name": "width",
+                  "type": "number",
+                  "required": false
+                },
+                "vx": {
+                  "name": "vx",
+                  "type": "number",
+                  "required": false
+                },
+                "facingRight": {
+                  "name": "facingRight",
+                  "type": "boolean",
+                  "required": false
+                },
+                "y": {
+                  "name": "y",
+                  "type": "number",
+                  "required": true
+                },
+                "vy": {
+                  "name": "vy",
+                  "type": "number",
+                  "required": false
+                },
+                "grounded": {
+                  "name": "grounded",
+                  "type": "boolean",
+                  "required": false
+                }
+              }
+            },
+            "worldWidth": {
+              "type": "number",
+              "default": 800.0,
+              "label": "World Width",
+              "description": "World dimensions",
+              "tier": "presentation"
+            },
+            "assetBaseUrl": {
+              "type": "string",
+              "default": "Asset Base Url",
+              "label": "Asset Base Url",
+              "description": "Base URL prefix for asset URLs",
+              "tier": "presentation"
+            },
+            "worldHeight": {
+              "type": "number",
+              "default": 400.0,
+              "label": "World Height",
+              "description": "worldHeight prop",
+              "tier": "presentation"
+            },
+            "followCamera": {
+              "type": "boolean",
+              "default": true,
+              "label": "Follow Camera",
+              "description": "Camera follows player",
               "tier": "presentation"
             }
           },

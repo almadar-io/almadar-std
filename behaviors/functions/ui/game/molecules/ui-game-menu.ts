@@ -46,20 +46,20 @@ export interface StdUiGameMenuSelectPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiGameMenuConfig {
-  /** Default: `[]` */
-  menuItems?: EntityRow[];
-  /** Default: `[]` */
-  options?: EntityRow[];
-  /** Default: `"Logo"` */
-  logo?: string;
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/isometric-blocks/Preview.png"` */
-  background?: unknown;
   /** Default: `""` */
   className?: string;
   /** Default: `"Title"` */
   title?: string;
   /** Default: `"Subtitle"` */
   subtitle?: string;
+  /** Default: `"Background"` */
+  background?: string;
+  /** Default: `"Logo"` */
+  logo?: string;
+  /** Default: `[]` */
+  options?: EntityRow[];
+  /** Default: `[]` */
+  menuItems?: EntityRow[];
 }
 
 /**

@@ -29,7 +29,7 @@ orbital EntityTableOrbital {
     navigatesTo : string
     action : string
     placement : "row" | "bulk"
-    icon : string
+    icon : icon
     variant : "default" | "primary" | "secondary" | "ghost" | "danger"
   }
   type EntityTableEmptyAction = {
@@ -38,13 +38,13 @@ orbital EntityTableOrbital {
   }
   type EntityTableRowActionsItem = {
     label : string!
-    icon : string
+    icon : icon
     variant : "default" | "danger"
     event : string
   }
   type EntityTableBulkActionsItem = {
     label : string!
-    icon : string
+    icon : icon
     variant : "default" | "danger"
   }
 
@@ -59,7 +59,6 @@ orbital EntityTableOrbital {
       INIT -> idle
         (fetch EntityTableItem {})
         (render-ui main {
-          entity: @entity
           className: @config.className
           isLoading: @config.isLoading
           error: @config.error
@@ -71,6 +70,7 @@ orbital EntityTableOrbital {
           totalCount: @config.totalCount
           activeFilters: @config.activeFilters
           selectedIds: @config.selectedIds
+          entity: @entity
           fields: @config.fields
           columns: @config.columns
           emptyIcon: @config.emptyIcon
@@ -146,7 +146,7 @@ orbital EntityTableOrbital {
         @label "Selected Ids"
         @description "Currently selected item IDs"
         @tier "presentation"
-      fields : [EntityTableFieldsItem] = []
+      fields : [EntityTableFieldsItem] = [{ key: "Key", header: "Header" }]
         @label "Fields"
         @description "Fields to display - accepts string[] or Column[] for unified interface. Alias for columns"
         @tier "presentation"
@@ -158,7 +158,7 @@ orbital EntityTableOrbital {
         @label "Item Actions"
         @description "Item actions from generated code - maps to rowActions"
         @tier "presentation"
-      emptyIcon : string = "Empty Icon"
+      emptyIcon : icon
         @label "Empty Icon"
         @description "emptyIcon prop"
         @tier "presentation"

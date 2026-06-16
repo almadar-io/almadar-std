@@ -69,49 +69,49 @@ export interface StdUiIsometricCanvasTileLeavePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiIsometricCanvasConfig {
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/isometric-blocks/Preview.png"` */
-  backgroundImage?: unknown;
+  error?: EntityRow;
+  /** Default: `0` */
+  boardWidth?: number;
+  /** Default: `0` */
+  boardHeight?: number;
+  /** Default: `"Asset Base Url"` */
+  assetBaseUrl?: string;
+  assetManifest?: EntityRow;
+  /** Default: `[{"x":1,"y":1}]` */
+  tiles?: EntityRow[];
+  /** Default: `false` */
+  hasActiveEffects?: boolean;
+  /** Default: `true` */
+  showMinimap?: boolean;
   /** Default: `1` */
   unitScale?: number;
-  /** Default: `true` */
-  enableCamera?: boolean;
-  hoveredTile?: EntityRow;
+  /** Default: `[{"y":1,"x":1}]` */
+  validMoves?: EntityRow[];
+  /** Default: `"Selected Unit Id"` */
+  selectedUnitId?: string;
   /** Default: `0` */
   diamondTopY?: number;
   /** Default: `[]` */
+  units?: EntityRow[];
+  hoveredTile?: EntityRow;
+  /** Default: `false` */
+  debug?: boolean;
+  /** Default: `true` */
+  enableCamera?: boolean;
+  /** Default: `[]` */
+  effectSpriteUrls?: string[];
+  /** Default: `[{"y":1,"x":1,"type":"Type"}]` */
   features?: EntityRow[];
   /** Default: `0.4` */
   scale?: number;
-  /** Default: `0` */
-  boardWidth?: number;
-  /** Default: `"Selected Unit Id"` */
-  selectedUnitId?: string;
-  /** Default: `true` */
-  showMinimap?: boolean;
-  error?: EntityRow;
-  /** Default: `[]` */
-  units?: EntityRow[];
-  /** Default: `false` */
-  hasActiveEffects?: boolean;
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/"` */
-  assetBaseUrl?: unknown;
-  /** Default: `[]` */
-  effectSpriteUrls?: string[];
-  /** Default: `false` */
-  debug?: boolean;
-  assetManifest?: EntityRow;
-  /** Default: `[]` */
-  tiles?: EntityRow[];
-  /** Default: `[]` */
-  validMoves?: EntityRow[];
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `0` */
-  boardHeight?: number;
-  /** Default: `[]` */
+  /** Default: `[{"y":1,"x":1}]` */
   attackTargets?: EntityRow[];
   /** Default: `""` */
   className?: string;
+  /** Default: `"Background Image"` */
+  backgroundImage?: string;
 }
 
 /**

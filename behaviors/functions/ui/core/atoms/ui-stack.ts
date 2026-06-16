@@ -47,29 +47,29 @@ export interface StdUiStackActionPayload {
  */
 export interface StdUiStackConfig {
   /** Default: `false` */
-  flex?: boolean;
+  reverse?: boolean;
   /** Default: `false` */
   wrap?: boolean;
-  /** Default: `"start"` */
-  justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';
-  /** Default: `"stretch"` */
-  align?: 'start' | 'center' | 'end' | 'stretch' | 'baseline';
-  /** Default: `false` */
-  reverse?: boolean;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"vertical"` */
-  direction?: 'horizontal' | 'vertical';
+  actionPayload?: unknown;
   /** Default: `0` */
   tabIndex?: number;
+  /** Default: `"stretch"` */
+  align?: 'start' | 'center' | 'end' | 'stretch' | 'baseline';
   style?: unknown;
-  /** Default: `"Role"` */
-  role?: string;
-  actionPayload?: unknown;
-  /** Default: `"md"` */
-  gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   /** Default: `false` */
   responsive?: boolean;
+  /** Default: `false` */
+  flex?: boolean;
+  /** Default: `"vertical"` */
+  direction?: 'horizontal' | 'vertical';
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"md"` */
+  gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  /** Default: `"start"` */
+  justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';
+  /** Default: `"Role"` */
+  role?: string;
 }
 
 /**

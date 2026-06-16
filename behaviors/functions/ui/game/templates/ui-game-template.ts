@@ -41,13 +41,13 @@ export type StdUiGameTemplateEventKey = 'INIT';
 export interface StdUiGameTemplateConfig {
   debugPanel?: unknown;
   hud?: unknown;
+  /** Default: `""` */
+  className?: string;
   /** Default: `false` */
   showDebugPanel?: boolean;
   controls?: EntityRow;
   /** Default: `"Game"` */
   title?: string;
-  /** Default: `""` */
-  className?: string;
 }
 
 /**

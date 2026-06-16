@@ -1,76 +1,6 @@
 app ui-castle-board "1.0.0"
 "CastleBoard — UI factory (1:1 with the @almadar/ui castle-board pattern)."
 orbital CastleBoardOrbital {
-  type CastleBoardEntity = {
-    id : string!
-    tiles : [CastleBoardEntityTilesItem]!
-    features : [CastleBoardEntityFeaturesItem]
-    units : [CastleBoardEntityUnitsItem]
-    assetManifest : CastleBoardEntityAssetManifest
-    backgroundImage : string
-  }
-  type CastleBoardEntityTilesItem = {
-    id : string
-    x : number!
-    y : number!
-    z : number
-    terrain : string
-    type : string
-    terrainSprite : string
-    passable : boolean
-    movementCost : number
-    tileType : string
-    elevation : number
-  }
-  type CastleBoardEntityFeaturesItem = {
-    id : string
-    x : number!
-    y : number!
-    z : number
-    type : string!
-    sprite : string
-    assetUrl : string
-    color : string
-    elevation : number
-  }
-  type CastleBoardEntityUnitsItem = {
-    id : string!
-    position : CastleBoardEntityUnitsItemPosition
-    x : number
-    y : number
-    z : number
-    sprite : string
-    unitType : string
-    heroId : string
-    name : string
-    team : "player" | "enemy" | "neutral"
-    faction : "player" | "enemy" | "neutral"
-    health : number
-    maxHealth : number
-    traits : [CastleBoardEntityUnitsItemTraitsItem]
-    previousPosition : CastleBoardEntityUnitsItemPreviousPosition
-    elevation : number
-  }
-  type CastleBoardEntityUnitsItemPosition = {
-    x : number!
-    y : number!
-  }
-  type CastleBoardEntityUnitsItemTraitsItem = {
-    name : string!
-    currentState : string!
-    states : [string]!
-    cooldown : number!
-  }
-  type CastleBoardEntityUnitsItemPreviousPosition = {
-    x : number!
-    y : number!
-  }
-  type CastleBoardEntityAssetManifest = {
-    baseUrl : string!
-    terrains : Map string string
-    units : Map string string
-    features : Map string string
-  }
   type CastleBoardFEATURECLICKFeature = {
     id : string
     x : number!
@@ -124,8 +54,9 @@ orbital CastleBoardOrbital {
 
     state idle {
       INIT -> idle
+        (fetch CastleBoardItem {})
         (render-ui main {
-          entity: @config.entityProp
+          entity: @entity
           scale: @config.scale
           onFeatureClick: FEATURE_CLICK
           onUnitClick: UNIT_CLICK
@@ -163,11 +94,6 @@ orbital CastleBoardOrbital {
     }
 
     config {
-      entityProp : CastleBoardEntity
-        @label "Entity"
-        @description "Castle entity data. Also accepts the canonical `EntityRow` the compiler binds (and arrays); narrowed to `CastleEntity` internally."
-        @synonyms "entity"
-        @tier "presentation"
       scale : number = 0.45
         @label "Scale"
         @description "Canvas render scale"

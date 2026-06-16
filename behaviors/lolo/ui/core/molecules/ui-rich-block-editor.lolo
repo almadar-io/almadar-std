@@ -1,14 +1,6 @@
 app ui-rich-block-editor "1.0.0"
 "RichBlockEditor — UI factory (1:1 with the @almadar/ui rich-block-editor pattern)."
 orbital RichBlockEditorOrbital {
-  type RichBlockEditorInitialBlocksItem = {
-    id : string!
-    type : "paragraph" | "heading-1" | "heading-2" | "heading-3" | "bullet-list" | "numbered-list" | "quote" | "code" | "divider" | "image"!
-    content : string
-    metadata : Map string string
-    children : [json]
-  }
-
   entity RichBlockEditorItem [runtime] {
     id : string!
   }
@@ -18,12 +10,14 @@ orbital RichBlockEditorOrbital {
 
     state idle {
       INIT -> idle
+        (fetch RichBlockEditorItem {})
         (render-ui main {
-          initialBlocks: @config.initialBlocks
+          initialBlocks: @entity
           onChange: CHANGE
           changeEvent: CHANGE
           readOnly: @config.readOnly
           placeholder: @config.placeholder
+          enableBlocks: @config.enableBlocks
           showToolbar: @config.showToolbar
           className: @config.className
           type: rich-block-editor
@@ -39,10 +33,6 @@ orbital RichBlockEditorOrbital {
     }
 
     config {
-      initialBlocks : [RichBlockEditorInitialBlocksItem] = []
-        @label "Initial Blocks"
-        @description "Initial block payload. Accepts strongly-typed RichBlock[] from native callers and the wider EntityRow[] shape that orb-bound traits emit (orb `[object]` lowers to `Record<string, FieldValue | undefined>[]`, which is structurally EntityRow[]). Items missing id/type are normalized into paragraph blocks at mount."
-        @tier "presentation"
       readOnly : boolean = false
         @label "Read Only"
         @description "readOnly prop"
@@ -50,6 +40,10 @@ orbital RichBlockEditorOrbital {
       placeholder : string = "Placeholder"
         @label "Placeholder"
         @description "placeholder prop"
+        @tier "presentation"
+      enableBlocks : boolean = false
+        @label "Enable Blocks"
+        @description "Opt-in to the Notion-style block authoring chrome (insert toolbar, per-row +/menu gutter, turn-into menu). Off by default: the editor renders as a plain rich text surface that edits block content inline without any add-block affordances."
         @tier "presentation"
       showToolbar : boolean = true
         @label "Show Toolbar"

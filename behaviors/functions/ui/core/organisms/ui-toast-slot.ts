@@ -39,17 +39,17 @@ export type StdUiToastSlotEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiToastSlotConfig {
-  /** Default: `false` */
-  isLoading?: boolean;
   /** Default: `"Title"` */
   title?: string;
-  /** Default: `5000` */
-  duration?: number;
   /** Default: `""` */
   className?: string;
-  error?: EntityRow;
   /** Default: `"success"` */
   variant?: 'success' | 'error' | 'info' | 'warning';
+  error?: EntityRow;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `5000` */
+  duration?: number;
 }
 
 /**
@@ -158,20 +158,20 @@ export function stdUiToastSlotToastSlotOrbital(params: StdUiToastSlotToastSlotOr
                   'render-ui',
                   'main',
                   {
+                    'className': '@config.className',
+                    'entity': 'ToastSlotItem',
+                    'type': 'toast-slot',
+                    'error': '@config.error',
                     'children': [
                       {
+                        'type': 'typography',
                         'content': 'Sample content',
-                        'type': 'text',
                       },
                     ],
-                    'title': '@config.title',
-                    'isLoading': '@config.isLoading',
                     'variant': '@config.variant',
-                    'type': 'toast-slot',
-                    'entity': 'ToastSlotItem',
-                    'error': '@config.error',
+                    'title': '@config.title',
                     'duration': '@config.duration',
-                    'className': '@config.className',
+                    'isLoading': '@config.isLoading',
                   },
                 ],
               ],
@@ -179,25 +179,11 @@ export function stdUiToastSlotToastSlotOrbital(params: StdUiToastSlotToastSlotOr
           ],
         },
         'config': {
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
-            'tier': 'presentation',
-          },
           'title': {
             'type': 'string',
             'default': 'Title',
             'label': 'Title',
             'description': 'Toast title',
-            'tier': 'presentation',
-          },
-          'duration': {
-            'type': 'number',
-            'default': 5000,
-            'label': 'Duration',
-            'description': 'Auto-dismiss duration in ms (0 = no auto-dismiss)',
             'tier': 'presentation',
           },
           'className': {
@@ -206,34 +192,6 @@ export function stdUiToastSlotToastSlotOrbital(params: StdUiToastSlotToastSlotOr
             'label': 'Class Name',
             'description': 'Custom class name',
             'tier': 'presentation',
-          },
-          'error': {
-            'type': 'ToastSlotError',
-            'label': 'Error',
-            'description': 'Error state',
-            'tier': 'presentation',
-            'properties': {
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-            },
           },
           'variant': {
             'type': 'string',
@@ -247,6 +205,48 @@ export function stdUiToastSlotToastSlotOrbital(params: StdUiToastSlotToastSlotOr
               'info',
               'warning',
             ],
+          },
+          'error': {
+            'type': 'ToastSlotError',
+            'label': 'Error',
+            'description': 'Error state',
+            'tier': 'presentation',
+            'properties': {
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+            },
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
+          'duration': {
+            'type': 'number',
+            'default': 5000,
+            'label': 'Duration',
+            'description': 'Auto-dismiss duration in ms (0 = no auto-dismiss)',
+            'tier': 'presentation',
           },
         },
         'scope': 'instance',

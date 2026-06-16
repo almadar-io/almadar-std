@@ -98,14 +98,30 @@
                 "event": "INIT",
                 "effects": [
                   [
+                    "fetch",
+                    "EventHandlerBoardItem",
+                    {}
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "type": "event-handler-board",
-                      "playEvent": "PLAY",
-                      "entity": "@config.entityProp",
+                      "page": "@config.pageProp",
+                      "pageSize": "@config.pageSize",
+                      "searchValue": "@config.searchValue",
+                      "sortBy": "@config.sortBy",
+                      "activeFilters": "@config.activeFilters",
+                      "sortDirection": "@config.sortDirection",
+                      "selectedIds": "@config.selectedIds",
+                      "completeEvent": "COMPLETE",
+                      "entity": "@entity",
+                      "isLoading": "@config.isLoading",
                       "stepDurationMs": "@config.stepDurationMs",
-                      "completeEvent": "COMPLETE"
+                      "totalCount": "@config.totalCount",
+                      "className": "@config.className",
+                      "type": "event-handler-board",
+                      "error": "@config.error",
+                      "playEvent": "PLAY"
                     }
                   ]
                 ]
@@ -113,196 +129,109 @@
             ]
           },
           "config": {
-            "entityProp": {
-              "type": "EventHandlerBoardEntity",
-              "label": "Entity",
-              "description": "Puzzle data. The compiler binds the generic `EntityRow`, so the inlet accepts it (and arrays) as union members; the component narrows to its curated `EventHandlerPuzzleEntity` read-shape below (a valid union-narrow) and renders nothing until a puzzle entity is present.",
-              "synonyms": "entity",
+            "activeFilters": {
+              "type": "json",
+              "label": "Active Filters",
+              "description": "Active filters",
+              "tier": "presentation"
+            },
+            "pageSize": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Page Size",
+              "description": "Number of items per page",
+              "tier": "presentation"
+            },
+            "pageProp": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Page",
+              "description": "Current page number",
+              "synonyms": "page",
+              "tier": "presentation"
+            },
+            "searchValue": {
+              "type": "string",
+              "default": "Search Value",
+              "label": "Search Value",
+              "description": "Current search query value",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "sortDirection": {
+              "type": "string",
+              "default": "asc",
+              "label": "Sort Direction",
+              "description": "Current sort direction",
+              "tier": "presentation",
+              "values": [
+                "asc",
+                "desc"
+              ]
+            },
+            "error": {
+              "type": "EventHandlerBoardError",
+              "label": "Error",
+              "description": "Error state (UiError)",
               "tier": "presentation",
               "properties": {
-                "title": {
-                  "name": "title",
-                  "type": "string",
-                  "required": true
-                },
-                "hint": {
-                  "name": "hint",
+                "stack": {
+                  "name": "stack",
                   "type": "string",
                   "required": false
                 },
-                "goalEvent": {
-                  "name": "goalEvent",
+                "message": {
+                  "name": "message",
                   "type": "string",
                   "required": true
                 },
-                "theme": {
-                  "name": "theme",
-                  "type": "object",
-                  "required": false,
-                  "properties": {
-                    "accentColor": {
-                      "name": "accentColor",
-                      "type": "string",
-                      "required": false
-                    },
-                    "background": {
-                      "name": "background",
-                      "type": "string",
-                      "required": false
-                    }
-                  }
-                },
-                "objects": {
-                  "name": "objects",
-                  "type": "array",
-                  "required": true,
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "icon": {
-                        "name": "icon",
-                        "type": "string",
-                        "required": true
-                      },
-                      "availableEvents": {
-                        "name": "availableEvents",
-                        "type": "array",
-                        "required": true,
-                        "items": {
-                          "type": "object",
-                          "properties": {
-                            "value": {
-                              "name": "value",
-                              "type": "string",
-                              "required": true
-                            },
-                            "label": {
-                              "name": "label",
-                              "type": "string",
-                              "required": true
-                            }
-                          }
-                        }
-                      },
-                      "currentState": {
-                        "name": "currentState",
-                        "type": "string",
-                        "required": true
-                      },
-                      "maxRules": {
-                        "name": "maxRules",
-                        "type": "number",
-                        "required": false
-                      },
-                      "availableActions": {
-                        "name": "availableActions",
-                        "type": "array",
-                        "required": true,
-                        "items": {
-                          "type": "object",
-                          "properties": {
-                            "value": {
-                              "name": "value",
-                              "type": "string",
-                              "required": true
-                            },
-                            "label": {
-                              "name": "label",
-                              "type": "string",
-                              "required": true
-                            }
-                          }
-                        }
-                      },
-                      "name": {
-                        "name": "name",
-                        "type": "string",
-                        "required": true
-                      },
-                      "initialState": {
-                        "name": "initialState",
-                        "type": "string",
-                        "required": true
-                      },
-                      "id": {
-                        "name": "id",
-                        "type": "string",
-                        "required": true
-                      },
-                      "rules": {
-                        "name": "rules",
-                        "type": "array",
-                        "required": true,
-                        "items": {
-                          "type": "object",
-                          "properties": {
-                            "whenEvent": {
-                              "name": "whenEvent",
-                              "type": "string",
-                              "required": true
-                            },
-                            "thenAction": {
-                              "name": "thenAction",
-                              "type": "string",
-                              "required": true
-                            },
-                            "id": {
-                              "name": "id",
-                              "type": "string",
-                              "required": true
-                            }
-                          }
-                        }
-                      },
-                      "states": {
-                        "name": "states",
-                        "type": "array",
-                        "required": true,
-                        "items": {
-                          "type": "string"
-                        }
-                      }
-                    }
-                  }
-                },
-                "failMessage": {
-                  "name": "failMessage",
+                "name": {
+                  "name": "name",
                   "type": "string",
                   "required": false
                 },
-                "headerImage": {
-                  "name": "headerImage",
+                "code": {
+                  "name": "code",
                   "type": "string",
                   "required": false
-                },
-                "successMessage": {
-                  "name": "successMessage",
-                  "type": "string",
-                  "required": false
-                },
-                "triggerEvents": {
-                  "name": "triggerEvents",
-                  "type": "array",
-                  "required": false,
-                  "items": {
-                    "type": "string"
-                  }
-                },
-                "goalCondition": {
-                  "name": "goalCondition",
-                  "type": "string",
-                  "required": true
-                },
-                "id": {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                },
-                "description": {
-                  "name": "description",
-                  "type": "string",
-                  "required": true
                 }
+              }
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
+              "tier": "presentation"
+            },
+            "sortBy": {
+              "type": "string",
+              "default": "Sort By",
+              "label": "Sort By",
+              "description": "Current sort field",
+              "tier": "presentation"
+            },
+            "totalCount": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Total Count",
+              "description": "Total number of items",
+              "tier": "presentation"
+            },
+            "selectedIds": {
+              "type": "[string]",
+              "default": [],
+              "label": "Selected Ids",
+              "description": "Currently selected item IDs",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
               }
             },
             "stepDurationMs": {

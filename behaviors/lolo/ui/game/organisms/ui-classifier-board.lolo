@@ -1,34 +1,11 @@
 app ui-classifier-board "1.0.0"
 "ClassifierBoard — UI factory (1:1 with the @almadar/ui classifier-board pattern)."
 orbital ClassifierBoardOrbital {
-  type ClassifierBoardEntity = {
-    id : string!
-    title : string!
-    description : string!
-    items : [ClassifierBoardEntityItemsItem]!
-    categories : [ClassifierBoardEntityCategoriesItem]!
-    successMessage : string
-    failMessage : string
-    hint : string
-    headerImage : string
-    theme : ClassifierBoardEntityTheme
-  }
-  type ClassifierBoardEntityItemsItem = {
-    id : string!
-    label : string!
-    description : string
-    correctCategory : string!
-    iconUrl : string
-  }
-  type ClassifierBoardEntityCategoriesItem = {
-    id : string!
-    label : string!
-    color : string
-    imageUrl : string
-  }
-  type ClassifierBoardEntityTheme = {
-    background : string
-    accentColor : string
+  type ClassifierBoardError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
   }
 
   entity ClassifierBoardItem [runtime] {
@@ -40,8 +17,20 @@ orbital ClassifierBoardOrbital {
 
     state idle {
       INIT -> idle
+        (fetch ClassifierBoardItem {})
         (render-ui main {
-          entity: @config.entityProp
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          sortBy: @config.sortBy
+          sortDirection: @config.sortDirection
+          searchValue: @config.searchValue
+          page: @config.pageProp
+          pageSize: @config.pageSize
+          totalCount: @config.totalCount
+          activeFilters: @config.activeFilters
+          selectedIds: @config.selectedIds
+          entity: @entity
           completeEvent: COMPLETE
           type: classifier-board
         })
@@ -57,10 +46,50 @@ orbital ClassifierBoardOrbital {
     }
 
     config {
-      entityProp : ClassifierBoardEntity
-        @label "Entity"
-        @description "The compiler binds the generic `EntityRow`, so the inlet accepts it (and"
-        @synonyms "entity"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : ClassifierBoardError
+        @label "Error"
+        @description "Error state (UiError)"
+        @tier "presentation"
+      sortBy : string = "Sort By"
+        @label "Sort By"
+        @description "Current sort field"
+        @tier "presentation"
+      sortDirection : "asc" | "desc" = asc
+        @label "Sort Direction"
+        @description "Current sort direction"
+        @tier "presentation"
+      searchValue : string = "Search Value"
+        @label "Search Value"
+        @description "Current search query value"
+        @tier "presentation"
+      pageProp : number = 0
+        @label "Page"
+        @description "Current page number"
+        @synonyms "page"
+        @tier "presentation"
+      pageSize : number = 0
+        @label "Page Size"
+        @description "Number of items per page"
+        @tier "presentation"
+      totalCount : number = 0
+        @label "Total Count"
+        @description "Total number of items"
+        @tier "presentation"
+      activeFilters : json
+        @label "Active Filters"
+        @description "Active filters"
+        @tier "presentation"
+      selectedIds : [string] = []
+        @label "Selected Ids"
+        @description "Currently selected item IDs"
         @tier "presentation"
     }
   }

@@ -47,29 +47,29 @@ export interface StdUiGraphCanvasNodeClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiGraphCanvasConfig {
-  error?: EntityRow;
-  /** Default: `true` */
-  interactive?: boolean;
-  /** Default: `"force"` */
-  layout?: 'force' | 'circular' | 'grid';
-  /** Default: `false` */
-  isLoading?: boolean;
   /** Default: `true` */
   showLabels?: boolean;
+  /** Default: `false` */
+  isLoading?: boolean;
+  error?: EntityRow;
+  /** Default: `"force"` */
+  layout?: 'force' | 'circular' | 'grid';
   /** Default: `400` */
   height?: number;
-  /** Default: `"Title"` */
-  title?: string;
+  /** Default: `[{"id":"Id"}]` */
+  nodes?: EntityRow[];
   /** Default: `""` */
   className?: string;
+  /** Default: `"Title"` */
+  title?: string;
+  /** Default: `true` */
+  interactive?: boolean;
   /** Default: `true` */
   draggable?: boolean;
   /** Default: `[]` */
   actions?: EntityRow[];
-  /** Default: `[]` */
+  /** Default: `[{"source":"Source","target":"Target"}]` */
   edges?: EntityRow[];
-  /** Default: `[]` */
-  nodes?: EntityRow[];
 }
 
 /**

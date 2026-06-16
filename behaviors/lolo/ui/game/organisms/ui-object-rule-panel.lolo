@@ -1,32 +1,6 @@
 app ui-object-rule-panel "1.0.0"
 "ObjectRulePanel — UI factory (1:1 with the @almadar/ui object-rule-panel pattern)."
 orbital ObjectRulePanelOrbital {
-  type ObjectRulePanelObject = {
-    id : string!
-    name : string!
-    icon : string!
-    states : [string]!
-    initialState : string!
-    currentState : string!
-    availableEvents : [ObjectRulePanelObjectAvailableEventsItem]!
-    availableActions : [ObjectRulePanelObjectAvailableActionsItem]!
-    rules : [ObjectRulePanelObjectRulesItem]!
-    maxRules : number
-  }
-  type ObjectRulePanelObjectAvailableEventsItem = {
-    value : string!
-    label : string!
-  }
-  type ObjectRulePanelObjectAvailableActionsItem = {
-    value : string!
-    label : string!
-  }
-  type ObjectRulePanelObjectRulesItem = {
-    id : string!
-    whenEvent : string!
-    thenAction : string!
-  }
-
   entity ObjectRulePanelItem [runtime] {
     id : string!
   }
@@ -36,8 +10,9 @@ orbital ObjectRulePanelOrbital {
 
     state idle {
       INIT -> idle
+        (fetch ObjectRulePanelItem {})
         (render-ui main {
-          object: @config.object
+          object: @entity
           onRulesChange: RULES_CHANGE
           disabled: @config.disabled
           className: @config.className
@@ -55,10 +30,6 @@ orbital ObjectRulePanelOrbital {
     }
 
     config {
-      object : ObjectRulePanelObject = { id: "", name: "", icon: "circle", states: [], initialState: "", currentState: "", availableEvents: [], availableActions: [], rules: [] }
-        @label "Object"
-        @description "The selected object"
-        @tier "presentation"
       disabled : boolean = false
         @label "Disabled"
         @description "Whether editing is disabled"

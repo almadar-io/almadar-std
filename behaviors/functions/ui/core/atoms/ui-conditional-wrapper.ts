@@ -39,12 +39,12 @@ export type StdUiConditionalWrapperEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiConditionalWrapperConfig {
-  /** Default: `{"formValues":{},"globalVariables":{}}` */
-  context?: EntityRow;
-  fallback?: unknown;
   /** Default: `false` */
   animate?: boolean;
   condition?: EntityRow;
+  /** Default: `{"globalVariables":{},"formValues":{}}` */
+  context?: EntityRow;
+  fallback?: unknown;
 }
 
 /**

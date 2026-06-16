@@ -47,12 +47,10 @@ export interface StdUiObjectRulePanelRulesChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiObjectRulePanelConfig {
-  /** Default: `{"states":[],"id":"","availableEvents":[],"name":"","currentState":"","initialState":"","icon":"circle","availableActions":[],"rules":[]}` */
-  object?: EntityRow;
-  /** Default: `false` */
-  disabled?: boolean;
   /** Default: `""` */
   className?: string;
+  /** Default: `false` */
+  disabled?: boolean;
 }
 
 /**
@@ -187,14 +185,19 @@ export function stdUiObjectRulePanelObjectRulePanelOrbital(params: StdUiObjectRu
               'event': 'INIT',
               'effects': [
                 [
+                  'fetch',
+                  'ObjectRulePanelItem',
+                  {},
+                ],
+                [
                   'render-ui',
                   'main',
                   {
-                    'object': '@config.object',
-                    'onRulesChange': 'RULES_CHANGE',
-                    'className': '@config.className',
+                    'object': '@entity',
                     'type': 'object-rule-panel',
+                    'className': '@config.className',
                     'disabled': '@config.disabled',
+                    'onRulesChange': 'RULES_CHANGE',
                   },
                 ],
               ],
@@ -202,140 +205,18 @@ export function stdUiObjectRulePanelObjectRulePanelOrbital(params: StdUiObjectRu
           ],
         },
         'config': {
-          'object': {
-            'type': 'ObjectRulePanelObject',
-            'default': {
-              'states': [],
-              'id': '',
-              'availableEvents': [],
-              'name': '',
-              'currentState': '',
-              'initialState': '',
-              'icon': 'circle',
-              'availableActions': [],
-              'rules': [],
-            },
-            'label': 'Object',
-            'description': 'The selected object',
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
             'tier': 'presentation',
-            'properties': {
-              'icon': {
-                'name': 'icon',
-                'type': 'string',
-                'required': true,
-              },
-              'id': {
-                'name': 'id',
-                'type': 'string',
-                'required': true,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': true,
-              },
-              'maxRules': {
-                'name': 'maxRules',
-                'type': 'number',
-                'required': false,
-              },
-              'initialState': {
-                'name': 'initialState',
-                'type': 'string',
-                'required': true,
-              },
-              'currentState': {
-                'name': 'currentState',
-                'type': 'string',
-                'required': true,
-              },
-              'rules': {
-                'name': 'rules',
-                'type': 'array',
-                'required': true,
-                'items': {
-                  'type': 'object',
-                  'properties': {
-                    'thenAction': {
-                      'name': 'thenAction',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'id': {
-                      'name': 'id',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'whenEvent': {
-                      'name': 'whenEvent',
-                      'type': 'string',
-                      'required': true,
-                    },
-                  },
-                },
-              },
-              'availableActions': {
-                'name': 'availableActions',
-                'type': 'array',
-                'required': true,
-                'items': {
-                  'type': 'object',
-                  'properties': {
-                    'label': {
-                      'name': 'label',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'value': {
-                      'name': 'value',
-                      'type': 'string',
-                      'required': true,
-                    },
-                  },
-                },
-              },
-              'availableEvents': {
-                'name': 'availableEvents',
-                'type': 'array',
-                'required': true,
-                'items': {
-                  'type': 'object',
-                  'properties': {
-                    'value': {
-                      'name': 'value',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'label': {
-                      'name': 'label',
-                      'type': 'string',
-                      'required': true,
-                    },
-                  },
-                },
-              },
-              'states': {
-                'name': 'states',
-                'type': 'array',
-                'required': true,
-                'items': {
-                  'type': 'string',
-                },
-              },
-            },
           },
           'disabled': {
             'type': 'boolean',
             'default': false,
             'label': 'Disabled',
             'description': 'Whether editing is disabled',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
         },
