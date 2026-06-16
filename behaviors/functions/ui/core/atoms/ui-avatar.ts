@@ -53,25 +53,25 @@ export interface StdUiAvatarActionPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiAvatarConfig {
-  /** Default: `"Src"` */
-  src?: string;
-  /** Default: `"Initials"` */
-  initials?: string;
-  /** Default: `"Badge"` */
-  badge?: string;
-  /** Default: `"circle"` */
-  icon?: string;
-  /** Default: `"online"` */
-  status?: 'online' | 'offline' | 'away' | 'busy';
-  /** Default: `"md"` */
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
-  actionPayload?: unknown;
   /** Default: `"Name"` */
   name?: string;
-  /** Default: `"Alt"` */
-  alt?: string;
   /** Default: `""` */
   className?: string;
+  /** Default: `"md"` */
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  /** Default: `"Alt"` */
+  alt?: string;
+  /** Default: `"circle"` */
+  icon?: string;
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/04_hero.png"` */
+  src?: string;
+  /** Default: `"online"` */
+  status?: 'online' | 'offline' | 'away' | 'busy';
+  /** Default: `"Badge"` */
+  badge?: string;
+  /** Default: `"Initials"` */
+  initials?: string;
+  actionPayload?: unknown;
 }
 
 /**
