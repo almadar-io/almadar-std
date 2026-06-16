@@ -46,30 +46,31 @@ export interface StdUiStackActionPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiStackConfig {
-  /** Default: `false` */
-  reverse?: boolean;
-  /** Default: `false` */
-  wrap?: boolean;
-  actionPayload?: unknown;
-  /** Default: `0` */
-  tabIndex?: number;
-  /** Default: `"stretch"` */
-  align?: 'start' | 'center' | 'end' | 'stretch' | 'baseline';
-  style?: unknown;
-  /** Default: `false` */
-  responsive?: boolean;
-  /** Default: `false` */
-  flex?: boolean;
-  /** Default: `"vertical"` */
-  direction?: 'horizontal' | 'vertical';
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"md"` */
-  gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
-  /** Default: `"start"` */
-  justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';
   /** Default: `"Role"` */
   role?: string;
+  /** Default: `"stretch"` */
+  align?: 'start' | 'center' | 'end' | 'stretch' | 'baseline';
+  /** Default: `""` */
+  className?: string;
+  style?: unknown;
+  /** Default: `false` */
+  flex?: boolean;
+  /** Default: `{}` */
+  actionPayload?: unknown;
+  /** Default: `false` */
+  responsive?: boolean;
+  /** Default: `"md"` */
+  gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  /** Default: `"vertical"` */
+  direction?: 'horizontal' | 'vertical';
+  /** Default: `false` */
+  reverse?: boolean;
+  /** Default: `"start"` */
+  justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';
+  /** Default: `0` */
+  tabIndex?: number;
+  /** Default: `false` */
+  wrap?: boolean;
 }
 
 /**

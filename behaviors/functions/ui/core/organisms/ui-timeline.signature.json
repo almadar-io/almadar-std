@@ -14,9 +14,17 @@
     "traits": [
       {
         "name": "TimelineRender",
-        "emittedEvents": [],
+        "emittedEvents": [
+          "VIEW"
+        ],
         "listenedEvents": [],
         "events": [
+          {
+            "name": "VIEW",
+            "direction": "emit",
+            "description": "User opened a record from the list.",
+            "tier": "essential"
+          },
           {
             "name": "INIT",
             "direction": "listen"
@@ -43,6 +51,11 @@
                 "required": true,
                 "type": "string"
               },
+              "code": {
+                "name": "code",
+                "required": false,
+                "type": "string"
+              },
               "stack": {
                 "name": "stack",
                 "required": false,
@@ -50,11 +63,6 @@
               },
               "name": {
                 "name": "name",
-                "required": false,
-                "type": "string"
-              },
-              "code": {
-                "name": "code",
                 "required": false,
                 "type": "string"
               }
@@ -84,22 +92,18 @@
           {
             "key": "itemActions",
             "type": "[TimelineItemActionsItem]",
-            "default": [],
+            "default": [
+              {
+                "variant": "primary",
+                "label": "Label",
+                "navigatesTo": "Navigates To"
+              }
+            ],
             "label": "Item Actions",
             "description": "Actions per item",
             "tier": "presentation",
             "items": {
               "properties": {
-                "label": {
-                  "name": "label",
-                  "required": true,
-                  "type": "string"
-                },
-                "event": {
-                  "name": "event",
-                  "required": false,
-                  "type": "string"
-                },
                 "variant": {
                   "name": "variant",
                   "required": false,
@@ -114,6 +118,16 @@
                   "name": "navigatesTo",
                   "required": false,
                   "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "event": {
+                  "name": "event",
+                  "required": false,
+                  "type": "string"
                 }
               },
               "type": "object"
@@ -125,7 +139,14 @@
             "default": [
               {
                 "id": "Id",
-                "title": "Title"
+                "description": "Description",
+                "icon": "circle",
+                "status": "complete",
+                "title": "Title",
+                "date": "Date",
+                "tags": [
+                  "Item"
+                ]
               }
             ],
             "label": "Items",
@@ -133,26 +154,15 @@
             "tier": "presentation",
             "items": {
               "properties": {
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
                 "date": {
                   "name": "date",
                   "required": false,
                   "type": "string"
-                },
-                "icon": {
-                  "name": "icon",
-                  "required": false,
-                  "type": "string"
-                },
-                "status": {
-                  "name": "status",
-                  "required": false,
-                  "type": "string",
-                  "values": [
-                    "complete",
-                    "active",
-                    "pending",
-                    "error"
-                  ]
                 },
                 "tags": {
                   "name": "tags",
@@ -167,13 +177,24 @@
                   "required": true,
                   "type": "string"
                 },
-                "id": {
-                  "name": "id",
-                  "required": true,
-                  "type": "string"
-                },
                 "description": {
                   "name": "description",
+                  "required": false,
+                  "type": "string"
+                },
+                "status": {
+                  "name": "status",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "complete",
+                    "active",
+                    "pending",
+                    "error"
+                  ]
+                },
+                "icon": {
+                  "name": "icon",
                   "required": false,
                   "type": "string"
                 }
@@ -219,7 +240,9 @@
         "primaryEntity": "TimelineItem"
       }
     ],
-    "emittedEvents": [],
+    "emittedEvents": [
+      "VIEW"
+    ],
     "listenedEvents": []
   }
 ]

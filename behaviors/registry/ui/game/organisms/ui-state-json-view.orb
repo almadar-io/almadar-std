@@ -1,0 +1,109 @@
+{
+  "name": "ui-state-json-view",
+  "version": "1.0.0",
+  "description": "StateJsonView — UI factory (1:1 with the @almadar/ui state-json-view pattern).",
+  "orbitals": [
+    {
+      "name": "StateJsonViewOrbital",
+      "entity": {
+        "name": "StateJsonViewItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "StateJsonViewRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "StateJsonViewItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "state-json-view",
+                      "className": "@config.className",
+                      "data": "@config.data",
+                      "defaultExpanded": "@config.defaultExpanded",
+                      "label": "@config.label"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "data": {
+              "type": "json",
+              "default": {},
+              "label": "Data",
+              "description": "JSON data to display",
+              "tier": "presentation"
+            },
+            "label": {
+              "type": "string",
+              "default": "Label",
+              "label": "Label",
+              "description": "Label",
+              "tier": "presentation"
+            },
+            "defaultExpanded": {
+              "type": "boolean",
+              "default": false,
+              "label": "Default Expanded",
+              "description": "Whether the code is expanded by default",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "StateJsonViewPage",
+          "path": "/state-json-view",
+          "traits": [
+            {
+              "ref": "StateJsonViewRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

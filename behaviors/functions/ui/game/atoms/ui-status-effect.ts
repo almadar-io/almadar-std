@@ -41,17 +41,18 @@ export type StdUiStatusEffectEventKey = 'INIT';
 export interface StdUiStatusEffectConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `"Label"` */
-  label?: string;
-  /** Default: `"neutral"` */
-  variant?: 'buff' | 'debuff' | 'neutral';
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
-  icon?: unknown;
   /** Default: `0` */
   duration?: number;
   /** Default: `0` */
   stacks?: number;
+  /** Default: `"neutral"` */
+  variant?: 'buff' | 'debuff' | 'neutral';
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
+  /** Default: `"circle"` */
+  icon?: unknown;
+  /** Default: `"Label"` */
+  label?: string;
 }
 
 /**

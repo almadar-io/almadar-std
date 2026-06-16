@@ -47,26 +47,26 @@ export interface StdUiDebuggerBoardCompletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiDebuggerBoardConfig {
-  activeFilters?: unknown;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `"Sort By"` */
-  sortBy?: string;
-  error?: EntityRow;
-  /** Default: `0` */
-  pageProp?: number;
+  /** Default: `"asc"` */
+  sortDirection?: 'asc' | 'desc';
   /** Default: `0` */
   pageSize?: number;
+  /** Default: `0` */
+  totalCount?: number;
+  activeFilters?: unknown;
   /** Default: `""` */
   className?: string;
   /** Default: `[]` */
   selectedIds?: string[];
+  /** Default: `0` */
+  pageProp?: number;
+  error?: EntityRow;
   /** Default: `"Search Value"` */
   searchValue?: string;
-  /** Default: `0` */
-  totalCount?: number;
-  /** Default: `"asc"` */
-  sortDirection?: 'asc' | 'desc';
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `"Sort By"` */
+  sortBy?: string;
 }
 
 /**
@@ -213,20 +213,20 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
                   'render-ui',
                   'main',
                   {
-                    'completeEvent': 'COMPLETE',
-                    'page': '@config.pageProp',
-                    'selectedIds': '@config.selectedIds',
-                    'sortBy': '@config.sortBy',
-                    'activeFilters': '@config.activeFilters',
-                    'searchValue': '@config.searchValue',
-                    'isLoading': '@config.isLoading',
-                    'entity': '@entity',
                     'error': '@config.error',
-                    'className': '@config.className',
-                    'sortDirection': '@config.sortDirection',
-                    'pageSize': '@config.pageSize',
                     'type': 'debugger-board',
+                    'entity': '@entity',
+                    'activeFilters': '@config.activeFilters',
+                    'sortDirection': '@config.sortDirection',
                     'totalCount': '@config.totalCount',
+                    'page': '@config.pageProp',
+                    'isLoading': '@config.isLoading',
+                    'className': '@config.className',
+                    'searchValue': '@config.searchValue',
+                    'selectedIds': '@config.selectedIds',
+                    'pageSize': '@config.pageSize',
+                    'completeEvent': 'COMPLETE',
+                    'sortBy': '@config.sortBy',
                   },
                 ],
               ],
@@ -234,67 +234,35 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
           ],
         },
         'config': {
-          'activeFilters': {
-            'type': 'json',
-            'label': 'Active Filters',
-            'description': 'Active filters',
-            'tier': 'presentation',
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
-            'tier': 'presentation',
-          },
-          'sortBy': {
+          'sortDirection': {
             'type': 'string',
-            'default': 'Sort By',
-            'label': 'Sort By',
-            'description': 'Current sort field',
+            'default': 'asc',
+            'label': 'Sort Direction',
+            'description': 'Current sort direction',
             'tier': 'presentation',
-          },
-          'error': {
-            'type': 'DebuggerBoardError',
-            'label': 'Error',
-            'description': 'Error state (UiError)',
-            'tier': 'presentation',
-            'properties': {
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-            },
-          },
-          'pageProp': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page',
-            'description': 'Current page number',
-            'synonyms': 'page',
-            'tier': 'presentation',
+            'values': [
+              'asc',
+              'desc',
+            ],
           },
           'pageSize': {
             'type': 'number',
             'default': 0,
             'label': 'Page Size',
             'description': 'Number of items per page',
+            'tier': 'presentation',
+          },
+          'totalCount': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Total Count',
+            'description': 'Total number of items',
+            'tier': 'presentation',
+          },
+          'activeFilters': {
+            'type': 'json',
+            'label': 'Active Filters',
+            'description': 'Active filters',
             'tier': 'presentation',
           },
           'className': {
@@ -314,6 +282,42 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
               'type': 'string',
             },
           },
+          'pageProp': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page',
+            'description': 'Current page number',
+            'synonyms': 'page',
+            'tier': 'presentation',
+          },
+          'error': {
+            'type': 'DebuggerBoardError',
+            'label': 'Error',
+            'description': 'Error state (UiError)',
+            'tier': 'presentation',
+            'properties': {
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+            },
+          },
           'searchValue': {
             'type': 'string',
             'default': 'Search Value',
@@ -321,23 +325,19 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
             'description': 'Current search query value',
             'tier': 'presentation',
           },
-          'totalCount': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Total Count',
-            'description': 'Total number of items',
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
             'tier': 'presentation',
           },
-          'sortDirection': {
+          'sortBy': {
             'type': 'string',
-            'default': 'asc',
-            'label': 'Sort Direction',
-            'description': 'Current sort direction',
+            'default': 'Sort By',
+            'label': 'Sort By',
+            'description': 'Current sort field',
             'tier': 'presentation',
-            'values': [
-              'asc',
-              'desc',
-            ],
           },
         },
         'scope': 'instance',

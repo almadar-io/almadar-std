@@ -43,17 +43,17 @@ export interface StdUiCenterConfig {
   vertical?: boolean;
   /** Default: `false` */
   inline?: boolean;
+  /** Default: `false` */
+  fullWidth?: boolean;
   style?: unknown;
   /** Default: `"Min Height"` */
   minHeight?: string;
-  /** Default: `false` */
-  fullHeight?: boolean;
   /** Default: `""` */
   className?: string;
+  /** Default: `false` */
+  fullHeight?: boolean;
   /** Default: `true` */
   horizontal?: boolean;
-  /** Default: `false` */
-  fullWidth?: boolean;
 }
 
 /**

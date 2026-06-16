@@ -41,10 +41,10 @@ export type StdUiContentSectionEventKey = 'INIT';
 export interface StdUiContentSectionConfig {
   /** Default: `"default"` */
   background?: 'default' | 'alt' | 'dark' | 'gradient';
-  /** Default: `"lg"` */
-  padding?: 'sm' | 'md' | 'lg';
   /** Default: `""` */
   className?: string;
+  /** Default: `"lg"` */
+  padding?: 'sm' | 'md' | 'lg';
 }
 
 /**

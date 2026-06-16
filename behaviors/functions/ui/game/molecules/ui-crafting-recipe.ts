@@ -48,10 +48,10 @@ export interface StdUiCraftingRecipeCraftPayload {
 export interface StdUiCraftingRecipeConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `[{"required":1,"label":"Label","available":1}]` */
-  inputs?: EntityRow[];
-  /** Default: `{"label":""}` */
+  /** Default: `{"label":"Label","rarity":"Rarity","icon":"circle"}` */
   output?: EntityRow;
+  /** Default: `[{"label":"Label","available":1,"required":1,"icon":"circle"}]` */
+  inputs?: EntityRow[];
   /** Default: `false` */
   canCraft?: boolean;
 }

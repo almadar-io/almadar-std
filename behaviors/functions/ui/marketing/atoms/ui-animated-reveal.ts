@@ -39,24 +39,24 @@ export type StdUiAnimatedRevealEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiAnimatedRevealConfig {
-  /** Default: `600` */
-  duration?: number;
-  /** Default: `0` */
-  delay?: number;
-  /** Default: `"fade-up"` */
-  animation?: 'fade-up' | 'fade-down' | 'fade-in' | 'fade-left' | 'fade-right' | 'scale' | 'scale-up' | 'none';
   /** Default: `0.15` */
   threshold?: number;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `false` */
-  animate?: boolean;
-  /** Default: `"scroll"` */
-  trigger?: 'scroll' | 'hover' | 'manual';
   /** Default: `true` */
   once?: boolean;
+  /** Default: `600` */
+  duration?: number;
+  /** Default: `"scroll"` */
+  trigger?: 'scroll' | 'hover' | 'manual';
+  /** Default: `false` */
+  animate?: boolean;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `0` */
+  delay?: number;
   /** Default: `"cubic-bezier(0.16, 1, 0.3, 1)"` */
   easing?: string;
+  /** Default: `"fade-up"` */
+  animation?: 'fade-up' | 'fade-down' | 'fade-in' | 'fade-left' | 'fade-right' | 'scale' | 'scale-up' | 'none';
 }
 
 /**

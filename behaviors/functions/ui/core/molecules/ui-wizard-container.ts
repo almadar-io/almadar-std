@@ -53,20 +53,20 @@ export interface StdUiWizardContainerCompletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiWizardContainerConfig {
-  error?: EntityRow;
-  /** Default: `[{"globalVariablesSet":["Item"],"title":"Title","content":"Content","entityMapping":{"entity":"Entity","mode":"search_or_create"},"sections":[],"optional":false,"name":"Name","localVariables":["Item"],"phase":"Phase","contextMenu":["Item"],"validationRules":[{"message":"Message","condition":[]}],"description":"Description","id":"Id","tabId":"Tab Id","globalVariablesRequired":["Item"],"lawReferences":[{"law":"Law","article":"Article"}]}]` */
+  /** Default: `[{"name":"Name","content":"Content","optional":false,"description":"Description","title":"Title","tabId":"Tab Id","localVariables":["Item"],"globalVariablesRequired":["Item"],"globalVariablesSet":["Item"],"validationRules":[{"condition":[],"message":"Message"}],"contextMenu":["Item"],"sections":[{"minItems":1,"condition":[],"addButtonLabel":"Add Button Label","title":"Title","fields":[{"condition":[],"options":[],"required":false,"displayFields":[],"repeatable":false,"contextMenu":[],"type":"Type","id":"Id","readOnly":false,"stats":[],"placeholder":"Placeholder","hiddenCalculations":[],"entityField":"Entity Field","minLength":1,"items":[],"maxLength":1,"label":"Label"}],"description":"Description","readOnly":false,"id":"Id","repeatable":false,"hiddenCalculations":[{"variable":"Variable","expression":"Expression","scope":"Scope"}],"subsections":[]}],"id":"Id","entityMapping":{"idField":"Id Field","parentField":"Parent Field","entity":"Entity","mode":"search_or_create"},"lawReferences":[{"article":"Article","description":"Description","law":"Law"}],"phase":"Phase"}]` */
   steps?: EntityRow[];
+  currentStep?: unknown;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `true` */
+  allowBack?: boolean;
   /** Default: `true` */
   showProgress?: boolean;
   /** Default: `""` */
   className?: string;
-  /** Default: `true` */
-  allowBack?: boolean;
-  currentStep?: unknown;
+  error?: EntityRow;
   /** Default: `false` */
   compact?: boolean;
-  /** Default: `false` */
-  isLoading?: boolean;
 }
 
 /**

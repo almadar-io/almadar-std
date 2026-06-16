@@ -46,18 +46,18 @@ export interface StdUiVoteStackVotePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiVoteStackConfig {
-  /** Default: `""` */
-  className?: string;
-  /** Default: `false` */
-  disabled?: boolean;
-  /** Default: `0` */
-  count?: number;
-  /** Default: `"vertical"` */
-  variant?: 'vertical' | 'horizontal';
-  /** Default: `"Label"` */
-  label?: string;
   /** Default: `"up"` */
   userVote?: 'up' | 'down' | 'none';
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"vertical"` */
+  variant?: 'vertical' | 'horizontal';
+  /** Default: `false` */
+  disabled?: boolean;
+  /** Default: `"Label"` */
+  label?: string;
+  /** Default: `0` */
+  count?: number;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
 }

@@ -39,18 +39,24 @@ export type StdUiSvgFlowEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiSvgFlowConfig {
-  /** Default: `"var(--color-primary)"` */
-  color?: string;
   /** Default: `false` */
   animated?: boolean;
-  /** Default: `1` */
-  opacity?: number;
   /** Default: `[]` */
   points?: unknown;
-  /** Default: `1.5` */
-  strokeWidth?: number;
+  /** Default: `100` */
+  height?: number;
+  /** Default: `1` */
+  opacity?: number;
+  /** Default: `"var(--color-primary)"` */
+  color?: string;
+  /** Default: `100` */
+  width?: number;
+  /** Default: `true` */
+  asRoot?: boolean;
   /** Default: `""` */
   className?: string;
+  /** Default: `1.5` */
+  strokeWidth?: number;
 }
 
 /**

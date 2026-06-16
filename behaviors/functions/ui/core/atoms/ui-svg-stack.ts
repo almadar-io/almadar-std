@@ -39,24 +39,30 @@ export type StdUiSvgStackEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiSvgStackConfig {
-  /** Default: `0` */
-  x?: number;
+  /** Default: `1` */
+  opacity?: number;
   /** Default: `60` */
   width?: number;
   /** Default: `40` */
   height?: number;
-  /** Default: `[]` */
-  labels?: string[];
-  /** Default: `0` */
+  /** Default: `80` */
+  svgHeight?: number;
+  /** Default: `90` */
+  svgWidth?: number;
+  /** Default: `40` */
   y?: number;
-  /** Default: `"var(--color-primary)"` */
-  color?: string;
-  /** Default: `0` */
-  layers?: number;
-  /** Default: `1` */
-  opacity?: number;
   /** Default: `""` */
   className?: string;
+  /** Default: `"var(--color-primary)"` */
+  color?: string;
+  /** Default: `true` */
+  asRoot?: boolean;
+  /** Default: `[]` */
+  labels?: string[];
+  /** Default: `10` */
+  x?: number;
+  /** Default: `0` */
+  layers?: number;
 }
 
 /**

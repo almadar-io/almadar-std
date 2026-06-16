@@ -191,15 +191,15 @@
                     "render-ui",
                     "main",
                     {
-                      "onNodeClick": "NODE_CLICK",
-                      "onNodeHover": "NODE_HOVER",
-                      "type": "graph-view",
-                      "width": "@config.width",
-                      "zoomToFit": "@config.zoomToFit",
-                      "showLabels": "@config.showLabels",
-                      "edges": "@config.edges",
                       "className": "@config.className",
+                      "edges": "@config.edges",
+                      "type": "graph-view",
                       "height": "@config.height",
+                      "zoomToFit": "@config.zoomToFit",
+                      "onNodeHover": "NODE_HOVER",
+                      "width": "@config.width",
+                      "showLabels": "@config.showLabels",
+                      "onNodeClick": "NODE_CLICK",
                       "nodes": "@config.nodes"
                     }
                   ]
@@ -208,12 +208,51 @@
             ]
           },
           "config": {
-            "showLabels": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Labels",
-              "description": "Show node labels (default true)",
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
               "tier": "presentation"
+            },
+            "edges": {
+              "type": "[GraphViewEdgesItem]",
+              "default": [
+                {
+                  "label": "Label",
+                  "target": "Target",
+                  "source": "Source",
+                  "color": "Color"
+                }
+              ],
+              "label": "Edges",
+              "description": "Graph edges",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "target": {
+                    "name": "target",
+                    "type": "string",
+                    "required": true
+                  },
+                  "color": {
+                    "name": "color",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
+                  "source": {
+                    "name": "source",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
             },
             "height": {
               "type": "number",
@@ -226,7 +265,11 @@
               "type": "[GraphViewNodesItem]",
               "default": [
                 {
-                  "id": "Id"
+                  "id": "Id",
+                  "color": "Color",
+                  "group": "Group",
+                  "label": "Label",
+                  "size": 1.0
                 }
               ],
               "label": "Nodes",
@@ -235,6 +278,16 @@
               "items": {
                 "type": "object",
                 "properties": {
+                  "group": {
+                    "name": "group",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
                   "id": {
                     "name": "id",
                     "type": "string",
@@ -249,63 +302,9 @@
                     "name": "size",
                     "type": "number",
                     "required": false
-                  },
-                  "group": {
-                    "name": "group",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
                   }
                 }
               }
-            },
-            "edges": {
-              "type": "[GraphViewEdgesItem]",
-              "default": [
-                {
-                  "source": "Source",
-                  "target": "Target"
-                }
-              ],
-              "label": "Edges",
-              "description": "Graph edges",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "source": {
-                    "name": "source",
-                    "type": "string",
-                    "required": true
-                  },
-                  "target": {
-                    "name": "target",
-                    "type": "string",
-                    "required": true
-                  },
-                  "color": {
-                    "name": "color",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "zoomToFit": {
-              "type": "boolean",
-              "default": true,
-              "label": "Zoom To Fit",
-              "description": "Auto zoom-to-fit after layout settles (default true)",
-              "tier": "presentation"
             },
             "width": {
               "type": "number",
@@ -314,11 +313,18 @@
               "description": "Width in pixels",
               "tier": "presentation"
             },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
+            "showLabels": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Labels",
+              "description": "Show node labels (default true)",
+              "tier": "presentation"
+            },
+            "zoomToFit": {
+              "type": "boolean",
+              "default": true,
+              "label": "Zoom To Fit",
+              "description": "Auto zoom-to-fit after layout settles (default true)",
               "tier": "presentation"
             }
           },

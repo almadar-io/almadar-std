@@ -46,22 +46,22 @@ export interface StdUiGameCanvas2dTickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiGameCanvas2dConfig {
-  /** Default: `60` */
-  fps?: number;
-  /** Default: `600` */
-  height?: number;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"Draw Event"` */
-  drawEvent?: string;
-  /** Default: `"Background Image"` */
-  backgroundImage?: string;
-  /** Default: `"Asset Base Url"` */
-  assetBaseUrl?: string;
   /** Default: `"Tick Event"` */
   tickEvent?: string;
+  /** Default: `"Draw Event"` */
+  drawEvent?: string;
+  /** Default: `"Asset Base Url"` */
+  assetBaseUrl?: string;
+  /** Default: `""` */
+  className?: string;
   /** Default: `800` */
   width?: number;
+  /** Default: `60` */
+  fps?: number;
+  /** Default: `"Background Image"` */
+  backgroundImage?: string;
+  /** Default: `600` */
+  height?: number;
 }
 
 /**

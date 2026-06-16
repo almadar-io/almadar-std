@@ -41,10 +41,9 @@ export type StdUiConditionalWrapperEventKey = 'INIT';
 export interface StdUiConditionalWrapperConfig {
   /** Default: `false` */
   animate?: boolean;
-  condition?: EntityRow;
   /** Default: `{"globalVariables":{},"formValues":{}}` */
   context?: EntityRow;
-  fallback?: unknown;
+  condition?: EntityRow;
 }
 
 /**

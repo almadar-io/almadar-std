@@ -47,26 +47,26 @@ export interface StdUiClassifierBoardCompletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiClassifierBoardConfig {
+  error?: EntityRow;
   /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
-  /** Default: `0` */
-  pageProp?: number;
-  activeFilters?: unknown;
   /** Default: `[]` */
   selectedIds?: string[];
   /** Default: `false` */
   isLoading?: boolean;
+  /** Default: `0` */
+  pageProp?: number;
   /** Default: `"Sort By"` */
   sortBy?: string;
   /** Default: `"Search Value"` */
   searchValue?: string;
-  /** Default: `0` */
-  pageSize?: number;
   /** Default: `""` */
   className?: string;
-  error?: EntityRow;
   /** Default: `0` */
   totalCount?: number;
+  activeFilters?: unknown;
+  /** Default: `0` */
+  pageSize?: number;
 }
 
 /**
@@ -213,20 +213,20 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
                   'render-ui',
                   'main',
                   {
-                    'error': '@config.error',
-                    'activeFilters': '@config.activeFilters',
-                    'entity': '@entity',
-                    'selectedIds': '@config.selectedIds',
                     'pageSize': '@config.pageSize',
-                    'completeEvent': 'COMPLETE',
+                    'sortBy': '@config.sortBy',
+                    'activeFilters': '@config.activeFilters',
+                    'sortDirection': '@config.sortDirection',
+                    'entity': '@entity',
                     'searchValue': '@config.searchValue',
-                    'className': '@config.className',
+                    'selectedIds': '@config.selectedIds',
                     'totalCount': '@config.totalCount',
                     'type': 'classifier-board',
-                    'sortDirection': '@config.sortDirection',
-                    'isLoading': '@config.isLoading',
+                    'className': '@config.className',
+                    'error': '@config.error',
+                    'completeEvent': 'COMPLETE',
                     'page': '@config.pageProp',
-                    'sortBy': '@config.sortBy',
+                    'isLoading': '@config.isLoading',
                   },
                 ],
               ],
@@ -234,6 +234,34 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
           ],
         },
         'config': {
+          'error': {
+            'type': 'ClassifierBoardError',
+            'label': 'Error',
+            'description': 'Error state (UiError)',
+            'tier': 'presentation',
+            'properties': {
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+            },
+          },
           'sortDirection': {
             'type': 'string',
             'default': 'asc',
@@ -244,20 +272,6 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
               'asc',
               'desc',
             ],
-          },
-          'pageProp': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page',
-            'description': 'Current page number',
-            'synonyms': 'page',
-            'tier': 'presentation',
-          },
-          'activeFilters': {
-            'type': 'json',
-            'label': 'Active Filters',
-            'description': 'Active filters',
-            'tier': 'presentation',
           },
           'selectedIds': {
             'type': '[string]',
@@ -276,6 +290,14 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
             'description': 'Loading state indicator',
             'tier': 'presentation',
           },
+          'pageProp': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page',
+            'description': 'Current page number',
+            'synonyms': 'page',
+            'tier': 'presentation',
+          },
           'sortBy': {
             'type': 'string',
             'default': 'Sort By',
@@ -290,13 +312,6 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
             'description': 'Current search query value',
             'tier': 'presentation',
           },
-          'pageSize': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page Size',
-            'description': 'Number of items per page',
-            'tier': 'presentation',
-          },
           'className': {
             'type': 'string',
             'default': '',
@@ -304,39 +319,24 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
             'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
-          'error': {
-            'type': 'ClassifierBoardError',
-            'label': 'Error',
-            'description': 'Error state (UiError)',
-            'tier': 'presentation',
-            'properties': {
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-            },
-          },
           'totalCount': {
             'type': 'number',
             'default': 0,
             'label': 'Total Count',
             'description': 'Total number of items',
+            'tier': 'presentation',
+          },
+          'activeFilters': {
+            'type': 'json',
+            'label': 'Active Filters',
+            'description': 'Active filters',
+            'tier': 'presentation',
+          },
+          'pageSize': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page Size',
+            'description': 'Number of items per page',
             'tier': 'presentation',
           },
         },

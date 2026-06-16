@@ -43,10 +43,10 @@ export interface StdUiStatCardConfig {
   className?: string;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
-  /** Default: `"Value"` */
-  value?: string;
   /** Default: `"Label"` */
   label?: string;
+  /** Default: `"Value"` */
+  value?: string;
 }
 
 /**

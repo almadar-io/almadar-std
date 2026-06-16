@@ -41,33 +41,33 @@ export type StdUiDocumentViewerEventKey = 'INIT';
 export interface StdUiDocumentViewerConfig {
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `0` */
-  currentPage?: number;
-  /** Default: `false` */
-  showPrint?: boolean;
-  /** Default: `"Title"` */
-  title?: string;
+  /** Default: `true` */
+  showToolbar?: boolean;
+  /** Default: `"Src"` */
+  src?: string;
   /** Default: `"pdf"` */
   documentType?: 'pdf' | 'text' | 'html' | 'markdown';
-  /** Default: `[{"label":"Label"}]` */
-  documents?: EntityRow[];
-  /** Default: `0` */
-  totalPages?: number;
-  /** Default: `"Height"` */
-  height?: string;
-  /** Default: `[]` */
+  /** Default: `[{"navigatesTo":"Navigates To","label":"Label","variant":"primary"}]` */
   actions?: EntityRow[];
   error?: EntityRow;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `0` */
+  totalPages?: number;
+  /** Default: `false` */
+  showPrint?: boolean;
+  /** Default: `[{"documentType":"pdf","content":"Content","label":"Label","src":"Src"}]` */
+  documents?: EntityRow[];
   /** Default: `false` */
   showDownload?: boolean;
   /** Default: `"Content"` */
   content?: string;
-  /** Default: `true` */
-  showToolbar?: boolean;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"Src"` */
-  src?: string;
+  /** Default: `"Title"` */
+  title?: string;
+  /** Default: `0` */
+  currentPage?: number;
+  /** Default: `"Height"` */
+  height?: string;
 }
 
 /**

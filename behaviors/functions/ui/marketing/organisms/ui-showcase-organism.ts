@@ -39,32 +39,32 @@ export type StdUiShowcaseOrganismEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiShowcaseOrganismConfig {
-  /** Default: `"Subtitle"` */
-  subtitle?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `"Sort By"` */
+  sortBy?: string;
   /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
   /** Default: `"Search Value"` */
   searchValue?: string;
-  /** Default: `""` */
-  className?: string;
-  activeFilters?: unknown;
+  /** Default: `0` */
+  pageProp?: number;
   /** Default: `0` */
   totalCount?: number;
   /** Default: `[]` */
   selectedIds?: string[];
+  activeFilters?: unknown;
   /** Default: `3` */
   columns?: number;
   /** Default: `"Heading"` */
   heading?: string;
-  error?: EntityRow;
-  /** Default: `"Sort By"` */
-  sortBy?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
+  /** Default: `"Subtitle"` */
+  subtitle?: string;
   /** Default: `0` */
   pageSize?: number;
-  /** Default: `0` */
-  pageProp?: number;
+  error?: EntityRow;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**
@@ -178,22 +178,22 @@ export function stdUiShowcaseOrganismShowcaseOrganismOrbital(params: StdUiShowca
                   'render-ui',
                   'main',
                   {
+                    'totalCount': '@config.totalCount',
+                    'error': '@config.error',
+                    'columns': '@config.columns',
+                    'isLoading': '@config.isLoading',
+                    'sortDirection': '@config.sortDirection',
+                    'page': '@config.pageProp',
+                    'subtitle': '@config.subtitle',
+                    'pageSize': '@config.pageSize',
                     'className': '@config.className',
+                    'heading': '@config.heading',
                     'activeFilters': '@config.activeFilters',
-                    'searchValue': '@config.searchValue',
+                    'entity': '@entity',
                     'type': 'showcase-organism',
                     'sortBy': '@config.sortBy',
                     'selectedIds': '@config.selectedIds',
-                    'isLoading': '@config.isLoading',
-                    'error': '@config.error',
-                    'entity': '@entity',
-                    'subtitle': '@config.subtitle',
-                    'pageSize': '@config.pageSize',
-                    'page': '@config.pageProp',
-                    'sortDirection': '@config.sortDirection',
-                    'columns': '@config.columns',
-                    'heading': '@config.heading',
-                    'totalCount': '@config.totalCount',
+                    'searchValue': '@config.searchValue',
                   },
                 ],
               ],
@@ -201,11 +201,18 @@ export function stdUiShowcaseOrganismShowcaseOrganismOrbital(params: StdUiShowca
           ],
         },
         'config': {
-          'subtitle': {
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
+          'sortBy': {
             'type': 'string',
-            'default': 'Subtitle',
-            'label': 'Subtitle',
-            'description': 'subtitle prop',
+            'default': 'Sort By',
+            'label': 'Sort By',
+            'description': 'Current sort field',
             'tier': 'presentation',
           },
           'sortDirection': {
@@ -226,17 +233,12 @@ export function stdUiShowcaseOrganismShowcaseOrganismOrbital(params: StdUiShowca
             'description': 'Current search query value',
             'tier': 'presentation',
           },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'activeFilters': {
-            'type': 'json',
-            'label': 'Active Filters',
-            'description': 'Active filters',
+          'pageProp': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page',
+            'description': 'Current page number',
+            'synonyms': 'page',
             'tier': 'presentation',
           },
           'totalCount': {
@@ -256,6 +258,12 @@ export function stdUiShowcaseOrganismShowcaseOrganismOrbital(params: StdUiShowca
               'type': 'string',
             },
           },
+          'activeFilters': {
+            'type': 'json',
+            'label': 'Active Filters',
+            'description': 'Active filters',
+            'tier': 'presentation',
+          },
           'columns': {
             'type': 'number',
             'default': 3,
@@ -270,46 +278,11 @@ export function stdUiShowcaseOrganismShowcaseOrganismOrbital(params: StdUiShowca
             'description': 'heading prop',
             'tier': 'presentation',
           },
-          'error': {
-            'type': 'ShowcaseOrganismError',
-            'label': 'Error',
-            'description': 'Error state (UiError)',
-            'tier': 'presentation',
-            'properties': {
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-            },
-          },
-          'sortBy': {
+          'subtitle': {
             'type': 'string',
-            'default': 'Sort By',
-            'label': 'Sort By',
-            'description': 'Current sort field',
-            'tier': 'presentation',
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
+            'default': 'Subtitle',
+            'label': 'Subtitle',
+            'description': 'subtitle prop',
             'tier': 'presentation',
           },
           'pageSize': {
@@ -319,12 +292,39 @@ export function stdUiShowcaseOrganismShowcaseOrganismOrbital(params: StdUiShowca
             'description': 'Number of items per page',
             'tier': 'presentation',
           },
-          'pageProp': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page',
-            'description': 'Current page number',
-            'synonyms': 'page',
+          'error': {
+            'type': 'ShowcaseOrganismError',
+            'label': 'Error',
+            'description': 'Error state (UiError)',
+            'tier': 'presentation',
+            'properties': {
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+            },
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
         },

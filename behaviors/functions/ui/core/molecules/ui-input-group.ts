@@ -41,8 +41,8 @@ export type StdUiInputGroupEventKey = 'INIT';
 export interface StdUiInputGroupConfig {
   /** Default: `""` */
   className?: string;
-  rightAddon?: unknown;
   leftAddon?: unknown;
+  rightAddon?: unknown;
 }
 
 /**

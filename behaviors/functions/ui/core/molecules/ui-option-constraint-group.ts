@@ -48,18 +48,18 @@ export interface StdUiOptionConstraintGroupChangePayload {
 export interface StdUiOptionConstraintGroupConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `"Group Id"` */
-  groupId?: string;
-  /** Default: `[{"label":"Label","id":"Id"}]` */
-  options?: EntityRow[];
-  /** Default: `"Description"` */
-  description?: string;
   /** Default: `[]` */
   selected?: string[];
-  /** Default: `"md"` */
-  size?: 'sm' | 'md';
   /** Default: `"Title"` */
   title?: string;
+  /** Default: `"Group Id"` */
+  groupId?: string;
+  /** Default: `"Description"` */
+  description?: string;
+  /** Default: `[{"priceDelta":1,"disabled":false,"outOfStock":false,"id":"Id","label":"Label"}]` */
+  options?: EntityRow[];
+  /** Default: `"md"` */
+  size?: 'sm' | 'md';
 }
 
 /**

@@ -62,12 +62,12 @@ export interface StdUiDialogueBoxAdvancePayload {
 export interface StdUiDialogueBoxConfig {
   /** Default: `30` */
   typewriterSpeed?: number;
-  /** Default: `{"speaker":"","text":""}` */
+  /** Default: `{"autoAdvance":1,"choices":[{"disabled":false,"action":"Action","next":"Next","text":"Text"}],"speaker":"Speaker","portrait":"Portrait","text":"Text","id":"Id"}` */
   dialogue?: EntityRow;
-  /** Default: `"bottom"` */
-  position?: 'top' | 'bottom';
   /** Default: `""` */
   className?: string;
+  /** Default: `"bottom"` */
+  position?: 'top' | 'bottom';
 }
 
 /**

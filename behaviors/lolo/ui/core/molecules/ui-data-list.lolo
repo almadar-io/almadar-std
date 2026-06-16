@@ -60,7 +60,6 @@ orbital DataListOrbital {
           entity: @entity
           fields: @config.fields
           columns: @config.columns
-          itemActions: @config.itemActions
           maxInlineActions: @config.maxInlineActions
           itemClickEvent: ITEM_CLICK
           gap: @config.gap
@@ -82,8 +81,11 @@ orbital DataListOrbital {
           hasMore: @config.hasMore
           pageSize: @config.pageSize
           look: @config.look
+          itemActions: [{ label: "View", event: VIEW }]
           type: data-list
         })
+      VIEW -> idle
+        (emit VIEW {})
     }
 
     emits {
@@ -117,6 +119,11 @@ orbital DataListOrbital {
       }
         @description "Event emitted when more items needed: UI:{loadMoreEvent}"
         @tier "essential"
+      VIEW -> external {
+        id : string
+      }
+        @description "User opened a record from the list."
+        @tier "essential"
     }
 
     config {
@@ -148,11 +155,11 @@ orbital DataListOrbital {
         @label "Dnd Root"
         @description "Mark this container as the DnD root for its subtree — descendant zones share one DndContext (cross-container drag). Use on an outer container whose own items are not draggable."
         @tier "presentation"
-      fields : [DataListFieldsItem] = [{ name: "Name" }]
+      fields : [DataListFieldsItem] = [{ name: "Name", label: "Label", icon: "circle", variant: h3, format: date }]
         @label "Fields"
         @description "Field definitions for rendering each row. The pattern contract in `@almadar/patterns` documents `columns` as the wire-format alias the compiler emits — both names resolve to the same shape here. Pass either."
         @tier "presentation"
-      columns : [DataListColumnsItem] = [{ name: "Name" }]
+      columns : [DataListColumnsItem] = [{ name: "Name", label: "Label", icon: "circle", variant: h3, format: date }]
         @label "Columns"
         @description "Alias for `fields` — the compiler emits `columns` for field defs."
         @tier "presentation"
@@ -200,11 +207,11 @@ orbital DataListOrbital {
         @label "Reorderable"
         @description "Enable drag-to-reorder with grip handles"
         @tier "presentation"
-      swipeLeftActions : [DataListSwipeLeftActionsItem] = [{ label: "Label" }]
+      swipeLeftActions : [DataListSwipeLeftActionsItem] = [{ label: "Label", icon: "circle", variant: primary }]
         @label "Swipe Left Actions"
         @description "Actions revealed on left swipe"
         @tier "presentation"
-      swipeRightActions : [DataListSwipeRightActionsItem] = [{ label: "Label" }]
+      swipeRightActions : [DataListSwipeRightActionsItem] = [{ label: "Label", icon: "circle", variant: primary }]
         @label "Swipe Right Actions"
         @description "Actions revealed on right swipe"
         @tier "presentation"

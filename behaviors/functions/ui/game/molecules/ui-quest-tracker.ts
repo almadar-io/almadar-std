@@ -39,12 +39,12 @@ export type StdUiQuestTrackerEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiQuestTrackerConfig {
-  /** Default: `""` */
-  className?: string;
-  /** Default: `[{"maxProgress":1,"title":"Title","id":"Id","progress":1}]` */
+  /** Default: `[{"active":false,"progress":1,"id":"Id","title":"Title","completed":false,"maxProgress":1}]` */
   quests?: EntityRow[];
   /** Default: `"Active Quest Id"` */
   activeQuestId?: string;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

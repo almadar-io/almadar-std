@@ -46,50 +46,50 @@ export interface StdUiEntityCardsViewPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiEntityCardsConfig {
-  error?: EntityRow;
-  /** Default: `[{"label":"Label","key":"Key","header":"Header","name":"Name"}]` */
-  columns?: EntityRow[];
-  /** Default: `[{"label":"Label","key":"Key","name":"Name","header":"Header"}]` */
-  fields?: EntityRow[];
-  /** Default: `false` */
-  showAvatar?: boolean;
+  /** Default: `1` */
+  maxCols?: number;
+  /** Default: `"Sort By"` */
+  sortBy?: string;
+  activeFilters?: unknown;
   /** Default: `"Search Value"` */
   searchValue?: string;
-  /** Default: `"Image Field"` */
-  imageField?: string;
   /** Default: `0` */
   totalCount?: number;
-  /** Default: `[]` */
-  selectedIds?: string[];
-  /** Default: `0` */
-  pageSize?: number;
-  /** Default: `"Variant"` */
-  variant?: string;
-  /** Default: `"stretch"` */
-  alignItems?: 'start' | 'center' | 'end' | 'stretch';
-  /** Default: `[]` */
-  itemActions?: EntityRow[];
+  /** Default: `""` */
+  className?: string;
+  error?: EntityRow;
   /** Default: `"md"` */
   gap?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
   /** Default: `[]` */
-  fieldNames?: string[];
-  /** Default: `true` */
-  showTotal?: boolean;
-  /** Default: `1` */
-  maxCols?: number;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `280` */
-  minCardWidth?: number;
-  activeFilters?: unknown;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `0` */
-  pageProp?: number;
-  /** Default: `"Sort By"` */
-  sortBy?: string;
+  selectedIds?: string[];
   /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
+  /** Default: `0` */
+  pageSize?: number;
+  /** Default: `[]` */
+  fieldNames?: string[];
+  /** Default: `false` */
+  showAvatar?: boolean;
+  /** Default: `[{"variant":"primary","action":"Action","placement":"card","label":"Label","navigatesTo":"Navigates To"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `0` */
+  pageProp?: number;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `"stretch"` */
+  alignItems?: 'start' | 'center' | 'end' | 'stretch';
+  /** Default: `[{"name":"Name","key":"Key","header":"Header","label":"Label"}]` */
+  fields?: EntityRow[];
+  /** Default: `[{"name":"Name","label":"Label","key":"Key","header":"Header"}]` */
+  columns?: EntityRow[];
+  /** Default: `280` */
+  minCardWidth?: number;
+  /** Default: `true` */
+  showTotal?: boolean;
+  /** Default: `"Variant"` */
+  variant?: string;
+  /** Default: `"Image Field"` */
+  imageField?: string;
 }
 
 /**
@@ -224,42 +224,42 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
                   'render-ui',
                   'main',
                   {
-                    'totalCount': '@config.totalCount',
+                    'sortBy': '@config.sortBy',
+                    'pageSize': '@config.pageSize',
+                    'error': '@config.error',
                     'showAvatar': '@config.showAvatar',
-                    'entity': '@entity',
+                    'imageField': '@config.imageField',
+                    'gap': '@config.gap',
+                    'page': '@config.pageProp',
+                    'activeFilters': '@config.activeFilters',
                     'searchValue': '@config.searchValue',
-                    'minCardWidth': '@config.minCardWidth',
                     'alignItems': '@config.alignItems',
+                    'fields': '@config.fields',
+                    'entity': '@entity',
+                    'sortDirection': '@config.sortDirection',
+                    'minCardWidth': '@config.minCardWidth',
                     'children': [
                       {
-                        'content': 'Sample content',
                         'type': 'typography',
+                        'content': 'Sample content',
                       },
                     ],
-                    'className': '@config.className',
-                    'fields': '@config.fields',
-                    'columns': '@config.columns',
-                    'activeFilters': '@config.activeFilters',
-                    'maxCols': '@config.maxCols',
+                    'type': 'entity-cards',
                     'itemActions': [
                       {
                         'label': 'View',
                         'event': 'VIEW',
                       },
                     ],
-                    'gap': '@config.gap',
-                    'selectedIds': '@config.selectedIds',
-                    'fieldNames': '@config.fieldNames',
-                    'error': '@config.error',
-                    'sortBy': '@config.sortBy',
                     'showTotal': '@config.showTotal',
-                    'imageField': '@config.imageField',
-                    'pageSize': '@config.pageSize',
+                    'fieldNames': '@config.fieldNames',
                     'isLoading': '@config.isLoading',
-                    'sortDirection': '@config.sortDirection',
-                    'type': 'entity-cards',
+                    'selectedIds': '@config.selectedIds',
+                    'columns': '@config.columns',
+                    'totalCount': '@config.totalCount',
                     'variant': '@config.variant',
-                    'page': '@config.pageProp',
+                    'maxCols': '@config.maxCols',
+                    'className': '@config.className',
                   },
                 ],
               ],
@@ -279,117 +279,24 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
           ],
         },
         'config': {
-          'error': {
-            'type': 'EntityCardsError',
-            'label': 'Error',
-            'description': 'Error state (UiError)',
+          'maxCols': {
+            'type': 'number',
+            'default': 1,
+            'label': 'Max Cols',
+            'description': 'Maximum number of columns',
             'tier': 'presentation',
-            'properties': {
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-            },
           },
-          'columns': {
-            'type': '[EntityCardsColumnsItem]',
-            'default': [
-              {
-                'label': 'Label',
-                'key': 'Key',
-                'header': 'Header',
-                'name': 'Name',
-              },
-            ],
-            'label': 'Columns',
-            'description': 'Alias for fields - backwards compatibility',
+          'sortBy': {
+            'type': 'string',
+            'default': 'Sort By',
+            'label': 'Sort By',
+            'description': 'Current sort field',
             'tier': 'presentation',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'key': {
-                  'name': 'key',
-                  'type': 'string',
-                  'required': false,
-                },
-                'header': {
-                  'name': 'header',
-                  'type': 'string',
-                  'required': false,
-                },
-                'name': {
-                  'name': 'name',
-                  'type': 'string',
-                  'required': false,
-                },
-                'label': {
-                  'name': 'label',
-                  'type': 'string',
-                  'required': false,
-                },
-              },
-            },
           },
-          'fields': {
-            'type': '[EntityCardsFieldsItem]',
-            'default': [
-              {
-                'label': 'Label',
-                'key': 'Key',
-                'name': 'Name',
-                'header': 'Header',
-              },
-            ],
-            'label': 'Fields',
-            'description': 'Fields to display - required for schema-driven rendering',
-            'tier': 'presentation',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'name': {
-                  'name': 'name',
-                  'type': 'string',
-                  'required': false,
-                },
-                'key': {
-                  'name': 'key',
-                  'type': 'string',
-                  'required': false,
-                },
-                'header': {
-                  'name': 'header',
-                  'type': 'string',
-                  'required': false,
-                },
-                'label': {
-                  'name': 'label',
-                  'type': 'string',
-                  'required': false,
-                },
-              },
-            },
-          },
-          'showAvatar': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Show Avatar',
-            'description': 'Show avatar/image field on cards',
+          'activeFilters': {
+            'type': 'json',
+            'label': 'Active Filters',
+            'description': 'Active filters',
             'tier': 'presentation',
           },
           'searchValue': {
@@ -399,13 +306,6 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
             'description': 'Current search query value',
             'tier': 'presentation',
           },
-          'imageField': {
-            'type': 'string',
-            'default': 'Image Field',
-            'label': 'Image Field',
-            'description': 'Entity field name containing an image URL to display as card thumbnail',
-            'tier': 'presentation',
-          },
           'totalCount': {
             'type': 'number',
             'default': 0,
@@ -413,93 +313,38 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
             'description': 'Total number of items',
             'tier': 'presentation',
           },
-          'selectedIds': {
-            'type': '[string]',
-            'default': [],
-            'label': 'Selected Ids',
-            'description': 'Currently selected item IDs',
-            'tier': 'presentation',
-            'items': {
-              'type': 'string',
-            },
-          },
-          'pageSize': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page Size',
-            'description': 'Number of items per page',
-            'tier': 'presentation',
-          },
-          'variant': {
+          'className': {
             'type': 'string',
-            'default': 'Variant',
-            'label': 'Variant',
-            'description': 'Visual variant for the card grid',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
-          'alignItems': {
-            'type': 'string',
-            'default': 'stretch',
-            'label': 'Align Items',
-            'description': 'Align cards vertically in their cells',
+          'error': {
+            'type': 'EntityCardsError',
+            'label': 'Error',
+            'description': 'Error state (UiError)',
             'tier': 'presentation',
-            'values': [
-              'start',
-              'center',
-              'end',
-              'stretch',
-            ],
-          },
-          'itemActions': {
-            'type': '[EntityCardsItemActionsItem]',
-            'default': [],
-            'label': 'Item Actions',
-            'description': 'Actions for each card item (schema-driven)',
-            'tier': 'presentation',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'event': {
-                  'name': 'event',
-                  'type': 'string',
-                  'required': false,
-                },
-                'label': {
-                  'name': 'label',
-                  'type': 'string',
-                  'required': true,
-                },
-                'placement': {
-                  'name': 'placement',
-                  'type': 'string',
-                  'required': false,
-                  'values': [
-                    'card',
-                    'footer',
-                    'row',
-                  ],
-                },
-                'variant': {
-                  'name': 'variant',
-                  'type': 'string',
-                  'required': false,
-                  'values': [
-                    'primary',
-                    'secondary',
-                    'ghost',
-                    'danger',
-                  ],
-                },
-                'navigatesTo': {
-                  'name': 'navigatesTo',
-                  'type': 'string',
-                  'required': false,
-                },
-                'action': {
-                  'name': 'action',
-                  'type': 'string',
-                  'required': false,
-                },
+            'properties': {
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
               },
             },
           },
@@ -517,71 +362,15 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
               'xl',
             ],
           },
-          'fieldNames': {
+          'selectedIds': {
             'type': '[string]',
             'default': [],
-            'label': 'Field Names',
-            'description': 'Alias for fields - backwards compatibility',
+            'label': 'Selected Ids',
+            'description': 'Currently selected item IDs',
             'tier': 'presentation',
             'items': {
               'type': 'string',
             },
-          },
-          'showTotal': {
-            'type': 'boolean',
-            'default': true,
-            'label': 'Show Total',
-            'description': 'Show total count in pagination',
-            'tier': 'presentation',
-          },
-          'maxCols': {
-            'type': 'number',
-            'default': 1,
-            'label': 'Max Cols',
-            'description': 'Maximum number of columns',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'minCardWidth': {
-            'type': 'number',
-            'default': 280,
-            'label': 'Min Card Width',
-            'description': 'Minimum width of each card (default: 280px)',
-            'tier': 'presentation',
-          },
-          'activeFilters': {
-            'type': 'json',
-            'label': 'Active Filters',
-            'description': 'Active filters',
-            'tier': 'presentation',
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
-            'tier': 'presentation',
-          },
-          'pageProp': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page',
-            'description': 'Current page number',
-            'synonyms': 'page',
-            'tier': 'presentation',
-          },
-          'sortBy': {
-            'type': 'string',
-            'default': 'Sort By',
-            'label': 'Sort By',
-            'description': 'Current sort field',
-            'tier': 'presentation',
           },
           'sortDirection': {
             'type': 'string',
@@ -593,6 +382,225 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
               'asc',
               'desc',
             ],
+          },
+          'pageSize': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page Size',
+            'description': 'Number of items per page',
+            'tier': 'presentation',
+          },
+          'fieldNames': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Field Names',
+            'description': 'Alias for fields - backwards compatibility',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'showAvatar': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Show Avatar',
+            'description': 'Show avatar/image field on cards',
+            'tier': 'presentation',
+          },
+          'itemActions': {
+            'type': '[EntityCardsItemActionsItem]',
+            'default': [
+              {
+                'variant': 'primary',
+                'action': 'Action',
+                'placement': 'card',
+                'label': 'Label',
+                'navigatesTo': 'Navigates To',
+              },
+            ],
+            'label': 'Item Actions',
+            'description': 'Actions for each card item (schema-driven)',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'placement': {
+                  'name': 'placement',
+                  'type': 'string',
+                  'required': false,
+                  'values': [
+                    'card',
+                    'footer',
+                    'row',
+                  ],
+                },
+                'navigatesTo': {
+                  'name': 'navigatesTo',
+                  'type': 'string',
+                  'required': false,
+                },
+                'variant': {
+                  'name': 'variant',
+                  'type': 'string',
+                  'required': false,
+                  'values': [
+                    'primary',
+                    'secondary',
+                    'ghost',
+                    'danger',
+                  ],
+                },
+                'action': {
+                  'name': 'action',
+                  'type': 'string',
+                  'required': false,
+                },
+                'event': {
+                  'name': 'event',
+                  'type': 'string',
+                  'required': false,
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': true,
+                },
+              },
+            },
+          },
+          'pageProp': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page',
+            'description': 'Current page number',
+            'synonyms': 'page',
+            'tier': 'presentation',
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
+          'alignItems': {
+            'type': 'string',
+            'default': 'stretch',
+            'label': 'Align Items',
+            'description': 'Align cards vertically in their cells',
+            'tier': 'presentation',
+            'values': [
+              'start',
+              'center',
+              'end',
+              'stretch',
+            ],
+          },
+          'fields': {
+            'type': '[EntityCardsFieldsItem]',
+            'default': [
+              {
+                'name': 'Name',
+                'key': 'Key',
+                'header': 'Header',
+                'label': 'Label',
+              },
+            ],
+            'label': 'Fields',
+            'description': 'Fields to display - required for schema-driven rendering',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'key': {
+                  'name': 'key',
+                  'type': 'string',
+                  'required': false,
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': false,
+                },
+                'header': {
+                  'name': 'header',
+                  'type': 'string',
+                  'required': false,
+                },
+                'name': {
+                  'name': 'name',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'columns': {
+            'type': '[EntityCardsColumnsItem]',
+            'default': [
+              {
+                'name': 'Name',
+                'label': 'Label',
+                'key': 'Key',
+                'header': 'Header',
+              },
+            ],
+            'label': 'Columns',
+            'description': 'Alias for fields - backwards compatibility',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': false,
+                },
+                'name': {
+                  'name': 'name',
+                  'type': 'string',
+                  'required': false,
+                },
+                'header': {
+                  'name': 'header',
+                  'type': 'string',
+                  'required': false,
+                },
+                'key': {
+                  'name': 'key',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'minCardWidth': {
+            'type': 'number',
+            'default': 280,
+            'label': 'Min Card Width',
+            'description': 'Minimum width of each card (default: 280px)',
+            'tier': 'presentation',
+          },
+          'showTotal': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Show Total',
+            'description': 'Show total count in pagination',
+            'tier': 'presentation',
+          },
+          'variant': {
+            'type': 'string',
+            'default': 'Variant',
+            'label': 'Variant',
+            'description': 'Visual variant for the card grid',
+            'tier': 'presentation',
+          },
+          'imageField': {
+            'type': 'string',
+            'default': 'Image Field',
+            'label': 'Image Field',
+            'description': 'Entity field name containing an image URL to display as card thumbnail',
+            'tier': 'presentation',
           },
         },
         'scope': 'instance',

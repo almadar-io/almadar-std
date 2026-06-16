@@ -39,39 +39,39 @@ export type StdUiChartEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiChartConfig {
-  /** Default: `[]` */
-  actions?: EntityRow[];
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `"Title"` */
-  title?: string;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `true` */
-  showLegend?: boolean;
   /** Default: `200` */
   height?: number;
-  /** Default: `"bar"` */
-  chartType?: 'bar' | 'line' | 'pie' | 'area' | 'donut' | 'scatter' | 'histogram';
-  /** Default: `"bar-vertical"` */
-  look?: 'bar-vertical' | 'bar-horizontal' | 'line' | 'area' | 'pie' | 'donut' | 'scatter' | 'histogram';
+  /** Default: `true` */
+  showLegend?: boolean;
   /** Default: `false` */
-  showValues?: boolean;
-  /** Default: `"Subtitle"` */
-  subtitle?: string;
-  /** Default: `[{"label":"Label","value":1}]` */
-  data?: EntityRow[];
-  /** Default: `"none"` */
-  stack?: 'none' | 'stack' | 'normalize';
+  isLoading?: boolean;
   /** Default: `false` */
   timeAxis?: boolean;
-  /** Default: `[{"y":1,"x":1}]` */
-  scatterData?: EntityRow[];
-  /** Default: `[{"name":"Name","data":[{"value":1,"label":"Label"}]}]` */
-  series?: EntityRow[];
   error?: EntityRow;
+  /** Default: `"bar-vertical"` */
+  look?: 'bar-vertical' | 'bar-horizontal' | 'line' | 'area' | 'pie' | 'donut' | 'scatter' | 'histogram';
+  /** Default: `"Subtitle"` */
+  subtitle?: string;
+  /** Default: `"none"` */
+  stack?: 'none' | 'stack' | 'normalize';
   /** Default: `"Drill Event"` */
   drillEvent?: string;
+  /** Default: `"Title"` */
+  title?: string;
+  /** Default: `[{"data":[{"label":"Label","color":"Color","value":1}],"name":"Name","color":"Color","dashed":false}]` */
+  series?: EntityRow[];
+  /** Default: `[{"label":"Label","color":"Color","value":1}]` */
+  data?: EntityRow[];
+  /** Default: `false` */
+  showValues?: boolean;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"bar"` */
+  chartType?: 'bar' | 'line' | 'pie' | 'area' | 'donut' | 'scatter' | 'histogram';
+  /** Default: `[{"y":1,"color":"Color","x":1,"size":1,"label":"Label"}]` */
+  scatterData?: EntityRow[];
+  /** Default: `[{"variant":"primary","navigatesTo":"Navigates To","label":"Label"}]` */
+  actions?: EntityRow[];
 }
 
 /**

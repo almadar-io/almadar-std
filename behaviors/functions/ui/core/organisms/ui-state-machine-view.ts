@@ -40,10 +40,10 @@ export type StdUiStateMachineViewEventKey = 'INIT';
  */
 export interface StdUiStateMachineViewConfig {
   error?: EntityRow;
-  /** Default: `false` */
-  isLoading?: boolean;
   /** Default: `""` */
   className?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
 }
 
 /**
@@ -147,10 +147,10 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
                   'render-ui',
                   'main',
                   {
-                    'isLoading': '@config.isLoading',
                     'className': '@config.className',
-                    'type': 'state-machine-view',
+                    'isLoading': '@config.isLoading',
                     'error': '@config.error',
+                    'type': 'state-machine-view',
                   },
                 ],
               ],
@@ -164,11 +164,6 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
             'description': 'Error state',
             'tier': 'presentation',
             'properties': {
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
               'message': {
                 'name': 'message',
                 'type': 'string',
@@ -184,20 +179,25 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
                 'type': 'string',
                 'required': false,
               },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
             },
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
-            'tier': 'presentation',
           },
           'className': {
             'type': 'string',
             'default': '',
             'label': 'Class Name',
             'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
             'tier': 'presentation',
           },
         },

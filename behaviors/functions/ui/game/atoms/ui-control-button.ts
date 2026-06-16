@@ -53,21 +53,21 @@ export interface StdUiControlButtonReleasePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiControlButtonConfig {
+  icon?: unknown;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"circle"` */
+  shape?: 'circle' | 'rounded' | 'square';
+  /** Default: `"secondary"` */
+  variant?: 'primary' | 'secondary' | 'ghost';
   /** Default: `"Label"` */
   label?: string;
   /** Default: `false` */
-  pressed?: boolean;
-  /** Default: `false` */
   disabled?: boolean;
-  icon?: unknown;
-  /** Default: `"secondary"` */
-  variant?: 'primary' | 'secondary' | 'ghost';
-  /** Default: `""` */
-  className?: string;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg' | 'xl';
-  /** Default: `"circle"` */
-  shape?: 'circle' | 'rounded' | 'square';
+  /** Default: `false` */
+  pressed?: boolean;
 }
 
 /**

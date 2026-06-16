@@ -41,19 +41,20 @@ export type StdUiMiniMapEventKey = 'INIT';
 export interface StdUiMiniMapConfig {
   /** Default: `150` */
   height?: number;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `[{"x":1,"color":"Color","y":1}]` */
-  units?: EntityRow[];
-  /** Default: `100` */
-  mapHeight?: number;
-  /** Default: `[{"x":1,"y":1,"color":"Color"}]` */
-  tiles?: EntityRow[];
   /** Default: `150` */
   width?: number;
+  /** Default: `[{"y":1,"color":"Color","x":1}]` */
+  tiles?: EntityRow[];
+  /** Default: `{"w":1,"h":1,"x":1,"y":1}` */
+  viewportRect?: EntityRow;
+  /** Default: `100` */
+  mapHeight?: number;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `[{"y":1,"color":"Color","isPlayer":false,"x":1}]` */
+  units?: EntityRow[];
   /** Default: `100` */
   mapWidth?: number;
-  viewportRect?: EntityRow;
 }
 
 /**

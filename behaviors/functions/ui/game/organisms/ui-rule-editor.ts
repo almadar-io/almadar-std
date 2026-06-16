@@ -53,16 +53,16 @@ export interface StdUiRuleEditorRemovePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiRuleEditorConfig {
-  /** Default: `""` */
-  className?: string;
   /** Default: `false` */
   disabled?: boolean;
-  /** Default: `[{"value":"Value","label":"Label"}]` */
+  /** Default: `[{"label":"Label","value":"Value"}]` */
   availableEvents?: EntityRow[];
-  /** Default: `{"whenEvent":"","thenAction":"","id":""}` */
-  rule?: EntityRow;
-  /** Default: `[{"value":"Value","label":"Label"}]` */
+  /** Default: `[{"label":"Label","value":"Value"}]` */
   availableActions?: EntityRow[];
+  /** Default: `""` */
+  className?: string;
+  /** Default: `{"id":"Id","whenEvent":"When Event","thenAction":"Then Action"}` */
+  rule?: EntityRow;
 }
 
 /**
@@ -250,13 +250,13 @@ export function stdUiRuleEditorRuleEditorOrbital(params: StdUiRuleEditorRuleEdit
                   'render-ui',
                   'main',
                   {
-                    'onRemove': 'REMOVE',
-                    'type': 'rule-editor',
                     'onChange': 'CHANGE',
+                    'rule': '@config.rule',
+                    'availableActions': '@config.availableActions',
+                    'type': 'rule-editor',
+                    'onRemove': 'REMOVE',
                     'className': '@config.className',
                     'availableEvents': '@config.availableEvents',
-                    'availableActions': '@config.availableActions',
-                    'rule': '@config.rule',
                     'disabled': '@config.disabled',
                   },
                 ],
@@ -265,13 +265,6 @@ export function stdUiRuleEditorRuleEditorOrbital(params: StdUiRuleEditorRuleEdit
           ],
         },
         'config': {
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
           'disabled': {
             'type': 'boolean',
             'default': false,
@@ -283,8 +276,8 @@ export function stdUiRuleEditorRuleEditorOrbital(params: StdUiRuleEditorRuleEdit
             'type': '[RuleEditorAvailableEventsItem]',
             'default': [
               {
-                'value': 'Value',
                 'label': 'Label',
+                'value': 'Value',
               },
             ],
             'label': 'Available Events',
@@ -293,44 +286,16 @@ export function stdUiRuleEditorRuleEditorOrbital(params: StdUiRuleEditorRuleEdit
             'items': {
               'type': 'object',
               'properties': {
-                'value': {
-                  'name': 'value',
-                  'type': 'string',
-                  'required': true,
-                },
                 'label': {
                   'name': 'label',
                   'type': 'string',
                   'required': true,
                 },
-              },
-            },
-          },
-          'rule': {
-            'type': 'RuleEditorRule',
-            'default': {
-              'whenEvent': '',
-              'thenAction': '',
-              'id': '',
-            },
-            'label': 'Rule',
-            'description': 'The current rule',
-            'tier': 'presentation',
-            'properties': {
-              'whenEvent': {
-                'name': 'whenEvent',
-                'type': 'string',
-                'required': true,
-              },
-              'thenAction': {
-                'name': 'thenAction',
-                'type': 'string',
-                'required': true,
-              },
-              'id': {
-                'name': 'id',
-                'type': 'string',
-                'required': true,
+                'value': {
+                  'name': 'value',
+                  'type': 'string',
+                  'required': true,
+                },
               },
             },
           },
@@ -338,8 +303,8 @@ export function stdUiRuleEditorRuleEditorOrbital(params: StdUiRuleEditorRuleEdit
             'type': '[RuleEditorAvailableActionsItem]',
             'default': [
               {
-                'value': 'Value',
                 'label': 'Label',
+                'value': 'Value',
               },
             ],
             'label': 'Available Actions',
@@ -358,6 +323,41 @@ export function stdUiRuleEditorRuleEditorOrbital(params: StdUiRuleEditorRuleEdit
                   'type': 'string',
                   'required': true,
                 },
+              },
+            },
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'rule': {
+            'type': 'RuleEditorRule',
+            'default': {
+              'id': 'Id',
+              'whenEvent': 'When Event',
+              'thenAction': 'Then Action',
+            },
+            'label': 'Rule',
+            'description': 'The current rule',
+            'tier': 'presentation',
+            'properties': {
+              'id': {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              'whenEvent': {
+                'name': 'whenEvent',
+                'type': 'string',
+                'required': true,
+              },
+              'thenAction': {
+                'name': 'thenAction',
+                'type': 'string',
+                'required': true,
               },
             },
           },

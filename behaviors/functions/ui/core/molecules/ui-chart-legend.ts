@@ -41,10 +41,10 @@ export type StdUiChartLegendEventKey = 'INIT';
 export interface StdUiChartLegendConfig {
   /** Default: `"horizontal"` */
   direction?: 'horizontal' | 'vertical';
-  /** Default: `[{"color":"Color","label":"Label"}]` */
-  items?: EntityRow[];
   /** Default: `""` */
   className?: string;
+  /** Default: `[{"label":"Label","color":"Color"}]` */
+  items?: EntityRow[];
 }
 
 /**
