@@ -189,8 +189,8 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
                   'render-ui',
                   'main',
                   {
-                    'entity': '@config.entityProp',
                     'type': 'debugger-board',
+                    'entity': '@config.entityProp',
                     'completeEvent': 'COMPLETE',
                   },
                 ],
@@ -206,47 +206,37 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
             'synonyms': 'entity',
             'tier': 'presentation',
             'properties': {
-              'failMessage': {
-                'name': 'failMessage',
-                'type': 'string',
-                'required': false,
-              },
-              'title': {
-                'name': 'title',
+              'id': {
+                'name': 'id',
                 'type': 'string',
                 'required': true,
-              },
-              'language': {
-                'name': 'language',
-                'type': 'string',
-                'required': false,
-              },
-              'hint': {
-                'name': 'hint',
-                'type': 'string',
-                'required': false,
-              },
-              'headerImage': {
-                'name': 'headerImage',
-                'type': 'string',
-                'required': false,
               },
               'theme': {
                 'name': 'theme',
                 'type': 'object',
                 'required': false,
                 'properties': {
-                  'background': {
-                    'name': 'background',
-                    'type': 'string',
-                    'required': false,
-                  },
                   'accentColor': {
                     'name': 'accentColor',
                     'type': 'string',
                     'required': false,
                   },
+                  'background': {
+                    'name': 'background',
+                    'type': 'string',
+                    'required': false,
+                  },
                 },
+              },
+              'successMessage': {
+                'name': 'successMessage',
+                'type': 'string',
+                'required': false,
+              },
+              'failMessage': {
+                'name': 'failMessage',
+                'type': 'string',
+                'required': false,
               },
               'lines': {
                 'name': 'lines',
@@ -255,16 +245,6 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
                 'items': {
                   'type': 'object',
                   'properties': {
-                    'isBug': {
-                      'name': 'isBug',
-                      'type': 'boolean',
-                      'required': true,
-                    },
-                    'content': {
-                      'name': 'content',
-                      'type': 'string',
-                      'required': true,
-                    },
                     'id': {
                       'name': 'id',
                       'type': 'string',
@@ -275,26 +255,46 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
                       'type': 'string',
                       'required': false,
                     },
+                    'content': {
+                      'name': 'content',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'isBug': {
+                      'name': 'isBug',
+                      'type': 'boolean',
+                      'required': true,
+                    },
                   },
                 },
+              },
+              'hint': {
+                'name': 'hint',
+                'type': 'string',
+                'required': false,
+              },
+              'language': {
+                'name': 'language',
+                'type': 'string',
+                'required': false,
+              },
+              'headerImage': {
+                'name': 'headerImage',
+                'type': 'string',
+                'required': false,
+              },
+              'description': {
+                'name': 'description',
+                'type': 'string',
+                'required': true,
               },
               'bugCount': {
                 'name': 'bugCount',
                 'type': 'number',
                 'required': true,
               },
-              'id': {
-                'name': 'id',
-                'type': 'string',
-                'required': true,
-              },
-              'successMessage': {
-                'name': 'successMessage',
-                'type': 'string',
-                'required': false,
-              },
-              'description': {
-                'name': 'description',
+              'title': {
+                'name': 'title',
                 'type': 'string',
                 'required': true,
               },

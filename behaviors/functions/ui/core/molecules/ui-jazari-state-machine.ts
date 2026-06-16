@@ -42,12 +42,12 @@ export interface StdUiJazariStateMachineConfig {
   error?: EntityRow;
   /** Default: `""` */
   className?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `0` */
-  traitIndex?: number;
   /** Default: `[]` */
   entityFields?: string[];
+  /** Default: `0` */
+  traitIndex?: number;
+  /** Default: `false` */
+  isLoading?: boolean;
   /** Default: `"ltr"` */
   direction?: 'ltr' | 'rtl';
 }

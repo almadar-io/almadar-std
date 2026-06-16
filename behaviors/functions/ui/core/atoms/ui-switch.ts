@@ -48,16 +48,16 @@ export interface StdUiSwitchChangePayload {
 export interface StdUiSwitchConfig {
   /** Default: `"Name"` */
   name?: string;
+  /** Default: `"Label"` */
+  label?: string;
   /** Default: `false` */
   checked?: boolean;
-  /** Default: `false` */
-  defaultChecked?: boolean;
   /** Default: `""` */
   className?: string;
   /** Default: `false` */
+  defaultChecked?: boolean;
+  /** Default: `false` */
   disabled?: boolean;
-  /** Default: `"Label"` */
-  label?: string;
 }
 
 /**

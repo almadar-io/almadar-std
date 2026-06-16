@@ -46,14 +46,14 @@ export interface StdUiCraftingRecipeCraftPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiCraftingRecipeConfig {
-  /** Default: `{"label":""}` */
-  output?: EntityRow;
-  /** Default: `false` */
-  canCraft?: boolean;
   /** Default: `""` */
   className?: string;
+  /** Default: `false` */
+  canCraft?: boolean;
   /** Default: `[]` */
   inputs?: EntityRow[];
+  /** Default: `{"label":""}` */
+  output?: EntityRow;
 }
 
 /**

@@ -39,30 +39,30 @@ export type StdUiHeroSectionEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiHeroSectionConfig {
-  /** Default: `"Tag"` */
-  tag?: string;
-  /** Default: `"Title Accent"` */
-  titleAccent?: string;
-  secondaryAction?: EntityRow;
-  image?: EntityRow;
-  /** Default: `"subtle"` */
-  background?: 'dark' | 'gradient' | 'subtle';
-  /** Default: `"center"` */
-  align?: 'center' | 'left';
-  /** Default: `"Install Command"` */
-  installCommand?: string;
-  primaryAction?: EntityRow;
-  /** Default: `"below"` */
-  imagePosition?: 'below' | 'right' | 'background';
-  /** Default: `"Title"` */
-  title?: string;
-  backgroundElement?: unknown;
-  /** Default: `""` */
-  className?: string;
   /** Default: `"Subtitle"` */
   subtitle?: string;
+  primaryAction?: EntityRow;
+  image?: EntityRow;
+  /** Default: `"center"` */
+  align?: 'center' | 'left';
+  /** Default: `"subtle"` */
+  background?: 'dark' | 'gradient' | 'subtle';
+  /** Default: `"below"` */
+  imagePosition?: 'below' | 'right' | 'background';
+  backgroundElement?: unknown;
   /** Default: `"primary"` */
   tagVariant?: 'primary' | 'secondary' | 'accent';
+  /** Default: `"Title"` */
+  title?: string;
+  /** Default: `"Title Accent"` */
+  titleAccent?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"Install Command"` */
+  installCommand?: string;
+  secondaryAction?: EntityRow;
+  /** Default: `"Tag"` */
+  tag?: string;
 }
 
 /**

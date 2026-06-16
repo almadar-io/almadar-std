@@ -39,10 +39,10 @@ export type StdUiServiceCatalogEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiServiceCatalogConfig {
+  /** Default: `[{"layer":"Layer","name":"Name"}]` */
+  services?: EntityRow[];
   /** Default: `""` */
   className?: string;
-  /** Default: `[{"name":"Name","layer":"Layer"}]` */
-  services?: EntityRow[];
 }
 
 /**

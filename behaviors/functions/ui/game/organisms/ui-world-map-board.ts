@@ -80,24 +80,24 @@ export interface StdUiWorldMapBoardTileClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiWorldMapBoardConfig {
-  /** Default: `0.4` */
-  scale?: number;
-  /** Default: `false` */
-  enableCamera?: boolean;
   /** Default: `0` */
   diamondTopY?: number;
-  /** Default: `""` */
-  className?: string;
-  error?: EntityRow;
-  entityProp?: EntityRow;
   /** Default: `false` */
-  allowMoveAllHeroes?: boolean;
+  enableCamera?: boolean;
+  error?: EntityRow;
   /** Default: `2.5` */
   unitScale?: number;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `0.4` */
+  scale?: number;
+  /** Default: `""` */
+  className?: string;
+  entityProp?: EntityRow;
   /** Default: `[]` */
   effectSpriteUrls?: string[];
   /** Default: `false` */
-  isLoading?: boolean;
+  allowMoveAllHeroes?: boolean;
 }
 
 /**
@@ -393,26 +393,26 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
                   'render-ui',
                   'main',
                   {
-                    'isLoading': '@config.isLoading',
-                    'type': 'world-map-board',
-                    'onHeroMove': 'HERO_MOVE',
-                    'allowMoveAllHeroes': '@config.allowMoveAllHeroes',
-                    'unitScale': '@config.unitScale',
-                    'battleEncounterEvent': 'BATTLE_ENCOUNTER',
-                    'heroSelectEvent': 'HERO_SELECT',
-                    'featureEnterEvent': 'FEATURE_ENTER',
-                    'onBattleEncounter': 'BATTLE_ENCOUNTER',
-                    'onFeatureEnter': 'FEATURE_ENTER',
-                    'diamondTopY': '@config.diamondTopY',
-                    'enableCamera': '@config.enableCamera',
-                    'tileClickEvent': 'TILE_CLICK',
                     'onHeroSelect': 'HERO_SELECT',
-                    'scale': '@config.scale',
-                    'entity': '@config.entityProp',
-                    'effectSpriteUrls': '@config.effectSpriteUrls',
-                    'error': '@config.error',
-                    'className': '@config.className',
+                    'heroSelectEvent': 'HERO_SELECT',
                     'heroMoveEvent': 'HERO_MOVE',
+                    'unitScale': '@config.unitScale',
+                    'scale': '@config.scale',
+                    'isLoading': '@config.isLoading',
+                    'enableCamera': '@config.enableCamera',
+                    'onBattleEncounter': 'BATTLE_ENCOUNTER',
+                    'entity': '@config.entityProp',
+                    'onHeroMove': 'HERO_MOVE',
+                    'diamondTopY': '@config.diamondTopY',
+                    'error': '@config.error',
+                    'battleEncounterEvent': 'BATTLE_ENCOUNTER',
+                    'effectSpriteUrls': '@config.effectSpriteUrls',
+                    'tileClickEvent': 'TILE_CLICK',
+                    'featureEnterEvent': 'FEATURE_ENTER',
+                    'allowMoveAllHeroes': '@config.allowMoveAllHeroes',
+                    'onFeatureEnter': 'FEATURE_ENTER',
+                    'type': 'world-map-board',
+                    'className': '@config.className',
                   },
                 ],
               ],
@@ -420,20 +420,6 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
           ],
         },
         'config': {
-          'scale': {
-            'type': 'number',
-            'default': 0.4,
-            'label': 'Scale',
-            'description': 'Canvas render scale',
-            'tier': 'presentation',
-          },
-          'enableCamera': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Enable Camera',
-            'description': 'Disable pan/zoom camera (default: true). Set false for fixed maps where overlay labels need stable positions.',
-            'tier': 'presentation',
-          },
           'diamondTopY': {
             'type': 'number',
             'default': 0,
@@ -441,11 +427,11 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
             'description': '-- Canvas pass-through --',
             'tier': 'presentation',
           },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
+          'enableCamera': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Enable Camera',
+            'description': 'Disable pan/zoom camera (default: true). Set false for fixed maps where overlay labels need stable positions.',
             'tier': 'presentation',
           },
           'error': {
@@ -464,17 +450,45 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
                 'type': 'string',
                 'required': true,
               },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
               'code': {
                 'name': 'code',
                 'type': 'string',
                 'required': false,
               },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
             },
+          },
+          'unitScale': {
+            'type': 'number',
+            'default': 2.5,
+            'label': 'Unit Scale',
+            'description': 'Unit draw-size multiplier',
+            'tier': 'presentation',
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
+          'scale': {
+            'type': 'number',
+            'default': 0.4,
+            'label': 'Scale',
+            'description': 'Canvas render scale',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
           },
           'entityProp': {
             'type': 'WorldMapBoardEntity',
@@ -483,94 +497,6 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
             'synonyms': 'entity',
             'tier': 'presentation',
             'properties': {
-              'heroes': {
-                'name': 'heroes',
-                'type': 'array',
-                'required': true,
-                'items': {
-                  'type': 'object',
-                  'properties': {
-                    'name': {
-                      'name': 'name',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'owner': {
-                      'name': 'owner',
-                      'type': 'string',
-                      'required': true,
-                      'values': [
-                        'player',
-                        'enemy',
-                      ],
-                    },
-                    'spriteSheet': {
-                      'name': 'spriteSheet',
-                      'type': 'object',
-                      'required': false,
-                      'properties': {
-                        'sw': {
-                          'name': 'sw',
-                          'type': 'string',
-                          'required': true,
-                        },
-                        'se': {
-                          'name': 'se',
-                          'type': 'string',
-                          'required': true,
-                        },
-                        'frameWidth': {
-                          'name': 'frameWidth',
-                          'type': 'number',
-                          'required': true,
-                        },
-                        'frameHeight': {
-                          'name': 'frameHeight',
-                          'type': 'number',
-                          'required': true,
-                        },
-                      },
-                    },
-                    'movement': {
-                      'name': 'movement',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'id': {
-                      'name': 'id',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'position': {
-                      'name': 'position',
-                      'type': 'object',
-                      'required': true,
-                      'properties': {
-                        'y': {
-                          'name': 'y',
-                          'type': 'number',
-                          'required': true,
-                        },
-                        'x': {
-                          'name': 'x',
-                          'type': 'number',
-                          'required': true,
-                        },
-                      },
-                    },
-                    'level': {
-                      'name': 'level',
-                      'type': 'number',
-                      'required': false,
-                    },
-                  },
-                },
-              },
               'id': {
                 'name': 'id',
                 'type': 'string',
@@ -583,8 +509,8 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
                 'items': {
                   'type': 'object',
                   'properties': {
-                    'x': {
-                      'name': 'x',
+                    'y': {
+                      'name': 'y',
                       'type': 'number',
                       'required': true,
                     },
@@ -593,20 +519,10 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
                       'type': 'string',
                       'required': true,
                     },
-                    'feature': {
-                      'name': 'feature',
-                      'type': 'string',
-                      'required': false,
-                    },
                     'terrainSprite': {
                       'name': 'terrainSprite',
                       'type': 'string',
                       'required': false,
-                    },
-                    'y': {
-                      'name': 'y',
-                      'type': 'number',
-                      'required': true,
                     },
                     'featureData': {
                       'name': 'featureData',
@@ -616,10 +532,20 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
                         'type': 'string',
                       },
                     },
+                    'feature': {
+                      'name': 'feature',
+                      'type': 'string',
+                      'required': false,
+                    },
                     'passable': {
                       'name': 'passable',
                       'type': 'boolean',
                       'required': false,
+                    },
+                    'x': {
+                      'name': 'x',
+                      'type': 'number',
+                      'required': true,
                     },
                   },
                 },
@@ -631,43 +557,18 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
                 'items': {
                   'type': 'object',
                   'properties': {
-                    'color': {
-                      'name': 'color',
+                    'sprite': {
+                      'name': 'sprite',
                       'type': 'string',
                       'required': false,
-                    },
-                    'y': {
-                      'name': 'y',
-                      'type': 'number',
-                      'required': true,
                     },
                     'x': {
                       'name': 'x',
                       'type': 'number',
                       'required': true,
                     },
-                    'id': {
-                      'name': 'id',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'z': {
-                      'name': 'z',
-                      'type': 'number',
-                      'required': false,
-                    },
-                    'type': {
-                      'name': 'type',
-                      'type': 'string',
-                      'required': true,
-                    },
                     'assetUrl': {
                       'name': 'assetUrl',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'sprite': {
-                      'name': 'sprite',
                       'type': 'string',
                       'required': false,
                     },
@@ -676,8 +577,38 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
                       'type': 'number',
                       'required': false,
                     },
+                    'y': {
+                      'name': 'y',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'z': {
+                      'name': 'z',
+                      'type': 'number',
+                      'required': false,
+                    },
+                    'color': {
+                      'name': 'color',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'type': {
+                      'name': 'type',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'id': {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': false,
+                    },
                   },
                 },
+              },
+              'selectedHeroId': {
+                'name': 'selectedHeroId',
+                'type': 'string',
+                'required': false,
               },
               'assetManifest': {
                 'name': 'assetManifest',
@@ -720,26 +651,95 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
                 'type': 'string',
                 'required': false,
               },
-              'selectedHeroId': {
-                'name': 'selectedHeroId',
-                'type': 'string',
-                'required': false,
+              'heroes': {
+                'name': 'heroes',
+                'type': 'array',
+                'required': true,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'spriteSheet': {
+                      'name': 'spriteSheet',
+                      'type': 'object',
+                      'required': false,
+                      'properties': {
+                        'frameHeight': {
+                          'name': 'frameHeight',
+                          'type': 'number',
+                          'required': true,
+                        },
+                        'se': {
+                          'name': 'se',
+                          'type': 'string',
+                          'required': true,
+                        },
+                        'sw': {
+                          'name': 'sw',
+                          'type': 'string',
+                          'required': true,
+                        },
+                        'frameWidth': {
+                          'name': 'frameWidth',
+                          'type': 'number',
+                          'required': true,
+                        },
+                      },
+                    },
+                    'movement': {
+                      'name': 'movement',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'id': {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'owner': {
+                      'name': 'owner',
+                      'type': 'string',
+                      'required': true,
+                      'values': [
+                        'player',
+                        'enemy',
+                      ],
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'level': {
+                      'name': 'level',
+                      'type': 'number',
+                      'required': false,
+                    },
+                    'position': {
+                      'name': 'position',
+                      'type': 'object',
+                      'required': true,
+                      'properties': {
+                        'y': {
+                          'name': 'y',
+                          'type': 'number',
+                          'required': true,
+                        },
+                        'x': {
+                          'name': 'x',
+                          'type': 'number',
+                          'required': true,
+                        },
+                      },
+                    },
+                  },
+                },
               },
             },
-          },
-          'allowMoveAllHeroes': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Allow Move All Heroes',
-            'description': 'Allow selecting / moving ALL heroes (including enemy). For testing.',
-            'tier': 'presentation',
-          },
-          'unitScale': {
-            'type': 'number',
-            'default': 2.5,
-            'label': 'Unit Scale',
-            'description': 'Unit draw-size multiplier',
-            'tier': 'presentation',
           },
           'effectSpriteUrls': {
             'type': '[string]',
@@ -751,11 +751,11 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
               'type': 'string',
             },
           },
-          'isLoading': {
+          'allowMoveAllHeroes': {
             'type': 'boolean',
             'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
+            'label': 'Allow Move All Heroes',
+            'description': 'Allow selecting / moving ALL heroes (including enemy). For testing.',
             'tier': 'presentation',
           },
         },

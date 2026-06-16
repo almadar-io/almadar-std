@@ -41,10 +41,10 @@ export type StdUiInstallBoxEventKey = 'INIT';
 export interface StdUiInstallBoxConfig {
   /** Default: `"Label"` */
   label?: string;
-  /** Default: `""` */
-  className?: string;
   /** Default: `"Command"` */
   command?: string;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

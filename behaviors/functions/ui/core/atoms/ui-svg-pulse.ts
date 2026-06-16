@@ -40,21 +40,21 @@ export type StdUiSvgPulseEventKey = 'INIT';
  */
 export interface StdUiSvgPulseConfig {
   /** Default: `0` */
-  cx?: number;
-  /** Default: `1` */
-  opacity?: number;
+  cy?: number;
+  /** Default: `3` */
+  rings?: number;
+  /** Default: `true` */
+  animated?: boolean;
   /** Default: `"var(--color-primary)"` */
   color?: string;
   /** Default: `0` */
-  cy?: number;
-  /** Default: `true` */
-  animated?: boolean;
-  /** Default: `60` */
-  maxRadius?: number;
-  /** Default: `3` */
-  rings?: number;
+  cx?: number;
   /** Default: `""` */
   className?: string;
+  /** Default: `60` */
+  maxRadius?: number;
+  /** Default: `1` */
+  opacity?: number;
 }
 
 /**

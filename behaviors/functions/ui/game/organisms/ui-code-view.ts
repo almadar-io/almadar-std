@@ -39,12 +39,12 @@ export type StdUiCodeViewEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiCodeViewConfig {
-  /** Default: `false` */
-  defaultExpanded?: boolean;
-  /** Default: `"Label"` */
-  label?: string;
   /** Default: `""` */
   className?: string;
+  /** Default: `"Label"` */
+  label?: string;
+  /** Default: `false` */
+  defaultExpanded?: boolean;
   /** Default: `{}` */
   data?: unknown;
 }
@@ -150,11 +150,11 @@ export function stdUiCodeViewCodeViewOrbital(params: StdUiCodeViewCodeViewOrbita
                   'render-ui',
                   'main',
                   {
-                    'data': '@config.data',
                     'defaultExpanded': '@config.defaultExpanded',
                     'type': 'code-view',
-                    'label': '@config.label',
+                    'data': '@config.data',
                     'className': '@config.className',
+                    'label': '@config.label',
                   },
                 ],
               ],
@@ -162,11 +162,11 @@ export function stdUiCodeViewCodeViewOrbital(params: StdUiCodeViewCodeViewOrbita
           ],
         },
         'config': {
-          'defaultExpanded': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Default Expanded',
-            'description': 'Whether the code is expanded by default',
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
           'label': {
@@ -176,11 +176,11 @@ export function stdUiCodeViewCodeViewOrbital(params: StdUiCodeViewCodeViewOrbita
             'description': 'Label',
             'tier': 'presentation',
           },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
+          'defaultExpanded': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Default Expanded',
+            'description': 'Whether the code is expanded by default',
             'tier': 'presentation',
           },
           'data': {

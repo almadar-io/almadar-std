@@ -46,18 +46,18 @@ export interface StdUiStateNodeClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiStateNodeConfig {
-  /** Default: `false` */
-  isCurrent?: boolean;
-  /** Default: `false` */
-  isSelected?: boolean;
-  /** Default: `{"y":0,"x":0}` */
-  position?: EntityRow;
   /** Default: `"Name"` */
   name?: string;
   /** Default: `false` */
-  isInitial?: boolean;
+  isCurrent?: boolean;
   /** Default: `""` */
   className?: string;
+  /** Default: `false` */
+  isSelected?: boolean;
+  /** Default: `false` */
+  isInitial?: boolean;
+  /** Default: `{"x":0,"y":0}` */
+  position?: EntityRow;
 }
 
 /**
@@ -187,14 +187,14 @@ export function stdUiStateNodeStateNodeOrbital(params: StdUiStateNodeStateNodeOr
                   'render-ui',
                   'main',
                   {
-                    'isCurrent': '@config.isCurrent',
-                    'isSelected': '@config.isSelected',
-                    'name': '@config.name',
                     'position': '@config.position',
                     'onClick': 'CLICK',
+                    'name': '@config.name',
                     'isInitial': '@config.isInitial',
-                    'className': '@config.className',
                     'type': 'state-node',
+                    'isCurrent': '@config.isCurrent',
+                    'className': '@config.className',
+                    'isSelected': '@config.isSelected',
                   },
                 ],
               ],
@@ -202,11 +202,25 @@ export function stdUiStateNodeStateNodeOrbital(params: StdUiStateNodeStateNodeOr
           ],
         },
         'config': {
+          'name': {
+            'type': 'string',
+            'default': 'Name',
+            'label': 'Name',
+            'description': 'State name',
+            'tier': 'presentation',
+          },
           'isCurrent': {
             'type': 'boolean',
             'default': false,
             'label': 'Is Current',
             'description': 'Whether this is the current active state',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
           'isSelected': {
@@ -216,35 +230,6 @@ export function stdUiStateNodeStateNodeOrbital(params: StdUiStateNodeStateNodeOr
             'description': 'Whether this node is selected for editing',
             'tier': 'presentation',
           },
-          'position': {
-            'type': 'StateNodePosition',
-            'default': {
-              'y': 0,
-              'x': 0,
-            },
-            'label': 'Position',
-            'description': 'Position on the graph canvas',
-            'tier': 'presentation',
-            'properties': {
-              'x': {
-                'name': 'x',
-                'type': 'number',
-                'required': true,
-              },
-              'y': {
-                'name': 'y',
-                'type': 'number',
-                'required': true,
-              },
-            },
-          },
-          'name': {
-            'type': 'string',
-            'default': 'Name',
-            'label': 'Name',
-            'description': 'State name',
-            'tier': 'presentation',
-          },
           'isInitial': {
             'type': 'boolean',
             'default': false,
@@ -252,12 +237,27 @@ export function stdUiStateNodeStateNodeOrbital(params: StdUiStateNodeStateNodeOr
             'description': 'Whether this is the initial state',
             'tier': 'presentation',
           },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
+          'position': {
+            'type': 'StateNodePosition',
+            'default': {
+              'x': 0,
+              'y': 0,
+            },
+            'label': 'Position',
+            'description': 'Position on the graph canvas',
             'tier': 'presentation',
+            'properties': {
+              'y': {
+                'name': 'y',
+                'type': 'number',
+                'required': true,
+              },
+              'x': {
+                'name': 'x',
+                'type': 'number',
+                'required': true,
+              },
+            },
           },
         },
         'scope': 'instance',

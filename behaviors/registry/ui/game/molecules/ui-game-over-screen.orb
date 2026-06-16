@@ -113,17 +113,17 @@
                     "render-ui",
                     "main",
                     {
+                      "highScore": "@config.highScore",
                       "title": "@config.title",
-                      "currentScore": "@config.currentScore",
-                      "className": "@config.className",
-                      "menuItems": "@config.menuItems",
                       "type": "game-over-screen",
+                      "actions": "@config.actions",
+                      "onAction": "ACTION",
+                      "stats": "@config.stats",
+                      "menuItems": "@config.menuItems",
                       "message": "@config.message",
                       "variant": "@config.variant",
-                      "actions": "@config.actions",
-                      "highScore": "@config.highScore",
-                      "onAction": "ACTION",
-                      "stats": "@config.stats"
+                      "currentScore": "@config.currentScore",
+                      "className": "@config.className"
                     }
                   ]
                 ]
@@ -131,13 +131,6 @@
             ]
           },
           "config": {
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
             "variant": {
               "type": "string",
               "default": "neutral",
@@ -150,11 +143,18 @@
                 "neutral"
               ]
             },
-            "highScore": {
+            "title": {
               "type": "string",
-              "default": "High Score",
-              "label": "High Score",
-              "description": "High score (optional, shows 'NEW HIGH SCORE!' if exceeded)",
+              "default": "Title",
+              "label": "Title",
+              "description": "Screen title (e.g., 'Game Over', 'Victory!')",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
               "tier": "presentation"
             },
             "actions": {
@@ -166,13 +166,18 @@
               "items": {
                 "type": "object",
                 "properties": {
+                  "navigatesTo": {
+                    "name": "navigatesTo",
+                    "type": "string",
+                    "required": false
+                  },
                   "label": {
                     "name": "label",
                     "type": "string",
                     "required": true
                   },
-                  "navigatesTo": {
-                    "name": "navigatesTo",
+                  "event": {
+                    "name": "event",
                     "type": "string",
                     "required": false
                   },
@@ -185,14 +190,16 @@
                       "secondary",
                       "ghost"
                     ]
-                  },
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": false
                   }
                 }
               }
+            },
+            "highScore": {
+              "type": "string",
+              "default": "High Score",
+              "label": "High Score",
+              "description": "High score (optional, shows 'NEW HIGH SCORE!' if exceeded)",
+              "tier": "presentation"
             },
             "stats": {
               "type": "[GameOverScreenStatsItem]",
@@ -203,13 +210,13 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
                   "value": {
                     "name": "value",
+                    "type": "string",
+                    "required": false
+                  },
+                  "bind": {
+                    "name": "bind",
                     "type": "string",
                     "required": false
                   },
@@ -223,38 +230,24 @@
                       "text"
                     ]
                   },
-                  "bind": {
-                    "name": "bind",
-                    "type": "string",
-                    "required": false
-                  },
                   "icon": {
                     "name": "icon",
                     "type": "string",
                     "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
                   }
                 }
               }
-            },
-            "currentScore": {
-              "type": "string",
-              "default": "Current Score",
-              "label": "Current Score",
-              "description": "Current score for high score comparison (accepts string for schema bindings)",
-              "tier": "presentation"
             },
             "message": {
               "type": "string",
               "default": "Message",
               "label": "Message",
               "description": "Optional message",
-              "tier": "presentation"
-            },
-            "title": {
-              "type": "string",
-              "default": "Title",
-              "label": "Title",
-              "description": "Screen title (e.g., 'Game Over', 'Victory!')",
               "tier": "presentation"
             },
             "menuItems": {
@@ -266,18 +259,8 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
                   "navigatesTo": {
                     "name": "navigatesTo",
-                    "type": "string",
-                    "required": false
-                  },
-                  "event": {
-                    "name": "event",
                     "type": "string",
                     "required": false
                   },
@@ -290,9 +273,26 @@
                       "secondary",
                       "ghost"
                     ]
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": false
                   }
                 }
               }
+            },
+            "currentScore": {
+              "type": "string",
+              "default": "Current Score",
+              "label": "Current Score",
+              "description": "Current score for high score comparison (accepts string for schema bindings)",
+              "tier": "presentation"
             }
           },
           "scope": "instance"

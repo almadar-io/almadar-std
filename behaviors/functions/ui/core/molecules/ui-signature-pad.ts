@@ -62,23 +62,23 @@ export interface StdUiSignaturePadClearPayload {
 export interface StdUiSignaturePadConfig {
   /** Default: `"Stroke Color"` */
   strokeColor?: string;
-  /** Default: `"Value"` */
-  value?: string;
-  /** Default: `"Signature"` */
-  label?: string;
-  /** Default: `2` */
-  strokeWidth?: number;
   /** Default: `"Draw your signature above"` */
   helperText?: string;
+  /** Default: `200` */
+  height?: number;
+  /** Default: `"Value"` */
+  value?: string;
+  /** Default: `false` */
+  readOnly?: boolean;
   /** Default: `""` */
   className?: string;
   /** Default: `false` */
-  readOnly?: boolean;
-  error?: EntityRow;
-  /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `200` */
-  height?: number;
+  /** Default: `2` */
+  strokeWidth?: number;
+  error?: EntityRow;
+  /** Default: `"Signature"` */
+  label?: string;
 }
 
 /**

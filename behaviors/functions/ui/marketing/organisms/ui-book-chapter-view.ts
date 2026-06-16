@@ -39,12 +39,12 @@ export type StdUiBookChapterViewEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiBookChapterViewConfig {
-  /** Default: `"rtl"` */
-  direction?: 'rtl' | 'ltr';
-  /** Default: `{"id":"","title":"","content":""}` */
-  chapter?: EntityRow;
   /** Default: `""` */
   className?: string;
+  /** Default: `{"title":"","content":"","id":""}` */
+  chapter?: EntityRow;
+  /** Default: `"rtl"` */
+  direction?: 'rtl' | 'ltr';
 }
 
 /**
@@ -148,10 +148,10 @@ export function stdUiBookChapterViewBookChapterViewOrbital(params: StdUiBookChap
                   'render-ui',
                   'main',
                   {
-                    'className': '@config.className',
                     'direction': '@config.direction',
-                    'chapter': '@config.chapter',
                     'type': 'book-chapter-view',
+                    'chapter': '@config.chapter',
+                    'className': '@config.className',
                   },
                 ],
               ],
@@ -159,28 +159,29 @@ export function stdUiBookChapterViewBookChapterViewOrbital(params: StdUiBookChap
           ],
         },
         'config': {
-          'direction': {
+          'className': {
             'type': 'string',
-            'default': 'rtl',
-            'label': 'Direction',
-            'description': 'direction prop',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
             'tier': 'presentation',
-            'values': [
-              'rtl',
-              'ltr',
-            ],
           },
           'chapter': {
             'type': 'BookChapterViewChapter',
             'default': {
-              'id': '',
               'title': '',
               'content': '',
+              'id': '',
             },
             'label': 'Chapter',
             'description': 'chapter prop',
             'tier': 'presentation',
             'properties': {
+              'content': {
+                'name': 'content',
+                'type': 'string',
+                'required': true,
+              },
               'id': {
                 'name': 'id',
                 'type': 'string',
@@ -191,11 +192,6 @@ export function stdUiBookChapterViewBookChapterViewOrbital(params: StdUiBookChap
                 'type': 'string',
                 'required': true,
               },
-              'content': {
-                'name': 'content',
-                'type': 'string',
-                'required': true,
-              },
               'orbitalSchema': {
                 'name': 'orbitalSchema',
                 'type': 'string',
@@ -203,12 +199,16 @@ export function stdUiBookChapterViewBookChapterViewOrbital(params: StdUiBookChap
               },
             },
           },
-          'className': {
+          'direction': {
             'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
+            'default': 'rtl',
+            'label': 'Direction',
+            'description': 'direction prop',
             'tier': 'presentation',
+            'values': [
+              'rtl',
+              'ltr',
+            ],
           },
         },
         'scope': 'instance',

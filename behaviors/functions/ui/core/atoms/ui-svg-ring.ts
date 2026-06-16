@@ -41,22 +41,22 @@ export type StdUiSvgRingEventKey = 'INIT';
 export interface StdUiSvgRingConfig {
   /** Default: `0` */
   cx?: number;
-  /** Default: `1` */
-  opacity?: number;
-  /** Default: `0` */
-  cy?: number;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `1.5` */
-  strokeWidth?: number;
   /** Default: `40` */
   r?: number;
-  /** Default: `"var(--color-primary)"` */
-  color?: string;
-  /** Default: `"Label"` */
-  label?: string;
   /** Default: `"solid"` */
   variant?: 'solid' | 'dashed' | 'glow';
+  /** Default: `1` */
+  opacity?: number;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"Label"` */
+  label?: string;
+  /** Default: `"var(--color-primary)"` */
+  color?: string;
+  /** Default: `0` */
+  cy?: number;
+  /** Default: `1.5` */
+  strokeWidth?: number;
 }
 
 /**

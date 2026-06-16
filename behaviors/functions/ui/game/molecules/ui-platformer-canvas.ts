@@ -67,31 +67,31 @@ export interface StdUiPlatformerCanvasStopPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiPlatformerCanvasConfig {
-  /** Default: `"Bg Color"` */
-  bgColor?: string;
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/platformer/"` */
-  assetBaseUrl?: string;
-  /** Default: `800` */
-  worldWidth?: number;
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/platformer/tilesheets/platformerPack_character.png"` */
-  playerSprite?: string;
-  /** Default: `true` */
-  followCamera?: boolean;
-  /** Default: `{}` */
-  tileSprites?: unknown;
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/isometric-blocks/Preview.png"` */
-  backgroundImage?: string;
-  /** Default: `""` */
-  className?: string;
+  player?: EntityRow;
   /** Default: `[]` */
   platforms?: EntityRow[];
-  /** Default: `800` */
-  canvasWidth?: number;
-  player?: EntityRow;
-  /** Default: `400` */
-  worldHeight?: number;
   /** Default: `400` */
   canvasHeight?: number;
+  /** Default: `400` */
+  worldHeight?: number;
+  /** Default: `true` */
+  followCamera?: boolean;
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/platformer/tilesheets/platformerPack_character.png"` */
+  playerSprite?: unknown;
+  /** Default: `800` */
+  worldWidth?: number;
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/isometric-blocks/Preview.png"` */
+  backgroundImage?: unknown;
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/platformer/"` */
+  assetBaseUrl?: unknown;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"Bg Color"` */
+  bgColor?: string;
+  /** Default: `{}` */
+  tileSprites?: unknown;
+  /** Default: `800` */
+  canvasWidth?: number;
 }
 
 /**

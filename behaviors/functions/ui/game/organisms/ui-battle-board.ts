@@ -101,18 +101,18 @@ export interface StdUiBattleBoardPlayAgainPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiBattleBoardConfig {
-  /** Default: `{"selectedUnitId":"","tiles":[],"id":"","units":[],"phase":"observation","turn":0,"gameResult":"victory"}` */
+  /** Default: `[]` */
+  effectSpriteUrls?: string[];
+  /** Default: `0.45` */
+  scale?: number;
+  /** Default: `{"id":"","turn":0,"units":[],"tiles":[],"selectedUnitId":"","phase":"observation","gameResult":"victory"}` */
   entityProp?: EntityRow;
   /** Default: `false` */
   hasActiveEffects?: boolean;
-  /** Default: `[]` */
-  effectSpriteUrls?: string[];
   /** Default: `""` */
   className?: string;
   /** Default: `1` */
   unitScale?: number;
-  /** Default: `0.45` */
-  scale?: number;
 }
 
 /**
@@ -1224,23 +1224,23 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                   'render-ui',
                   'main',
                   {
-                    'tileClickEvent': 'TILE_CLICK',
-                    'unitScale': '@config.unitScale',
+                    'onGameEnd': 'GAME_END',
+                    'onAttack': 'ATTACK',
+                    'entity': '@config.entityProp',
                     'scale': '@config.scale',
+                    'cancelEvent': 'CANCEL',
                     'gameEndEvent': 'GAME_END',
+                    'effectSpriteUrls': '@config.effectSpriteUrls',
+                    'type': 'battle-board',
                     'hasActiveEffects': '@config.hasActiveEffects',
+                    'unitScale': '@config.unitScale',
+                    'tileClickEvent': 'TILE_CLICK',
+                    'unitClickEvent': 'UNIT_CLICK',
                     'endTurnEvent': 'END_TURN',
                     'playAgainEvent': 'PLAY_AGAIN',
-                    'effectSpriteUrls': '@config.effectSpriteUrls',
-                    'onAttack': 'ATTACK',
-                    'onUnitMove': 'UNIT_MOVE',
-                    'attackEvent': 'ATTACK',
-                    'onGameEnd': 'GAME_END',
-                    'entity': '@config.entityProp',
                     'className': '@config.className',
-                    'unitClickEvent': 'UNIT_CLICK',
-                    'cancelEvent': 'CANCEL',
-                    'type': 'battle-board',
+                    'attackEvent': 'ATTACK',
+                    'onUnitMove': 'UNIT_MOVE',
                   },
                 ],
               ],
@@ -1248,15 +1248,32 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
           ],
         },
         'config': {
+          'effectSpriteUrls': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Effect Sprite Urls',
+            'description': 'effectSpriteUrls prop',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'scale': {
+            'type': 'number',
+            'default': 0.45,
+            'label': 'Scale',
+            'description': 'Canvas render scale',
+            'tier': 'presentation',
+          },
           'entityProp': {
             'type': 'BattleBoardEntity',
             'default': {
-              'selectedUnitId': '',
-              'tiles': [],
               'id': '',
-              'units': [],
-              'phase': 'observation',
               'turn': 0,
+              'units': [],
+              'tiles': [],
+              'selectedUnitId': '',
+              'phase': 'observation',
               'gameResult': 'victory',
             },
             'label': 'Entity',
@@ -1264,188 +1281,9 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
             'synonyms': 'entity',
             'tier': 'presentation',
             'properties': {
-              'tiles': {
-                'name': 'tiles',
-                'type': 'array',
-                'required': true,
-                'items': {
-                  'type': 'object',
-                  'properties': {
-                    'id': {
-                      'name': 'id',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'z': {
-                      'name': 'z',
-                      'type': 'number',
-                      'required': false,
-                    },
-                    'elevation': {
-                      'name': 'elevation',
-                      'type': 'number',
-                      'required': false,
-                    },
-                    'type': {
-                      'name': 'type',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'passable': {
-                      'name': 'passable',
-                      'type': 'boolean',
-                      'required': false,
-                    },
-                    'movementCost': {
-                      'name': 'movementCost',
-                      'type': 'number',
-                      'required': false,
-                    },
-                    'x': {
-                      'name': 'x',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'terrain': {
-                      'name': 'terrain',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'y': {
-                      'name': 'y',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'terrainSprite': {
-                      'name': 'terrainSprite',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'tileType': {
-                      'name': 'tileType',
-                      'type': 'string',
-                      'required': false,
-                    },
-                  },
-                },
-              },
-              'id': {
-                'name': 'id',
-                'type': 'string',
-                'required': true,
-              },
-              'boardHeight': {
-                'name': 'boardHeight',
-                'type': 'number',
-                'required': false,
-              },
-              'features': {
-                'name': 'features',
-                'type': 'array',
-                'required': false,
-                'items': {
-                  'type': 'object',
-                  'properties': {
-                    'x': {
-                      'name': 'x',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'assetUrl': {
-                      'name': 'assetUrl',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'y': {
-                      'name': 'y',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'color': {
-                      'name': 'color',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'z': {
-                      'name': 'z',
-                      'type': 'number',
-                      'required': false,
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'elevation': {
-                      'name': 'elevation',
-                      'type': 'number',
-                      'required': false,
-                    },
-                    'type': {
-                      'name': 'type',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'id': {
-                      'name': 'id',
-                      'type': 'string',
-                      'required': false,
-                    },
-                  },
-                },
-              },
-              'assetManifest': {
-                'name': 'assetManifest',
-                'type': 'object',
-                'required': false,
-                'properties': {
-                  'baseUrl': {
-                    'name': 'baseUrl',
-                    'type': 'string',
-                    'required': true,
-                  },
-                  'terrains': {
-                    'name': 'terrains',
-                    'type': 'object',
-                    'required': false,
-                    'items': {
-                      'type': 'string',
-                    },
-                  },
-                  'units': {
-                    'name': 'units',
-                    'type': 'object',
-                    'required': false,
-                    'items': {
-                      'type': 'string',
-                    },
-                  },
-                  'effects': {
-                    'name': 'effects',
-                    'type': 'object',
-                    'required': false,
-                    'items': {
-                      'type': 'string',
-                    },
-                  },
-                  'features': {
-                    'name': 'features',
-                    'type': 'object',
-                    'required': false,
-                    'items': {
-                      'type': 'string',
-                    },
-                  },
-                },
-              },
               'boardWidth': {
                 'name': 'boardWidth',
                 'type': 'number',
-                'required': false,
-              },
-              'backgroundImage': {
-                'name': 'backgroundImage',
-                'type': 'string',
                 'required': false,
               },
               'units': {
@@ -1455,16 +1293,50 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                 'items': {
                   'type': 'object',
                   'properties': {
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'team': {
+                      'name': 'team',
+                      'type': 'string',
+                      'required': true,
+                      'values': [
+                        'player',
+                        'enemy',
+                      ],
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': true,
+                    },
                     'unitType': {
                       'name': 'unitType',
                       'type': 'string',
                       'required': false,
+                    },
+                    'heroId': {
+                      'name': 'heroId',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'id': {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
                     },
                     'spriteSheet': {
                       'name': 'spriteSheet',
                       'type': 'object',
                       'required': false,
                       'properties': {
+                        'frameWidth': {
+                          'name': 'frameWidth',
+                          'type': 'number',
+                          'required': true,
+                        },
                         'frameHeight': {
                           'name': 'frameHeight',
                           'type': 'number',
@@ -1478,11 +1350,6 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                         'se': {
                           'name': 'se',
                           'type': 'string',
-                          'required': true,
-                        },
-                        'frameWidth': {
-                          'name': 'frameWidth',
-                          'type': 'number',
                           'required': true,
                         },
                       },
@@ -1504,24 +1371,9 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                         },
                       },
                     },
-                    'health': {
-                      'name': 'health',
+                    'maxHealth': {
+                      'name': 'maxHealth',
                       'type': 'number',
-                      'required': true,
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'id': {
-                      'name': 'id',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'name': {
-                      'name': 'name',
-                      'type': 'string',
                       'required': true,
                     },
                     'movement': {
@@ -1529,27 +1381,8 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                       'type': 'number',
                       'required': true,
                     },
-                    'team': {
-                      'name': 'team',
-                      'type': 'string',
-                      'required': true,
-                      'values': [
-                        'player',
-                        'enemy',
-                      ],
-                    },
-                    'attack': {
-                      'name': 'attack',
-                      'type': 'number',
-                      'required': true,
-                    },
                     'defense': {
                       'name': 'defense',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'maxHealth': {
-                      'name': 'maxHealth',
                       'type': 'number',
                       'required': true,
                     },
@@ -1560,10 +1393,10 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                       'items': {
                         'type': 'object',
                         'properties': {
-                          'name': {
-                            'name': 'name',
-                            'type': 'string',
-                            'required': true,
+                          'cooldown': {
+                            'name': 'cooldown',
+                            'type': 'number',
+                            'required': false,
                           },
                           'states': {
                             'name': 'states',
@@ -1573,23 +1406,28 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                               'type': 'string',
                             },
                           },
-                          'cooldown': {
-                            'name': 'cooldown',
-                            'type': 'number',
-                            'required': false,
-                          },
                           'currentState': {
                             'name': 'currentState',
+                            'type': 'string',
+                            'required': true,
+                          },
+                          'name': {
+                            'name': 'name',
                             'type': 'string',
                             'required': true,
                           },
                         },
                       },
                     },
-                    'heroId': {
-                      'name': 'heroId',
-                      'type': 'string',
-                      'required': false,
+                    'attack': {
+                      'name': 'attack',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'health': {
+                      'name': 'health',
+                      'type': 'number',
+                      'required': true,
                     },
                   },
                 },
@@ -1598,6 +1436,136 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                 'name': 'turn',
                 'type': 'number',
                 'required': true,
+              },
+              'selectedUnitId': {
+                'name': 'selectedUnitId',
+                'type': 'string',
+                'required': true,
+              },
+              'tiles': {
+                'name': 'tiles',
+                'type': 'array',
+                'required': true,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'type': {
+                      'name': 'type',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'terrain': {
+                      'name': 'terrain',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'z': {
+                      'name': 'z',
+                      'type': 'number',
+                      'required': false,
+                    },
+                    'passable': {
+                      'name': 'passable',
+                      'type': 'boolean',
+                      'required': false,
+                    },
+                    'terrainSprite': {
+                      'name': 'terrainSprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'movementCost': {
+                      'name': 'movementCost',
+                      'type': 'number',
+                      'required': false,
+                    },
+                    'elevation': {
+                      'name': 'elevation',
+                      'type': 'number',
+                      'required': false,
+                    },
+                    'x': {
+                      'name': 'x',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'id': {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'y': {
+                      'name': 'y',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'tileType': {
+                      'name': 'tileType',
+                      'type': 'string',
+                      'required': false,
+                    },
+                  },
+                },
+              },
+              'features': {
+                'name': 'features',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'type': {
+                      'name': 'type',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'id': {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'elevation': {
+                      'name': 'elevation',
+                      'type': 'number',
+                      'required': false,
+                    },
+                    'y': {
+                      'name': 'y',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'x': {
+                      'name': 'x',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'assetUrl': {
+                      'name': 'assetUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'color': {
+                      'name': 'color',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'z': {
+                      'name': 'z',
+                      'type': 'number',
+                      'required': false,
+                    },
+                  },
+                },
+              },
+              'boardHeight': {
+                'name': 'boardHeight',
+                'type': 'number',
+                'required': false,
               },
               'phase': {
                 'name': 'phase',
@@ -1612,6 +1580,55 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                   'game_over',
                 ],
               },
+              'assetManifest': {
+                'name': 'assetManifest',
+                'type': 'object',
+                'required': false,
+                'properties': {
+                  'terrains': {
+                    'name': 'terrains',
+                    'type': 'object',
+                    'required': false,
+                    'items': {
+                      'type': 'string',
+                    },
+                  },
+                  'effects': {
+                    'name': 'effects',
+                    'type': 'object',
+                    'required': false,
+                    'items': {
+                      'type': 'string',
+                    },
+                  },
+                  'units': {
+                    'name': 'units',
+                    'type': 'object',
+                    'required': false,
+                    'items': {
+                      'type': 'string',
+                    },
+                  },
+                  'baseUrl': {
+                    'name': 'baseUrl',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  'features': {
+                    'name': 'features',
+                    'type': 'object',
+                    'required': false,
+                    'items': {
+                      'type': 'string',
+                    },
+                  },
+                },
+              },
+              'backgroundImage': {
+                'name': 'backgroundImage',
+                'type': 'string',
+                'required': false,
+              },
               'gameResult': {
                 'name': 'gameResult',
                 'type': 'string',
@@ -1621,8 +1638,8 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                   'defeat',
                 ],
               },
-              'selectedUnitId': {
-                'name': 'selectedUnitId',
+              'id': {
+                'name': 'id',
                 'type': 'string',
                 'required': true,
               },
@@ -1634,16 +1651,6 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
             'label': 'Has Active Effects',
             'description': 'hasActiveEffects prop',
             'tier': 'presentation',
-          },
-          'effectSpriteUrls': {
-            'type': '[string]',
-            'default': [],
-            'label': 'Effect Sprite Urls',
-            'description': 'effectSpriteUrls prop',
-            'tier': 'presentation',
-            'items': {
-              'type': 'string',
-            },
           },
           'className': {
             'type': 'string',
@@ -1657,13 +1664,6 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
             'default': 1,
             'label': 'Unit Scale',
             'description': 'Unit draw-size multiplier',
-            'tier': 'presentation',
-          },
-          'scale': {
-            'type': 'number',
-            'default': 0.45,
-            'label': 'Scale',
-            'description': 'Canvas render scale',
             'tier': 'presentation',
           },
         },

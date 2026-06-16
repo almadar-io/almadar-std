@@ -614,15 +614,15 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                   'render-ui',
                   'main',
                   {
-                    'className': '@config.className',
-                    'entity': '@config.entityProp',
-                    'type': 'castle-board',
+                    'onTileClick': 'TILE_CLICK',
+                    'onUnitClick': 'UNIT_CLICK',
                     'tileClickEvent': 'TILE_CLICK',
+                    'className': '@config.className',
+                    'onFeatureClick': 'FEATURE_CLICK',
                     'featureClickEvent': 'FEATURE_CLICK',
                     'unitClickEvent': 'UNIT_CLICK',
-                    'onUnitClick': 'UNIT_CLICK',
-                    'onTileClick': 'TILE_CLICK',
-                    'onFeatureClick': 'FEATURE_CLICK',
+                    'type': 'castle-board',
+                    'entity': '@config.entityProp',
                     'scale': '@config.scale',
                   },
                 ],
@@ -638,6 +638,283 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
             'synonyms': 'entity',
             'tier': 'presentation',
             'properties': {
+              'units': {
+                'name': 'units',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'health': {
+                      'name': 'health',
+                      'type': 'number',
+                      'required': false,
+                    },
+                    'position': {
+                      'name': 'position',
+                      'type': 'object',
+                      'required': false,
+                      'properties': {
+                        'x': {
+                          'name': 'x',
+                          'type': 'number',
+                          'required': true,
+                        },
+                        'y': {
+                          'name': 'y',
+                          'type': 'number',
+                          'required': true,
+                        },
+                      },
+                    },
+                    'id': {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'heroId': {
+                      'name': 'heroId',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'team': {
+                      'name': 'team',
+                      'type': 'string',
+                      'required': false,
+                      'values': [
+                        'player',
+                        'enemy',
+                        'neutral',
+                      ],
+                    },
+                    'maxHealth': {
+                      'name': 'maxHealth',
+                      'type': 'number',
+                      'required': false,
+                    },
+                    'traits': {
+                      'name': 'traits',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'object',
+                        'properties': {
+                          'name': {
+                            'name': 'name',
+                            'type': 'string',
+                            'required': true,
+                          },
+                          'cooldown': {
+                            'name': 'cooldown',
+                            'type': 'number',
+                            'required': true,
+                          },
+                          'states': {
+                            'name': 'states',
+                            'type': 'array',
+                            'required': true,
+                            'items': {
+                              'type': 'string',
+                            },
+                          },
+                          'currentState': {
+                            'name': 'currentState',
+                            'type': 'string',
+                            'required': true,
+                          },
+                        },
+                      },
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'unitType': {
+                      'name': 'unitType',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'previousPosition': {
+                      'name': 'previousPosition',
+                      'type': 'object',
+                      'required': false,
+                      'properties': {
+                        'x': {
+                          'name': 'x',
+                          'type': 'number',
+                          'required': true,
+                        },
+                        'y': {
+                          'name': 'y',
+                          'type': 'number',
+                          'required': true,
+                        },
+                      },
+                    },
+                    'faction': {
+                      'name': 'faction',
+                      'type': 'string',
+                      'required': false,
+                      'values': [
+                        'player',
+                        'enemy',
+                        'neutral',
+                      ],
+                    },
+                    'y': {
+                      'name': 'y',
+                      'type': 'number',
+                      'required': false,
+                    },
+                    'elevation': {
+                      'name': 'elevation',
+                      'type': 'number',
+                      'required': false,
+                    },
+                    'x': {
+                      'name': 'x',
+                      'type': 'number',
+                      'required': false,
+                    },
+                    'z': {
+                      'name': 'z',
+                      'type': 'number',
+                      'required': false,
+                    },
+                  },
+                },
+              },
+              'features': {
+                'name': 'features',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'elevation': {
+                      'name': 'elevation',
+                      'type': 'number',
+                      'required': false,
+                    },
+                    'id': {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'y': {
+                      'name': 'y',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'color': {
+                      'name': 'color',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'assetUrl': {
+                      'name': 'assetUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'x': {
+                      'name': 'x',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'z': {
+                      'name': 'z',
+                      'type': 'number',
+                      'required': false,
+                    },
+                    'type': {
+                      'name': 'type',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  },
+                },
+              },
+              'id': {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              'tiles': {
+                'name': 'tiles',
+                'type': 'array',
+                'required': true,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'terrainSprite': {
+                      'name': 'terrainSprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'y': {
+                      'name': 'y',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'z': {
+                      'name': 'z',
+                      'type': 'number',
+                      'required': false,
+                    },
+                    'type': {
+                      'name': 'type',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'passable': {
+                      'name': 'passable',
+                      'type': 'boolean',
+                      'required': false,
+                    },
+                    'id': {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'movementCost': {
+                      'name': 'movementCost',
+                      'type': 'number',
+                      'required': false,
+                    },
+                    'elevation': {
+                      'name': 'elevation',
+                      'type': 'number',
+                      'required': false,
+                    },
+                    'tileType': {
+                      'name': 'tileType',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'terrain': {
+                      'name': 'terrain',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'x': {
+                      'name': 'x',
+                      'type': 'number',
+                      'required': true,
+                    },
+                  },
+                },
+              },
               'assetManifest': {
                 'name': 'assetManifest',
                 'type': 'object',
@@ -670,283 +947,6 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                     'required': false,
                     'items': {
                       'type': 'string',
-                    },
-                  },
-                },
-              },
-              'id': {
-                'name': 'id',
-                'type': 'string',
-                'required': true,
-              },
-              'tiles': {
-                'name': 'tiles',
-                'type': 'array',
-                'required': true,
-                'items': {
-                  'type': 'object',
-                  'properties': {
-                    'tileType': {
-                      'name': 'tileType',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'terrain': {
-                      'name': 'terrain',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'passable': {
-                      'name': 'passable',
-                      'type': 'boolean',
-                      'required': false,
-                    },
-                    'z': {
-                      'name': 'z',
-                      'type': 'number',
-                      'required': false,
-                    },
-                    'elevation': {
-                      'name': 'elevation',
-                      'type': 'number',
-                      'required': false,
-                    },
-                    'id': {
-                      'name': 'id',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'terrainSprite': {
-                      'name': 'terrainSprite',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'movementCost': {
-                      'name': 'movementCost',
-                      'type': 'number',
-                      'required': false,
-                    },
-                    'y': {
-                      'name': 'y',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'x': {
-                      'name': 'x',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'type': {
-                      'name': 'type',
-                      'type': 'string',
-                      'required': false,
-                    },
-                  },
-                },
-              },
-              'units': {
-                'name': 'units',
-                'type': 'array',
-                'required': false,
-                'items': {
-                  'type': 'object',
-                  'properties': {
-                    'heroId': {
-                      'name': 'heroId',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'y': {
-                      'name': 'y',
-                      'type': 'number',
-                      'required': false,
-                    },
-                    'faction': {
-                      'name': 'faction',
-                      'type': 'string',
-                      'required': false,
-                      'values': [
-                        'player',
-                        'enemy',
-                        'neutral',
-                      ],
-                    },
-                    'z': {
-                      'name': 'z',
-                      'type': 'number',
-                      'required': false,
-                    },
-                    'name': {
-                      'name': 'name',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'id': {
-                      'name': 'id',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'maxHealth': {
-                      'name': 'maxHealth',
-                      'type': 'number',
-                      'required': false,
-                    },
-                    'team': {
-                      'name': 'team',
-                      'type': 'string',
-                      'required': false,
-                      'values': [
-                        'player',
-                        'enemy',
-                        'neutral',
-                      ],
-                    },
-                    'health': {
-                      'name': 'health',
-                      'type': 'number',
-                      'required': false,
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'elevation': {
-                      'name': 'elevation',
-                      'type': 'number',
-                      'required': false,
-                    },
-                    'traits': {
-                      'name': 'traits',
-                      'type': 'array',
-                      'required': false,
-                      'items': {
-                        'type': 'object',
-                        'properties': {
-                          'currentState': {
-                            'name': 'currentState',
-                            'type': 'string',
-                            'required': true,
-                          },
-                          'states': {
-                            'name': 'states',
-                            'type': 'array',
-                            'required': true,
-                            'items': {
-                              'type': 'string',
-                            },
-                          },
-                          'cooldown': {
-                            'name': 'cooldown',
-                            'type': 'number',
-                            'required': true,
-                          },
-                          'name': {
-                            'name': 'name',
-                            'type': 'string',
-                            'required': true,
-                          },
-                        },
-                      },
-                    },
-                    'x': {
-                      'name': 'x',
-                      'type': 'number',
-                      'required': false,
-                    },
-                    'position': {
-                      'name': 'position',
-                      'type': 'object',
-                      'required': false,
-                      'properties': {
-                        'x': {
-                          'name': 'x',
-                          'type': 'number',
-                          'required': true,
-                        },
-                        'y': {
-                          'name': 'y',
-                          'type': 'number',
-                          'required': true,
-                        },
-                      },
-                    },
-                    'unitType': {
-                      'name': 'unitType',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'previousPosition': {
-                      'name': 'previousPosition',
-                      'type': 'object',
-                      'required': false,
-                      'properties': {
-                        'y': {
-                          'name': 'y',
-                          'type': 'number',
-                          'required': true,
-                        },
-                        'x': {
-                          'name': 'x',
-                          'type': 'number',
-                          'required': true,
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-              'features': {
-                'name': 'features',
-                'type': 'array',
-                'required': false,
-                'items': {
-                  'type': 'object',
-                  'properties': {
-                    'id': {
-                      'name': 'id',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'y': {
-                      'name': 'y',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'x': {
-                      'name': 'x',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'color': {
-                      'name': 'color',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'z': {
-                      'name': 'z',
-                      'type': 'number',
-                      'required': false,
-                    },
-                    'type': {
-                      'name': 'type',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'assetUrl': {
-                      'name': 'assetUrl',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'elevation': {
-                      'name': 'elevation',
-                      'type': 'number',
-                      'required': false,
                     },
                   },
                 },

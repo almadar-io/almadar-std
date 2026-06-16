@@ -41,18 +41,18 @@ export type StdUiCardEventKey = 'INIT';
 export interface StdUiCardConfig {
   /** Default: `"none"` */
   shadow?: 'none' | 'sm' | 'md' | 'lg';
+  /** Default: `"md"` */
+  padding?: 'none' | 'sm' | 'md' | 'lg';
   /** Default: `"bordered"` */
   variant?: 'default' | 'bordered' | 'elevated' | 'interactive';
   /** Default: `""` */
   className?: string;
+  /** Default: `"elevated"` */
+  look?: 'elevated' | 'flat-bordered' | 'borderless-divider' | 'ticket' | 'invoice' | 'chip' | 'tile-image-first';
   /** Default: `"Title"` */
   title?: string;
   /** Default: `"Subtitle"` */
   subtitle?: string;
-  /** Default: `"elevated"` */
-  look?: 'elevated' | 'flat-bordered' | 'borderless-divider' | 'ticket' | 'invoice' | 'chip' | 'tile-image-first';
-  /** Default: `"md"` */
-  padding?: 'none' | 'sm' | 'md' | 'lg';
 }
 
 /**

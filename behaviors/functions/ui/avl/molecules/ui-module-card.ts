@@ -39,7 +39,7 @@ export type StdUiModuleCardEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiModuleCardConfig {
-  /** Default: `{"fields":[],"persistence":"","pages":[],"traits":[],"traitDetails":{},"orbitalName":"","externalLinks":[],"entityName":""}` */
+  /** Default: `{"persistence":"","entityName":"","externalLinks":[],"traitDetails":{},"orbitalName":"","traits":[],"fields":[],"pages":[]}` */
   data?: EntityRow;
 }
 

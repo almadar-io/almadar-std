@@ -67,32 +67,32 @@ export interface StdUiTraitSlotRemovePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiTraitSlotConfig {
+  /** Default: `false` */
+  locked?: boolean;
+  /** Default: `0` */
+  slotNumber?: number;
+  /** Default: `true` */
+  showTooltip?: boolean;
+  /** Default: `false` */
+  selected?: boolean;
   /** Default: `"Tooltip Frame Url"` */
   tooltipFrameUrl?: string;
   /** Default: `false` */
-  locked?: boolean;
-  /** Default: `false` */
-  isLoading?: boolean;
+  draggable?: boolean;
   /** Default: `""` */
   className?: string;
   error?: EntityRow;
   equippedItem?: EntityRow;
-  /** Default: `true` */
-  showTooltip?: boolean;
-  /** Default: `0` */
-  slotNumber?: number;
-  /** Default: `"Lock Label"` */
-  lockLabel?: string;
-  /** Default: `false` */
-  draggable?: boolean;
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
-  /** Default: `"correct"` */
-  feedback?: 'correct' | 'wrong';
-  /** Default: `false` */
-  selected?: boolean;
   /** Default: `{}` */
   categoryColors?: unknown;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `"correct"` */
+  feedback?: 'correct' | 'wrong';
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
+  /** Default: `"Lock Label"` */
+  lockLabel?: string;
 }
 
 /**
@@ -635,28 +635,28 @@ export function stdUiTraitSlotTraitSlotOrbital(params: StdUiTraitSlotTraitSlotOr
                   'render-ui',
                   'main',
                   {
-                    'equippedItem': '@config.equippedItem',
-                    'slotNumber': '@entity.slotNumber',
-                    'locked': '@config.locked',
-                    'removeEvent': 'REMOVE',
-                    'size': '@config.size',
-                    'tooltipFrameUrl': '@config.tooltipFrameUrl',
-                    'className': '@config.className',
-                    'error': '@config.error',
-                    'onItemDrop': 'ITEM_DROP',
-                    'showTooltip': '@config.showTooltip',
-                    'entity': 'TraitSlotItem',
-                    'onRemove': 'REMOVE',
-                    'onClick': 'CLICK',
-                    'lockLabel': '@config.lockLabel',
-                    'selected': '@config.selected',
-                    'draggable': '@config.draggable',
-                    'categoryColors': '@config.categoryColors',
-                    'isLoading': '@config.isLoading',
-                    'type': 'trait-slot',
-                    'clickEvent': 'CLICK',
                     'onDragStart': 'DRAG_START',
+                    'selected': '@config.selected',
+                    'error': '@config.error',
+                    'clickEvent': 'CLICK',
+                    'equippedItem': '@config.equippedItem',
+                    'lockLabel': '@config.lockLabel',
+                    'categoryColors': '@config.categoryColors',
+                    'removeEvent': 'REMOVE',
+                    'draggable': '@config.draggable',
+                    'isLoading': '@config.isLoading',
+                    'entity': 'TraitSlotItem',
+                    'tooltipFrameUrl': '@config.tooltipFrameUrl',
                     'feedback': '@config.feedback',
+                    'type': 'trait-slot',
+                    'showTooltip': '@config.showTooltip',
+                    'size': '@config.size',
+                    'locked': '@config.locked',
+                    'className': '@config.className',
+                    'onItemDrop': 'ITEM_DROP',
+                    'onRemove': 'REMOVE',
+                    'slotNumber': '@entity.slotNumber',
+                    'onClick': 'CLICK',
                   },
                 ],
               ],
@@ -675,28 +675,28 @@ export function stdUiTraitSlotTraitSlotOrbital(params: StdUiTraitSlotTraitSlotOr
                   'render-ui',
                   'main',
                   {
-                    'clickEvent': 'CLICK',
-                    'slotNumber': '@entity.slotNumber',
-                    'error': '@config.error',
-                    'locked': '@config.locked',
-                    'tooltipFrameUrl': '@config.tooltipFrameUrl',
-                    'showTooltip': '@config.showTooltip',
-                    'lockLabel': '@config.lockLabel',
-                    'categoryColors': '@config.categoryColors',
-                    'className': '@config.className',
-                    'entity': 'TraitSlotItem',
-                    'onItemDrop': 'ITEM_DROP',
-                    'feedback': '@config.feedback',
-                    'type': 'trait-slot',
                     'draggable': '@config.draggable',
+                    'onClick': 'CLICK',
+                    'type': 'trait-slot',
+                    'size': '@config.size',
                     'onRemove': 'REMOVE',
                     'removeEvent': 'REMOVE',
+                    'entity': 'TraitSlotItem',
+                    'lockLabel': '@config.lockLabel',
+                    'isLoading': '@config.isLoading',
+                    'showTooltip': '@config.showTooltip',
+                    'locked': '@config.locked',
                     'selected': '@config.selected',
                     'onDragStart': 'DRAG_START',
-                    'size': '@config.size',
+                    'tooltipFrameUrl': '@config.tooltipFrameUrl',
+                    'feedback': '@config.feedback',
+                    'clickEvent': 'CLICK',
                     'equippedItem': '@config.equippedItem',
-                    'isLoading': '@config.isLoading',
-                    'onClick': 'CLICK',
+                    'slotNumber': '@entity.slotNumber',
+                    'onItemDrop': 'ITEM_DROP',
+                    'className': '@config.className',
+                    'error': '@config.error',
+                    'categoryColors': '@config.categoryColors',
                   },
                 ],
               ],
@@ -715,28 +715,28 @@ export function stdUiTraitSlotTraitSlotOrbital(params: StdUiTraitSlotTraitSlotOr
                   'render-ui',
                   'main',
                   {
-                    'error': '@config.error',
-                    'size': '@config.size',
-                    'locked': '@config.locked',
-                    'draggable': '@config.draggable',
-                    'entity': 'TraitSlotItem',
-                    'lockLabel': '@config.lockLabel',
-                    'className': '@config.className',
-                    'onDragStart': 'DRAG_START',
-                    'clickEvent': 'CLICK',
-                    'onClick': 'CLICK',
                     'removeEvent': 'REMOVE',
-                    'slotNumber': '@entity.slotNumber',
-                    'categoryColors': '@config.categoryColors',
-                    'feedback': '@config.feedback',
                     'showTooltip': '@config.showTooltip',
-                    'type': 'trait-slot',
+                    'clickEvent': 'CLICK',
                     'selected': '@config.selected',
-                    'isLoading': '@config.isLoading',
-                    'onRemove': 'REMOVE',
-                    'tooltipFrameUrl': '@config.tooltipFrameUrl',
+                    'slotNumber': '@entity.slotNumber',
+                    'error': '@config.error',
+                    'entity': 'TraitSlotItem',
+                    'draggable': '@config.draggable',
+                    'onClick': 'CLICK',
+                    'categoryColors': '@config.categoryColors',
+                    'className': '@config.className',
+                    'type': 'trait-slot',
+                    'feedback': '@config.feedback',
+                    'lockLabel': '@config.lockLabel',
                     'onItemDrop': 'ITEM_DROP',
+                    'locked': '@config.locked',
+                    'size': '@config.size',
                     'equippedItem': '@config.equippedItem',
+                    'tooltipFrameUrl': '@config.tooltipFrameUrl',
+                    'isLoading': '@config.isLoading',
+                    'onDragStart': 'DRAG_START',
+                    'onRemove': 'REMOVE',
                   },
                 ],
               ],
@@ -744,13 +744,6 @@ export function stdUiTraitSlotTraitSlotOrbital(params: StdUiTraitSlotTraitSlotOr
           ],
         },
         'config': {
-          'tooltipFrameUrl': {
-            'type': 'string',
-            'default': 'Tooltip Frame Url',
-            'label': 'Tooltip Frame Url',
-            'description': 'Optional tooltip frame image URL',
-            'tier': 'presentation',
-          },
           'locked': {
             'type': 'boolean',
             'default': false,
@@ -758,11 +751,39 @@ export function stdUiTraitSlotTraitSlotOrbital(params: StdUiTraitSlotTraitSlotOr
             'description': 'Whether slot is locked',
             'tier': 'presentation',
           },
-          'isLoading': {
+          'slotNumber': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Slot Number',
+            'description': 'Slot index (1-based)',
+            'tier': 'presentation',
+          },
+          'showTooltip': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Show Tooltip',
+            'description': 'Show tooltip on hover',
+            'tier': 'presentation',
+          },
+          'selected': {
             'type': 'boolean',
             'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state',
+            'label': 'Selected',
+            'description': 'Whether slot is selected',
+            'tier': 'presentation',
+          },
+          'tooltipFrameUrl': {
+            'type': 'string',
+            'default': 'Tooltip Frame Url',
+            'label': 'Tooltip Frame Url',
+            'description': 'Optional tooltip frame image URL',
+            'tier': 'presentation',
+          },
+          'draggable': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Draggable',
+            'description': 'Whether this slot\'s equipped item is draggable',
             'tier': 'presentation',
           },
           'className': {
@@ -778,13 +799,8 @@ export function stdUiTraitSlotTraitSlotOrbital(params: StdUiTraitSlotTraitSlotOr
             'description': 'Error state',
             'tier': 'presentation',
             'properties': {
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'stack': {
-                'name': 'stack',
+              'code': {
+                'name': 'code',
                 'type': 'string',
                 'required': false,
               },
@@ -793,8 +809,13 @@ export function stdUiTraitSlotTraitSlotOrbital(params: StdUiTraitSlotTraitSlotOr
                 'type': 'string',
                 'required': true,
               },
-              'code': {
-                'name': 'code',
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'stack': {
+                'name': 'stack',
                 'type': 'string',
                 'required': false,
               },
@@ -806,11 +827,6 @@ export function stdUiTraitSlotTraitSlotOrbital(params: StdUiTraitSlotTraitSlotOr
             'description': 'Currently equipped item, if any',
             'tier': 'presentation',
             'properties': {
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': true,
-              },
               'id': {
                 'name': 'id',
                 'type': 'string',
@@ -831,6 +847,11 @@ export function stdUiTraitSlotTraitSlotOrbital(params: StdUiTraitSlotTraitSlotOr
                 'type': 'string',
                 'required': false,
               },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': true,
+              },
               'description': {
                 'name': 'description',
                 'type': 'string',
@@ -841,6 +862,16 @@ export function stdUiTraitSlotTraitSlotOrbital(params: StdUiTraitSlotTraitSlotOr
                 'type': 'object',
                 'required': false,
                 'properties': {
+                  'description': {
+                    'name': 'description',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'name': {
+                    'name': 'name',
+                    'type': 'string',
+                    'required': true,
+                  },
                   'states': {
                     'name': 'states',
                     'type': 'array',
@@ -861,16 +892,6 @@ export function stdUiTraitSlotTraitSlotOrbital(params: StdUiTraitSlotTraitSlotOr
                     'items': {
                       'type': 'object',
                       'properties': {
-                        'guardHint': {
-                          'name': 'guardHint',
-                          'type': 'string',
-                          'required': false,
-                        },
-                        'to': {
-                          'name': 'to',
-                          'type': 'string',
-                          'required': true,
-                        },
                         'event': {
                           'name': 'event',
                           'type': 'string',
@@ -881,50 +902,62 @@ export function stdUiTraitSlotTraitSlotOrbital(params: StdUiTraitSlotTraitSlotOr
                           'type': 'string',
                           'required': true,
                         },
+                        'guardHint': {
+                          'name': 'guardHint',
+                          'type': 'string',
+                          'required': false,
+                        },
+                        'to': {
+                          'name': 'to',
+                          'type': 'string',
+                          'required': true,
+                        },
                       },
                     },
-                  },
-                  'description': {
-                    'name': 'description',
-                    'type': 'string',
-                    'required': false,
-                  },
-                  'name': {
-                    'name': 'name',
-                    'type': 'string',
-                    'required': true,
                   },
                 },
               },
             },
           },
-          'showTooltip': {
-            'type': 'boolean',
-            'default': true,
-            'label': 'Show Tooltip',
-            'description': 'Show tooltip on hover',
+          'categoryColors': {
+            'type': 'Map<string,TraitSlotCategoryColorsValue>',
+            'default': {},
+            'label': 'Category Colors',
+            'description': 'Category → color mapping',
             'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'border': {
+                  'name': 'border',
+                  'type': 'string',
+                  'required': true,
+                },
+                'bg': {
+                  'name': 'bg',
+                  'type': 'string',
+                  'required': true,
+                },
+              },
+            },
           },
-          'slotNumber': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Slot Number',
-            'description': 'Slot index (1-based)',
-            'tier': 'presentation',
-          },
-          'lockLabel': {
-            'type': 'string',
-            'default': 'Lock Label',
-            'label': 'Lock Label',
-            'description': 'Label shown when locked',
-            'tier': 'presentation',
-          },
-          'draggable': {
+          'isLoading': {
             'type': 'boolean',
             'default': false,
-            'label': 'Draggable',
-            'description': 'Whether this slot\'s equipped item is draggable',
+            'label': 'Is Loading',
+            'description': 'Loading state',
             'tier': 'presentation',
+          },
+          'feedback': {
+            'type': 'string',
+            'default': 'correct',
+            'label': 'Feedback',
+            'description': 'Per-slot correctness feedback after a failed attempt',
+            'tier': 'presentation',
+            'values': [
+              'correct',
+              'wrong',
+            ],
           },
           'size': {
             'type': 'string',
@@ -938,45 +971,12 @@ export function stdUiTraitSlotTraitSlotOrbital(params: StdUiTraitSlotTraitSlotOr
               'lg',
             ],
           },
-          'feedback': {
+          'lockLabel': {
             'type': 'string',
-            'default': 'correct',
-            'label': 'Feedback',
-            'description': 'Per-slot correctness feedback after a failed attempt',
+            'default': 'Lock Label',
+            'label': 'Lock Label',
+            'description': 'Label shown when locked',
             'tier': 'presentation',
-            'values': [
-              'correct',
-              'wrong',
-            ],
-          },
-          'selected': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Selected',
-            'description': 'Whether slot is selected',
-            'tier': 'presentation',
-          },
-          'categoryColors': {
-            'type': 'Map<string,TraitSlotCategoryColorsValue>',
-            'default': {},
-            'label': 'Category Colors',
-            'description': 'Category → color mapping',
-            'tier': 'presentation',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'bg': {
-                  'name': 'bg',
-                  'type': 'string',
-                  'required': true,
-                },
-                'border': {
-                  'name': 'border',
-                  'type': 'string',
-                  'required': true,
-                },
-              },
-            },
           },
         },
         'scope': 'instance',

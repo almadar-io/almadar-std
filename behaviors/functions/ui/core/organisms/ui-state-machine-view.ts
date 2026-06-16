@@ -39,11 +39,11 @@ export type StdUiStateMachineViewEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiStateMachineViewConfig {
+  error?: EntityRow;
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `""` */
   className?: string;
-  error?: EntityRow;
 }
 
 /**
@@ -148,9 +148,9 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
                   'main',
                   {
                     'isLoading': '@config.isLoading',
+                    'className': '@config.className',
                     'type': 'state-machine-view',
                     'error': '@config.error',
-                    'className': '@config.className',
                   },
                 ],
               ],
@@ -158,6 +158,34 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
           ],
         },
         'config': {
+          'error': {
+            'type': 'StateMachineViewError',
+            'label': 'Error',
+            'description': 'Error state',
+            'tier': 'presentation',
+            'properties': {
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+            },
+          },
           'isLoading': {
             'type': 'boolean',
             'default': false,
@@ -171,34 +199,6 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
             'label': 'Class Name',
             'description': 'Additional CSS classes',
             'tier': 'presentation',
-          },
-          'error': {
-            'type': 'StateMachineViewError',
-            'label': 'Error',
-            'description': 'Error state',
-            'tier': 'presentation',
-            'properties': {
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-            },
           },
         },
         'scope': 'instance',

@@ -54,11 +54,11 @@ export interface StdUiSequencerBoardCompletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiSequencerBoardConfig {
-  /** Default: `1000` */
-  stepDurationMs?: number;
   entityProp?: EntityRow;
   /** Default: `{}` */
   categoryColors?: unknown;
+  /** Default: `1000` */
+  stepDurationMs?: number;
 }
 
 /**
@@ -227,11 +227,11 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                   'main',
                   {
                     'type': 'sequencer-board',
-                    'entity': '@config.entityProp',
-                    'categoryColors': '@config.categoryColors',
-                    'completeEvent': 'COMPLETE',
-                    'stepDurationMs': '@config.stepDurationMs',
                     'playEvent': 'PLAY',
+                    'completeEvent': 'COMPLETE',
+                    'entity': '@config.entityProp',
+                    'stepDurationMs': '@config.stepDurationMs',
+                    'categoryColors': '@config.categoryColors',
                   },
                 ],
               ],
@@ -239,13 +239,6 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
           ],
         },
         'config': {
-          'stepDurationMs': {
-            'type': 'number',
-            'default': 1000,
-            'label': 'Step Duration Ms',
-            'description': 'Playback speed in ms per step',
-            'tier': 'presentation',
-          },
           'entityProp': {
             'type': 'SequencerBoardEntity',
             'label': 'Entity',
@@ -253,8 +246,59 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
             'synonyms': 'entity',
             'tier': 'presentation',
             'properties': {
-              'failMessage': {
-                'name': 'failMessage',
+              'path': {
+                'name': 'path',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'y': {
+                      'name': 'y',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'x': {
+                      'name': 'x',
+                      'type': 'number',
+                      'required': true,
+                    },
+                  },
+                },
+              },
+              'maxSlots': {
+                'name': 'maxSlots',
+                'type': 'number',
+                'required': true,
+              },
+              'id': {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              'headerImage': {
+                'name': 'headerImage',
+                'type': 'string',
+                'required': false,
+              },
+              'title': {
+                'name': 'title',
+                'type': 'string',
+                'required': true,
+              },
+              'solutions': {
+                'name': 'solutions',
+                'type': 'array',
+                'required': true,
+                'items': {
+                  'type': 'array',
+                  'items': {
+                    'type': 'string',
+                  },
+                },
+              },
+              'hint': {
+                'name': 'hint',
                 'type': 'string',
                 'required': false,
               },
@@ -263,60 +307,105 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                 'type': 'string',
                 'required': true,
               },
-              'hint': {
-                'name': 'hint',
-                'type': 'string',
-                'required': false,
-              },
-              'id': {
-                'name': 'id',
-                'type': 'string',
-                'required': true,
-              },
-              'maxSlots': {
-                'name': 'maxSlots',
-                'type': 'number',
-                'required': true,
-              },
-              'allowDuplicates': {
-                'name': 'allowDuplicates',
-                'type': 'boolean',
-                'required': false,
-              },
-              'title': {
-                'name': 'title',
-                'type': 'string',
-                'required': true,
-              },
-              'path': {
-                'name': 'path',
+              'availableActions': {
+                'name': 'availableActions',
                 'type': 'array',
-                'required': false,
+                'required': true,
                 'items': {
                   'type': 'object',
                   'properties': {
-                    'x': {
-                      'name': 'x',
-                      'type': 'number',
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
                       'required': true,
                     },
-                    'y': {
-                      'name': 'y',
-                      'type': 'number',
+                    'iconUrl': {
+                      'name': 'iconUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'iconEmoji': {
+                      'name': 'iconEmoji',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'category': {
+                      'name': 'category',
+                      'type': 'string',
                       'required': true,
+                    },
+                    'id': {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'description': {
+                      'name': 'description',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'stateMachine': {
+                      'name': 'stateMachine',
+                      'type': 'object',
+                      'required': false,
+                      'properties': {
+                        'description': {
+                          'name': 'description',
+                          'type': 'string',
+                          'required': false,
+                        },
+                        'name': {
+                          'name': 'name',
+                          'type': 'string',
+                          'required': true,
+                        },
+                        'currentState': {
+                          'name': 'currentState',
+                          'type': 'string',
+                          'required': true,
+                        },
+                        'transitions': {
+                          'name': 'transitions',
+                          'type': 'array',
+                          'required': true,
+                          'items': {
+                            'type': 'object',
+                            'properties': {
+                              'to': {
+                                'name': 'to',
+                                'type': 'string',
+                                'required': true,
+                              },
+                              'from': {
+                                'name': 'from',
+                                'type': 'string',
+                                'required': true,
+                              },
+                              'event': {
+                                'name': 'event',
+                                'type': 'string',
+                                'required': true,
+                              },
+                              'guardHint': {
+                                'name': 'guardHint',
+                                'type': 'string',
+                                'required': false,
+                              },
+                            },
+                          },
+                        },
+                        'states': {
+                          'name': 'states',
+                          'type': 'array',
+                          'required': true,
+                          'items': {
+                            'type': 'string',
+                          },
+                        },
+                      },
                     },
                   },
                 },
-              },
-              'headerImage': {
-                'name': 'headerImage',
-                'type': 'string',
-                'required': false,
-              },
-              'successMessage': {
-                'name': 'successMessage',
-                'type': 'string',
-                'required': false,
               },
               'theme': {
                 'name': 'theme',
@@ -335,116 +424,20 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                   },
                 },
               },
-              'availableActions': {
-                'name': 'availableActions',
-                'type': 'array',
-                'required': true,
-                'items': {
-                  'type': 'object',
-                  'properties': {
-                    'stateMachine': {
-                      'name': 'stateMachine',
-                      'type': 'object',
-                      'required': false,
-                      'properties': {
-                        'description': {
-                          'name': 'description',
-                          'type': 'string',
-                          'required': false,
-                        },
-                        'name': {
-                          'name': 'name',
-                          'type': 'string',
-                          'required': true,
-                        },
-                        'states': {
-                          'name': 'states',
-                          'type': 'array',
-                          'required': true,
-                          'items': {
-                            'type': 'string',
-                          },
-                        },
-                        'currentState': {
-                          'name': 'currentState',
-                          'type': 'string',
-                          'required': true,
-                        },
-                        'transitions': {
-                          'name': 'transitions',
-                          'type': 'array',
-                          'required': true,
-                          'items': {
-                            'type': 'object',
-                            'properties': {
-                              'from': {
-                                'name': 'from',
-                                'type': 'string',
-                                'required': true,
-                              },
-                              'guardHint': {
-                                'name': 'guardHint',
-                                'type': 'string',
-                                'required': false,
-                              },
-                              'to': {
-                                'name': 'to',
-                                'type': 'string',
-                                'required': true,
-                              },
-                              'event': {
-                                'name': 'event',
-                                'type': 'string',
-                                'required': true,
-                              },
-                            },
-                          },
-                        },
-                      },
-                    },
-                    'id': {
-                      'name': 'id',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'category': {
-                      'name': 'category',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'description': {
-                      'name': 'description',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'iconEmoji': {
-                      'name': 'iconEmoji',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'iconUrl': {
-                      'name': 'iconUrl',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'name': {
-                      'name': 'name',
-                      'type': 'string',
-                      'required': true,
-                    },
-                  },
-                },
+              'successMessage': {
+                'name': 'successMessage',
+                'type': 'string',
+                'required': false,
               },
-              'solutions': {
-                'name': 'solutions',
-                'type': 'array',
-                'required': true,
-                'items': {
-                  'type': 'array',
-                  'items': {
-                    'type': 'string',
-                  },
-                },
+              'allowDuplicates': {
+                'name': 'allowDuplicates',
+                'type': 'boolean',
+                'required': false,
+              },
+              'failMessage': {
+                'name': 'failMessage',
+                'type': 'string',
+                'required': false,
               },
             },
           },
@@ -469,6 +462,13 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                 },
               },
             },
+          },
+          'stepDurationMs': {
+            'type': 'number',
+            'default': 1000,
+            'label': 'Step Duration Ms',
+            'description': 'Playback speed in ms per step',
+            'tier': 'presentation',
           },
         },
         'scope': 'instance',

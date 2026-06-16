@@ -190,8 +190,8 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
                   'main',
                   {
                     'type': 'builder-board',
-                    'entity': '@config.entityProp',
                     'completeEvent': 'COMPLETE',
+                    'entity': '@config.entityProp',
                   },
                 ],
               ],
@@ -206,50 +206,10 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
             'synonyms': 'entity',
             'tier': 'presentation',
             'properties': {
-              'components': {
-                'name': 'components',
-                'type': 'array',
-                'required': true,
-                'items': {
-                  'type': 'object',
-                  'properties': {
-                    'id': {
-                      'name': 'id',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'category': {
-                      'name': 'category',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'label': {
-                      'name': 'label',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'iconEmoji': {
-                      'name': 'iconEmoji',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'description': {
-                      'name': 'description',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'iconUrl': {
-                      'name': 'iconUrl',
-                      'type': 'string',
-                      'required': false,
-                    },
-                  },
-                },
-              },
-              'description': {
-                'name': 'description',
+              'hint': {
+                'name': 'hint',
                 'type': 'string',
-                'required': true,
+                'required': false,
               },
               'theme': {
                 'name': 'theme',
@@ -268,16 +228,6 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
                   },
                 },
               },
-              'headerImage': {
-                'name': 'headerImage',
-                'type': 'string',
-                'required': false,
-              },
-              'successMessage': {
-                'name': 'successMessage',
-                'type': 'string',
-                'required': false,
-              },
               'id': {
                 'name': 'id',
                 'type': 'string',
@@ -288,13 +238,13 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
                 'type': 'string',
                 'required': true,
               },
-              'failMessage': {
-                'name': 'failMessage',
+              'successMessage': {
+                'name': 'successMessage',
                 'type': 'string',
                 'required': false,
               },
-              'hint': {
-                'name': 'hint',
+              'failMessage': {
+                'name': 'failMessage',
                 'type': 'string',
                 'required': false,
               },
@@ -305,15 +255,50 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
                 'items': {
                   'type': 'object',
                   'properties': {
+                    'acceptsComponentId': {
+                      'name': 'acceptsComponentId',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'description': {
+                      'name': 'description',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'id': {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
                     'label': {
                       'name': 'label',
                       'type': 'string',
                       'required': true,
                     },
-                    'acceptsComponentId': {
-                      'name': 'acceptsComponentId',
+                  },
+                },
+              },
+              'headerImage': {
+                'name': 'headerImage',
+                'type': 'string',
+                'required': false,
+              },
+              'description': {
+                'name': 'description',
+                'type': 'string',
+                'required': true,
+              },
+              'components': {
+                'name': 'components',
+                'type': 'array',
+                'required': true,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'category': {
+                      'name': 'category',
                       'type': 'string',
-                      'required': true,
+                      'required': false,
                     },
                     'id': {
                       'name': 'id',
@@ -322,6 +307,21 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
                     },
                     'description': {
                       'name': 'description',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'iconUrl': {
+                      'name': 'iconUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'label': {
+                      'name': 'label',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'iconEmoji': {
+                      'name': 'iconEmoji',
                       'type': 'string',
                       'required': false,
                     },

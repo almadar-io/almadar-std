@@ -46,21 +46,21 @@ export interface StdUiItemSlotClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiItemSlotConfig {
-  /** Default: `"Label"` */
-  label?: string;
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
+  /** Default: `0` */
+  quantity?: number;
   /** Default: `"common"` */
   rarity?: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
   /** Default: `false` */
   selected?: boolean;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
+  /** Default: `"Label"` */
+  label?: string;
+  /** Default: `false` */
+  empty?: boolean;
   icon?: unknown;
   /** Default: `""` */
   className?: string;
-  /** Default: `false` */
-  empty?: boolean;
-  /** Default: `0` */
-  quantity?: number;
 }
 
 /**

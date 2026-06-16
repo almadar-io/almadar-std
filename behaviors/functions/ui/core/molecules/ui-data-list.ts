@@ -81,57 +81,57 @@ export interface StdUiDataListLoadMorePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiDataListConfig {
-  /** Default: `"Drag Group"` */
-  dragGroup?: string;
-  /** Default: `[]` */
-  fields?: EntityRow[];
-  /** Default: `[]` */
-  columns?: EntityRow[];
-  /** Default: `[]` */
-  itemActions?: EntityRow[];
-  /** Default: `"Group By"` */
-  groupBy?: string;
-  /** Default: `"Current User"` */
-  currentUser?: string;
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `5` */
   pageSize?: number;
-  /** Default: `[]` */
-  swipeLeftActions?: EntityRow[];
-  /** Default: `"none"` */
-  gap?: 'none' | 'sm' | 'md' | 'lg';
   /** Default: `"default"` */
   variant?: 'default' | 'card' | 'compact' | 'message';
-  /** Default: `0` */
-  maxInlineActions?: number;
+  /** Default: `false` */
+  hasMore?: boolean;
+  /** Default: `[]` */
+  columns?: EntityRow[];
+  /** Default: `"Current User"` */
+  currentUser?: string;
+  /** Default: `"Drag Group"` */
+  dragGroup?: string;
+  /** Default: `"Group By"` */
+  groupBy?: string;
   /** Default: `false` */
   dndRoot?: boolean;
-  /** Default: `"Drop Event"` */
-  dropEvent?: string;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"Accepts"` */
-  accepts?: string;
+  /** Default: `[]` */
+  itemActions?: EntityRow[];
+  error?: EntityRow;
+  /** Default: `"Position Event"` */
+  positionEvent?: string;
   /** Default: `"Sender Field"` */
   senderField?: string;
   /** Default: `false` */
   reorderable?: boolean;
-  /** Default: `false` */
-  infiniteScroll?: boolean;
-  /** Default: `"Position Event"` */
-  positionEvent?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"Drop Event"` */
+  dropEvent?: string;
   /** Default: `[]` */
-  swipeRightActions?: EntityRow[];
-  /** Default: `false` */
-  hasMore?: boolean;
-  /** Default: `"dense"` */
-  look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
+  swipeLeftActions?: EntityRow[];
   /** Default: `false` */
   sortable?: boolean;
-  error?: EntityRow;
+  /** Default: `"Accepts"` */
+  accepts?: string;
+  /** Default: `[]` */
+  fields?: EntityRow[];
+  /** Default: `[]` */
+  swipeRightActions?: EntityRow[];
+  /** Default: `0` */
+  maxInlineActions?: number;
+  /** Default: `false` */
+  infiniteScroll?: boolean;
+  /** Default: `"none"` */
+  gap?: 'none' | 'sm' | 'md' | 'lg';
   /** Default: `"Dnd Item Id Field"` */
   dndItemIdField?: string;
+  /** Default: `"dense"` */
+  look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
 }
 
 /**

@@ -41,16 +41,16 @@ export type StdUiHealthBarEventKey = 'INIT';
 export interface StdUiHealthBarConfig {
   /** Default: `""` */
   className?: string;
+  /** Default: `0` */
+  current?: number;
   /** Default: `true` */
   animated?: boolean;
   /** Default: `"hearts"` */
   format?: 'hearts' | 'bar' | 'numeric';
-  /** Default: `0` */
-  current?: number;
-  /** Default: `0` */
-  max?: number;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
+  /** Default: `0` */
+  max?: number;
 }
 
 /**

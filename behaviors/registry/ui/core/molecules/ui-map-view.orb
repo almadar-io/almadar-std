@@ -223,20 +223,20 @@
                     "render-ui",
                     "main",
                     {
-                      "routes": "@config.routes",
-                      "centerLat": "@config.centerLat",
-                      "markers": "@config.markers",
-                      "onMapClick": "MAP_CLICK",
-                      "type": "map-view",
-                      "onMarkerClick": "MARKER_CLICK",
-                      "markerClickEvent": "MARKER_CLICK",
-                      "height": "@config.height",
-                      "mapClickEvent": "MAP_CLICK",
-                      "centerLng": "@config.centerLng",
-                      "showAttribution": "@config.showAttribution",
-                      "showClickedPin": "@config.showClickedPin",
                       "zoom": "@config.zoom",
-                      "className": "@config.className"
+                      "routes": "@config.routes",
+                      "onMapClick": "MAP_CLICK",
+                      "onMarkerClick": "MARKER_CLICK",
+                      "height": "@config.height",
+                      "showClickedPin": "@config.showClickedPin",
+                      "type": "map-view",
+                      "markerClickEvent": "MARKER_CLICK",
+                      "mapClickEvent": "MAP_CLICK",
+                      "className": "@config.className",
+                      "showAttribution": "@config.showAttribution",
+                      "markers": "@config.markers",
+                      "centerLat": "@config.centerLat",
+                      "centerLng": "@config.centerLng"
                     }
                   ]
                 ]
@@ -251,11 +251,11 @@
               "description": "Map center latitude",
               "tier": "presentation"
             },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
+            "zoom": {
+              "type": "number",
+              "default": 13.0,
+              "label": "Zoom",
+              "description": "Zoom level (1-18, default 13)",
               "tier": "presentation"
             },
             "centerLng": {
@@ -265,11 +265,11 @@
               "description": "Map center longitude",
               "tier": "presentation"
             },
-            "showAttribution": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Attribution",
-              "description": "Show attribution (default true)",
+            "height": {
+              "type": "string",
+              "default": "400px",
+              "label": "Height",
+              "description": "Height of the map container (default '400px')",
               "tier": "presentation"
             },
             "markers": {
@@ -286,8 +286,18 @@
                     "type": "string",
                     "required": true
                   },
+                  "lng": {
+                    "name": "lng",
+                    "type": "number",
+                    "required": true
+                  },
                   "label": {
                     "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
+                  "category": {
+                    "name": "category",
                     "type": "string",
                     "required": false
                   },
@@ -295,33 +305,9 @@
                     "name": "lat",
                     "type": "number",
                     "required": true
-                  },
-                  "lng": {
-                    "name": "lng",
-                    "type": "number",
-                    "required": true
-                  },
-                  "category": {
-                    "name": "category",
-                    "type": "string",
-                    "required": false
                   }
                 }
               }
-            },
-            "height": {
-              "type": "string",
-              "default": "400px",
-              "label": "Height",
-              "description": "Height of the map container (default '400px')",
-              "tier": "presentation"
-            },
-            "showClickedPin": {
-              "type": "boolean",
-              "default": false,
-              "label": "Show Clicked Pin",
-              "description": "Whether to show a pin at the clicked location",
-              "tier": "presentation"
             },
             "routes": {
               "type": "[MapViewRoutesItem]",
@@ -332,10 +318,10 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "weight": {
-                    "name": "weight",
-                    "type": "number",
-                    "required": false
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
                   },
                   "waypoints": {
                     "name": "waypoints",
@@ -344,28 +330,18 @@
                     "items": {
                       "type": "object",
                       "properties": {
-                        "lat": {
-                          "name": "lat",
+                        "lng": {
+                          "name": "lng",
                           "type": "number",
                           "required": true
                         },
-                        "lng": {
-                          "name": "lng",
+                        "lat": {
+                          "name": "lat",
                           "type": "number",
                           "required": true
                         }
                       }
                     }
-                  },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  "color": {
-                    "name": "color",
-                    "type": "string",
-                    "required": false
                   },
                   "opacity": {
                     "name": "opacity",
@@ -381,15 +357,39 @@
                     "name": "label",
                     "type": "string",
                     "required": false
+                  },
+                  "color": {
+                    "name": "color",
+                    "type": "string",
+                    "required": false
+                  },
+                  "weight": {
+                    "name": "weight",
+                    "type": "number",
+                    "required": false
                   }
                 }
               }
             },
-            "zoom": {
-              "type": "number",
-              "default": 13.0,
-              "label": "Zoom",
-              "description": "Zoom level (1-18, default 13)",
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "showAttribution": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Attribution",
+              "description": "Show attribution (default true)",
+              "tier": "presentation"
+            },
+            "showClickedPin": {
+              "type": "boolean",
+              "default": false,
+              "label": "Show Clicked Pin",
+              "description": "Whether to show a pin at the clicked location",
               "tier": "presentation"
             }
           },

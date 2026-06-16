@@ -69,49 +69,49 @@ export interface StdUiIsometricCanvasTileLeavePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiIsometricCanvasConfig {
-  error?: EntityRow;
-  /** Default: `[]` */
-  features?: EntityRow[];
-  /** Default: `""` */
-  className?: string;
-  /** Default: `[]` */
-  attackTargets?: EntityRow[];
-  /** Default: `[]` */
-  validMoves?: EntityRow[];
-  /** Default: `true` */
-  showMinimap?: boolean;
-  /** Default: `0` */
-  boardHeight?: number;
-  /** Default: `false` */
-  hasActiveEffects?: boolean;
-  /** Default: `[]` */
-  effectSpriteUrls?: string[];
-  /** Default: `false` */
-  debug?: boolean;
-  hoveredTile?: EntityRow;
-  /** Default: `[]` */
-  units?: EntityRow[];
   /** Default: `"https://almadar-kflow-assets.web.app/shared/isometric-blocks/Preview.png"` */
-  backgroundImage?: string;
+  backgroundImage?: unknown;
   /** Default: `1` */
   unitScale?: number;
+  /** Default: `true` */
+  enableCamera?: boolean;
+  hoveredTile?: EntityRow;
   /** Default: `0` */
   diamondTopY?: number;
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/"` */
-  assetBaseUrl?: string;
-  assetManifest?: EntityRow;
   /** Default: `[]` */
-  tiles?: EntityRow[];
+  features?: EntityRow[];
   /** Default: `0.4` */
   scale?: number;
   /** Default: `0` */
   boardWidth?: number;
-  /** Default: `false` */
-  isLoading?: boolean;
   /** Default: `"Selected Unit Id"` */
   selectedUnitId?: string;
   /** Default: `true` */
-  enableCamera?: boolean;
+  showMinimap?: boolean;
+  error?: EntityRow;
+  /** Default: `[]` */
+  units?: EntityRow[];
+  /** Default: `false` */
+  hasActiveEffects?: boolean;
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/"` */
+  assetBaseUrl?: unknown;
+  /** Default: `[]` */
+  effectSpriteUrls?: string[];
+  /** Default: `false` */
+  debug?: boolean;
+  assetManifest?: EntityRow;
+  /** Default: `[]` */
+  tiles?: EntityRow[];
+  /** Default: `[]` */
+  validMoves?: EntityRow[];
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `0` */
+  boardHeight?: number;
+  /** Default: `[]` */
+  attackTargets?: EntityRow[];
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

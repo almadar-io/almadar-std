@@ -48,20 +48,20 @@ export interface StdUiCodeBlockChangePayload {
 export interface StdUiCodeBlockConfig {
   /** Default: `""` */
   className?: string;
+  /** Default: `false` */
+  editable?: boolean;
+  /** Default: `true` */
+  showCopyButton?: boolean;
+  /** Default: `"60vh"` */
+  maxHeight?: string;
   /** Default: `"text"` */
   language?: string;
   /** Default: `true` */
   showLanguageBadge?: boolean;
   /** Default: `false` */
-  editable?: boolean;
-  /** Default: `true` */
-  showCopyButton?: boolean;
+  foldable?: boolean;
   /** Default: `"Code"` */
   code?: string;
-  /** Default: `false` */
-  foldable?: boolean;
-  /** Default: `"60vh"` */
-  maxHeight?: string;
 }
 
 /**

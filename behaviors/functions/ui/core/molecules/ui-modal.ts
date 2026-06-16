@@ -54,24 +54,24 @@ export interface StdUiModalOpenPayload {
  */
 export interface StdUiModalConfig {
   /** Default: `true` */
-  closeOnOverlayClick?: boolean;
-  /** Default: `true` */
   closeOnEscape?: boolean;
+  footer?: unknown;
+  /** Default: `""` */
+  className?: string;
   /** Default: `true` */
-  isOpen?: boolean;
+  showCloseButton?: boolean;
   /** Default: `"centered-card"` */
   look?: 'centered-card' | 'top-sheet' | 'side-drawer' | 'full-screen';
   /** Default: `true` */
-  showCloseButton?: boolean;
-  footer?: unknown;
-  /** Default: `true` */
-  swipeDownToClose?: boolean;
+  closeOnOverlayClick?: boolean;
   /** Default: `"Title"` */
   title?: string;
+  /** Default: `true` */
+  isOpen?: boolean;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
-  /** Default: `""` */
-  className?: string;
+  /** Default: `true` */
+  swipeDownToClose?: boolean;
 }
 
 /**

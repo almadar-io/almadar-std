@@ -53,51 +53,51 @@ export interface StdUiTableViewSortPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiTableViewConfig {
-  error?: EntityRow;
-  /** Default: `[]` */
-  columns?: EntityRow[];
-  /** Default: `false` */
-  sortable?: boolean;
-  /** Default: `"Drop Event"` */
-  dropEvent?: string;
-  /** Default: `[]` */
-  itemActions?: EntityRow[];
   /** Default: `"Empty Message"` */
   emptyMessage?: string;
+  /** Default: `0` */
+  maxInlineActions?: number;
+  /** Default: `"Drop Event"` */
+  dropEvent?: string;
+  error?: EntityRow;
+  /** Default: `0` */
+  pageSize?: number;
+  /** Default: `"Reorder Event"` */
+  reorderEvent?: string;
+  /** Default: `[]` */
+  itemActions?: EntityRow[];
+  /** Default: `"dense"` */
+  look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'bordered';
+  /** Default: `[]` */
+  columns?: EntityRow[];
+  /** Default: `[]` */
+  fields?: EntityRow[];
+  /** Default: `false` */
+  selectable?: boolean;
+  /** Default: `false` */
+  dndRoot?: boolean;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"asc"` */
+  sortDirection?: 'asc' | 'desc';
+  /** Default: `"Dnd Item Id Field"` */
+  dndItemIdField?: string;
+  /** Default: `"Sort Column"` */
+  sortColumn?: string;
+  /** Default: `[]` */
+  selectedIds?: string[];
+  /** Default: `"Drag Group"` */
+  dragGroup?: string;
+  /** Default: `"Accepts"` */
+  accepts?: string;
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `"Group By"` */
   groupBy?: string;
-  /** Default: `"Sort Column"` */
-  sortColumn?: string;
   /** Default: `false` */
-  selectable?: boolean;
-  /** Default: `0` */
-  pageSize?: number;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"Dnd Item Id Field"` */
-  dndItemIdField?: string;
-  /** Default: `"Drag Group"` */
-  dragGroup?: string;
-  /** Default: `false` */
-  dndRoot?: boolean;
-  /** Default: `"dense"` */
-  look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'bordered';
-  /** Default: `"Accepts"` */
-  accepts?: string;
-  /** Default: `"Reorder Event"` */
-  reorderEvent?: string;
-  /** Default: `0` */
-  maxInlineActions?: number;
-  /** Default: `[]` */
-  selectedIds?: string[];
-  /** Default: `"asc"` */
-  sortDirection?: 'asc' | 'desc';
+  sortable?: boolean;
   /** Default: `"Position Event"` */
   positionEvent?: string;
-  /** Default: `[]` */
-  fields?: EntityRow[];
 }
 
 /**

@@ -48,16 +48,16 @@ export interface StdUiVoteStackVotePayload {
 export interface StdUiVoteStackConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `"Label"` */
-  label?: string;
   /** Default: `false` */
   disabled?: boolean;
-  /** Default: `"up"` */
-  userVote?: 'up' | 'down' | 'none';
   /** Default: `0` */
   count?: number;
   /** Default: `"vertical"` */
   variant?: 'vertical' | 'horizontal';
+  /** Default: `"Label"` */
+  label?: string;
+  /** Default: `"up"` */
+  userVote?: 'up' | 'down' | 'none';
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
 }

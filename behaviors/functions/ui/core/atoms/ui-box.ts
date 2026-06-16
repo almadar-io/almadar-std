@@ -53,41 +53,41 @@ export interface StdUiBoxHoverPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiBoxConfig {
+  /** Default: `"Max Width"` */
+  maxWidth?: string;
   /** Default: `"none"` */
-  padding?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  marginX?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'auto';
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"none"` */
+  shadow?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
+  /** Default: `"relative"` */
+  position?: 'relative' | 'absolute' | 'fixed' | 'sticky';
+  /** Default: `"auto"` */
+  overflow?: 'auto' | 'hidden' | 'visible' | 'scroll';
+  /** Default: `false` */
+  fullWidth?: boolean;
   /** Default: `"none"` */
   rounded?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
   /** Default: `"none"` */
-  marginX?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'auto';
-  actionPayload?: unknown;
-  /** Default: `"block"` */
-  display?: 'block' | 'inline' | 'inline-block' | 'flex' | 'inline-flex' | 'grid';
+  margin?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'auto';
   /** Default: `"none"` */
-  paddingX?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  padding?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   /** Default: `"transparent"` */
   bg?: 'transparent' | 'primary' | 'secondary' | 'muted' | 'accent' | 'surface' | 'overlay';
-  /** Default: `"none"` */
-  paddingY?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
-  /** Default: `"Max Width"` */
-  maxWidth?: string;
-  /** Default: `"relative"` */
-  position?: 'relative' | 'absolute' | 'fixed' | 'sticky';
-  /** Default: `""` */
-  className?: string;
-  /** Default: `false` */
-  border?: boolean;
   /** Default: `false` */
   fullHeight?: boolean;
-  /** Default: `"auto"` */
-  overflow?: 'auto' | 'hidden' | 'visible' | 'scroll';
   /** Default: `"none"` */
   marginY?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'auto';
   /** Default: `"none"` */
-  shadow?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
+  paddingX?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  /** Default: `"block"` */
+  display?: 'block' | 'inline' | 'inline-block' | 'flex' | 'inline-flex' | 'grid';
   /** Default: `"none"` */
-  margin?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'auto';
+  paddingY?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   /** Default: `false` */
-  fullWidth?: boolean;
+  border?: boolean;
+  actionPayload?: unknown;
 }
 
 /**

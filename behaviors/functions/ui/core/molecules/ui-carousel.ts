@@ -47,18 +47,18 @@ export interface StdUiCarouselSlideChangePayload {
  */
 export interface StdUiCarouselConfig {
   /** Default: `true` */
-  showArrows?: boolean;
-  /** Default: `5000` */
-  autoPlayInterval?: number;
-  /** Default: `false` */
-  loop?: boolean;
+  showDots?: boolean;
   slideChangePayload?: unknown;
+  /** Default: `true` */
+  showArrows?: boolean;
   /** Default: `false` */
   autoPlay?: boolean;
+  /** Default: `5000` */
+  autoPlayInterval?: number;
   /** Default: `[]` */
   items?: EntityRow[];
-  /** Default: `true` */
-  showDots?: boolean;
+  /** Default: `false` */
+  loop?: boolean;
   /** Default: `""` */
   className?: string;
 }

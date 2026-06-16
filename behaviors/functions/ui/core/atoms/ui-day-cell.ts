@@ -48,9 +48,9 @@ export interface StdUiDayCellClickPayload {
 export interface StdUiDayCellConfig {
   /** Default: `false` */
   isToday?: boolean;
-  date?: string;
   /** Default: `""` */
   className?: string;
+  date?: string;
 }
 
 /**
