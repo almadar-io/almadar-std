@@ -1,0 +1,100 @@
+app ui-game-canvas-3d-castle-template "1.0.0"
+"GameCanvas3dCastleTemplate — UI factory (1:1 with the @almadar/ui game-canvas-3d-castle-template pattern)."
+orbital GameCanvas3dCastleTemplateOrbital {
+  type GameCanvas3dCastleTemplateAvailableBuildSitesItem = {
+    x : number!
+    z : number!
+  }
+
+  entity GameCanvas3dCastleTemplateItem [runtime] {
+    id : string!
+  }
+
+  trait GameCanvas3dCastleTemplateRender -> @rebindable GameCanvas3dCastleTemplateItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch GameCanvas3dCastleTemplateItem {})
+        (render-ui main {
+          entity: @entity
+          className: @config.className
+          cameraMode: @config.cameraMode
+          showGrid: @config.showGrid
+          shadows: @config.shadows
+          backgroundColor: @config.backgroundColor
+          buildingClickEvent: @config.buildingClickEvent
+          unitClickEvent: @config.unitClickEvent
+          buildEvent: @config.buildEvent
+          recruitEvent: @config.recruitEvent
+          exitEvent: @config.exitEvent
+          selectedBuildingId: @config.selectedBuildingId
+          availableBuildSites: @config.availableBuildSites
+          showHeader: @config.showHeader
+          selectedTileIds: @config.selectedTileIds
+          type: game-canvas-3d-castle-template
+        })
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "External styling override"
+        @tier "presentation"
+      cameraMode : "isometric" | "perspective" | "top-down" = isometric
+        @label "Camera Mode"
+        @description "3D camera mode"
+        @tier "presentation"
+      showGrid : boolean = true
+        @label "Show Grid"
+        @description "Show grid helper"
+        @tier "presentation"
+      shadows : boolean = true
+        @label "Shadows"
+        @description "Enable shadows"
+        @tier "presentation"
+      backgroundColor : string = "#1e1e2e"
+        @label "Background Color"
+        @description "Background color"
+        @tier "presentation"
+      buildingClickEvent : string = "Building Click Event"
+        @label "Building Click Event"
+        @description "Event name for building clicks"
+        @tier "presentation"
+      unitClickEvent : string = "Unit Click Event"
+        @label "Unit Click Event"
+        @description "Event name for unit clicks"
+        @tier "presentation"
+      buildEvent : string = "Build Event"
+        @label "Build Event"
+        @description "Event name for build action"
+        @tier "presentation"
+      recruitEvent : string = "Recruit Event"
+        @label "Recruit Event"
+        @description "Event name for recruit action"
+        @tier "presentation"
+      exitEvent : string = "Exit Event"
+        @label "Exit Event"
+        @description "Event name for exit"
+        @tier "presentation"
+      selectedBuildingId : string = "Selected Building Id"
+        @label "Selected Building Id"
+        @description "Currently selected building ID"
+        @tier "presentation"
+      availableBuildSites : [GameCanvas3dCastleTemplateAvailableBuildSitesItem] = [{ x: 1, z: 1 }]
+        @label "Available Build Sites"
+        @description "Available build positions"
+        @tier "presentation"
+      showHeader : boolean = true
+        @label "Show Header"
+        @description "Show castle name header"
+        @tier "presentation"
+      selectedTileIds : [string] = []
+        @label "Selected Tile Ids"
+        @description "Pre-computed selected tile IDs array"
+        @tier "presentation"
+    }
+  }
+
+  page "/game-canvas-3d-castle-template" as GameCanvas3dCastleTemplatePage -> GameCanvas3dCastleTemplateRender
+}

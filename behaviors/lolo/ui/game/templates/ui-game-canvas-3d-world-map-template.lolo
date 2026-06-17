@@ -1,0 +1,119 @@
+app ui-game-canvas-3d-world-map-template "1.0.0"
+"GameCanvas3dWorldMapTemplate — UI factory (1:1 with the @almadar/ui game-canvas-3d-world-map-template pattern)."
+orbital GameCanvas3dWorldMapTemplateOrbital {
+  type GameCanvas3dWorldMapTemplateValidMovesItem = {
+    x : number!
+    z : number!
+  }
+  type GameCanvas3dWorldMapTemplateAttackTargetsItem = {
+    x : number!
+    z : number!
+  }
+
+  entity GameCanvas3dWorldMapTemplateItem [runtime] {
+    id : string!
+  }
+
+  trait GameCanvas3dWorldMapTemplateRender -> @rebindable GameCanvas3dWorldMapTemplateItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch GameCanvas3dWorldMapTemplateItem {})
+        (render-ui main {
+          entity: @entity
+          className: @config.className
+          cameraMode: @config.cameraMode
+          showGrid: @config.showGrid
+          showCoordinates: @config.showCoordinates
+          showTileInfo: @config.showTileInfo
+          shadows: @config.shadows
+          backgroundColor: @config.backgroundColor
+          tileClickEvent: @config.tileClickEvent
+          unitClickEvent: @config.unitClickEvent
+          featureClickEvent: @config.featureClickEvent
+          tileHoverEvent: @config.tileHoverEvent
+          tileLeaveEvent: @config.tileLeaveEvent
+          cameraChangeEvent: @config.cameraChangeEvent
+          exitEvent: @config.exitEvent
+          selectedUnitId: @config.selectedUnitId
+          validMoves: @config.validMoves
+          attackTargets: @config.attackTargets
+          type: game-canvas-3d-world-map-template
+        })
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "External styling override"
+        @tier "presentation"
+      cameraMode : "isometric" | "perspective" | "top-down" = isometric
+        @label "Camera Mode"
+        @description "3D camera mode"
+        @tier "presentation"
+      showGrid : boolean = true
+        @label "Show Grid"
+        @description "Show grid helper"
+        @tier "presentation"
+      showCoordinates : boolean = true
+        @label "Show Coordinates"
+        @description "Show coordinate overlay"
+        @tier "presentation"
+      showTileInfo : boolean = true
+        @label "Show Tile Info"
+        @description "Show tile info on hover"
+        @tier "presentation"
+      shadows : boolean = true
+        @label "Shadows"
+        @description "Enable shadows"
+        @tier "presentation"
+      backgroundColor : string = "#1a1a2e"
+        @label "Background Color"
+        @description "Background color"
+        @tier "presentation"
+      tileClickEvent : string = "Tile Click Event"
+        @label "Tile Click Event"
+        @description "Event name for tile clicks"
+        @tier "presentation"
+      unitClickEvent : string = "Unit Click Event"
+        @label "Unit Click Event"
+        @description "Event name for unit clicks"
+        @tier "presentation"
+      featureClickEvent : string = "Feature Click Event"
+        @label "Feature Click Event"
+        @description "Event name for feature clicks"
+        @tier "presentation"
+      tileHoverEvent : string = "Tile Hover Event"
+        @label "Tile Hover Event"
+        @description "Event name for tile hover"
+        @tier "presentation"
+      tileLeaveEvent : string = "Tile Leave Event"
+        @label "Tile Leave Event"
+        @description "Event name for tile leave"
+        @tier "presentation"
+      cameraChangeEvent : string = "Camera Change Event"
+        @label "Camera Change Event"
+        @description "Event name for camera changes"
+        @tier "presentation"
+      exitEvent : string = "Exit Event"
+        @label "Exit Event"
+        @description "Exit/back event name"
+        @tier "presentation"
+      selectedUnitId : string = "Selected Unit Id"
+        @label "Selected Unit Id"
+        @description "Currently selected unit ID"
+        @tier "presentation"
+      validMoves : [GameCanvas3dWorldMapTemplateValidMovesItem] = [{ x: 1, z: 1 }]
+        @label "Valid Moves"
+        @description "Valid move positions for selected unit"
+        @tier "presentation"
+      attackTargets : [GameCanvas3dWorldMapTemplateAttackTargetsItem] = [{ x: 1, z: 1 }]
+        @label "Attack Targets"
+        @description "Attack target positions"
+        @tier "presentation"
+    }
+  }
+
+  page "/game-canvas-3d-world-map-template" as GameCanvas3dWorldMapTemplatePage -> GameCanvas3dWorldMapTemplateRender
+}

@@ -1,0 +1,308 @@
+app ui-game-canvas-3d "1.0.0"
+"GameCanvas3d — UI factory (1:1 with the @almadar/ui game-canvas-3d pattern)."
+orbital GameCanvas3dOrbital {
+  type GameCanvas3dTilesItem = {
+    id : string
+    x : number!
+    y : number!
+    z : number
+    terrain : string
+    type : string
+    terrainSprite : asset
+    passable : boolean
+    movementCost : number
+    tileType : string
+    elevation : number
+  }
+  type GameCanvas3dUnitsItem = {
+    id : string!
+    position : GameCanvas3dUnitsItemPosition
+    x : number
+    y : number
+    z : number
+    sprite : json
+    unitType : string
+    heroId : string
+    name : string
+    team : "player" | "enemy" | "neutral"
+    faction : "player" | "enemy" | "neutral"
+    health : number
+    maxHealth : number
+    traits : [GameCanvas3dUnitsItemTraitsItem]
+    previousPosition : GameCanvas3dUnitsItemPreviousPosition
+    elevation : number
+  }
+  type GameCanvas3dUnitsItemPosition = {
+    x : number!
+    y : number!
+  }
+  type GameCanvas3dUnitsItemTraitsItem = {
+    name : string!
+    currentState : string!
+    states : [string]!
+    cooldown : number!
+  }
+  type GameCanvas3dUnitsItemPreviousPosition = {
+    x : number!
+    y : number!
+  }
+  type GameCanvas3dFeaturesItem = {
+    id : string
+    x : number!
+    y : number!
+    z : number
+    type : string!
+    sprite : json
+    assetUrl : json
+    color : string
+    elevation : number
+  }
+  type GameCanvas3dEventsItem = {
+    id : string!
+    type : string!
+    x : number!
+    z : number
+    y : number
+    message : string
+  }
+  type GameCanvas3dValidMovesItem = {
+    x : number!
+    z : number!
+  }
+  type GameCanvas3dAttackTargetsItem = {
+    x : number!
+    z : number!
+  }
+
+  entity GameCanvas3dItem [runtime] {
+    id : string!
+  }
+
+  trait GameCanvas3dRender -> @rebindable GameCanvas3dItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch GameCanvas3dItem {})
+        (render-ui main {
+          className: @config.className
+          children: [{ content: "Sample content", type: typography }]
+          isLoading: @config.isLoading
+          error: @config.error
+          entity: GameCanvas3dItem
+          tiles: @config.tiles
+          units: @config.units
+          features: @config.features
+          events: @config.events
+          fogOfWar: @config.fogOfWar
+          orientation: @config.orientation
+          cameraMode: @config.cameraMode
+          showGrid: @config.showGrid
+          showCoordinates: @config.showCoordinates
+          showTileInfo: @config.showTileInfo
+          overlay: @config.overlay
+          shadows: @config.shadows
+          backgroundColor: @config.backgroundColor
+          onUnitAnimation: UNIT_ANIMATION
+          assetLoader: @config.assetLoader
+          tileRenderer: @config.tileRenderer
+          unitRenderer: @config.unitRenderer
+          featureRenderer: @config.featureRenderer
+          preloadAssets: @config.preloadAssets
+          tileClickEvent: TILE_CLICK
+          unitClickEvent: UNIT_CLICK
+          featureClickEvent: FEATURE_CLICK
+          canvasClickEvent: CANVAS_CLICK
+          tileHoverEvent: TILE_HOVER
+          tileLeaveEvent: TILE_LEAVE
+          unitAnimationEvent: UNIT_ANIMATION
+          cameraChangeEvent: CAMERA_CHANGE
+          loadingMessage: @config.loadingMessage
+          useInstancing: @config.useInstancing
+          validMoves: @config.validMoves
+          attackTargets: @config.attackTargets
+          selectedTileIds: @config.selectedTileIds
+          selectedUnitId: @config.selectedUnitId
+          type: game-canvas-3d
+        })
+    }
+
+    emits {
+      UNIT_ANIMATION -> external {
+        unitId : string
+        state : string
+        timestamp : number!
+      }
+        @description "Callback for unit animation state change"
+        @tier "essential"
+      TILE_CLICK -> external {
+        tileId : string!
+        x : number!
+        z : number!
+        terrain : string
+        elevation : number
+      }
+        @description "Declarative event: tile click"
+        @tier "essential"
+      UNIT_CLICK -> external {
+        unitId : string!
+        x : number!
+        z : number!
+        unitType : string
+        name : string
+        team : string
+        faction : string
+        health : number
+        maxHealth : number
+      }
+        @description "Declarative event: unit click"
+        @tier "essential"
+      FEATURE_CLICK -> external {
+        featureId : string!
+        x : number!
+        z : number!
+        elevation : number
+      }
+        @description "Declarative event: feature click"
+        @tier "essential"
+      CANVAS_CLICK -> external {
+        clientX : number!
+        clientY : number!
+        button : number!
+      }
+        @description "Declarative event: canvas click"
+        @tier "essential"
+      TILE_HOVER -> external {
+        tileId : string!
+        x : number!
+        z : number!
+      }
+        @description "Declarative event: tile hover"
+        @tier "essential"
+      TILE_LEAVE -> external {
+        id : string
+      }
+        @description "Declarative event: tile leave"
+        @tier "essential"
+      CAMERA_CHANGE -> external {
+        position : object!
+        timestamp : number!
+      }
+        @description "Declarative event: camera change"
+        @tier "essential"
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "--- Closed-circuit props (MANDATORY) ---"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : string = ""
+        @label "Error"
+        @description "Error state"
+        @tier "presentation"
+      tiles : [GameCanvas3dTilesItem] = [{ x: 0, y: 0, terrain: "stone", passable: false }, { x: 1, y: 0, terrain: "stone", passable: false }, { x: 2, y: 0, terrain: "stone", passable: false }, { x: 3, y: 0, terrain: "stone", passable: false }, { x: 4, y: 0, terrain: "stone", passable: false }, { x: 0, y: 1, terrain: "stone", passable: false }, { x: 1, y: 1, terrain: "dirt", passable: true }, { x: 2, y: 1, terrain: "grass", passable: true }, { x: 3, y: 1, terrain: "grass", passable: true }, { x: 4, y: 1, terrain: "stone", passable: false }, { x: 0, y: 2, terrain: "stone", passable: false }, { x: 1, y: 2, terrain: "grass", passable: true }, { x: 2, y: 2, terrain: "dirt", passable: true }, { x: 3, y: 2, terrain: "grass", passable: true }, { x: 4, y: 2, terrain: "stone", passable: false }, { x: 0, y: 3, terrain: "stone", passable: false }, { x: 1, y: 3, terrain: "grass", passable: true }, { x: 2, y: 3, terrain: "grass", passable: true }, { x: 3, y: 3, terrain: "dirt", passable: true }, { x: 4, y: 3, terrain: "stone", passable: false }, { x: 0, y: 4, terrain: "stone", passable: false }, { x: 1, y: 4, terrain: "stone", passable: false }, { x: 2, y: 4, terrain: "stone", passable: false }, { x: 3, y: 4, terrain: "stone", passable: false }, { x: 4, y: 4, terrain: "stone", passable: false }]
+        @label "Tiles"
+        @description "Array of tiles to render"
+        @tier "presentation"
+      units : [GameCanvas3dUnitsItem] = [{ id: "u1", position: { x: 1, y: 1 }, unitType: "worker", name: "Worker", team: player, health: 10, maxHealth: 10 }, { id: "u2", position: { x: 3, y: 3 }, unitType: "guardian", name: "Guardian", team: enemy, health: 8, maxHealth: 10 }]
+        @label "Units"
+        @description "Array of units to render"
+        @tier "presentation"
+      features : [GameCanvas3dFeaturesItem] = [{ id: "f1", x: 2, y: 2, type: "gold_mine" }, { id: "f2", x: 3, y: 1, type: "portal" }]
+        @label "Features"
+        @description "Array of features to render"
+        @tier "presentation"
+      events : [GameCanvas3dEventsItem] = [{ id: "f1", x: 2, y: 2, type: "gold_mine" }, { id: "f2", x: 3, y: 1, type: "portal" }]
+        @label "Events"
+        @description "Array of events to display"
+        @tier "presentation"
+      fogOfWar : [[boolean]] = []
+        @label "Fog Of War"
+        @description "Fog of war data"
+        @tier "presentation"
+      orientation : "standard" | "rotated" = standard
+        @label "Orientation"
+        @description "Map orientation"
+        @tier "presentation"
+      cameraMode : "isometric" | "perspective" | "top-down" = isometric
+        @label "Camera Mode"
+        @description "Camera mode"
+        @tier "presentation"
+      showGrid : boolean = true
+        @label "Show Grid"
+        @description "Show grid"
+        @tier "presentation"
+      showCoordinates : boolean = false
+        @label "Show Coordinates"
+        @description "Show coordinates overlay"
+        @tier "presentation"
+      showTileInfo : boolean = false
+        @label "Show Tile Info"
+        @description "Show tile information"
+        @tier "presentation"
+      overlay : "default" | "hidden" | "minimap" = default
+        @label "Overlay"
+        @description "Overlay control mode"
+        @tier "presentation"
+      shadows : boolean = true
+        @label "Shadows"
+        @description "Enable shadows"
+        @tier "presentation"
+      backgroundColor : string = "#1a1a2e"
+        @label "Background Color"
+        @description "Background color"
+        @tier "presentation"
+      assetLoader : json = {}
+        @label "Asset Loader"
+        @description "Asset loader instance (uses global singleton if not provided)"
+        @tier "presentation"
+      tileRenderer : json = {}
+        @label "Tile Renderer"
+        @description "Custom tile renderer component"
+        @tier "presentation"
+      unitRenderer : json = {}
+        @label "Unit Renderer"
+        @description "Custom unit renderer component"
+        @tier "presentation"
+      featureRenderer : json = {}
+        @label "Feature Renderer"
+        @description "Custom feature renderer component"
+        @tier "presentation"
+      preloadAssets : [string] = []
+        @label "Preload Assets"
+        @description "URLs to preload"
+        @tier "presentation"
+      loadingMessage : string = "Loading 3D Scene..."
+        @label "Loading Message"
+        @description "Loading message"
+        @tier "presentation"
+      useInstancing : boolean = true
+        @label "Use Instancing"
+        @description "Whether to use instancing for tiles"
+        @tier "presentation"
+      validMoves : [GameCanvas3dValidMovesItem] = [{ x: 1, z: 1 }]
+        @label "Valid Moves"
+        @description "Valid move positions"
+        @tier "presentation"
+      attackTargets : [GameCanvas3dAttackTargetsItem] = [{ x: 1, z: 1 }]
+        @label "Attack Targets"
+        @description "Attack target positions"
+        @tier "presentation"
+      selectedTileIds : [string] = []
+        @label "Selected Tile Ids"
+        @description "Selected tile IDs"
+        @tier "presentation"
+      selectedUnitId : string = "Selected Unit Id"
+        @label "Selected Unit Id"
+        @description "Selected unit ID"
+        @tier "presentation"
+    }
+  }
+
+  page "/game-canvas-3d" as GameCanvas3dPage -> GameCanvas3dRender
+}
